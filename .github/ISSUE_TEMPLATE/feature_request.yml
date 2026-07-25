@@ -1,0 +1,10 @@
+name: Feature request
+description: Request a new capability
+labels: [enhancement]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true

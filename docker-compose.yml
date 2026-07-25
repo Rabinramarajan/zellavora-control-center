@@ -1,0 +1,9 @@
+services:
+  admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.admin
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: production
