@@ -1,0 +1,20 @@
+<div class="min-h-screen bg-slate-950 text-slate-100">
+  <header class="border-b border-slate-800 p-4">
+    <h1 class="text-xl font-semibold">Zellavora Control Center</h1>
+    <nav class="mt-3 flex flex-wrap gap-2" aria-label="Primary navigation">
+      @for (item of navItems(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="bg-slate-700"
+          class="rounded-md border border-slate-700 px-3 py-1 text-sm"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </header>
+
+  <main class="p-6">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,1 @@
+-- Base schema placeholder for Zellavora Control Center.

@@ -1,0 +1,1 @@
+-- Storage bucket configuration placeholder.
