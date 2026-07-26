@@ -13,4 +13,3 @@ export type { MenuNode } from './menu.service';
 export { AuditService } from './audit.service';
 export type { AuditEvent, AuditAction, AuditSeverity } from './audit.service';
 export { RateLimitService } from './rate-limit.service';
-export { RsaKeysService } from './rsa-keys';

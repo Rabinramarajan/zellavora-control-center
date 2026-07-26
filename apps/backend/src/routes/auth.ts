@@ -35,7 +35,6 @@ import {
   MenuService,
   AuditService,
   RateLimitService,
-  RsaKeysService,
 } from '../services/auth';
 
 const router: ExpressRouter = Router();
@@ -174,33 +173,6 @@ router.post('/validate-client', async (req, res, next) => {
   }
 });
 
-// ----------------------------------------------------------------------------
-// GET /auth/public-key
-// ----------------------------------------------------------------------------
-
-/**
- * @swagger
- * /api/v1/auth/public-key:
- *   get:
- *     summary: Retrieve public RSA key for payload encryption
- *     tags: [Auth]
- *     security: []
- *     responses:
- *       200:
- *         description: JWK representation of the public key
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- */
-router.get('/public-key', (req, res, next) => {
-  try {
-    const { publicKeyJwk } = RsaKeysService.getKeys();
-    res.json(publicKeyJwk);
-  } catch (e) {
-    next(e);
-  }
-});
 
 // ----------------------------------------------------------------------------
 // GET /auth/gettoken
@@ -293,10 +265,10 @@ router.get('/gettoken', (req, res, next) => {
 router.post('/login', async (req, res, next) => {
   try {
     let loginData = { ...req.body };
-    if (req.headers['x-payload-encrypted'] === 'true' || (loginData.keyToken && Array.isArray(loginData.keyToken))) {
+    if (loginData.keyToken && Array.isArray(loginData.keyToken)) {
       try {
         const keyToken = loginData.keyToken;
-        if (keyToken && Array.isArray(keyToken) && keyToken.length === 2) {
+        if (keyToken.length === 2) {
           const aesKey = Buffer.from(keyToken[0], 'binary');
           const aesIv = Buffer.from(keyToken[1], 'binary');
 
@@ -310,16 +282,6 @@ router.post('/login', async (req, res, next) => {
           if (loginData.clientCode) loginData.clientCode = decryptAes(loginData.clientCode);
           if (loginData.email) loginData.email = decryptAes(loginData.email);
           if (loginData.password) loginData.password = decryptAes(loginData.password);
-        } else {
-          if (loginData.clientCode) {
-            loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
-          }
-          if (loginData.email) {
-            loginData.email = RsaKeysService.decrypt(loginData.email);
-          }
-          if (loginData.password) {
-            loginData.password = RsaKeysService.decrypt(loginData.password);
-          }
         }
       } catch (err) {
         throw new AppError('Failed to decrypt login payload', 400, 'AUTHENTICATION_FAILED');
