@@ -128,6 +128,11 @@ export class SidebarComponent {
   adminNavItems: NavItem[] = [
     { label: 'Users', icon: '👥', route: '/users' },
     { label: 'Settings', icon: '⚙️', route: '/settings' },
+    { label: 'Admin Console', icon: '🔐', route: '/admin' },
+    { label: 'Manage Users', icon: '👤', route: '/admin/users' },
+    { label: 'Manage Roles', icon: '🛡️', route: '/admin/roles' },
+    { label: 'Resources', icon: '📦', route: '/admin/resources' },
+    { label: 'Branches', icon: '🌍', route: '/admin/branches' },
   ];
 
   toggleSidebar(): void {
