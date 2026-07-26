@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { RequestHandler } from 'express';
 import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
-import authRoutes, { loginKeys } from './routes/auth';
+import authRoutes from './routes/auth';
 import crypto from 'crypto';
 import projectRoutes from './routes/projects';
 import portfolioRoutes from './routes/portfolio';
@@ -130,22 +130,6 @@ if (process.env.SWAGGER_ENABLED !== 'false') {
 app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (req, res) => {
   const key = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
-  const tempSessionId = crypto.randomUUID();
-
-  loginKeys.set(tempSessionId, {
-    key,
-    iv,
-    expiresAt: Date.now() + 5 * 60 * 1000,
-  });
-
-  res.setHeader('X-Temp-Session-Id', tempSessionId);
-  res.cookie('zcc_temp_session', tempSessionId, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 5 * 60 * 1000,
-  });
-
   res.json([
     key.toString('binary'),
     iv.toString('binary'),

@@ -110,19 +110,7 @@ const consumeMfa = (token: string) => {
   return v;
 };
 
-// Store for temporary login encryption keys (Key: tempSessionId, Value: { key, iv, expiresAt })
-export const loginKeys = new Map<string, { key: Buffer; iv: Buffer; expiresAt: number }>();
-const LOGIN_KEY_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-// Clean up expired keys periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [id, value] of loginKeys.entries()) {
-    if (value.expiresAt < now) {
-      loginKeys.delete(id);
-    }
-  }
-}, 60 * 1000).unref();
 
 
 // ----------------------------------------------------------------------------
@@ -239,22 +227,6 @@ router.get('/gettoken', (req, res, next) => {
   try {
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
-    const tempSessionId = crypto.randomUUID();
-
-    loginKeys.set(tempSessionId, {
-      key,
-      iv,
-      expiresAt: Date.now() + LOGIN_KEY_TTL_MS,
-    });
-
-    res.setHeader('X-Temp-Session-Id', tempSessionId);
-    res.cookie('zcc_temp_session', tempSessionId, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      maxAge: LOGIN_KEY_TTL_MS,
-    });
-
     res.json([
       key.toString('binary'),
       iv.toString('binary'),
@@ -339,41 +311,14 @@ router.post('/login', async (req, res, next) => {
           if (loginData.email) loginData.email = decryptAes(loginData.email);
           if (loginData.password) loginData.password = decryptAes(loginData.password);
         } else {
-          const tempSessionId = (req.headers['x-temp-session-id'] as string) || 
-            req.headers['cookie']?.split(';').find(c => c.trim().startsWith('zcc_temp_session='))?.split('=')[1]?.trim();
-
-          const encryptionType = req.headers['x-encryption-type'] as string;
-
-          if (encryptionType === 'aes' || tempSessionId) {
-            if (!tempSessionId) {
-              throw new Error('Missing temp session ID for AES decryption');
-            }
-            const sessionKeys = loginKeys.get(tempSessionId);
-            if (!sessionKeys || sessionKeys.expiresAt < Date.now()) {
-              throw new Error('Encryption session expired or invalid');
-            }
-            loginKeys.delete(tempSessionId); // single-use key
-
-            const decryptAes = (cipherText: string) => {
-              const decipher = crypto.createDecipheriv('aes-256-cbc', sessionKeys.key, sessionKeys.iv);
-              let decrypted = decipher.update(cipherText, 'base64', 'utf8');
-              decrypted += decipher.final('utf8');
-              return decrypted;
-            };
-
-            if (loginData.clientCode) loginData.clientCode = decryptAes(loginData.clientCode);
-            if (loginData.email) loginData.email = decryptAes(loginData.email);
-            if (loginData.password) loginData.password = decryptAes(loginData.password);
-          } else {
-            if (loginData.clientCode) {
-              loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
-            }
-            if (loginData.email) {
-              loginData.email = RsaKeysService.decrypt(loginData.email);
-            }
-            if (loginData.password) {
-              loginData.password = RsaKeysService.decrypt(loginData.password);
-            }
+          if (loginData.clientCode) {
+            loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
+          }
+          if (loginData.email) {
+            loginData.email = RsaKeysService.decrypt(loginData.email);
+          }
+          if (loginData.password) {
+            loginData.password = RsaKeysService.decrypt(loginData.password);
           }
         }
       } catch (err) {
