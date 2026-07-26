@@ -135,10 +135,14 @@ app.use(errorHandler);
 // Start server
 const PORT = config.port;
 
-app.listen(PORT, async () => {
-  await initRbac();
+// Initialize RBAC asynchronously
+const rbacPromise = initRbac();
 
-  console.log(`
+if (!process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    await rbacPromise;
+
+    console.log(`
 ╔════════════════════════════════════════╗
 ║   Zellavora Control Center - Backend   ║
 ╚════════════════════════════════════════╝
@@ -149,7 +153,8 @@ app.listen(PORT, async () => {
 
   Health Check:  http://localhost:${PORT}/health
   Swagger Docs:  http://localhost:${PORT}/api-docs
-`);
-});
+    `);
+  });
+}
 
 export default app;
