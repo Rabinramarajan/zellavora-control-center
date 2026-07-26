@@ -52,15 +52,15 @@ export class UsageTrackingMiddleware {
       const user = (req as any).user;
       const organizationId = this.extractOrganizationId(req);
 
-      if (req.file && organizationId && user) {
-        const sizeGb = (req.file.size || 0) / (1024 * 1024 * 1024);
+      if ((req as any).file && organizationId && user) {
+        const sizeGb = ((req as any).file.size || 0) / (1024 * 1024 * 1024);
         await this.subscriptionService.trackUsageEvent(
           organizationId,
           user.id,
           'file_uploaded',
           1,
           'file',
-          req.file.filename
+          (req as any).file.filename
         );
 
         // Also track storage if size is significant
@@ -71,7 +71,7 @@ export class UsageTrackingMiddleware {
             'storage_used',
             Math.ceil(sizeGb * 1024), // Track in MB for precision
             'file',
-            req.file.filename
+            (req as any).file.filename
           );
         }
       }

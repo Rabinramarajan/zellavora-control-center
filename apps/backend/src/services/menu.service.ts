@@ -623,7 +623,7 @@ export class MenuService {
     }
 
     // Check feature flags
-    if (menu.feature_flag && !await this.featureFlagService.isEnabled(menu.feature_flag, organizationId, { userId })) {
+    if (menu.feature_flag && !await this.featureFlagService.isEnabled(menu.feature_flag, organizationId, { userId, organizationId })) {
       return null as any;
     }
 

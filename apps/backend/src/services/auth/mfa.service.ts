@@ -174,7 +174,7 @@ export class MfaService {
     // Returns the "time-step" number of the verified code.
     const now = Math.floor(Date.now() / 1000 / authenticator.options.step);
     for (let i = -1; i <= 1; i++) {
-      const expected = authenticator.generate(secret, { time: now + i });
+      const expected = (authenticator as any).generate(secret, { time: now + i });
       if (expected === code) return now + i;
     }
     return now;

@@ -6,7 +6,7 @@
  *
  * Single-flight via SETNX prevents cache stampede.
  */
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import type Redis from 'ioredis';
 import type { EffectivePolicy } from '../engine/permission-engine';
 
@@ -16,13 +16,13 @@ const NEG_TTL_SEC = 60;          // 1 min negative cache
 const LOCK_TTL_SEC = 5;          // single-flight lock
 
 export class PolicyCache {
-  private l1: LRU<string, EffectivePolicy>;
+  private l1: LRUCache<string, EffectivePolicy>;
 
   constructor(
     private redis: Redis,
     l1Max = 10_000
   ) {
-    this.l1 = new LRU<string, EffectivePolicy>({
+    this.l1 = new LRUCache<string, EffectivePolicy>({
       max: l1Max,
       ttl: L1_TTL_MS
     });

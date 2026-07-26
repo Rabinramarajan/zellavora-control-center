@@ -109,9 +109,9 @@ export const requirePermission =
       if (!req.userId || !req.tenantId) {
         throw new AppError('Unauthorized', 401, 'UNAUTHORIZED');
       }
+      const { PermissionService } = await import('../services/auth');
       // Lazy-load on first hit
       if (!req.permissions) {
-        const { PermissionService } = await import('@/services/auth');
         req.permissions = await PermissionService.loadForUser(req.userId, req.tenantId);
       }
       const ok = codes.some((c) => PermissionService.has(req.permissions!, c));

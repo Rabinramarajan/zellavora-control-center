@@ -280,7 +280,7 @@ router.post('/login', async (req, res, next) => {
     // 6. Issue MFA challenge if user has 2FA enabled
     if (user.mfa_enabled) {
       const mfaToken = newMfaToken();
-      remember(mfaToken, { userId: user.id, organizationId: tenant.id, attempts: 0 });
+      remember(mfaToken, { userId: user.id, organizationId: tenant.id, attempts: 0, expiresAt: Date.now() + 300000 });
       res.status(200).json({
         mfaRequired: true,
         mfaToken,

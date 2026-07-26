@@ -98,7 +98,7 @@ export function createNotificationRoutes(notificationService: NotificationServic
         {
           ...body,
           scheduledFor: body.scheduledFor ? new Date(body.scheduledFor) : undefined,
-        },
+        } as any,
         userId
       );
 

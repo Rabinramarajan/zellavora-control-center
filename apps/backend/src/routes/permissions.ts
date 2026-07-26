@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PermissionService } from '../services/permission.service';
-import { authenticateToken, authorizeRole } from '../middleware/auth';
+import { authenticateToken, authorize } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { z } from 'zod';
 
@@ -235,7 +235,7 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
   router.get(
     '/list',
     authenticateToken,
-    authorizeRole(['admin', 'owner']),
+    authorize('admin', 'owner'),
     async (req: AuthRequest, res: Response, next: NextFunction) => {
       try {
         if (!req.user?.organizationId) {
@@ -268,7 +268,7 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
   router.get(
     '/screens/all',
     authenticateToken,
-    authorizeRole(['admin', 'owner']),
+    authorize('admin', 'owner'),
     async (req: AuthRequest, res: Response, next: NextFunction) => {
       try {
         if (!req.user?.organizationId) {
@@ -291,7 +291,7 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
   router.post(
     '/grant',
     authenticateToken,
-    authorizeRole(['admin', 'owner']),
+    authorize('admin', 'owner'),
     validateRequest(grantPermissionSchema),
     async (req: AuthRequest, res: Response, next: NextFunction) => {
       try {
@@ -341,7 +341,7 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
   router.post(
     '/deny',
     authenticateToken,
-    authorizeRole(['admin', 'owner']),
+    authorize('admin', 'owner'),
     validateRequest(denyPermissionSchema),
     async (req: AuthRequest, res: Response, next: NextFunction) => {
       try {
@@ -390,7 +390,7 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
   router.get(
     '/audit',
     authenticateToken,
-    authorizeRole(['admin', 'owner']),
+    authorize('admin', 'owner'),
     async (req: AuthRequest, res: Response, next: NextFunction) => {
       try {
         if (!req.user?.organizationId) {

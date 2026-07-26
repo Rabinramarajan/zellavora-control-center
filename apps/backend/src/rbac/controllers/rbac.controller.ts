@@ -260,7 +260,7 @@ export function buildRbacRouter(deps: {
    */
   router.post('/roles', requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
-      const input = CreateRole.parse(req.body);
+      const input = CreateRole.parse(req.body) as any;
       const role = await roleService.create(
         req.auth!.tenantId,
         input,
@@ -313,7 +313,7 @@ export function buildRbacRouter(deps: {
    */
   router.patch('/roles/:id', requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
-      const input = UpdateRole.parse(req.body);
+      const input = UpdateRole.parse(req.body) as any;
       const role = await roleService.update(req.params.id, input, req.auth!.userId);
       res.json({ data: role });
     })
@@ -413,7 +413,7 @@ export function buildRbacRouter(deps: {
    */
   router.put('/roles/:id/permissions', requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
-      const perms = PermissionsSet.parse(req.body);
+      const perms = PermissionsSet.parse(req.body) as any;
       await roleService.setPermissions(req.params.id, perms, req.auth!.userId);
       res.json({ data: { ok: true } });
     })
@@ -619,7 +619,7 @@ export function buildRbacRouter(deps: {
    */
   router.post('/users/:userId/roles', requirePermission('users:role:assign'),
     wrap(async (req, res) => {
-      const input = AssignRole.parse(req.body);
+      const input = AssignRole.parse(req.body) as any;
       const assignment = await userRoleService.assign(
         req.params.userId,
         input,
