@@ -9,20 +9,24 @@
  *
  * This is the ONLY way to bridge the gap between "page reload" and "logged in".
  */
-import { inject, provideAppInitializer } from '@angular/core';
+import { APP_INITIALIZER, Provider } from '@angular/core';
 import { AuthService } from './auth.service';
 import { SessionActivityService } from './session-activity.service';
 import { firstValueFrom } from 'rxjs';
 
-export const provideAuthInitializer = () =>
-  provideAppInitializer(async () => {
-    const auth = inject(AuthService);
-    const activity = inject(SessionActivityService);
-    await firstValueFrom(auth.initialize());
-    if (auth) {
-      // Re-start idle tracking now that the store is in its final state.
-      // (initialize() will have reset() the store if no session, so
-      //  start() short-circuits via the isAuthenticated check inside onActivity.)
-      activity.start();
-    }
-  });
+export const provideAuthInitializer = (): Provider => ({
+  provide: APP_INITIALIZER,
+  useFactory: (auth: AuthService, activity: SessionActivityService) => {
+    return async () => {
+      await firstValueFrom(auth.initialize());
+      if (auth) {
+        // Re-start idle tracking now that the store is in its final state.
+        // (initialize() will have reset() the store if no session, so
+        //  start() short-circuits via the isAuthenticated check inside onActivity.)
+        activity.start();
+      }
+    };
+  },
+  deps: [AuthService, SessionActivityService],
+  multi: true,
+});

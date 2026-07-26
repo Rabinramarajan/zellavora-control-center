@@ -1,3 +1,5 @@
+import { TemplateRef } from '@angular/core';
+
 /**
  * Component-Level Permission Type Definitions
  * Fine-grained authorization for UI components

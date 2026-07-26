@@ -8,9 +8,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { RbacService } from '../../core/rbac';
-import { HasPermissionDirective } from '../../core/rbac/directives/has-permission.directive';
-import type { Role } from '../../core/rbac';
+import { RbacService, HasPermissionDirective, Role } from '@core/rbac';
 
 @Component({
   selector: 'zcc-role-list',

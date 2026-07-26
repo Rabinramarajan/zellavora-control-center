@@ -1,3 +1,5 @@
+import { HttpInterceptorFn } from '@angular/common/http';
+
 // Default local Supabase Edge Functions base URL
 const SUPABASE_FUNCTIONS_URL = 'http://localhost:54321/functions/v1';
 

@@ -19,6 +19,5 @@ export {
   anyPermissionGuard,
   tenantResolvedGuard,
   mfaEnrolledGuard,
-  AuthGuard,
 } from './auth.guard';
 export { authInterceptor } from './auth.interceptor';

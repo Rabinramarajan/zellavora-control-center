@@ -57,7 +57,7 @@ export class ComponentPermissionService {
     await this.permissionService.loadPermissions();
 
     // Update context with loaded permissions
-    const context = this.permissionService['getUserPermissionContext']?.(
+    const context = (this.permissionService as any)['getUserPermissionContext']?.(
       // Access through reflection if needed
     );
   }

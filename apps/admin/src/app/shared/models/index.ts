@@ -485,3 +485,34 @@ export interface FormState<T> {
   isDirty: boolean;
   isSubmitting: boolean;
 }
+
+// ============================================================================
+// GALLERY & TECHNOLOGY
+// ============================================================================
+
+export interface ProjectGalleryItem {
+  id: string;
+  projectId: string;
+  url: string;
+  caption?: string;
+  orderIndex: number;
+  createdAt?: string;
+}
+
+export interface Technology {
+  id: string;
+  name: string;
+  category?: string;
+  description?: string;
+  iconUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProjectTechnology {
+  id: string;
+  projectId: string;
+  technologyId: string;
+  createdAt?: Date | string;
+}
+

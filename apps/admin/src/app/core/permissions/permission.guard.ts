@@ -228,9 +228,7 @@ export const mfaRequiredGuard: CanActivateFn = async (
   const authStore = inject(AuthStore);
   const router = inject(Router);
 
-  // Check if user has MFA enabled
-  // This would need to be implemented based on your auth system
-  const hasMfa = authStore.mfaEnabled();
+  const hasMfa = authStore.user()?.mfaEnabled ?? false;
 
   if (!hasMfa) {
     // Redirect to MFA setup
