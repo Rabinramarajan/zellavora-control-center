@@ -32,6 +32,10 @@ All endpoints are prefixed with \`/api/v1\`.
     },
     servers: [
       {
+        url: '/',
+        description: 'Current host (Default)',
+      },
+      {
         url: 'http://localhost:3001',
         description: 'Local development server',
       },
