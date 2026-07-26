@@ -36,6 +36,10 @@ All endpoints are prefixed with \`/api/v1\`.
         description: 'Local development server',
       },
       {
+        url: 'https://zcc-backend.vercel.app',
+        description: 'Vercel Deployment server',
+      },
+      {
         url: 'https://api.zellavora.com',
         description: 'Production server',
       },
