@@ -1,0 +1,52 @@
+{
+  "name": "zellavora-control-center",
+  "version": "1.0.0",
+  "description": "Enterprise CMS and Administration Platform",
+  "license": "MIT",
+  "author": "Zellavora",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "npm run dev:admin",
+    "dev:admin": "cd apps/admin && npm run dev",
+    "dev:public": "cd apps/public && npm run dev",
+    "build": "npm run build:admin",
+    "build:admin": "cd apps/admin && npm run build",
+    "build:public": "cd apps/public && npm run build",
+    "test": "npm run test:admin",
+    "test:admin": "cd apps/admin && npm run test",
+    "test:e2e": "cd apps/admin && npm run test:e2e",
+    "lint": "npm run lint:admin",
+    "lint:admin": "cd apps/admin && npm run lint",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,html,css,json,md}\"",
+    "type-check": "tsc --noEmit",
+    "db:migrate": "echo 'Database migrations will run here'",
+    "db:reset": "echo 'Database reset will run here'",
+    "db:seed": "echo 'Database seed will run here'",
+    "deploy:staging": "echo 'Deploy to staging'",
+    "deploy:production": "echo 'Deploy to production'",
+    "docker:build": "docker build -t zcc:latest .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "analyze": "npm run build -- --stats"
+  },
+  "workspaces": [
+    "apps/admin",
+    "apps/public",
+    "services",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/typography": "^0.5.20",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "eslint": "^8.53.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  }
+}

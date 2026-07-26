@@ -1,0 +1,53 @@
+# Environment
+.env
+.env.local
+.env.*.local
+.env.*.example
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+out/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Angular
+.angular/
+.angularrc
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Supabase
+.supabase/
+
+# Cache
+.cache/
+.eslintcache
+
+# Misc
+.history/
+.env.prod
+.env.staging

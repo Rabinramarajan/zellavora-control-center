@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Supabase backend)
+  postgres:
+    image: postgres:16-alpine
+    container_name: zcc-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zcc_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (RBAC L2 cache, BullMQ queue, session, rate-limit)
+  redis:
+    image: redis:7-alpine
+    container_name: zcc-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Node.js Backend API
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: zcc-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      VITE_SUPABASE_URL: http://localhost:54321
+      VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlbW8iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTUwMzk0ODAwMCwiZXhwIjo0MTIzOTY4MDAwfQ.xP3xH0B7OiqYFTZ-aqUNMvCpqpbH2h2K4A-u0eLFfPQ
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlbW8iLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNTAzOTQ4MDAwLCJleHAiOjQxMjM5NjgwMDB9.wNa4lpHQ3Y9yBOkYP3q9GE3yv9N7WF7PQRJlxJ9E8p4
+      JWT_SECRET: your_super_secret_jwt_key_change_in_production
+      REFRESH_TOKEN_SECRET: your_super_secret_refresh_key_change_in_production
+      VITE_CORS_ORIGINS: http://localhost:4200,http://localhost:3000
+      REDIS_URL: redis://redis:6379
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/backend/src:/app/src
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: zcc-network
