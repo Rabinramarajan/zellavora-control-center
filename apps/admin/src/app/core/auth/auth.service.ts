@@ -20,7 +20,7 @@
 import { Injectable, inject, effect, DestroyRef } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, throwError, timer, Subscription } from 'rxjs';
+import { Observable, of, throwError, timer, Subscription, from } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 
 import { AuthStore } from './auth.store';
@@ -126,25 +126,72 @@ export class AuthService {
    * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
    * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
    */
+  private async encryptString(plain: string, jwk: any): Promise<string> {
+    const key = await window.crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      {
+        name: 'RSA-OAEP',
+        hash: { name: 'SHA-256' },
+      },
+      false,
+      ['encrypt']
+    );
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plain);
+    const encrypted = await window.crypto.subtle.encrypt(
+      {
+        name: 'RSA-OAEP',
+      },
+      key,
+      data
+    );
+    return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+  }
+
+  /**
+   * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
+   * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
+   */
   login(request: LoginRequest): Observable<LoginResponse> {
     this.store.setLoading(true);
     this.store.setError(null);
-    return this.http
-      .post<LoginResponse>(`${this.apiUrl}/login`, request)
-      .pipe(
-        tap((res) => {
-          if (this.isMfaChallenge(res)) {
-            this.store.setLoading(false);
-            return;
-          }
-          this.handleSuccess(res);
-        }),
-        catchError((err) => {
-          this.store.setError(this.extractErrorMessage(err), this.extractErrorCode(err));
+    return this.http.get<any>(`${this.apiUrl}/public-key`).pipe(
+      switchMap((jwk) => {
+        const encryptPromises = Promise.all([
+          this.encryptString(request.clientCode, jwk),
+          this.encryptString(request.email, jwk),
+          this.encryptString(request.password, jwk),
+        ]);
+        return from(encryptPromises).pipe(
+          switchMap(([encClientCode, encEmail, encPassword]) => {
+            const encryptedRequest = {
+              ...request,
+              clientCode: encClientCode,
+              email: encEmail,
+              password: encPassword,
+            };
+            return this.http.post<LoginResponse>(`${this.apiUrl}/login`, encryptedRequest, {
+              headers: {
+                'X-Payload-Encrypted': 'true',
+              },
+            });
+          })
+        );
+      }),
+      tap((res) => {
+        if (this.isMfaChallenge(res)) {
           this.store.setLoading(false);
-          return throwError(() => err);
-        })
-      );
+          return;
+        }
+        this.handleSuccess(res);
+      }),
+      catchError((err) => {
+        this.store.setError(this.extractErrorMessage(err), this.extractErrorCode(err));
+        this.store.setLoading(false);
+        return throwError(() => err);
+      })
+    );
   }
 
   /** Complete an MFA challenge. */

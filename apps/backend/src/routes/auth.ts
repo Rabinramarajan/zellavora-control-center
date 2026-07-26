@@ -35,6 +35,7 @@ import {
   MenuService,
   AuditService,
   RateLimitService,
+  RsaKeysService,
 } from '../services/auth';
 
 const router: ExpressRouter = Router();
@@ -171,6 +172,34 @@ router.post('/validate-client', async (req, res, next) => {
 });
 
 // ----------------------------------------------------------------------------
+// GET /auth/public-key
+// ----------------------------------------------------------------------------
+
+/**
+ * @swagger
+ * /api/v1/auth/public-key:
+ *   get:
+ *     summary: Retrieve public RSA key for payload encryption
+ *     tags: [Auth]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: JWK representation of the public key
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.get('/public-key', (req, res, next) => {
+  try {
+    const { publicKeyJwk } = RsaKeysService.getKeys();
+    res.json(publicKeyJwk);
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ----------------------------------------------------------------------------
 // POST /auth/login  —  primary login
 // ----------------------------------------------------------------------------
 
@@ -225,7 +254,23 @@ router.post('/validate-client', async (req, res, next) => {
  */
 router.post('/login', async (req, res, next) => {
   try {
-    const body = LoginSchema.parse(req.body);
+    let loginData = { ...req.body };
+    if (req.headers['x-payload-encrypted'] === 'true') {
+      try {
+        if (loginData.clientCode) {
+          loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
+        }
+        if (loginData.email) {
+          loginData.email = RsaKeysService.decrypt(loginData.email);
+        }
+        if (loginData.password) {
+          loginData.password = RsaKeysService.decrypt(loginData.password);
+        }
+      } catch (err) {
+        throw new AppError('Failed to decrypt login payload', 400, 'AUTHENTICATION_FAILED');
+      }
+    }
+    const body = LoginSchema.parse(loginData);
 
     // 1. Rate-limit the IP
     await RateLimitService.assertIpAllowed(ip(req));
