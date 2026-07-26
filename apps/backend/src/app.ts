@@ -3,7 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import Redis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
-import { config } from './config/env';
+import type { RequestHandler } from 'express';
+import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
 import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
@@ -54,9 +55,16 @@ app.use((req, res, next) => {
  *                   type: string
  *                   format: date-time
  */
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check. Reports configuration problems instead of crashing on them,
+// so a misconfigured deployment is diagnosable rather than opaque.
+app.get('/health', (_req, res) => {
+  const healthy = configErrors.length === 0;
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? 'ok' : 'degraded',
+    environment: config.nodeEnv,
+    timestamp: new Date().toISOString(),
+    ...(healthy ? {} : { configErrors }),
+  });
 });
 
 // Swagger UI — available unless SWAGGER_ENABLED is explicitly 'false'
@@ -72,62 +80,98 @@ app.use('/api/v1', galleryRoutes);
 app.use('/api/v1', techRoutes);
 
 // ---------- RBAC module ----------
-// Lazy init: if Supabase or Redis aren't configured, skip the module
-// (allows the rest of the API to keep working in dev / partial setups).
-async function initRbac() {
-  try {
-    if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
-      console.warn('[rbac] Supabase not configured — RBAC module disabled.');
-      return;
-    }
-    if (!config.redisUrl) {
-      console.warn('[rbac] Redis not configured — RBAC module disabled.');
-      return;
-    }
+// The RBAC router is mounted SYNCHRONOUSLY below, before the 404 handler.
+// Express matches middleware in registration order, so a router added later
+// from an async callback sits behind the catch-all 404 and is unreachable.
+// Initialisation itself stays async and is deferred to the first request:
+// on a serverless platform, connecting to Redis during module evaluation
+// blocks (and can time out) every cold start, including requests that never
+// touch RBAC.
 
-    const db = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
-      auth: { persistSession: false }
-    });
+type RbacHandle = Awaited<ReturnType<typeof buildRbac>>;
 
-    const redis = new Redis(config.redisUrl, { lazyConnect: true });
+let rbacPromise: Promise<RbacHandle | null> | null = null;
 
-    // Attach an error listener BEFORE connecting so Node.js never sees an
-    // unhandled 'error' event from ioredis while it retries the connection.
-    redis.on('error', (err) => {
-      // Suppress noisy connection-refused events after a failed init.
-      if (process.env.LOG_LEVEL === 'debug') {
-        console.debug('[rbac/redis] connection error:', err.message);
-      }
-    });
-
-    try {
-      await redis.connect();
-    } catch (connectErr) {
-      // Disconnect so ioredis stops retrying in the background.
-      redis.disconnect();
-      throw connectErr;
-    }
-
-    const rbac = await buildRbac({ db, redis });
-
-    // Make services reachable from request middleware (req.app.locals.*)
-    app.locals.engine         = rbac.engine;
-    app.locals.audit          = rbac.audit;
-    app.locals.roleService    = rbac.roleService;
-    app.locals.userRoleService = rbac.userRoleService;
-
-    app.use('/api/v1/rbac', rbac.router);
-    console.log('[rbac] Mounted at /api/v1/rbac');
-  } catch (e) {
-    console.warn('[rbac] Init failed (RBAC module disabled):', (e as Error).message);
+async function createRbac(): Promise<RbacHandle | null> {
+  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
+    console.warn('[rbac] Supabase not configured — RBAC module disabled.');
+    return null;
   }
+  if (!config.redisUrl) {
+    console.warn('[rbac] Redis not configured — RBAC module disabled.');
+    return null;
+  }
+
+  const db = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const redis = new Redis(config.redisUrl, {
+    lazyConnect: true,
+    // Serverless: fail fast instead of retrying past the function timeout.
+    maxRetriesPerRequest: 2,
+    connectTimeout: 5000,
+    enableOfflineQueue: false,
+  });
+
+  // Attach the error listener BEFORE connecting so Node never sees an
+  // unhandled 'error' event from ioredis while it retries the connection.
+  redis.on('error', (err) => {
+    if (config.logLevel === 'debug') {
+      console.debug('[rbac/redis] connection error:', err.message);
+    }
+  });
+
+  try {
+    await redis.connect();
+  } catch (connectErr) {
+    redis.disconnect(); // stop background retries
+    throw connectErr;
+  }
+
+  const rbac = await buildRbac({ db, redis });
+
+  // Make services reachable from request middleware (req.app.locals.*)
+  app.locals.engine = rbac.engine;
+  app.locals.audit = rbac.audit;
+  app.locals.roleService = rbac.roleService;
+  app.locals.userRoleService = rbac.userRoleService;
+
+  console.log('[rbac] Initialised');
+  return rbac;
 }
 
-// Initialize RBAC asynchronously
-initRbac();
+/** Resolves once per instance; a failed attempt is retried on the next request. */
+function getRbac(): Promise<RbacHandle | null> {
+  if (!rbacPromise) {
+    rbacPromise = createRbac().catch((e: Error) => {
+      console.warn('[rbac] Init failed (RBAC module disabled):', e.message);
+      rbacPromise = null; // allow a later request to retry
+      return null;
+    });
+  }
+  return rbacPromise;
+}
 
-// 404 handler
-app.use((req, res) => {
+const rbacGateway: RequestHandler = (req, res, next) => {
+  getRbac()
+    .then((rbac) => {
+      if (!rbac) {
+        res.status(503).json({
+          error: 'RBAC module unavailable',
+          code: 'RBAC_UNAVAILABLE',
+        });
+        return;
+      }
+      rbac.router(req, res, next);
+    })
+    .catch(next);
+};
+
+app.use('/api/v1/rbac', rbacGateway);
+
+// 404 handler — must stay after every route registration above.
+app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 

@@ -11,8 +11,8 @@
  *   - refresh_token_hash + family (for rotation + reuse detection)
  */
 import { v4 as uuidv4 } from 'uuid';
-import { supabaseAdmin } from '@/config/supabase';
-import { AppError } from '@/middleware/error';
+import { supabaseAdmin } from '../../config/supabase';
+import { AppError } from '../../middleware/error';
 import { TokenService } from './token.service';
 
 export interface CreateSessionInput {

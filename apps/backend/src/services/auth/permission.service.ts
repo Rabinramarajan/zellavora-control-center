@@ -8,8 +8,8 @@
  * The full permission set is shipped in /auth/me so the client can hide menu
  * items, disable buttons, etc. — without an extra round-trip.
  */
-import { supabaseAdmin } from '@/config/supabase';
-import { AppError } from '@/middleware/error';
+import { supabaseAdmin } from '../../config/supabase';
+import { AppError } from '../../middleware/error';
 
 export class PermissionService {
   /** Load the user's permission codes within an organization. */

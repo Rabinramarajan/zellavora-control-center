@@ -18,9 +18,9 @@ import qrcode from 'qrcode';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { supabaseAdmin } from '@/config/supabase';
-import { config } from '@/config/env';
-import { AppError } from '@/middleware/error';
+import { supabaseAdmin } from '../../config/supabase';
+import { config } from '../../config/env';
+import { AppError } from '../../middleware/error';
 import { EncryptionService } from './encryption.service';
 
 // otplib defaults: 30s step, 1 window either side (handles clock skew)

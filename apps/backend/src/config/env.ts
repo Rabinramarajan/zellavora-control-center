@@ -1,7 +1,13 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+// On Vercel (and any managed platform) the environment is injected by the
+// platform and there is no .env file in the bundle. Only load dotenv locally;
+// `override: false` guarantees a real platform variable always wins.
+if (!process.env.VERCEL) {
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: false });
+  dotenv.config({ override: false });
+}
 
 export const config = {
   // ============================================================================
@@ -152,40 +158,69 @@ const productionEnvVars = [
   'SMTP_HOST', // Or SendGrid configured
 ];
 
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    const message = `Missing required environment variable: ${envVar}`;
-    if (config.nodeEnv === 'production') {
-      throw new Error(message);
+/**
+ * Collects configuration problems without throwing.
+ *
+ * IMPORTANT: this module must never throw at import time. On a serverless
+ * platform the whole module graph is evaluated during cold start, so an
+ * import-time throw takes down the function before Express is ever built —
+ * the platform then returns an opaque FUNCTION_INVOCATION_FAILED with no
+ * usable stack trace. Instead we surface problems as a list that callers
+ * decide what to do with, and expose a `/health` signal for operators.
+ */
+export function collectConfigErrors(): string[] {
+  const errors: string[] = [];
+
+  for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+      errors.push(`Missing required environment variable: ${envVar}`);
     }
   }
-}
 
-if (config.nodeEnv === 'production') {
+  if (config.nodeEnv !== 'production') return errors;
+
   for (const envVar of productionEnvVars) {
     if (!process.env[envVar]) {
-      throw new Error(`Missing production environment variable: ${envVar}`);
+      errors.push(`Missing production environment variable: ${envVar}`);
     }
   }
 
-  // Validate email configuration
   if (config.emailProvider === 'smtp') {
     if (!config.smtpHost || !config.smtpUser || !config.smtpPassword) {
-      throw new Error('SMTP email provider requires SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
+      errors.push('SMTP email provider requires SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
     }
   } else if (config.emailProvider === 'sendgrid') {
     if (!config.sendgridApiKey) {
-      throw new Error('SendGrid email provider requires SENDGRID_API_KEY');
+      errors.push('SendGrid email provider requires SENDGRID_API_KEY');
     }
   }
 
-  // Validate encryption
   if (!config.encryptionKey || config.encryptionKey.length < 32) {
-    throw new Error('Production requires ENCRYPTION_KEY with minimum 32 characters');
+    errors.push('Production requires ENCRYPTION_KEY with minimum 32 characters');
+  }
+
+  return errors;
+}
+
+/** Problems detected at boot. Empty array means the config is fully valid. */
+export const configErrors = collectConfigErrors();
+
+/**
+ * Hard-fails the process. Call this ONLY from a long-lived server entrypoint
+ * (src/index.ts, Docker), never from the serverless handler.
+ */
+export function assertConfigValid(): void {
+  if (configErrors.length > 0) {
+    throw new Error(`Invalid configuration:\n  - ${configErrors.join('\n  - ')}`);
   }
 }
 
-// Development-mode warning
+if (configErrors.length > 0) {
+  console.error(
+    `[config] ${configErrors.length} configuration problem(s) detected:\n  - ${configErrors.join('\n  - ')}`
+  );
+}
+
 if (config.nodeEnv === 'development') {
   if (config.jwtSecret.includes('dev-secret')) {
     console.warn('⚠️  WARNING: Using development JWT secret. Change JWT_SECRET in production.');

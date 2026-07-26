@@ -5,8 +5,8 @@
  * `client_code` (e.g. "ACME"). All RLS policies and JWT `tid` claims refer
  * to the org id, not the client_code.
  */
-import { supabaseAdmin } from '@/config/supabase';
-import { AppError } from '@/middleware/error';
+import { supabaseAdmin } from '../../config/supabase';
+import { AppError } from '../../middleware/error';
 
 export interface Tenant {
   id: string;

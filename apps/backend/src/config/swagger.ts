@@ -433,14 +433,32 @@ All endpoints are prefixed with \`/api/v1\`.
     },
     security: [{ BearerAuth: [] }],
   },
+  // Globs are resolved relative to THIS file, never process.cwd(). On a
+  // serverless platform cwd is the task root and the source tree may not be
+  // part of the bundle, so a cwd-based glob silently matches nothing.
   apis: [
-    // TypeScript source (tsx / ts-node dev mode) — use forward slashes for glob compatibility
-    `${process.cwd().replace(/\\/g, '/')}/src/**/*.ts`,
-    // Compiled JavaScript (production)
-    `${process.cwd().replace(/\\/g, '/')}/dist/**/*.js`,
+    `${path.resolve(__dirname, '..').replace(/\\/g, '/')}/**/*.ts`,
+    `${path.resolve(__dirname, '..').replace(/\\/g, '/')}/**/*.js`,
   ],
 };
 
-export const swaggerSpec = swaggerJsdoc(options);
+/**
+ * The JSDoc scan walks the source tree, which may be absent or read-only in a
+ * deployed bundle. A failure here must degrade to a spec built from the static
+ * `definition` above rather than crash the function during cold start.
+ */
+function buildSpec(): object {
+  try {
+    return swaggerJsdoc(options) as object;
+  } catch (err) {
+    console.warn(
+      '[swagger] JSDoc scan failed, serving base definition only:',
+      (err as Error).message
+    );
+    return { ...options.definition, paths: {} };
+  }
+}
+
+export const swaggerSpec = buildSpec();
 
 

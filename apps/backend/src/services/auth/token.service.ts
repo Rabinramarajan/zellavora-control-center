@@ -17,9 +17,9 @@
 import crypto from 'crypto';
 import jwt, { type JwtPayload, type Secret, type SignOptions } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '@/config/env';
-import { supabaseAdmin } from '@/config/supabase';
-import { AppError } from '@/middleware/error';
+import { config } from '../../config/env';
+import { supabaseAdmin } from '../../config/supabase';
+import { AppError } from '../../middleware/error';
 
 export interface AccessTokenClaims {
   sub: string;            // userId

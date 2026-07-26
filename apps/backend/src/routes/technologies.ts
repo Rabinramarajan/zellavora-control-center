@@ -1,7 +1,7 @@
 import { Router, type Router as ExpressRouter } from 'express';
-import { supabase } from '@/config/supabase';
-import { authenticateToken, AuthRequest } from '@/middleware/auth';
-import { AppError } from '@/middleware/error';
+import { supabase } from '../config/supabase';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { AppError } from '../middleware/error';
 
 const router: ExpressRouter = Router();
 

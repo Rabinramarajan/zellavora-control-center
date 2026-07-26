@@ -13,7 +13,7 @@
  */
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { TokenService, type AccessTokenClaims, SessionService, TenantService } from '@/services/auth';
+import { TokenService, type AccessTokenClaims, SessionService, TenantService } from '../services/auth';
 import { AppError } from './error';
 
 export interface AuthRequest extends Request {

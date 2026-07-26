@@ -7,8 +7,8 @@
  *   2. Filter by visibility + permission set.
  *   3. Build a tree.
  */
-import { supabaseAdmin } from '@/config/supabase';
-import { AppError } from '@/middleware/error';
+import { supabaseAdmin } from '../../config/supabase';
+import { AppError } from '../../middleware/error';
 import { PermissionService } from './permission.service';
 
 export interface MenuNode {

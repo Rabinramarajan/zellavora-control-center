@@ -1,5 +1,13 @@
+/**
+ * Long-lived server entrypoint (Docker / local dev only).
+ * The serverless deployment uses `api/index.ts` and must never load this file.
+ */
 import app from './app';
-import { config } from './config/env';
+import { config, assertConfigValid } from './config/env';
+
+// Unlike the serverless handler, a persistent server should refuse to start on
+// an invalid configuration rather than serve degraded traffic.
+assertConfigValid();
 
 const PORT = config.port;
 

@@ -15,10 +15,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "node",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "moduleResolution": "node"
   },
   "include": ["src/**/*", "api/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

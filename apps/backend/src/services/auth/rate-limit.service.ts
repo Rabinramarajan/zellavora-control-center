@@ -8,8 +8,8 @@
  * We use the `login_attempts` table as the source of truth and derive the
  * counters in SQL (cheap with the indexes we added in 0004).
  */
-import { supabaseAdmin } from '@/config/supabase';
-import { AppError } from '@/middleware/error';
+import { supabaseAdmin } from '../../config/supabase';
+import { AppError } from '../../middleware/error';
 
 const WINDOW_MS = 15 * 60 * 1000;
 const IP_LIMIT = 10;

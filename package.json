@@ -12,10 +12,10 @@
   "scripts": {
     "dev": "npm run dev:admin",
     "dev:admin": "cd apps/admin && npm run dev",
-    "dev:public": "cd apps/public && npm run dev",
+    "dev:backend": "cd apps/backend && npm run dev",
     "build": "npm run build:admin",
     "build:admin": "cd apps/admin && npm run build",
-    "build:public": "cd apps/public && npm run build",
+    "build:backend": "cd apps/backend && npm run build",
     "test": "npm run test:admin",
     "test:admin": "cd apps/admin && npm run test",
     "test:e2e": "cd apps/admin && npm run test:e2e",
@@ -34,10 +34,7 @@
     "analyze": "npm run build -- --stats"
   },
   "workspaces": [
-    "apps/admin",
-    "apps/public",
-    "services",
-    "packages/*"
+    "apps/admin"
   ],
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.11",

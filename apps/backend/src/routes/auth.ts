@@ -21,10 +21,10 @@
 import { Router, type Router as ExpressRouter } from 'express';
 import crypto from 'crypto';
 import { z } from 'zod';
-import { config } from '@/config/env';
-import { supabase, supabaseAdmin } from '@/config/supabase';
-import { AppError } from '@/middleware/error';
-import { authenticate, type AuthRequest, requirePermission } from '@/middleware/auth';
+import { config } from '../config/env';
+import { supabase, supabaseAdmin } from '../config/supabase';
+import { AppError } from '../middleware/error';
+import { authenticate, type AuthRequest, requirePermission } from '../middleware/auth';
 import {
   PasswordService,
   TokenService,
@@ -35,7 +35,7 @@ import {
   MenuService,
   AuditService,
   RateLimitService,
-} from '@/services/auth';
+} from '../services/auth';
 
 const router: ExpressRouter = Router();
 

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { config } from '@/config/env';
+import { config } from '../config/env';
 
 export interface ApiError extends Error {
   status?: number;
@@ -23,7 +23,15 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  console.error(error);
+  console.error(`[error] ${req.method} ${req.originalUrl}`, error);
+
+  // If the response has already begun streaming, writing another one throws
+  // ERR_HTTP_HEADERS_SENT and takes down the process. Hand off to Express's
+  // built-in handler, which aborts the connection cleanly.
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
 
   if (error instanceof AppError) {
     res.status(error.status).json({

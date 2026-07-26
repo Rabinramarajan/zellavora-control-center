@@ -6,7 +6,7 @@
  * in production). Output format: base64( iv(12) || authTag(16) || ciphertext ).
  */
 import crypto from 'crypto';
-import { config } from '@/config/env';
+import { config } from '../../config/env';
 
 const ALGO = 'aes-256-gcm';
 const KEY_BYTES = 32;

@@ -8,8 +8,8 @@
  */
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
-import { config } from '@/config/env';
-import { AppError } from '@/middleware/error';
+import { config } from '../../config/env';
+import { AppError } from '../../middleware/error';
 
 export const PasswordPolicySchema = z
   .string()
