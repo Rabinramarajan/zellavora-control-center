@@ -15,9 +15,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "ignoreDeprecations": "6.0",
+    "moduleResolution": "node",
     "paths": {
       "@/*": ["./src/*"]
     }
