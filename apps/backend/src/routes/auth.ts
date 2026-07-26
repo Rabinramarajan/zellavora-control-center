@@ -321,25 +321,15 @@ router.get('/gettoken', (req, res, next) => {
 router.post('/login', async (req, res, next) => {
   try {
     let loginData = { ...req.body };
-    if (req.headers['x-payload-encrypted'] === 'true') {
+    if (req.headers['x-payload-encrypted'] === 'true' || (loginData.keyToken && Array.isArray(loginData.keyToken))) {
       try {
-        const tempSessionId = (req.headers['x-temp-session-id'] as string) || 
-          req.headers['cookie']?.split(';').find(c => c.trim().startsWith('zcc_temp_session='))?.split('=')[1]?.trim();
-
-        const encryptionType = req.headers['x-encryption-type'] as string;
-
-        if (encryptionType === 'aes' || tempSessionId) {
-          if (!tempSessionId) {
-            throw new Error('Missing temp session ID for AES decryption');
-          }
-          const sessionKeys = loginKeys.get(tempSessionId);
-          if (!sessionKeys || sessionKeys.expiresAt < Date.now()) {
-            throw new Error('Encryption session expired or invalid');
-          }
-          loginKeys.delete(tempSessionId); // single-use key
+        const keyToken = loginData.keyToken;
+        if (keyToken && Array.isArray(keyToken) && keyToken.length === 2) {
+          const aesKey = Buffer.from(keyToken[0], 'binary');
+          const aesIv = Buffer.from(keyToken[1], 'binary');
 
           const decryptAes = (cipherText: string) => {
-            const decipher = crypto.createDecipheriv('aes-256-cbc', sessionKeys.key, sessionKeys.iv);
+            const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, aesIv);
             let decrypted = decipher.update(cipherText, 'base64', 'utf8');
             decrypted += decipher.final('utf8');
             return decrypted;
@@ -349,14 +339,41 @@ router.post('/login', async (req, res, next) => {
           if (loginData.email) loginData.email = decryptAes(loginData.email);
           if (loginData.password) loginData.password = decryptAes(loginData.password);
         } else {
-          if (loginData.clientCode) {
-            loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
-          }
-          if (loginData.email) {
-            loginData.email = RsaKeysService.decrypt(loginData.email);
-          }
-          if (loginData.password) {
-            loginData.password = RsaKeysService.decrypt(loginData.password);
+          const tempSessionId = (req.headers['x-temp-session-id'] as string) || 
+            req.headers['cookie']?.split(';').find(c => c.trim().startsWith('zcc_temp_session='))?.split('=')[1]?.trim();
+
+          const encryptionType = req.headers['x-encryption-type'] as string;
+
+          if (encryptionType === 'aes' || tempSessionId) {
+            if (!tempSessionId) {
+              throw new Error('Missing temp session ID for AES decryption');
+            }
+            const sessionKeys = loginKeys.get(tempSessionId);
+            if (!sessionKeys || sessionKeys.expiresAt < Date.now()) {
+              throw new Error('Encryption session expired or invalid');
+            }
+            loginKeys.delete(tempSessionId); // single-use key
+
+            const decryptAes = (cipherText: string) => {
+              const decipher = crypto.createDecipheriv('aes-256-cbc', sessionKeys.key, sessionKeys.iv);
+              let decrypted = decipher.update(cipherText, 'base64', 'utf8');
+              decrypted += decipher.final('utf8');
+              return decrypted;
+            };
+
+            if (loginData.clientCode) loginData.clientCode = decryptAes(loginData.clientCode);
+            if (loginData.email) loginData.email = decryptAes(loginData.email);
+            if (loginData.password) loginData.password = decryptAes(loginData.password);
+          } else {
+            if (loginData.clientCode) {
+              loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
+            }
+            if (loginData.email) {
+              loginData.email = RsaKeysService.decrypt(loginData.email);
+            }
+            if (loginData.password) {
+              loginData.password = RsaKeysService.decrypt(loginData.password);
+            }
           }
         }
       } catch (err) {
