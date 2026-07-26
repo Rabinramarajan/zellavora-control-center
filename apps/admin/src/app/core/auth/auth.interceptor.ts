@@ -24,7 +24,7 @@ import { AuthStore } from './auth.store';
 import { AuthService } from './auth.service';
 import { ErrorBus } from '@core/error/error-bus';
 
-const AUTH_FREE = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password', '/auth/refresh', '/auth/validate-client', '/auth/login/mfa', '/auth/public-key'];
+const AUTH_FREE = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password', '/auth/refresh', '/auth/validate-client', '/auth/login/mfa', '/auth/public-key', '/auth/gettoken', '/MemberPortalLogin/gettoken'];
 
 let inflightRefresh$: BehaviorSubject<string | null> | null = null;
 

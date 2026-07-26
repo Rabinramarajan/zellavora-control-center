@@ -110,6 +110,21 @@ const consumeMfa = (token: string) => {
   return v;
 };
 
+// Store for temporary login encryption keys (Key: tempSessionId, Value: { key, iv, expiresAt })
+export const loginKeys = new Map<string, { key: Buffer; iv: Buffer; expiresAt: number }>();
+const LOGIN_KEY_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+// Clean up expired keys periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, value] of loginKeys.entries()) {
+    if (value.expiresAt < now) {
+      loginKeys.delete(id);
+    }
+  }
+}, 60 * 1000).unref();
+
+
 // ----------------------------------------------------------------------------
 // POST /auth/validate-client
 // ----------------------------------------------------------------------------
@@ -200,6 +215,57 @@ router.get('/public-key', (req, res, next) => {
 });
 
 // ----------------------------------------------------------------------------
+// GET /auth/gettoken
+// ----------------------------------------------------------------------------
+
+/**
+ * @swagger
+ * /api/v1/auth/gettoken:
+ *   get:
+ *     summary: Retrieve temporary AES key and IV for payload encryption
+ *     tags: [Auth]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Array containing AES key and IV as binary strings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ */
+router.get('/gettoken', (req, res, next) => {
+  try {
+    const key = crypto.randomBytes(32);
+    const iv = crypto.randomBytes(16);
+    const tempSessionId = crypto.randomUUID();
+
+    loginKeys.set(tempSessionId, {
+      key,
+      iv,
+      expiresAt: Date.now() + LOGIN_KEY_TTL_MS,
+    });
+
+    res.setHeader('X-Temp-Session-Id', tempSessionId);
+    res.cookie('zcc_temp_session', tempSessionId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: LOGIN_KEY_TTL_MS,
+    });
+
+    res.json([
+      key.toString('binary'),
+      iv.toString('binary'),
+    ]);
+  } catch (e) {
+    next(e);
+  }
+});
+
+
+// ----------------------------------------------------------------------------
 // POST /auth/login  —  primary login
 // ----------------------------------------------------------------------------
 
@@ -257,14 +323,41 @@ router.post('/login', async (req, res, next) => {
     let loginData = { ...req.body };
     if (req.headers['x-payload-encrypted'] === 'true') {
       try {
-        if (loginData.clientCode) {
-          loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
-        }
-        if (loginData.email) {
-          loginData.email = RsaKeysService.decrypt(loginData.email);
-        }
-        if (loginData.password) {
-          loginData.password = RsaKeysService.decrypt(loginData.password);
+        const tempSessionId = (req.headers['x-temp-session-id'] as string) || 
+          req.headers['cookie']?.split(';').find(c => c.trim().startsWith('zcc_temp_session='))?.split('=')[1]?.trim();
+
+        const encryptionType = req.headers['x-encryption-type'] as string;
+
+        if (encryptionType === 'aes' || tempSessionId) {
+          if (!tempSessionId) {
+            throw new Error('Missing temp session ID for AES decryption');
+          }
+          const sessionKeys = loginKeys.get(tempSessionId);
+          if (!sessionKeys || sessionKeys.expiresAt < Date.now()) {
+            throw new Error('Encryption session expired or invalid');
+          }
+          loginKeys.delete(tempSessionId); // single-use key
+
+          const decryptAes = (cipherText: string) => {
+            const decipher = crypto.createDecipheriv('aes-256-cbc', sessionKeys.key, sessionKeys.iv);
+            let decrypted = decipher.update(cipherText, 'base64', 'utf8');
+            decrypted += decipher.final('utf8');
+            return decrypted;
+          };
+
+          if (loginData.clientCode) loginData.clientCode = decryptAes(loginData.clientCode);
+          if (loginData.email) loginData.email = decryptAes(loginData.email);
+          if (loginData.password) loginData.password = decryptAes(loginData.password);
+        } else {
+          if (loginData.clientCode) {
+            loginData.clientCode = RsaKeysService.decrypt(loginData.clientCode);
+          }
+          if (loginData.email) {
+            loginData.email = RsaKeysService.decrypt(loginData.email);
+          }
+          if (loginData.password) {
+            loginData.password = RsaKeysService.decrypt(loginData.password);
+          }
         }
       } catch (err) {
         throw new AppError('Failed to decrypt login payload', 400, 'AUTHENTICATION_FAILED');
