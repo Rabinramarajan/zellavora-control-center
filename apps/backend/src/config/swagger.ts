@@ -435,13 +435,9 @@ All endpoints are prefixed with \`/api/v1\`.
   },
   apis: [
     // TypeScript source (tsx / ts-node dev mode) — use forward slashes for glob compatibility
-    `${process.cwd().replace(/\\/g, '/')}/src/index.ts`,
-    `${process.cwd().replace(/\\/g, '/')}/src/routes/*.ts`,
-    `${process.cwd().replace(/\\/g, '/')}/src/rbac/controllers/*.ts`,
+    `${process.cwd().replace(/\\/g, '/')}/src/**/*.ts`,
     // Compiled JavaScript (production)
-    `${process.cwd().replace(/\\/g, '/')}/dist/index.js`,
-    `${process.cwd().replace(/\\/g, '/')}/dist/routes/*.js`,
-    `${process.cwd().replace(/\\/g, '/')}/dist/rbac/controllers/*.js`,
+    `${process.cwd().replace(/\\/g, '/')}/dist/**/*.js`,
   ],
 };
 
