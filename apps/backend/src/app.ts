@@ -67,6 +67,34 @@ app.get('/health', (_req, res) => {
   });
 });
 
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: API index — service metadata and entrypoints
+ *     tags: [Health]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Service descriptor
+ */
+// Root index. Without this, `/` falls through to the 404 handler, which looks
+// like a deployment failure even though the function is healthy.
+app.get('/', (_req, res) => {
+  res.json({
+    service: 'Zellavora Control Center — Backend API',
+    version: '1.0.0',
+    status: configErrors.length === 0 ? 'ok' : 'degraded',
+    environment: config.nodeEnv,
+    endpoints: {
+      health: '/health',
+      docs: '/api-docs',
+      openapi: '/api-docs.json',
+      api: `/api/${config.apiVersion}`,
+    },
+  });
+});
+
 // Swagger UI — available unless SWAGGER_ENABLED is explicitly 'false'
 if (process.env.SWAGGER_ENABLED !== 'false') {
   app.use(swaggerRoutes);
