@@ -66,7 +66,7 @@ export interface ModuleAccess {
 }
 
 export class SubscriptionService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: any;
   private redis: RedisClient;
   private readonly CACHE_TTL = 3600; // 1 hour
   private readonly USAGE_CACHE_TTL = 300; // 5 minutes

@@ -42,7 +42,7 @@ export interface FeatureFlagEvaluation {
 }
 
 export class FeatureFlagService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: any;
   private redis: RedisClient;
   private readonly CACHE_TTL = 5 * 60; // 5 minutes
   private readonly CACHE_PREFIX = 'feature:';

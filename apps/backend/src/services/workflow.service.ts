@@ -63,6 +63,8 @@ export interface ApprovalChain {
   approverGroup?: string;
   allowDelegation: boolean;
   allowRejection: boolean;
+  approval_state?: string;
+  rejection_state?: string;
 }
 
 export interface Approval {
@@ -88,7 +90,8 @@ export interface StateTransitionRequest {
 }
 
 export class WorkflowService {
-  private supabase: ReturnType<typeof createClient>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private supabase: any;
   private redis: RedisClient;
   private readonly CACHE_TTL = 3600; // 1 hour
 
@@ -315,7 +318,7 @@ export class WorkflowService {
     approverId: string
   ): Promise<Approval | null> {
     try {
-      const { data: approval, error } = await this.supabase
+      const { data: approval, error } = await (this.supabase as any)
         .from('approvals')
         .insert({
           workflow_instance_id: instanceId,
@@ -353,7 +356,7 @@ export class WorkflowService {
     error?: string;
   }> {
     try {
-      const { data: approval, error: fetchError } = await this.supabase
+      const { data: approval, error: fetchError } = await (this.supabase as any)
         .from('approvals')
         .select('*')
         .eq('id', approvalId)
@@ -369,7 +372,7 @@ export class WorkflowService {
       }
 
       // Update approval
-      const { data: updated, error } = await this.supabase
+      const { data: updated, error } = await (this.supabase as any)
         .from('approvals')
         .update({
           status: 'approved',
@@ -434,7 +437,7 @@ export class WorkflowService {
     error?: string;
   }> {
     try {
-      const { data: approval, error: fetchError } = await this.supabase
+      const { data: approval, error: fetchError } = await (this.supabase as any)
         .from('approvals')
         .select('*')
         .eq('id', approvalId)
@@ -445,7 +448,7 @@ export class WorkflowService {
       }
 
       // Update approval
-      const { data: updated, error } = await this.supabase
+      const { data: updated, error } = await (this.supabase as any)
         .from('approvals')
         .update({
           status: 'rejected',
@@ -497,7 +500,7 @@ export class WorkflowService {
     mentions?: string[]
   ): Promise<void> {
     try {
-      await this.supabase.from('workflow_comments').insert({
+      await (this.supabase as any).from('workflow_comments').insert({
         workflow_instance_id: instanceId,
         content,
         author_id: authorId,
@@ -575,7 +578,7 @@ export class WorkflowService {
 
       if (error || !approvals) return [];
 
-      return approvals.map(a => this.transformApproval(a));
+      return approvals.map((a: any) => this.transformApproval(a));
     } catch (error) {
       console.error('Failed to get approvals', error);
       return [];
@@ -628,7 +631,7 @@ export class WorkflowService {
    */
   async cancelInstance(instanceId: string, userId: string, reason?: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
+      const { error } = await (this.supabase as any)
         .from('workflow_instances')
         .update({
           status: 'cancelled',
@@ -653,7 +656,7 @@ export class WorkflowService {
    */
   async completeInstance(instanceId: string, userId: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
+      const { error } = await (this.supabase as any)
         .from('workflow_instances')
         .update({
           status: 'completed',
@@ -716,7 +719,7 @@ export class WorkflowService {
     instanceId: string,
     chainId: string
   ): Promise<boolean> {
-    const { data: approvals, error } = await this.supabase
+    const { data: approvals, error } = await (this.supabase as any)
       .from('approvals')
       .select('status')
       .eq('workflow_instance_id', instanceId)
@@ -729,20 +732,20 @@ export class WorkflowService {
 
     if (chain.type === 'sequential') {
       // All must be approved in order
-      return approvals.every(a => a.status === 'approved');
+      return approvals.every((a: any) => a.status === 'approved');
     } else if (chain.type === 'parallel') {
       // All must be approved
-      return approvals.every(a => a.status === 'approved');
+      return approvals.every((a: any) => a.status === 'approved');
     } else {
       // Conditional - check strategy
       if (chain.strategy === 'unanimous') {
-        return approvals.every(a => a.status === 'approved');
+        return approvals.every((a: any) => a.status === 'approved');
       } else if (chain.strategy === 'majority') {
-        const approved = approvals.filter(a => a.status === 'approved').length;
+        const approved = approvals.filter((a: any) => a.status === 'approved').length;
         return approved > approvals.length / 2;
       } else {
         // first_approver
-        return approvals.some(a => a.status === 'approved');
+        return approvals.some((a: any) => a.status === 'approved');
       }
     }
   }
@@ -757,7 +760,7 @@ export class WorkflowService {
     comment?: string
   ): Promise<void> {
     try {
-      await this.supabase.from('workflow_transitions').insert({
+      await (this.supabase as any).from('workflow_transitions').insert({
         organization_id: organizationId,
         workflow_instance_id: instanceId,
         from_state: fromState,
@@ -782,7 +785,7 @@ export class WorkflowService {
       const instance = await this.getInstance(instanceId);
       if (!instance) return;
 
-      await this.supabase.from('workflow_history').insert({
+      await (this.supabase as any).from('workflow_history').insert({
         organization_id: instance.organizationId,
         workflow_instance_id: instanceId,
         event_type: eventType,
@@ -838,11 +841,11 @@ export class WorkflowService {
       } else if (notificationType === 'mentioned_in_comment') {
         recipientId = context.mentionedId;
       } else {
-        recipientId = instance.initiatorId || undefined;
+        recipientId = instance.initiatorId || null;
       }
 
       if (recipientId) {
-        await this.supabase.from('workflow_notifications').insert({
+        await (this.supabase as any).from('workflow_notifications').insert({
           organization_id: instance.organizationId,
           workflow_instance_id: instanceId,
           notification_type: notificationType,

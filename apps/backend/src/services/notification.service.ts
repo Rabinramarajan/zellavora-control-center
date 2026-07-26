@@ -69,7 +69,7 @@ export interface SendNotificationRequest {
 }
 
 export class NotificationService extends EventEmitter {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: any;
   private redis: RedisClient;
   private readonly CACHE_TTL = 300; // 5 minutes
   private readonly UNREAD_COUNT_CACHE = 'unread_count:';

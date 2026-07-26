@@ -44,7 +44,7 @@ export interface UserPermissionContext {
 }
 
 export class PermissionService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: any;
   private redis: RedisClient;
   private readonly CACHE_TTL = 30 * 60; // 30 minutes
   private readonly PERMISSION_CACHE_PREFIX = 'perms:';

@@ -58,7 +58,7 @@ export interface MenuCategory {
 }
 
 export class MenuService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: any;
   private redis: RedisClient;
   private featureFlagService: FeatureFlagService;
   private permissionService: PermissionService;
@@ -123,9 +123,9 @@ export class MenuService {
       .eq('user_id', userId)
       .eq('is_favorite', true);
 
-    const favoriteIds = new Set(favorites?.map(f => f.menu_id) || []);
-    const usageMap = new Map(
-      (favorites || []).map(f => [f.menu_id, { last_accessed_at: f.last_accessed_at, access_count: f.access_count }])
+    const favoriteIds = new Set<string>(favorites?.map((f: any) => f.menu_id) || []);
+    const usageMap = new Map<string, any>(
+      (favorites || []).map((f: any) => [f.menu_id, { last_accessed_at: f.last_accessed_at, access_count: f.access_count }])
     );
 
     // Filter and transform menus
@@ -206,7 +206,7 @@ export class MenuService {
       userId,
       organizationId,
       new Set([menuId]),
-      new Map([[menuId, { last_accessed_at: usage?.last_accessed_at, access_count: usage?.access_count }]]),
+      new Map<string, any>([[menuId, { last_accessed_at: usage?.last_accessed_at, access_count: usage?.access_count }]]),
       allMenus || []
     );
   }
@@ -240,11 +240,11 @@ export class MenuService {
       .eq('user_id', userId)
       .eq('is_favorite', true);
 
-    const favoriteIds = new Set(favorites?.map(f => f.menu_id) || []);
+    const favoriteIds = new Set<string>(favorites?.map((f: any) => f.menu_id) || []);
 
     return Promise.all(
       (menus || []).map(menu =>
-        this.transformMenuNode(menu, userId, organizationId, favoriteIds, new Map(), allMenus || [])
+        this.transformMenuNode(menu, userId, organizationId, favoriteIds, new Map<string, any>(), allMenus || [])
       )
     );
   }
@@ -284,7 +284,7 @@ export class MenuService {
 
     return Promise.all(
       menus.map(menu =>
-        this.transformMenuNode(menu, userId, organizationId, new Set(menuIds), new Map(), allMenus || [])
+        this.transformMenuNode(menu, userId, organizationId, new Set(menuIds), new Map<string, any>(), allMenus || [])
       )
     );
   }
@@ -323,11 +323,11 @@ export class MenuService {
       .select('*')
       .eq('organization_id', organizationId);
 
-    const usageMap = new Map(usage.map(u => [u.menu_id, u]));
+    const usageMap = new Map<string, any>(usage.map((u: any) => [u.menu_id, u]));
 
     return Promise.all(
       menus.map(menu =>
-        this.transformMenuNode(menu, userId, organizationId, new Set(), usageMap, allMenus || [])
+        this.transformMenuNode(menu, userId, organizationId, new Set<string>(), usageMap, allMenus || [])
       )
     );
   }
@@ -432,7 +432,7 @@ export class MenuService {
         description: menuData.description,
         icon: menuData.icon,
         route: menuData.route,
-        external_url: menuData.externalUrl,
+        externalUrl: menuData.externalUrl,
         parent_id: parentId,
         order_index: menuData.orderIndex || 0,
         nesting_level: nestingLevel,
@@ -505,7 +505,7 @@ export class MenuService {
       updateData.route = updates.route;
       changedFields.push('route');
     }
-    if (updates.externalUrl !== undefined && updates.external_url !== menu.external_url) {
+    if (updates.externalUrl !== undefined && updates.externalUrl !== menu.external_url) {
       updateData.external_url = updates.externalUrl;
       changedFields.push('external_url');
     }
@@ -623,7 +623,7 @@ export class MenuService {
     }
 
     // Check feature flags
-    if (menu.feature_flag && !await this.featureFlagService.isEnabled(menu.feature_flag, organizationId)) {
+    if (menu.feature_flag && !await this.featureFlagService.isEnabled(menu.feature_flag, organizationId, { userId })) {
       return null as any;
     }
 
