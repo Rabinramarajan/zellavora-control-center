@@ -44,12 +44,12 @@ export class SearchFilterHelper {
       const term = options.searchTerm.toLowerCase();
       filtered = filtered.filter(role =>
         role.roleName.toLowerCase().includes(term) ||
-        (role.roleDescription?.toLowerCase().includes(term) || false)
+        (role.moduleDescription?.toLowerCase().includes(term) || false)
       );
     }
 
     if (options.activeOnly !== undefined) {
-      filtered = filtered.filter(role => role.roleActive === options.activeOnly);
+      filtered = filtered.filter(role => role.statusValue === (options.activeOnly ? 'Active' : 'Inactive'));
     }
 
     return filtered;
@@ -63,12 +63,12 @@ export class SearchFilterHelper {
       filtered = filtered.filter(resource =>
         resource.resourceName.toLowerCase().includes(term) ||
         (resource.resourceDescription?.toLowerCase().includes(term) || false) ||
-        (resource.resourceType?.toLowerCase().includes(term) || false)
+        (resource.resourceTypeValue?.toLowerCase().includes(term) || false)
       );
     }
 
     if (options.typeFilter) {
-      filtered = filtered.filter(resource => resource.resourceType === options.typeFilter);
+      filtered = filtered.filter(resource => resource.resourceTypeValue === options.typeFilter);
     }
 
     return filtered;
@@ -81,8 +81,7 @@ export class SearchFilterHelper {
     return branches.filter(branch =>
       branch.branchCode.toLowerCase().includes(term) ||
       branch.branchName.toLowerCase().includes(term) ||
-      (branch.cityName?.toLowerCase().includes(term) || false) ||
-      (branch.address?.toLowerCase().includes(term) || false)
+      (branch.statusValue?.toLowerCase().includes(term) || false)
     );
   }
 
@@ -91,9 +90,8 @@ export class SearchFilterHelper {
 
     const term = searchTerm.toLowerCase();
     return configs.filter(config =>
-      config.configCode?.toLowerCase().includes(term) ||
-      (config.configValue?.toLowerCase().includes(term) || false) ||
-      (config.description?.toLowerCase().includes(term) || false)
+      config.configValue?.toLowerCase().includes(term) ||
+      (config.configDescription?.toLowerCase().includes(term) || false)
     );
   }
 
@@ -102,8 +100,8 @@ export class SearchFilterHelper {
 
     const term = searchTerm.toLowerCase();
     return groups.filter(group =>
-      group.groupCode?.toLowerCase().includes(term) ||
-      (group.groupDescription?.toLowerCase().includes(term) || false)
+      group.groupName.toLowerCase().includes(term) ||
+      (group.statusValue?.toLowerCase().includes(term) || false)
     );
   }
 }

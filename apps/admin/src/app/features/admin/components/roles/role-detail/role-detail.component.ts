@@ -31,29 +31,30 @@ import { Role } from '../../../models';
 
           <div class="form-row">
             <div class="form-field">
-              <label>Description</label>
-              <textarea [(ngModel)]="role()!.roleDescription" name="description" rows="3"></textarea>
+              <label>Module</label>
+              <input type="text" [(ngModel)]="role()!.moduleValue" name="module" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-field">
-              <label>
-                <input type="checkbox" [(ngModel)]="role()!.roleActive" name="active" />
-                Active
-              </label>
+              <label>Status</label>
+              <select [(ngModel)]="role()!.statusValue" name="status">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
             </div>
           </div>
         </fieldset>
 
-        <fieldset class="form-group" *ngIf="role()!.roleResources && role()!.roleResources!.length > 0">
+        <fieldset class="form-group" *ngIf="role()!.ilstRoleResource && role()!.ilstRoleResource!.length > 0">
           <legend>Resources</legend>
           <div class="resource-list">
-            @for (resource of role()!.roleResources!; track resource.resourceId) {
+            @for (resource of role()!.ilstRoleResource!; track resource.roleResourceId) {
               <div class="resource-item">
                 <label>
                   <input type="checkbox" [checked]="true" />
-                  {{ resource.resourceName }}
+                  {{ resource.permissionValue }} (ID: {{ resource.resourceId }})
                 </label>
               </div>
             }

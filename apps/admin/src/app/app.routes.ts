@@ -58,7 +58,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'users',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/users/users.routes').then((m) => m.usersRoutes),
   },
@@ -72,7 +72,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },

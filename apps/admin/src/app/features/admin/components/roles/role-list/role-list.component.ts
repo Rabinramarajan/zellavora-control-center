@@ -57,11 +57,11 @@ import { SearchFilterHelper } from '../../../utils';
                     {{ role.roleName }}
                   </a>
                 </td>
-                <td>{{ role.roleDescription || '—' }}</td>
-                <td>{{ role.roleResources?.length || 0 }} resources</td>
+                <td>{{ role.moduleDescription || '—' }}</td>
+                <td>{{ role.ilstRoleResource?.length || 0 }} resources</td>
                 <td>
-                  <span [class]="'badge ' + (role.roleActive ? 'badge-active' : 'badge-inactive')">
-                    {{ role.roleActive ? 'Active' : 'Inactive' }}
+                  <span [class]="'badge ' + (role.statusValue === 'Active' ? 'badge-active' : 'badge-inactive')">
+                    {{ role.statusDescription || role.statusValue }}
                   </span>
                 </td>
                 <td class="actions">
@@ -131,7 +131,7 @@ export class RoleListComponent implements OnInit {
     const term = this.searchTerm().toLowerCase();
     return this.roles().filter(role =>
       role.roleName.toLowerCase().includes(term) ||
-      (role.roleDescription?.toLowerCase().includes(term) || false)
+      (role.moduleDescription?.toLowerCase().includes(term) || false)
     );
   });
 

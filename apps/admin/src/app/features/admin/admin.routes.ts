@@ -12,7 +12,7 @@ export const adminRoutes: Routes = [
   {
     path: 'users',
     component: UserListComponent,
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     data: { title: 'Users' }
   },
   {

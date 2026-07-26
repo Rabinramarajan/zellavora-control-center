@@ -53,11 +53,11 @@ import { Branch, BranchSearchCriteria } from '../../../models';
               <tr>
                 <td>{{ branch.branchCode }}</td>
                 <td>{{ branch.branchName }}</td>
-                <td>{{ branch.address || '—' }}</td>
-                <td>{{ branch.cityName || '—' }}</td>
+                <td>{{ branch.effectiveDate || '—' }}</td>
+                <td>{{ branch.statusValue || '—' }}</td>
                 <td>
-                  <span [class]="'badge ' + (branch.isActive ? 'badge-active' : 'badge-inactive')">
-                    {{ branch.isActive ? 'Active' : 'Inactive' }}
+                  <span [class]="'badge ' + (branch.statusValue === 'Active' ? 'badge-active' : 'badge-inactive')">
+                    {{ branch.statusValue }}
                   </span>
                 </td>
                 <td class="actions">
@@ -128,7 +128,7 @@ export class BranchManagerComponent implements OnInit {
     return this.branches().filter(branch =>
       branch.branchCode.toLowerCase().includes(term) ||
       branch.branchName.toLowerCase().includes(term) ||
-      (branch.cityName?.toLowerCase().includes(term) || false)
+      (branch.statusValue?.toLowerCase().includes(term) || false)
     );
   });
 

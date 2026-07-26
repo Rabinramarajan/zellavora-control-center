@@ -42,10 +42,8 @@ import { Resource, ResourceSearchCriteria } from '../../../models';
             <h3>{{ resource.resourceName }}</h3>
             <p class="description">{{ resource.resourceDescription || 'No description' }}</p>
             <div class="meta">
-              <span class="type">{{ resource.resourceType }}</span>
-              <span [class]="'badge ' + (resource.resourceActive ? 'badge-active' : 'badge-inactive')">
-                {{ resource.resourceActive ? 'Active' : 'Inactive' }}
-              </span>
+              <span class="type">{{ resource.resourceTypeDescription || resource.resourceTypeValue }}</span>
+              <span class="badge badge-active">Available</span>
             </div>
             <div class="actions">
               <button
