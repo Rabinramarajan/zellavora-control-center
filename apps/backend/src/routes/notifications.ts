@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { NotificationService } from '../services/notification.service';
+import { NotificationService, SendNotificationRequest } from '../services/notification.service';
 
 export function createNotificationRoutes(notificationService: NotificationService): Router {
   const router = Router();
@@ -98,7 +98,7 @@ export function createNotificationRoutes(notificationService: NotificationServic
         {
           ...body,
           scheduledFor: body.scheduledFor ? new Date(body.scheduledFor) : undefined,
-        } as any,
+        } as SendNotificationRequest,
         userId
       );
 

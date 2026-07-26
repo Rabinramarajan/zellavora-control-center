@@ -170,12 +170,11 @@ export class MfaService {
   }
 
   private static counterFromCode(code: string, secret: string): number {
-    // otplib doesn't expose this directly; compute manually.
-    // Returns the "time-step" number of the verified code.
-    const now = Math.floor(Date.now() / 1000 / authenticator.options.step);
-    for (let i = -1; i <= 1; i++) {
-      const expected = (authenticator as any).generate(secret, { time: now + i });
-      if (expected === code) return now + i;
+    const delta = authenticator.checkDelta(code, secret);
+    const step = authenticator.options.step || 30;
+    const now = Math.floor(Date.now() / 1000 / step);
+    if (typeof delta === 'number') {
+      return now + delta;
     }
     return now;
   }

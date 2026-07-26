@@ -97,7 +97,7 @@ const ua = (req: any) => (req.headers['user-agent'] as string) ?? 'unknown';
 const MFA_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const mfaChallenges = new Map<string, { userId: string; organizationId: string; attempts: number; expiresAt: number }>();
 const newMfaToken = () => crypto.randomUUID();
-const remember = (token: string, value: Omit<ReturnType<typeof consumeMfa>, never>) => {
+const remember = (token: string, value: Omit<NonNullable<ReturnType<typeof consumeMfa>>, 'expiresAt'>) => {
   mfaChallenges.set(token, { ...value, expiresAt: Date.now() + MFA_CHALLENGE_TTL_MS });
 };
 const consumeMfa = (token: string) => {
@@ -280,7 +280,7 @@ router.post('/login', async (req, res, next) => {
     // 6. Issue MFA challenge if user has 2FA enabled
     if (user.mfa_enabled) {
       const mfaToken = newMfaToken();
-      remember(mfaToken, { userId: user.id, organizationId: tenant.id, attempts: 0, expiresAt: Date.now() + 300000 });
+      remember(mfaToken, { userId: user.id, organizationId: tenant.id, attempts: 0 });
       res.status(200).json({
         mfaRequired: true,
         mfaToken,
