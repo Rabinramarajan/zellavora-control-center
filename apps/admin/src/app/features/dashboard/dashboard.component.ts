@@ -1,6 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { RippleModule } from 'primeng/ripple';
 
 interface Task {
   id: number;
@@ -22,7 +27,15 @@ interface Activity {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule, 
+    RouterLink, 
+    FormsModule, 
+    ButtonModule, 
+    CheckboxModule, 
+    ProgressBarModule, 
+    RippleModule
+  ],
   template: `
     <div class="h-screen w-screen overflow-hidden bg-[#03020c] text-slate-100 flex font-sans">
       <!-- Sidebar Navigation -->
@@ -134,9 +147,7 @@ interface Activity {
 
           <!-- Utility Icons -->
           <div class="flex items-center gap-4">
-            <button class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold hover:bg-purple-500 shadow-lg shadow-purple-600/20 transition">
-              ＋
-            </button>
+            <button pButton pRipple icon="pi pi-plus" class="w-8 h-8 rounded-lg bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-purple-600/20 border-none transition"></button>
             <div class="relative">
               <button class="w-8 h-8 rounded-lg border border-white/5 bg-white/5 text-slate-400 flex items-center justify-center hover:text-white transition">
                 🔔
@@ -169,9 +180,7 @@ interface Activity {
               <p class="text-xs text-slate-400 mt-1">Here's what's happening with your workspace today.</p>
             </div>
             <!-- Date picker button -->
-            <button class="px-4 py-2 border border-white/5 bg-white/5 text-xs text-slate-300 rounded-xl hover:bg-white/10 transition flex items-center gap-2">
-              📅 May 20 – May 27, 2025 <span class="text-[9px] text-slate-500">&bull;&bull;&bull;</span>
-            </button>
+            <button pButton pRipple icon="pi pi-calendar" label="May 20 – May 27, 2025" class="p-button-outlined p-button-secondary text-xs text-slate-300 border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl py-2 px-4"></button>
           </div>
 
           <!-- Stats Grid -->
@@ -461,9 +470,7 @@ interface Activity {
                     <span class="flex items-center gap-2">🌐 Zellavora Website</span>
                     <span class="text-white">90%</span>
                   </div>
-                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-                    <div class="h-full bg-purple-600 rounded-full" style="width: 90%;"></div>
-                  </div>
+                  <p-progressBar [value]="90" [showValue]="false" styleClass="h-1.5 mt-2 bg-white/5"></p-progressBar>
                 </div>
 
                 <!-- Project 2 -->
@@ -472,9 +479,7 @@ interface Activity {
                     <span class="flex items-center gap-2">🤖 AI Resume Builder</span>
                     <span class="text-white">75%</span>
                   </div>
-                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-                    <div class="h-full bg-blue-500 rounded-full" style="width: 75%;"></div>
-                  </div>
+                  <p-progressBar [value]="75" [showValue]="false" styleClass="h-1.5 mt-2 bg-white/5"></p-progressBar>
                 </div>
 
                 <!-- Project 3 -->
@@ -483,9 +488,7 @@ interface Activity {
                     <span class="flex items-center gap-2">🛍️ E-Commerce Platform</span>
                     <span class="text-white">60%</span>
                   </div>
-                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-                    <div class="h-full bg-emerald-500 rounded-full" style="width: 60%;"></div>
-                  </div>
+                  <p-progressBar [value]="60" [showValue]="false" styleClass="h-1.5 mt-2 bg-white/5"></p-progressBar>
                 </div>
 
                 <!-- Project 4 -->
@@ -494,9 +497,7 @@ interface Activity {
                     <span class="flex items-center gap-2">📱 Mobile Banking App</span>
                     <span class="text-white">40%</span>
                   </div>
-                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-                    <div class="h-full bg-amber-500 rounded-full" style="width: 40%;"></div>
-                  </div>
+                  <p-progressBar [value]="40" [showValue]="false" styleClass="h-1.5 mt-2 bg-white/5"></p-progressBar>
                 </div>
               </div>
             </div>
@@ -513,13 +514,12 @@ interface Activity {
                 <div class="space-y-3.5">
                   <label *ngFor="let t of tasks" class="flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition">
                     <div class="flex items-center gap-2.5">
-                      <input
-                        type="checkbox"
-                        [checked]="t.completed"
-                        (change)="toggleTask(t)"
-                        class="w-4 h-4 rounded border-white/10 text-purple-600 bg-transparent focus:ring-purple-600 focus:ring-offset-0"
-                      />
-                      <span class="text-xs text-slate-200" [ngClass]="{'line-through text-slate-500': t.completed}">{{ t.title }}</span>
+                      <p-checkbox
+                        [binary]="true"
+                        [(ngModel)]="t.completed"
+                        class="text-purple-600 focus:ring-0"
+                      ></p-checkbox>
+                      <span class="text-xs text-slate-200 ml-2" [ngClass]="{'line-through text-slate-500': t.completed}">{{ t.title }}</span>
                     </div>
                     <span class="px-2 py-0.5 rounded-md text-[9px] font-bold" [ngClass]="t.categoryClass">
                       {{ t.category }}
@@ -594,8 +594,4 @@ export class DashboardComponent {
     { id: 4, message: 'Deployment <strong>v2.4.1</strong> successful', time: '3 hours ago', iconBg: 'bg-amber-500/10 text-amber-400', iconColor: 'amber', type: 'deployment' },
     { id: 5, message: 'New user <strong>John Doe</strong> joined', time: '5 hours ago', iconBg: 'bg-pink-500/10 text-pink-400', iconColor: 'pink', type: 'user' },
   ];
-
-  toggleTask(task: Task) {
-    task.completed = !task.completed;
-  }
 }

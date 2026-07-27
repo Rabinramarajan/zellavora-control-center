@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "rootDir": "./src",
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
@@ -12,9 +11,8 @@
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "declaration": false,
-    "downlevelIteration": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "ES2022",
     "module": "ES2022",
@@ -22,10 +20,10 @@
     "types": ["vite/client"],
     "lib": ["ES2022", "dom"],
     "paths": {
-      "@/*": ["src/*"],
-      "@shared/*": ["src/app/shared/*"],
-      "@core/*": ["src/app/core/*"],
-      "@features/*": ["src/app/features/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/app/shared/*"],
+      "@core/*": ["./src/app/core/*"],
+      "@features/*": ["./src/app/features/*"]
     }
   },
   "angularCompilerOptions": {
