@@ -10,7 +10,7 @@ const router = Router();
  * /api/v1/admin/user/search:
  *   post:
  *     summary: Search users
- *     tags: [User Search]
+ *     tags: [UserSearch]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -19,7 +19,7 @@ const router = Router();
  * /api/v1/admin/user/initialize:
  *   get:
  *     summary: Initialize user data
- *     tags: [User Detail]
+ *     tags: [UserDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -28,7 +28,7 @@ const router = Router();
  * /api/v1/admin/user/new:
  *   get:
  *     summary: Get template for new user
- *     tags: [User Detail]
+ *     tags: [UserDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -37,7 +37,7 @@ const router = Router();
  * /api/v1/admin/user/open:
  *   post:
  *     summary: Load user details by Serial ID
- *     tags: [User Detail]
+ *     tags: [UserDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -46,7 +46,7 @@ const router = Router();
  * /api/v1/admin/user/save:
  *   post:
  *     summary: Save user details
- *     tags: [User Detail]
+ *     tags: [UserDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -55,7 +55,7 @@ const router = Router();
  * /api/v1/admin/user/role/get:
  *   get:
  *     summary: Get roles assignable to user
- *     tags: [User Request]
+ *     tags: [UserRequest]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -64,7 +64,7 @@ const router = Router();
  * /api/v1/admin/user/team/user/get:
  *   post:
  *     summary: Get team users
- *     tags: [User Request]
+ *     tags: [UserRequest]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -73,7 +73,7 @@ const router = Router();
  * /api/v1/admin/user/LoadBranchDDLByUserLoginId:
  *   post:
  *     summary: Load branch dropdown details
- *     tags: [User Request]
+ *     tags: [UserRequest]
  *     security:
  *       - BearerAuth: []
  *     responses:

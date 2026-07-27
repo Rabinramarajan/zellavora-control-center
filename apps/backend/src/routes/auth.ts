@@ -1047,7 +1047,7 @@ router.post('/forgot-password', async (req, res, next) => {
  * /api/v1/auth/reset-password:
  *   post:
  *     summary: Apply new password using a reset token
- *     tags: [Reset Password]
+ *     tags: [ResetPassword]
  *     security: []
  *     requestBody:
  *       required: true

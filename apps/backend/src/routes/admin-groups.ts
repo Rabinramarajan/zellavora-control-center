@@ -21,7 +21,7 @@ let mockGroups = [
  * /api/v1/admin/group/search:
  *   post:
  *     summary: Search groups
- *     tags: [Group Search]
+ *     tags: [GroupSearch]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -30,7 +30,7 @@ let mockGroups = [
  * /api/v1/admin/group/open:
  *   post:
  *     summary: Load group details
- *     tags: [Group Detail]
+ *     tags: [GroupDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -39,7 +39,7 @@ let mockGroups = [
  * /api/v1/admin/group/save:
  *   post:
  *     summary: Save group details
- *     tags: [Group Detail]
+ *     tags: [GroupDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -48,7 +48,7 @@ let mockGroups = [
  * /api/v1/admin/group/delete:
  *   post:
  *     summary: Delete group
- *     tags: [Group Detail]
+ *     tags: [GroupDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:

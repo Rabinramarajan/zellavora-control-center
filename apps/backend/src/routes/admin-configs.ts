@@ -26,7 +26,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/Branch/Branch/Search:
  *   post:
  *     summary: Search branches
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -35,7 +35,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/MAsterConfig/Region/GetMaasterConfigInitialData:
  *   get:
  *     summary: Get regional initial metadata
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -44,7 +44,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/Branch/Branch/new:
  *   get:
  *     summary: Get template for new branch
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -53,7 +53,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/Branch/Branch/open:
  *   post:
  *     summary: Load branch details
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -62,7 +62,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/Branch/Branch/save:
  *   post:
  *     summary: Save branch details
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -71,7 +71,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/Branch/Branch/delete:
  *   post:
  *     summary: Delete branch
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -80,7 +80,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/config/search:
  *   post:
  *     summary: Search configs
- *     tags: [Common Configuration Search]
+ *     tags: [CommonConfigurationSearch]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -89,7 +89,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/config/open:
  *   post:
  *     summary: Load configuration details
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -98,7 +98,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/config/save:
  *   post:
  *     summary: Save configuration details
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -107,7 +107,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/config/Load:
  *   post:
  *     summary: Load all configurations
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -116,7 +116,7 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/config/delete:
  *   post:
  *     summary: Delete configuration
- *     tags: [Common Configuration Detail]
+ *     tags: [CommonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:

@@ -10,7 +10,7 @@ const router = Router();
  * /api/v1/admin/role/search:
  *   post:
  *     summary: Search roles
- *     tags: [Role Search]
+ *     tags: [RoleSearch]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -19,7 +19,7 @@ const router = Router();
  * /api/v1/admin/role/initialize:
  *   get:
  *     summary: Initialize role metadata
- *     tags: [Role Detail]
+ *     tags: [RoleDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -28,7 +28,7 @@ const router = Router();
  * /api/v1/admin/role/new:
  *   get:
  *     summary: Get template for new role
- *     tags: [Role Detail]
+ *     tags: [RoleDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -37,7 +37,7 @@ const router = Router();
  * /api/v1/admin/role/open:
  *   post:
  *     summary: Load role details by ID
- *     tags: [Role Detail]
+ *     tags: [RoleDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -46,7 +46,7 @@ const router = Router();
  * /api/v1/admin/role/save:
  *   post:
  *     summary: Save role details
- *     tags: [Role Detail]
+ *     tags: [RoleDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -55,7 +55,7 @@ const router = Router();
  * /api/v1/admin/role/delete:
  *   post:
  *     summary: Delete role
- *     tags: [Role Detail]
+ *     tags: [RoleDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -64,7 +64,7 @@ const router = Router();
  * /api/v1/admin/role/role-resource/load:
  *   post:
  *     summary: Load role-resource mappings
- *     tags: [Role Detail]
+ *     tags: [RoleDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -73,7 +73,7 @@ const router = Router();
  * /api/v1/admin/role/role-resource/save:
  *   post:
  *     summary: Save role-resource mappings
- *     tags: [Role Detail]
+ *     tags: [RoleDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:

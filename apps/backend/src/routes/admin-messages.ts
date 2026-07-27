@@ -18,7 +18,7 @@ const router = Router();
  * /api/v1/admin/email/send:
  *   post:
  *     summary: Send email communication
- *     tags: [Email Communication]
+ *     tags: [EmailCommunication]
  *     security:
  *       - BearerAuth: []
  *     responses:
