@@ -437,5 +437,33 @@ export interface GroupSearchSet {
   beginDate: string;
   endDate: string;
   statusDescription: string;
+}
+
+// ==================== Message Models ====================
+export interface MessageSendRequest {
+  recipientId: string;
+  body: string;
+}
+
+export interface MessageSendResult {
+  messageId: number;
+  status: string;
+  recipientId: string;
+  body: string;
+  timestamp: string;
+}
+
+export interface EmailSendRequest {
+  toEmail: string;
+  subject: string;
+  content: string;
+}
+
+export interface EmailSendResult {
+  emailId: number;
+  status: string;
+  toEmail: string;
+  subject: string;
+  timestamp: string;
   moduleName?: string;
 }

@@ -30,7 +30,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'projects',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/projects/projects.routes').then(
         (m) => m.projectsRoutes
@@ -38,19 +38,19 @@ export const appRoutes: Routes = [
   },
   {
     path: 'blog',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/blog/blog.routes').then((m) => m.blogRoutes),
   },
   {
     path: 'media',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/media/media.routes').then((m) => m.mediaRoutes),
   },
   {
     path: 'analytics',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/analytics/analytics.routes').then(
         (m) => m.analyticsRoutes
@@ -64,7 +64,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'settings',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/settings/settings.routes').then(
         (m) => m.settingsRoutes
@@ -77,7 +77,47 @@ export const appRoutes: Routes = [
       import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
   {
+    path: 'theme-builder',
+    loadComponent: () =>
+      import('./features/theme-builder/theme-builder.component').then(
+        (m) => m.ThemeBuilderComponent
+      ),
+  },
+  {
+    path: 'notifications',
+    loadComponent: () =>
+      import('./features/notifications/notifications.component').then(
+        (m) => m.NotificationsComponent
+      ),
+  },
+  {
+    path: 'audit-logs',
+    loadComponent: () =>
+      import('./features/audit-logs/audit-logs.component').then(
+        (m) => m.AuditLogsComponent
+      ),
+  },
+  {
+    path: 'system-health',
+    loadComponent: () =>
+      import('./features/system-health/system-health.component').then(
+        (m) => m.SystemHealthComponent
+      ),
+  },
+  {
+    path: 'cms-builder',
+    loadComponent: () =>
+      import('./features/cms-builder/cms-builder.component').then(
+        (m) => m.CmsBuilderComponent
+      ),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },
 ];
+
+
+
+
+

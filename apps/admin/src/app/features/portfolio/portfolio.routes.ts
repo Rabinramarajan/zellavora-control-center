@@ -4,24 +4,12 @@ import { CommonModule } from '@angular/common';
 import { PortfolioComponent } from './portfolio.component';
 import { ProfileEditorComponent } from './components/profile-editor/profile-editor.component';
 import { SkillsManagerComponent } from './components/skills-manager/skills-manager.component';
+import { HeroSectionComponent } from './components/hero-section/hero-section.component';
+import { AboutSectionComponent } from './components/about-section/about-section.component';
+import { ServicesSectionComponent } from './components/services-section/services-section.component';
+import { TestimonialsSectionComponent } from './components/testimonials-section/testimonials-section.component';
 
-// Placeholder components for other sections
-@Component({
-  selector: 'app-hero-section',
-  standalone: true,
-  imports: [CommonModule],
-  template: `<div class="p-6"><p class="text-slate-600">Hero Section coming soon...</p></div>`,
-})
-class HeroSectionComponent {}
-
-@Component({
-  selector: 'app-about-section',
-  standalone: true,
-  imports: [CommonModule],
-  template: `<div class="p-6"><p class="text-slate-600">About Section coming soon...</p></div>`,
-})
-class AboutSectionComponent {}
-
+// Placeholder components for sections not yet implemented
 @Component({
   selector: 'app-experience-section',
   standalone: true,
@@ -37,22 +25,6 @@ class ExperienceSectionComponent {}
   template: `<div class="p-6"><p class="text-slate-600">Education Section coming soon...</p></div>`,
 })
 class EducationSectionComponent {}
-
-@Component({
-  selector: 'app-services-section',
-  standalone: true,
-  imports: [CommonModule],
-  template: `<div class="p-6"><p class="text-slate-600">Services Section coming soon...</p></div>`,
-})
-class ServicesSectionComponent {}
-
-@Component({
-  selector: 'app-testimonials-section',
-  standalone: true,
-  imports: [CommonModule],
-  template: `<div class="p-6"><p class="text-slate-600">Testimonials Section coming soon...</p></div>`,
-})
-class TestimonialsSectionComponent {}
 
 export const portfolioRoutes: Routes = [
   {
