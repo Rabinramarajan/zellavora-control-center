@@ -70,8 +70,8 @@ app.use((req, res, next) => {
  * @swagger
  * /health:
  *   get:
- *     summary: Health check
- *     tags: [Health]
+ *     summary: healthCheck
+ *     tags: [health]
  *     security: []
  *     responses:
  *       200:
@@ -104,8 +104,8 @@ app.get('/health', (_req, res) => {
  * @swagger
  * /:
  *   get:
- *     summary: API index — service metadata and entrypoints
- *     tags: [Health]
+ *     summary: aPIIndexServiceMetadataAndEntrypoints
+ *     tags: [health]
  *     security: []
  *     responses:
  *       200:

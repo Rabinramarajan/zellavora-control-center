@@ -50,8 +50,8 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
    * @swagger
    * /api/v1/permissions/check:
    *   post:
-   *     summary: Check if the current user has one or more permissions
-   *     tags: [Permissions]
+   *     summary: checkIfTheCurrentUserHasOneOrMorePermissions
+   *     tags: [permissions]
    *     security:
    *       - BearerAuth: []
    *     requestBody:
@@ -148,8 +148,8 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
    * @swagger
    * /api/v1/permissions/user:
    *   get:
-   *     summary: Get current user's permissions and denied permissions
-   *     tags: [Permissions]
+   *     summary: getCurrentUsersPermissionsAndDeniedPermissions
+   *     tags: [permissions]
    *     security:
    *       - BearerAuth: []
    *     responses:

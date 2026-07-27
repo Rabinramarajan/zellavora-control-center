@@ -20,8 +20,8 @@ let mockGroups = [
  * @swagger
  * /api/v1/admin/group/search:
  *   post:
- *     summary: Search groups
- *     tags: [GroupSearch]
+ *     summary: searchGroups
+ *     tags: [groupSearch]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -29,8 +29,8 @@ let mockGroups = [
  *         description: Search results
  * /api/v1/admin/group/open:
  *   post:
- *     summary: Load group details
- *     tags: [GroupDetail]
+ *     summary: loadGroupDetails
+ *     tags: [groupDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -38,8 +38,8 @@ let mockGroups = [
  *         description: Group details
  * /api/v1/admin/group/save:
  *   post:
- *     summary: Save group details
- *     tags: [GroupDetail]
+ *     summary: saveGroupDetails
+ *     tags: [groupDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -47,8 +47,8 @@ let mockGroups = [
  *         description: Saved group details
  * /api/v1/admin/group/delete:
  *   post:
- *     summary: Delete group
- *     tags: [GroupDetail]
+ *     summary: deleteGroup
+ *     tags: [groupDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:

@@ -25,8 +25,8 @@ let currentBranches = [...mockBranches];
  * @swagger
  * /api/v1/admin/Branch/Branch/Search:
  *   post:
- *     summary: Search branches
- *     tags: [CommonConfigurationDetail]
+ *     summary: searchBranches
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -34,8 +34,8 @@ let currentBranches = [...mockBranches];
  *         description: Search results
  * /api/v1/admin/MAsterConfig/Region/GetMaasterConfigInitialData:
  *   get:
- *     summary: Get regional initial metadata
- *     tags: [CommonConfigurationDetail]
+ *     summary: getRegionalInitialMetadata
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -43,8 +43,8 @@ let currentBranches = [...mockBranches];
  *         description: Initial state
  * /api/v1/admin/Branch/Branch/new:
  *   get:
- *     summary: Get template for new branch
- *     tags: [CommonConfigurationDetail]
+ *     summary: getTemplateForNewBranch
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -52,8 +52,8 @@ let currentBranches = [...mockBranches];
  *         description: New branch template
  * /api/v1/admin/Branch/Branch/open:
  *   post:
- *     summary: Load branch details
- *     tags: [CommonConfigurationDetail]
+ *     summary: loadBranchDetails
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -61,8 +61,8 @@ let currentBranches = [...mockBranches];
  *         description: Branch details
  * /api/v1/admin/Branch/Branch/save:
  *   post:
- *     summary: Save branch details
- *     tags: [CommonConfigurationDetail]
+ *     summary: saveBranchDetails
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -70,8 +70,8 @@ let currentBranches = [...mockBranches];
  *         description: Saved branch details
  * /api/v1/admin/Branch/Branch/delete:
  *   post:
- *     summary: Delete branch
- *     tags: [CommonConfigurationDetail]
+ *     summary: deleteBranch
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -79,8 +79,8 @@ let currentBranches = [...mockBranches];
  *         description: Deletion confirmation
  * /api/v1/admin/config/search:
  *   post:
- *     summary: Search configs
- *     tags: [CommonConfigurationSearch]
+ *     summary: searchConfigs
+ *     tags: [commonConfigurationSearch]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -88,8 +88,8 @@ let currentBranches = [...mockBranches];
  *         description: Search results
  * /api/v1/admin/config/open:
  *   post:
- *     summary: Load configuration details
- *     tags: [CommonConfigurationDetail]
+ *     summary: loadConfigurationDetails
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -97,8 +97,8 @@ let currentBranches = [...mockBranches];
  *         description: Loaded configuration
  * /api/v1/admin/config/save:
  *   post:
- *     summary: Save configuration details
- *     tags: [CommonConfigurationDetail]
+ *     summary: saveConfigurationDetails
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -106,8 +106,8 @@ let currentBranches = [...mockBranches];
  *         description: Saved configuration
  * /api/v1/admin/config/Load:
  *   post:
- *     summary: Load all configurations
- *     tags: [CommonConfigurationDetail]
+ *     summary: loadAllConfigurations
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -115,8 +115,8 @@ let currentBranches = [...mockBranches];
  *         description: Configurations list
  * /api/v1/admin/config/delete:
  *   post:
- *     summary: Delete configuration
- *     tags: [CommonConfigurationDetail]
+ *     summary: deleteConfiguration
+ *     tags: [commonConfigurationDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:

@@ -17,8 +17,8 @@ export function createLicensingRoutes(subscriptionService: SubscriptionService):
    * @swagger
    * /api/v1/licensing/plans:
    *   get:
-   *     summary: Get all available license plans
-   *     tags: [Licensing]
+   *     summary: getAllAvailableLicensePlans
+   *     tags: [licensing]
    *     security: []
    *     responses:
    *       200:
@@ -77,8 +77,8 @@ export function createLicensingRoutes(subscriptionService: SubscriptionService):
    * @swagger
    * /api/v1/licensing/{orgId}/license:
    *   get:
-   *     summary: Get organization's current license
-   *     tags: [Licensing]
+   *     summary: getOrganizationsCurrentLicense
+   *     tags: [licensing]
    *     security:
    *       - BearerAuth: []
    *     parameters:

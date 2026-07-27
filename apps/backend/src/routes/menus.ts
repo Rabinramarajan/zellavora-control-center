@@ -65,8 +65,8 @@ export function createMenuRoutes(menuService: MenuService): Router {
    * @swagger
    * /api/v1/menus:
    *   get:
-   *     summary: Fetch complete menu tree for the authenticated user
-   *     tags: [Menus]
+   *     summary: fetchCompleteMenuTreeForTheAuthenticatedUser
+   *     tags: [menus]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -275,8 +275,8 @@ export function createMenuRoutes(menuService: MenuService): Router {
    * @swagger
    * /api/v1/menus:
    *   post:
-   *     summary: Create a new menu item (admin/owner)
-   *     tags: [Menus]
+   *     summary: createANewMenuItemAdminowner
+   *     tags: [menus]
    *     security:
    *       - BearerAuth: []
    *     requestBody:

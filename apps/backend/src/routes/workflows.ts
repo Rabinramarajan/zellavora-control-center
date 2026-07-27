@@ -17,8 +17,8 @@ export function createWorkflowRoutes(workflowService: WorkflowService): Router {
    * @swagger
    * /api/v1/workflows:
    *   get:
-   *     summary: Get all workflows for the organization
-   *     tags: [Workflows]
+   *     summary: getAllWorkflowsForTheOrganization
+   *     tags: [workflows]
    *     security:
    *       - BearerAuth: []
    *     responses:

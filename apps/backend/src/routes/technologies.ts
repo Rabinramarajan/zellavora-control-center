@@ -9,8 +9,8 @@ const router: ExpressRouter = Router();
  * @swagger
  * /api/v1/technologies:
  *   get:
- *     summary: Get all technologies
- *     tags: [Technologies]
+ *     summary: getAllTechnologies
+ *     tags: [technologies]
  *     security: []
  *     responses:
  *       200:
@@ -38,8 +38,8 @@ router.get('/technologies', async (req, res, next) => {
  * @swagger
  * /api/v1/technologies:
  *   post:
- *     summary: Create a new technology
- *     tags: [Technologies]
+ *     summary: createANewTechnology
+ *     tags: [technologies]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -72,8 +72,8 @@ router.post('/technologies', authenticateToken, async (req: AuthRequest, res, ne
  * @swagger
  * /api/v1/projects/{projectId}/technologies:
  *   get:
- *     summary: Get technologies for a project
- *     tags: [Technologies]
+ *     summary: getTechnologiesForAProject
+ *     tags: [technologies]
  *     security: []
  *     parameters:
  *       - in: path
@@ -113,8 +113,8 @@ router.get('/projects/:projectId/technologies', async (req, res, next) => {
  * @swagger
  * /api/v1/projects/{projectId}/technologies:
  *   post:
- *     summary: Add a technology to a project
- *     tags: [Technologies]
+ *     summary: addATechnologyToAProject
+ *     tags: [technologies]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -179,8 +179,8 @@ router.post('/projects/:projectId/technologies', authenticateToken, async (req: 
  * @swagger
  * /api/v1/projects/{projectId}/technologies:
  *   put:
- *     summary: Bulk replace technologies for a project
- *     tags: [Technologies]
+ *     summary: bulkReplaceTechnologiesForAProject
+ *     tags: [technologies]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -248,8 +248,8 @@ router.put('/projects/:projectId/technologies', authenticateToken, async (req: A
  * @swagger
  * /api/v1/projects/{projectId}/technologies/{technologyId}:
  *   delete:
- *     summary: Remove a technology from a project
- *     tags: [Technologies]
+ *     summary: removeATechnologyFromAProject
+ *     tags: [technologies]
  *     security:
  *       - BearerAuth: []
  *     parameters:

@@ -8,8 +8,8 @@ const router = Router();
  * @swagger
  * /api/v1/admin/message/send:
  *   post:
- *     summary: Send message
- *     tags: [Message]
+ *     summary: sendMessage
+ *     tags: [message]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -17,8 +17,8 @@ const router = Router();
  *         description: Message status
  * /api/v1/admin/email/send:
  *   post:
- *     summary: Send email communication
- *     tags: [EmailCommunication]
+ *     summary: sendEmailCommunication
+ *     tags: [emailCommunication]
  *     security:
  *       - BearerAuth: []
  *     responses:

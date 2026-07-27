@@ -39,6 +39,9 @@ const CUSTOM_CSS = `
   .swagger-ui .topbar .download-url-wrapper { display: none; }
   .swagger-ui .info .title { color: #cba6f7; }
   .swagger-ui .scheme-container { background: #1e1e2e; box-shadow: none; padding: 16px; }
+  .swagger-ui .opblock-summary-path-description-wrapper { justify-content: flex-start !important; }
+  .swagger-ui .opblock-summary-description { flex: 0 1 auto !important; text-align: left !important; margin-left: 12px !important; }
+  .swagger-ui .opblock-summary-method { text-transform: lowercase !important; }
 `;
 
 const SWAGGER_HTML = `<!DOCTYPE html>
@@ -73,8 +76,8 @@ const SWAGGER_HTML = `<!DOCTYPE html>
  * @swagger
  * /api-docs.json:
  *   get:
- *     summary: Raw OpenAPI 3.0 specification
- *     tags: [Health]
+ *     summary: rawOpenAPI30Specification
+ *     tags: [health]
  *     security: []
  *     responses:
  *       200:
@@ -88,8 +91,8 @@ router.get('/api-docs.json', (_req, res) => {
  * @swagger
  * /api-docs:
  *   get:
- *     summary: Swagger UI (interactive API explorer)
- *     tags: [Health]
+ *     summary: swaggerUIInteractiveAPIExplorer
+ *     tags: [health]
  *     security: []
  *     responses:
  *       200:

@@ -33,8 +33,8 @@ let mockResources = [
  * @swagger
  * /api/v1/admin/resource/search:
  *   post:
- *     summary: Search resources
- *     tags: [Resource]
+ *     summary: searchResources
+ *     tags: [resource]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -42,8 +42,8 @@ let mockResources = [
  *         description: Search results
  * /api/v1/admin/resource/initialize:
  *   get:
- *     summary: Initialize resource metadata
- *     tags: [Resource]
+ *     summary: initializeResourceMetadata
+ *     tags: [resource]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -51,8 +51,8 @@ let mockResources = [
  *         description: Initial state
  * /api/v1/admin/resource/new:
  *   get:
- *     summary: Get template for new resource
- *     tags: [Resource]
+ *     summary: getTemplateForNewResource
+ *     tags: [resource]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -60,8 +60,8 @@ let mockResources = [
  *         description: New resource template
  * /api/v1/admin/resource/open:
  *   post:
- *     summary: Load resource details by ID
- *     tags: [Resource]
+ *     summary: loadResourceDetailsById
+ *     tags: [resource]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -69,8 +69,8 @@ let mockResources = [
  *         description: Resource profile
  * /api/v1/admin/resource/save:
  *   post:
- *     summary: Save resource details
- *     tags: [Resource]
+ *     summary: saveResourceDetails
+ *     tags: [resource]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -78,8 +78,8 @@ let mockResources = [
  *         description: Saved resource details
  * /api/v1/admin/resource/delete:
  *   post:
- *     summary: Delete resource
- *     tags: [Resource]
+ *     summary: deleteResource
+ *     tags: [resource]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -87,8 +87,8 @@ let mockResources = [
  *         description: Deletion confirmation
  * /api/v1/admin/resource/SaveListResource:
  *   post:
- *     summary: Save a list of resources
- *     tags: [Resource]
+ *     summary: saveAListOfResources
+ *     tags: [resource]
  *     security:
  *       - BearerAuth: []
  *     responses:

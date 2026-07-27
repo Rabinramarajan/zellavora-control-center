@@ -120,8 +120,8 @@ const consumeMfa = (token: string) => {
  * @swagger
  * /api/v1/auth/validate-client:
  *   post:
- *     summary: Validate a client/tenant code
- *     tags: [Auth]
+ *     summary: validateAClienttenantCode
+ *     tags: [auth]
  *     security: []
  *     requestBody:
  *       required: true
@@ -182,8 +182,8 @@ router.post('/validate-client', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/gettoken:
  *   get:
- *     summary: Retrieve temporary AES key and IV for payload encryption
- *     tags: [Auth]
+ *     summary: retrieveTemporaryAESKeyAndIVForPayloadEncryption
+ *     tags: [auth]
  *     security: []
  *     responses:
  *       200:
@@ -217,9 +217,9 @@ router.get('/gettoken', (req, res, next) => {
  * @swagger
  * /api/v1/auth/login:
  *   post:
- *     summary: Login with email and password
+ *     summary: loginWithEmailAndPassword
  *     description: Returns tokens on success, or an MFA challenge token if the user has 2FA enabled.
- *     tags: [Login]
+ *     tags: [login]
  *     security: []
  *     requestBody:
  *       required: true
@@ -408,9 +408,9 @@ router.post('/login', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/login/mfa:
  *   post:
- *     summary: Complete MFA challenge
+ *     summary: completeMFAChallenge
  *     description: Submit a TOTP code or recovery code to finalize login after an MFA challenge.
- *     tags: [Auth]
+ *     tags: [auth]
  *     security: []
  *     requestBody:
  *       required: true
@@ -540,8 +540,8 @@ router.post('/login/mfa', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/refresh:
  *   post:
- *     summary: Rotate access and refresh tokens
- *     tags: [Auth]
+ *     summary: rotateAccessAndRefreshTokens
+ *     tags: [auth]
  *     security: []
  *     requestBody:
  *       required: true
@@ -615,8 +615,8 @@ router.post('/refresh', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/logout:
  *   post:
- *     summary: Revoke current session
- *     tags: [Auth]
+ *     summary: revokeCurrentSession
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -661,8 +661,8 @@ router.post('/logout', authenticate, async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/auth/logout-all:
  *   post:
- *     summary: Revoke all sessions for the current user
- *     tags: [Auth]
+ *     summary: revokeAllSessionsForTheCurrentUser
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -700,8 +700,8 @@ router.post('/logout-all', authenticate, async (req: AuthRequest, res, next) => 
  * @swagger
  * /api/v1/auth/me:
  *   get:
- *     summary: Get current user profile with permissions and menu
- *     tags: [Auth]
+ *     summary: getCurrentUserProfileWithPermissionsAndMenu
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -779,8 +779,8 @@ router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/auth/tenants:
  *   get:
- *     summary: List tenants the current user belongs to
- *     tags: [Auth]
+ *     summary: listTenantsTheCurrentUserBelongsTo
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -815,8 +815,8 @@ router.get('/tenants', authenticate, async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/auth/switch-tenant:
  *   post:
- *     summary: Switch to a different tenant and get fresh tokens
- *     tags: [Auth]
+ *     summary: switchToADifferentTenantAndGetFreshTokens
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -893,8 +893,8 @@ router.post('/switch-tenant', authenticate, async (req: AuthRequest, res, next) 
  * @swagger
  * /api/v1/auth/change-password:
  *   post:
- *     summary: Change password (authenticated)
- *     tags: [Auth]
+ *     summary: changePasswordAuthenticated
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -967,9 +967,9 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res, next
  * @swagger
  * /api/v1/auth/forgot-password:
  *   post:
- *     summary: Send password reset email
+ *     summary: sendPasswordResetEmail
  *     description: Always returns 200 to avoid email enumeration attacks.
- *     tags: [Auth]
+ *     tags: [auth]
  *     security: []
  *     requestBody:
  *       required: true
@@ -1046,8 +1046,8 @@ router.post('/forgot-password', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/reset-password:
  *   post:
- *     summary: Apply new password using a reset token
- *     tags: [ResetPassword]
+ *     summary: applyNewPasswordUsingAResetToken
+ *     tags: [resetPassword]
  *     security: []
  *     requestBody:
  *       required: true
@@ -1113,8 +1113,8 @@ router.post('/reset-password', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/mfa/enroll:
  *   post:
- *     summary: Start TOTP enrollment — returns QR code and otpauth URI
- *     tags: [Auth]
+ *     summary: startTOTPEnrollmentReturnsQRCodeAndOtpauthURI
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -1157,8 +1157,8 @@ const pendingMfaSecrets = new Map<string, string>(); // userId -> secret (5 min 
  * @swagger
  * /api/v1/auth/mfa/confirm:
  *   post:
- *     summary: Confirm TOTP enrollment with the first code
- *     tags: [Auth]
+ *     summary: confirmTOTPEnrollmentWithTheFirstCode
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -1222,8 +1222,8 @@ router.post('/mfa/confirm', authenticate, async (req: AuthRequest, res, next) =>
  * @swagger
  * /api/v1/auth/mfa/disable:
  *   post:
- *     summary: Disable MFA (requires current password)
- *     tags: [Auth]
+ *     summary: disableMFARequiresCurrentPassword
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -1277,8 +1277,8 @@ router.post('/mfa/disable', authenticate, async (req: AuthRequest, res, next) =>
  * @swagger
  * /api/v1/auth/mfa/recovery-codes:
  *   post:
- *     summary: Regenerate MFA recovery codes
- *     tags: [Auth]
+ *     summary: regenerateMFARecoveryCodes
+ *     tags: [auth]
  *     security:
  *       - BearerAuth: []
  *     responses:

@@ -9,8 +9,8 @@ const router = Router();
  * @swagger
  * /api/v1/admin/user/search:
  *   post:
- *     summary: Search users
- *     tags: [UserSearch]
+ *     summary: searchUsers
+ *     tags: [userSearch]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -18,8 +18,8 @@ const router = Router();
  *         description: Search results
  * /api/v1/admin/user/initialize:
  *   get:
- *     summary: Initialize user data
- *     tags: [UserDetail]
+ *     summary: initializeUserData
+ *     tags: [userDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -27,8 +27,8 @@ const router = Router();
  *         description: Initial state
  * /api/v1/admin/user/new:
  *   get:
- *     summary: Get template for new user
- *     tags: [UserDetail]
+ *     summary: getTemplateForNewUser
+ *     tags: [userDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -36,8 +36,8 @@ const router = Router();
  *         description: New user template
  * /api/v1/admin/user/open:
  *   post:
- *     summary: Load user details by Serial ID
- *     tags: [UserDetail]
+ *     summary: loadUserDetailsBySerialId
+ *     tags: [userDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -45,8 +45,8 @@ const router = Router();
  *         description: Loaded user profile
  * /api/v1/admin/user/save:
  *   post:
- *     summary: Save user details
- *     tags: [UserDetail]
+ *     summary: saveUserDetails
+ *     tags: [userDetail]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -54,8 +54,8 @@ const router = Router();
  *         description: Saved user profile
  * /api/v1/admin/user/role/get:
  *   get:
- *     summary: Get roles assignable to user
- *     tags: [UserRequest]
+ *     summary: getRolesAssignableToUser
+ *     tags: [userRequest]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -63,8 +63,8 @@ const router = Router();
  *         description: Available roles
  * /api/v1/admin/user/team/user/get:
  *   post:
- *     summary: Get team users
- *     tags: [UserRequest]
+ *     summary: getTeamUsers
+ *     tags: [userRequest]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -72,8 +72,8 @@ const router = Router();
  *         description: Team users list
  * /api/v1/admin/user/LoadBranchDDLByUserLoginId:
  *   post:
- *     summary: Load branch dropdown details
- *     tags: [UserRequest]
+ *     summary: loadBranchDropdownDetails
+ *     tags: [userRequest]
  *     security:
  *       - BearerAuth: []
  *     responses:

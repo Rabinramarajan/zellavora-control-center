@@ -17,8 +17,8 @@ export function createNotificationRoutes(notificationService: NotificationServic
    * @swagger
    * /api/v1/notifications/send:
    *   post:
-   *     summary: Send a notification via one or more channels
-   *     tags: [Notifications]
+   *     summary: sendANotificationViaOneOrMoreChannels
+   *     tags: [notifications]
    *     security:
    *       - BearerAuth: []
    *     requestBody:

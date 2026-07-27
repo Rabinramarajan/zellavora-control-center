@@ -20,8 +20,8 @@ const CreateProjectSchema = z.object({
  * @swagger
  * /api/v1/projects:
  *   get:
- *     summary: List projects
- *     tags: [Projects]
+ *     summary: listProjects
+ *     tags: [projects]
  *     security: []
  *     parameters:
  *       - in: query
@@ -90,8 +90,8 @@ router.get('/', async (req, res, next) => {
  * @swagger
  * /api/v1/projects/slug/{slug}:
  *   get:
- *     summary: Get project by slug
- *     tags: [Projects]
+ *     summary: getProjectBySlug
+ *     tags: [projects]
  *     security: []
  *     parameters:
  *       - in: path
@@ -131,8 +131,8 @@ router.get('/slug/:slug', async (req, res, next) => {
  * @swagger
  * /api/v1/projects/{id}:
  *   get:
- *     summary: Get project by ID
- *     tags: [Projects]
+ *     summary: getProjectByID
+ *     tags: [projects]
  *     security: []
  *     parameters:
  *       - in: path
@@ -177,8 +177,8 @@ router.get('/:id', async (req, res, next) => {
  * @swagger
  * /api/v1/projects:
  *   post:
- *     summary: Create a new project
- *     tags: [Projects]
+ *     summary: createANewProject
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -221,8 +221,8 @@ router.post('/', authenticateToken, authorize('admin', 'editor'), async (req: Au
  * @swagger
  * /api/v1/projects/{id}:
  *   put:
- *     summary: Update a project
- *     tags: [Projects]
+ *     summary: updateAProject
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -285,8 +285,8 @@ router.put('/:id', authenticateToken, authorize('admin', 'editor'), async (req: 
  * @swagger
  * /api/v1/projects/{id}:
  *   delete:
- *     summary: Delete a project
- *     tags: [Projects]
+ *     summary: deleteAProject
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -334,8 +334,8 @@ router.delete('/:id', authenticateToken, authorize('admin', 'editor'), async (re
  * @swagger
  * /api/v1/projects/{id}/publish:
  *   post:
- *     summary: Publish a project
- *     tags: [Projects]
+ *     summary: publishAProject
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -374,8 +374,8 @@ router.post('/:id/publish', authenticateToken, authorize('admin', 'editor'), asy
  * @swagger
  * /api/v1/projects/{id}/archive:
  *   post:
- *     summary: Archive a project
- *     tags: [Projects]
+ *     summary: archiveAProject
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:

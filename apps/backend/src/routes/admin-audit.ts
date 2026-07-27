@@ -33,8 +33,8 @@ let mockAuditLogs = [
  * @swagger
  * /api/v1/admin/auditlog/search:
  *   post:
- *     summary: Search audit logs
- *     tags: [Audit]
+ *     summary: searchAuditLogs
+ *     tags: [audit]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -42,8 +42,8 @@ let mockAuditLogs = [
  *         description: Search results
  * /api/v1/admin/auditlog/LoadAuditLogDetails:
  *   post:
- *     summary: Load audit log details
- *     tags: [Audit]
+ *     summary: loadAuditLogDetails
+ *     tags: [audit]
  *     security:
  *       - BearerAuth: []
  *     responses:
