@@ -9,20 +9,16 @@ const router = Router();
  * /api/v1/admin/message/send:
  *   post:
  *     summary: Send message
- *     tags: [Admin]
+ *     tags: [Message]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Message status
- */
-
-/**
- * @swagger
  * /api/v1/admin/email/send:
  *   post:
  *     summary: Send email communication
- *     tags: [Admin]
+ *     tags: [Email Communication]
  *     security:
  *       - BearerAuth: []
  *     responses:

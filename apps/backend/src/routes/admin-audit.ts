@@ -34,12 +34,21 @@ let mockAuditLogs = [
  * /api/v1/admin/auditlog/search:
  *   post:
  *     summary: Search audit logs
- *     tags: [Admin]
+ *     tags: [Audit]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Search results
+ * /api/v1/admin/auditlog/LoadAuditLogDetails:
+ *   post:
+ *     summary: Load audit log details
+ *     tags: [Audit]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Log details
  */
 
 router.get('/auditlog/search', authenticate, async (req, res, next) => {

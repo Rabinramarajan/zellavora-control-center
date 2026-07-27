@@ -219,7 +219,7 @@ router.get('/gettoken', (req, res, next) => {
  *   post:
  *     summary: Login with email and password
  *     description: Returns tokens on success, or an MFA challenge token if the user has 2FA enabled.
- *     tags: [Auth]
+ *     tags: [Login]
  *     security: []
  *     requestBody:
  *       required: true
@@ -1047,7 +1047,7 @@ router.post('/forgot-password', async (req, res, next) => {
  * /api/v1/auth/reset-password:
  *   post:
  *     summary: Apply new password using a reset token
- *     tags: [Auth]
+ *     tags: [Reset Password]
  *     security: []
  *     requestBody:
  *       required: true

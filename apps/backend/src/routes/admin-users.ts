@@ -10,12 +10,75 @@ const router = Router();
  * /api/v1/admin/user/search:
  *   post:
  *     summary: Search users
- *     tags: [Admin]
+ *     tags: [User Search]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Search results
+ * /api/v1/admin/user/initialize:
+ *   get:
+ *     summary: Initialize user data
+ *     tags: [User Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Initial state
+ * /api/v1/admin/user/new:
+ *   get:
+ *     summary: Get template for new user
+ *     tags: [User Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: New user template
+ * /api/v1/admin/user/open:
+ *   post:
+ *     summary: Load user details by Serial ID
+ *     tags: [User Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Loaded user profile
+ * /api/v1/admin/user/save:
+ *   post:
+ *     summary: Save user details
+ *     tags: [User Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved user profile
+ * /api/v1/admin/user/role/get:
+ *   get:
+ *     summary: Get roles assignable to user
+ *     tags: [User Request]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Available roles
+ * /api/v1/admin/user/team/user/get:
+ *   post:
+ *     summary: Get team users
+ *     tags: [User Request]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Team users list
+ * /api/v1/admin/user/LoadBranchDDLByUserLoginId:
+ *   post:
+ *     summary: Load branch dropdown details
+ *     tags: [User Request]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Branches dropdown
  */
 
 router.get('/user/initialize', authenticate, async (req, res, next) => {

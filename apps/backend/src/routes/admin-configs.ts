@@ -26,25 +26,102 @@ let currentBranches = [...mockBranches];
  * /api/v1/admin/Branch/Branch/Search:
  *   post:
  *     summary: Search branches
- *     tags: [Admin]
+ *     tags: [Common Configuration Detail]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Search results
- */
-
-/**
- * @swagger
+ * /api/v1/admin/MAsterConfig/Region/GetMaasterConfigInitialData:
+ *   get:
+ *     summary: Get regional initial metadata
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Initial state
+ * /api/v1/admin/Branch/Branch/new:
+ *   get:
+ *     summary: Get template for new branch
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: New branch template
+ * /api/v1/admin/Branch/Branch/open:
+ *   post:
+ *     summary: Load branch details
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Branch details
+ * /api/v1/admin/Branch/Branch/save:
+ *   post:
+ *     summary: Save branch details
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved branch details
+ * /api/v1/admin/Branch/Branch/delete:
+ *   post:
+ *     summary: Delete branch
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Deletion confirmation
  * /api/v1/admin/config/search:
  *   post:
  *     summary: Search configs
- *     tags: [Admin]
+ *     tags: [Common Configuration Search]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Search results
+ * /api/v1/admin/config/open:
+ *   post:
+ *     summary: Load configuration details
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Loaded configuration
+ * /api/v1/admin/config/save:
+ *   post:
+ *     summary: Save configuration details
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved configuration
+ * /api/v1/admin/config/Load:
+ *   post:
+ *     summary: Load all configurations
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Configurations list
+ * /api/v1/admin/config/delete:
+ *   post:
+ *     summary: Delete configuration
+ *     tags: [Common Configuration Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Deletion confirmation
  */
 
 // ==================== BRANCH / REGION ENDPOINTS ====================

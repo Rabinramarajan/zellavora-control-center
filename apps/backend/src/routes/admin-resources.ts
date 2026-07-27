@@ -34,12 +34,66 @@ let mockResources = [
  * /api/v1/admin/resource/search:
  *   post:
  *     summary: Search resources
- *     tags: [Admin]
+ *     tags: [Resource]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Search results
+ * /api/v1/admin/resource/initialize:
+ *   get:
+ *     summary: Initialize resource metadata
+ *     tags: [Resource]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Initial state
+ * /api/v1/admin/resource/new:
+ *   get:
+ *     summary: Get template for new resource
+ *     tags: [Resource]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: New resource template
+ * /api/v1/admin/resource/open:
+ *   post:
+ *     summary: Load resource details by ID
+ *     tags: [Resource]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Resource profile
+ * /api/v1/admin/resource/save:
+ *   post:
+ *     summary: Save resource details
+ *     tags: [Resource]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved resource details
+ * /api/v1/admin/resource/delete:
+ *   post:
+ *     summary: Delete resource
+ *     tags: [Resource]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Deletion confirmation
+ * /api/v1/admin/resource/SaveListResource:
+ *   post:
+ *     summary: Save a list of resources
+ *     tags: [Resource]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Action status
  */
 
 router.get('/resource/initialize', authenticate, async (req, res, next) => {

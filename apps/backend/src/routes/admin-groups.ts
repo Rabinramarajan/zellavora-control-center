@@ -21,12 +21,39 @@ let mockGroups = [
  * /api/v1/admin/group/search:
  *   post:
  *     summary: Search groups
- *     tags: [Admin]
+ *     tags: [Group Search]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Search results
+ * /api/v1/admin/group/open:
+ *   post:
+ *     summary: Load group details
+ *     tags: [Group Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Group details
+ * /api/v1/admin/group/save:
+ *   post:
+ *     summary: Save group details
+ *     tags: [Group Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved group details
+ * /api/v1/admin/group/delete:
+ *   post:
+ *     summary: Delete group
+ *     tags: [Group Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Deletion confirmation
  */
 
 router.get('/group/search', authenticate, async (req, res, next) => {

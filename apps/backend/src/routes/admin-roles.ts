@@ -10,12 +10,75 @@ const router = Router();
  * /api/v1/admin/role/search:
  *   post:
  *     summary: Search roles
- *     tags: [Admin]
+ *     tags: [Role Search]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Search results
+ * /api/v1/admin/role/initialize:
+ *   get:
+ *     summary: Initialize role metadata
+ *     tags: [Role Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Initial state
+ * /api/v1/admin/role/new:
+ *   get:
+ *     summary: Get template for new role
+ *     tags: [Role Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: New role template
+ * /api/v1/admin/role/open:
+ *   post:
+ *     summary: Load role details by ID
+ *     tags: [Role Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Role profile
+ * /api/v1/admin/role/save:
+ *   post:
+ *     summary: Save role details
+ *     tags: [Role Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved role details
+ * /api/v1/admin/role/delete:
+ *   post:
+ *     summary: Delete role
+ *     tags: [Role Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Deletion confirmation
+ * /api/v1/admin/role/role-resource/load:
+ *   post:
+ *     summary: Load role-resource mappings
+ *     tags: [Role Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Mappings list
+ * /api/v1/admin/role/role-resource/save:
+ *   post:
+ *     summary: Save role-resource mappings
+ *     tags: [Role Detail]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Action status
  */
 
 router.get('/role/initialize', authenticate, async (req, res, next) => {
