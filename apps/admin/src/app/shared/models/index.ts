@@ -516,3 +516,26 @@ export interface ProjectTechnology {
   createdAt?: Date | string;
 }
 
+// ============================================================================
+// COMMON RESPONSE METADATA WRAPPERS (ADDED BY EXPRESS MIDDLEWARE)
+// ============================================================================
+
+export interface InfoMessage {
+  id: number;
+  msg: string;
+  msgType: 'Information' | 'Warning' | 'Error' | string;
+}
+
+export interface MsgWrapper {
+  errorMessage: string[];
+  infoMessage: InfoMessage;
+}
+
+export type WrappedResponse<T> = T & {
+  msg?: MsgWrapper;
+};
+
+export * from './error.model';
+
+
+
