@@ -94,7 +94,7 @@ import { FileUploadModule } from 'primeng/fileupload';
                 class="w-full"
                 [(ngModel)]="aboutData.sectionTitle"
               />
-              <span class="text-xs text-slate-400 mt-1 block">{{ aboutData.sectionTitle?.length || 0 }}/50</span>
+              <span class="text-xs text-slate-400 mt-1 block">{{ aboutData.sectionTitle.length || 0 }}/50</span>
             </div>
 
             <!-- Subtitle -->
@@ -119,7 +119,7 @@ import { FileUploadModule } from 'primeng/fileupload';
                 class="w-full"
                 [(ngModel)]="aboutData.description">
               </textarea>
-              <span class="text-xs text-slate-400 mt-1 block">{{ aboutData.description?.length || 0 }}/500</span>
+              <span class="text-xs text-slate-400 mt-1 block">{{ aboutData.description.length || 0 }}/500</span>
             </div>
 
             <!-- Highlights -->
@@ -131,7 +131,7 @@ import { FileUploadModule } from 'primeng/fileupload';
                   pInputText
                   type="text"
                   [value]="highlight"
-                  (ngModelChange)="aboutData.highlights[i] = $event"
+                  (ngModelChange)="updateHighlight(i, $event)"
                   placeholder="e.g., Clean Code & Best Practices"
                   class="w-full"
                 />
@@ -239,6 +239,10 @@ export class AboutSectionComponent implements OnInit {
 
   addHighlight() {
     this.aboutData.highlights.push('');
+  }
+
+  updateHighlight(index: number, value: any) {
+    this.aboutData.highlights[index] = value;
   }
 
   saveChanges() {

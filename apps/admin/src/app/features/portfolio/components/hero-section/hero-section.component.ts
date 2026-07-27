@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextareaModule } from 'primeng/inputtextarea';
@@ -69,7 +69,7 @@ import { MessageService } from 'primeng/api';
                 class="w-full"
                 [(ngModel)]="heroData.mainHeading"
               />
-              <span class="text-xs text-slate-400 mt-1 block">{{ heroData.mainHeading?.length || 0 }}/50</span>
+              <span class="text-xs text-slate-400 mt-1 block">{{ heroData.mainHeading.length || 0 }}/50</span>
             </div>
 
             <!-- Sub Heading -->
@@ -82,7 +82,7 @@ import { MessageService } from 'primeng/api';
                 class="w-full"
                 [(ngModel)]="heroData.subHeading"
               />
-              <span class="text-xs text-slate-400 mt-1 block">{{ heroData.subHeading?.length || 0 }}/80</span>
+              <span class="text-xs text-slate-400 mt-1 block">{{ heroData.subHeading.length || 0 }}/80</span>
             </div>
 
             <!-- Description -->
@@ -95,7 +95,7 @@ import { MessageService } from 'primeng/api';
                 class="w-full"
                 [(ngModel)]="heroData.description">
               </textarea>
-              <span class="text-xs text-slate-400 mt-1 block">{{ heroData.description?.length || 0 }}/500</span>
+              <span class="text-xs text-slate-400 mt-1 block">{{ heroData.description.length || 0 }}/500</span>
             </div>
 
             <!-- Availability Status -->
