@@ -4,6 +4,117 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin
+ *     description: Enterprise admin operations for user, role, resource, branch, config, and audit logs.
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/user/search:
+ *   post:
+ *     summary: Search users
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               pageSize:
+ *                 type: integer
+ *                 default: 10
+ *               pageNumber:
+ *                 type: integer
+ *                 default: 1
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/role/search:
+ *   post:
+ *     summary: Search roles
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/resource/search:
+ *   post:
+ *     summary: Search resources
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/Branch/Branch/Search:
+ *   post:
+ *     summary: Search branches
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/auditlog/search:
+ *   post:
+ *     summary: Search audit logs
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/config/search:
+ *   post:
+ *     summary: Search configs
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/group/search:
+ *   post:
+ *     summary: Search groups
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Search results
+ */
+
 // ==================== IN-MEMORY STORES FOR MOCK DATA ====================
 let mockResources = [
   {
