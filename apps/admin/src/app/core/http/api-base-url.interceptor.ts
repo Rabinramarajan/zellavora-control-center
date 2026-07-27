@@ -9,6 +9,7 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
     let rewrittenUrl = req.url;
 
     const isAdminRequest = 
+      rewrittenUrl.startsWith('/api/v1/admin') ||
       rewrittenUrl.startsWith('/api/user') ||
       rewrittenUrl.startsWith('/api/role') ||
       rewrittenUrl.startsWith('/api/resource') ||
@@ -27,7 +28,13 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
       rewrittenUrl.startsWith('/group');
 
     if (isAdminRequest) {
-      const normalizedPath = rewrittenUrl.startsWith('/api') ? rewrittenUrl : '/api' + rewrittenUrl;
+      let normalizedPath = rewrittenUrl;
+      if (rewrittenUrl.startsWith('/api/v1/admin')) {
+        // Keep as-is
+      } else {
+        const legacyPath = rewrittenUrl.startsWith('/api') ? rewrittenUrl : '/api' + rewrittenUrl;
+        normalizedPath = legacyPath.replace('/api/', '/api/v1/admin/');
+      }
       rewrittenUrl = `http://localhost:3000${normalizedPath}`;
     } else if (rewrittenUrl.startsWith('/api/v1')) {
       const rest = rewrittenUrl.slice('/api/v1'.length); // e.g. "/auth/login", "/projects/123/gallery"

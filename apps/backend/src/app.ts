@@ -143,7 +143,7 @@ app.use('/api/v1', projectRoutes);
 app.use('/api/v1', portfolioRoutes);
 app.use('/api/v1', galleryRoutes);
 app.use('/api/v1', techRoutes);
-app.use('/api', adminRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // ---------- RBAC module ----------
 // The RBAC router is mounted SYNCHRONOUSLY below, before the 404 handler.

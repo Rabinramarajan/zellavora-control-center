@@ -35,7 +35,7 @@ import {
 })
 export class AdminApiService {
   private http = inject(HttpClient);
-  private readonly baseUrl = '/api';
+  private readonly baseUrl = '/api/v1/admin';
 
   // ==================== USER ENDPOINTS ====================
 
