@@ -13,7 +13,13 @@ import portfolioRoutes from './routes/portfolio';
 import galleryRoutes from './routes/gallery';
 import techRoutes from './routes/technologies';
 import swaggerRoutes from './routes/swagger.route';
-import adminRoutes from './routes/admin';
+import adminUsersRoutes from './routes/admin-users';
+import adminGroupsRoutes from './routes/admin-groups';
+import adminRolesRoutes from './routes/admin-roles';
+import adminResourcesRoutes from './routes/admin-resources';
+import adminConfigsRoutes from './routes/admin-configs';
+import adminAuditRoutes from './routes/admin-audit';
+import adminMessagesRoutes from './routes/admin-messages';
 import { buildRbac } from './rbac';
 
 const app = express();
@@ -143,7 +149,13 @@ app.use('/api/v1', projectRoutes);
 app.use('/api/v1', portfolioRoutes);
 app.use('/api/v1', galleryRoutes);
 app.use('/api/v1', techRoutes);
-app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/admin', adminUsersRoutes);
+app.use('/api/v1/admin', adminGroupsRoutes);
+app.use('/api/v1/admin', adminRolesRoutes);
+app.use('/api/v1/admin', adminResourcesRoutes);
+app.use('/api/v1/admin', adminConfigsRoutes);
+app.use('/api/v1/admin', adminAuditRoutes);
+app.use('/api/v1/admin', adminMessagesRoutes);
 
 // ---------- RBAC module ----------
 // The RBAC router is mounted SYNCHRONOUSLY below, before the 404 handler.
