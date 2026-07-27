@@ -14,7 +14,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/dashboard/dashboard.routes').then(
         (m) => m.dashboardRoutes
@@ -22,7 +22,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'portfolio',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadChildren: () =>
       import('./features/portfolio/portfolio.routes').then(
         (m) => m.portfolioRoutes

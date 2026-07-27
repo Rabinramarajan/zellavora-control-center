@@ -13,6 +13,7 @@ import portfolioRoutes from './routes/portfolio';
 import galleryRoutes from './routes/gallery';
 import techRoutes from './routes/technologies';
 import swaggerRoutes from './routes/swagger.route';
+import adminRoutes from './routes/admin';
 import { buildRbac } from './rbac';
 
 const app = express();
@@ -142,6 +143,7 @@ app.use('/api/v1', projectRoutes);
 app.use('/api/v1', portfolioRoutes);
 app.use('/api/v1', galleryRoutes);
 app.use('/api/v1', techRoutes);
+app.use('/api', adminRoutes);
 
 // ---------- RBAC module ----------
 // The RBAC router is mounted SYNCHRONOUSLY below, before the 404 handler.

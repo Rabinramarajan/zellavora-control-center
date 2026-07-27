@@ -1,12 +1,21 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
+import { LayoutService } from '@core/services/layout.service';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+
+interface SubNavItem {
+  label: string;
+  route: string;
+  path: string;
+}
 
 interface NavItem {
   label: string;
   icon: string;
   route: string;
+  path: string;
   badge?: number;
+  children?: SubNavItem[];
 }
 
 @Component({
@@ -16,136 +25,201 @@ interface NavItem {
   template: `
     <!-- Sidebar Toggle Button (Mobile) -->
     <button
-      (click)="toggleSidebar()"
-      class="fixed bottom-6 right-6 md:hidden z-50 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+      (click)="layoutService.toggleSidebar()"
+      class="fixed bottom-6 right-6 md:hidden z-50 w-14 h-14 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
       [attr.aria-label]="'Toggle sidebar'"
     >
-      <span *ngIf="!isSidebarOpen()" class="text-2xl">☰</span>
-      <span *ngIf="isSidebarOpen()" class="text-2xl">✕</span>
+      <span *ngIf="!layoutService.isSidebarOpen()" class="text-2xl">☰</span>
+      <span *ngIf="layoutService.isSidebarOpen()" class="text-2xl">✕</span>
     </button>
 
     <!-- Sidebar -->
     <aside
-      class="fixed md:static inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-transform duration-300 transform md:transform-none"
-      [class.translate-x-0]="isSidebarOpen()"
-      [class.-translate-x-full]="!isSidebarOpen()"
+      class="fixed md:static inset-y-0 left-0 w-64 h-full bg-[#05040e] border-r border-[#13112b] transition-transform duration-300 transform md:transform-none flex flex-col overflow-hidden"
+      [class.translate-x-0]="layoutService.isSidebarOpen()"
+      [class.-translate-x-full]="!layoutService.isSidebarOpen()"
       [attr.aria-label]="'Navigation sidebar'"
     >
-      <div class="flex flex-col h-full pt-6">
+      <div class="flex flex-col h-full">
+        <!-- Logo Header (aligned with navbar h-16) -->
+        <div class="h-16 flex items-center gap-3 px-6 border-b border-[#13112b] shrink-0 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <span class="text-white font-extrabold text-base">Z</span>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold tracking-wider leading-none text-white">ZELLAVORA</div>
+            <div class="text-[8px] tracking-widest text-[#4f46e5] font-semibold mt-0.5">CONTROL CENTER</div>
+          </div>
+        </div>
+
         <!-- Navigation Section -->
-        <nav class="flex-1 px-4 space-y-2">
-          <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 mb-4">
-            Main
-          </p>
+        <nav class="flex-1 overflow-y-auto px-4 space-y-4 mb-6 custom-sidebar-scrollbar">
+          <!-- Main Category -->
+          <div>
+            <p class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
+              MAIN NAVIGATION
+            </p>
 
-          <a
-            *ngFor="let item of mainNavItems"
-            [routerLink]="item.route"
-            routerLinkActive="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-            [routerLinkActiveOptions]="{ exact: false }"
-            (click)="closeSidebarOnMobile()"
-            class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          >
-            <div class="flex items-center gap-3">
-              <span class="text-xl">{{ item.icon }}</span>
-              <span class="font-medium">{{ item.label }}</span>
-            </div>
-            <span
-              *ngIf="item.badge"
-              class="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
-            >
-              {{ item.badge }}
-            </span>
-          </a>
+            <div class="space-y-1">
+              <div *ngFor="let item of mainNavItems" class="space-y-1">
+                <!-- Parent Link -->
+                <a
+                  [routerLink]="item.route"
+                  routerLinkActive="bg-[#13112b] text-white"
+                  [routerLinkActiveOptions]="{ exact: item.route === '/portfolio' || item.route === '/dashboard' ? true : false }"
+                  (click)="item.children ? togglePortfolio($event) : closeSidebarOnMobile()"
+                  class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
+                >
+                  <div class="flex items-center gap-3">
+                    <span class="text-base">{{ item.icon }}</span>
+                    <span>{{ item.label }}</span>
+                  </div>
+                  <span class="text-[9px] text-[#4e4b70] font-normal font-mono" *ngIf="!item.children || !isPortfolioExpanded()">{{ item.path }}</span>
+                </a>
 
-          <!-- Divider -->
-          <div class="my-4 border-t border-slate-200 dark:border-slate-700"></div>
-
-          <!-- Admin Section -->
-          <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 mb-4">
-            Admin
-          </p>
-
-          <a
-            *ngFor="let item of adminNavItems"
-            [routerLink]="item.route"
-            routerLinkActive="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-            [routerLinkActiveOptions]="{ exact: false }"
-            (click)="closeSidebarOnMobile()"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          >
-            <span class="text-xl">{{ item.icon }}</span>
-            <span class="font-medium">{{ item.label }}</span>
-          </a>
-        </nav>
-
-        <!-- Bottom Section -->
-        <div class="border-t border-slate-200 dark:border-slate-700 p-4 space-y-2">
-          <!-- Quick Stats -->
-          <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 space-y-2">
-            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400">Quick Stats</p>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <p class="text-slate-500 dark:text-slate-400">Projects</p>
-                <p class="text-lg font-bold text-slate-900 dark:text-white">0</p>
-              </div>
-              <div>
-                <p class="text-slate-500 dark:text-slate-400">Posts</p>
-                <p class="text-lg font-bold text-slate-900 dark:text-white">0</p>
+                <!-- Submenu for Portfolio (if active/expanded) -->
+                <div *ngIf="item.children && isPortfolioExpanded()" class="pl-3.5 pr-1 py-1 space-y-1 border-l border-[#13112b] ml-5">
+                  <a
+                    *ngFor="let sub of item.children"
+                    [routerLink]="sub.route"
+                    routerLinkActive="active-sub text-white shadow-lg shadow-purple-600/10"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    (click)="closeSidebarOnMobile()"
+                    class="flex items-center justify-between px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#8b88a5] hover:bg-[#13112b]/30 hover:text-white transition-all"
+                  >
+                    <span>{{ sub.label }}</span>
+                    <span class="text-[8px] text-[#4e4b70] font-normal font-mono sub-path">{{ sub.path }}</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Version -->
-          <p class="text-xs text-slate-500 dark:text-slate-400 text-center py-2">
-            v1.0.0
-          </p>
+          <!-- Admin Category -->
+          <div>
+            <p class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
+              ADMIN NAVIGATION
+            </p>
+
+            <div class="space-y-1">
+              <a
+                *ngFor="let item of adminNavItems"
+                [routerLink]="item.route"
+                routerLinkActive="bg-[#13112b] text-white"
+                (click)="closeSidebarOnMobile()"
+                class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="text-base">{{ item.icon }}</span>
+                  <span>{{ item.label }}</span>
+                </div>
+                <span class="text-[9px] text-[#4e4b70] font-normal font-mono">{{ item.path }}</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+
+        <!-- Upgrade Section (Fixed at bottom) -->
+        <div class="p-4 shrink-0 mt-auto border-t border-[#13112b]">
+          <div class="glass-panel p-4 rounded-2xl relative overflow-hidden bg-gradient-to-br from-purple-900/40 via-blue-900/10 to-transparent border border-purple-500/20">
+            <div class="absolute -right-2 -top-2 w-10 h-10 bg-purple-500/10 rounded-full blur-md"></div>
+            <div class="absolute -left-2 -bottom-2 w-10 h-10 bg-indigo-500/10 rounded-full blur-md"></div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-lg">👑</span>
+              <h5 class="text-xs font-bold text-white">Upgrade to Pro</h5>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1.5 leading-normal">Unlock advanced features and priority support.</p>
+            <button class="mt-3.5 w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-[10px] rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center justify-center gap-1">
+              Upgrade Now &rarr;
+            </button>
+          </div>
         </div>
       </div>
     </aside>
 
     <!-- Backdrop for mobile -->
     <div
-      *ngIf="isSidebarOpen()"
-      (click)="closeSidebar()"
+      *ngIf="layoutService.isSidebarOpen()"
+      (click)="layoutService.closeSidebar()"
       class="fixed inset-0 bg-black/50 md:hidden z-40"
     ></div>
   `,
-  styles: [],
+  styles: [
+    `
+      .active-sub {
+        background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%) !important;
+      }
+      .active-sub .sub-path {
+        color: #c084fc !important;
+      }
+      .custom-sidebar-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-sidebar-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-sidebar-scrollbar::-webkit-scrollbar-thumb {
+        background: #13112b;
+        border-radius: 2px;
+      }
+    `,
+  ],
 })
 export class SidebarComponent {
-  isSidebarOpen = signal(false);
+  layoutService = inject(LayoutService);
+  isPortfolioExpanded = signal(true); // Defaults to expanded in the mockup
 
   mainNavItems: NavItem[] = [
-    { label: 'Dashboard', icon: '📊', route: '/dashboard' },
-    { label: 'Portfolio', icon: '👤', route: '/portfolio' },
-    { label: 'Projects', icon: '💼', route: '/projects' },
-    { label: 'Blog', icon: '📝', route: '/blog' },
-    { label: 'Media', icon: '🖼️', route: '/media' },
-    { label: 'Analytics', icon: '📈', route: '/analytics', badge: 3 },
+    { label: 'Dashboard', icon: '📊', route: '/dashboard', path: '/dashboard' },
+    {
+      label: 'Portfolio',
+      icon: '👤',
+      route: '/portfolio',
+      path: '/portfolio',
+      children: [
+        { label: 'Overview', route: '/portfolio/profile', path: '/profile' },
+        { label: 'About', route: '/portfolio/about', path: '/about' },
+        { label: 'Experience', route: '/portfolio/experience', path: '/experience' },
+        { label: 'Education', route: '/portfolio/education', path: '/education' },
+        { label: 'Skills', route: '/portfolio/skills', path: '/skills' },
+        { label: 'Services', route: '/portfolio/services', path: '/services' },
+        { label: 'Testimonials', route: '/portfolio/testimonials', path: '/testimonials' }
+      ]
+    },
+    { label: 'Projects', icon: '💼', route: '/projects', path: '/projects' },
+    { label: 'Blog', icon: '📝', route: '/blog', path: '/blog' },
+    { label: 'Media', icon: '🖼️', route: '/media', path: '/media' },
+    { label: 'Analytics', icon: '📈', route: '/analytics', path: '/analytics', badge: 3 },
   ];
 
   adminNavItems: NavItem[] = [
-    { label: 'Users', icon: '👥', route: '/users' },
-    { label: 'Settings', icon: '⚙️', route: '/settings' },
-    { label: 'Admin Console', icon: '🔐', route: '/admin' },
-    { label: 'Manage Users', icon: '👤', route: '/admin/users' },
-    { label: 'Manage Roles', icon: '🛡️', route: '/admin/roles' },
-    { label: 'Resources', icon: '📦', route: '/admin/resources' },
-    { label: 'Branches', icon: '🌍', route: '/admin/branches' },
+    { label: 'Users', icon: '👥', route: '/users', path: '/users' },
+    { label: 'Settings', icon: '⚙️', route: '/settings', path: '/settings' },
+    { label: 'Admin Console', icon: '🔐', route: '/admin', path: '/admin' },
+    { label: 'Manage Users', icon: '👤', route: '/admin/users', path: '/admin/users' },
+    { label: 'Manage Roles', icon: '🛡️', route: '/admin/roles', path: '/admin/roles' },
+    { label: 'Resources', icon: '📦', route: '/admin/resources', path: '/admin/resources' },
+    { label: 'Branches', icon: '🌍', route: '/admin/branches', path: '/admin/branches' },
   ];
 
   toggleSidebar(): void {
-    this.isSidebarOpen.update((v) => !v);
+    this.layoutService.toggleSidebar();
   }
 
   closeSidebar(): void {
-    this.isSidebarOpen.set(false);
+    this.layoutService.closeSidebar();
   }
 
   closeSidebarOnMobile(): void {
     if (window.innerWidth < 768) {
-      this.closeSidebar();
+      this.layoutService.closeSidebar();
     }
+  }
+
+  togglePortfolio(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isPortfolioExpanded.update((v) => !v);
   }
 }

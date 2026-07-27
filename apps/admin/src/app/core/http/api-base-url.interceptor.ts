@@ -8,8 +8,28 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
   if (!req.url.startsWith('http://') && !req.url.startsWith('https://')) {
     let rewrittenUrl = req.url;
 
-    // Remove leading /api/v1 if present
-    if (rewrittenUrl.startsWith('/api/v1')) {
+    const isAdminRequest = 
+      rewrittenUrl.startsWith('/api/user') ||
+      rewrittenUrl.startsWith('/api/role') ||
+      rewrittenUrl.startsWith('/api/resource') ||
+      rewrittenUrl.startsWith('/api/Branch') ||
+      rewrittenUrl.startsWith('/api/MAsterConfig') ||
+      rewrittenUrl.startsWith('/api/auditlog') ||
+      rewrittenUrl.startsWith('/api/config') ||
+      rewrittenUrl.startsWith('/api/group') ||
+      rewrittenUrl.startsWith('/user') ||
+      rewrittenUrl.startsWith('/role') ||
+      rewrittenUrl.startsWith('/resource') ||
+      rewrittenUrl.startsWith('/Branch') ||
+      rewrittenUrl.startsWith('/MAsterConfig') ||
+      rewrittenUrl.startsWith('/auditlog') ||
+      rewrittenUrl.startsWith('/config') ||
+      rewrittenUrl.startsWith('/group');
+
+    if (isAdminRequest) {
+      const normalizedPath = rewrittenUrl.startsWith('/api') ? rewrittenUrl : '/api' + rewrittenUrl;
+      rewrittenUrl = `http://localhost:3000${normalizedPath}`;
+    } else if (rewrittenUrl.startsWith('/api/v1')) {
       const rest = rewrittenUrl.slice('/api/v1'.length); // e.g. "/auth/login", "/projects/123/gallery"
       
       // Perform routing mapping to individual Edge Functions

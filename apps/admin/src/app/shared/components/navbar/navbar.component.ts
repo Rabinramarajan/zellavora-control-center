@@ -1,8 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { LayoutService } from '@core/services/layout.service';
+
+interface BreadcrumbSegment {
+  label: string;
+  route: string;
+}
 
 @Component({
   selector: 'app-navbar',
@@ -11,214 +17,143 @@ import { trigger, transition, style, animate } from '@angular/animations';
   animations: [
     trigger('slideDown', [
       transition(':enter', [
-        style({ transform: 'translateY(-100%)', opacity: 0 }),
-        animate('300ms ease-out', style({ transform: 'translateY(0)', opacity: 1 })),
+        style({ transform: 'translateY(-10%)', opacity: 0 }),
+        animate('200ms ease-out', style({ transform: 'translateY(0)', opacity: 1 })),
       ]),
       transition(':leave', [
-        animate('300ms ease-in', style({ transform: 'translateY(-100%)', opacity: 0 })),
+        animate('150ms ease-in', style({ transform: 'translateY(-10%)', opacity: 0 })),
       ]),
     ]),
   ],
   template: `
-    <!-- Navbar -->
-    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <!-- Logo -->
-          <div class="flex items-center gap-2">
-            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span class="text-white font-bold text-lg">Z</span>
-            </div>
-            <span class="font-bold text-slate-900 dark:text-white hidden sm:inline">Zellavora</span>
-          </div>
+    <!-- Top Header -->
+    <header class="h-16 bg-[#05040e] border-b border-[#13112b] px-6 flex items-center justify-between sticky top-0 z-40 font-sans">
+      <!-- Left side: Logo, Hamburger and Breadcrumbs -->
+      <div class="flex items-center gap-4">
 
-          <!-- Desktop Navigation -->
-          <div class="hidden md:flex items-center gap-8">
+
+        <!-- Hamburger Menu toggle -->
+        <button (click)="layoutService.toggleSidebar()" class="text-slate-400 hover:text-white transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+
+        <!-- Breadcrumbs trail -->
+        <nav class="flex items-center gap-2 text-xs font-semibold select-none ml-2">
+          <ng-container *ngFor="let seg of getBreadcrumbs(); let last = last">
             <a
-              routerLink="/dashboard"
-              class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              *ngIf="seg.route"
+              [routerLink]="seg.route"
+              class="text-[#a3a1b8] hover:text-white transition"
             >
-              Dashboard
+              {{ seg.label }}
             </a>
-            <a
-              routerLink="/portfolio"
-              class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Portfolio
-            </a>
-            <a
-              routerLink="/projects"
-              class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Projects
-            </a>
-            <a
-              routerLink="/blog"
-              class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Blog
-            </a>
-            <a
-              routerLink="/analytics"
-              class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Analytics
-            </a>
-          </div>
+            <!-- Active breadcrumb highlighted in vibrant violet/purple -->
+            <span *ngIf="!seg.route" class="text-[#8B5CF6]">
+              {{ seg.label }}
+            </span>
+            <!-- Chevron separator -->
+            <svg *ngIf="!last" class="w-3 h-3 text-[#4e4b70] mx-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </ng-container>
+        </nav>
+      </div>
 
-          <!-- Right Side - Theme Toggle & User Menu -->
-          <div class="flex items-center gap-4">
-            <!-- Theme Toggle -->
-            <button
-              (click)="toggleTheme()"
-              class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
-            >
-              <span *ngIf="!isDarkMode()" class="text-2xl">🌙</span>
-              <span *ngIf="isDarkMode()" class="text-2xl">☀️</span>
-            </button>
-
-            <!-- User Menu Dropdown -->
-            <div class="relative">
-              <button
-                (click)="toggleUserMenu()"
-                class="flex items-center gap-2 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                [attr.aria-label]="'User menu for ' + (auth.user()?.fullName || 'User')"
-              >
-                <!-- User Avatar -->
-                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  {{ getInitials(auth.user()?.fullName) }}
-                </div>
-                <!-- Dropdown Indicator -->
-                <span *ngIf="screenSize() !== 'mobile'" class="text-slate-600 dark:text-slate-400">
-                  {{ isUserMenuOpen() ? '▲' : '▼' }}
-                </span>
-              </button>
-
-              <!-- User Dropdown Menu -->
-              <div
-                *ngIf="isUserMenuOpen()"
-                @slideDown
-                class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600"
-              >
-                <!-- User Info -->
-                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-600">
-                  <p class="font-medium text-slate-900 dark:text-white">{{ auth.user()?.fullName }}</p>
-                  <p class="text-sm text-slate-600 dark:text-slate-400">{{ auth.user()?.email }}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                    Role: <span class="font-medium">{{ auth.user()?.role | uppercase }}</span>
-                  </p>
-                </div>
-
-                <!-- Menu Items -->
-                <a
-                  routerLink="/settings"
-                  (click)="closeUserMenu()"
-                  class="block px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
-                >
-                  ⚙️ Settings
-                </a>
-
-                <!-- Logout -->
-                <button
-                  (click)="logout()"
-                  class="w-full text-left px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-t border-slate-200 dark:border-slate-600 transition-colors"
-                >
-                  🚪 Logout
-                </button>
-              </div>
-            </div>
-
-            <!-- Mobile Menu Button -->
-            <button
-              (click)="toggleMobileMenu()"
-              class="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              [attr.aria-label]="isMobileMenuOpen() ? 'Close menu' : 'Open menu'"
-            >
-              <span *ngIf="!isMobileMenuOpen()" class="text-2xl">☰</span>
-              <span *ngIf="isMobileMenuOpen()" class="text-2xl">✕</span>
-            </button>
-          </div>
+      <!-- Right side: Notifications & User profile dropdown -->
+      <div class="flex items-center gap-5">
+        <!-- Notification bell -->
+        <div class="relative cursor-pointer group">
+          <button class="w-9 h-9 rounded-xl border border-[#13112b] bg-white/5 text-slate-400 flex items-center justify-center hover:text-white transition relative">
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </button>
+          <span class="absolute -top-1 -right-1 bg-[#8B5CF6] text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md shadow-purple-600/30">
+            9+
+          </span>
         </div>
 
-        <!-- Mobile Navigation Menu -->
-        <div
-          *ngIf="isMobileMenuOpen()"
-          @slideDown
-          class="md:hidden pb-4 space-y-2"
-        >
-          <a
-            routerLink="/dashboard"
-            (click)="closeMobileMenu()"
-            class="block px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+        <!-- User profile dropdown toggle -->
+        <div class="relative">
+          <button
+            (click)="toggleUserMenu()"
+            class="flex items-center gap-3 p-1.5 rounded-xl border border-transparent hover:bg-white/5 transition-all"
+            type="button"
           >
-            Dashboard
-          </a>
-          <a
-            routerLink="/portfolio"
-            (click)="closeMobileMenu()"
-            class="block px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            <!-- User avatar -->
+            <div class="w-8 h-8 rounded-full bg-purple-600/30 border border-purple-500/20 flex items-center justify-center overflow-hidden shrink-0">
+              <img
+                src="assets/rabin_avatar.jpg"
+                alt="Rabin R"
+                class="w-full h-full object-cover"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
+              />
+              <span class="hidden text-xs font-bold text-purple-300">{{ getInitials(auth.user()?.fullName || 'Rabin R') }}</span>
+            </div>
+            
+            <!-- User details -->
+            <div class="text-left hidden sm:block leading-none">
+              <div class="text-xs font-bold text-white">
+                {{ auth.user()?.fullName || 'Rabin R' }}
+              </div>
+              <span class="text-[9px] text-[#a3a1b8] mt-1.5 block">
+                {{ auth.user()?.role || 'Super Admin' }}
+              </span>
+            </div>
+
+            <!-- Down arrow chevron -->
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <!-- User dropdown menu -->
+          <div
+            *ngIf="isUserMenuOpen()"
+            @slideDown
+            class="absolute right-0 mt-2.5 w-52 glass-panel rounded-2xl shadow-2xl border border-[#13112b] p-2 z-50 text-slate-200"
           >
-            Portfolio
-          </a>
-          <a
-            routerLink="/projects"
-            (click)="closeMobileMenu()"
-            class="block px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-          >
-            Projects
-          </a>
-          <a
-            routerLink="/blog"
-            (click)="closeMobileMenu()"
-            class="block px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-          >
-            Blog
-          </a>
-          <a
-            routerLink="/media"
-            (click)="closeMobileMenu()"
-            class="block px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-          >
-            Media
-          </a>
-          <a
-            routerLink="/analytics"
-            (click)="closeMobileMenu()"
-            class="block px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-          >
-            Analytics
-          </a>
+            <!-- Profile title details -->
+            <div class="px-4 py-3 border-b border-[#13112b] mb-1">
+              <p class="font-bold text-xs text-white leading-none">
+                {{ auth.user()?.fullName || 'Rabin R' }}
+              </p>
+              <p class="text-[10px] text-slate-400 mt-1.5 leading-none">
+                {{ auth.user()?.email || 'rabin@zellavora.com' }}
+              </p>
+            </div>
+
+            <!-- Options -->
+            <a
+              routerLink="/settings"
+              (click)="closeUserMenu()"
+              class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-white/5 text-xs text-[#a3a1b8] hover:text-white transition-colors"
+            >
+              <span>⚙️</span> Settings
+            </a>
+
+            <!-- Logout action -->
+            <button
+              (click)="logout()"
+              class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-red-500/10 text-xs text-red-400 hover:text-red-300 transition-colors border-t border-[#13112b] mt-1"
+            >
+              <span>🚪</span> Logout
+            </button>
+          </div>
         </div>
       </div>
-    </nav>
+    </header>
   `,
   styles: [],
 })
 export class NavbarComponent {
   auth = inject(AuthService);
+  router = inject(Router);
+  layoutService = inject(LayoutService);
 
   isUserMenuOpen = signal(false);
-  isMobileMenuOpen = signal(false);
-  isDarkMode = signal(this.getInitialTheme());
-  screenSize = signal<'mobile' | 'tablet' | 'desktop'>('desktop');
-
-  constructor() {
-    this.updateScreenSize();
-    window.addEventListener('resize', () => this.updateScreenSize());
-  }
-
-  toggleTheme(): void {
-    this.isDarkMode.update((v) => !v);
-    const html = document.documentElement;
-    if (this.isDarkMode()) {
-      html.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      html.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }
 
   toggleUserMenu(): void {
     this.isUserMenuOpen.update((v) => !v);
@@ -228,17 +163,47 @@ export class NavbarComponent {
     this.isUserMenuOpen.set(false);
   }
 
-  toggleMobileMenu(): void {
-    this.isMobileMenuOpen.update((v) => !v);
-  }
-
-  closeMobileMenu(): void {
-    this.isMobileMenuOpen.set(false);
-  }
-
   logout(): void {
     this.closeUserMenu();
     this.auth.logout().subscribe();
+  }
+
+  getBreadcrumbs(): BreadcrumbSegment[] {
+    const url = this.router.url;
+    if (url.includes('education')) {
+      return [
+        { label: 'Portfolio', route: '/portfolio' },
+        { label: 'Profile Editor', route: '/portfolio/profile' },
+        { label: 'Education Section', route: '' }
+      ];
+    } else if (url.includes('profile')) {
+      return [
+        { label: 'Portfolio', route: '/portfolio' },
+        { label: 'Profile Editor', route: '' }
+      ];
+    } else if (url.includes('skills')) {
+      return [
+        { label: 'Portfolio', route: '/portfolio' },
+        { label: 'Profile Editor', route: '/portfolio/profile' },
+        { label: 'Skills Section', route: '' }
+      ];
+    } else if (url.includes('dashboard')) {
+      return [
+        { label: 'Dashboard', route: '' }
+      ];
+    } else {
+      // Clean fallback breadcrumb trail
+      const segments = url.split('/').filter(s => s && s !== 'admin');
+      if (segments.length === 0) return [{ label: 'Zellavora', route: '' }];
+      return segments.map((seg, idx) => {
+        const path = '/' + segments.slice(0, idx + 1).join('/');
+        const isLast = idx === segments.length - 1;
+        return {
+          label: this.capitalize(seg),
+          route: isLast ? '' : path
+        };
+      });
+    }
   }
 
   getInitials(name?: string): string {
@@ -251,21 +216,7 @@ export class NavbarComponent {
       .slice(0, 2);
   }
 
-  private getInitialTheme(): boolean {
-    if (typeof localStorage === 'undefined') return false;
-    const stored = localStorage.getItem('theme');
-    if (stored) return stored === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-
-  private updateScreenSize(): void {
-    const width = window.innerWidth;
-    if (width < 768) {
-      this.screenSize.set('mobile');
-    } else if (width < 1024) {
-      this.screenSize.set('tablet');
-    } else {
-      this.screenSize.set('desktop');
-    }
+  private capitalize(s: string): string {
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 }

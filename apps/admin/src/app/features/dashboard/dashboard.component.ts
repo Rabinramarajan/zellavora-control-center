@@ -2,142 +2,600 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
+interface Task {
+  id: number;
+  title: string;
+  category: string;
+  categoryClass: string;
+  completed: boolean;
+}
+
+interface Activity {
+  id: number;
+  message: string;
+  time: string;
+  iconBg: string;
+  iconColor: string;
+  type: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
-      <!-- Header -->
-      <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-          <p class="text-slate-600 dark:text-slate-400 mt-1">Welcome to Zellavora Control Center</p>
+    <div class="h-screen w-screen overflow-hidden bg-[#03020c] text-slate-100 flex font-sans">
+      <!-- Sidebar Navigation -->
+      <aside class="w-64 h-full border-r border-white/5 bg-[#070514]/80 backdrop-blur-xl flex flex-col p-6 shrink-0 hidden md:flex overflow-hidden">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 mb-6 shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <span class="text-white font-extrabold text-lg">Z</span>
+          </div>
+          <div>
+            <div class="text-xs font-bold tracking-wider leading-none text-white">ZELLAVORA</div>
+            <div class="text-[9px] tracking-widest text-purple-400 font-semibold mt-0.5">CONTROL CENTER</div>
+          </div>
         </div>
-      </div>
 
-      <!-- Content -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- Welcome Card -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 mb-8">
-          <div class="flex items-center gap-6">
-            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center">
-              <span class="text-3xl">🚀</span>
+        <!-- Scrollable Navigation Links -->
+        <nav class="flex-1 overflow-y-auto space-y-1.5 mb-6 pr-1">
+          <a routerLink="/dashboard" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-purple-600/20 to-blue-500/5 text-purple-400 border border-purple-500/10">
+            <span class="text-sm">📊</span> Dashboard
+          </a>
+          <a routerLink="/projects" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">💼</span> Projects
+          </a>
+          <a routerLink="/portfolio" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">👤</span> Clients
+          </a>
+          <a routerLink="/media" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">📦</span> Products
+          </a>
+          <a routerLink="/analytics" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">📈</span> Analytics
+          </a>
+          <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">📝</span> Content
+          </a>
+          <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">💳</span> Finance
+          </a>
+          <a routerLink="/users" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">👥</span> Users & Teams
+          </a>
+          <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">🔌</span> Integrations
+          </a>
+          <a routerLink="/settings" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition">
+            <span class="text-sm">⚙️</span> Settings
+          </a>
+        </nav>
+
+        <!-- Fixed Bottom Upgrade & User info -->
+        <div class="space-y-4 shrink-0 mt-auto pt-4 border-t border-white/5">
+          <!-- Upgrade Panel -->
+          <div class="glass-panel p-3.5 rounded-xl relative overflow-hidden bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/15">
+            <span class="text-base">👑</span>
+            <h5 class="text-[11px] font-bold text-white mt-1.5">Upgrade Plan</h5>
+            <p class="text-[9px] text-slate-400 mt-0.5 leading-relaxed">Unlock advanced features.</p>
+            <button class="mt-2 text-[9px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 transition">
+              Upgrade Now <span class="text-xs">&rarr;</span>
+            </button>
+          </div>
+
+          <!-- Profile Info -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-purple-600/30 border border-purple-500/20 flex items-center justify-center overflow-hidden">
+                <span class="text-xs font-bold text-purple-300">RR</span>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-white leading-none">Rabin R</div>
+                <span class="text-[9px] text-slate-400 mt-0.5 block">Super Admin</span>
+              </div>
             </div>
+            <button class="text-slate-400 hover:text-white">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Body Container -->
+      <main class="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
+        <!-- Top Bar Navigation Header -->
+        <header class="h-16 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-[#03020c]/40 backdrop-blur-md">
+          <!-- Search Bar -->
+          <div class="flex items-center gap-4 flex-1 max-w-md">
+            <button class="md:hidden text-slate-400 hover:text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+            <div class="relative w-full">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </span>
+              <input
+                type="text"
+                class="w-full pl-9 pr-12 py-1.5 rounded-xl border border-white/5 bg-white/5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-600 focus:border-transparent"
+                placeholder="Search anything..."
+              />
+              <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-bold text-slate-500">
+                ⌘ K
+              </span>
+            </div>
+          </div>
+
+          <!-- Utility Icons -->
+          <div class="flex items-center gap-4">
+            <button class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold hover:bg-purple-500 shadow-lg shadow-purple-600/20 transition">
+              ＋
+            </button>
+            <div class="relative">
+              <button class="w-8 h-8 rounded-lg border border-white/5 bg-white/5 text-slate-400 flex items-center justify-center hover:text-white transition">
+                🔔
+              </button>
+              <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-purple-600 text-white text-[9px] font-bold flex items-center justify-center">8</span>
+            </div>
+            <button class="w-8 h-8 rounded-lg border border-white/5 bg-white/5 text-slate-400 flex items-center justify-center hover:text-white transition text-xs font-bold">
+              ❓
+            </button>
+
+            <!-- Dropdown -->
+            <div class="flex items-center gap-2 border-l border-white/10 pl-4 ml-2">
+              <div class="w-8 h-8 rounded-full bg-purple-600/30 border border-purple-500/20 flex items-center justify-center text-xs font-bold text-purple-300">RR</div>
+              <div class="hidden sm:block">
+                <div class="text-xs font-bold text-white leading-none">Rabin R</div>
+                <span class="text-[9px] text-slate-400">Super Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Scrollable Dashboard Content Area -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+          <!-- Top Greeting & Datepicker -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Welcome to Zellavora Control Center
+              <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                Good Morning, Rabin <span class="text-xl">👋</span>
               </h2>
-              <p class="text-slate-600 dark:text-slate-400">
-                Your enterprise CMS and administration platform is ready. Manage your portfolio, projects, blog, and more!
-              </p>
+              <p class="text-xs text-slate-400 mt-1">Here's what's happening with your workspace today.</p>
+            </div>
+            <!-- Date picker button -->
+            <button class="px-4 py-2 border border-white/5 bg-white/5 text-xs text-slate-300 rounded-xl hover:bg-white/10 transition flex items-center gap-2">
+              📅 May 20 – May 27, 2025 <span class="text-[9px] text-slate-500">&bull;&bull;&bull;</span>
+            </button>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Stat 1 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Revenue</span>
+                <span class="text-2xl font-black text-white tracking-tight mt-1.5 block">$24,780</span>
+                <div class="flex items-center gap-1 text-[10px] text-emerald-400 font-bold mt-2">
+                  <span>▲</span> 18.6% vs last 7 days
+                </div>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                💼
+              </div>
+            </div>
+
+            <!-- Stat 2 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Projects</span>
+                <span class="text-2xl font-black text-white tracking-tight mt-1.5 block">46</span>
+                <div class="flex items-center gap-1 text-[10px] text-emerald-400 font-bold mt-2">
+                  <span>▲</span> 12.5% vs 7 days
+                </div>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                📁
+              </div>
+            </div>
+
+            <!-- Stat 3 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Clients</span>
+                <span class="text-2xl font-black text-white tracking-tight mt-1.5 block">114</span>
+                <div class="flex items-center gap-1 text-[10px] text-emerald-400 font-bold mt-2">
+                  <span>▲</span> 9.2% 7 days
+                </div>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                👥
+              </div>
+            </div>
+
+            <!-- Stat 4 -->
+            <div class="glass-panel p-5 rounded-2xl relative overflow-hidden flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">System Health</span>
+                <span class="text-2xl font-black text-white tracking-tight mt-1.5 block">99.9%</span>
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] text-emerald-400 font-bold mt-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Excellent
+                </div>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                🛡️
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle row layout: Analytics chart / Donut chart / Activity Feed -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Analytics Chart Overlay -->
+            <div class="glass-panel p-6 rounded-3xl lg:col-span-6 relative overflow-hidden">
+              <div class="flex items-center justify-between mb-6">
+                <div>
+                  <h4 class="text-sm font-bold text-white">Analytics Overview</h4>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Track and analyze performance metrics</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Revenue
+                  </div>
+                  <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span> Visitors
+                  </div>
+                  <button class="px-2.5 py-1 border border-white/5 bg-white/5 text-[9px] text-slate-300 font-semibold rounded-lg">
+                    This Week ▾
+                  </button>
+                </div>
+              </div>
+
+              <!-- Graphic mock graph chart content matching the beautiful neon aesthetics -->
+              <div class="h-56 relative mt-4">
+                <!-- Grid Lines -->
+                <div class="absolute inset-x-0 top-0 border-b border-white/5 text-[8px] text-slate-500 pb-1">$30K</div>
+                <div class="absolute inset-x-0 top-1/4 border-b border-white/5 text-[8px] text-slate-500 pb-1">$20K</div>
+                <div class="absolute inset-x-0 top-2/4 border-b border-white/5 text-[8px] text-slate-500 pb-1">$10K</div>
+                <div class="absolute inset-x-0 bottom-0 border-b border-white/5 text-[8px] text-slate-500 pb-1">$0</div>
+
+                <!-- Custom Neon Wave Lines SVG -->
+                <svg class="w-full h-full absolute inset-0" viewBox="0 0 500 200" preserveAspectRatio="none">
+                  <!-- Revenue wave gradient fill -->
+                  <defs>
+                    <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.2"/>
+                      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>
+                      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  
+                  <path d="M 0 150 Q 80 130 160 160 T 320 100 T 500 70 L 500 200 L 0 200 Z" fill="url(#blueGrad)" />
+                  <path d="M 0 150 Q 80 130 160 160 T 320 100 T 500 70" fill="none" stroke="#3b82f6" stroke-width="2.5" />
+                  
+                  <path d="M 0 120 Q 80 150 160 110 T 320 140 T 500 90 L 500 200 L 0 200 Z" fill="url(#purpleGrad)" />
+                  <path d="M 0 120 Q 80 150 160 110 T 320 140 T 500 90" fill="none" stroke="#a855f7" stroke-width="2.5" />
+
+                  <!-- Dots -->
+                  <circle cx="210" cy="130" r="4.5" fill="#a855f7" stroke="#03020c" stroke-width="2"/>
+                  <circle cx="210" cy="148" r="4.5" fill="#3b82f6" stroke="#03020c" stroke-width="2"/>
+                </svg>
+
+                <!-- Tooltip hover state mock -->
+                <div class="absolute left-[160px] top-[40px] glass-panel p-3 rounded-xl border border-white/10 shadow-2xl z-20 pointer-events-none w-32">
+                  <div class="text-[9px] text-slate-400 font-bold">May 23, 2025</div>
+                  <div class="flex items-center justify-between text-[10px] mt-1 font-bold text-white">
+                    <span>Revenue</span> <span>$18,420</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px] font-bold text-blue-400">
+                    <span>Visitors</span> <span>2,540</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- X-Axis Legend -->
+              <div class="flex justify-between text-[8px] text-slate-500 mt-2 font-bold px-2">
+                <span>May 20</span>
+                <span>May 21</span>
+                <span>May 22</span>
+                <span>May 23</span>
+                <span>May 24</span>
+                <span>May 25</span>
+                <span>May 26</span>
+                <span>May 27</span>
+              </div>
+            </div>
+
+            <!-- Project Status Radial card -->
+            <div class="glass-panel p-6 rounded-3xl lg:col-span-3">
+              <h4 class="text-sm font-bold text-white mb-1">Project Status</h4>
+              <p class="text-[10px] text-slate-400 mb-6">Status of all system workspaces</p>
+
+              <div class="flex flex-col items-center justify-center mt-2">
+                <div class="relative w-36 h-36 flex items-center justify-center">
+                  <!-- Custom CSS radial circular wave simulator -->
+                  <div class="absolute inset-0 rounded-full border-[10px] border-emerald-500/10"></div>
+                  <!-- Segment highlights -->
+                  <div class="absolute inset-0 rounded-full border-[10px] border-transparent border-t-purple-600 border-r-blue-500"></div>
+                  <div class="absolute inset-0 rounded-full border-[10px] border-transparent border-l-emerald-500 rotate-[60deg]"></div>
+                  
+                  <div class="text-center z-10">
+                    <span class="text-2xl font-black text-white">46</span>
+                    <span class="text-[8px] text-slate-500 font-bold block uppercase tracking-widest mt-0.5">Total</span>
+                  </div>
+                </div>
+
+                <!-- Legend details list -->
+                <div class="w-full space-y-2 mt-6">
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="flex items-center gap-2 text-slate-400 font-medium">
+                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Completed
+                    </span>
+                    <span class="text-white font-bold">16 <span class="text-slate-500 font-normal">(34.8%)</span></span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="flex items-center gap-2 text-slate-400 font-medium">
+                      <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span> In Progress
+                    </span>
+                    <span class="text-white font-bold">18 <span class="text-slate-500 font-normal">(39.1%)</span></span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="flex items-center gap-2 text-slate-400 font-medium">
+                      <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> On Hold
+                    </span>
+                    <span class="text-white font-bold">7 <span class="text-slate-500 font-normal">(15.2%)</span></span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="flex items-center gap-2 text-slate-400 font-medium">
+                      <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Canceled
+                    </span>
+                    <span class="text-white font-bold">5 <span class="text-slate-500 font-normal">(10.9%)</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity List card -->
+            <div class="glass-panel p-6 rounded-3xl lg:col-span-3">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-bold text-white">Recent Activity</h4>
+                <a href="#" class="text-[10px] text-purple-400 font-bold hover:underline">View all</a>
+              </div>
+
+              <!-- Activity List Feed -->
+              <div class="space-y-4">
+                <div *ngFor="let act of activities" class="flex gap-3">
+                  <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs" [ngClass]="act.iconBg">
+                    {{ act.type === 'project' ? '📁' : act.type === 'client' ? '👤' : act.type === 'invoice' ? '💳' : act.type === 'deployment' ? '🚀' : '👥' }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-[10px] text-slate-300 font-medium leading-normal" [innerHTML]="act.message"></p>
+                    <span class="text-[9px] text-slate-500 block mt-0.5">{{ act.time }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom row layout: Revenue breakdown radial / Projects list / Tasks checklist -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Revenue Breakdown Radial Arc Wave -->
+            <div class="glass-panel p-6 rounded-3xl lg:col-span-4">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-bold text-white">Revenue Breakdown</h4>
+                <a href="#" class="text-[10px] text-slate-400 hover:text-white">View full report &rarr;</a>
+              </div>
+
+              <div class="flex items-center gap-6 mt-6">
+                <!-- Stacked circular arch waves representation -->
+                <div class="relative w-36 h-36 flex items-center justify-center shrink-0">
+                  <div class="absolute inset-2 rounded-full border-4 border-slate-500/5"></div>
+                  <div class="absolute inset-2 rounded-full border-4 border-transparent border-t-purple-500 border-r-purple-500" style="transform: rotate(45deg);"></div>
+                  
+                  <div class="absolute inset-5 rounded-full border-4 border-slate-500/5"></div>
+                  <div class="absolute inset-5 rounded-full border-4 border-transparent border-t-blue-500" style="transform: rotate(15deg);"></div>
+
+                  <div class="absolute inset-8 rounded-full border-4 border-slate-500/5"></div>
+                  <div class="absolute inset-8 rounded-full border-4 border-transparent border-t-emerald-500" style="transform: rotate(75deg);"></div>
+
+                  <div class="absolute inset-11 rounded-full border-4 border-slate-500/5"></div>
+                  <div class="absolute inset-11 rounded-full border-4 border-transparent border-t-amber-500" style="transform: rotate(20deg);"></div>
+
+                  <div class="text-center">
+                    <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block">Total</span>
+                    <span class="text-sm font-black text-white mt-0.5 block">$24,780</span>
+                    <span class="text-[8px] text-emerald-400 font-bold block mt-0.5">▲ 18.6%</span>
+                  </div>
+                </div>
+
+                <div class="flex-1 space-y-3">
+                  <div>
+                    <div class="flex justify-between text-[10px]">
+                      <span class="flex items-center gap-1.5 text-slate-400 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-purple-500 inline-block"></span> Subscriptions
+                      </span>
+                      <span class="text-white font-bold">$12,480</span>
+                    </div>
+                    <div class="text-[8px] text-slate-500 font-semibold mt-0.5 text-right">50.4%</div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[10px]">
+                      <span class="flex items-center gap-1.5 text-slate-400 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> Services
+                      </span>
+                      <span class="text-white font-bold">$7,230</span>
+                    </div>
+                    <div class="text-[8px] text-slate-500 font-semibold mt-0.5 text-right">29.2%</div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[10px]">
+                      <span class="flex items-center gap-1.5 text-slate-400 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Products
+                      </span>
+                      <span class="text-white font-bold">$3,870</span>
+                    </div>
+                    <div class="text-[8px] text-slate-500 font-semibold mt-0.5 text-right">15.6%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Projects List Card -->
+            <div class="glass-panel p-6 rounded-3xl lg:col-span-4">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-bold text-white">Top Projects</h4>
+                <a href="#" class="text-[10px] text-purple-400 font-bold hover:underline">View all</a>
+              </div>
+
+              <div class="space-y-4">
+                <!-- Project 1 -->
+                <div>
+                  <div class="flex justify-between text-[10px] font-bold text-slate-300">
+                    <span class="flex items-center gap-2">🌐 Zellavora Website</span>
+                    <span class="text-white">90%</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
+                    <div class="h-full bg-purple-600 rounded-full" style="width: 90%;"></div>
+                  </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div>
+                  <div class="flex justify-between text-[10px] font-bold text-slate-300">
+                    <span class="flex items-center gap-2">🤖 AI Resume Builder</span>
+                    <span class="text-white">75%</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
+                    <div class="h-full bg-blue-500 rounded-full" style="width: 75%;"></div>
+                  </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div>
+                  <div class="flex justify-between text-[10px] font-bold text-slate-300">
+                    <span class="flex items-center gap-2">🛍️ E-Commerce Platform</span>
+                    <span class="text-white">60%</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full" style="width: 60%;"></div>
+                  </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div>
+                  <div class="flex justify-between text-[10px] font-bold text-slate-300">
+                    <span class="flex items-center gap-2">📱 Mobile Banking App</span>
+                    <span class="text-white">40%</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
+                    <div class="h-full bg-amber-500 rounded-full" style="width: 40%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tasks Checklist Card -->
+            <div class="glass-panel p-6 rounded-3xl lg:col-span-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <h4 class="text-sm font-bold text-white">Tasks</h4>
+                  <a href="#" class="text-[10px] text-purple-400 font-bold hover:underline">View all</a>
+                </div>
+
+                <!-- Interactive Checklist -->
+                <div class="space-y-3.5">
+                  <label *ngFor="let t of tasks" class="flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition">
+                    <div class="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        [checked]="t.completed"
+                        (change)="toggleTask(t)"
+                        class="w-4 h-4 rounded border-white/10 text-purple-600 bg-transparent focus:ring-purple-600 focus:ring-offset-0"
+                      />
+                      <span class="text-xs text-slate-200" [ngClass]="{'line-through text-slate-500': t.completed}">{{ t.title }}</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-md text-[9px] font-bold" [ngClass]="t.categoryClass">
+                      {{ t.category }}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Embedded get more with pro plan -->
+              <div class="glass-panel p-3.5 rounded-2xl relative overflow-hidden bg-gradient-to-tr from-purple-900/40 via-blue-900/10 to-transparent border border-purple-500/15 mt-4">
+                <h5 class="text-xs font-bold text-white">Get more with Pro Plan</h5>
+                <p class="text-[9px] text-slate-400 mt-1 leading-normal">Unlock advanced analytics, priority support & more.</p>
+                <button class="mt-2.5 py-1.5 px-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[9px] rounded-lg shadow-md shadow-purple-600/20 transition">
+                  Upgrade Now &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Footer Metrics Row -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-white/5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs shrink-0">👥</div>
+              <div>
+                <span class="text-[9px] text-slate-500 uppercase font-black tracking-wider block">Visitors Online</span>
+                <span class="text-base font-bold text-white mt-0.5 block">2,540 <span class="text-[9px] text-emerald-400 font-bold ml-1">▲ 12.5%</span></span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-400 text-xs shrink-0">📉</div>
+              <div>
+                <span class="text-[9px] text-slate-500 uppercase font-black tracking-wider block">Bounce Rate</span>
+                <span class="text-base font-bold text-white mt-0.5 block">24.6% <span class="text-[9px] text-red-400 font-bold ml-1">▼ 4.3%</span></span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs shrink-0">📄</div>
+              <div>
+                <span class="text-[9px] text-slate-500 uppercase font-black tracking-wider block">Page Views</span>
+                <span class="text-base font-bold text-white mt-0.5 block">8,320 <span class="text-[9px] text-emerald-400 font-bold ml-1">▲ 7.8%</span></span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs shrink-0">⏱️</div>
+              <div>
+                <span class="text-[9px] text-slate-500 uppercase font-black tracking-wider block">Avg. Session</span>
+                <span class="text-base font-bold text-white mt-0.5 block">04:32 <span class="text-[9px] text-emerald-400 font-bold ml-1">▲ 6.1%</span></span>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white dark:bg-slate-800 rounded-xl shadow p-6">
-            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Total Projects</p>
-            <p class="text-4xl font-bold text-slate-900 dark:text-white mt-2">0</p>
-            <a routerLink="/projects" class="text-blue-600 hover:text-blue-700 text-sm mt-4 inline-block">
-              View Projects →
-            </a>
-          </div>
-
-          <div class="bg-white dark:bg-slate-800 rounded-xl shadow p-6">
-            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Blog Posts</p>
-            <p class="text-4xl font-bold text-slate-900 dark:text-white mt-2">0</p>
-            <a routerLink="/blog" class="text-blue-600 hover:text-blue-700 text-sm mt-4 inline-block">
-              Manage Blog →
-            </a>
-          </div>
-
-          <div class="bg-white dark:bg-slate-800 rounded-xl shadow p-6">
-            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Media Files</p>
-            <p class="text-4xl font-bold text-slate-900 dark:text-white mt-2">0</p>
-            <a routerLink="/media" class="text-blue-600 hover:text-blue-700 text-sm mt-4 inline-block">
-              Media Library →
-            </a>
-          </div>
-
-          <div class="bg-white dark:bg-slate-800 rounded-xl shadow p-6">
-            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Visitors</p>
-            <p class="text-4xl font-bold text-slate-900 dark:text-white mt-2">0</p>
-            <a routerLink="/analytics" class="text-blue-600 hover:text-blue-700 text-sm mt-4 inline-block">
-              Analytics →
-            </a>
-          </div>
-        </div>
-
-        <!-- Quick Access -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow p-6">
-          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Quick Access</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a routerLink="/portfolio" class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-              <span class="text-2xl">👤</span>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white">Portfolio</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Manage your profile</p>
-              </div>
-            </a>
-
-            <a routerLink="/projects" class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-              <span class="text-2xl">💼</span>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white">Projects</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Create & edit projects</p>
-              </div>
-            </a>
-
-            <a routerLink="/blog" class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-              <span class="text-2xl">📝</span>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white">Blog</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Write & publish articles</p>
-              </div>
-            </a>
-
-            <a routerLink="/media" class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-              <span class="text-2xl">🖼️</span>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white">Media</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Manage files & images</p>
-              </div>
-            </a>
-
-            <a routerLink="/analytics" class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-              <span class="text-2xl">📊</span>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white">Analytics</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">View insights & stats</p>
-              </div>
-            </a>
-
-            <a routerLink="/settings" class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-              <span class="text-2xl">⚙️</span>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white">Settings</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Configure system</p>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        <!-- Info Box -->
-        <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900 rounded-xl p-6">
-          <h4 class="font-bold text-blue-900 dark:text-blue-200 mb-2">🎯 Getting Started</h4>
-          <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
-            <li>Complete your profile information in Portfolio section</li>
-            <li>Create your first project to showcase your work</li>
-            <li>Write a blog post to share your thoughts</li>
-            <li>Upload media files to your media library</li>
-            <li>Monitor your portfolio analytics</li>
-          </ul>
-        </div>
-      </div>
+      </main>
     </div>
   `,
   styles: [],
 })
-export class DashboardComponent {}
+export class DashboardComponent {
+  tasks: Task[] = [
+    { id: 1, title: 'Review wireframes', category: 'Design', categoryClass: 'bg-purple-500/10 border border-purple-500/20 text-purple-400', completed: true },
+    { id: 2, title: 'Client meeting', category: 'Meeting', categoryClass: 'bg-blue-500/10 border border-blue-500/20 text-blue-400', completed: true },
+    { id: 3, title: 'API integration', category: 'Development', categoryClass: 'bg-amber-500/10 border border-amber-500/20 text-amber-400', completed: false },
+    { id: 4, title: 'Testing & QA', category: 'Testing', categoryClass: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400', completed: false },
+  ];
+
+  activities: Activity[] = [
+    { id: 1, message: 'Project <strong>Apollo</strong> was completed', time: '2 minutes ago', iconBg: 'bg-emerald-500/10 text-emerald-400', iconColor: 'emerald', type: 'project' },
+    { id: 2, message: 'New client <strong>TechNova Inc.</strong> added', time: '15 minutes ago', iconBg: 'bg-purple-500/10 text-purple-400', iconColor: 'purple', type: 'client' },
+    { id: 3, message: 'Invoice <strong>#INV-2025-0042</strong> paid', time: '1 hour ago', iconBg: 'bg-blue-500/10 text-blue-400', iconColor: 'blue', type: 'invoice' },
+    { id: 4, message: 'Deployment <strong>v2.4.1</strong> successful', time: '3 hours ago', iconBg: 'bg-amber-500/10 text-amber-400', iconColor: 'amber', type: 'deployment' },
+    { id: 5, message: 'New user <strong>John Doe</strong> joined', time: '5 hours ago', iconBg: 'bg-pink-500/10 text-pink-400', iconColor: 'pink', type: 'user' },
+  ];
+
+  toggleTask(task: Task) {
+    task.completed = !task.completed;
+  }
+}
