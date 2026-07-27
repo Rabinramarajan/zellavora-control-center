@@ -113,7 +113,8 @@ router.post('/user/search', authenticate, async (req: AuthRequest, res, next) =>
         userLoginId: user.email,
         firstName: user.full_name.split(' ')[0] || '',
         lastName: user.full_name.split(' ').slice(1).join(' ') || '',
-        emailId: user.email,
+        emailId: user.email_id || user.email,
+        userName: user.username,
         contactNumber: '+1 555-0100',
         employeeCode: `EMP-${1000 + serial}`,
         statusDescription: user.is_active ? 'Active' : 'Inactive',
@@ -141,6 +142,7 @@ router.get('/user/new', authenticate, async (req, res, next) => {
       firstName: '',
       lastName: '',
       emailId: '',
+      userName: '',
       contactNumber: '',
       genderId: 1,
       genderValue: 'Male',
@@ -156,7 +158,12 @@ router.get('/user/new', authenticate, async (req, res, next) => {
       departmentId: 1,
       departmentValue: 'Staff',
       teamId: 1,
-      teamValue: 'General'
+      teamValue: 'General',
+      enableTwoFactorAuthentication: false,
+      isAccountLocked: false,
+      successfulLoginAttempts: 0,
+      passwordResetFlag: false,
+      version: 1
     }));
   } catch (error) {
     next(error);
@@ -179,7 +186,8 @@ router.post('/user/open', authenticate, async (req, res, next) => {
       userLoginId: user.email,
       firstName: user.full_name.split(' ')[0] || '',
       lastName: user.full_name.split(' ').slice(1).join(' ') || '',
-      emailId: user.email,
+      emailId: user.email_id || user.email,
+      userName: user.username,
       contactNumber: '+1 555-0100',
       genderId: 1,
       genderValue: 'Male',
@@ -196,7 +204,22 @@ router.post('/user/open', authenticate, async (req, res, next) => {
       departmentValue: 'Staff',
       teamId: 1,
       teamValue: 'General',
-      fullname: user.full_name
+      fullname: user.full_name,
+      
+      // Mapped Login/Auth fields
+      currentLoginDatetime: user.current_login_datetime,
+      lastLoginDatetime: user.last_login_datetime,
+      defaultLandingPage: user.default_landing_page,
+      enableTwoFactorAuthentication: user.enable_two_factor_authentication,
+      isAccountLocked: user.is_account_locked,
+      lastLockedDate: user.last_locked_date,
+      keyToken: user.key_token,
+      msg: user.msg,
+      otp: user.otp,
+      passwordResetFlag: user.password_reset_flag,
+      statusDescription: user.status_description,
+      version: user.version,
+      successfulLoginAttempts: user.successful_login_attempts
     }));
   } catch (error) {
     next(error);
@@ -209,17 +232,35 @@ router.post('/user/save', authenticate, async (req, res, next) => {
     const fullName = `${uData.firstName} ${uData.lastName}`.trim();
     const isActive = uData.statusValue === 'Active' || uData.statusId === 1;
 
+    const dbPayload = {
+      full_name: fullName,
+      email: uData.emailId || uData.userLoginId,
+      email_id: uData.emailId,
+      username: uData.userName,
+      is_active: isActive,
+      enable_two_factor_authentication: uData.enableTwoFactorAuthentication,
+      is_account_locked: uData.isAccountLocked,
+      last_locked_date: uData.lastLockedDate,
+      current_login_datetime: uData.currentLoginDatetime,
+      last_login_datetime: uData.lastLoginDatetime,
+      default_landing_page: uData.defaultLandingPage,
+      password_reset_flag: uData.passwordResetFlag,
+      key_token: uData.keyToken,
+      status_value: uData.statusValue,
+      status_description: uData.statusDescription,
+      version: uData.version,
+      msg: uData.msg,
+      otp: uData.otp,
+      successful_login_attempts: uData.successfulLoginAttempts
+    };
+
     let user;
     if (uData.userSerialId > 0) {
       // Update
       const uuid = getUserUuidFromSerial(uData.userSerialId);
       const { data, error } = await supabase
         .from('users')
-        .update({
-          full_name: fullName,
-          email: uData.emailId,
-          is_active: isActive
-        })
+        .update(dbPayload)
         .eq('id', uuid)
         .select()
         .single();
@@ -230,10 +271,8 @@ router.post('/user/save', authenticate, async (req, res, next) => {
       const { data, error } = await supabase
         .from('users')
         .insert({
-          full_name: fullName,
-          email: uData.emailId,
-          role: 'viewer',
-          is_active: isActive
+          ...dbPayload,
+          role: 'viewer'
         })
         .select()
         .single();

@@ -52,6 +52,27 @@ const LoginSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(1).max(128), // policy checked on hash
   rememberMe: z.boolean().optional(),
+
+  // Legacy/Handshake properties accepted for compatibility
+  confirmPassword: z.string().optional(),
+  currentLoginDatetime: z.string().optional(),
+  defaultLandingPage: z.string().optional(),
+  emailId: z.string().optional(),
+  enableTwoFactorAuthentication: z.boolean().optional(),
+  isAccountLocked: z.boolean().optional(),
+  lastLockedDate: z.string().optional(),
+  keyToken: z.union([z.string(), z.array(z.string())]).optional(),
+  lastLoginDatetime: z.string().optional(),
+  msg: z.string().optional(),
+  newPassword: z.string().optional(),
+  oldPassword: z.string().optional(),
+  otp: z.string().optional(),
+  passwordResetFlag: z.boolean().optional(),
+  statusValue: z.string().optional(),
+  statusDescription: z.string().optional(),
+  version: z.number().optional(),
+  userName: z.string().optional(),
+  successfulLoginAttempts: z.number().optional(),
 });
 
 const LoginMfaSchema = z.object({
@@ -240,6 +261,52 @@ router.get('/gettoken', (req, res, next) => {
  *                 format: password
  *               rememberMe:
  *                 type: boolean
+ *               confirmPassword:
+ *                 type: string
+ *                 format: password
+ *               currentLoginDatetime:
+ *                 type: string
+ *                 format: date-time
+ *               defaultLandingPage:
+ *                 type: string
+ *               emailId:
+ *                 type: string
+ *               enableTwoFactorAuthentication:
+ *                 type: boolean
+ *               isAccountLocked:
+ *                 type: boolean
+ *               lastLockedDate:
+ *                 type: string
+ *                 format: date-time
+ *               keyToken:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               lastLoginDatetime:
+ *                 type: string
+ *                 format: date-time
+ *               msg:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *               oldPassword:
+ *                 type: string
+ *                 format: password
+ *               otp:
+ *                 type: string
+ *               passwordResetFlag:
+ *                 type: boolean
+ *               statusValue:
+ *                 type: string
+ *               statusDescription:
+ *                 type: string
+ *               version:
+ *                 type: integer
+ *               userName:
+ *                 type: string
+ *               successfulLoginAttempts:
+ *                 type: integer
  *     responses:
  *       200:
  *         description: Login success (no MFA) or MFA challenge issued
@@ -265,6 +332,14 @@ router.get('/gettoken', (req, res, next) => {
 router.post('/login', async (req, res, next) => {
   try {
     let loginData = { ...req.body };
+    // Map emailId or userName to email for compatibility if email is not directly specified
+    if (!loginData.email && loginData.emailId) {
+      loginData.email = loginData.emailId;
+    }
+    if (!loginData.email && loginData.userName) {
+      loginData.email = loginData.userName;
+    }
+
     if (loginData.keyToken && Array.isArray(loginData.keyToken)) {
       try {
         const keyToken = loginData.keyToken;
@@ -298,7 +373,7 @@ router.post('/login', async (req, res, next) => {
     // 3. Find user in this tenant
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, full_name, role, password_hash, mfa_enabled, is_active, deleted_at, locked_until, failed_login_attempts')
+      .select('id, email, username, full_name, role, password_hash, mfa_enabled, is_active, deleted_at, locked_until, failed_login_attempts, current_login_datetime, successful_login_attempts, version')
       .eq('email', body.email.toLowerCase())
       .eq('tenant_id', tenant.id)
       .maybeSingle();
@@ -370,10 +445,24 @@ router.post('/login', async (req, res, next) => {
 
     // 8. Clear rate-limit counters on success
     await RateLimitService.clearForEmail(user.email);
+
+    const currentLogin = new Date().toISOString();
+    const lastLogin = user.current_login_datetime || null;
+    const nextAttempts = (user.successful_login_attempts || 0) + 1;
+    const nextVersion = (user.version || 1) + 1;
+
     await supabaseAdmin
       .from('users')
       .update({
-        last_login_at: new Date().toISOString(),
+        last_login_at: currentLogin,
+        current_login_datetime: currentLogin,
+        last_login_datetime: lastLogin,
+        successful_login_attempts: nextAttempts,
+        key_token: tokens.accessToken,
+        msg: 'Success',
+        status_value: 'ACTIVE',
+        status_description: 'Logged in successfully',
+        version: nextVersion,
         failed_login_attempts: 0,
         locked_until: null,
       })
@@ -393,6 +482,15 @@ router.post('/login', async (req, res, next) => {
       mfaRequired: false,
       user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, mfaEnabled: user.mfa_enabled },
       tenant: { id: tenant.id, name: tenant.name, clientCode: tenant.clientCode, logoUrl: tenant.logoUrl },
+      currentLoginDatetime: currentLogin,
+      lastLoginDatetime: lastLogin,
+      successfulLoginAttempts: nextAttempts,
+      keyToken: tokens.accessToken,
+      msg: 'Success',
+      statusValue: 'ACTIVE',
+      statusDescription: 'Logged in successfully',
+      version: nextVersion,
+      userName: user.username || user.email,
       ...tokens,
     });
   } catch (e) {

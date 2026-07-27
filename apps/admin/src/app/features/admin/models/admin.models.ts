@@ -80,6 +80,23 @@ export interface User {
   maritalStatusValue?: string;
   spouseName?: string;
   spouseDob?: string;
+
+  // New Login/Auth properties
+  userName?: string;
+  confirmPassword?: string;
+  currentLoginDatetime?: string;
+  defaultLandingPage?: string;
+  enableTwoFactorAuthentication?: boolean;
+  isAccountLocked?: boolean;
+  lastLockedDate?: string;
+  lastLoginDatetime?: string;
+  msg?: string;
+  newPassword?: string;
+  oldPassword?: string;
+  otp?: string;
+  passwordResetFlag?: boolean;
+  successfulLoginAttempts?: number;
+  version?: number;
 }
 
 export interface UserSearchCriteria extends PaginationParams {
