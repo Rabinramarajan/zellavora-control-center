@@ -100,20 +100,68 @@
             </div>
 
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-3">
-              <!-- Client Code Field -->
-              <div>
-                <div class="relative">
+              <!-- Client Selector Dropdown -->
+              <div class="relative">
+                <button
+                  type="button"
+                  (click)="toggleOrgDropdown()"
+                  class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-left text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent flex items-center justify-between"
+                >
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                     <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                   </span>
-                  <input
-                    type="text"
-                    formControlName="clientCode"
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-500"
-                    placeholder="Enter your client code"
-                  />
+                  <span class="truncate">
+                    {{ selectedOrg ? selectedOrg.name + ' (' + selectedOrg.clientCode + ')' : 'Select Organization' }}
+                  </span>
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+
+                <input type="hidden" formControlName="clientCode" />
+
+                <!-- Dropdown panel -->
+                <div
+                  *ngIf="showOrgDropdown"
+                  class="absolute z-20 w-full mt-2 rounded-2xl border border-white/10 bg-[#0f0b21] shadow-2xl p-3 space-y-2 backdrop-blur-xl"
+                >
+                  <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                      </svg>
+                    </span>
+                    <input
+                      type="text"
+                      [value]="orgSearchQuery"
+                      (input)="filterOrgs($event)"
+                      class="w-full pl-8 pr-4 py-1.5 rounded-lg border border-white/5 bg-white/5 text-[11px] text-white focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder:text-slate-500"
+                      placeholder="Search organization..."
+                    />
+                  </div>
+
+                  <div class="max-h-40 overflow-y-auto space-y-1 pr-1">
+                    <div *ngIf="loadingOrgs" class="text-center py-4 text-slate-500 text-[10px]">
+                      Loading organizations...
+                    </div>
+                    
+                    <div *ngIf="!loadingOrgs && filteredOrgs.length === 0" class="text-center py-4 text-slate-500 text-[10px]">
+                      No organizations found
+                    </div>
+
+                    <button
+                      type="button"
+                      *ngFor="let org of filteredOrgs"
+                      (click)="selectOrg(org)"
+                      class="w-full px-3 py-2 rounded-lg text-left text-[11px] text-slate-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2"
+                    >
+                      <span class="w-2 h-2 rounded-full" [ngClass]="org.clientCode.toUpperCase() === 'DEMO' ? 'bg-purple-500' : 'bg-blue-500'"></span>
+                      <span class="font-medium truncate">{{ org.name }}</span>
+                      <span class="text-[9px] text-slate-500 font-semibold uppercase">({{ org.clientCode }})</span>
+                    </button>
+                  </div>
                 </div>
                 <p *ngIf="form.get('clientCode')?.hasError('required') && form.get('clientCode')?.touched" class="mt-1 text-[10px] text-red-400">
                   Client code is required

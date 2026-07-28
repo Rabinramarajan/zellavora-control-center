@@ -28,6 +28,10 @@ export class AuthApiService {
     return this.apiData.postData<ValidateClientResponse>('/auth/validate-client', { clientCode }, { hideJwt: true });
   }
 
+  getClients(): Observable<any> {
+    return this.apiData.getData<any>('/auth/clients', undefined, { hideJwt: true });
+  }
+
   getPublicKey(): Observable<any> {
     return this.apiData.getData<any>('/auth/gettoken', undefined, { hideJwt: true });
   }

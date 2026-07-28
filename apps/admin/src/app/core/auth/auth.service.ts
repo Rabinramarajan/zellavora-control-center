@@ -118,6 +118,16 @@ export class AuthService {
     return this.http.post<ValidateClientResponse>(`${this.apiUrl}/validate-client`, { clientCode });
   }
 
+  loadClients(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/clients`).pipe(
+      tap((res) => {
+        if (res && res.tenants) {
+          this.store.setAvailableTenants(res.tenants);
+        }
+      })
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Login / MFA
   // -------------------------------------------------------------------------

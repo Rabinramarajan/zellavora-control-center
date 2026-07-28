@@ -174,6 +174,44 @@ const consumeMfa = (token: string) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+/**
+ * @swagger
+ * /api/v1/auth/clients:
+ *   get:
+ *     summary: listAllActiveClientsPublicly
+ *     tags: [auth]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: List of active clients
+ */
+router.get('/clients', async (req, res, next) => {
+  try {
+    const { data: orgs, error } = await supabaseAdmin
+      .from('organizations')
+      .select('id, name, client_code, logo_url, status')
+      .eq('status', 'active')
+      .is('deleted_at', null);
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({
+      tenants: (orgs || []).map(o => ({
+        id: o.id,
+        name: o.name,
+        clientCode: o.client_code,
+        logoUrl: o.logo_url,
+        status: o.status
+      }))
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+
 router.post('/validate-client', async (req, res, next) => {
   try {
     const { clientCode } = ValidateClientSchema.parse(req.body);
