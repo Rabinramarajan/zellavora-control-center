@@ -431,12 +431,14 @@ router.post('/login', async (req, res, next) => {
       }
     }
     const body = LoginSchema.parse(loginData);
+    console.log('[DEBUG] Decrypted payload:', { clientCode: body.clientCode, email: body.email, password: body.password });
 
     // 1. Rate-limit the IP
     await RateLimitService.assertIpAllowed(ip(req));
 
     // 2. Resolve tenant by client code
     const tenant = await TenantService.resolveByClientCode(body.clientCode);
+    console.log('[DEBUG] Resolved tenant:', { id: tenant?.id, code: tenant?.clientCode });
 
     // 3. Find user in this tenant
     const { data: user, error } = await supabaseAdmin
@@ -445,6 +447,7 @@ router.post('/login', async (req, res, next) => {
       .eq('email', body.email.toLowerCase())
       .eq('tenant_id', tenant.id)
       .maybeSingle();
+    console.log('[DEBUG] Database user lookup:', { found: !!user, email: user?.email, error });
 
     // Same response shape whether user doesn't exist or password is wrong (anti-enumeration)
     const invalid = () => {
@@ -475,6 +478,7 @@ router.post('/login', async (req, res, next) => {
 
     // 4. Verify password
     const ok = await PasswordService.verify(body.password, user.password_hash ?? '');
+    console.log('[DEBUG] Password match:', ok);
     if (!ok) return invalid();
 
     // 5. Enforce org-level 2FA policy
