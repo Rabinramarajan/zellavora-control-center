@@ -268,36 +268,6 @@ router.get('/gettoken', (req, res, next) => {
   }
 });
 
-router.get('/test-db', async (req, res, next) => {
-  try {
-    const { data: orgs, error: orgsErr } = await supabaseAdmin.from('organizations').select('id, name, client_code, status');
-    const { data: users, error: usersErr } = await supabaseAdmin.from('users').select('id, email, role, tenant_id');
-    
-    let bcryptResult = 'not-tested';
-    let bcryptError: any = null;
-    try {
-      const bcrypt = require('bcrypt');
-      const hash = await bcrypt.hash('AdminPassword123!', 10);
-      const match = await bcrypt.compare('AdminPassword123!', hash);
-      bcryptResult = `hash-success:match=${match}`;
-    } catch (e: any) {
-      bcryptError = { message: e.message, stack: e.stack };
-    }
-
-    res.json({
-      orgs,
-      orgsErr,
-      users,
-      usersErr,
-      supabaseUrl: config.supabaseUrl,
-      bcryptResult,
-      bcryptError,
-    });
-  } catch (e: any) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 
 // ----------------------------------------------------------------------------
 // POST /auth/login  —  primary login
@@ -436,14 +406,12 @@ router.post('/login', async (req, res, next) => {
       }
     }
     const body = LoginSchema.parse(loginData);
-    console.log('[DEBUG] Decrypted payload:', { clientCode: body.clientCode, email: body.email });
 
     // 1. Rate-limit the IP
     await RateLimitService.assertIpAllowed(ip(req));
 
     // 2. Resolve tenant by client code
     const tenant = await TenantService.resolveByClientCode(body.clientCode);
-    console.log('[DEBUG] Resolved tenant:', { id: tenant?.id, code: tenant?.clientCode });
 
     // 3. Find user in this tenant
     const { data: user, error } = await supabaseAdmin
@@ -452,7 +420,6 @@ router.post('/login', async (req, res, next) => {
       .eq('email', body.email.toLowerCase())
       .eq('tenant_id', tenant.id)
       .maybeSingle();
-    console.log('[DEBUG] Database user lookup:', { found: !!user, email: user?.email, error });
 
     // Same response shape whether user doesn't exist or password is wrong (anti-enumeration)
     const invalid = () => {
@@ -483,7 +450,6 @@ router.post('/login', async (req, res, next) => {
 
     // 4. Verify password
     const ok = await PasswordService.verify(body.password, user.password_hash ?? '');
-    console.log('[DEBUG] Password match:', ok);
     if (!ok) return invalid();
 
     // 5. Enforce org-level 2FA policy
