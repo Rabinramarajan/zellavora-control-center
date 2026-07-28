@@ -50,3 +50,4 @@ Thumbs.db
 .history/
 .env.prod
 .env.staging
+.claude/worktrees/agent-ae6b19130678a6621
