@@ -448,7 +448,7 @@ router.post('/login', async (req, res, next) => {
     // 3. Find user in this tenant
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, username, full_name, role, password_hash, mfa_enabled, is_active, deleted_at, locked_until, failed_login_attempts, current_login_datetime, successful_login_attempts, version')
+      .select('id, email, full_name, role, password_hash, mfa_enabled, is_active, deleted_at, locked_until, failed_login_attempts, current_login_datetime, successful_login_attempts, version')
       .eq('email', body.email.toLowerCase())
       .eq('tenant_id', tenant.id)
       .maybeSingle();
@@ -567,7 +567,7 @@ router.post('/login', async (req, res, next) => {
       statusValue: 'ACTIVE',
       statusDescription: 'Logged in successfully',
       version: nextVersion,
-      userName: user.username || user.email,
+      userName: user.email,
       ...tokens,
     });
   } catch (e) {

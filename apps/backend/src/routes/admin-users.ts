@@ -236,7 +236,6 @@ router.post('/user/save', authenticate, async (req, res, next) => {
       full_name: fullName,
       email: uData.emailId || uData.userLoginId,
       email_id: uData.emailId,
-      username: uData.userName,
       is_active: isActive,
       enable_two_factor_authentication: uData.enableTwoFactorAuthentication,
       is_account_locked: uData.isAccountLocked,
