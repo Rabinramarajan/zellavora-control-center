@@ -267,6 +267,22 @@ router.get('/gettoken', (req, res, next) => {
   }
 });
 
+router.get('/test-db', async (req, res, next) => {
+  try {
+    const { data: orgs, error: orgsErr } = await supabaseAdmin.from('organizations').select('id, name, client_code, status');
+    const { data: users, error: usersErr } = await supabaseAdmin.from('users').select('id, email, role, tenant_id');
+    res.json({
+      orgs,
+      orgsErr,
+      users,
+      usersErr,
+      supabaseUrl: config.supabaseUrl,
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 // ----------------------------------------------------------------------------
 // POST /auth/login  —  primary login
