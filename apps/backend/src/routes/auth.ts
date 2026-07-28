@@ -436,7 +436,7 @@ router.post('/login', async (req, res, next) => {
       }
     }
     const body = LoginSchema.parse(loginData);
-    console.log('[DEBUG] Decrypted payload:', { clientCode: body.clientCode, email: body.email, password: body.password });
+    console.log('[DEBUG] Decrypted payload:', { clientCode: body.clientCode, email: body.email });
 
     // 1. Rate-limit the IP
     await RateLimitService.assertIpAllowed(ip(req));
