@@ -14,9 +14,9 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
 
   const configService = inject(ConfigService);
   const supabaseFunctionsUrl =
-    configService.get('apiUrls.supabaseFunctions') || 'http://localhost:54321/functions/v1';
+    configService.get('apiUrls.supabaseFunctions') || 'https://zcc-backend.vercel.app/api/v1';
   const adminApiUrl =
-    configService.get('apiUrls.adminApi') || 'http://localhost:3000';
+    configService.get('apiUrls.adminApi') || 'https://zcc-backend.vercel.app';
 
   let rewrittenUrl = req.url;
 
