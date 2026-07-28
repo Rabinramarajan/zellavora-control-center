@@ -1,0 +1,346 @@
+<div class="min-h-screen w-full flex bg-[#030014] text-slate-100 font-sans relative overflow-hidden">
+      <!-- Background overlay gradients -->
+      <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/10 blur-[120px] pointer-events-none"></div>
+      <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none"></div>
+
+      <!-- Left Side (Branding and Features) - hidden on mobile -->
+      <div class="hidden lg:flex lg:w-5/12 flex-col justify-between p-12 relative z-10 bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(3,0,20,0.95), rgba(3,0,20,0.85)), url('assets/register_bg.jpg')">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <span class="text-white font-extrabold text-xl">Z</span>
+          </div>
+          <div>
+            <div class="text-sm font-bold tracking-wider leading-none text-white">ZELLAVORA</div>
+            <div class="text-[10px] tracking-widest text-purple-400 font-semibold mt-0.5">CONTROL CENTER</div>
+          </div>
+        </div>
+
+        <!-- Hero Copy -->
+        <div class="my-auto max-w-md">
+          <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Welcome to Zellavora</span>
+          <h1 class="text-4xl font-extrabold tracking-tight leading-tight text-white mt-2 mb-8">
+            Create your Account.<br>
+            <span class="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Unlock Everything.</span>
+          </h1>
+
+          <!-- Features list -->
+          <div class="space-y-6">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-sm font-semibold text-white">Unified Dashboard</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Manage all your projects, clients and products in one place.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-sm font-semibold text-white">Enterprise Security</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Bank-level security to keep your data safe and compliant.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-sm font-semibold text-white">Smart Automation</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Automate workflows and save hours of manual work.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-sm font-semibold text-white">Insights & Analytics</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Real-time analytics to make smarter data-driven decisions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trusted by Footer -->
+        <div>
+          <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-3">TRUSTED BY FAST-GROWING TEAMS</div>
+          <div class="flex items-center gap-4 text-xs text-slate-400 font-bold opacity-60">
+            <span>Verrix</span>
+            <span>Cloudexa</span>
+            <span>Manageo</span>
+            <span>Hexalink</span>
+            <span>BrightCoders</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side (Stepped Onboarding Form Container) -->
+      <div class="w-full lg:w-7/12 flex flex-col justify-center items-center p-6 md:p-12 relative z-10 bg-white text-slate-900 rounded-l-[32px] overflow-y-auto">
+        <div class="w-full max-w-2xl">
+          <!-- Stepper Headings -->
+          <div class="flex items-center justify-between mb-8 max-w-md mx-auto relative">
+            <div class="absolute left-0 right-0 top-1/2 h-[2px] bg-slate-100 z-0"></div>
+            <!-- Step 1 -->
+            <div class="relative z-10 flex flex-col items-center gap-2">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs" [ngClass]="{'bg-purple-600 text-white shadow-lg shadow-purple-600/30': step >= 1, 'bg-slate-100 text-slate-400': step < 1}">
+                <svg *ngIf="step > 1" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span *ngIf="step <= 1">1</span>
+              </div>
+              <span class="text-[10px] font-bold" [ngClass]="{'text-purple-600': step >= 1, 'text-slate-400': step < 1}">Account</span>
+            </div>
+            <!-- Step 2 -->
+            <div class="relative z-10 flex flex-col items-center gap-2">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs" [ngClass]="{'bg-purple-600 text-white shadow-lg shadow-purple-600/30': step >= 2, 'bg-slate-100 text-slate-400': step < 2}">
+                <svg *ngIf="step > 2" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span *ngIf="step <= 2">2</span>
+              </div>
+              <span class="text-[10px] font-bold" [ngClass]="{'text-purple-600': step >= 2, 'text-slate-400': step < 2}">Verify</span>
+            </div>
+            <!-- Step 3 -->
+            <div class="relative z-10 flex flex-col items-center gap-2">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs" [ngClass]="{'bg-purple-600 text-white shadow-lg shadow-purple-600/30': step >= 3, 'bg-slate-100 text-slate-400': step < 3}">
+                <svg *ngIf="step > 3" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span *ngIf="step <= 3">3</span>
+              </div>
+              <span class="text-[10px] font-bold" [ngClass]="{'text-purple-600': step >= 3, 'text-slate-400': step < 3}">Security</span>
+            </div>
+            <!-- Step 4 -->
+            <div class="relative z-10 flex flex-col items-center gap-2">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs" [ngClass]="{'bg-purple-600 text-white shadow-lg shadow-purple-600/30': step >= 4, 'bg-slate-100 text-slate-400': step < 4}">
+                <span>4</span>
+              </div>
+              <span class="text-[10px] font-bold" [ngClass]="{'text-purple-600': step >= 4, 'text-slate-400': step < 4}">Complete</span>
+            </div>
+          </div>
+
+          <!-- Step Content -->
+          <div *ngIf="step === 1" class="fade-in">
+            <h2 class="text-2xl font-bold text-slate-900 mb-1">Let's Get You Started! 👋</h2>
+            <p class="text-sm text-slate-500 mb-6">Create your account to continue</p>
+
+            <form [formGroup]="form" (ngSubmit)="nextStep()" class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    formControlName="fullName"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 placeholder:text-slate-400"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1.5">Email Address</label>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 placeholder:text-slate-400"
+                    placeholder="Enter your email"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
+                  <input
+                    type="password"
+                    formControlName="password"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 placeholder:text-slate-400"
+                    placeholder="Create a strong password"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1.5">Confirm Password</label>
+                  <input
+                    type="password"
+                    formControlName="confirmPassword"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 placeholder:text-slate-400"
+                    placeholder="Confirm your password"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Company Name <span class="text-slate-400 font-normal">(Optional)</span></label>
+                <input
+                  type="text"
+                  formControlName="companyName"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 placeholder:text-slate-400"
+                  placeholder="Enter your company name"
+                />
+              </div>
+
+              <!-- I am signing up as -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-2">I am signing up as</label>
+                <div class="grid grid-cols-3 gap-3">
+                  <label class="border rounded-xl p-3.5 flex flex-col items-start gap-1 cursor-pointer transition relative" [ngClass]="{'border-purple-600 bg-purple-50/20': accountType === 'individual', 'border-slate-200 hover:bg-slate-50': accountType !== 'individual'}">
+                    <input type="radio" name="signupType" (click)="setAccountType('individual')" checked class="absolute right-3.5 top-3.5 text-purple-600 focus:ring-purple-600" />
+                    <span class="text-xs font-bold text-slate-950">Individual</span>
+                    <span class="text-[9px] text-slate-500">For personal projects</span>
+                  </label>
+                  <label class="border rounded-xl p-3.5 flex flex-col items-start gap-1 cursor-pointer transition relative" [ngClass]="{'border-purple-600 bg-purple-50/20': accountType === 'team', 'border-slate-200 hover:bg-slate-50': accountType !== 'team'}">
+                    <input type="radio" name="signupType" (click)="setAccountType('team')" class="absolute right-3.5 top-3.5 text-purple-600 focus:ring-purple-600" />
+                    <span class="text-xs font-bold text-slate-950">Team</span>
+                    <span class="text-[9px] text-slate-500">Work with your team</span>
+                  </label>
+                  <label class="border rounded-xl p-3.5 flex flex-col items-start gap-1 cursor-pointer transition relative" [ngClass]="{'border-purple-600 bg-purple-50/20': accountType === 'business', 'border-slate-200 hover:bg-slate-50': accountType !== 'business'}">
+                    <input type="radio" name="signupType" (click)="setAccountType('business')" class="absolute right-3.5 top-3.5 text-purple-600 focus:ring-purple-600" />
+                    <span class="text-xs font-bold text-slate-950">Business</span>
+                    <span class="text-[9px] text-slate-500">For organizations</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Terms Checkbox -->
+              <label class="flex items-center gap-2 cursor-pointer pt-2">
+                <input type="checkbox" formControlName="agreeTerms" class="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 focus:ring-offset-0" />
+                <span class="text-xs text-slate-500">I agree to the <a href="#" class="text-purple-600 font-semibold hover:underline">Terms of Service</a> and <a href="#" class="text-purple-600 font-semibold hover:underline">Privacy Policy</a></span>
+              </label>
+
+              <!-- Submit -->
+              <button
+                type="submit"
+                [disabled]="!form.valid"
+                class="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create Account
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </button>
+            </form>
+
+            <!-- Social Signups -->
+            <div class="relative my-6 text-center">
+              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-100"></div></div>
+              <span class="relative px-3 bg-white text-[10px] text-slate-400 font-bold uppercase tracking-wider">Or Continue With</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <button class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition text-xs font-semibold text-slate-700 bg-white">
+                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.64 5.64 0 0 1 8.35 12.96a5.64 5.64 0 0 1 5.64-5.64c2.4 0 4.4 1.5 5.2 3.6l3.96-3.07C20.8 4.2 16.8 1.8 12.24 1.8a10.2 10.2 0 0 0-10.2 10.2 10.2 10.2 0 0 0 10.2 10.2c5.64 0 9.84-3.96 9.84-9.96 0-.6-.05-1.08-.16-1.56H12.24z"/>
+                </svg>
+                Google
+              </button>
+              <button class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition text-xs font-semibold text-slate-700 bg-white">
+                <svg class="w-4 h-4" viewBox="0 0 23 23">
+                  <path fill="#f35325" d="M0 0h11v11H0z"/>
+                  <path fill="#81bc06" d="M12 0h11v11H12z"/>
+                  <path fill="#05a6f0" d="M0 12h11v11H0z"/>
+                  <path fill="#ffba08" d="M12 12h11v11H12z"/>
+                </svg>
+                Microsoft
+              </button>
+              <button class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition text-xs font-semibold text-slate-700 bg-white">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                </svg>
+                GitHub
+              </button>
+            </div>
+
+            <!-- Login navigation -->
+            <p class="text-center text-xs text-slate-500 mt-6">
+              Already have an account?
+              <a routerLink="/auth/login" class="text-purple-600 font-bold hover:underline">Sign in</a>
+            </p>
+          </div>
+
+          <!-- Step 2: Verification step -->
+          <div *ngIf="step === 2" class="fade-in max-w-md mx-auto text-center py-6">
+            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mx-auto mb-6">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l8-5.333a2 2 0 012.22 0l8 5.333A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"/>
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Verify Your Email</h2>
+            <p class="text-sm text-slate-500 mb-6">We've sent a 6-digit confirmation code to your email. Enter it below to verify.</p>
+
+            <div class="flex justify-center gap-3 mb-8">
+              <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
+              <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
+              <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
+              <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
+              <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
+              <input type="text" maxlength="1" class="w-12 h-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
+            </div>
+
+            <button (click)="nextStep()" class="w-full py-3.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-purple-600/20">
+              Verify Code
+            </button>
+            <p class="text-xs text-slate-400 mt-4">Didn't receive code? <a href="#" class="text-purple-600 font-bold hover:underline">Resend code</a></p>
+          </div>
+
+          <!-- Step 3: Security config -->
+          <div *ngIf="step === 3" class="fade-in max-w-md mx-auto py-6">
+            <h2 class="text-2xl font-bold text-slate-900 mb-1">Secure Your Account</h2>
+            <p class="text-sm text-slate-500 mb-6">Choose a security method to protect your account and data.</p>
+
+            <div class="space-y-4 mb-8">
+              <label class="border rounded-xl p-4 flex items-start gap-4 cursor-pointer hover:bg-slate-50 transition border-purple-600 bg-purple-50/10">
+                <input type="radio" name="securityMethod" checked class="text-purple-600 focus:ring-purple-600 mt-1" />
+                <div>
+                  <span class="text-sm font-bold text-slate-900 block">Authenticator App (Recommended)</span>
+                  <span class="text-xs text-slate-500 mt-0.5 block">Use Google Authenticator or Microsoft Authenticator to generate verification codes.</span>
+                </div>
+              </label>
+
+              <label class="border border-slate-200 rounded-xl p-4 flex items-start gap-4 cursor-pointer hover:bg-slate-50 transition">
+                <input type="radio" name="securityMethod" class="text-purple-600 focus:ring-purple-600 mt-1" />
+                <div>
+                  <span class="text-sm font-bold text-slate-900 block">SMS Verification</span>
+                  <span class="text-xs text-slate-500 mt-0.5 block">Receive a text message with a verification code whenever you sign in.</span>
+                </div>
+              </label>
+            </div>
+
+            <button (click)="nextStep()" class="w-full py-3.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-purple-600/20">
+              Continue to Completion
+            </button>
+          </div>
+
+          <!-- Step 4: Success / Completion -->
+          <div *ngIf="step === 4" class="fade-in max-w-md mx-auto text-center py-6">
+            <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mx-auto mb-6 shadow-xl shadow-emerald-600/10">
+              <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Account Created!</h2>
+            <p class="text-sm text-slate-500 mb-6">Your Zellavora Control Center account has been set up successfully. You are ready to log in.</p>
+
+            <button (click)="completeRegistration()" class="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2">
+              Launch Dashboard
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>

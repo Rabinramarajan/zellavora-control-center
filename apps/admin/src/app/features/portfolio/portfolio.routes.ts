@@ -9,6 +9,8 @@ import { AboutSectionComponent } from './components/about-section/about-section.
 import { ServicesSectionComponent } from './components/services-section/services-section.component';
 import { TestimonialsSectionComponent } from './components/testimonials-section/testimonials-section.component';
 
+import { EducationSectionComponent } from './components/education-section/education-section.component';
+
 // Placeholder components for sections not yet implemented
 @Component({
   selector: 'app-experience-section',
@@ -17,14 +19,6 @@ import { TestimonialsSectionComponent } from './components/testimonials-section/
   template: `<div class="p-6"><p class="text-slate-600">Experience Section coming soon...</p></div>`,
 })
 class ExperienceSectionComponent {}
-
-@Component({
-  selector: 'app-education-section',
-  standalone: true,
-  imports: [CommonModule],
-  template: `<div class="p-6"><p class="text-slate-600">Education Section coming soon...</p></div>`,
-})
-class EducationSectionComponent {}
 
 export const portfolioRoutes: Routes = [
   {

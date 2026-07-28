@@ -1,0 +1,210 @@
+<p-toast></p-toast>
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-white">Blog Component Placeholder</h1>
+          <p class="text-slate-400 mt-1">Create, edit, and manage your blog posts.</p>
+        </div>
+        <button
+          pButton
+          pRipple
+          label="Create New Blog"
+          icon="pi pi-plus"
+          class="p-button-primary"
+          (click)="createBlog()">
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Total Blogs -->
+        <div class="bg-[#07051a] border border-white/10 rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-slate-400 uppercase">Total Blogs</span>
+              <span class="text-3xl font-bold text-white block mt-2">24</span>
+              <span class="text-xs text-emerald-400 font-semibold mt-1">↑ 8 this month</span>
+            </div>
+            <div class="text-3xl">📝</div>
+          </div>
+        </div>
+
+        <!-- Published -->
+        <div class="bg-[#07051a] border border-white/10 rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-slate-400 uppercase">Published</span>
+              <span class="text-3xl font-bold text-white block mt-2">18</span>
+              <span class="text-xs text-slate-400 font-semibold mt-1">75% of total</span>
+            </div>
+            <div class="text-3xl">✅</div>
+          </div>
+        </div>
+
+        <!-- Drafts -->
+        <div class="bg-[#07051a] border border-white/10 rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-slate-400 uppercase">Drafts</span>
+              <span class="text-3xl font-bold text-white block mt-2">4</span>
+              <span class="text-xs text-slate-400 font-semibold mt-1">16.7% of total</span>
+            </div>
+            <div class="text-3xl">📋</div>
+          </div>
+        </div>
+
+        <!-- Total Views -->
+        <div class="bg-[#07051a] border border-white/10 rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-slate-400 uppercase">Total Views</span>
+              <span class="text-3xl font-bold text-white block mt-2">12.6K</span>
+              <span class="text-xs text-emerald-400 font-semibold mt-1">↑ 24% this month</span>
+            </div>
+            <div class="text-3xl">👁️</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="bg-[#07051a] border border-white/10 rounded-2xl p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-2">Search blogs...</label>
+            <input
+              pInputText
+              type="text"
+              placeholder="Search by title or slug..."
+              class="w-full"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="filterBlogs()"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-2">Category</label>
+            <p-select
+              [options]="categoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="selectedCategory"
+              (ngModelChange)="filterBlogs()"
+              placeholder="All Categories"
+              [showClear]="true">
+            </p-select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-2">Status</label>
+            <p-select
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="selectedStatus"
+              (ngModelChange)="filterBlogs()"
+              placeholder="All Status"
+              [showClear]="true">
+            </p-select>
+          </div>
+
+          <div class="flex items-end">
+            <button
+              pButton
+              pRipple
+              label="Clear Filters"
+              icon="pi pi-filter-slash"
+              class="p-button-text w-full"
+              (click)="clearFilters()">
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blog Posts Table -->
+      <div class="bg-[#07051a] border border-white/10 rounded-2xl overflow-hidden">
+        <p-table
+          [value]="filteredBlogs"
+          [paginator]="true"
+          [rows]="10"
+          [pageLinks]="5"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          responsiveLayout="scroll"
+          class="p-datatable-dark">
+
+          <ng-template pTemplate="header">
+            <tr class="bg-white/5 border-b border-white/10">
+              <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase">Title</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase">Category</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase">Author</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase">Status</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase">Views</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase">Updated</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-post>
+            <tr class="border-b border-white/5 hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div>
+                  <p class="text-sm font-semibold text-white">{{ post.title }}</p>
+                  <p class="text-xs text-slate-400">{{ post.slug }}</p>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded text-xs font-semibold bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                  {{ post.category }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-sm text-slate-300">{{ post.author }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold" [ngClass]="{
+                  'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400': post.status === 'Published',
+                  'bg-amber-500/10 border border-amber-500/30 text-amber-400': post.status === 'Draft',
+                  'bg-blue-500/10 border border-blue-500/30 text-blue-400': post.status === 'Scheduled'
+                }">
+                  {{ post.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-sm text-slate-300">{{ post.views | number }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-sm text-slate-400">{{ post.updatedDate }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <button
+                    pButton
+                    pRipple
+                    icon="pi pi-eye"
+                    class="p-button-rounded p-button-text p-button-sm"
+                    title="View"
+                    (click)="viewBlog(post)">
+                  </button>
+                  <button
+                    pButton
+                    pRipple
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text p-button-sm"
+                    title="Edit"
+                    (click)="editBlog(post)">
+                  </button>
+                  <button
+                    pButton
+                    pRipple
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                    title="Delete"
+                    (click)="deleteBlog(post)">
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>

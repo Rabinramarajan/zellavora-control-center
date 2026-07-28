@@ -1,6 +1,7 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { TenantService } from '../auth/tenant.service';
 import {
   LicensePlan,
   OrganizationLicense,
@@ -17,6 +18,9 @@ import {
   providedIn: 'root',
 })
 export class LicensingService {
+  private readonly tenantService = inject(TenantService);
+  private readonly http = inject(HttpClient);
+
   // ========================================
   // Signals
   // ========================================
@@ -145,14 +149,10 @@ export class LicensingService {
     });
   };
 
-  // ========================================
-  // Effects
-  // ========================================
-
-  constructor(private http: HttpClient, private organizationService: any) {
+  constructor() {
     // Auto-load license when organization changes
     effect(() => {
-      const orgId = this.organizationService.currentOrganization()?.id;
+      const orgId = this.tenantService.current()?.id;
       if (orgId) {
         this.loadLicense(orgId);
       }

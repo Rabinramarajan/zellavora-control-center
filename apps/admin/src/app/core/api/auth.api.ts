@@ -29,7 +29,11 @@ export class AuthApiService {
   }
 
   getPublicKey(): Observable<any> {
-    return this.apiData.getData<any>('/auth/public-key', undefined, { hideJwt: true });
+    return this.apiData.getData<any>('/auth/gettoken', undefined, { hideJwt: true });
+  }
+
+  getToken(): Observable<string[]> {
+    return this.apiData.getData<string[]>('/auth/gettoken', undefined, { hideJwt: true });
   }
 
   login(request: any, headers?: Record<string, string>): Observable<LoginResponse> {

@@ -1,0 +1,59 @@
+.glass-panel {
+  background: rgba(8, 7, 24, 0.45);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn-active {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  color: #ffffff;
+}
+
+.tab-btn-inactive {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+}
+
+.tab-btn-inactive:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: #f1f5f9;
+}
+
+/* Custom scrollbars inside dropdown containers */
+::ng-deep .p-select {
+  width: 100% !important;
+  background: rgba(8, 7, 24, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+}
+
+::ng-deep .p-select-panel {
+  background: #0b0924 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+::ng-deep .p-select-item {
+  color: #94a3b8 !important;
+}
+
+::ng-deep .p-select-item:hover, ::ng-deep .p-select-item.p-highlight {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #fff !important;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+

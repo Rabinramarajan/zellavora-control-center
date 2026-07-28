@@ -1,0 +1,78 @@
+<div class="role-list">
+      <header class="page-header">
+        <h1>Roles</h1>
+        <button
+          *hasPermission="'admin:roles:create'"
+          class="btn btn-primary"
+          (click)="onCreate()"
+        >
+          + New Role
+        </button>
+      </header>
+
+      <div class="filters-section">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearch($event)"
+          placeholder="Search roles..."
+          class="search-input"
+        />
+        <button class="btn btn-secondary" (click)="onReset()">Reset</button>
+      </div>
+
+      <div class="loading" *ngIf="loading()">Loading roles...</div>
+      <div class="error" *ngIf="error()">{{ error() }}</div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Role Name</th>
+              <th>Description</th>
+              <th>Resources</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (role of filteredRoles(); track role.roleId) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/admin/roles', role.roleId]">
+                    {{ role.roleName }}
+                  </a>
+                </td>
+                <td>{{ role.moduleDescription || '—' }}</td>
+                <td>{{ role.ilstRoleResource?.length || 0 }} resources</td>
+                <td>
+                  <span [class]="'badge ' + (role.statusValue === 'Active' ? 'badge-active' : 'badge-inactive')">
+                    {{ role.statusDescription || role.statusValue }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button
+                    *hasPermission="'admin:roles:read'"
+                    class="btn btn-sm btn-ghost"
+                    (click)="onView(role)"
+                  >
+                    View
+                  </button>
+                  <button
+                    *hasPermission="'admin:roles:update'"
+                    class="btn btn-sm btn-ghost"
+                    (click)="onEdit(role)"
+                  >
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty">No roles found.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>

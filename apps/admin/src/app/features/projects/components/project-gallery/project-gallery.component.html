@@ -1,0 +1,146 @@
+<div class="bg-white dark:bg-slate-800 rounded-lg p-6 space-y-6 border border-slate-200 dark:border-slate-700">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Project Gallery</h3>
+
+      <!-- Upload Section -->
+      <div class="space-y-4">
+        <div
+          class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors cursor-pointer group"
+          (click)="fileInput.click()"
+        >
+          <input
+            #fileInput
+            type="file"
+            multiple
+            accept="image/*"
+            (change)="onFilesSelected($event)"
+            class="hidden"
+          />
+
+          <div class="text-4xl mb-2 group-hover:scale-110 transition-transform">🖼️</div>
+          <p class="text-slate-700 dark:text-slate-300 font-medium">
+            Click to upload or drag and drop
+          </p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            PNG, JPG, GIF up to 10MB each
+          </p>
+        </div>
+
+        <!-- Caption Form (optional) -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Image Caption (optional)
+          </label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="imageCaption"
+              placeholder="e.g., Homepage design mockup"
+              class="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+            />
+            <button
+              (click)="clearCaption()"
+              class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Progress -->
+      <div *ngIf="gallery.uploadProgress() > 0 && gallery.uploadProgress() < 100" class="space-y-2">
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-700 dark:text-slate-300">Uploading...</span>
+          <span class="text-slate-600 dark:text-slate-400">{{ gallery.uploadProgress() }}%</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+          <div
+            class="bg-blue-600 h-full transition-all"
+            [style.width.%]="gallery.uploadProgress()"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div
+        *ngIf="gallery.error()"
+        class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-lg text-red-700 dark:text-red-300 text-sm"
+      >
+        {{ gallery.error() }}
+      </div>
+
+      <!-- Gallery Grid -->
+      <div *ngIf="gallery.items().length > 0" class="space-y-4">
+        <h4 class="font-medium text-slate-900 dark:text-white">
+          Gallery Images ({{ gallery.items().length }})
+        </h4>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div
+            *ngFor="let item of gallery.items(); let i = index"
+            class="group relative aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:shadow-lg transition-shadow"
+          >
+            <!-- Image -->
+            <img
+              [src]="item.url"
+              [alt]="item.caption || 'Gallery image ' + (i + 1)"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            />
+
+            <!-- Overlay -->
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 gap-2">
+              <!-- Order Buttons -->
+              <div class="flex gap-1 flex-1">
+                <button
+                  *ngIf="i > 0"
+                  (click)="moveUp(item.id)"
+                  class="flex-1 px-2 py-1 bg-white/20 hover:bg-white/40 text-white rounded text-xs font-medium transition-colors"
+                >
+                  ⬆️
+                </button>
+                <button
+                  *ngIf="i < gallery.items().length - 1"
+                  (click)="moveDown(item.id)"
+                  class="flex-1 px-2 py-1 bg-white/20 hover:bg-white/40 text-white rounded text-xs font-medium transition-colors"
+                >
+                  ⬇️
+                </button>
+              </div>
+
+              <!-- Delete Button -->
+              <button
+                (click)="deleteImage(item.id)"
+                class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-medium transition-colors"
+              >
+                🗑️
+              </button>
+            </div>
+
+            <!-- Caption Badge -->
+            <div
+              *ngIf="item.caption"
+              class="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs max-w-[90%] truncate"
+            >
+              {{ item.caption }}
+            </div>
+
+            <!-- Index Badge -->
+            <div class="absolute top-2 right-2 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+              {{ i + 1 }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="gallery.items().length === 0 && !gallery.isLoading()" class="text-center py-8">
+        <p class="text-slate-600 dark:text-slate-400">No gallery images yet</p>
+        <p class="text-sm text-slate-500 dark:text-slate-500 mt-1">Upload images to showcase your project</p>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="gallery.isLoading()" class="flex items-center gap-2 text-slate-600">
+        <div class="animate-spin">⏳</div>
+        Loading gallery...
+      </div>
+    </div>

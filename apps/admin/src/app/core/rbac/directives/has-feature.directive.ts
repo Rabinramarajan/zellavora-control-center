@@ -7,8 +7,8 @@
  * Internally checks `feature:<name>` permission.
  */
 import {
-  Directive, Input, TemplateRef, ViewContainerRef,
-  effect, signal, inject, OnDestroy
+  Directive, input, TemplateRef, ViewContainerRef,
+  effect, inject, OnDestroy
 } from '@angular/core';
 import { PermissionService } from '../services/permission.service';
 import { PolicyStore } from '../store/policy.store';
@@ -23,12 +23,8 @@ export class HasFeatureDirective implements OnDestroy {
   private perms = inject(PermissionService);
   private store = inject(PolicyStore);
 
-  private feature = signal<string>('');
+  readonly hasFeature = input.required<string>();
   private viewRef: any = null;
-
-  @Input() set hasFeature(value: string) {
-    this.feature.set(value);
-  }
 
   constructor() {
     effect(() => {
@@ -43,7 +39,7 @@ export class HasFeatureDirective implements OnDestroy {
   }
 
   private evaluate(): void {
-    const ok = this.perms.hasFeature(this.feature());
+    const ok = this.perms.hasFeature(this.hasFeature());
     if (ok && !this.viewRef) {
       this.viewRef = this.vcr.createEmbeddedView(this.tpl);
     } else if (!ok && this.viewRef) {

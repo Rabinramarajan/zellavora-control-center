@@ -56,6 +56,12 @@ export class AuthRepository {
     );
   }
 
+  getToken(): Observable<string[]> {
+    return this.api.getToken().pipe(
+      catchError((error) => this.handleError(error))
+    );
+  }
+
   login(request: any, headers?: Record<string, string>): Observable<LoginResponse> {
     this.store.setLoading(true);
     this.store.setError(null);

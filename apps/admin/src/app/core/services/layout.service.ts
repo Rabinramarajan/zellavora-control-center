@@ -8,7 +8,11 @@ export class LayoutService {
   isSidebarCollapsed = signal(false);
 
   toggleSidebar(): void {
-    this.isSidebarOpen.update((v) => !v);
+    if (window.innerWidth >= 768) {
+      this.isSidebarCollapsed.update((v) => !v);
+    } else {
+      this.isSidebarOpen.update((v) => !v);
+    }
   }
 
   closeSidebar(): void {

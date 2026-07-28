@@ -5,8 +5,8 @@
  *   <a *hasRole="['hr','recruiter']" routerLink="/candidates">Candidates</a>
  */
 import {
-  Directive, Input, TemplateRef, ViewContainerRef,
-  effect, signal, inject, OnDestroy
+  Directive, input, computed, TemplateRef, ViewContainerRef,
+  effect, inject, OnDestroy
 } from '@angular/core';
 import { PermissionService } from '../services/permission.service';
 import { PolicyStore } from '../store/policy.store';
@@ -21,12 +21,14 @@ export class HasRoleDirective implements OnDestroy {
   private perms = inject(PermissionService);
   private store = inject(PolicyStore);
 
-  private required = signal<string[]>([]);
-  private viewRef: any = null;
+  readonly hasRole = input.required<string | string[]>();
 
-  @Input() set hasRole(value: string | string[]) {
-    this.required.set(Array.isArray(value) ? value : [value]);
-  }
+  private readonly required = computed(() => {
+    const value = this.hasRole();
+    return Array.isArray(value) ? value : [value];
+  });
+
+  private viewRef: any = null;
 
   constructor() {
     effect(() => {

@@ -1,0 +1,193 @@
+<p-toast></p-toast>
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-white">Testimonials Section</h1>
+          <p class="text-slate-400 mt-1">Showcase client feedback and reviews that build trust and credibility.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            pButton
+            pRipple
+            label="Save Changes"
+            icon="pi pi-save"
+            class="p-button-primary"
+            (click)="saveChanges()">
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Testimonials List -->
+        <div class="lg:col-span-2">
+          <!-- Section Header -->
+          <div class="bg-[#07051a] border border-white/10 rounded-2xl p-6 mb-6">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2 mb-6">
+              <span class="text-xl">⚙️</span> Section Settings
+            </h3>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-white mb-2">Section Title <span class="text-red-400">*</span></label>
+                <input
+                  pInputText
+                  type="text"
+                  placeholder="e.g., What Clients Say"
+                  class="w-full"
+                  [(ngModel)]="sectionTitle"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-white mb-2">Section Description</label>
+                <textarea
+                  pTextarea
+                  rows="3"
+                  placeholder="Add a brief description about your testimonials..."
+                  class="w-full"
+                  [(ngModel)]="sectionDescription">
+                </textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonials List -->
+          <div class="bg-[#07051a] border border-white/10 rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                <span class="text-xl">💬</span> Testimonials ({{ testimonials.length }})
+              </h3>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-plus"
+                class="p-button-rounded p-button-primary"
+                (click)="addTestimonial()">
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <div *ngFor="let testimonial of testimonials; let i = index" class="border border-white/10 rounded-xl p-4 space-y-4">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center gap-3 flex-1">
+                    <div class="w-10 h-10 rounded-full bg-purple-600/30 border border-purple-500/20 flex items-center justify-center text-sm font-bold text-purple-300">
+                      {{ testimonial.clientName.charAt(0) }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-white">{{ testimonial.clientName }}</p>
+                      <p class="text-xs text-slate-400">{{ testimonial.position }}</p>
+                    </div>
+                  </div>
+                  <button
+                    pButton
+                    pRipple
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-danger p-button-text"
+                    (click)="removeTestimonial(i)">
+                  </button>
+                </div>
+
+                <!-- Rating -->
+                <div class="flex gap-1">
+                  <span *ngFor="let star of [1,2,3,4,5]" class="text-lg cursor-pointer" (click)="testimonial.rating = star">
+                    {{ star <= testimonial.rating ? '⭐' : '☆' }}
+                  </span>
+                </div>
+
+                <div class="space-y-3 pt-2 border-t border-white/10">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Client Name</label>
+                    <input
+                      pInputText
+                      type="text"
+                      placeholder="e.g., John Doe"
+                      class="w-full"
+                      [(ngModel)]="testimonial.clientName"
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-400 mb-1">Position</label>
+                      <input
+                        pInputText
+                        type="text"
+                        placeholder="e.g., CEO"
+                        class="w-full"
+                        [(ngModel)]="testimonial.position"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-400 mb-1">Company</label>
+                      <input
+                        pInputText
+                        type="text"
+                        placeholder="e.g., Tech Corp"
+                        class="w-full"
+                        [(ngModel)]="testimonial.company"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Testimonial Message</label>
+                    <textarea
+                      pTextarea
+                      rows="3"
+                      placeholder="What did the client say about you?"
+                      class="w-full"
+                      [(ngModel)]="testimonial.message">
+                    </textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="bg-[#07051a] border border-white/10 rounded-2xl p-6 sticky top-6">
+          <h3 class="text-lg font-semibold text-white flex items-center gap-2 mb-6">
+            <span class="text-xl">👁️</span> Live Preview
+          </h3>
+
+          <div class="bg-gradient-to-br from-purple-900/20 to-blue-900/20 rounded-2xl p-4 border border-white/10">
+            <div class="bg-[#03020c] rounded-lg overflow-hidden">
+              <!-- Preview Content -->
+              <div class="p-6 space-y-6">
+                <div>
+                  <h2 class="text-2xl font-bold text-white mb-2">{{ sectionTitle || 'Testimonials' }}</h2>
+                  <p class="text-xs text-slate-400">{{ sectionDescription || 'Section description...' }}</p>
+                </div>
+
+                <!-- First Testimonial Preview -->
+                <div *ngIf="testimonials.length > 0" class="border border-white/10 rounded-lg p-4">
+                  <div class="flex gap-1 mb-2">
+                    <span *ngFor="let star of [1,2,3,4,5]">
+                      {{ star <= testimonials[0].rating ? '⭐' : '☆' }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-300 line-clamp-2 mb-3">{{ testimonials[0].message }}</p>
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-purple-600/30"></div>
+                    <div>
+                      <p class="text-xs font-semibold text-white">{{ testimonials[0].clientName }}</p>
+                      <p class="text-[10px] text-slate-500">{{ testimonials[0].position }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="pt-4 border-t border-white/10 text-center">
+                  <p class="text-[10px] text-slate-400">
+                    {{ testimonials.length }} testimonials
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

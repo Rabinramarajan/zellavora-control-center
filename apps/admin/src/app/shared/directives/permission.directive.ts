@@ -1,14 +1,14 @@
 import {
   Directive,
-  Input,
+  input,
   TemplateRef,
   ViewContainerRef,
+  ElementRef,
   OnInit,
   OnDestroy,
 } from '@angular/core';
 import { PermissionService } from '../../core/permissions/permission.service';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 
 /**
  * Structural Directive: *appHasPermission
@@ -23,8 +23,8 @@ import { takeUntil } from 'rxjs/operators';
   standalone: true,
 })
 export class HasPermissionDirective implements OnInit, OnDestroy {
-  @Input() appHasPermission: string | string[] = [];
-  @Input() appHasPermissionMode: 'any' | 'all' = 'any';
+  readonly appHasPermission = input<string | string[]>([]);
+  readonly appHasPermissionMode = input<'any' | 'all'>('any');
 
   private destroy$ = new Subject<void>();
   private hasPermission = false;
@@ -46,13 +46,14 @@ export class HasPermissionDirective implements OnInit, OnDestroy {
 
   private async updateView(): Promise<void> {
     try {
-      const permissions = Array.isArray(this.appHasPermission)
-        ? this.appHasPermission
-        : [this.appHasPermission];
+      const permsVal = this.appHasPermission();
+      const permissions = Array.isArray(permsVal)
+        ? permsVal
+        : [permsVal];
 
       this.hasPermission = await this.permissionService.hasPermission(
         permissions,
-        this.appHasPermissionMode
+        this.appHasPermissionMode()
       );
 
       if (this.hasPermission) {
@@ -81,7 +82,7 @@ export class HasPermissionDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class HasAnyPermissionDirective implements OnInit, OnDestroy {
-  @Input() appHasAnyPermission: string[] = [];
+  readonly appHasAnyPermission = input<string[]>([]);
 
   private destroy$ = new Subject<void>();
 
@@ -94,7 +95,7 @@ export class HasAnyPermissionDirective implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     try {
       const hasPermission = await this.permissionService.hasAnyPermission(
-        this.appHasAnyPermission
+        this.appHasAnyPermission()
       );
 
       if (hasPermission) {
@@ -128,7 +129,7 @@ export class HasAnyPermissionDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class HasAllPermissionsDirective implements OnInit, OnDestroy {
-  @Input() appHasAllPermissions: string[] = [];
+  readonly appHasAllPermissions = input<string[]>([]);
 
   private destroy$ = new Subject<void>();
 
@@ -141,7 +142,7 @@ export class HasAllPermissionsDirective implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     try {
       const hasPermission = await this.permissionService.hasAllPermissions(
-        this.appHasAllPermissions
+        this.appHasAllPermissions()
       );
 
       if (hasPermission) {
@@ -173,17 +174,17 @@ export class HasAllPermissionsDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class DisableIfNoPermissionDirective implements OnInit {
-  @Input() appDisableIfNoPermission: string = '';
+  readonly appDisableIfNoPermission = input<string>('');
 
   constructor(
-    private elementRef: any,
+    private elementRef: ElementRef,
     private permissionService: PermissionService
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
       const hasPermission = await this.permissionService.hasPermission(
-        this.appDisableIfNoPermission
+        this.appDisableIfNoPermission()
       );
 
       if (!hasPermission) {

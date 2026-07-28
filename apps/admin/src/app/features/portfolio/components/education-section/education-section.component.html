@@ -1,0 +1,428 @@
+<p-toast></p-toast>
+<div class="space-y-6">
+  <!-- Inner Header Bar -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950/40 border border-white/5 p-4 rounded-3xl backdrop-blur-xl">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg">
+        🎓
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-white leading-none">Education Section</h2>
+          <span class="px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-bold text-emerald-400">Live</span>
+          <span class="px-1.5 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-[8px] font-bold text-purple-400">Auth Required</span>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-1.5 leading-none">Manage your education, certifications and academic achievements.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 self-end md:self-auto">
+      <span class="text-[10px] text-slate-400 flex items-center gap-1.5 font-medium">
+        <span class="text-emerald-400">●</span> All changes saved
+      </span>
+      <button class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors flex items-center gap-1">
+        <span>👁️</span> Preview
+      </button>
+      <button class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors flex items-center gap-1">
+        <span>🔗</span> View Live
+      </button>
+      <button (click)="saveForm()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[9px] rounded-lg shadow-lg shadow-purple-600/20 transition-all">
+        Save Changes
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Layout Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Left Column: Education Entries List -->
+    <div class="lg:col-span-3 space-y-4">
+      <div class="glass-panel p-4 rounded-3xl space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-white">Education Entries</span>
+            <span class="px-1.5 py-0.5 rounded bg-purple-600/20 border border-purple-500/30 text-[9px] font-bold text-purple-400">{{ totalItems() }}</span>
+          </div>
+          <button (click)="addEmptyEntry()" class="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[9px] rounded-lg transition-all flex items-center gap-1">
+            <span>+</span> Add Education
+          </button>
+        </div>
+        <p class="text-[9px] text-slate-500 leading-none">Drag to reorder your education items.</p>
+
+        <!-- Entry cards list -->
+        <div class="space-y-3 mt-2 max-h-[420px] overflow-y-auto pr-1">
+          <div
+            *ngFor="let edu of parsedEntries()"
+            (click)="selectEntry(edu.id!)"
+            class="p-3.5 rounded-2xl cursor-pointer border transition-all relative group flex items-start gap-3"
+            [class.border-purple-500/30]="selectedId() === edu.id"
+            [class.bg-purple-950/10]="selectedId() === edu.id"
+            [class.border-white/5]="selectedId() !== edu.id"
+            [class.bg-slate-900/10]="selectedId() !== edu.id"
+          >
+            <!-- Drag handle icon mockup -->
+            <div class="text-slate-600 hover:text-slate-400 transition cursor-grab mt-0.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"></path>
+              </svg>
+            </div>
+
+            <!-- Graduation cap colored box -->
+            <div class="w-8 h-8 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-sm shrink-0">
+              🎓
+            </div>
+
+            <div class="space-y-1 pr-10">
+              <h4 class="text-[11px] font-bold text-white leading-tight line-clamp-1">{{ edu.degree }}</h4>
+              <p class="text-[9px] text-slate-400 leading-none">{{ edu.institution }}</p>
+              <p class="text-[8px] text-slate-500 flex items-center gap-1 leading-none mt-1">
+                <span>📅</span> {{ edu.startDate }} - {{ edu.isCurrent ? 'Current' : edu.endDate }}
+              </p>
+            </div>
+
+            <!-- Float Action Buttons -->
+            <div class="absolute right-3.5 top-3.5 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button class="text-slate-500 hover:text-white transition">
+                📝
+              </button>
+              <button (click)="$event.stopPropagation(); selectEntry(edu.id!); deleteEntry()" class="text-red-500 hover:text-red-400 transition">
+                🗑️
+              </button>
+            </div>
+            
+            <!-- Active Badge -->
+            <span *ngIf="edu.status === 'Active'" class="absolute right-3 bottom-3 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-bold text-emerald-400">
+              Active
+            </span>
+          </div>
+        </div>
+
+        <!-- Dashed add new at bottom -->
+        <button (click)="addEmptyEntry()" class="w-full py-3.5 border border-dashed border-white/10 hover:border-purple-500/30 rounded-2xl flex items-center justify-center text-[10px] text-slate-400 hover:text-white transition-all gap-1.5 mt-2 bg-slate-950/20">
+          <span>+</span> Add New Education
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Column: Edit form -->
+    <div class="lg:col-span-5 space-y-6">
+      <div class="glass-panel p-6 rounded-3xl space-y-6 relative overflow-hidden">
+        
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-white leading-none">Edit Education</h2>
+          <span class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-bold text-emerald-400">Active</span>
+        </div>
+
+        <div class="space-y-4 border-t border-white/5 pt-5">
+          <!-- Degree / Certification & Field of Study -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                <span>Degree / Certification *</span>
+                <span class="text-[9px] text-slate-500">{{ editingForm().degree.length }}/60</span>
+              </div>
+              <input pInputText type="text" [(ngModel)]="editingForm().degree" class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5" placeholder="e.g. Bachelor of Science" maxLength="60" />
+            </div>
+            
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                <span>Field of Study</span>
+                <span class="text-[9px] text-slate-500">{{ editingForm().field.length }}/50</span>
+              </div>
+              <input pInputText type="text" [(ngModel)]="editingForm().field" class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5" placeholder="e.g. Computer Science" maxLength="50" />
+            </div>
+          </div>
+
+          <!-- Institution / University -->
+          <div class="space-y-1">
+            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+              <span>Institution / University *</span>
+              <span class="text-[9px] text-slate-500">{{ editingForm().institution.length }}/60</span>
+            </div>
+            <input pInputText type="text" [(ngModel)]="editingForm().institution" class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5" placeholder="e.g. Stanford University" maxLength="60" />
+          </div>
+
+          <!-- Location & Grade -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 block">Location</span>
+              <div class="relative flex items-center">
+                <span class="absolute left-3.5 text-xs text-slate-500">📍</span>
+                <input pInputText type="text" [(ngModel)]="editingForm().location" class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl pl-8 pr-4 py-2.5" placeholder="e.g. Stanford, CA" />
+              </div>
+            </div>
+            
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 block">Grade / Percentage</span>
+              <input pInputText type="text" [(ngModel)]="editingForm().grade" class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5" placeholder="e.g. GPA 3.9 / 4.0 or First Class" />
+            </div>
+          </div>
+
+          <!-- Start Year & End Year & Current Education -->
+          <div class="grid grid-cols-3 gap-4 items-end">
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 block">Start Year *</span>
+              <p-select [options]="yearsOptions" [(ngModel)]="editingForm().startDate" optionLabel="label" optionValue="value" class="w-full text-xs"></p-select>
+            </div>
+            
+            <div class="space-y-1" [class.opacity-50]="editingForm().isCurrent">
+              <span class="text-[10px] font-bold text-slate-400 block">End Year *</span>
+              <p-select [options]="yearsOptions" [(ngModel)]="editingForm().endDate" optionLabel="label" optionValue="value" class="w-full text-xs" [disabled]="editingForm().isCurrent"></p-select>
+            </div>
+
+            <div class="flex items-center justify-center gap-2.5 h-10 pb-1">
+              <!-- Switch toggle -->
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="editingForm().isCurrent" class="sr-only peer" />
+                <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+              <span class="text-[9px] font-bold text-slate-400 leading-none">Current Education</span>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="space-y-1">
+            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+              <span>Description</span>
+              <span class="text-[9px] text-slate-500">{{ editingForm().descriptionText.length }}/300</span>
+            </div>
+            <textarea pTextarea rows="3" [(ngModel)]="editingForm().descriptionText" class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 pr-12 focus:outline-none" placeholder="Provide details about your accomplishments, coursework, projects etc..." maxLength="300"></textarea>
+          </div>
+
+          <!-- Highlights (Bullets) -->
+          <div class="space-y-2.5">
+            <span class="text-[10px] font-bold text-slate-400 block">Achievements / Highlights (Optional)</span>
+            <div class="space-y-2">
+              <div *ngFor="let hl of editingForm().highlights; let i = index" class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-purple-600/10 border border-purple-500/20 text-purple-400 rounded flex items-center justify-center text-[9px]">
+                  ✓
+                </div>
+                <input pInputText type="text" [ngModel]="hl" (ngModelChange)="updateHighlight(i, $event)" class="flex-1 bg-slate-900/30 border-white/5 text-slate-200 text-xs rounded-lg px-3 py-1.5" />
+                <button (click)="removeHighlight(i)" class="text-slate-500 hover:text-white transition text-[9px] p-1">✕</button>
+              </div>
+            </div>
+            <button (click)="addHighlight()" class="px-2.5 py-1.5 border border-dashed border-white/10 bg-slate-950/20 hover:border-purple-500/20 text-slate-300 font-bold text-[9px] rounded-lg transition-colors flex items-center gap-1">
+              <span>+</span> Add Highlight
+            </button>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="flex justify-between pt-4 border-t border-white/5 gap-3">
+            <button *ngIf="selectedId()" (click)="deleteEntry()" class="px-4 py-2.5 border border-red-500/30 hover:bg-red-500/10 text-red-400 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5">
+              <span>🗑️</span> Delete Entry
+            </button>
+            <div *ngIf="!selectedId()"></div>
+            <button (click)="saveForm()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-1.5 ml-auto">
+              <span>✓</span> {{ selectedId() ? 'Update Education' : 'Create Education' }}
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Column: Interactive Live Preview -->
+    <div class="lg:col-span-4 space-y-6">
+      <div class="glass-panel p-5 rounded-3xl space-y-4 relative flex flex-col h-full min-h-[580px]">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-white">Live Preview</span>
+          <!-- Device toggles -->
+          <div class="flex items-center bg-slate-900/80 border border-white/5 p-1 rounded-xl gap-1">
+            <button (click)="deviceMode.set('desktop')" class="p-1.5 rounded-lg text-xs leading-none transition" [class.bg-purple-600]="deviceMode() === 'desktop'" [class.text-white]="deviceMode() === 'desktop'" [class.text-slate-500]="deviceMode() !== 'desktop'">
+              🖥️
+            </button>
+            <button (click)="deviceMode.set('tablet')" class="p-1.5 rounded-lg text-xs leading-none transition" [class.bg-purple-600]="deviceMode() === 'tablet'" [class.text-white]="deviceMode() === 'tablet'" [class.text-slate-500]="deviceMode() !== 'tablet'">
+              📟
+            </button>
+            <button (click)="deviceMode.set('mobile')" class="p-1.5 rounded-lg text-xs leading-none transition" [class.bg-purple-600]="deviceMode() === 'mobile'" [class.text-white]="deviceMode() === 'mobile'" [class.text-slate-500]="deviceMode() !== 'mobile'">
+              📱
+            </button>
+          </div>
+        </div>
+        <p class="text-[9px] text-slate-500 leading-none">This is how your education section appears on your portfolio.</p>
+
+        <!-- Preview Canvas with responsive styling -->
+        <div class="flex-1 rounded-2xl bg-[#05040e] border border-white/5 p-4 overflow-y-auto max-h-[460px] scroll-purple" [class.preview-desktop]="deviceMode() === 'desktop'" [class.preview-tablet]="deviceMode() === 'tablet'" [class.preview-mobile]="deviceMode() === 'mobile'">
+          <div class="space-y-4">
+            
+            <!-- Header elements -->
+            <div class="flex items-center gap-1.5 text-xs text-purple-400 font-bold uppercase tracking-wider">
+              <span>🎓</span> Education
+            </div>
+            
+            <div>
+              <h3 class="text-base font-black text-white leading-tight">My Education</h3>
+              <p class="text-[9px] text-slate-400 mt-1">My academic background and learning journey that shaped my career.</p>
+            </div>
+
+            <!-- Timeline tree -->
+            <div class="relative pl-6 space-y-6 mt-4 border-l border-slate-800/80">
+              
+              <div *ngFor="let item of parsedEntries()" class="relative">
+                <!-- Timeline Dot indicator -->
+                <div class="absolute -left-[30px] top-1.5 w-3.5 h-3.5 rounded-full border bg-slate-950 flex items-center justify-center"
+                  [class.border-purple-500]="item.isCurrent"
+                  [class.border-slate-700]="!item.isCurrent">
+                  <div class="w-1.5 h-1.5 rounded-full" [class.bg-purple-500]="item.isCurrent" [class.bg-slate-700]="!item.isCurrent"></div>
+                </div>
+
+                <!-- Date display box on left timeline -->
+                <div class="absolute -left-[105px] top-0 hidden xl:block w-16 text-right">
+                  <span class="text-[9px] font-bold text-slate-500">{{ item.startDate }} - {{ item.isCurrent ? 'Present' : item.endDate }}</span>
+                </div>
+
+                <!-- Content Card details -->
+                <div class="p-3.5 rounded-xl border border-white/5 bg-white/2 space-y-1.5 relative overflow-hidden">
+                  <div class="absolute inset-0 bg-purple-500/[0.01] blur-md"></div>
+                  
+                  <div class="flex flex-wrap items-center gap-1.5 justify-between relative">
+                    <h5 class="text-[11px] font-bold text-white leading-tight">{{ item.degree }}</h5>
+                    <span *ngIf="item.isCurrent" class="px-1 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[6px] font-bold text-emerald-400 leading-none">
+                      Current
+                    </span>
+                  </div>
+
+                  <p class="text-[9px] text-purple-300/90 font-medium relative">{{ item.institution }}</p>
+                  
+                  <div class="flex items-center gap-2 text-[8px] text-slate-500 relative">
+                    <span *ngIf="item.location">📍 {{ item.location }}</span>
+                    <span *ngIf="item.grade">● {{ item.grade }}</span>
+                  </div>
+
+                  <p class="text-[9px] text-slate-400 leading-normal relative mt-1" *ngIf="item.descriptionText">{{ item.descriptionText }}</p>
+
+                  <!-- Highlight bullet highlights -->
+                  <div class="space-y-1 mt-1.5 relative" *ngIf="item.highlights.length">
+                    <div *ngFor="let hl of item.highlights" class="flex items-start gap-1.5 text-[8px] text-slate-400">
+                      <span class="text-purple-400 mt-0.5">✓</span>
+                      <span>{{ hl }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Settings & Stats widgets -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Bottom Left: Section Settings -->
+    <div class="lg:col-span-8 glass-panel p-5 rounded-3xl space-y-5">
+      <div>
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400 leading-none">Section Settings</h4>
+        <p class="text-[9px] text-slate-500 mt-1 leading-none">Configure how the education section behaves.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start pt-2">
+        <!-- Layout style -->
+        <div class="space-y-2">
+          <span class="text-[10px] font-bold text-slate-400 block">Layout Style</span>
+          <div class="grid grid-cols-4 bg-slate-950/60 p-1 border border-white/5 rounded-xl gap-1">
+            <button (click)="layoutStyle.set('timeline')" class="py-2.5 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition gap-1" [class.bg-purple-600]="layoutStyle() === 'timeline'" [class.text-white]="layoutStyle() === 'timeline'" [class.text-slate-500]="layoutStyle() !== 'timeline'">
+              <span>📊</span> Timeline
+            </button>
+            <button (click)="layoutStyle.set('grid')" class="py-2.5 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition gap-1" [class.bg-purple-600]="layoutStyle() === 'grid'" [class.text-white]="layoutStyle() === 'grid'" [class.text-slate-500]="layoutStyle() !== 'grid'">
+              <span>🎛️</span> Grid
+            </button>
+            <button (click)="layoutStyle.set('list')" class="py-2.5 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition gap-1" [class.bg-purple-600]="layoutStyle() === 'list'" [class.text-white]="layoutStyle() === 'list'" [class.text-slate-500]="layoutStyle() !== 'list'">
+              <span>📃</span> List
+            </button>
+            <button (click)="layoutStyle.set('cards')" class="py-2.5 rounded-lg flex flex-col items-center justify-center text-[8px] font-bold transition gap-1" [class.bg-purple-600]="layoutStyle() === 'cards'" [class.text-white]="layoutStyle() === 'cards'" [class.text-slate-500]="layoutStyle() !== 'cards'">
+              <span>🃏</span> Cards
+            </button>
+          </div>
+        </div>
+
+        <!-- Toggles -->
+        <div class="space-y-2 bg-slate-900/20 p-3 border border-white/5 rounded-2xl">
+          <div class="flex items-center justify-between text-[9px] font-bold">
+            <span class="text-slate-400">Show Header</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" [(ngModel)]="showSettings.showHeader" class="sr-only peer" />
+              <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between text-[9px] font-bold">
+            <span class="text-slate-400">Show Description</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" [(ngModel)]="showSettings.showDescription" class="sr-only peer" />
+              <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between text-[9px] font-bold">
+            <span class="text-slate-400">Show Location</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" [(ngModel)]="showSettings.showLocation" class="sr-only peer" />
+              <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between text-[9px] font-bold">
+            <span class="text-slate-400">Show Year Range</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" [(ngModel)]="showSettings.showYearRange" class="sr-only peer" />
+              <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Limit & Animations -->
+        <div class="space-y-4">
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 block">Maximum Items</span>
+            <p-select [options]="[{label:'3 items', value:3}, {label:'6 items', value:6}, {label:'10 items', value:10}]" [(ngModel)]="maxItems" optionLabel="label" optionValue="value" class="w-full text-xs"></p-select>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 block">Animation</span>
+            <p-select [options]="[{label:'Fade In Up', value:'fade-in-up'}, {label:'Slide Right', value:'slide-right'}]" [(ngModel)]="animationStyle" optionLabel="label" optionValue="value" class="w-full text-xs"></p-select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/5 pt-4">
+        <div class="bg-slate-950/20 border border-white/5 p-3 rounded-2xl text-center space-y-1">
+          <span class="text-slate-500 text-[8px] font-bold uppercase tracking-wider block">Education Items</span>
+          <span class="text-base font-black text-white block leading-none">{{ totalItems() }}</span>
+          <span class="text-slate-500 text-[8px] block">Total Added</span>
+        </div>
+        <div class="bg-slate-950/20 border border-white/5 p-3 rounded-2xl text-center space-y-1">
+          <span class="text-slate-500 text-[8px] font-bold uppercase tracking-wider block">Active</span>
+          <span class="text-base font-black text-white block leading-none">{{ activeItemsCount() }}</span>
+          <span class="text-slate-500 text-[8px] block">Currently Active</span>
+        </div>
+        <div class="bg-slate-950/20 border border-white/5 p-3 rounded-2xl text-center space-y-1">
+          <span class="text-slate-500 text-[8px] font-bold uppercase tracking-wider block">Hidden Items</span>
+          <span class="text-base font-black text-white block leading-none">0</span>
+          <span class="text-slate-500 text-[8px] block">Not Visible</span>
+        </div>
+        <div class="bg-slate-950/20 border border-white/5 p-3 rounded-2xl text-center space-y-1">
+          <span class="text-slate-500 text-[8px] font-bold uppercase tracking-wider block">Completion</span>
+          <span class="text-base font-black text-emerald-400 block leading-none">{{ completionPercentage() }}%</span>
+          <span class="text-slate-500 text-[8px] block">Looks Good</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Right: Pro Tip -->
+    <div class="lg:col-span-4 glass-panel p-5 rounded-3xl flex items-center gap-4 relative overflow-hidden bg-gradient-to-tr from-purple-950/20 to-transparent border border-purple-500/10">
+      <div class="w-16 h-16 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0 relative">
+        <div class="absolute inset-0 bg-purple-500/5 blur-sm"></div>
+        <span class="text-2xl">💡</span>
+      </div>
+      <div class="space-y-1">
+        <span class="text-[10px] font-bold text-white block">Pro Tip</span>
+        <p class="text-[9px] text-slate-400 leading-normal">Keep your education information updated and to the point. Quality over quantity.</p>
+      </div>
+      <!-- Graphic stacked books mockup -->
+      <div class="absolute bottom-1 right-2 select-none opacity-40 pointer-events-none text-2xl">
+        📚
+      </div>
+    </div>
+  </div>
+</div>

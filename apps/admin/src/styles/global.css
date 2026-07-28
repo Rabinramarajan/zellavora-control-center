@@ -3,8 +3,6 @@
 @import 'tailwindcss/utilities';
 
 /* PrimeNG Styles */
-@import "primeng/resources/themes/lara-dark-blue/theme.css";
-@import "primeng/resources/primeng.min.css";
 @import "primeicons/primeicons.css";
 
 * {

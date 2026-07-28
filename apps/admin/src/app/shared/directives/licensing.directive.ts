@@ -1,6 +1,6 @@
 import {
   Directive,
-  Input,
+  input,
   TemplateRef,
   ViewContainerRef,
   OnInit,
@@ -32,8 +32,8 @@ import { Subject } from 'rxjs';
   standalone: true,
 })
 export class HasFeatureDirective implements OnInit, OnDestroy {
-  @Input() appHasFeature!: string;
-  @Input() appHasFeatureElse?: TemplateRef<any>;
+  readonly appHasFeature = input.required<string>();
+  readonly appHasFeatureElse = input<TemplateRef<any>>();
 
   private destroy$ = new Subject<void>();
   private hasRendered = false;
@@ -47,7 +47,7 @@ export class HasFeatureDirective implements OnInit, OnDestroy {
   ngOnInit(): void {
     effect(() => {
       const enabledFeatures = this.licensingService.enabledFeatures();
-      const hasFeature = enabledFeatures.some(f => f.featureKey === this.appHasFeature);
+      const hasFeature = enabledFeatures.some(f => f.featureKey === this.appHasFeature());
 
       if (hasFeature && !this.hasRendered) {
         this.viewContainer.clear();
@@ -55,8 +55,9 @@ export class HasFeatureDirective implements OnInit, OnDestroy {
         this.hasRendered = true;
       } else if (!hasFeature && this.hasRendered) {
         this.viewContainer.clear();
-        if (this.appHasFeatureElse) {
-          this.viewContainer.createEmbeddedView(this.appHasFeatureElse);
+        const elseTpl = this.appHasFeatureElse();
+        if (elseTpl) {
+          this.viewContainer.createEmbeddedView(elseTpl);
         }
         this.hasRendered = false;
       }
@@ -83,8 +84,8 @@ export class HasFeatureDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class DisableIfFeatureLockedDirective implements OnInit, OnDestroy {
-  @Input() appDisableIfFeatureLocked!: string;
-  @Input() appDisableIfFeatureLockedTooltip?: string;
+  readonly appDisableIfFeatureLocked = input.required<string>();
+  readonly appDisableIfFeatureLockedTooltip = input<string>();
 
   private destroy$ = new Subject<void>();
 
@@ -96,7 +97,7 @@ export class DisableIfFeatureLockedDirective implements OnInit, OnDestroy {
   ngOnInit(): void {
     effect(() => {
       const enabledFeatures = this.licensingService.enabledFeatures();
-      const hasFeature = enabledFeatures.some(f => f.featureKey === this.appDisableIfFeatureLocked);
+      const hasFeature = enabledFeatures.some(f => f.featureKey === this.appDisableIfFeatureLocked());
 
       const element = this.viewContainer.element?.nativeElement;
       if (element) {
@@ -106,8 +107,9 @@ export class DisableIfFeatureLockedDirective implements OnInit, OnDestroy {
         } else {
           element.disabled = true;
           element.classList.add('opacity-50', 'cursor-not-allowed');
-          if (this.appDisableIfFeatureLockedTooltip) {
-            element.setAttribute('title', this.appDisableIfFeatureLockedTooltip);
+          const tooltip = this.appDisableIfFeatureLockedTooltip();
+          if (tooltip) {
+            element.setAttribute('title', tooltip);
           }
         }
       }
@@ -134,8 +136,8 @@ export class DisableIfFeatureLockedDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class HasModuleDirective implements OnInit, OnDestroy {
-  @Input() appHasModule!: string;
-  @Input() appHasModuleElse?: TemplateRef<any>;
+  readonly appHasModule = input.required<string>();
+  readonly appHasModuleElse = input<TemplateRef<any>>();
 
   private destroy$ = new Subject<void>();
   private hasRendered = false;
@@ -149,7 +151,7 @@ export class HasModuleDirective implements OnInit, OnDestroy {
   ngOnInit(): void {
     effect(() => {
       const enabledModules = this.licensingService.enabledModules();
-      const hasModule = enabledModules.some(m => m.moduleKey === this.appHasModule);
+      const hasModule = enabledModules.some(m => m.moduleKey === this.appHasModule());
 
       if (hasModule && !this.hasRendered) {
         this.viewContainer.clear();
@@ -157,8 +159,9 @@ export class HasModuleDirective implements OnInit, OnDestroy {
         this.hasRendered = true;
       } else if (!hasModule && this.hasRendered) {
         this.viewContainer.clear();
-        if (this.appHasModuleElse) {
-          this.viewContainer.createEmbeddedView(this.appHasModuleElse);
+        const elseTpl = this.appHasModuleElse();
+        if (elseTpl) {
+          this.viewContainer.createEmbeddedView(elseTpl);
         }
         this.hasRendered = false;
       }
@@ -239,14 +242,14 @@ export class LicenseStatusDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class UpgradePathDirective implements OnInit {
-  @Input() appUpgradePath!: string;
+  readonly appUpgradePath = input.required<string>();
 
   constructor(private viewContainer: ViewContainerRef) {}
 
   ngOnInit(): void {
     const element = this.viewContainer.element?.nativeElement;
     if (element) {
-      element.setAttribute('data-upgrade-path', this.appUpgradePath);
+      element.setAttribute('data-upgrade-path', this.appUpgradePath());
       element.setAttribute('data-upgrade-source', 'locked-feature');
       element.classList.add('cursor-pointer', 'hover:underline');
     }

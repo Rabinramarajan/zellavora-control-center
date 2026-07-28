@@ -126,22 +126,30 @@ export class AuthService {
    * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
    * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
    */
-  private async encryptString(plain: string, jwk: any): Promise<string> {
+  private binaryStringToArrayBuffer(str: string): ArrayBuffer {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+      bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+  }
+
+  private async encryptAesCbc(plainText: string, keyStr: string, ivStr: string): Promise<string> {
+    const keyBuf = this.binaryStringToArrayBuffer(keyStr);
+    const ivBuf = this.binaryStringToArrayBuffer(ivStr);
     const key = await window.crypto.subtle.importKey(
-      'jwk',
-      jwk,
-      {
-        name: 'RSA-OAEP',
-        hash: { name: 'SHA-256' },
-      },
+      'raw',
+      keyBuf,
+      { name: 'AES-CBC' },
       false,
       ['encrypt']
     );
-    const encoder = new TextEncoder();
-    const data = encoder.encode(plain);
+    const data = new TextEncoder().encode(plainText);
     const encrypted = await window.crypto.subtle.encrypt(
       {
-        name: 'RSA-OAEP',
+        name: 'AES-CBC',
+        iv: ivBuf,
       },
       key,
       data
@@ -156,12 +164,13 @@ export class AuthService {
   login(request: LoginRequest): Observable<LoginResponse> {
     this.store.setLoading(true);
     this.store.setError(null);
-    return this.http.get<any>(`${this.apiUrl}/public-key`).pipe(
-      switchMap((jwk) => {
+    return this.http.get<string[]>(`${this.apiUrl}/gettoken`).pipe(
+      switchMap((keyToken) => {
+        const [keyStr, ivStr] = keyToken;
         const encryptPromises = Promise.all([
-          this.encryptString(request.clientCode, jwk),
-          this.encryptString(request.email, jwk),
-          this.encryptString(request.password, jwk),
+          this.encryptAesCbc(request.clientCode, keyStr, ivStr),
+          this.encryptAesCbc(request.email, keyStr, ivStr),
+          this.encryptAesCbc(request.password, keyStr, ivStr),
         ]);
         return from(encryptPromises).pipe(
           switchMap(([encClientCode, encEmail, encPassword]) => {
@@ -170,6 +179,7 @@ export class AuthService {
               clientCode: encClientCode,
               email: encEmail,
               password: encPassword,
+              keyToken: keyToken,
             };
             return this.http.post<LoginResponse>(`${this.apiUrl}/login`, encryptedRequest, {
               headers: {

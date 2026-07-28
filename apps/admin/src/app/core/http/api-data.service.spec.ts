@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApiDataService } from './api-data.service';
 import { AuthStore } from '../auth/auth.store';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('ApiDataService', () => {
   let service: ApiDataService;
@@ -10,9 +11,9 @@ describe('ApiDataService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [ApiDataService, AuthStore]
-    });
+    imports: [],
+    providers: [ApiDataService, AuthStore, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     service = TestBed.inject(ApiDataService);
     httpMock = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);

@@ -35,10 +35,10 @@ export const environment = {
   // Storage (for S3 configuration)
   storage: {
     type: 's3',
-    bucket: process.env['S3_BUCKET'] || 'zellavora-media',
-    region: process.env['S3_REGION'] || 'us-east-1',
-    accessKeyId: process.env['S3_ACCESS_KEY'] || '',
-    secretAccessKey: process.env['S3_SECRET_KEY'] || '',
+    bucket: 'zellavora-media',
+    region: 'us-east-1',
+    accessKeyId: '',
+    secretAccessKey: '',
   },
 
   // Features

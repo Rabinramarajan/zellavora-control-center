@@ -169,41 +169,60 @@ export class NavbarComponent {
   }
 
   getBreadcrumbs(): BreadcrumbSegment[] {
-    const url = this.router.url;
-    if (url.includes('education')) {
-      return [
-        { label: 'Portfolio', route: '/portfolio' },
-        { label: 'Profile Editor', route: '/portfolio/profile' },
-        { label: 'Education Section', route: '' }
-      ];
-    } else if (url.includes('profile')) {
-      return [
-        { label: 'Portfolio', route: '/portfolio' },
-        { label: 'Profile Editor', route: '' }
-      ];
-    } else if (url.includes('skills')) {
-      return [
-        { label: 'Portfolio', route: '/portfolio' },
-        { label: 'Profile Editor', route: '/portfolio/profile' },
-        { label: 'Skills Section', route: '' }
-      ];
-    } else if (url.includes('dashboard')) {
-      return [
-        { label: 'Dashboard', route: '' }
-      ];
-    } else {
-      // Clean fallback breadcrumb trail
-      const segments = url.split('/').filter(s => s && s !== 'admin');
-      if (segments.length === 0) return [{ label: 'Zellavora', route: '' }];
-      return segments.map((seg, idx) => {
-        const path = '/' + segments.slice(0, idx + 1).join('/');
-        const isLast = idx === segments.length - 1;
-        return {
-          label: this.capitalize(seg),
-          route: isLast ? '' : path
-        };
-      });
+    const url = this.router.url.split('?')[0]; // Strip query parameters
+    const segments = url.split('/').filter(s => s);
+    
+    if (segments.length === 0) {
+      return [{ label: 'Dashboard', route: '' }];
     }
+
+    const labelMap: Record<string, string> = {
+      dashboard: 'Dashboard',
+      portfolio: 'Portfolio',
+      profile: 'Profile',
+      hero: 'Hero Section',
+      about: 'About Section',
+      experience: 'Experience',
+      education: 'Education',
+      skills: 'Skills',
+      services: 'Services',
+      testimonials: 'Testimonials',
+      projects: 'Projects',
+      blog: 'Blog',
+      media: 'Media',
+      analytics: 'Analytics',
+      users: 'Users',
+      settings: 'Settings',
+      admin: 'Admin Console',
+      roles: 'Manage Roles',
+      resources: 'Resources',
+      branches: 'Branches',
+      'theme-builder': 'Theme Builder',
+      notifications: 'Notifications',
+      'audit-logs': 'Audit Logs',
+      'system-health': 'System Health',
+      'cms-builder': 'CMS Builder',
+      new: 'New',
+    };
+
+    return segments.map((seg, idx) => {
+      const isLast = idx === segments.length - 1;
+      const path = '/' + segments.slice(0, idx + 1).join('/');
+      
+      let label = labelMap[seg.toLowerCase()];
+      if (!label) {
+        if (/^[0-9a-fA-F-]+$/.test(seg) && seg.length > 8) {
+          label = 'Details';
+        } else {
+          label = this.capitalize(seg.replace(/-/g, ' '));
+        }
+      }
+
+      return {
+        label: label,
+        route: isLast ? '' : path
+      };
+    });
   }
 
   getInitials(name?: string): string {

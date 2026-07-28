@@ -1,0 +1,18 @@
+.role-list { padding: 1.5rem; }
+    .page-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .filters { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+    .search-input { flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .chip { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+    .role-key { font-size: 0.75rem; color: #6b7280; }
+    .badge {
+      display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 500;
+    }
+    .badge-system { background: #fee2e2; color: #991b1b; }
+    .badge-custom { background: #dbeafe; color: #1e40af; }
+    .empty { text-align: center; color: #6b7280; padding: 2rem; }

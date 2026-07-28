@@ -1,11 +1,11 @@
 import {
   Directive,
-  Input,
+  input,
   TemplateRef,
   ViewContainerRef,
+  ElementRef,
   OnInit,
   OnDestroy,
-  effect,
 } from '@angular/core';
 import { ComponentPermissionService } from '../../core/permissions/component-permission.service';
 import { PermissionService } from '../../core/permissions/permission.service';
@@ -29,12 +29,12 @@ import { ComponentState } from '../../shared/models/component-permission.model';
   standalone: true,
 })
 export class ComponentPermissionDirective implements OnInit, OnDestroy {
-  @Input() appComponentPermission: string = '';
-  @Input() permissions?: string | string[];
-  @Input() roles?: string | string[];
-  @Input() features?: string | string[];
-  @Input() state?: ComponentState;
-  @Input() else?: TemplateRef<any>;
+  readonly appComponentPermission = input<string>('');
+  readonly permissions = input<string | string[] | undefined>(undefined);
+  readonly roles = input<string | string[] | undefined>(undefined);
+  readonly features = input<string | string[] | undefined>(undefined);
+  readonly state = input<ComponentState | undefined>(undefined);
+  readonly else = input<TemplateRef<any> | undefined>(undefined);
 
   private viewCreated = false;
 
@@ -55,31 +55,31 @@ export class ComponentPermissionDirective implements OnInit, OnDestroy {
 
   private async updateView(): Promise<void> {
     try {
-      const permissionArray = Array.isArray(this.permissions)
-        ? this.permissions
-        : this.permissions
-          ? [this.permissions]
-          : undefined;
+      const permsVal = this.permissions();
+      let permissionArray: string[] | undefined = undefined;
+      if (permsVal) {
+        permissionArray = Array.isArray(permsVal) ? permsVal : [permsVal];
+      }
 
-      const roleArray = Array.isArray(this.roles)
-        ? this.roles
-        : this.roles
-          ? [this.roles]
-          : undefined;
+      const rolesVal = this.roles();
+      let roleArray: string[] | undefined = undefined;
+      if (rolesVal) {
+        roleArray = Array.isArray(rolesVal) ? rolesVal : [rolesVal];
+      }
 
-      const featureArray = Array.isArray(this.features)
-        ? this.features
-        : this.features
-          ? [this.features]
-          : undefined;
+      const featuresVal = this.features();
+      let featureArray: string[] | undefined = undefined;
+      if (featuresVal) {
+        featureArray = Array.isArray(featuresVal) ? featuresVal : [featuresVal];
+      }
 
       const response = await this.componentPermService.checkComponentPermission({
-        componentId: this.appComponentPermission,
+        componentId: this.appComponentPermission(),
         componentType: 'button' as any,
         permissions: permissionArray,
         roles: roleArray,
         features: featureArray,
-        requiredState: this.state,
+        requiredState: this.state(),
       });
 
       if (response.allowed) {
@@ -89,9 +89,10 @@ export class ComponentPermissionDirective implements OnInit, OnDestroy {
           this.viewCreated = true;
         }
       } else {
-        if (this.else) {
+        const elseTpl = this.else();
+        if (elseTpl) {
           this.viewContainer.clear();
-          this.viewContainer.createEmbeddedView(this.else);
+          this.viewContainer.createEmbeddedView(elseTpl);
           this.viewCreated = false;
         } else {
           this.viewContainer.clear();
@@ -118,8 +119,8 @@ export class ComponentPermissionDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class HasRoleDirective implements OnInit, OnDestroy {
-  @Input() appHasRole: string | string[] = [];
-  @Input() hasRoleElse?: TemplateRef<any>;
+  readonly appHasRole = input<string | string[]>([]);
+  readonly hasRoleElse = input<TemplateRef<any> | undefined>(undefined);
 
   private viewCreated = false;
 
@@ -130,7 +131,8 @@ export class HasRoleDirective implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    const roles = Array.isArray(this.appHasRole) ? this.appHasRole : [this.appHasRole];
+    const rolesVal = this.appHasRole();
+    const roles = Array.isArray(rolesVal) ? rolesVal : [rolesVal];
     const userRole = this.permissionService.role();
 
     const hasRole = roles.includes(userRole);
@@ -138,9 +140,12 @@ export class HasRoleDirective implements OnInit, OnDestroy {
     if (hasRole) {
       this.viewContainer.createEmbeddedView(this.templateRef);
       this.viewCreated = true;
-    } else if (this.hasRoleElse) {
-      this.viewContainer.createEmbeddedView(this.hasRoleElse);
-      this.viewCreated = false;
+    } else {
+      const elseTpl = this.hasRoleElse();
+      if (elseTpl) {
+        this.viewContainer.createEmbeddedView(elseTpl);
+        this.viewCreated = false;
+      }
     }
   }
 
@@ -167,9 +172,9 @@ export class HasRoleDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class HasFeatureDirective implements OnInit, OnDestroy {
-  @Input() appHasFeature: string | string[] = [];
-  @Input() featureMode: 'any' | 'all' = 'any';
-  @Input() hasFeatureElse?: TemplateRef<any>;
+  readonly appHasFeature = input<string | string[]>([]);
+  readonly featureMode = input<'any' | 'all'>('any');
+  readonly hasFeatureElse = input<TemplateRef<any> | undefined>(undefined);
 
   private viewCreated = false;
 
@@ -180,16 +185,15 @@ export class HasFeatureDirective implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    const features = Array.isArray(this.appHasFeature)
-      ? this.appHasFeature
-      : [this.appHasFeature];
+    const featuresVal = this.appHasFeature();
+    const features = Array.isArray(featuresVal)
+      ? featuresVal
+      : [featuresVal];
 
     try {
       let hasFeature: boolean;
 
-      if (this.featureMode === 'all') {
-        // Check if all features are enabled (would need feature service)
-        // For now, simplified check
+      if (this.featureMode() === 'all') {
         hasFeature = features.length > 0;
       } else {
         hasFeature = features.length > 0;
@@ -198,9 +202,12 @@ export class HasFeatureDirective implements OnInit, OnDestroy {
       if (hasFeature) {
         this.viewContainer.createEmbeddedView(this.templateRef);
         this.viewCreated = true;
-      } else if (this.hasFeatureElse) {
-        this.viewContainer.createEmbeddedView(this.hasFeatureElse);
-        this.viewCreated = false;
+      } else {
+        const elseTpl = this.hasFeatureElse();
+        if (elseTpl) {
+          this.viewContainer.createEmbeddedView(elseTpl);
+          this.viewCreated = false;
+        }
       }
     } catch (error) {
       console.error('Feature check error:', error);
@@ -231,17 +238,17 @@ export class HasFeatureDirective implements OnInit, OnDestroy {
   standalone: true,
 })
 export class ComponentStateDirective implements OnInit {
-  @Input() appComponentState: string = '';
+  readonly appComponentState = input<string>('');
 
   constructor(
-    private elementRef: any,
+    private elementRef: ElementRef,
     private componentPermService: ComponentPermissionService
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
       const classes = this.componentPermService.getComponentStateClasses(
-        this.appComponentState
+        this.appComponentState()
       );
 
       if (classes) {
@@ -271,23 +278,24 @@ export class ComponentStateDirective implements OnInit {
   standalone: true,
 })
 export class DisableIfNotPermittedDirective implements OnInit {
-  @Input() appDisableIfNotPermitted: string | string[] = [];
-  @Input() permissionMode: 'any' | 'all' = 'any';
+  readonly appDisableIfNotPermitted = input<string | string[]>([]);
+  readonly permissionMode = input<'any' | 'all'>('any');
 
   constructor(
-    private elementRef: any,
+    private elementRef: ElementRef,
     private permissionService: PermissionService
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
-      const permissions = Array.isArray(this.appDisableIfNotPermitted)
-        ? this.appDisableIfNotPermitted
-        : [this.appDisableIfNotPermitted];
+      const disableVal = this.appDisableIfNotPermitted();
+      const permissions = Array.isArray(disableVal)
+        ? disableVal
+        : [disableVal];
 
       const hasPermission = await this.permissionService.hasPermission(
         permissions,
-        this.permissionMode
+        this.permissionMode()
       );
 
       if (!hasPermission) {
@@ -314,18 +322,19 @@ export class DisableIfNotPermittedDirective implements OnInit {
   standalone: true,
 })
 export class ReadOnlyIfNotPermittedDirective implements OnInit {
-  @Input() appReadOnlyIfNotPermitted: string | string[] = [];
+  readonly appReadOnlyIfNotPermitted = input<string | string[]>([]);
 
   constructor(
-    private elementRef: any,
+    private elementRef: ElementRef,
     private permissionService: PermissionService
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
-      const permissions = Array.isArray(this.appReadOnlyIfNotPermitted)
-        ? this.appReadOnlyIfNotPermitted
-        : [this.appReadOnlyIfNotPermitted];
+      const readOnlyVal = this.appReadOnlyIfNotPermitted();
+      const permissions = Array.isArray(readOnlyVal)
+        ? readOnlyVal
+        : [readOnlyVal];
 
       const hasPermission = await this.permissionService.hasPermission(permissions, 'any');
 
@@ -353,18 +362,19 @@ export class ReadOnlyIfNotPermittedDirective implements OnInit {
   standalone: true,
 })
 export class HideIfNotPermittedDirective implements OnInit {
-  @Input() appHideIfNotPermitted: string | string[] = [];
+  readonly appHideIfNotPermitted = input<string | string[]>([]);
 
   constructor(
-    private elementRef: any,
+    private elementRef: ElementRef,
     private permissionService: PermissionService
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
-      const permissions = Array.isArray(this.appHideIfNotPermitted)
-        ? this.appHideIfNotPermitted
-        : [this.appHideIfNotPermitted];
+      const hideVal = this.appHideIfNotPermitted();
+      const permissions = Array.isArray(hideVal)
+        ? hideVal
+        : [hideVal];
 
       const hasPermission = await this.permissionService.hasPermission(permissions, 'any');
 

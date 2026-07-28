@@ -1,0 +1,64 @@
+<div class="resource-manager">
+      <header class="page-header">
+        <h1>Resources</h1>
+        <button
+          *hasPermission="'admin:resources:create'"
+          class="btn btn-primary"
+          (click)="onCreate()"
+        >
+          + New Resource
+        </button>
+      </header>
+
+      <div class="filters-section">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearch($event)"
+          placeholder="Search resources..."
+          class="search-input"
+        />
+        <button class="btn btn-secondary" (click)="onReset()">Reset</button>
+      </div>
+
+      <div class="loading" *ngIf="loading()">Loading resources...</div>
+      <div class="error" *ngIf="error()">{{ error() }}</div>
+
+      <div class="resources-grid">
+        @for (resource of filteredResources(); track resource.resourceId) {
+          <div class="resource-card">
+            <h3>{{ resource.resourceName }}</h3>
+            <p class="description">{{ resource.resourceDescription || 'No description' }}</p>
+            <div class="meta">
+              <span class="type">{{ resource.resourceTypeDescription || resource.resourceTypeValue }}</span>
+              <span class="badge badge-active">Available</span>
+            </div>
+            <div class="actions">
+              <button
+                *hasPermission="'admin:resources:read'"
+                class="btn btn-sm btn-ghost"
+                (click)="onView(resource)"
+              >
+                View
+              </button>
+              <button
+                *hasPermission="'admin:resources:update'"
+                class="btn btn-sm btn-ghost"
+                (click)="onEdit(resource)"
+              >
+                Edit
+              </button>
+              <button
+                *hasPermission="'admin:resources:delete'"
+                class="btn btn-sm btn-danger"
+                (click)="onDelete(resource)"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty">No resources found.</div>
+        }
+      </div>
+    </div>

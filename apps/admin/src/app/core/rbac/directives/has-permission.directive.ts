@@ -10,8 +10,8 @@
  * Reactive: re-evaluates on every policy change.
  */
 import {
-  Directive, Input, TemplateRef, ViewContainerRef, effect,
-  signal, inject, OnDestroy
+  Directive, input, computed, TemplateRef, ViewContainerRef, effect,
+  inject, OnDestroy
 } from '@angular/core';
 import { PermissionService } from '../services/permission.service';
 import { PolicyStore } from '../store/policy.store';
@@ -26,17 +26,15 @@ export class HasPermissionDirective implements OnDestroy {
   private perms = inject(PermissionService);
   private store = inject(PolicyStore);
 
-  private required = signal<string[]>([]);
-  private mode: 'any' | 'all' = 'all';
+  readonly hasPermission = input.required<string | string[]>();
+  readonly hasPermissionMode = input<'any' | 'all'>('all');
+
+  private readonly required = computed(() => {
+    const value = this.hasPermission();
+    return Array.isArray(value) ? value : [value];
+  });
+
   private viewRef: any = null;
-
-  @Input() set hasPermission(value: string | string[]) {
-    this.required.set(Array.isArray(value) ? value : [value]);
-  }
-
-  @Input() set hasPermissionMode(mode: 'any' | 'all') {
-    this.mode = mode;
-  }
 
   constructor() {
     // Re-evaluate on every policy change (signal effect)
@@ -53,7 +51,7 @@ export class HasPermissionDirective implements OnDestroy {
 
   private evaluate(): void {
     const perms = this.required();
-    const ok = this.mode === 'all'
+    const ok = this.hasPermissionMode() === 'all'
       ? this.perms.canAll(perms)
       : this.perms.canAny(perms);
 

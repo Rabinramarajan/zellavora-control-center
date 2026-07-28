@@ -35,18 +35,22 @@ interface NavItem {
 
     <!-- Sidebar -->
     <aside
-      class="fixed md:static inset-y-0 left-0 w-64 h-full bg-[#05040e] border-r border-[#13112b] transition-transform duration-300 transform md:transform-none flex flex-col overflow-hidden"
+      class="fixed md:static inset-y-0 left-0 h-full bg-[#05040e] border-r border-[#13112b] transition-all duration-300 transform md:transform-none flex flex-col overflow-hidden animate-all"
+      [class.w-64]="!layoutService.isSidebarCollapsed()"
+      [class.w-20]="layoutService.isSidebarCollapsed()"
       [class.translate-x-0]="layoutService.isSidebarOpen()"
       [class.-translate-x-full]="!layoutService.isSidebarOpen()"
       [attr.aria-label]="'Navigation sidebar'"
     >
       <div class="flex flex-col h-full">
         <!-- Logo Header (aligned with navbar h-16) -->
-        <div class="h-16 flex items-center gap-3 px-6 border-b border-[#13112b] shrink-0 mb-4">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+        <div class="h-16 flex items-center gap-3 px-6 border-b border-[#13112b] shrink-0 mb-4 transition-all duration-300"
+             [class.justify-center]="layoutService.isSidebarCollapsed()"
+             [class.px-2]="layoutService.isSidebarCollapsed()">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
             <span class="text-white font-extrabold text-base">Z</span>
           </div>
-          <div>
+          <div *ngIf="!layoutService.isSidebarCollapsed()" class="transition-opacity duration-300">
             <div class="text-[11px] font-bold tracking-wider leading-none text-white">ZELLAVORA</div>
             <div class="text-[8px] tracking-widest text-[#4f46e5] font-semibold mt-0.5">CONTROL CENTER</div>
           </div>
@@ -56,9 +60,10 @@ interface NavItem {
         <nav class="flex-1 overflow-y-auto px-4 space-y-4 mb-6 custom-sidebar-scrollbar">
           <!-- Main Category -->
           <div>
-            <p class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
+            <p *ngIf="!layoutService.isSidebarCollapsed()" class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
               MAIN NAVIGATION
             </p>
+            <div *ngIf="layoutService.isSidebarCollapsed()" class="border-t border-[#13112b] my-4 mx-1"></div>
 
             <div class="space-y-1">
               <div *ngFor="let item of mainNavItems" class="space-y-1">
@@ -68,17 +73,18 @@ interface NavItem {
                   routerLinkActive="bg-[#13112b] text-white"
                   [routerLinkActiveOptions]="{ exact: item.route === '/portfolio' || item.route === '/dashboard' ? true : false }"
                   (click)="item.children ? togglePortfolio($event) : closeSidebarOnMobile()"
+                  [class.justify-center]="layoutService.isSidebarCollapsed()"
                   class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
                 >
                   <div class="flex items-center gap-3">
-                    <span class="text-base">{{ item.icon }}</span>
-                    <span>{{ item.label }}</span>
+                    <span class="text-base shrink-0">{{ item.icon }}</span>
+                    <span *ngIf="!layoutService.isSidebarCollapsed()">{{ item.label }}</span>
                   </div>
-                  <span class="text-[9px] text-[#4e4b70] font-normal font-mono" *ngIf="!item.children || !isPortfolioExpanded()">{{ item.path }}</span>
+                  <span class="text-[9px] text-[#4e4b70] font-normal font-mono" *ngIf="!layoutService.isSidebarCollapsed() && (!item.children || !isPortfolioExpanded())">{{ item.path }}</span>
                 </a>
 
                 <!-- Submenu for Portfolio (if active/expanded) -->
-                <div *ngIf="item.children && isPortfolioExpanded()" class="pl-3.5 pr-1 py-1 space-y-1 border-l border-[#13112b] ml-5">
+                <div *ngIf="item.children && isPortfolioExpanded() && !layoutService.isSidebarCollapsed()" class="pl-3.5 pr-1 py-1 space-y-1 border-l border-[#13112b] ml-5">
                   <a
                     *ngFor="let sub of item.children"
                     [routerLink]="sub.route"
@@ -97,9 +103,10 @@ interface NavItem {
 
           <!-- Admin Category -->
           <div>
-            <p class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
+            <p *ngIf="!layoutService.isSidebarCollapsed()" class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
               ADMIN NAVIGATION
             </p>
+            <div *ngIf="layoutService.isSidebarCollapsed()" class="border-t border-[#13112b] my-4 mx-1"></div>
 
             <div class="space-y-1">
               <a
@@ -107,20 +114,21 @@ interface NavItem {
                 [routerLink]="item.route"
                 routerLinkActive="bg-[#13112b] text-white"
                 (click)="closeSidebarOnMobile()"
+                [class.justify-center]="layoutService.isSidebarCollapsed()"
                 class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
               >
                 <div class="flex items-center gap-3">
-                  <span class="text-base">{{ item.icon }}</span>
-                  <span>{{ item.label }}</span>
+                  <span class="text-base shrink-0">{{ item.icon }}</span>
+                  <span *ngIf="!layoutService.isSidebarCollapsed()">{{ item.label }}</span>
                 </div>
-                <span class="text-[9px] text-[#4e4b70] font-normal font-mono">{{ item.path }}</span>
+                <span *ngIf="!layoutService.isSidebarCollapsed()" class="text-[9px] text-[#4e4b70] font-normal font-mono">{{ item.path }}</span>
               </a>
             </div>
           </div>
         </nav>
 
         <!-- Upgrade Section (Fixed at bottom) -->
-        <div class="p-4 shrink-0 mt-auto border-t border-[#13112b]">
+        <div *ngIf="!layoutService.isSidebarCollapsed()" class="p-4 shrink-0 mt-auto border-t border-[#13112b] transition-all duration-300">
           <div class="glass-panel p-4 rounded-2xl relative overflow-hidden bg-gradient-to-br from-purple-900/40 via-blue-900/10 to-transparent border border-purple-500/20">
             <div class="absolute -right-2 -top-2 w-10 h-10 bg-purple-500/10 rounded-full blur-md"></div>
             <div class="absolute -left-2 -bottom-2 w-10 h-10 bg-indigo-500/10 rounded-full blur-md"></div>
