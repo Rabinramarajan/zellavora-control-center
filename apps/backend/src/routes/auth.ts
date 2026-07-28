@@ -259,8 +259,8 @@ router.get('/gettoken', (req, res, next) => {
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
     res.json([
-      key.toString('binary'),
-      iv.toString('binary'),
+      key.toString('base64'),
+      iv.toString('base64'),
     ]);
   } catch (e) {
     next(e);
@@ -382,8 +382,8 @@ router.post('/login', async (req, res, next) => {
       try {
         const keyToken = loginData.keyToken;
         if (keyToken.length === 2) {
-          const aesKey = Buffer.from(keyToken[0], 'binary');
-          const aesIv = Buffer.from(keyToken[1], 'binary');
+          const aesKey = Buffer.from(keyToken[0], 'base64');
+          const aesIv = Buffer.from(keyToken[1], 'base64');
 
           const decryptAes = (cipherText: string) => {
             const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, aesIv);

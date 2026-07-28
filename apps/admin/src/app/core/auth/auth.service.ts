@@ -136,18 +136,19 @@ export class AuthService {
    * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
    * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
    */
-  private binaryStringToArrayBuffer(str: string): ArrayBuffer {
-    const buf = new ArrayBuffer(str.length);
-    const bufView = new Uint8Array(buf);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
-      bufView[i] = str.charCodeAt(i);
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
     }
-    return buf;
+    return bytes.buffer;
   }
 
   private async encryptAesCbc(plainText: string, keyStr: string, ivStr: string): Promise<string> {
-    const keyBuf = this.binaryStringToArrayBuffer(keyStr);
-    const ivBuf = this.binaryStringToArrayBuffer(ivStr);
+    const keyBuf = this.base64ToArrayBuffer(keyStr);
+    const ivBuf = this.base64ToArrayBuffer(ivStr);
     const key = await window.crypto.subtle.importKey(
       'raw',
       keyBuf,
