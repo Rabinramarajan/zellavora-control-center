@@ -18,6 +18,7 @@
  *   3. If failure, fall back to login
  */
 import { Injectable, inject, effect, DestroyRef } from '@angular/core';
+import CryptoJS from 'crypto-js';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError, timer, Subscription, from } from 'rxjs';
@@ -136,36 +137,15 @@ export class AuthService {
    * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
    * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
    */
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-  }
-
-  private async encryptAesCbc(plainText: string, keyStr: string, ivStr: string): Promise<string> {
-    const keyBuf = this.base64ToArrayBuffer(keyStr);
-    const ivBuf = this.base64ToArrayBuffer(ivStr);
-    const key = await window.crypto.subtle.importKey(
-      'raw',
-      keyBuf,
-      { name: 'AES-CBC' },
-      false,
-      ['encrypt']
-    );
-    const data = new TextEncoder().encode(plainText);
-    const encrypted = await window.crypto.subtle.encrypt(
-      {
-        name: 'AES-CBC',
-        iv: ivBuf,
-      },
-      key,
-      data
-    );
-    return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+  private encryptAesCbc(plainText: string, keyBase64: string, ivBase64: string): string {
+    const key = CryptoJS.enc.Base64.parse(keyBase64);
+    const iv = CryptoJS.enc.Base64.parse(ivBase64);
+    const encrypted = CryptoJS.AES.encrypt(plainText, key, {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    return encrypted.toString();
   }
 
   /**
@@ -178,27 +158,22 @@ export class AuthService {
     return this.http.get<string[]>(`${this.apiUrl}/gettoken`).pipe(
       switchMap((keyToken) => {
         const [keyStr, ivStr] = keyToken;
-        const encryptPromises = Promise.all([
-          this.encryptAesCbc(request.clientCode, keyStr, ivStr),
-          this.encryptAesCbc(request.email, keyStr, ivStr),
-          this.encryptAesCbc(request.password, keyStr, ivStr),
-        ]);
-        return from(encryptPromises).pipe(
-          switchMap(([encClientCode, encEmail, encPassword]) => {
-            const encryptedRequest = {
-              ...request,
-              clientCode: encClientCode,
-              email: encEmail,
-              password: encPassword,
-              keyToken: keyToken,
-            };
-            return this.http.post<LoginResponse>(`${this.apiUrl}/login`, encryptedRequest, {
-              headers: {
-                'X-Payload-Encrypted': 'true',
-              },
-            });
-          })
-        );
+        const encClientCode = this.encryptAesCbc(request.clientCode, keyStr, ivStr);
+        const encEmail = this.encryptAesCbc(request.email, keyStr, ivStr);
+        const encPassword = this.encryptAesCbc(request.password, keyStr, ivStr);
+
+        const encryptedRequest = {
+          ...request,
+          clientCode: encClientCode,
+          email: encEmail,
+          password: encPassword,
+          keyToken: keyToken,
+        };
+        return this.http.post<LoginResponse>(`${this.apiUrl}/login`, encryptedRequest, {
+          headers: {
+            'X-Payload-Encrypted': 'true',
+          },
+        });
       }),
       tap((res) => {
         if (this.isMfaChallenge(res)) {

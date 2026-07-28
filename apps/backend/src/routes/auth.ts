@@ -19,6 +19,7 @@
  *   POST   /api/v1/auth/mfa/recovery-codes     →  Regenerate recovery codes
  */
 import { Router, type Router as ExpressRouter } from 'express';
+import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { config } from '../config/env';
@@ -412,14 +413,18 @@ router.post('/login', async (req, res, next) => {
       try {
         const keyToken = loginData.keyToken;
         if (keyToken.length === 2) {
-          const aesKey = Buffer.from(keyToken[0], 'base64');
-          const aesIv = Buffer.from(keyToken[1], 'base64');
+          const keyBase64 = keyToken[0];
+          const ivBase64 = keyToken[1];
 
           const decryptAes = (cipherText: string) => {
-            const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, aesIv);
-            let decrypted = decipher.update(cipherText, 'base64', 'utf8');
-            decrypted += decipher.final('utf8');
-            return decrypted;
+            const key = CryptoJS.enc.Base64.parse(keyBase64);
+            const iv = CryptoJS.enc.Base64.parse(ivBase64);
+            const decrypted = CryptoJS.AES.decrypt(cipherText, key, {
+              iv: iv,
+              mode: CryptoJS.mode.CBC,
+              padding: CryptoJS.pad.Pkcs7
+            });
+            return decrypted.toString(CryptoJS.enc.Utf8);
           };
 
           if (loginData.clientCode) loginData.clientCode = decryptAes(loginData.clientCode);
