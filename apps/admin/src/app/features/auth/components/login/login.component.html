@@ -1,10 +1,10 @@
-<div class="h-screen w-full flex bg-[#030014] text-slate-100 font-sans relative overflow-hidden">
+<div class="h-screen w-full flex text-slate-100 font-sans relative overflow-hidden bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(3,0,20,0.9), rgba(3,0,20,0.8)), url('assets/login_bg.jpg')">
       <!-- Background overlay gradients -->
       <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/10 blur-[120px] pointer-events-none"></div>
       <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none"></div>
 
       <!-- Left Side (Illustration and Info) - hidden on mobile -->
-      <div class="hidden lg:flex lg:w-7/12 flex-col justify-between p-10 relative z-10 bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(3,0,20,0.95), rgba(3,0,20,0.7)), url('assets/login_bg.jpg')">
+      <div class="hidden lg:flex lg:w-7/12 flex-col justify-between p-10 relative z-10 bg-transparent">
         <!-- Logo and Status -->
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
@@ -105,10 +105,10 @@
                 <button
                   type="button"
                   (click)="toggleOrgDropdown()"
-                  class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-left text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent flex items-center justify-between"
+                  class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-left text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent flex items-center justify-between"
                 >
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                   </span>
@@ -172,16 +172,26 @@
               <div>
                 <div class="relative">
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
                   </span>
                   <input
                     type="email"
                     formControlName="email"
-                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-500"
+                    class="w-full pl-10 pr-10 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-500"
                     placeholder="Enter your email"
                   />
+                  <button
+                    *ngIf="form.get('email')?.value"
+                    type="button"
+                    (click)="clearEmail()"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors z-10"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
                 </div>
                 <p *ngIf="form.get('email')?.hasError('required') && form.get('email')?.touched" class="mt-1 text-[10px] text-red-400">
                   Email is required
@@ -192,22 +202,41 @@
               <div>
                 <div class="relative">
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                   </span>
                   <input
-                    type="password"
+                    [type]="showPassword ? 'text' : 'password'"
                     formControlName="password"
-                    class="w-full pl-10 pr-10 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-500"
+                    class="w-full pl-10 pr-16 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-500"
                     placeholder="Enter your password"
                   />
-                  <span class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-slate-400 hover:text-white">
-                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                  </span>
+                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center gap-2.5 z-10">
+                    <button
+                      *ngIf="form.get('password')?.value"
+                      type="button"
+                      (click)="clearPassword()"
+                      class="text-slate-400 hover:text-white transition-colors"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="togglePasswordVisibility()"
+                      class="text-slate-400 hover:text-white transition-colors focus:outline-none"
+                    >
+                      <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M21 21L3 3m6.318 6.318a4.5 4.5 0 006.364 6.364m-1.341-1.341l-3.682-3.682"/>
+                      </svg>
+                      <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 <p *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched" class="mt-1 text-[10px] text-red-400">
                   Password is required
@@ -250,7 +279,7 @@
             </form>
 
             <!-- Social Logins -->
-            <div class="relative my-4.5 text-center">
+            <div class="relative my-5 text-center">
               <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/5"></div></div>
               <span class="relative px-2 bg-[#0a0f1e] text-[9px] text-slate-500 font-bold uppercase tracking-wider">Or Continue With</span>
             </div>

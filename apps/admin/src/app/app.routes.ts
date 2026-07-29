@@ -14,7 +14,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'dashboard',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/dashboard/dashboard.routes').then(
         (m) => m.dashboardRoutes
@@ -22,7 +22,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'portfolio',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/portfolio/portfolio.routes').then(
         (m) => m.portfolioRoutes
@@ -30,7 +30,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'projects',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/projects/projects.routes').then(
         (m) => m.projectsRoutes
@@ -38,19 +38,19 @@ export const appRoutes: Routes = [
   },
   {
     path: 'blog',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/blog/blog.routes').then((m) => m.blogRoutes),
   },
   {
     path: 'media',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/media/media.routes').then((m) => m.mediaRoutes),
   },
   {
     path: 'analytics',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/analytics/analytics.routes').then(
         (m) => m.analyticsRoutes
@@ -58,13 +58,13 @@ export const appRoutes: Routes = [
   },
   {
     path: 'users',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/users/users.routes').then((m) => m.usersRoutes),
   },
   {
     path: 'settings',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/settings/settings.routes').then(
         (m) => m.settingsRoutes
@@ -72,12 +72,13 @@ export const appRoutes: Routes = [
   },
   {
     path: 'admin',
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     loadChildren: () =>
       import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
   {
     path: 'theme-builder',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/theme-builder/theme-builder.component').then(
         (m) => m.ThemeBuilderComponent
@@ -85,6 +86,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'notifications',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/notifications/notifications.component').then(
         (m) => m.NotificationsComponent
@@ -92,6 +94,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'audit-logs',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/audit-logs/audit-logs.component').then(
         (m) => m.AuditLogsComponent
@@ -99,6 +102,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'system-health',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/system-health/system-health.component').then(
         (m) => m.SystemHealthComponent
@@ -106,6 +110,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'cms-builder',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/cms-builder/cms-builder.component').then(
         (m) => m.CmsBuilderComponent

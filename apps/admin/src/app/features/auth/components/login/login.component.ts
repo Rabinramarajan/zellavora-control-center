@@ -22,6 +22,21 @@ export class LoginComponent implements OnInit {
   allOrgs: any[] = [];
   selectedOrg: any = null;
   loadingOrgs = false;
+  showPassword = false;
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  clearEmail(): void {
+    this.form.get('email')?.setValue('');
+    this.form.get('email')?.markAsUntouched();
+  }
+
+  clearPassword(): void {
+    this.form.get('password')?.setValue('');
+    this.form.get('password')?.markAsUntouched();
+  }
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
