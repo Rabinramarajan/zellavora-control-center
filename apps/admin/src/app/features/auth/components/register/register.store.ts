@@ -9,37 +9,35 @@ export interface RegisterState {
   welcomeType: 'organization' | 'partner' | null;
   invitationCode: string;
   invitationEmail: string;
-  
+
   // Company Info
   companyName: string;
   companyClientCode: string;
   companyLogoUrl: string | null;
   companyIndustry: string;
   companyEmployees: string;
-  
+
   // Branch Info
   branchName: string;
   branchCode: string;
-  
+
   // Admin Info
   adminFullName: string;
   adminEmail: string;
-  adminPhone: string;
   adminDesignation: string;
-  
+
   // Credentials
   credentialsUsername: string;
   credentialsPassword: string;
-  
+
   // Verification Codes
   emailOtpCode: string;
-  phoneOtpCode: string;
   mfaCode: string;
-  
+
   // MFA Details
   mfaSecret: string;
   mfaQrCode: string;
-  
+
   // UI States
   loading: boolean;
   error: string | null;
@@ -60,12 +58,10 @@ const initial: RegisterState = {
   branchCode: '',
   adminFullName: '',
   adminEmail: '',
-  adminPhone: '',
   adminDesignation: '',
   credentialsUsername: '',
   credentialsPassword: '',
   emailOtpCode: '',
-  phoneOtpCode: '',
   mfaCode: '',
   mfaSecret: '',
   mfaQrCode: '',
@@ -94,7 +90,6 @@ export class RegisterStore {
   readonly branchCode = computed(() => this.state().branchCode);
   readonly adminFullName = computed(() => this.state().adminFullName);
   readonly adminEmail = computed(() => this.state().adminEmail);
-  readonly adminPhone = computed(() => this.state().adminPhone);
   readonly adminDesignation = computed(() => this.state().adminDesignation);
   readonly credentialsUsername = computed(() => this.state().credentialsUsername);
   readonly credentialsPassword = computed(() => this.state().credentialsPassword);
@@ -106,7 +101,7 @@ export class RegisterStore {
 
   // Methods
   nextStep() {
-    this.state.update(s => ({ ...s, currentStep: Math.min(s.currentStep + 1, 12), error: null }));
+    this.state.update(s => ({ ...s, currentStep: Math.min(s.currentStep + 1, 11), error: null }));
   }
 
   prevStep() {
@@ -190,34 +185,6 @@ export class RegisterStore {
     }
   }
 
-  async sendPhoneOtp(phone: string): Promise<boolean> {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
-    try {
-      await firstValueFrom(
-        this.http.post('/api/v1/auth/register/send-phone-otp', { phone })
-      );
-      this.state.update(s => ({ ...s, loading: false }));
-      return true;
-    } catch (err: any) {
-      this.state.update(s => ({ ...s, error: 'Failed to send OTP to phone.', loading: false }));
-      return false;
-    }
-  }
-
-  async verifyPhoneOtp(phone: string, code: string): Promise<boolean> {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
-    try {
-      await firstValueFrom(
-        this.http.post('/api/v1/auth/register/verify-phone-otp', { phone, code })
-      );
-      this.state.update(s => ({ ...s, phoneOtpCode: code, loading: false }));
-      return true;
-    } catch (err: any) {
-      this.state.update(s => ({ ...s, error: 'Incorrect phone OTP code.', loading: false }));
-      return false;
-    }
-  }
-
   async loadMfaSetup(email: string) {
     this.state.update(s => ({ ...s, loading: true, error: null }));
     try {
@@ -255,7 +222,6 @@ export class RegisterStore {
       admin: {
         fullName: s.adminFullName,
         email: s.adminEmail,
-        phone: s.adminPhone,
         designation: s.adminDesignation,
       },
       credentials: {
@@ -270,7 +236,7 @@ export class RegisterStore {
       const res = await firstValueFrom(
         this.http.post<any>('/api/v1/auth/register/submit', payload)
       );
-      this.state.update(s => ({ ...s, successData: res.data, currentStep: 12, loading: false }));
+      this.state.update(s => ({ ...s, successData: res.data, currentStep: 11, loading: false }));
     } catch (err: any) {
       const msg = err.error?.error || 'Registration submission failed. Please verify your MFA key code.';
       this.state.update(s => ({ ...s, error: msg, loading: false }));

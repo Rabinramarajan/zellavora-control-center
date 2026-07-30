@@ -37,14 +37,11 @@ export class RegisterComponent implements OnInit {
   
   // Timer for OTPs
   emailTimer = signal<number>(0);
-  phoneTimer = signal<number>(0);
   emailInterval: any;
-  phoneInterval: any;
 
   // Local state
   localMfaCode = signal<string>('');
   emailOtpCode = signal<string>('');
-  phoneOtpCode = signal<string>('');
 
   steps = [
     { title: 'Welcome', desc: 'Setup Type' },
@@ -54,7 +51,6 @@ export class RegisterComponent implements OnInit {
     { title: 'Admin', desc: 'Profile details' },
     { title: 'Security', desc: 'Credentials' },
     { title: 'Email', desc: 'OTP Verification' },
-    { title: 'Phone', desc: 'SMS OTP' },
     { title: 'MFA', desc: 'Authenticator' },
     { title: 'Review', desc: 'Confirm Details' },
     { title: 'Complete', desc: 'Initializing' }
@@ -95,7 +91,6 @@ export class RegisterComponent implements OnInit {
 
     this.adminForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
-      phone: ['', [Validators.required, Validators.pattern(/^[0-9+() -]{10,20}$/)]],
       designation: ['Super Administrator']
     });
 
@@ -142,7 +137,6 @@ export class RegisterComponent implements OnInit {
     if (this.adminForm.invalid) return;
     this.store.updateAdmin({
       adminFullName: this.adminForm.value.fullName,
-      adminPhone: this.adminForm.value.phone,
       adminDesignation: this.adminForm.value.designation
     });
     this.store.nextStep();
@@ -181,34 +175,7 @@ export class RegisterComponent implements OnInit {
     const ok = await this.store.verifyEmailOtp(this.store.adminEmail(), this.emailOtpCode());
     if (ok) {
       clearInterval(this.emailInterval);
-      this.store.nextStep();
-    }
-  }
 
-  async triggerPhoneOtp() {
-    const ok = await this.store.sendPhoneOtp(this.store.adminPhone());
-    if (ok) {
-      this.startPhoneTimer();
-    }
-  }
-
-  startPhoneTimer() {
-    this.phoneTimer.set(60);
-    clearInterval(this.phoneInterval);
-    this.phoneInterval = setInterval(() => {
-      if (this.phoneTimer() > 0) {
-        this.phoneTimer.update(t => t - 1);
-      } else {
-        clearInterval(this.phoneInterval);
-      }
-    }, 1000);
-  }
-
-  async verifyPhoneOtp() {
-    const ok = await this.store.verifyPhoneOtp(this.store.adminPhone(), this.phoneOtpCode());
-    if (ok) {
-      clearInterval(this.phoneInterval);
-      
       // Load MFA setup for the next step before moving forward
       await this.store.loadMfaSetup(this.store.adminEmail());
       this.store.nextStep();

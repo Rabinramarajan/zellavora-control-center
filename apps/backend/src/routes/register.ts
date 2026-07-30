@@ -23,15 +23,6 @@ const VerifyOtpSchema = z.object({
   code: z.string().length(6, 'OTP must be exactly 6 characters'),
 });
 
-const SendPhoneOtpSchema = z.object({
-  phone: z.string().min(10, 'Invalid phone number'),
-});
-
-const VerifyPhoneOtpSchema = z.object({
-  phone: z.string().min(10, 'Invalid phone number'),
-  code: z.string().length(6, 'OTP must be exactly 6 characters'),
-});
-
 const RegisterSubmitSchema = z.object({
   invitationCode: z.string(),
   company: z.object({
@@ -48,7 +39,6 @@ const RegisterSubmitSchema = z.object({
   admin: z.object({
     fullName: z.string().min(2),
     email: z.string().email(),
-    phone: z.string().min(10),
     designation: z.string().optional(),
   }),
   credentials: z.object({
@@ -111,58 +101,6 @@ router.post('/verify-email-otp', async (req, res, next) => {
       where: {
         type: 'email',
         target: email,
-        code,
-        verified: false,
-        expiresAt: { gte: new Date() },
-      },
-    });
-
-    if (!otp) {
-      return res.status(400).json({ error: 'Invalid or expired verification code.' });
-    }
-
-    await prisma.otp.update({
-      where: { id: otp.id },
-      data: { verified: true },
-    });
-
-    res.json({ success: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/send-phone-otp', async (req, res, next) => {
-  try {
-    const { phone } = SendPhoneOtpSchema.parse(req.body);
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    await prisma.otp.create({
-      data: {
-        type: 'phone',
-        target: phone,
-        code,
-        expiresAt,
-      },
-    });
-
-    logger.info(`[SMS-MOCK] Send OTP ${code} to ${phone}`);
-
-    res.json({ success: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/verify-phone-otp', async (req, res, next) => {
-  try {
-    const { phone, code } = VerifyPhoneOtpSchema.parse(req.body);
-    
-    const otp = await prisma.otp.findFirst({
-      where: {
-        type: 'phone',
-        target: phone,
         code,
         verified: false,
         expiresAt: { gte: new Date() },
