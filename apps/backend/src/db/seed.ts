@@ -129,6 +129,18 @@ async function main() {
   });
   console.log(`- Assigned Owner role to User: ${adminUser.email}`);
 
+  // 8. Create a default invitation code for registration testing
+  await prisma.invitation.upsert({
+    where: { email: 'admin@zellavora.com' },
+    update: { used: false },
+    create: {
+      email: 'admin@zellavora.com',
+      code: 'ZCC-INVITE-2026',
+      used: false,
+    },
+  });
+  console.log('- Default invitation code seeded: ZCC-INVITE-2026');
+
   console.log('✅ Seeding Completed Successfully.');
 }
 

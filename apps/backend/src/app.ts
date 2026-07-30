@@ -34,6 +34,7 @@ import cleanNotifRoutes from './modules/notification/notification.routes';
 import cleanVerifyRoutes from './modules/verification/verification.routes';
 import cleanAuditRoutes from './modules/audit/audit.routes';
 import cleanStorageRoutes from './modules/storage/storage.routes';
+import emailRoutes from './routes/email.routes';
 import { buildRbac } from './rbac';
 
 const app = express();
@@ -186,6 +187,9 @@ app.use('/api/v1/admin', adminResourcesRoutes);
 app.use('/api/v1/admin', adminConfigsRoutes);
 app.use('/api/v1/admin', adminAuditRoutes);
 app.use('/api/v1/admin', adminMessagesRoutes);
+
+// Email service routes
+app.use('/api/v1/email', emailRoutes);
 
 // ---------- RBAC module ----------
 // The RBAC router is mounted SYNCHRONOUSLY below, before the 404 handler.

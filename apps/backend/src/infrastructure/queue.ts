@@ -1,7 +1,8 @@
 import { Queue, Worker } from 'bullmq';
 import { config } from '../config/env';
 import { logger } from './logger';
-import nodemailer from 'nodemailer';
+import { emailService } from '../services/email.service';
+import { emailTemplates } from '../services/email.templates';
 
 const redisConnectionOptions = config.redisUrl ? { url: config.redisUrl } : undefined;
 
@@ -9,8 +10,13 @@ export const emailQueue = redisConnectionOptions && config.redisEnabled
   ? new Queue('email-queue', { connection: { host: '127.0.0.1', port: 6379 } })
   : null;
 
+export interface EmailJob {
+  name: string;
+  data: Record<string, any>;
+}
+
 // Helper to queue a job
-export const addQueueJob = async (name: string, data: any) => {
+export const addQueueJob = async (name: string, data: any): Promise<void> => {
   if (emailQueue && config.redisEnabled) {
     try {
       await emailQueue.add(name, data);
@@ -25,81 +31,228 @@ export const addQueueJob = async (name: string, data: any) => {
   }
 };
 
-const processJobLocally = async (name: string, data: any) => {
-  if (name === 'send-otp') {
-    await sendOtpEmail(data.email, data.otp);
-  } else if (name === 'send-welcome') {
-    await sendWelcomeEmail(data.email, data.tenantName);
+const processJobLocally = async (name: string, data: any): Promise<void> => {
+  try {
+    switch (name) {
+      case 'send-otp':
+        await sendOtpEmail(data.email, data.otp, data.expiryMinutes);
+        break;
+      case 'send-welcome':
+        await sendWelcomeEmail(data.email, data.tenantName);
+        break;
+      case 'send-email-verification':
+        await sendEmailVerificationEmail(data.email, data.verificationLink);
+        break;
+      case 'send-password-reset':
+        await sendPasswordResetEmail(data.email, data.resetLink, data.expiryHours);
+        break;
+      case 'send-user-invitation':
+        await sendUserInvitationEmail(data.email, data.invitationLink, data.invitedBy, data.tenantName);
+        break;
+      case 'send-2fa-code':
+        await send2FACodeEmail(data.email, data.code, data.expiryMinutes);
+        break;
+      case 'send-security-alert':
+        await sendSecurityAlertEmail(data.email, data.alertType, data.timestamp);
+        break;
+      default:
+        logger.warn(`[Queue] Unknown job type: ${name}`);
+    }
+  } catch (err: any) {
+    logger.error(`[Queue] Error processing job ${name}: ${err.message}`);
+    throw err;
   }
 };
 
-// Mailer Setup
-const transporter = nodemailer.createTransport({
-  host: config.smtpHost || 'localhost',
-  port: config.smtpPort || 2525,
-  secure: config.smtpPort === 465,
-  auth: config.smtpUser ? {
-    user: config.smtpUser,
-    pass: config.smtpPassword,
-  } : undefined,
-});
-
-export const sendOtpEmail = async (email: string, otp: string) => {
-  const mailOptions = {
-    from: `"${config.smtpFromName}" <${config.smtpFromEmail}>`,
-    to: email,
-    subject: 'ZCC Registration OTP Verification',
-    text: `Your ZELLAVORA CONTROL CENTER registration OTP is: ${otp}. Valid for 10 minutes.`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-        <h2 style="color: #6366f1;">ZELLAVORA CONTROL CENTER</h2>
-        <p>Your verification OTP code for signing up is:</p>
-        <div style="font-size: 32px; font-weight: bold; color: #4f46e5; letter-spacing: 4px; padding: 10px 0;">${otp}</div>
-        <p>This code is valid for 10 minutes.</p>
-        <hr style="border: 0; border-top: 1px solid #eee;" />
-        <p style="font-size: 12px; color: #888;">If you did not initiate this request, please ignore this email.</p>
-      </div>
-    `,
-  };
-
+// OTP Email
+export const sendOtpEmail = async (email: string, otp: string, expiryMinutes: number = 10): Promise<boolean> => {
   try {
-    if (config.emailProvider === 'console' || !config.smtpUser) {
-      logger.info(`[SMTP-MOCK] Send OTP ${otp} to ${email}`);
+    const template = emailTemplates.otpVerification(otp, expiryMinutes);
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
+
+    if (result.success) {
+      logger.info(`[Email] OTP sent to ${email}`);
     } else {
-      await transporter.sendMail(mailOptions);
-      logger.info(`[SMTP] Sent OTP email to ${email}`);
+      logger.error(`[Email] Failed to send OTP to ${email}: ${result.error}`);
     }
+    return result.success;
   } catch (err: any) {
-    logger.error(`[SMTP] Failed to send OTP email to ${email}: ${err.message}`);
+    logger.error(`[Email] Error sending OTP email: ${err.message}`);
+    return false;
   }
 };
 
-export const sendWelcomeEmail = async (email: string, tenantName: string) => {
-  const mailOptions = {
-    from: `"${config.smtpFromName}" <${config.smtpFromEmail}>`,
-    to: email,
-    subject: 'Welcome to ZELLAVORA CONTROL CENTER',
-    text: `Welcome to ZCC! Your workspace for ${tenantName} is active and ready.`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-        <h2 style="color: #6366f1;">Welcome to ZELLAVORA CONTROL CENTER!</h2>
-        <p>Your organization <strong>${tenantName}</strong> has been registered successfully.</p>
-        <p>You can now log in to the administrative panel using your superadmin credentials.</p>
-        <hr style="border: 0; border-top: 1px solid #eee;" />
-        <p style="font-size: 12px; color: #888;">ZCC Platform Administrator Team</p>
-      </div>
-    `,
-  };
-
+// Welcome Email
+export const sendWelcomeEmail = async (email: string, tenantName: string): Promise<boolean> => {
   try {
-    if (config.emailProvider === 'console' || !config.smtpUser) {
-      logger.info(`[SMTP-MOCK] Send Welcome to ${email} for tenant ${tenantName}`);
+    const template = emailTemplates.welcomeEmail(tenantName);
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
+
+    if (result.success) {
+      logger.info(`[Email] Welcome email sent to ${email}`);
     } else {
-      await transporter.sendMail(mailOptions);
-      logger.info(`[SMTP] Sent Welcome email to ${email}`);
+      logger.error(`[Email] Failed to send welcome email to ${email}: ${result.error}`);
     }
+    return result.success;
   } catch (err: any) {
-    logger.error(`[SMTP] Failed to send Welcome email: ${err.message}`);
+    logger.error(`[Email] Error sending welcome email: ${err.message}`);
+    return false;
+  }
+};
+
+// Email Verification
+export const sendEmailVerificationEmail = async (email: string, verificationLink: string): Promise<boolean> => {
+  try {
+    const template = emailTemplates.emailVerification(verificationLink);
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
+
+    if (result.success) {
+      logger.info(`[Email] Verification email sent to ${email}`);
+    } else {
+      logger.error(`[Email] Failed to send verification email to ${email}: ${result.error}`);
+    }
+    return result.success;
+  } catch (err: any) {
+    logger.error(`[Email] Error sending verification email: ${err.message}`);
+    return false;
+  }
+};
+
+// Password Reset Email
+export const sendPasswordResetEmail = async (
+  email: string,
+  resetLink: string,
+  expiryHours: number = 1
+): Promise<boolean> => {
+  try {
+    const template = emailTemplates.passwordResetEmail(resetLink, expiryHours);
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
+
+    if (result.success) {
+      logger.info(`[Email] Password reset email sent to ${email}`);
+    } else {
+      logger.error(`[Email] Failed to send password reset email to ${email}: ${result.error}`);
+    }
+    return result.success;
+  } catch (err: any) {
+    logger.error(`[Email] Error sending password reset email: ${err.message}`);
+    return false;
+  }
+};
+
+// User Invitation Email
+export const sendUserInvitationEmail = async (
+  email: string,
+  invitationLink: string,
+  invitedBy: string,
+  tenantName: string
+): Promise<boolean> => {
+  try {
+    const template = emailTemplates.userInvitation(invitationLink, invitedBy, tenantName);
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
+
+    if (result.success) {
+      logger.info(`[Email] Invitation email sent to ${email}`);
+    } else {
+      logger.error(`[Email] Failed to send invitation email to ${email}: ${result.error}`);
+    }
+    return result.success;
+  } catch (err: any) {
+    logger.error(`[Email] Error sending invitation email: ${err.message}`);
+    return false;
+  }
+};
+
+// 2FA Code Email
+export const send2FACodeEmail = async (
+  email: string,
+  code: string,
+  expiryMinutes: number = 5
+): Promise<boolean> => {
+  try {
+    const template = emailTemplates.twoFactorCode(code, expiryMinutes);
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
+
+    if (result.success) {
+      logger.info(`[Email] 2FA code sent to ${email}`);
+    } else {
+      logger.error(`[Email] Failed to send 2FA code to ${email}: ${result.error}`);
+    }
+    return result.success;
+  } catch (err: any) {
+    logger.error(`[Email] Error sending 2FA code: ${err.message}`);
+    return false;
+  }
+};
+
+// Security Alert Email
+export const sendSecurityAlertEmail = async (
+  email: string,
+  alertType: string,
+  timestamp: string
+): Promise<boolean> => {
+  try {
+    const template = emailTemplates.accountSecurityAlert(alertType, timestamp);
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+    });
+
+    if (result.success) {
+      logger.info(`[Email] Security alert sent to ${email}`);
+    } else {
+      logger.error(`[Email] Failed to send security alert to ${email}: ${result.error}`);
+    }
+    return result.success;
+  } catch (err: any) {
+    logger.error(`[Email] Error sending security alert: ${err.message}`);
+    return false;
+  }
+};
+
+// Batch Email Sending
+export const sendBatchEmails = async (emailList: Array<any>): Promise<any[]> => {
+  try {
+    logger.info(`[Queue] Processing batch of ${emailList.length} emails`);
+    const results = await emailService.sendBatch(emailList);
+    const successful = results.filter(r => r.success).length;
+    logger.info(`[Queue] Batch email send completed: ${successful}/${emailList.length} successful`);
+    return results;
+  } catch (err: any) {
+    logger.error(`[Queue] Error sending batch emails: ${err.message}`);
+    throw err;
   }
 };
 
@@ -109,20 +262,26 @@ if (emailQueue && config.redisEnabled) {
     'email-queue',
     async (job) => {
       logger.info(`[Queue Worker] Processing job ${job.name} (${job.id})`);
-      if (job.name === 'send-otp') {
-        await sendOtpEmail(job.data.email, job.data.otp);
-      } else if (job.name === 'send-welcome') {
-        await sendWelcomeEmail(job.data.email, job.data.tenantName);
+      try {
+        await processJobLocally(job.name, job.data);
+        logger.info(`[Queue Worker] Job ${job.name} completed successfully`);
+      } catch (err: any) {
+        logger.error(`[Queue Worker] Job ${job.name} failed: ${err.message}`);
+        throw err;
       }
     },
     { connection: { host: '127.0.0.1', port: 6379 } }
   );
 
   worker.on('completed', (job) => {
-    logger.info(`[Queue Worker] Job ${job.name} completed successfully`);
+    logger.info(`[Queue Worker] Job ${job.name} completed (${job.id})`);
   });
 
   worker.on('failed', (job, err) => {
-    logger.error(`[Queue Worker] Job ${job?.name} failed: ${err.message}`);
+    logger.error(`[Queue Worker] Job ${job?.name} (${job?.id}) failed: ${err.message}`);
+  });
+
+  worker.on('error', (err) => {
+    logger.error(`[Queue Worker] Worker error: ${err.message}`);
   });
 }
