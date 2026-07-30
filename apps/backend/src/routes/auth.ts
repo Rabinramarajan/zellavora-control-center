@@ -25,6 +25,7 @@ import { z } from 'zod';
 import { config } from '../config/env';
 import { supabase, supabaseAdmin } from '../config/supabase';
 import { AppError } from '../middleware/error';
+import { prisma } from '../infrastructure/prisma';
 import { authenticate, type AuthRequest, requirePermission } from '../middleware/auth';
 import {
   PasswordService,
