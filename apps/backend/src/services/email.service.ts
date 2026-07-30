@@ -192,7 +192,7 @@ class EmailService {
           html: '<p>Test</p>',
         };
         const response = await this.sendEmail(testEmail);
-        return response.success || this.provider === 'console';
+        return response.success;
       }
       return this.provider === 'console';
     } catch (err) {
