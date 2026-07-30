@@ -1,23 +1,41 @@
 -- Screen-Level Permission System
 -- Provides fine-grained authorization at screen and action level
 
+DROP TABLE IF EXISTS role_permissions CASCADE;
+DROP TABLE IF EXISTS permissions CASCADE;
+DROP TABLE IF EXISTS user_permissions CASCADE;
+
+CREATE OR REPLACE FUNCTION update_timestamp() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION invalidate_permission_cache() RETURNS TRIGGER AS $$
+BEGIN
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
 -- ========================================
 -- Permissions Table
 -- ========================================
 
 CREATE TABLE IF NOT EXISTS permissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
 
   -- Permission identity
-  key VARCHAR(255) NOT NULL,                    -- e.g., "dashboard:view", "projects:create"
+  key VARCHAR(255),                    -- e.g., "dashboard:view", "projects:create"
   name VARCHAR(255) NOT NULL,
   description TEXT,
 
   -- Categorization
-  resource VARCHAR(100) NOT NULL,               -- e.g., "dashboard", "projects", "blogs"
-  action VARCHAR(100) NOT NULL,                 -- e.g., "view", "create", "edit", "delete"
+  resource VARCHAR(100),               -- e.g., "dashboard", "projects", "blogs"
+  action VARCHAR(100),                 -- e.g., "view", "create", "edit", "delete"
   category VARCHAR(100),                        -- e.g., "core", "admin", "reporting"
+  group_id UUID REFERENCES permission_groups(id) ON DELETE SET NULL,
 
   -- Configuration
   requires_approval BOOLEAN DEFAULT false,      -- Requires admin approval
@@ -453,6 +471,7 @@ ON CONFLICT (organization_id, key) DO NOTHING;
 
 -- Initialize empty permission cache for all users
 INSERT INTO permission_cache (organization_id, user_id, permissions, expires_at)
-SELECT organization_id, id, '{}'::TEXT[], now() + INTERVAL '30 minutes'
+SELECT tenant_id, id, '{}'::TEXT[], now() + INTERVAL '30 minutes'
 FROM users
+WHERE tenant_id IS NOT NULL
 ON CONFLICT (organization_id, user_id) DO NOTHING;

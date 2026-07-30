@@ -9,5 +9,6 @@ export const CreatePermissionSchema = z.object({
 export const AssignPermissionSchema = z.object({
   roleId: z.string().uuid('Invalid role ID'),
   permissionId: z.string().uuid('Invalid permission ID'),
+  organizationId: z.string().uuid('Invalid organization ID'),
   effect: z.enum(['allow', 'deny']).default('allow'),
 });

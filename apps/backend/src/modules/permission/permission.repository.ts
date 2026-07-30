@@ -17,13 +17,13 @@ export class PermissionRepository extends BaseRepository {
     });
   }
 
-  async assignToRole(roleId: string, permissionId: string, effect: 'allow' | 'deny', tx?: TxClient) {
+  async assignToRole(roleId: string, permissionId: string, effect: 'allow' | 'deny', organizationId: string, tx?: TxClient) {
     return this.getDb(tx).rolePermission.upsert({
       where: {
         roleId_permissionId: { roleId, permissionId }
       },
       update: { effect },
-      create: { roleId, permissionId, effect }
+      create: { organizationId, roleId, permissionId, effect }
     });
   }
 

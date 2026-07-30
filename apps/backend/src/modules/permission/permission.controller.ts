@@ -27,7 +27,7 @@ export class PermissionController {
   assign = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = AssignPermissionSchema.parse(req.body);
-      const result = await this.service.assignPermissionToRole(data.roleId, data.permissionId, data.effect);
+      const result = await this.service.assignPermissionToRole(data.roleId, data.permissionId, data.effect, data.organizationId);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);

@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS workflows (
   tags TEXT[] DEFAULT '{}',
 
   -- Audit
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -76,8 +76,8 @@ CREATE TABLE IF NOT EXISTS workflow_instances (
   metadata JSONB DEFAULT '{}'::jsonb,
 
   -- Participants
-  initiator_id UUID REFERENCES organization_users(id),
-  assigned_to UUID REFERENCES organization_users(id),
+  initiator_id UUID REFERENCES users(id),
+  assigned_to UUID REFERENCES users(id),
 
   -- Audit
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS workflow_transitions (
 
   -- Metadata
   triggered_by VARCHAR(100),                   -- 'user', 'system', 'api'
-  triggered_by_id UUID REFERENCES organization_users(id),
+  triggered_by_id UUID REFERENCES users(id),
   timestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
 
   -- Comment/Reason
@@ -176,8 +176,8 @@ CREATE TABLE IF NOT EXISTS approvals (
   approval_chain_id UUID NOT NULL REFERENCES approval_chains(id) ON DELETE CASCADE,
 
   -- Approver
-  approver_id UUID NOT NULL REFERENCES organization_users(id) ON DELETE CASCADE,
-  delegated_to UUID REFERENCES organization_users(id),
+  approver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  delegated_to UUID REFERENCES users(id),
 
   -- Status
   status VARCHAR(50) NOT NULL DEFAULT 'pending',  -- pending, approved, rejected, delegated, escalated
@@ -222,7 +222,7 @@ CREATE TABLE IF NOT EXISTS workflow_history (
   event_data JSONB,
 
   -- Actor
-  actor_id UUID REFERENCES organization_users(id),
+  actor_id UUID REFERENCES users(id),
   actor_type VARCHAR(50),                      -- user, system, api
 
   -- Timestamp
@@ -251,7 +251,7 @@ CREATE TABLE IF NOT EXISTS workflow_audit_logs (
   new_value JSONB,
 
   -- User
-  user_id UUID REFERENCES organization_users(id),
+  user_id UUID REFERENCES users(id),
   ip_address INET,
   user_agent TEXT,
 
@@ -274,7 +274,7 @@ CREATE TABLE IF NOT EXISTS workflow_notifications (
 
   -- Notification
   notification_type VARCHAR(50) NOT NULL,     -- assigned, approved, rejected, comment, deadline
-  recipient_id UUID REFERENCES organization_users(id),
+  recipient_id UUID REFERENCES users(id),
 
   -- Content
   title VARCHAR(255) NOT NULL,
@@ -307,7 +307,7 @@ CREATE TABLE IF NOT EXISTS workflow_comments (
 
   -- Comment
   content TEXT NOT NULL,
-  author_id UUID NOT NULL REFERENCES organization_users(id),
+  author_id UUID NOT NULL REFERENCES users(id),
 
   -- Mentions
   mentions UUID[],

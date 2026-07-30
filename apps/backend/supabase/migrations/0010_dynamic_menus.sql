@@ -1,6 +1,8 @@
 -- Dynamic Menu System for Enterprise Admin Platform
 -- Supports unlimited nesting, permissions, feature flags, and usage tracking
 
+DROP TABLE IF EXISTS menus CASCADE;
+
 -- ========================================
 -- Menu Items Core Table
 -- ========================================

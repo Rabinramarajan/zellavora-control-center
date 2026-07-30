@@ -101,8 +101,8 @@ CREATE TABLE IF NOT EXISTS organization_licenses (
   notes TEXT,
 
   -- Audit
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -225,7 +225,7 @@ CREATE INDEX idx_module_access_module ON module_access(module_key);
 CREATE TABLE IF NOT EXISTS usage_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES organization_users(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
 
   -- Event
   event_type VARCHAR(100) NOT NULL,            -- file_uploaded, report_generated, api_call, user_added, etc.
@@ -532,7 +532,7 @@ INSERT INTO license_plans (
 (
   'enterprise', 'Enterprise', 'For large organizations', 3,
   NULL, NULL, 'USD',
-  NULL, NULL, NULL, NULL,
+  -1, -1, -1, -1,
   NULL, NULL, NULL, NULL,
   '{"ai": true, "advanced_reporting": true, "custom_domain": true, "sso": true, "api_access": true, "white_label": true}'::jsonb,
   ARRAY['dashboard', 'projects', 'analytics', 'reports', 'integrations', 'admin', 'api'],

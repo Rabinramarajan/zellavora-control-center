@@ -20,7 +20,7 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE NOT NULL,
   full_name VARCHAR(255) NOT NULL,
   avatar_url TEXT,
-  role user_role DEFAULT 'viewer',
+  role VARCHAR(50) DEFAULT 'viewer',
   is_active BOOLEAN DEFAULT true,
   email_verified_at TIMESTAMPTZ,
   last_login_at TIMESTAMPTZ,

@@ -1,6 +1,8 @@
 -- Enterprise Project Management System
 -- 28+ tables supporting complete project lifecycle
 
+DROP TABLE IF EXISTS projects CASCADE;
+
 -- ========================================
 -- Core Project Tables
 -- ========================================
@@ -41,8 +43,8 @@ CREATE TABLE IF NOT EXISTS projects (
   visibility VARCHAR(50) DEFAULT 'private',
 
   -- Team & Management
-  owner_id UUID NOT NULL REFERENCES organization_users(id),
-  project_manager_id UUID REFERENCES organization_users(id),
+  owner_id UUID NOT NULL REFERENCES users(id),
+  project_manager_id UUID REFERENCES users(id),
 
   -- Budget
   budget NUMERIC(15,2),
@@ -91,8 +93,8 @@ CREATE TABLE IF NOT EXISTS projects (
   deleted BOOLEAN DEFAULT false,
 
   -- Audit
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -127,7 +129,7 @@ CREATE TABLE IF NOT EXISTS project_roles (
 CREATE TABLE IF NOT EXISTS project_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES organization_users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role_id UUID REFERENCES project_roles(id),
 
   role_name VARCHAR(100),
@@ -171,7 +173,7 @@ CREATE TABLE IF NOT EXISTS project_milestones (
   deliverables TEXT[],
   success_criteria TEXT[],
 
-  owner_id UUID REFERENCES organization_users(id),
+  owner_id UUID REFERENCES users(id),
 
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -191,8 +193,8 @@ CREATE TABLE IF NOT EXISTS project_epics (
   status VARCHAR(50) DEFAULT 'draft',
   priority INT DEFAULT 50,
 
-  owner_id UUID REFERENCES organization_users(id),
-  assigned_to UUID REFERENCES organization_users(id),
+  owner_id UUID REFERENCES users(id),
+  assigned_to UUID REFERENCES users(id),
 
   start_date DATE,
   end_date DATE,
@@ -224,8 +226,8 @@ CREATE TABLE IF NOT EXISTS project_features (
   acceptance_criteria TEXT[],
   technical_spec TEXT,
 
-  owner_id UUID REFERENCES organization_users(id),
-  assigned_to UUID REFERENCES organization_users(id),
+  owner_id UUID REFERENCES users(id),
+  assigned_to UUID REFERENCES users(id),
 
   start_date DATE,
   end_date DATE,
@@ -249,7 +251,7 @@ CREATE TABLE IF NOT EXISTS project_tasks (
   priority INT DEFAULT 50,
   complexity VARCHAR(50),
 
-  assigned_to UUID REFERENCES organization_users(id),
+  assigned_to UUID REFERENCES users(id),
 
   estimated_hours NUMERIC(8,2),
   actual_hours NUMERIC(8,2),
@@ -275,7 +277,7 @@ CREATE TABLE IF NOT EXISTS project_subtasks (
   title VARCHAR(255) NOT NULL,
 
   status VARCHAR(50) DEFAULT 'todo',
-  assigned_to UUID REFERENCES organization_users(id),
+  assigned_to UUID REFERENCES users(id),
 
   estimated_hours NUMERIC(8,2),
   actual_hours NUMERIC(8,2),
@@ -305,9 +307,9 @@ CREATE TABLE IF NOT EXISTS project_bugs (
   environment VARCHAR(100),
   steps_to_reproduce TEXT,
 
-  reported_by UUID REFERENCES organization_users(id),
-  assigned_to UUID REFERENCES organization_users(id),
-  fixed_by UUID REFERENCES organization_users(id),
+  reported_by UUID REFERENCES users(id),
+  assigned_to UUID REFERENCES users(id),
+  fixed_by UUID REFERENCES users(id),
 
   fix_version VARCHAR(50),
 
@@ -331,7 +333,7 @@ CREATE TABLE IF NOT EXISTS project_issues (
   status VARCHAR(50) DEFAULT 'open',
   priority INT DEFAULT 50,
 
-  assigned_to UUID REFERENCES organization_users(id),
+  assigned_to UUID REFERENCES users(id),
 
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -352,7 +354,7 @@ CREATE TABLE IF NOT EXISTS project_risks (
   mitigation_strategy TEXT,
 
   status VARCHAR(50) DEFAULT 'identified',
-  owner_id UUID REFERENCES organization_users(id),
+  owner_id UUID REFERENCES users(id),
 
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -458,8 +460,8 @@ CREATE TABLE IF NOT EXISTS project_documents (
   version INT DEFAULT 1,
   status VARCHAR(50) DEFAULT 'draft',
 
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
 
   tags TEXT[],
   categories TEXT[],
@@ -491,7 +493,7 @@ CREATE TABLE IF NOT EXISTS project_media (
   sort_order INT,
   visibility VARCHAR(50) DEFAULT 'public',
 
-  uploaded_by UUID REFERENCES organization_users(id),
+  uploaded_by UUID REFERENCES users(id),
 
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -576,7 +578,7 @@ CREATE TABLE IF NOT EXISTS project_activity (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
 
-  user_id UUID REFERENCES organization_users(id),
+  user_id UUID REFERENCES users(id),
 
   action VARCHAR(100),
   entity_type VARCHAR(100),
@@ -591,7 +593,7 @@ CREATE TABLE IF NOT EXISTS project_audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
 
-  user_id UUID REFERENCES organization_users(id),
+  user_id UUID REFERENCES users(id),
   action VARCHAR(100) NOT NULL,
 
   entity_type VARCHAR(100),

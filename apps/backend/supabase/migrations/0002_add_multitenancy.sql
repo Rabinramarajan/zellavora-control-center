@@ -33,11 +33,11 @@ CREATE TYPE audit_action AS ENUM (
 CREATE TABLE organizations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
-  slug VARCHAR(255) UNIQUE NOT NULL,
+  slug VARCHAR(255) UNIQUE,
   description TEXT,
   logo_url TEXT,
   website_url VARCHAR(255),
-  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  owner_id UUID REFERENCES users(id) ON DELETE CASCADE,
 
   -- Subscription/Plan
   plan VARCHAR(50) DEFAULT 'free', -- free, pro, enterprise

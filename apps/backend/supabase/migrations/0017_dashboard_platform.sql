@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS dashboard_layouts (
 
   -- Role/User
   role_name VARCHAR(100),                       -- If role-specific
-  user_id UUID REFERENCES organization_users(id),  -- If user-specific
+  user_id UUID REFERENCES users(id),  -- If user-specific
   is_default BOOLEAN DEFAULT false,
 
   -- Layout
@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS dashboard_layouts (
   metadata JSONB DEFAULT '{}'::jsonb,
 
   -- Audit
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -121,8 +121,8 @@ CREATE TABLE IF NOT EXISTS dashboard_widgets (
   experimental BOOLEAN DEFAULT false,
 
   -- Audit
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -140,7 +140,7 @@ CREATE INDEX idx_dashboard_widgets_enabled ON dashboard_widgets(enabled) WHERE e
 CREATE TABLE IF NOT EXISTS dashboard_preferences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES organization_users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
   -- Layout
   layout_id UUID REFERENCES dashboard_layouts(id),
@@ -273,7 +273,7 @@ CREATE INDEX idx_dashboard_cache_expires ON dashboard_cache(expires_at);
 CREATE TABLE IF NOT EXISTS dashboard_activity (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES organization_users(id),
+  user_id UUID REFERENCES users(id),
 
   -- Action
   action VARCHAR(100),                         -- view, configure, export, filter, etc.
@@ -301,7 +301,7 @@ CREATE INDEX idx_dashboard_activity_entity ON dashboard_activity(entity_type, en
 CREATE TABLE IF NOT EXISTS dashboard_reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES organization_users(id),
+  user_id UUID NOT NULL REFERENCES users(id),
 
   -- Identity
   name VARCHAR(255) NOT NULL,
@@ -333,8 +333,8 @@ CREATE TABLE IF NOT EXISTS dashboard_reports (
   -- Metadata
   metadata JSONB DEFAULT '{}'::jsonb,
 
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -350,7 +350,7 @@ CREATE INDEX idx_dashboard_reports_scheduled ON dashboard_reports(scheduled) WHE
 CREATE TABLE IF NOT EXISTS dashboard_filters (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES organization_users(id),
+  user_id UUID REFERENCES users(id),
 
   -- Identity
   name VARCHAR(255) NOT NULL,

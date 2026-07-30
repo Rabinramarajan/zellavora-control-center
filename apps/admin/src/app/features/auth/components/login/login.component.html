@@ -1,86 +1,93 @@
-<div class="h-screen w-full flex text-slate-100 font-sans relative overflow-hidden bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(3,0,20,0.9), rgba(3,0,20,0.8)), url('assets/login_bg.jpg')">
+<div class="auth-shell">
       <!-- Background overlay gradients -->
-      <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/10 blur-[120px] pointer-events-none"></div>
-      <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none"></div>
+      <div class="glow-bg-1"></div>
+      <div class="glow-bg-2"></div>
 
-      <!-- Left Side (Illustration and Info) - hidden on mobile -->
-      <div class="hidden lg:flex lg:w-7/12 flex-col justify-between p-10 relative z-10 bg-transparent">
-        <!-- Logo and Status -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <span class="text-white font-extrabold text-lg">Z</span>
-            </div>
-            <div>
-              <div class="text-xs font-bold tracking-wider leading-none text-white">ZELLAVORA</div>
-              <div class="text-[9px] tracking-widest text-purple-400 font-semibold mt-0.5">CONTROL CENTER</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-[10px] text-emerald-400 font-medium">v2.0.0 &bull; All Systems Operational</span>
+      <!-- LEFT PANEL: Brand Story, 3D City & Trust -->
+      <aside class="brand-panel">
+        <div class="brand-lockup">
+          <div class="brand-mark">Z</div>
+          <div>
+            <h1 class="brand-name">ZELLAVORA</h1>
+            <p class="brand-sub">Control Center</p>
           </div>
         </div>
 
-        <!-- Main Content Hero Area -->
-        <div class="my-auto max-w-xl">
-          <h1 class="text-4xl font-extrabold tracking-tight leading-tight text-white mb-4">
-            One Platform.<br>
-            <span class="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Infinite Possibilities.</span>
-          </h1>
-          <p class="text-slate-400 text-sm leading-relaxed mb-6">
-            Zellavora Control Center is an enterprise-grade administration platform and secure command hub designed to manage, monitor, and scale multi-tenant CMS solutions.
-          </p>
+        <h2 class="brand-headline">
+          One Platform.<br />
+          <span class="headline-accent">Infinite Possibilities.</span>
+        </h2>
+        <p class="brand-copy">
+          Zellavora Control Center is the unified platform to manage, monitor and scale
+          your organization, teams and operations — securely and effortlessly.
+        </p>
 
-          <!-- Stats Grid -->
-          <div class="grid grid-cols-3 gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md mb-6">
-            <div>
-              <div class="text-xl font-bold text-white">2</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Products</div>
-            </div>
-            <div>
-              <div class="text-xl font-bold text-white">2</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Clients</div>
-            </div>
-            <div>
-              <div class="text-xl font-bold text-white">3</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Projects</div>
-            </div>
-          </div>
+        <!-- 3D Holographic City -->
+        <div class="city-stage">
+          <span class="float-badge float-badge--gear">⚙️</span>
+          <span class="float-badge float-badge--chart">📊</span>
+          <span class="float-badge float-badge--user">👤</span>
+          <span class="float-badge float-badge--spark">✦</span>
 
-          <!-- Quote Box -->
-          <div class="border-l border-purple-500 pl-3 py-0.5 text-slate-300 italic bg-purple-500/5 rounded-r-xl pr-3">
-            <p class="text-xs">"The best way to predict the future is to create it."</p>
-            <p class="text-[10px] text-slate-400 font-medium mt-0.5">&mdash; Peter Drucker</p>
+          <div class="city-scene">
+            <div class="city-platform"></div>
+            <div class="city-platform city-platform--inner"></div>
+            <div class="city-skyline">
+              <span class="tower tower--1"></span>
+              <span class="tower tower--2"></span>
+              <span class="tower tower--3"><i class="tower-glyph">Z</i></span>
+              <span class="tower tower--4"></span>
+              <span class="tower tower--5"></span>
+            </div>
           </div>
         </div>
 
-        <!-- Footer Info -->
-        <div>
-          <div class="text-[9px] text-slate-500 font-semibold mb-2 tracking-wider">TRUSTED & SECURED BY</div>
-          <div class="flex items-center gap-5 mb-4 text-[10px] text-slate-400">
-            <div class="flex items-center gap-1"><span class="text-purple-400 font-bold">✓</span> SSL ENCRYPTED</div>
-            <div class="flex items-center gap-1"><span class="text-purple-400 font-bold">✓</span> JWT SECURED</div>
-            <div class="flex items-center gap-1"><span class="text-purple-400 font-bold">✓</span> SOC 2 COMPLIANT</div>
-            <div class="flex items-center gap-1"><span class="text-purple-400 font-bold">✓</span> GDPR READY</div>
+        <!-- Feature Trio -->
+        <div class="feature-grid">
+          <div>
+            <div class="feature-icon feature-icon--cyan">🛡️</div>
+            <h4 class="feature-title">Enterprise Grade</h4>
+            <p class="feature-copy">Secure, compliant and audit ready</p>
           </div>
-          <div class="text-[10px] text-slate-500">
-            &copy; 2025 Zellavora Solutions. All rights reserved.
+          <div>
+            <div class="feature-icon feature-icon--violet">⚡</div>
+            <h4 class="feature-title">Built for Scale</h4>
+            <p class="feature-copy">Grow your business without limits</p>
+          </div>
+          <div>
+            <div class="feature-icon feature-icon--emerald">🕸️</div>
+            <h4 class="feature-title">Unified Control</h4>
+            <p class="feature-copy">Everything you need in one place</p>
           </div>
         </div>
-      </div>
+
+        <!-- Trust strip -->
+        <div class="trust-card">
+          <div class="trust-shield">🛡️</div>
+          <div class="flex-1">
+            <p class="trust-title">Trusted &amp; secured by design</p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[10px] text-slate-400">
+              <span><span class="text-indigo-400 font-bold">✓</span> SSL</span>
+              <span><span class="text-indigo-400 font-bold">✓</span> JWT</span>
+              <span><span class="text-indigo-400 font-bold">✓</span> SOC 2</span>
+              <span><span class="text-indigo-400 font-bold">✓</span> GDPR</span>
+            </div>
+          </div>
+        </div>
+      </aside>
 
       <!-- Right Side (Form Container) -->
-      <div class="w-full lg:w-5/12 flex flex-col justify-center items-center p-6 md:p-10 relative z-10">
+      <div class="glass-panel auth-card items-center">
+        <div class="auth-scroll w-full flex flex-col justify-center items-center py-2">
         <div class="w-full max-w-md">
-          <!-- Glassmorphic Card -->
-          <div class="glass-panel rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+          <!-- Sign-in Card -->
+          <div class="login-card">
             <!-- Profile avatar with circular glow -->
             <div class="flex justify-center mb-4">
               <div class="relative">
-                <div class="absolute inset-0 bg-purple-500 rounded-full blur-sm opacity-30 animate-pulse"></div>
-                <div class="w-16 h-16 rounded-full border border-purple-500/30 bg-[#0f0b21] flex items-center justify-center relative z-10">
-                  <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center">
+                <div class="absolute inset-0 bg-indigo-500 rounded-full blur-sm opacity-30 animate-pulse"></div>
+                <div class="w-16 h-16 rounded-full border border-indigo-500/30 bg-[#0b0e1c] flex items-center justify-center relative z-10">
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center">
                     <span class="text-white text-xl font-black">Z</span>
                   </div>
                 </div>
@@ -101,7 +108,7 @@
                 <button
                   type="button"
                   (click)="toggleOrgDropdown()"
-                  class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-left text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent flex items-center justify-between"
+                  class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-left text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent flex items-center justify-between"
                 >
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +128,7 @@
                 <!-- Dropdown panel -->
                 <div
                   *ngIf="showOrgDropdown"
-                  class="absolute z-20 w-full mt-2 rounded-2xl border border-white/10 bg-[#0f0b21] shadow-2xl p-3 space-y-2 backdrop-blur-xl"
+                  class="absolute z-20 w-full mt-2 rounded-2xl border border-white/10 bg-[#0b0e1c] shadow-2xl p-3 space-y-2 backdrop-blur-xl"
                 >
                   <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
@@ -133,7 +140,7 @@
                       type="text"
                       [value]="orgSearchQuery"
                       (input)="filterOrgs($event)"
-                      class="w-full pl-8 pr-4 py-1.5 rounded-lg border border-white/5 bg-white/5 text-[11px] text-white focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder:text-slate-500"
+                      class="w-full pl-8 pr-4 py-1.5 rounded-lg border border-white/5 bg-white/5 text-[11px] text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500"
                       placeholder="Search organization..."
                     />
                   </div>
@@ -175,7 +182,7 @@
                   <input
                     type="email"
                     formControlName="email"
-                    class="w-full pl-10 pr-10 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-500"
+                    class="w-full pl-10 pr-10 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent placeholder:text-slate-500"
                     placeholder="Enter your email"
                   />
                   <button
@@ -205,7 +212,7 @@
                   <input
                     [type]="showPassword ? 'text' : 'password'"
                     formControlName="password"
-                    class="w-full pl-10 pr-16 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-500"
+                    class="w-full pl-10 pr-16 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent placeholder:text-slate-500"
                     placeholder="Enter your password"
                   />
                   <div class="absolute inset-y-0 right-0 pr-3 flex items-center gap-2.5 z-10">
@@ -245,18 +252,18 @@
                   <input
                     type="checkbox"
                     formControlName="rememberMe"
-                    class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-purple-600 focus:ring-purple-500 focus:ring-offset-0 focus:ring-offset-transparent"
+                    class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-purple-600 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-offset-transparent"
                   />
                   <span>Remember me</span>
                 </label>
-                <a routerLink="/auth/forgot-password" class="text-purple-400 hover:text-purple-300 font-medium">Forgot password?</a>
+                <a routerLink="/auth/forgot-password" class="text-indigo-400 hover:text-indigo-300 font-medium">Forgot password?</a>
               </div>
 
               <!-- Sign In Button -->
               <button
                 type="submit"
                 [disabled]="!form.valid || auth.isLoading()"
-                class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 text-white font-medium text-xs rounded-xl transition-all shadow-lg shadow-purple-500/10 flex items-center justify-center gap-1.5 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:brightness-110 text-white font-medium text-xs rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-1.5 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span *ngIf="!auth.isLoading()" class="flex items-center gap-1.5">
                   Sign In
@@ -277,7 +284,7 @@
             <!-- Social Logins -->
             <div class="relative my-5 text-center">
               <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/5"></div></div>
-              <span class="relative px-2 bg-[#0a0f1e] text-[9px] text-slate-500 font-bold uppercase tracking-wider">Or Continue With</span>
+              <span class="relative px-2 bg-transparent text-[9px] text-slate-500 font-bold uppercase tracking-wider">Or Continue With</span>
             </div>
 
             <div class="grid grid-cols-3 gap-2">
@@ -305,9 +312,9 @@
             </div>
 
             <!-- Trust / Protected Indicator -->
-            <div class="mt-4 flex items-center justify-between p-3 bg-purple-500/5 border border-purple-500/10 rounded-2xl cursor-pointer hover:bg-purple-500/10 transition">
+            <div class="mt-4 flex items-center justify-between p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl cursor-pointer hover:bg-indigo-500/10 transition">
               <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+                <div class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                   </svg>
@@ -322,7 +329,7 @@
 
           <!-- Bottom Footer Navigation -->
           <div class="mt-4 flex items-center justify-between text-[11px] text-slate-500">
-            <a routerLink="/auth/register" class="text-purple-400 hover:text-purple-300 font-semibold">Create account</a>
+            <a routerLink="/auth/register" class="text-indigo-400 hover:text-indigo-300 font-semibold">Create account</a>
             <div class="flex gap-3">
               <button type="button" (click)="visiblePrivacy = true" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Privacy Policy</button>
               <span>|</span>
@@ -331,6 +338,7 @@
               <button type="button" (click)="visibleHelp = true" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Help Center</button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -388,3 +396,4 @@
         </section>
       </div>
     </p-dialog>
+

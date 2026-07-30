@@ -1,132 +1,119 @@
-<div class="min-h-screen bg-gray-950 text-white flex items-center justify-center p-4 md:p-6 lg:p-8 relative overflow-hidden">
+<div class="auth-shell">
   <!-- Dynamic Glowing Radial Backdrops -->
   <div class="glow-bg-1"></div>
   <div class="glow-bg-2"></div>
 
-  <!-- Primary Layout Grid -->
-  <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10 items-stretch">
-    
-    <!-- LEFT SIDEBAR: Branding, Features & Hologram -->
-    <div class="flex flex-col justify-between py-6 space-y-8 lg:space-y-0">
-      
-      <!-- Logo and Sub-branding -->
-      <div class="space-y-6">
-        <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-indigo-500 flex items-center justify-center font-bold text-white text-lg shadow-lg">
-            Z
-          </div>
-          <div>
-            <h1 class="text-xl font-bold tracking-tight text-white leading-none">ZELLAVORA</h1>
-            <p class="text-[10px] tracking-wider text-gray-500 mt-1 font-semibold uppercase">Control Center</p>
-          </div>
-        </div>
-
-        <!-- Current Step Badge -->
-        @if (store.currentStep() <= 10) {
-          <span class="inline-block bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs px-3 py-1 rounded-full font-bold">
-            Step {{ store.currentStep() }} of 10
-          </span>
-        }
-
-        <!-- Punchy Header -->
-        <div class="space-y-3">
-          <h2 class="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
-            Create Your<br />
-            <span class="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">Workspace</span>
-          </h2>
-          <p class="text-gray-400 text-sm leading-relaxed max-w-sm">
-            Get started by setting up your organization. This will be your control center for everything.
-          </p>
-        </div>
-
-        <!-- Key Feature Highlights -->
-        <div class="space-y-5 pt-4">
-          <div class="flex items-start gap-4">
-            <div class="h-9 w-9 rounded-lg bg-cyan-950 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm shrink-0">
-              🛡️
-            </div>
-            <div>
-              <h4 class="font-bold text-sm text-gray-200">Secure & Compliant</h4>
-              <p class="text-xs text-gray-400 mt-0.5">Enterprise-grade security with role-based access and audit logs.</p>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-4">
-            <div class="h-9 w-9 rounded-lg bg-indigo-950 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm shrink-0">
-              ⚡
-            </div>
-            <div>
-              <h4 class="font-bold text-sm text-gray-200">Built for Scale</h4>
-              <p class="text-xs text-gray-400 mt-0.5">Manage unlimited projects, teams, and environments with ease.</p>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-4">
-            <div class="h-9 w-9 rounded-lg bg-emerald-950 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm shrink-0">
-              📈
-            </div>
-            <div>
-              <h4 class="font-bold text-sm text-gray-200">Unified Control</h4>
-              <p class="text-xs text-gray-400 mt-0.5">All your applications and integrations in one centralized dashboard.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Holographic 3D Platform Indicator -->
-      <div class="platform-container hidden lg:block">
-        <div class="platform-base-1"></div>
-        <div class="platform-base-2"></div>
-        <div class="hologram-logo">Z</div>
+  <!-- LEFT PANEL: Brand Story, 3D City & Trust -->
+  <aside class="brand-panel">
+    <!-- Logo Lockup -->
+    <div class="brand-lockup">
+      <div class="brand-mark">Z</div>
+      <div>
+        <h1 class="brand-name">ZELLAVORA</h1>
+        <p class="brand-sub">Control Center</p>
       </div>
     </div>
 
-    <!-- RIGHT CARD: The Multi-Step Form Wizard -->
-    <div class="lg:col-span-2 flex flex-col justify-between glass-panel rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/5 shadow-2xl relative">
-      
+    <!-- Headline -->
+    <h2 class="brand-headline">
+      Build Your<br />
+      Command Center.<br />
+      <span class="headline-accent">Your Way.</span>
+    </h2>
+    <p class="brand-copy">
+      Zellavora Control Center is the unified platform to manage your organization,
+      teams, and operations — securely and effortlessly.
+    </p>
+
+    <!-- 3D Holographic City -->
+    <div class="city-stage">
+      <span class="float-badge float-badge--gear">⚙️</span>
+      <span class="float-badge float-badge--chart">📊</span>
+      <span class="float-badge float-badge--user">👤</span>
+      <span class="float-badge float-badge--spark">✦</span>
+
+      <div class="city-scene">
+        <div class="city-platform"></div>
+        <div class="city-platform city-platform--inner"></div>
+        <div class="city-skyline">
+          <span class="tower tower--1"></span>
+          <span class="tower tower--2"></span>
+          <span class="tower tower--3"><i class="tower-glyph">Z</i></span>
+          <span class="tower tower--4"></span>
+          <span class="tower tower--5"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Trio -->
+    <div class="feature-grid">
+      <div>
+        <div class="feature-icon feature-icon--cyan">🛡️</div>
+        <h4 class="feature-title">Enterprise Grade</h4>
+        <p class="feature-copy">Secure, compliant and audit ready</p>
+      </div>
+      <div>
+        <div class="feature-icon feature-icon--violet">⚡</div>
+        <h4 class="feature-title">Built for Scale</h4>
+        <p class="feature-copy">Grow your business without limits</p>
+      </div>
+      <div>
+        <div class="feature-icon feature-icon--emerald">🕸️</div>
+        <h4 class="feature-title">Unified Control</h4>
+        <p class="feature-copy">Everything you need in one place</p>
+      </div>
+    </div>
+
+    <!-- Social Proof -->
+    <div class="trust-card">
+      <div class="trust-shield">🛡️</div>
+      <div class="flex-1">
+        <p class="trust-title">Trusted by modern teams worldwide</p>
+        <div class="flex items-center gap-2 mt-1.5">
+          <div class="avatar-stack">
+            @for (a of trustAvatars; track a) {
+              <span class="avatar">{{ a }}</span>
+            }
+          </div>
+          <span class="text-[11px] text-gray-400 font-medium">+2.5K teams</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT CARD: The Multi-Step Form Wizard -->
+  <div class="glass-panel auth-card">
+
       <!-- Top Stepper Header (7 Visual Steps representation with horizontal line) -->
       @if (store.currentStep() <= 10) {
-        <div class="flex justify-between items-center relative pb-8 border-b border-white/5 overflow-x-auto gap-2">
-          <!-- Horizontal Connecting Line -->
-          <div class="absolute top-4 left-6 right-6 h-[2px] bg-white/5 z-0"></div>
-          
+        <div class="stepper">
           @for (item of visualSteps; track $index) {
-            <div class="flex flex-col items-center gap-1.5 z-10 flex-1 min-w-[70px]">
-              <div
-                class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 border-2"
-                [class.bg-blue-600]="activeVisualStep() === $index"
-                [class.border-blue-600]="activeVisualStep() === $index"
-                [class.text-white]="activeVisualStep() === $index"
-                
-                [class.bg-emerald-500/20]="activeVisualStep() > $index"
-                [class.border-emerald-500/30]="activeVisualStep() > $index"
-                [class.text-emerald-400]="activeVisualStep() > $index"
-                
-                [class.bg-gray-950]="activeVisualStep() < $index"
-                [class.border-white/10]="activeVisualStep() < $index"
-                [class.text-gray-500]="activeVisualStep() < $index"
-              >
-                @if (activeVisualStep() > $index) {
-                  ✓
-                } @else {
-                  {{ $index + 1 }}
-                }
+            <div
+              class="stepper-node"
+              [class.is-active]="activeVisualStep() === $index"
+              [class.is-done]="activeVisualStep() > $index"
+            >
+              <div class="hex">
+                <span class="hex-inner">
+                  @if (activeVisualStep() > $index) {
+                    ✓
+                  } @else {
+                    {{ item.icon }}
+                  }
+                </span>
               </div>
-              <span
-                class="text-[9px] font-bold tracking-wider uppercase text-center"
-                [class.text-blue-400]="activeVisualStep() === $index"
-                [class.text-emerald-400]="activeVisualStep() > $index"
-                [class.text-gray-500]="activeVisualStep() < $index"
-              >
-                {{ item.title }}
-              </span>
+              <span class="stepper-label">{{ item.title }}</span>
             </div>
+
+            @if (!$last) {
+              <span class="stepper-link" [class.is-done]="activeVisualStep() > $index"></span>
+            }
           }
         </div>
       }
 
-      <!-- Main Form Step Switcher Content -->
-      <div class="py-6 flex-1 flex flex-col justify-center">
+      <!-- Main Form Step Switcher Content (only scrollable region on the page) -->
+      <div class="auth-scroll py-5 pr-1">
 
         <!-- Error Alert Alerting Box -->
         @if (store.error()) {
@@ -144,49 +131,46 @@
               <p class="text-gray-400 text-sm font-light">Select the tenant profile representing your operational integration.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- Organization Card -->
               <div
                 (click)="store.setWelcomeType('organization')"
-                class="border rounded-2xl p-6 text-left cursor-pointer transition-all duration-300 hover:scale-[1.02] shadow-md flex flex-col justify-between h-48"
-                [class.border-blue-500]="store.welcomeType() === 'organization'"
-                [class.bg-blue-500/10]="store.welcomeType() === 'organization'"
-                [class.border-white/10]="store.welcomeType() !== 'organization'"
-                [class.bg-white/5]="store.welcomeType() !== 'organization'"
+                class="mode-card"
+                [class.active]="store.welcomeType() === 'organization'"
               >
                 <div>
                   <span class="text-2xl">🏢</span>
-                  <h3 class="text-lg font-bold mt-2 text-white">Enterprise Organization</h3>
-                  <p class="text-gray-400 text-xs mt-1">Configure full administrative capabilities, host corporate branches, and connect workloads.</p>
+                  <h3 class="text-base font-bold mt-2 text-white">Enterprise Organization</h3>
+                  <p class="text-gray-400 text-xs mt-1 leading-relaxed">Configure full administrative capabilities, host corporate branches, and connect workloads.</p>
                 </div>
-                <span class="text-xs font-semibold text-blue-400">Select Organization →</span>
+                <span class="text-xs font-semibold text-indigo-400">Select Organization →</span>
               </div>
 
               <!-- Partner Card -->
               <div
                 (click)="store.setWelcomeType('partner')"
-                class="border rounded-2xl p-6 text-left cursor-pointer transition-all duration-300 hover:scale-[1.02] shadow-md flex flex-col justify-between h-48"
-                [class.border-blue-500]="store.welcomeType() === 'partner'"
-                [class.bg-blue-500/10]="store.welcomeType() === 'partner'"
-                [class.border-white/10]="store.welcomeType() !== 'partner'"
-                [class.bg-white/5]="store.welcomeType() !== 'partner'"
+                class="mode-card"
+                [class.active]="store.welcomeType() === 'partner'"
               >
                 <div>
                   <span class="text-2xl">🤝</span>
-                  <h3 class="text-lg font-bold mt-2 text-white">Integration Partner</h3>
-                  <p class="text-gray-400 text-xs mt-1">Implement customized microservices, build dynamic plugins, and access telemetry channels.</p>
+                  <h3 class="text-base font-bold mt-2 text-white">Integration Partner</h3>
+                  <p class="text-gray-400 text-xs mt-1 leading-relaxed">Implement customized microservices, build dynamic plugins, and access telemetry channels.</p>
                 </div>
-                <span class="text-xs font-semibold text-blue-400">Select Partner →</span>
+                <span class="text-xs font-semibold text-indigo-400">Select Partner →</span>
               </div>
             </div>
 
-            <div class="flex justify-end border-t border-white/5 pt-6">
-              <button
-                [disabled]="!store.welcomeType()"
-                (click)="store.nextStep()"
-                class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                Continue <span>→</span>
+            <div class="form-footer">
+              <div class="security-note">
+                <span class="security-note__icon">🛡️</span>
+                <div class="text-[12px] leading-snug">
+                  <p class="text-gray-300">Your data is 100% secure and encrypted.</p>
+                  <p class="text-gray-500">You can change these settings anytime.</p>
+                </div>
+              </div>
+              <button [disabled]="!store.welcomeType()" (click)="store.nextStep()" class="btn-primary">
+                Continue <span class="btn-primary__arrow">→</span>
               </button>
             </div>
           </div>
@@ -232,8 +216,10 @@
         @if (store.currentStep() === 3) {
           <form [formGroup]="companyForm" (ngSubmit)="saveCompanyInfo()" class="space-y-6">
             <div class="space-y-1">
-              <h2 class="text-xl font-bold text-white">Let's set up your organization</h2>
-              <p class="text-gray-400 text-sm">Please provide the details below to create your workspace.</p>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="text-indigo-400">✦</span> Let's set up your organization
+              </h2>
+              <p class="text-gray-400 text-sm">Provide the basic details to create your workspace.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -294,22 +280,67 @@
               </div>
             </div>
 
+            <!-- Primary Use Case -->
+            <div class="space-y-2.5">
+              <label class="block text-xs font-semibold text-gray-300 tracking-wide">
+                Primary Use Case <span class="text-gray-500 font-normal">(Select all that apply)</span>
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                @for (uc of useCaseOptions; track uc.value) {
+                  <button
+                    type="button"
+                    (click)="toggleUseCase(uc.value)"
+                    class="use-case-card"
+                    [class.active]="isUseCaseSelected(uc.value)"
+                  >
+                    <span class="use-case-icon">{{ uc.icon }}</span>
+                    <span class="use-case-label">{{ uc.label }}</span>
+                    @if (isUseCaseSelected(uc.value)) {
+                      <span class="use-case-check">✓</span>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Country / Region -->
+            <div class="space-y-1.5 md:w-1/2 md:pr-2">
+              <label class="block text-xs font-semibold text-gray-300 tracking-wide">Country / Region</label>
+              <div class="custom-input-group">
+                <span class="input-icon">🌍</span>
+                <select formControlName="country" class="custom-input custom-select">
+                  <option value="" disabled>Select your country</option>
+                  @for (c of countryOptions; track c) {
+                    <option [value]="c">{{ c }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Brand Logo -->
             <div class="space-y-1.5">
-              <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Brand Identity Logo</label>
+              <label class="block text-xs font-semibold text-gray-300 tracking-wide">Brand Identity Logo</label>
               <app-drag-drop-upload (upload)="onLogoUploaded($event)"></app-drag-drop-upload>
             </div>
 
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="submit"
-                [disabled]="companyForm.invalid"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                Continue <span>→</span>
-              </button>
+            <!-- Footer: security notice + primary action -->
+            <div class="form-footer">
+              <div class="security-note">
+                <span class="security-note__icon">🛡️</span>
+                <div class="text-[12px] leading-snug">
+                  <p class="text-gray-300">Your data is 100% secure and encrypted.</p>
+                  <p class="text-gray-500">You can change these settings anytime.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <button type="button" (click)="store.prevStep()" class="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
+                  Back
+                </button>
+                <button type="submit" [disabled]="companyForm.invalid" class="btn-primary">
+                  Continue <span class="btn-primary__arrow">→</span>
+                </button>
+              </div>
             </div>
           </form>
         }
@@ -668,7 +699,6 @@
         }
 
       </div>
-      
-    </div>
+
   </div>
 </div>

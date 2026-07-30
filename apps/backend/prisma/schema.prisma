@@ -32,7 +32,7 @@ model Tenant {
   notifications  Notification[]
   configurations CommonConfiguration[]
 
-  @@map("tenants")
+  @@map("organizations")
 }
 
 model User {
@@ -44,6 +44,7 @@ model User {
   passwordHash   String?      @map("password_hash")
   avatarUrl      String?      @map("avatar_url")
   role           String       @default("user")
+  tenantId       String?      @map("tenant_id") @db.Uuid
   
   enable2fa      Boolean      @default(false) @map("enable_two_factor_authentication")
   mfaEnabled     Boolean      @default(false) @map("mfa_enabled")
@@ -82,13 +83,13 @@ model User {
 
 model UserTenant {
   userId   String @map("user_id") @db.Uuid
-  tenantId String @map("tenant_id") @db.Uuid
+  tenantId String @map("organization_id") @db.Uuid
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@id([userId, tenantId])
   @@index([tenantId])
-  @@map("user_tenants")
+  @@map("organization_members")
 }
 
 model Profile {
@@ -152,7 +153,7 @@ model Otp {
 
 model Role {
   id             String    @id @default(uuid()) @db.Uuid
-  name           String
+  name           String    @map("key")
   organizationId String?   @map("organization_id") @db.Uuid
   description    String?
   
@@ -184,13 +185,15 @@ model Permission {
 }
 
 model RolePermission {
-  roleId       String     @map("role_id") @db.Uuid
-  permissionId String     @map("permission_id") @db.Uuid
-  effect       String     @default("allow")
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  id             String     @id @default(uuid()) @db.Uuid
+  organizationId String     @map("organization_id") @db.Uuid
+  roleId         String     @map("role_id") @db.Uuid
+  permissionId   String     @map("permission_id") @db.Uuid
+  effect         String     @default("allow")
+  role           Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission     Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  @@id([roleId, permissionId])
+  @@unique([roleId, permissionId])
   @@index([roleId])
   @@index([permissionId])
   @@map("role_permissions")

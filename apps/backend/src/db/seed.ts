@@ -42,6 +42,7 @@ async function main() {
       fullName: 'Super Administrator',
       passwordHash,
       role: 'owner',
+      tenantId: tenant.id,
     },
   });
   console.log(`- Super Admin User created: ${adminUser.email}`);
@@ -109,6 +110,7 @@ async function main() {
   for (const perm of permissionsList) {
     await prisma.rolePermission.create({
       data: {
+        organizationId: tenant.id,
         roleId: ownerRole.id,
         permissionId: perm.id,
         effect: 'allow',

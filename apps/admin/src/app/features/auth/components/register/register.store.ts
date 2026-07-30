@@ -16,6 +16,8 @@ export interface RegisterState {
   companyLogoUrl: string | null;
   companyIndustry: string;
   companyEmployees: string;
+  companyCountry: string;
+  companyUseCases: string[];
 
   // Branch Info
   branchName: string;
@@ -54,6 +56,8 @@ const initial: RegisterState = {
   companyLogoUrl: null,
   companyIndustry: 'technology',
   companyEmployees: '10-50',
+  companyCountry: '',
+  companyUseCases: [],
   branchName: '',
   branchCode: '',
   adminFullName: '',
@@ -86,6 +90,8 @@ export class RegisterStore {
   readonly companyLogoUrl = computed(() => this.state().companyLogoUrl);
   readonly companyIndustry = computed(() => this.state().companyIndustry);
   readonly companyEmployees = computed(() => this.state().companyEmployees);
+  readonly companyCountry = computed(() => this.state().companyCountry);
+  readonly companyUseCases = computed(() => this.state().companyUseCases);
   readonly branchName = computed(() => this.state().branchName);
   readonly branchCode = computed(() => this.state().branchCode);
   readonly adminFullName = computed(() => this.state().adminFullName);
@@ -214,6 +220,8 @@ export class RegisterStore {
         logoUrl: s.companyLogoUrl,
         industry: s.companyIndustry,
         employees: s.companyEmployees,
+        country: s.companyCountry,
+        useCases: s.companyUseCases,
       },
       branch: {
         name: s.branchName,

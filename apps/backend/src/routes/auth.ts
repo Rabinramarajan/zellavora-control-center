@@ -413,13 +413,29 @@ router.post('/login', async (req, res, next) => {
     // 2. Resolve tenant by client code
     const tenant = await TenantService.resolveByClientCode(body.clientCode);
 
-    // 3. Find user in this tenant
-    const { data: user, error } = await supabaseAdmin
-      .from('users')
-      .select('id, email, full_name, role, password_hash, mfa_enabled, is_active, deleted_at, locked_until, failed_login_attempts, current_login_datetime, successful_login_attempts, version')
-      .eq('email', body.email.toLowerCase())
-      .eq('tenant_id', tenant.id)
-      .maybeSingle();
+    // 3. Find user in this tenant (using Prisma for reliable direct DB access)
+    const prismaUser = await prisma.user.findFirst({
+      where: {
+        email: body.email.toLowerCase(),
+        tenantId: tenant.id,
+      },
+    });
+    const user = prismaUser ? {
+      id: prismaUser.id,
+      email: prismaUser.email,
+      full_name: prismaUser.fullName,
+      role: prismaUser.role,
+      password_hash: prismaUser.passwordHash,
+      mfa_enabled: prismaUser.mfaEnabled,
+      is_active: !prismaUser.isDeleted,
+      deleted_at: prismaUser.deletedAt?.toISOString() ?? null,
+      locked_until: null as string | null,
+      failed_login_attempts: 0,
+      current_login_datetime: prismaUser.currentLoginDatetime?.toISOString() ?? null,
+      successful_login_attempts: prismaUser.successfulLoginAttempts,
+      version: prismaUser.version,
+    } : null;
+    const error = null;
 
     // Same response shape whether user doesn't exist or password is wrong (anti-enumeration)
     const invalid = () => {

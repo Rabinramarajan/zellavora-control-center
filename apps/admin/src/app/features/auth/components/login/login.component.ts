@@ -12,7 +12,7 @@ import { Dialog } from 'primeng/dialog';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, Dialog],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css',
+  styleUrls: ['../../auth-shell.css', './login.component.css'],
 })
 export class LoginComponent implements OnInit {
   visiblePrivacy = false;

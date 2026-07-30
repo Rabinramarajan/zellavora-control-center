@@ -4,6 +4,8 @@
 -- Depends on: 0005, 0006, 0007
 -- =============================================================
 
+DROP TABLE IF EXISTS audit_logs CASCADE;
+
 -- ---------- Policy Versions ----------
 CREATE TABLE IF NOT EXISTS policy_versions (
   organization_id UUID PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
@@ -13,23 +15,41 @@ CREATE TABLE IF NOT EXISTS policy_versions (
 );
 
 -- Bump helper
-CREATE OR REPLACE FUNCTION bump_policy_version() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION bump_policy_version_direct() RETURNS TRIGGER AS $$
 DECLARE
   target_org UUID;
 BEGIN
-  target_org := COALESCE(
-    CASE WHEN TG_OP = 'DELETE' THEN OLD.organization_id END,
-    NEW.organization_id
-  );
-
-  -- Some tables (e.g. role_inheritance) need the role's org
-  IF target_org IS NULL THEN
-    IF TG_OP = 'DELETE' THEN
-      SELECT organization_id INTO target_org FROM roles WHERE id = OLD.role_id;
-    ELSE
-      SELECT organization_id INTO target_org FROM roles WHERE id = NEW.role_id;
-    END IF;
+  IF TG_OP = 'DELETE' THEN
+    target_org := OLD.organization_id;
+  ELSE
+    target_org := NEW.organization_id;
   END IF;
+
+  IF target_org IS NULL THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+
+  INSERT INTO policy_versions (organization_id, version, updated_at)
+  VALUES (target_org, 1, now())
+  ON CONFLICT (organization_id) DO UPDATE
+    SET version = policy_versions.version + 1, updated_at = now();
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION bump_policy_version_indirect() RETURNS TRIGGER AS $$
+DECLARE
+  target_org UUID;
+  rid UUID;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    rid := OLD.role_id;
+  ELSE
+    rid := NEW.role_id;
+  END IF;
+
+  SELECT organization_id INTO target_org FROM roles WHERE id = rid;
 
   IF target_org IS NULL THEN
     RETURN COALESCE(NEW, OLD);
@@ -54,27 +74,27 @@ DROP TRIGGER IF EXISTS trg_bump_v_res_scopes       ON resource_scopes;
 
 CREATE TRIGGER trg_bump_v_role_perms
   AFTER INSERT OR UPDATE OR DELETE ON role_permissions
-  FOR EACH ROW EXECUTE FUNCTION bump_policy_version();
+  FOR EACH ROW EXECUTE FUNCTION bump_policy_version_indirect();
 
 CREATE TRIGGER trg_bump_v_user_roles
   AFTER INSERT OR UPDATE OR DELETE ON user_roles
-  FOR EACH ROW EXECUTE FUNCTION bump_policy_version();
+  FOR EACH ROW EXECUTE FUNCTION bump_policy_version_direct();
 
 CREATE TRIGGER trg_bump_v_user_perms
   AFTER INSERT OR UPDATE OR DELETE ON user_permissions
-  FOR EACH ROW EXECUTE FUNCTION bump_policy_version();
+  FOR EACH ROW EXECUTE FUNCTION bump_policy_version_direct();
 
 CREATE TRIGGER trg_bump_v_role_inh
   AFTER INSERT OR UPDATE OR DELETE ON role_inheritance
-  FOR EACH ROW EXECUTE FUNCTION bump_policy_version();
+  FOR EACH ROW EXECUTE FUNCTION bump_policy_version_indirect();
 
 CREATE TRIGGER trg_bump_v_roles
   AFTER INSERT OR UPDATE OR DELETE ON roles
-  FOR EACH ROW EXECUTE FUNCTION bump_policy_version();
+  FOR EACH ROW EXECUTE FUNCTION bump_policy_version_direct();
 
 CREATE TRIGGER trg_bump_v_res_scopes
   AFTER INSERT OR UPDATE OR DELETE ON resource_scopes
-  FOR EACH ROW EXECUTE FUNCTION bump_policy_version();
+  FOR EACH ROW EXECUTE FUNCTION bump_policy_version_direct();
 
 -- ---------- Audit Log ----------
 CREATE TABLE IF NOT EXISTS audit_logs (

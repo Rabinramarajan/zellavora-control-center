@@ -4,6 +4,10 @@
 -- Depends on: 0004_enterprise_auth.sql (users, organizations, sessions)
 -- =============================================================
 
+DROP TABLE IF EXISTS role_permissions CASCADE;
+DROP TABLE IF EXISTS permissions CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+
 -- ---------- Types ----------
 DO $$ BEGIN
   CREATE TYPE permission_type AS ENUM ('feature','screen','component','action','database');
@@ -50,8 +54,8 @@ CREATE INDEX IF NOT EXISTS idx_permissions_key   ON permissions(key text_pattern
 CREATE TABLE IF NOT EXISTS roles (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  key             VARCHAR(100) NOT NULL,
-  label           VARCHAR(200) NOT NULL,
+  key             VARCHAR(100),
+  label           VARCHAR(200),
   description     TEXT,
   level           INT NOT NULL DEFAULT 0,
   is_system       BOOLEAN NOT NULL DEFAULT false,

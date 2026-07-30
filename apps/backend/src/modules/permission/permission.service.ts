@@ -20,8 +20,8 @@ export class PermissionService {
     return this.repo.create(data);
   }
 
-  async assignPermissionToRole(roleId: string, permissionId: string, effect: 'allow' | 'deny') {
-    return this.repo.assignToRole(roleId, permissionId, effect);
+  async assignPermissionToRole(roleId: string, permissionId: string, effect: 'allow' | 'deny', organizationId: string) {
+    return this.repo.assignToRole(roleId, permissionId, effect, organizationId);
   }
 
   async revokePermissionFromRole(roleId: string, permissionId: string) {

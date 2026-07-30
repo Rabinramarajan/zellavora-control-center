@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS notification_templates (
   metadata JSONB DEFAULT '{}'::jsonb,
 
   -- Audit
-  created_by UUID REFERENCES organization_users(id),
-  updated_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   template_id UUID REFERENCES notification_templates(id) ON DELETE SET NULL,
 
   -- Recipient
-  recipient_id UUID REFERENCES organization_users(id) ON DELETE CASCADE,
+  recipient_id UUID REFERENCES users(id) ON DELETE CASCADE,
   recipient_email VARCHAR(255),
   recipient_phone VARCHAR(20),
   recipient_push_token VARCHAR(500),
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   ip_address INET,
 
   -- Audit
-  created_by UUID REFERENCES organization_users(id),
+  created_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -134,7 +134,7 @@ CREATE INDEX idx_notifications_category ON notifications(category);
 CREATE TABLE IF NOT EXISTS notification_preferences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES organization_users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
   -- Global Settings
   notifications_enabled BOOLEAN DEFAULT true,
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS notification_audit_logs (
   error_details JSONB,
 
   -- User/System
-  user_id UUID REFERENCES organization_users(id),
+  user_id UUID REFERENCES users(id),
   actor VARCHAR(50),                           -- 'user', 'system', 'api'
 
   -- Tracking
@@ -254,7 +254,7 @@ CREATE INDEX idx_notification_queue_retry ON notification_queue(next_retry_at);
 CREATE TABLE IF NOT EXISTS user_notification_unread_counts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES organization_users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
   -- Counts
   unread_count INT DEFAULT 0,
@@ -343,6 +343,7 @@ CREATE POLICY "Users can view their notifications"
 -- Users can update their own notification read status
 DROP POLICY IF EXISTS "Users can read their notifications" ON notifications;
 CREATE POLICY "Users can read their notifications"
+  ON notifications
   FOR UPDATE
   TO authenticated
   USING (recipient_id = auth.uid())

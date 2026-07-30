@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, signal, effect, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RegisterStore } from './register.store';
 import { OtpInputComponent } from '../../../../shared/components/otp-input.component';
@@ -12,7 +12,6 @@ import { PasswordStrengthComponent } from '../../../../shared/components/passwor
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     FormsModule,
     ReactiveFormsModule,
     OtpInputComponent,
@@ -21,7 +20,7 @@ import { PasswordStrengthComponent } from '../../../../shared/components/passwor
   ],
   providers: [RegisterStore],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css',
+  styleUrls: ['../../auth-shell.css', './register.component.css'],
 })
 export class RegisterComponent implements OnInit {
   readonly store = inject(RegisterStore);
@@ -57,14 +56,42 @@ export class RegisterComponent implements OnInit {
   ];
 
   visualSteps = [
-    { title: 'WELCOME' },
-    { title: 'INVITATION' },
-    { title: 'COMPANY' },
-    { title: 'BRANCH' },
-    { title: 'ADMIN' },
-    { title: 'SECURITY' },
-    { title: 'VERIFY EMAIL' }
+    { title: 'WELCOME', icon: '👤' },
+    { title: 'INVITATION', icon: '✉️' },
+    { title: 'COMPANY', icon: '🏢' },
+    { title: 'BRANCH', icon: '🏬' },
+    { title: 'ADMIN', icon: '🧑‍💼' },
+    { title: 'SECURITY', icon: '🔒' },
+    { title: 'VERIFY EMAIL', icon: '✅' }
   ];
+
+  // Left panel social proof avatars
+  trustAvatars = ['🧑', '👩', '🧔', '👩‍🦰', '🧑‍🦱', '👨'];
+
+  useCaseOptions = [
+    { value: 'project-management', label: 'Project Management', icon: '📁' },
+    { value: 'crm', label: 'CRM', icon: '👤' },
+    { value: 'analytics', label: 'Analytics', icon: '📈' },
+    { value: 'hr-management', label: 'HR Management', icon: '👥' },
+    { value: 'other', label: 'Other', icon: '•••' }
+  ];
+
+  countryOptions = [
+    'India', 'United States', 'United Kingdom', 'Canada', 'Australia',
+    'Germany', 'France', 'Singapore', 'United Arab Emirates', 'Japan'
+  ];
+
+  selectedUseCases = signal<string[]>([]);
+
+  isUseCaseSelected(value: string): boolean {
+    return this.selectedUseCases().includes(value);
+  }
+
+  toggleUseCase(value: string) {
+    this.selectedUseCases.update(list =>
+      list.includes(value) ? list.filter(v => v !== value) : [...list, value]
+    );
+  }
 
   activeVisualStep = computed(() => {
     const logicalStep = this.store.currentStep();
@@ -82,6 +109,7 @@ export class RegisterComponent implements OnInit {
       clientCode: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-]{2,16}$/)]],
       industry: ['technology', [Validators.required]],
       employees: ['10-50', [Validators.required]],
+      country: ['', [Validators.required]],
     });
 
     this.branchForm = this.fb.group({
@@ -119,7 +147,9 @@ export class RegisterComponent implements OnInit {
       companyName: this.companyForm.value.name,
       companyClientCode: this.companyForm.value.clientCode,
       companyIndustry: this.companyForm.value.industry,
-      companyEmployees: this.companyForm.value.employees
+      companyEmployees: this.companyForm.value.employees,
+      companyCountry: this.companyForm.value.country,
+      companyUseCases: this.selectedUseCases()
     });
     this.store.nextStep();
   }
