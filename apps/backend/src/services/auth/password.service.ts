@@ -6,7 +6,7 @@
  * Always store VERIFIED cost in the hash itself; ignore env on verify so we
  * can rotate the cost without breaking old hashes.
  */
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { config } from '../../config/env';
 import { AppError } from '../../middleware/error';
