@@ -63,38 +63,44 @@ async function main() {
   });
 
   // 4. Create Roles
-  const ownerRole = await prisma.role.upsert({
-    where: { organizationId_key: { organizationId: tenant.id, key: 'owner' } },
-    update: {},
-    create: {
-      name: 'Owner',
-      key: 'owner',
-      organizationId: tenant.id,
-      description: 'Full workspace owner access controls',
-    },
+  let ownerRole = await prisma.role.findFirst({
+    where: { name: 'Owner', organizationId: tenant.id },
   });
+  if (!ownerRole) {
+    ownerRole = await prisma.role.create({
+      data: {
+        name: 'Owner',
+        organizationId: tenant.id,
+        description: 'Full workspace owner access controls',
+      },
+    });
+  }
 
-  const adminRole = await prisma.role.upsert({
-    where: { organizationId_key: { organizationId: tenant.id, key: 'admin' } },
-    update: {},
-    create: {
-      name: 'Admin',
-      key: 'admin',
-      organizationId: tenant.id,
-      description: 'General system administration permissions',
-    },
+  let adminRole = await prisma.role.findFirst({
+    where: { name: 'Admin', organizationId: tenant.id },
   });
+  if (!adminRole) {
+    adminRole = await prisma.role.create({
+      data: {
+        name: 'Admin',
+        organizationId: tenant.id,
+        description: 'General system administration permissions',
+      },
+    });
+  }
 
-  const userRole = await prisma.role.upsert({
-    where: { organizationId_key: { organizationId: tenant.id, key: 'user' } },
-    update: {},
-    create: {
-      name: 'User',
-      key: 'user',
-      organizationId: tenant.id,
-      description: 'Standard operational team member privileges',
-    },
+  let userRole = await prisma.role.findFirst({
+    where: { name: 'User', organizationId: tenant.id },
   });
+  if (!userRole) {
+    userRole = await prisma.role.create({
+      data: {
+        name: 'User',
+        organizationId: tenant.id,
+        description: 'Standard operational team member privileges',
+      },
+    });
+  }
   console.log('- Default security roles created');
 
   // 5. Create Permissions
@@ -117,43 +123,45 @@ async function main() {
 
   // 6. Map Permissions to Roles
   for (const perm of permissionsList) {
-    await prisma.rolePermission.upsert({
+    const existing = await prisma.rolePermission.findFirst({
       where: {
-        roleId_permissionId_organizationId: {
-          organizationId: tenant.id,
-          roleId: ownerRole.id,
-          permissionId: perm.id,
-        },
-      },
-      update: {},
-      create: {
         organizationId: tenant.id,
         roleId: ownerRole.id,
         permissionId: perm.id,
-        effect: 'allow',
       },
     });
+    if (!existing) {
+      await prisma.rolePermission.create({
+        data: {
+          organizationId: tenant.id,
+          roleId: ownerRole.id,
+          permissionId: perm.id,
+          effect: 'allow',
+        },
+      });
+    }
   }
   console.log('- Mapped permissions to Owner role');
 
   // 7. Assign Owner Role to Admin User
-  await prisma.userRoleAssignment.upsert({
+  const existingAssignment = await prisma.userRoleAssignment.findFirst({
     where: {
-      userId_roleId_organizationId: {
-        userId: adminUser.id,
-        roleId: ownerRole.id,
-        organizationId: tenant.id,
-      },
-    },
-    update: {},
-    create: {
       userId: adminUser.id,
       roleId: ownerRole.id,
       organizationId: tenant.id,
-      resourceType: 'tenant',
-      resourceId: tenant.id,
     },
   });
+  if (!existingAssignment) {
+    await prisma.userRoleAssignment.create({
+      data: {
+        userId: adminUser.id,
+        roleId: ownerRole.id,
+        organizationId: tenant.id,
+        resourceType: 'tenant',
+        resourceId: tenant.id,
+      },
+    });
+  }
   console.log(`- Assigned Owner role to User: ${adminUser.email}`);
 
   // 8. Create a default invitation code for registration testing
