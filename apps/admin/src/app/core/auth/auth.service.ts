@@ -152,6 +152,37 @@ export class AuthService {
    * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
    * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
    */
+  /** Login using raw tokens (e.g. following OAuth callback redirects). */
+  loginWithTokens(accessToken: string, refreshToken: string): Observable<boolean> {
+    this.store.setLoading(true);
+    this.store.setError(null);
+
+    this.store.updateTokens({
+      accessToken,
+      refreshToken,
+      accessTokenExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15m default
+      refreshTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7d default
+      sessionId: 'oauth-session',
+    });
+    this.persistRefreshToken(refreshToken);
+
+    return this.loadMe().pipe(
+      tap((ok) => {
+        this.store.setLoading(false);
+        if (ok) {
+          const redirect = sessionStorage.getItem(STORAGE.redirect) ?? '/dashboard';
+          sessionStorage.removeItem(STORAGE.redirect);
+          this.router.navigateByUrl(redirect, { replaceUrl: true });
+        }
+      }),
+      catchError((err) => {
+        this.clearLocalSession();
+        this.store.setLoading(false);
+        return of(false);
+      })
+    );
+  }
+
   login(request: LoginRequest): Observable<LoginResponse> {
     this.store.setLoading(true);
     this.store.setError(null);

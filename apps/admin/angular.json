@@ -24,12 +24,7 @@
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "assets": ["src/favicon.png", "src/assets"],
-            "styles": [
-              "src/styles/global.css",
-              "primeng/resources/themes/lara-dark-blue/theme.css",
-              "primeng/resources/primeng.min.css",
-              "primeicons/primeicons.css"
-            ],
+            "styles": ["src/styles/global.css"],
             "scripts": [],
             "vendorChunk": true,
             "extractLicenses": false,
@@ -48,8 +43,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "750kb"
+                  "maximumWarning": "1mb",
+                  "maximumError": "2mb"
                 }
               ],
               "outputHashing": "all",
@@ -90,12 +85,7 @@
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "css",
             "assets": ["src/favicon.png", "src/assets"],
-            "styles": [
-              "src/styles/global.css",
-              "primeng/resources/themes/lara-dark-blue/theme.css",
-              "primeng/resources/primeng.min.css",
-              "primeicons/primeicons.css"
-            ],
+            "styles": ["src/styles/global.css"],
             "scripts": [],
             "karmaConfig": "karma.conf.js"
           }

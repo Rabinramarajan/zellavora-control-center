@@ -27,7 +27,7 @@
     "apexcharts": "^3.45.0",
     "crypto-js": "^4.2.0",
     "primeicons": "^8.0.0",
-    "primeng": "^22.0.0",
+    "primeng": "^21.0.0",
     "rxjs": "^7.8.0",
     "tslib": "^2.6.0",
     "zone.js": "^0.15.0"

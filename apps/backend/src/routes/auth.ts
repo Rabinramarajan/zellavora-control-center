@@ -1449,4 +1449,107 @@ router.post(
   }
 );
 
+// ----------------------------------------------------------------------------
+// OAuth Social Sign-In (Google, Microsoft, GitHub)
+// ----------------------------------------------------------------------------
+
+router.get('/oauth/:provider', async (req, res, next) => {
+  try {
+    const provider = req.params.provider;
+    // Map provider names if necessary (e.g. microsoft -> azure)
+    const supabaseProvider = provider === 'microsoft' ? 'azure' : provider;
+
+    const redirectUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/oauth/callback`;
+    
+    // Create Supabase Anon client for sign-in redirection URL generation
+    const { supabaseAnon } = await import('../config/supabase');
+    const { data, error } = await supabaseAnon.auth.signInWithOAuth({
+      provider: supabaseProvider as any,
+      options: {
+        redirectTo: redirectUrl,
+      },
+    });
+
+    if (error || !data?.url) {
+      throw new AppError(error?.message || 'Failed to initiate OAuth', 400, 'OAUTH_INITIATION_FAILED');
+    }
+
+    res.redirect(data.url);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get('/oauth/callback', async (req, res, next) => {
+  try {
+    const code = req.query.code as string;
+    const frontendUrl = config.corsOrigins[0] || 'http://localhost:4200';
+
+    if (!code) {
+      return res.redirect(`${frontendUrl}/#/auth/login?error=OAUTH_CODE_MISSING`);
+    }
+
+    const { supabaseAnon } = await import('../config/supabase');
+    const { data: sessionData, error } = await supabaseAnon.auth.exchangeCodeForSession(code);
+
+    if (error || !sessionData?.user?.email) {
+      return res.redirect(`${frontendUrl}/#/auth/login?error=OAUTH_EXCHANGE_FAILED`);
+    }
+
+    const email = sessionData.user.email.toLowerCase();
+
+    // Look up the user in our custom database
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, full_name, role, tenant_id, is_active, deleted_at')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (userError || !user || user.deleted_at || user.is_active === false) {
+      return res.redirect(`${frontendUrl}/#/auth/login?error=USER_NOT_FOUND`);
+    }
+
+    // Create session and issue ZCC tokens
+    const { sessionId } = await SessionService.create({
+      userId: user.id,
+      organizationId: user.tenant_id,
+      ipAddress: ip(req),
+      userAgent: ua(req),
+    });
+
+    const tokens = await TokenService.issue({
+      userId: user.id,
+      tenantId: user.tenant_id,
+      role: user.role,
+      email: user.email,
+      sessionId,
+    });
+
+    // Update user login audit metadata
+    await supabaseAdmin
+      .from('users')
+      .update({
+        last_login_at: new Date().toISOString(),
+        failed_login_attempts: 0,
+        locked_until: null,
+      })
+      .eq('id', user.id);
+
+    // Audit
+    await AuditService.log({
+      organizationId: user.tenant_id,
+      actorId: user.id,
+      action: 'login',
+      ipAddress: ip(req),
+      userAgent: ua(req),
+      requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
+    });
+
+    // Redirect to Angular app with credentials
+    res.redirect(`${frontendUrl}/#/auth/login?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`);
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;

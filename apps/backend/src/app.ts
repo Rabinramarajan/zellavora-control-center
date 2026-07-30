@@ -7,6 +7,7 @@ import type { RequestHandler } from 'express';
 import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
 import authRoutes from './routes/auth';
+import registerRoutes from './routes/register';
 import crypto from 'crypto';
 import projectRoutes from './routes/projects';
 import portfolioRoutes from './routes/portfolio';
@@ -21,6 +22,18 @@ import adminConfigsRoutes from './routes/admin-configs';
 import adminAuditRoutes from './routes/admin-audit';
 import adminMessagesRoutes from './routes/admin-messages';
 import settingsRoutes from './routes/settings';
+import cleanAuthRoutes from './modules/auth/auth.routes';
+import cleanInviteRoutes from './modules/invitation/invitation.routes';
+import cleanOrgRoutes from './modules/organization/organization.routes';
+import cleanBranchRoutes from './modules/branch/branch.routes';
+import cleanUserRoutes from './modules/user/user.routes';
+import cleanRoleRoutes from './modules/role/role.routes';
+import cleanPermRoutes from './modules/permission/permission.routes';
+import cleanSettingsRoutes from './modules/settings/settings.routes';
+import cleanNotifRoutes from './modules/notification/notification.routes';
+import cleanVerifyRoutes from './modules/verification/verification.routes';
+import cleanAuditRoutes from './modules/audit/audit.routes';
+import cleanStorageRoutes from './modules/storage/storage.routes';
 import { buildRbac } from './rbac';
 
 const app = express();
@@ -146,6 +159,21 @@ app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (req, res) => {
 
 // Core routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth/register', registerRoutes);
+
+// Modular Clean Architecture routes
+app.use('/api/v1/clean/auth', cleanAuthRoutes);
+app.use('/api/v1/clean/invitations', cleanInviteRoutes);
+app.use('/api/v1/clean/organizations', cleanOrgRoutes);
+app.use('/api/v1/clean/branches', cleanBranchRoutes);
+app.use('/api/v1/clean/users', cleanUserRoutes);
+app.use('/api/v1/clean/roles', cleanRoleRoutes);
+app.use('/api/v1/clean/permissions', cleanPermRoutes);
+app.use('/api/v1/clean/settings', cleanSettingsRoutes);
+app.use('/api/v1/clean/notifications', cleanNotifRoutes);
+app.use('/api/v1/clean/verifications', cleanVerifyRoutes);
+app.use('/api/v1/clean/audits', cleanAuditRoutes);
+app.use('/api/v1/clean/storage', cleanStorageRoutes);
 app.use('/api/v1', projectRoutes);
 app.use('/api/v1', portfolioRoutes);
 app.use('/api/v1', galleryRoutes);

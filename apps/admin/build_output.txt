@@ -1,0 +1,39 @@
+﻿
+> @zcc/admin@1.0.0 build
+> ng build
+
+npm : The "@angular-devkit/build-angular:browser" builder is deprecated as part of Angular's Webpack support 
+deprecation. Use "@angular/build:application" instead. For more information, see 
+https://angular.dev/tools/cli/build-system-migration.
+At line:1 char:364
++ ... thub\zellavora-control-center\apps\admin"; npm run build 2>&1 | Tee-O ...
++                                                ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (The "@angular-d...stem-migration.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+- Generating browser application bundles (phase: setup)...
+√ Browser application bundle generation complete.
+√ Browser application bundle generation complete.
+
+Warning: D:\Github\zellavora-control-center\apps\admin\src\app\core\auth\auth.service.ts depends on 'crypto-js'. 
+CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+
+
+Error: "./resources/primeng.min.css" is not exported under the conditions ["sass","less","style"] from package 
+D:\Github\zellavora-control-center\node_modules\primeng (see exports field in 
+D:\Github\zellavora-control-center\node_modules\primeng\package.json)
+
+Error: "./resources/themes/lara-dark-blue/theme.css" is not exported under the conditions ["sass","less","style"] from 
+package D:\Github\zellavora-control-center\node_modules\primeng (see exports field in 
+D:\Github\zellavora-control-center\node_modules\primeng\package.json)
+
+
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path D:\Github\zellavora-control-center\apps\admin
+npm error workspace @zcc/admin@1.0.0
+npm error location D:\Github\zellavora-control-center\apps\admin
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c ng build

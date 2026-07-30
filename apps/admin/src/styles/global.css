@@ -2,8 +2,36 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* PrimeNG Styles */
+/* PrimeIcons for PrimeNG */
 @import "primeicons/primeicons.css";
+
+:root {
+  --p-primary-50: #faf5ff;
+  --p-primary-100: #f3e8ff;
+  --p-primary-200: #e9d5ff;
+  --p-primary-300: #d8b4fe;
+  --p-primary-400: #c084fc;
+  --p-primary-500: #a855f7;
+  --p-primary-600: #9333ea;
+  --p-primary-700: #7e22ce;
+  --p-primary-800: #6b21a8;
+  --p-primary-900: #581c87;
+
+  --p-surface-0: #ffffff;
+  --p-surface-50: #f9fafb;
+  --p-surface-100: #f3f4f6;
+  --p-surface-200: #e5e7eb;
+  --p-surface-300: #d1d5db;
+  --p-surface-400: #9ca3af;
+  --p-surface-500: #6b7280;
+  --p-surface-600: #4b5563;
+  --p-surface-700: #374151;
+  --p-surface-800: #1f2937;
+  --p-surface-900: #111827;
+
+  --p-overlay-panel-background: rgba(10, 15, 30, 0.95);
+  --p-overlay-panel-border-color: rgba(255, 255, 255, 0.1);
+}
 
 * {
   @apply border-slate-200 dark:border-slate-800;

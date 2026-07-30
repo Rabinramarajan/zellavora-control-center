@@ -1,0 +1,261 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Tenant {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  clientCode     String    @unique @map("client_code")
+  logoUrl        String?   @map("logo_url")
+  plan           String    @default("free")
+  enforce2fa     Boolean   @default(false) @map("enforce_2fa")
+  allowedDomains Json?     @map("allowed_domains")
+  
+  // Auditing & Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  branches       Branch[]
+  userTenants    UserTenant[]
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+  configurations CommonConfiguration[]
+
+  @@map("tenants")
+}
+
+model User {
+  id             String       @id @default(uuid()) @db.Uuid
+  email          String       @unique
+  emailId        String?      @unique @map("email_id")
+  username       String?      @unique
+  fullName       String       @map("full_name")
+  passwordHash   String?      @map("password_hash")
+  avatarUrl      String?      @map("avatar_url")
+  role           String       @default("user")
+  
+  enable2fa      Boolean      @default(false) @map("enable_two_factor_authentication")
+  mfaEnabled     Boolean      @default(false) @map("mfa_enabled")
+  mfaEnrolledAt  DateTime?    @map("mfa_enrolled_at") @db.Timestamptz
+  otp            String?
+  
+  isAccountLocked           Boolean   @default(false) @map("is_account_locked")
+  lastLockedDate            DateTime? @map("last_locked_date") @db.Timestamptz
+  successfulLoginAttempts   Int       @default(0) @map("successful_login_attempts")
+  currentLoginDatetime      DateTime? @map("current_login_datetime") @db.Timestamptz
+  lastLoginDatetime         DateTime? @map("last_login_datetime") @db.Timestamptz
+  defaultLandingPage        String?   @map("default_landing_page")
+  passwordResetFlag         Boolean   @default(false) @map("password_reset_flag")
+  
+  keyToken           String?  @map("key_token")
+  statusValue        String?  @map("status_value")
+  statusDescription  String?  @map("status_description")
+  
+  // Auditing & Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int      @default(1)
+  msg                String?
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  userTenants        UserTenant[]
+  profiles           Profile?
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+
+  @@map("users")
+}
+
+model UserTenant {
+  userId   String @map("user_id") @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([userId, tenantId])
+  @@index([tenantId])
+  @@map("user_tenants")
+}
+
+model Profile {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio       String?
+  headline  String?
+  location  String?
+  website   String?
+  github    String?
+  linkedin  String?
+  twitter   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("profiles")
+}
+
+model Branch {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  tenant         Tenant   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  code           String?
+  
+  // Auditing & Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([organizationId])
+  @@map("branches")
+}
+
+model Invitation {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  code      String   @unique
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("invitations")
+}
+
+model Otp {
+  id        String   @id @default(uuid()) @db.Uuid
+  type      String
+  target    String
+  code      String
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([target])
+  @@map("otps")
+}
+
+model Role {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  organizationId String?   @map("organization_id") @db.Uuid
+  description    String?
+  
+  // Auditing & Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  
+  rolePermissions RolePermission[]
+  userAssignments UserRoleAssignment[]
+
+  @@index([organizationId])
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  groupId     String?  @map("group_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  effect       String     @default("allow")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model UserRoleAssignment {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  roleId         String   @map("role_id") @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  resourceType   String?  @map("resource_type")
+  resourceId     String?  @map("resource_id")
+  role           Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("user_role_assignments")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  actorId        String?  @map("actor_id") @db.Uuid
+  action         String
+  organizationId String   @map("organization_id") @db.Uuid
+  severity       String   @default("info")
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor        User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  organization Tenant  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  recipientId    String?  @map("recipient_id") @db.Uuid
+  title          String?
+  body           String
+  channels       Json?
+  status         String   @default("pending")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Tenant @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recipient    User?  @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([recipientId])
+  @@map("notifications")
+}
+
+model CommonConfiguration {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  key            String
+  value          String
+  category       String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Tenant @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
+  @@map("common_configurations")
+}
