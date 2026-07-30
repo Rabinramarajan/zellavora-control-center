@@ -1,9 +1,61 @@
 /* Login-specific styling. Shared shell lives in ../../auth-shell.css */
 
+/* No card-in-a-card: the right half IS the card, so the form sits directly on
+   it and gets its structure from spacing instead of another border. */
 .login-card {
-  border-radius: 1.25rem;
-  padding: clamp(1rem, 2.4vh, 1.75rem);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 25px 50px -20px rgba(0, 0, 0, 0.6);
+  padding: 0;
+}
+
+/* Inputs: 14px text and a 44px+ hit target — the old 12px/py-2.5 controls read
+   as disabled and were awkward to tap. */
+.auth-field {
+  width: 100%;
+  padding: 0.8rem 2.75rem 0.8rem 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.auth-field::placeholder { color: #64748b; }
+
+.auth-field:focus {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.auth-field--select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.5rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.social-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
 }

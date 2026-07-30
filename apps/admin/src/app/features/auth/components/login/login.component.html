@@ -45,17 +45,17 @@
         <!-- Feature Trio -->
         <div class="feature-grid">
           <div>
-            <div class="feature-icon feature-icon--cyan">🛡️</div>
+            <div class="feature-icon feature-icon--cyan"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z"/></svg></div>
             <h4 class="feature-title">Enterprise Grade</h4>
             <p class="feature-copy">Secure, compliant and audit ready</p>
           </div>
           <div>
-            <div class="feature-icon feature-icon--violet">⚡</div>
+            <div class="feature-icon feature-icon--violet"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 3L5 13.5h5.5L11 21l8-10.5h-5.5L13 3z"/></svg></div>
             <h4 class="feature-title">Built for Scale</h4>
             <p class="feature-copy">Grow your business without limits</p>
           </div>
           <div>
-            <div class="feature-icon feature-icon--emerald">🕸️</div>
+            <div class="feature-icon feature-icon--emerald"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></div>
             <h4 class="feature-title">Unified Control</h4>
             <p class="feature-copy">Everything you need in one place</p>
           </div>
@@ -63,10 +63,10 @@
 
         <!-- Trust strip -->
         <div class="trust-card">
-          <div class="trust-shield">🛡️</div>
+          <div class="trust-shield"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.2 12l2 2 3.6-3.8"/></svg></div>
           <div class="flex-1">
             <p class="trust-title">Trusted &amp; secured by design</p>
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[10px] text-slate-400">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11.5px] text-slate-400">
               <span><span class="text-indigo-400 font-bold">✓</span> SSL</span>
               <span><span class="text-indigo-400 font-bold">✓</span> JWT</span>
               <span><span class="text-indigo-400 font-bold">✓</span> SOC 2</span>
@@ -79,36 +79,25 @@
       <!-- Right Side (Form Container) -->
       <div class="glass-panel auth-card items-center">
         <div class="auth-scroll w-full flex flex-col justify-center items-center py-2">
-        <div class="w-full max-w-md">
-          <!-- Sign-in Card -->
+        <div class="auth-form-col">
+          <!-- Sign-in form -->
           <div class="login-card">
-            <!-- Profile avatar with circular glow -->
-            <div class="flex justify-center mb-4">
-              <div class="relative">
-                <div class="absolute inset-0 bg-indigo-500 rounded-full blur-sm opacity-30 animate-pulse"></div>
-                <div class="w-16 h-16 rounded-full border border-indigo-500/30 bg-[#0b0e1c] flex items-center justify-center relative z-10">
-                  <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center">
-                    <span class="text-white text-xl font-black">Z</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <h2 class="text-xl font-bold text-center text-white mb-0.5">Welcome Back! 👋</h2>
-            <p class="text-xs text-slate-400 text-center mb-6">Sign in to continue to your dashboard</p>
+            <h2 class="text-2xl font-bold text-white mb-1.5">Welcome back</h2>
+            <p class="text-sm text-slate-400 mb-7">Sign in to continue to your dashboard</p>
 
             <!-- Error Notification -->
             <div *ngIf="auth.error()" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
               {{ auth.error() }}
             </div>
 
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-3">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
               <!-- Client Selector Dropdown -->
               <div class="relative">
+                <label class="field-label">Organization</label>
                 <button
                   type="button"
                   (click)="toggleOrgDropdown()"
-                  class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-left text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent flex items-center justify-between"
+                  class="auth-field auth-field--select"
                 >
                   <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,17 +129,17 @@
                       type="text"
                       [value]="orgSearchQuery"
                       (input)="filterOrgs($event)"
-                      class="w-full pl-8 pr-4 py-1.5 rounded-lg border border-white/5 bg-white/5 text-[11px] text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500"
+                      class="w-full pl-8 pr-4 py-2 rounded-lg border border-white/5 bg-white/5 text-[13px] text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500"
                       placeholder="Search organization..."
                     />
                   </div>
 
                   <div class="max-h-40 overflow-y-auto space-y-1 pr-1">
-                    <div *ngIf="loadingOrgs" class="text-center py-4 text-slate-500 text-[10px]">
+                    <div *ngIf="loadingOrgs" class="text-center py-4 text-slate-500 text-[13px]">
                       Loading organizations...
                     </div>
                     
-                    <div *ngIf="!loadingOrgs && filteredOrgs.length === 0" class="text-center py-4 text-slate-500 text-[10px]">
+                    <div *ngIf="!loadingOrgs && filteredOrgs.length === 0" class="text-center py-4 text-slate-500 text-[13px]">
                       No organizations found
                     </div>
 
@@ -158,23 +147,24 @@
                       type="button"
                       *ngFor="let org of filteredOrgs"
                       (click)="selectOrg(org)"
-                      class="w-full px-3 py-2 rounded-lg text-left text-[11px] text-slate-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2"
+                      class="w-full px-3 py-2 rounded-lg text-left text-[13px] text-slate-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2"
                     >
                       <span class="w-2 h-2 rounded-full" [ngClass]="org.clientCode.toUpperCase() === 'DEMO' ? 'bg-purple-500' : 'bg-blue-500'"></span>
                       <span class="font-medium truncate">{{ org.name }}</span>
-                      <span class="text-[9px] text-slate-500 font-semibold uppercase">({{ org.clientCode }})</span>
+                      <span class="text-[11px] text-slate-500 font-semibold uppercase">({{ org.clientCode }})</span>
                     </button>
                   </div>
                 </div>
-                <p *ngIf="form.get('clientCode')?.hasError('required') && form.get('clientCode')?.touched" class="mt-1 text-[10px] text-red-400">
+                <p *ngIf="form.get('clientCode')?.hasError('required') && form.get('clientCode')?.touched" class="mt-1.5 text-[12px] text-red-400">
                   Client code is required
                 </p>
               </div>
 
               <!-- Email Field -->
               <div>
+                <label class="field-label">Email address</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
@@ -182,8 +172,8 @@
                   <input
                     type="email"
                     formControlName="email"
-                    class="w-full pl-10 pr-10 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent placeholder:text-slate-500"
-                    placeholder="Enter your email"
+                    class="auth-field"
+                    placeholder="you@company.com"
                   />
                   <button
                     *ngIf="form.get('email')?.value"
@@ -196,15 +186,19 @@
                     </svg>
                   </button>
                 </div>
-                <p *ngIf="form.get('email')?.hasError('required') && form.get('email')?.touched" class="mt-1 text-[10px] text-red-400">
+                <p *ngIf="form.get('email')?.hasError('required') && form.get('email')?.touched" class="mt-1.5 text-[12px] text-red-400">
                   Email is required
                 </p>
               </div>
 
               <!-- Password Field -->
               <div>
+                <div class="flex items-center justify-between">
+                  <label class="field-label">Password</label>
+                  <a routerLink="/auth/forgot-password" class="field-label text-indigo-400 hover:text-indigo-300 no-underline">Forgot password?</a>
+                </div>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
@@ -212,7 +206,7 @@
                   <input
                     [type]="showPassword ? 'text' : 'password'"
                     formControlName="password"
-                    class="w-full pl-10 pr-16 py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent placeholder:text-slate-500"
+                    class="auth-field pr-16"
                     placeholder="Enter your password"
                   />
                   <div class="absolute inset-y-0 right-0 pr-3 flex items-center gap-2.5 z-10">
@@ -241,38 +235,37 @@
                     </button>
                   </div>
                 </div>
-                <p *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched" class="mt-1 text-[10px] text-red-400">
+                <p *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched" class="mt-1.5 text-[12px] text-red-400">
                   Password is required
                 </p>
               </div>
 
-              <!-- Remember & Forgot -->
-              <div class="flex items-center justify-between text-[11px] pt-0.5">
+              <!-- Remember -->
+              <div class="flex items-center text-[13px] pt-0.5">
                 <label class="flex items-center gap-2 cursor-pointer text-slate-300">
                   <input
                     type="checkbox"
                     formControlName="rememberMe"
-                    class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-purple-600 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-offset-transparent"
+                    class="w-4 h-4 rounded border-white/10 bg-white/5 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-offset-transparent"
                   />
-                  <span>Remember me</span>
+                  <span>Keep me signed in</span>
                 </label>
-                <a routerLink="/auth/forgot-password" class="text-indigo-400 hover:text-indigo-300 font-medium">Forgot password?</a>
               </div>
 
               <!-- Sign In Button -->
               <button
                 type="submit"
                 [disabled]="!form.valid || auth.isLoading()"
-                class="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:brightness-110 text-white font-medium text-xs rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-1.5 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:brightness-110 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
               >
-                <span *ngIf="!auth.isLoading()" class="flex items-center gap-1.5">
+                <span *ngIf="!auth.isLoading()" class="flex items-center gap-2">
                   Sign In
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                   </svg>
                 </span>
-                <span *ngIf="auth.isLoading()" class="flex items-center gap-1.5">
-                  <svg class="animate-spin h-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                <span *ngIf="auth.isLoading()" class="flex items-center gap-2">
+                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -282,20 +275,20 @@
             </form>
 
             <!-- Social Logins -->
-            <div class="relative my-5 text-center">
-              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/5"></div></div>
-              <span class="relative px-2 bg-transparent text-[9px] text-slate-500 font-bold uppercase tracking-wider">Or Continue With</span>
+            <div class="relative my-6 text-center">
+              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div>
+              <span class="relative px-3 bg-[#05070f] text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Or continue with</span>
             </div>
 
-            <div class="grid grid-cols-3 gap-2">
-              <button (click)="redirectToOAuth('google')" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-[10px] font-medium text-white">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
+            <div class="grid grid-cols-3 gap-2.5">
+              <button (click)="redirectToOAuth('google')" class="social-btn">
+                <svg class="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.64 5.64 0 0 1 8.35 12.96a5.64 5.64 0 0 1 5.64-5.64c2.4 0 4.4 1.5 5.2 3.6l3.96-3.07C20.8 4.2 16.8 1.8 12.24 1.8a10.2 10.2 0 0 0-10.2 10.2 10.2 10.2 0 0 0 10.2 10.2c5.64 0 9.84-3.96 9.84-9.96 0-.6-.05-1.08-.16-1.56H12.24z"/>
                 </svg>
                 Google
               </button>
-              <button (click)="redirectToOAuth('microsoft')" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-[10px] font-medium text-white">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 23 23">
+              <button (click)="redirectToOAuth('microsoft')" class="social-btn">
+                <svg class="w-4 h-4" viewBox="0 0 23 23">
                   <path fill="#f35325" d="M0 0h11v11H0z"/>
                   <path fill="#81bc06" d="M12 0h11v11H12z"/>
                   <path fill="#05a6f0" d="M0 12h11v11H0z"/>
@@ -303,8 +296,8 @@
                 </svg>
                 Microsoft
               </button>
-              <button (click)="redirectToOAuth('github')" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-[10px] font-medium text-white">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+              <button (click)="redirectToOAuth('github')" class="social-btn">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
                 </svg>
                 GitHub
@@ -312,23 +305,20 @@
             </div>
 
             <!-- Trust / Protected Indicator -->
-            <div class="mt-4 flex items-center justify-between p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl cursor-pointer hover:bg-indigo-500/10 transition">
+            <div class="mt-6 flex items-center justify-between gap-3 p-3.5 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl">
               <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <div class="w-7 h-7 shrink-0 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                   </svg>
                 </div>
-                <span class="text-[9px] font-semibold text-slate-300">Your data is protected with enterprise-grade security</span>
+                <span class="text-[12px] font-medium text-slate-400">Your data is protected with enterprise-grade security</span>
               </div>
-              <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
             </div>
           </div>
 
           <!-- Bottom Footer Navigation -->
-          <div class="mt-4 flex items-center justify-between text-[11px] text-slate-500">
+          <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-[12px] text-slate-500">
             <a routerLink="/auth/register" class="text-indigo-400 hover:text-indigo-300 font-semibold">Create account</a>
             <div class="flex gap-3">
               <button type="button" (click)="visiblePrivacy = true" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Privacy Policy</button>
