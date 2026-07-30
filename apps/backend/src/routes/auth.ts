@@ -189,6 +189,11 @@ const consumeMfa = (token: string) => {
  */
 router.get('/clients', async (req, res, next) => {
   try {
+    // Disable caching to ensure fresh 200 response
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     const { data: orgs, error } = await supabaseAdmin
       .from('organizations')
       .select('id, name, client_code, logo_url, status')
@@ -199,7 +204,7 @@ router.get('/clients', async (req, res, next) => {
       throw error;
     }
 
-    res.json({
+    res.status(200).json({
       tenants: (orgs || []).map(o => ({
         id: o.id,
         name: o.name,
