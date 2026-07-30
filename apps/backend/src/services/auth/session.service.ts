@@ -61,7 +61,8 @@ export class SessionService {
     });
 
     if (error) {
-      throw new AppError('Failed to create session', 500, 'SESSION_CREATE_FAILED');
+      console.error('Session creation error:', error);
+      throw new AppError(`Failed to create session: ${error?.message || 'Unknown error'}`, 500, 'SESSION_CREATE_FAILED');
     }
     return { sessionId };
   }
