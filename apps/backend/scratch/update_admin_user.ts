@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 // Load env
 dotenv.config({ path: path.join(__dirname, '../.env.local') });

@@ -15,7 +15,7 @@
 import crypto from 'crypto';
 import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { supabaseAdmin } from '../../config/supabase';
