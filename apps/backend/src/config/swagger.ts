@@ -459,10 +459,18 @@ All endpoints are prefixed with \`/api/v1\`.
   // Globs are resolved relative to THIS file, never process.cwd(). On a
   // serverless platform cwd is the task root and the source tree may not be
   // part of the bundle, so a cwd-based glob silently matches nothing.
-  apis: [
-    `${path.resolve(__dirname, '..').replace(/\\/g, '/')}/**/*.ts`,
-    `${path.resolve(__dirname, '..').replace(/\\/g, '/')}/**/*.js`,
-  ],
+  apis: (() => {
+    const configDir = __dirname;
+    // In development (tsx), __dirname is src/config; in production (compiled), it's dist/src/config
+    const isProduction = configDir.includes('dist');
+    const scanDir = isProduction
+      ? path.resolve(configDir, '..').replace(/\\/g, '/') // dist/src
+      : path.resolve(configDir, '..').replace(/\\/g, '/'); // src
+    return [
+      `${scanDir}/**/*.ts`,
+      `${scanDir}/**/*.js`,
+    ];
+  })(),
 };
 
 /**

@@ -16,7 +16,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "removeComments": false
   },
   "include": ["src/**/*", "api/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
