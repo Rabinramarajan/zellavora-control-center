@@ -471,6 +471,10 @@ All endpoints are prefixed with \`/api/v1\`.
  * `definition` above rather than crash the function during cold start.
  */
 function buildSpec(): object {
+  if (process.env.VERCEL) {
+    console.log('[swagger] Running on Vercel, serving base definition to prevent cold-start filesystem scanning');
+    return options.definition as object;
+  }
   try {
     return swaggerJsdoc(options) as object;
   } catch (err) {
