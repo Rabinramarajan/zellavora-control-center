@@ -24,7 +24,12 @@
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "assets": ["src/favicon.png", "src/assets"],
-            "styles": ["src/styles/global.css"],
+            "styles": [
+              "src/styles/global.css",
+              "primeng/resources/themes/lara-dark-blue/theme.css",
+              "primeng/resources/primeng.min.css",
+              "primeicons/primeicons.css"
+            ],
             "scripts": [],
             "vendorChunk": true,
             "extractLicenses": false,
@@ -85,7 +90,12 @@
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "css",
             "assets": ["src/favicon.png", "src/assets"],
-            "styles": ["src/styles/global.css"],
+            "styles": [
+              "src/styles/global.css",
+              "primeng/resources/themes/lara-dark-blue/theme.css",
+              "primeng/resources/primeng.min.css",
+              "primeicons/primeicons.css"
+            ],
             "scripts": [],
             "karmaConfig": "karma.conf.js"
           }
