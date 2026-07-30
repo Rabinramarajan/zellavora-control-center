@@ -63,25 +63,34 @@ async function main() {
   });
 
   // 4. Create Roles
-  const ownerRole = await prisma.role.create({
-    data: {
+  const ownerRole = await prisma.role.upsert({
+    where: { organizationId_key: { organizationId: tenant.id, key: 'owner' } },
+    update: {},
+    create: {
       name: 'Owner',
+      key: 'owner',
       organizationId: tenant.id,
       description: 'Full workspace owner access controls',
     },
   });
 
-  const adminRole = await prisma.role.create({
-    data: {
+  const adminRole = await prisma.role.upsert({
+    where: { organizationId_key: { organizationId: tenant.id, key: 'admin' } },
+    update: {},
+    create: {
       name: 'Admin',
+      key: 'admin',
       organizationId: tenant.id,
       description: 'General system administration permissions',
     },
   });
 
-  const userRole = await prisma.role.create({
-    data: {
+  const userRole = await prisma.role.upsert({
+    where: { organizationId_key: { organizationId: tenant.id, key: 'user' } },
+    update: {},
+    create: {
       name: 'User',
+      key: 'user',
       organizationId: tenant.id,
       description: 'Standard operational team member privileges',
     },
@@ -108,8 +117,16 @@ async function main() {
 
   // 6. Map Permissions to Roles
   for (const perm of permissionsList) {
-    await prisma.rolePermission.create({
-      data: {
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId_organizationId: {
+          organizationId: tenant.id,
+          roleId: ownerRole.id,
+          permissionId: perm.id,
+        },
+      },
+      update: {},
+      create: {
         organizationId: tenant.id,
         roleId: ownerRole.id,
         permissionId: perm.id,
@@ -120,8 +137,16 @@ async function main() {
   console.log('- Mapped permissions to Owner role');
 
   // 7. Assign Owner Role to Admin User
-  await prisma.userRoleAssignment.create({
-    data: {
+  await prisma.userRoleAssignment.upsert({
+    where: {
+      userId_roleId_organizationId: {
+        userId: adminUser.id,
+        roleId: ownerRole.id,
+        organizationId: tenant.id,
+      },
+    },
+    update: {},
+    create: {
       userId: adminUser.id,
       roleId: ownerRole.id,
       organizationId: tenant.id,
