@@ -15,7 +15,7 @@ async function main() {
       clientCode: 'zellavora-inc',
       logoUrl: null,
       plan: 'enterprise',
-      enforce2fa: true,
+      enforce2fa: false,
     },
   });
   console.log(`- Tenant created: ${tenant.name} (${tenant.id})`);
