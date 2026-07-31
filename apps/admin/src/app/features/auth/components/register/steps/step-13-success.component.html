@@ -1,0 +1,119 @@
+<section class="step step--center">
+  <div class="success">
+    <div class="success__burst" aria-hidden="true">
+      <div class="success__halo success__halo--1"></div>
+      <div class="success__halo success__halo--2"></div>
+      <div class="success__badge">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </div>
+    </div>
+    <h2 class="success__title">Welcome, {{ store.firstName() }}!</h2>
+    <p class="success__sub">
+      Your organization <strong class="step__em">{{ store.organizationName() }}</strong> is
+      ready.
+    </p>
+
+    <div class="success__list">
+      <div class="success__item">
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path></svg
+        ></span>
+        Organization created
+      </div>
+      <div class="success__item">
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path></svg
+        ></span>
+        Head-office branch setup
+      </div>
+      <div class="success__item">
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path></svg
+        ></span>
+        Owner account configured
+      </div>
+      <div class="success__item">
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path></svg
+        ></span>
+        Security enabled
+      </div>
+      <div class="success__item">
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path></svg
+        ></span>
+        Workspace ready
+      </div>
+    </div>
+
+    <div class="success__actions">
+      <button type="button" class="btn-primary" (click)="navigateToDashboard()">
+        Go to Dashboard
+        <svg
+          class="btn-primary__arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 12h14"></path>
+          <path d="M12 5l7 7-7 7"></path>
+        </svg>
+      </button>
+      <button type="button" class="btn-ghost" (click)="navigateToLogin()">
+        Sign in instead
+      </button>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,172 @@
+<section class="step">
+  <header class="step__head">
+    <p class="step__eyebrow">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+      Security Setup
+    </p>
+    <h2 class="step__title">Choose two-factor authentication</h2>
+    <p class="step__sub">Pick how you want to verify sign-ins.</p>
+  </header>
+
+  <div class="reg-form__body">
+    <div class="mfa-grid">
+      @for (m of mfaMethods; track m.value) {
+        <button
+          type="button"
+          class="mfa-card"
+          [class.is-active]="store.mfaMethod() === m.value"
+          (click)="selectMfaMethod(m.value)"
+        >
+          <span
+            class="mfa-card__icon"
+            [class.mfa-card__icon--cyan]="m.value === 'email_otp'"
+            [class.mfa-card__icon--violet]="m.value === 'authenticator'"
+            [class.mfa-card__icon--emerald]="m.value === 'sms'"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path [attr.d]="icons[m.icon]"></path>
+            </svg>
+          </span>
+          <span class="mfa-card__body">
+            <span class="mfa-card__title-row">
+              <span class="mfa-card__title">{{ m.label }}</span>
+              <span class="mfa-card__badge">{{ m.badge }}</span>
+            </span>
+            <span class="mfa-card__desc">{{ m.desc }}</span>
+          </span>
+          <span class="choice__radio">
+            @if (store.mfaMethod() === m.value) {
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            }
+          </span>
+        </button>
+      }
+    </div>
+
+    @if (store.mfaMethod() === 'authenticator' && store.mfaQrCode()) {
+      <div class="qr-panel">
+        <div class="qr-panel__qrcode">
+          <img [src]="store.mfaQrCode()" alt="Scan this QR code with your authenticator app" />
+        </div>
+        <div class="qr-panel__body">
+          <p class="qr-panel__title">Scan to add your account</p>
+          <p class="qr-panel__hint">
+            Use Google Authenticator, Authy, or Microsoft Authenticator.
+          </p>
+          <div class="qr-panel__secret">
+            <span class="qr-panel__secret-label">Manual entry key</span>
+            <code>{{ store.mfaSecret() }}</code>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (store.mfaMethod() === 'authenticator') {
+      <div class="otp-card">
+        @if (store.mfaVerified()) {
+          <div class="success-chip">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+            Authenticator Verified
+          </div>
+        } @else {
+          <p class="qr-panel__hint">Enter the 6-digit code from your authenticator app.</p>
+          <app-otp-input (otpChange)="mfaCodeInput.set($event)"></app-otp-input>
+          <button
+            type="button"
+            class="btn-primary btn-primary--block"
+            [disabled]="mfaCodeInput().length !== 6 || store.loading()"
+            (click)="verifyAuthenticator()"
+          >
+            {{ store.loading() ? 'Verifying…' : 'Verify Code' }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (store.mfaMethod() === 'sms' && !store.mobileVerified()) {
+      <div class="notice-warn">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 8v4"></path>
+          <path d="M12 16h.01"></path>
+        </svg>
+        SMS two-factor requires a verified mobile number. Go back to
+        <button type="button" class="text-link" (click)="store.setStep(5)">Mobile Verification</button>
+        to finish it.
+      </div>
+    }
+  </div>
+
+  <footer class="form-actions">
+    <button type="button" class="btn-ghost" (click)="store.prevStep()">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      Back
+    </button>
+    <button type="button" class="btn-primary" [disabled]="!canContinue()" (click)="store.nextStep()">
+      Continue
+      <svg
+        class="btn-primary__arrow"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M5 12h14"></path>
+        <path d="M12 5l7 7-7 7"></path>
+      </svg>
+    </button>
+  </footer>
+</section>

@@ -168,6 +168,53 @@ export async function checkOrganizationCodeAvailability(code: string): Promise<{
 }
 
 // =============================================================================
+// ORGANIZATION NAME CHECK
+// =============================================================================
+
+export async function checkOrganizationNameAvailability(name: string): Promise<{
+  available: boolean;
+  message?: string;
+  suggestion?: string;
+}> {
+  const normalizedName = name.trim().replace(/\s+/g, ' ');
+
+  if (normalizedName.length < 3) {
+    return {
+      available: false,
+      message: 'Organization name must be at least 3 characters',
+    };
+  }
+
+  if (normalizedName.length > 100) {
+    return {
+      available: false,
+      message: 'Organization name cannot exceed 100 characters',
+    };
+  }
+
+  const existingOrg = await prisma.organization.findFirst({
+    where: {
+      name: { equals: normalizedName, mode: 'insensitive' },
+      isDeleted: false,
+    },
+    select: { id: true, name: true },
+  });
+
+  if (existingOrg) {
+    return {
+      available: false,
+      message: `The organization name "${existingOrg.name}" is already taken`,
+      suggestion: `${normalizedName} ${new Date().getFullYear()}`,
+    };
+  }
+
+  return {
+    available: true,
+    message: 'Organization name is available',
+  };
+}
+
+// =============================================================================
 // GENERATE ORGANIZATION CODE
 // =============================================================================
 

@@ -1,170 +1,163 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { AuthStore } from '@core/auth/auth.store';
 import { ConfigService } from '@core/config/config.service';
 import { Dialog } from 'primeng/dialog';
+import { InputControlComponent } from '@shared/components/input-control';
+import { SelectControlComponent } from '@shared/components/select-control';
+
+interface Org {
+  name: string;
+  clientCode: string;
+  [key: string]: unknown;
+}
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  USER_NOT_FOUND:
+    'Your social login email is not registered in our platform. Please contact your admin.',
+  OAUTH_EXCHANGE_FAILED: 'Failed to exchange authentication code with the provider.',
+  OAUTH_CODE_MISSING: 'Authentication code missing from redirect.',
+};
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, Dialog],
+  imports: [ReactiveFormsModule, RouterLink, Dialog, InputControlComponent, SelectControlComponent],
   templateUrl: './login.component.html',
   styleUrls: ['../../auth-shell.css', './login.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent implements OnInit {
-  visiblePrivacy = false;
-  visibleTerms = false;
-  visibleHelp = false;
-  auth = inject(AuthService);
+export class LoginComponent {
+  private readonly fb = inject(FormBuilder);
   private readonly authStore = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly configService = inject(ConfigService);
-  form: FormGroup;
+  readonly auth = inject(AuthService);
 
-  // Multi-Tenant Org Dropdown State
-  showOrgDropdown = false;
-  orgSearchQuery = '';
-  filteredOrgs: any[] = [];
-  allOrgs: any[] = [];
-  selectedOrg: any = null;
-  loadingOrgs = false;
-  showPassword = false;
+  // --- Dialog visibility ---------------------------------------------------
+  readonly visiblePrivacy = signal(false);
+  readonly visibleTerms = signal(false);
+  readonly visibleHelp = signal(false);
 
-  redirectToOAuth(provider: string): void {
-    const adminApiUrl = this.configService.get('apiUrls.adminApi') || 'https://zcc-backend.vercel.app';
-    window.location.href = `${adminApiUrl}/api/v1/auth/oauth/${provider}`;
-  }
+  // --- Organization state --------------------------------------------------
+  readonly allOrgs = signal<Org[]>([]);
+  readonly loadingOrgs = signal(false);
+  readonly selectedOrg = signal<Org | null>(null);
 
-  togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
-  }
+  /** The form stores the code lower-cased; the API returns it upper-cased. */
+  readonly orgValue = (org: Org): string => org.clientCode.toLowerCase();
 
-  clearEmail(): void {
-    this.form.get('email')?.setValue('');
-    this.form.get('email')?.markAsUntouched();
-  }
+  // --- Form ----------------------------------------------------------------
+  readonly form = this.fb.nonNullable.group({
+    clientCode: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    rememberMe: [false],
+  });
 
-  clearPassword(): void {
-    this.form.get('password')?.setValue('');
-    this.form.get('password')?.markAsUntouched();
-  }
+  /** Ticks on every value/status/touched/pristine change of the form. */
+  private readonly formEvents = toSignal(this.form.events, { initialValue: null });
 
-  constructor(private fb: FormBuilder) {
-    this.form = this.fb.group({
-      clientCode: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      rememberMe: [false],
-    });
+  /** Snapshot of everything the template needs from the form. */
+  readonly formState = computed(() => {
+    this.formEvents(); // dependency: recompute on any form event
+    return {
+      // Every field renders its own errors via the shared form controls.
+      valid: this.form.valid,
+    };
+  });
 
-    // Pre-fill clientCode from sessionStorage if available
+  private readonly queryParams = toSignal(this.route.queryParams, { initialValue: {} as any });
+
+  constructor() {
     const stored = sessionStorage.getItem('zcc.clientCode');
     if (stored) {
-      this.form.patchValue({ clientCode: stored });
+      this.form.controls.clientCode.setValue(stored);
     }
-  }
 
-  ngOnInit(): void {
-    // 1. Check for OAuth redirection parameters
-    this.route.queryParams.subscribe((params) => {
+    // Handle OAuth redirect params.
+    effect(() => {
+      const params = this.queryParams();
       const accessToken = params['accessToken'];
       const refreshToken = params['refreshToken'];
       const error = params['error'];
 
-      if (accessToken && refreshToken) {
-        this.auth.loginWithTokens(accessToken, refreshToken).subscribe();
-        return;
-      }
-
-      if (error) {
-        let msg = 'Social sign-in failed.';
-        if (error === 'USER_NOT_FOUND') {
-          msg = 'Your social login email is not registered in our platform. Please contact your admin.';
-        } else if (error === 'OAUTH_EXCHANGE_FAILED') {
-          msg = 'Failed to exchange authentication code with the provider.';
-        } else if (error === 'OAUTH_CODE_MISSING') {
-          msg = 'Authentication code missing from redirect.';
+      untracked(() => {
+        if (accessToken && refreshToken) {
+          this.auth.loginWithTokens(accessToken, refreshToken).subscribe();
+          return;
         }
-        this.authStore.setError(msg);
-      }
+        if (error) {
+          this.authStore.setError(OAUTH_ERROR_MESSAGES[error] ?? 'Social sign-in failed.');
+        }
+      });
     });
 
-    // 2. Load tenants
-    this.loadingOrgs = true;
+    // Match the pre-filled client code once organizations arrive.
+    effect(() => {
+      const orgs = this.allOrgs();
+      if (!orgs.length) return;
+      untracked(() => {
+        if (this.selectedOrg()) return;
+        const code = this.form.controls.clientCode.value;
+        if (!code) return;
+        // The select resolves its own display value from the control; this only
+        // needs to feed the tenant-theme effect below.
+        const matched = orgs.find((o) => o.clientCode.toLowerCase() === code.toLowerCase());
+        if (matched) this.selectedOrg.set(matched);
+      });
+    });
+
+    // Apply the tenant theme whenever the selected organization changes.
+    effect(() => {
+      const org = this.selectedOrg();
+      if (!org) return;
+      const root = document.documentElement;
+      const isDemo = org.clientCode.toUpperCase() === 'DEMO';
+      root.style.setProperty('--primary-color', isDemo ? '#a855f7' : '#3b82f6');
+      root.style.setProperty('--secondary-color', isDemo ? '#3b82f6' : '#06b6d4');
+    });
+
+    this.loadOrgs();
+  }
+
+  private loadOrgs(): void {
+    this.loadingOrgs.set(true);
     this.auth.loadClients().subscribe({
       next: (res) => {
-        this.allOrgs = res.tenants || [];
-        this.filteredOrgs = [...this.allOrgs];
-        this.loadingOrgs = false;
-        
-        // Match initially loaded client code if present
-        const initialCode = this.form.value.clientCode;
-        if (initialCode) {
-          const matched = this.allOrgs.find(
-            (o: any) => o.clientCode.toLowerCase() === initialCode.toLowerCase()
-          );
-          if (matched) {
-            this.selectOrg(matched);
-          }
-        }
+        this.allOrgs.set(res?.tenants ?? []);
+        this.loadingOrgs.set(false);
       },
-      error: () => {
-        this.loadingOrgs = false;
-      }
+      error: () => this.loadingOrgs.set(false),
     });
   }
 
-  toggleOrgDropdown(): void {
-    this.showOrgDropdown = !this.showOrgDropdown;
-  }
-
-  filterOrgs(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.orgSearchQuery = input.value;
-    this.filteredOrgs = this.allOrgs.filter((o: any) => 
-      o.name.toLowerCase().includes(this.orgSearchQuery.toLowerCase()) ||
-      o.clientCode.toLowerCase().includes(this.orgSearchQuery.toLowerCase())
-    );
-  }
-
-  selectOrg(org: any): void {
-    this.selectedOrg = org;
-    this.form.patchValue({ clientCode: org.clientCode.toLowerCase() });
-    this.showOrgDropdown = false;
-    
-    // Apply dynamic theme colors based on selected organization
-    const root = document.documentElement;
-    if (org.clientCode.toUpperCase() === 'DEMO') {
-      root.style.setProperty('--primary-color', '#a855f7'); // Purple
-      root.style.setProperty('--secondary-color', '#3b82f6'); // Blue
-    } else {
-      root.style.setProperty('--primary-color', '#3b82f6'); // Blue
-      root.style.setProperty('--secondary-color', '#06b6d4'); // Cyan
-    }
+  // --- Actions -------------------------------------------------------------
+  redirectToOAuth(provider: string): void {
+    const adminApiUrl =
+      this.configService.get('apiUrls.adminApi') || 'https://zcc-backend.vercel.app';
+    window.location.href = `${adminApiUrl}/api/v1/auth/oauth/${provider}`;
   }
 
   onSubmit(): void {
     if (this.form.invalid || this.auth.isLoading()) return;
 
-    const request = {
-      clientCode: this.form.value.clientCode,
-      email: this.form.value.email,
-      password: this.form.value.password,
-      rememberMe: this.form.value.rememberMe,
-    };
+    const request = this.form.getRawValue();
 
     this.auth.login(request).subscribe({
-      next: () => {
-        // Save clientCode to session storage
-        sessionStorage.setItem('zcc.clientCode', request.clientCode);
-        console.log('Login successful');
-      },
-      error: (error) => {
-        console.error('Login error:', error);
-      },
+      next: () => sessionStorage.setItem('zcc.clientCode', request.clientCode),
+      error: (error) => console.error('Login error:', error),
     });
   }
 }

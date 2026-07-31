@@ -78,6 +78,57 @@ export interface PasswordStrength {
   suggestions: string[];
 }
 
+export interface SaveProgressRequest {
+  sessionId: string;
+  currentStep?: number;
+  registrationType?: 'new_org' | 'invite' | null;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  email?: string;
+  mobile?: string;
+  country?: string;
+  timezone?: string;
+  language?: string;
+  gender?: string;
+  emailVerified?: boolean;
+  mobileVerified?: boolean;
+  organizationName?: string;
+  organizationCode?: string;
+  industry?: string;
+  organizationSize?: string;
+  website?: string;
+  gstNumber?: string;
+  taxNumber?: string;
+  logoUrl?: string | null;
+  useCases?: string[];
+  branchName?: string;
+  branchAddress?: string;
+  branchCity?: string;
+  branchState?: string;
+  branchCountry?: string;
+  branchPincode?: string;
+  branchPhone?: string;
+  branchEmail?: string;
+  branchLatitude?: string | number;
+  branchLongitude?: string | number;
+  currency?: string;
+  fiscalYear?: string;
+  mfaMethod?: 'email_otp' | 'authenticator' | 'sms' | null;
+  mfaEnabled?: boolean;
+  termsAccepted?: boolean;
+  privacyAccepted?: boolean;
+  cookieAccepted?: boolean;
+  securityAlertsEnabled?: boolean;
+  marketingEmails?: boolean;
+}
+
+export interface SaveProgressResponse {
+  success: boolean;
+  message: string;
+  sessionId: string;
+}
+
 export interface CompleteRegistrationRequest {
   sessionId?: string;
   email: string;
@@ -98,6 +149,12 @@ export interface CompleteRegistrationRequest {
   branchState?: string;
   branchCountry?: string;
   branchPincode?: string;
+  branchPhone?: string;
+  branchEmail?: string;
+  branchLatitude?: string | number;
+  branchLongitude?: string | number;
+  currency?: string;
+  fiscalYear?: string;
   firstName: string;
   lastName: string;
   mobile?: string;
@@ -207,6 +264,15 @@ export class RegistrationApiService {
   }
 
   /**
+   * Check if organization name is available
+   */
+  checkOrganizationName(name: string): Observable<CheckOrgResponse> {
+    return this.http.post<CheckOrgResponse>(`${this.baseUrl}/check-org-name`, {
+      organizationName: name,
+    });
+  }
+
+  /**
    * Initialize a new registration session
    */
   initRegistration(data: InitRegistrationRequest): Observable<InitRegistrationResponse> {
@@ -256,10 +322,24 @@ export class RegistrationApiService {
   }
 
   /**
+   * Verify the 6-digit authenticator code against the registration session
+   */
+  verifyMfaCode(email: string, code: string, sessionId?: string): Observable<VerifyOtpResponse> {
+    return this.http.post<VerifyOtpResponse>(`${this.baseUrl}/verify-mfa`, { email, code, sessionId });
+  }
+
+  /**
    * Get registration session
    */
   getSession(sessionId: string): Observable<RegistrationSession> {
     return this.http.get<RegistrationSession>(`${this.baseUrl}/session/${sessionId}`);
+  }
+
+  /**
+   * Save registration progress to backend session
+   */
+  saveRegistrationProgress(data: SaveProgressRequest): Observable<SaveProgressResponse> {
+    return this.http.put<SaveProgressResponse>(`${this.baseUrl}/save-progress`, data);
   }
 
   /**

@@ -1,0 +1,150 @@
+<section class="step">
+  <header class="step__head">
+    <p class="step__eyebrow">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <path d="M12 18h.01"></path>
+      </svg>
+      Mobile Verification
+    </p>
+    <h2 class="step__title">Verify your mobile number</h2>
+    <p class="step__sub">
+      We sent a 6-digit code to <strong class="step__em">{{ maskedMobile }}</strong>
+    </p>
+  </header>
+
+  <div class="reg-form__body">
+    <div class="otp-card">
+      <div class="otp-card__mail">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <path d="M12 18h.01"></path>
+        </svg>
+      </div>
+
+      @if (!store.mobileVerified()) {
+        <button
+          type="button"
+          class="btn-primary btn-primary--block"
+          [disabled]="store.loading()"
+          (click)="sendMobileOtp()"
+        >
+          {{ store.loading() ? 'Sending…' : 'Send OTP Code' }}
+        </button>
+      }
+
+      @if (store.mobileVerified()) {
+        <div class="success-chip">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+          Mobile Verified
+        </div>
+      }
+
+      @if (!store.mobileVerified()) {
+        <div class="otp-card__entry">
+          <app-otp-input (otpChange)="mobileOtpCodeInput.set($event)"></app-otp-input>
+
+          <div class="otp-card__meta">
+            <span class="otp-card__timer">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+              @if (mobileTimer() > 0) {
+                <span>{{ formatTimer(mobileTimer()) }}</span>
+              } @else {
+                <span>Code expired</span>
+              }
+            </span>
+            <button
+              class="text-link"
+              [disabled]="mobileTimer() > 0 || store.loading()"
+              (click)="resendMobileOtp()"
+            >
+              Resend code
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="btn-primary btn-primary--block"
+            [disabled]="mobileOtpCodeInput().length !== 6 || store.loading()"
+            (click)="verifyMobileOtp()"
+          >
+            {{ store.loading() ? 'Verifying…' : 'Verify Code' }}
+            <svg
+              class="btn-primary__arrow"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14"></path>
+              <path d="M12 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (!store.mobileVerified()) {
+      <button
+        type="button"
+        class="text-link otp-card__skip"
+        [disabled]="store.loading()"
+        (click)="skipMobileVerification()"
+      >
+        Skip for now — I'll verify later
+      </button>
+    }
+  </div>
+
+  <footer class="form-actions">
+    <button type="button" class="btn-ghost" (click)="store.prevStep()">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      Back
+    </button>
+  </footer>
+</section>

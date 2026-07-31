@@ -3,9 +3,33 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { DdlApiService, DdlItem } from '../../../../core/api/ddl.api';
 
+const DRAFT_STORAGE_KEY = 'zellavora_reg_draft';
+const SESSION_STORAGE_KEY = 'zellavora_reg_session_id';
+
+const SENSITIVE_KEYS = [
+  'password',
+  'confirmPassword',
+  'mfaSecret',
+  'mfaQrCode',
+  'mfaCode',
+  'emailOtpCode',
+  'mobileOtpCode',
+  'successData',
+  'loading',
+  'error',
+  'ddl',
+  'ddlLoaded',
+  'ddlLoading',
+] as const;
+
+type SensitiveKey = (typeof SENSITIVE_KEYS)[number];
+
+type DraftState = Omit<RegisterState, SensitiveKey>;
+
 export interface RegisterState {
   currentStep: number;
   registrationType: 'new_org' | 'invite' | null;
+  sessionId: string | null;
 
   // Step 3: Basic Information
   firstName: string;
@@ -44,6 +68,14 @@ export interface RegisterState {
   branchState: string;
   branchCountry: string;
   branchPincode: string;
+  branchPhone: string;
+  branchEmail: string;
+  branchLatitude: string;
+  branchLongitude: string;
+
+  // Step 6: Organization financials
+  currency: string;
+  fiscalYear: string;
 
   // Step 8: Password Creation
   password: string;
@@ -55,6 +87,7 @@ export interface RegisterState {
   mfaSecret: string;
   mfaQrCode: string;
   mfaCode: string;
+  mfaVerified: boolean;
 
   // Step 10: Terms & Privacy
   termsAccepted: boolean;
@@ -62,6 +95,10 @@ export interface RegisterState {
   cookieAccepted: boolean;
   securityAlertsEnabled: boolean;
   marketingEmails: boolean;
+
+  // Step 2: Invitation
+  invitationCode: string;
+  invitationEmail: string;
 
   // Step 12-13: Success
   successData: any;
@@ -79,6 +116,7 @@ export interface RegisterState {
 const initial: RegisterState = {
   currentStep: 1,
   registrationType: null,
+  sessionId: null,
 
   firstName: '',
   lastName: '',
@@ -112,6 +150,13 @@ const initial: RegisterState = {
   branchState: '',
   branchCountry: '',
   branchPincode: '',
+  branchPhone: '',
+  branchEmail: '',
+  branchLatitude: '',
+  branchLongitude: '',
+
+  currency: 'USD',
+  fiscalYear: 'january-december',
 
   password: '',
   confirmPassword: '',
@@ -121,12 +166,16 @@ const initial: RegisterState = {
   mfaSecret: '',
   mfaQrCode: '',
   mfaCode: '',
+  mfaVerified: false,
 
   termsAccepted: false,
   privacyAccepted: false,
   cookieAccepted: false,
   securityAlertsEnabled: true,
   marketingEmails: false,
+
+  invitationCode: '',
+  invitationEmail: '',
 
   successData: null,
 
@@ -183,6 +232,14 @@ export class RegisterStore {
   readonly branchState = computed(() => this.state().branchState);
   readonly branchCountry = computed(() => this.state().branchCountry);
   readonly branchPincode = computed(() => this.state().branchPincode);
+  readonly branchPhone = computed(() => this.state().branchPhone);
+  readonly branchEmail = computed(() => this.state().branchEmail);
+  readonly branchLatitude = computed(() => this.state().branchLatitude);
+  readonly branchLongitude = computed(() => this.state().branchLongitude);
+  readonly currency = computed(() => this.state().currency);
+  readonly fiscalYear = computed(() => this.state().fiscalYear);
+  readonly invitationCode = computed(() => this.state().invitationCode);
+  readonly invitationEmail = computed(() => this.state().invitationEmail);
   readonly password = computed(() => this.state().password);
   readonly confirmPassword = computed(() => this.state().confirmPassword);
   readonly mfaMethod = computed(() => this.state().mfaMethod);
@@ -190,6 +247,7 @@ export class RegisterStore {
   readonly mfaSecret = computed(() => this.state().mfaSecret);
   readonly mfaQrCode = computed(() => this.state().mfaQrCode);
   readonly mfaCode = computed(() => this.state().mfaCode);
+  readonly mfaVerified = computed(() => this.state().mfaVerified);
   readonly termsAccepted = computed(() => this.state().termsAccepted);
   readonly privacyAccepted = computed(() => this.state().privacyAccepted);
   readonly cookieAccepted = computed(() => this.state().cookieAccepted);
@@ -202,42 +260,189 @@ export class RegisterStore {
   // Methods
   nextStep() {
     this.state.update((s) => ({ ...s, currentStep: Math.min(s.currentStep + 1, 13), error: null }));
+    this.saveDraft();
   }
 
   prevStep() {
     this.state.update((s) => ({ ...s, currentStep: Math.max(s.currentStep - 1, 1), error: null }));
+    this.saveDraft();
   }
 
   setRegistrationType(type: 'new_org' | 'invite') {
     this.state.update((s) => ({ ...s, registrationType: type }));
+    this.saveDraft();
   }
 
   updatePersonalInfo(info: Partial<RegisterState>) {
     this.state.update((s) => ({ ...s, ...info }));
+    this.saveDraft();
   }
 
   updateOrganizationInfo(info: Partial<RegisterState>) {
     this.state.update((s) => ({ ...s, ...info }));
+    this.saveDraft();
   }
 
   updateBranchInfo(info: Partial<RegisterState>) {
     this.state.update((s) => ({ ...s, ...info }));
+    this.saveDraft();
   }
 
   updatePassword(info: Partial<RegisterState>) {
     this.state.update((s) => ({ ...s, ...info }));
+    this.saveDraft();
   }
 
   updateMfaSettings(info: Partial<RegisterState>) {
     this.state.update((s) => ({ ...s, ...info }));
+    this.saveDraft();
   }
 
   updateTerms(info: Partial<RegisterState>) {
     this.state.update((s) => ({ ...s, ...info }));
+    this.saveDraft();
   }
 
   setStep(step: number) {
     this.state.update((s) => ({ ...s, currentStep: step }));
+    this.saveDraft();
+  }
+
+  setSessionId(sessionId: string) {
+    this.state.update((s) => ({ ...s, sessionId }));
+    try {
+      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    } catch {
+      // localStorage unavailable
+    }
+  }
+
+  getSessionId(): string | null {
+    return this.state().sessionId;
+  }
+
+  private getDraftPayload(): DraftState {
+    const s = this.state();
+    const payload: Partial<RegisterState> = {};
+    for (const key of Object.keys(s) as Array<keyof RegisterState>) {
+      if (!(SENSITIVE_KEYS as readonly string[]).includes(key)) {
+        payload[key] = s[key];
+      }
+    }
+    return payload as DraftState;
+  }
+
+  saveDraft(): void {
+    try {
+      const payload = this.getDraftPayload() as DraftState & { _savedAt?: number };
+      payload._savedAt = Date.now();
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // localStorage unavailable or quota exceeded
+    }
+  }
+
+  loadDraft(): Partial<RegisterState> | null {
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      delete parsed._savedAt;
+      return parsed as Partial<RegisterState>;
+    } catch {
+      return null;
+    }
+  }
+
+  restoreDraft(): boolean {
+    const draft = this.loadDraft();
+    if (!draft) return false;
+    this.state.update((s) => ({ ...s, ...draft }));
+    return true;
+  }
+
+  clearDraft(): void {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      // localStorage unavailable
+    }
+  }
+
+  hasDraft(): boolean {
+    try {
+      return localStorage.getItem(DRAFT_STORAGE_KEY) !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  async syncProgressToBackend(): Promise<void> {
+    const sessionId = this.state().sessionId;
+    if (!sessionId) return;
+    try {
+      const payload = this.getDraftPayload();
+      await firstValueFrom(
+        this.http.put('/api/v1/register/save-progress', {
+          ...payload,
+          sessionId,
+        })
+      );
+    } catch {
+      // Silently fail - localStorage is the source of truth
+    }
+  }
+
+  async initializeSession(): Promise<string | null> {
+    const existingSessionId = this.state().sessionId;
+    if (existingSessionId) return existingSessionId;
+
+    const storedSessionId = this.getStoredSessionId();
+    if (storedSessionId) {
+      this.state.update((s) => ({ ...s, sessionId: storedSessionId }));
+      return storedSessionId;
+    }
+
+    try {
+      const s = this.state();
+      const email = s.email || '';
+      if (!email) return null;
+      const res = await firstValueFrom(
+        this.http.post<{ sessionId: string }>('/api/v1/register/init', {
+          email,
+          firstName: s.firstName || 'New',
+          lastName: s.lastName || 'User',
+          displayName: s.displayName || undefined,
+          mobile: s.mobile || undefined,
+          country: s.country || 'US',
+          timezone: s.timezone || 'UTC',
+          language: s.language || 'en',
+        })
+      );
+      const sessionId = res.sessionId;
+      this.state.update((s) => ({ ...s, sessionId }));
+      this.storeSessionId(sessionId);
+      return sessionId;
+    } catch {
+      return null;
+    }
+  }
+
+  private getStoredSessionId(): string | null {
+    try {
+      return localStorage.getItem(SESSION_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  private storeSessionId(sessionId: string): void {
+    try {
+      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    } catch {
+      // localStorage unavailable
+    }
   }
 
   async verifyInvitation(code: string): Promise<boolean> {
@@ -255,6 +460,7 @@ export class RegisterStore {
         adminEmail: res.email,
         loading: false,
       }));
+      this.saveDraft();
       return true;
     } catch (err: any) {
       const msg = err.error?.error || 'Invalid or already used invitation code.';
@@ -348,6 +554,103 @@ export class RegisterStore {
     }
   }
 
+  /** Derive the international dialing code for a country name or code. */
+  getPhoneCode(country: string): string {
+    if (!country) return '+91';
+    const items = this.state().ddl['country'] ?? [];
+    const match = items.find(
+      (c) =>
+        c.value?.toLowerCase() === country.toLowerCase() ||
+        c.key?.toLowerCase() === country.toLowerCase()
+    );
+    return match?.phoneCode ?? '+91';
+  }
+
+  async sendMobileOtp(mobile: string): Promise<boolean> {
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const countryCode = this.getPhoneCode(this.state().country);
+      const sessionId = this.getSessionId() ?? undefined;
+      await firstValueFrom(
+        this.http.post('/api/v1/register/send-mobile-otp', { mobile, countryCode, sessionId })
+      );
+      this.state.update((s) => ({ ...s, loading: false }));
+      return true;
+    } catch (err: any) {
+      const msg = err.error?.message || 'Failed to send OTP to your mobile number.';
+      this.state.update((s) => ({ ...s, error: msg, loading: false }));
+      return false;
+    }
+  }
+
+  async verifyMobileOtp(mobile: string, code: string): Promise<boolean> {
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const full = this.getPhoneCode(this.state().country) + mobile;
+      const sessionId = this.getSessionId() ?? undefined;
+      await firstValueFrom(
+        this.http.post('/api/v1/register/verify-mobile', { mobile: full, code, sessionId })
+      );
+      this.state.update((s) => ({ ...s, mobileOtpCode: code, mobileVerified: true, loading: false }));
+      this.saveDraft();
+      return true;
+    } catch (err: any) {
+      const msg = err.error?.message || 'Incorrect mobile OTP code.';
+      this.state.update((s) => ({ ...s, error: msg, loading: false }));
+      return false;
+    }
+  }
+
+  async resendMobileOtp(mobile: string): Promise<boolean> {
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const full = this.getPhoneCode(this.state().country) + mobile;
+      await firstValueFrom(
+        this.http.post('/api/v1/register/resend-otp', { email: full, type: 'mobile' })
+      );
+      this.state.update((s) => ({ ...s, loading: false }));
+      return true;
+    } catch (err: any) {
+      const msg = err.error?.message || 'Failed to resend OTP. Please try again.';
+      this.state.update((s) => ({ ...s, error: msg, loading: false }));
+      return false;
+    }
+  }
+
+  async verifyMfaCode(code: string): Promise<boolean> {
+    this.state.update((s) => ({ ...s, loading: true, error: null, mfaCode: code }));
+    try {
+      const sessionId = this.getSessionId() ?? undefined;
+      await firstValueFrom(
+        this.http.post('/api/v1/register/verify-mfa', {
+          email: this.state().email,
+          code,
+          sessionId,
+        })
+      );
+      this.state.update((s) => ({ ...s, mfaVerified: true, loading: false }));
+      this.saveDraft();
+      return true;
+    } catch (err: any) {
+      const msg = err.error?.message || 'Incorrect authentication code.';
+      this.state.update((s) => ({ ...s, mfaVerified: false, error: msg, loading: false }));
+      return false;
+    }
+  }
+
+  async checkOrgNameAvailability(name: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{ available: boolean }>('/api/v1/register/check-org-name', {
+          organizationName: name,
+        })
+      );
+      return res.available;
+    } catch {
+      return true;
+    }
+  }
+
   async loadDdls(): Promise<void> {
     if (this.state().ddlLoaded || this.state().ddlLoading) return;
     this.state.update((s) => ({ ...s, ddlLoading: true }));
@@ -361,6 +664,7 @@ export class RegisterStore {
 
   resetForm() {
     this.state.set(initial);
+    this.clearDraft();
   }
 
   async submitRegistration() {
@@ -368,19 +672,30 @@ export class RegisterStore {
     const s = this.state();
 
     const payload = {
+      // Session reference
+      sessionId: s.sessionId ?? undefined,
+
       // Personal Info
       email: s.email,
       emailVerified: s.emailVerified,
       firstName: s.firstName,
       lastName: s.lastName,
+      displayName: s.displayName,
+      mobile: s.mobile,
+      mobileVerified: s.mobileVerified,
 
       // Organization Info
       organizationName: s.organizationName,
       organizationCode: s.organizationCode,
       industry: s.industry,
       size: s.organizationSize,
+      website: s.website,
+      gstNumber: s.gstNumber,
+      taxNumber: s.taxNumber,
       logoUrl: s.logoUrl,
       useCases: s.useCases,
+      currency: s.currency,
+      fiscalYear: s.fiscalYear,
 
       // Branch Info
       branchName: s.branchName,
@@ -389,6 +704,10 @@ export class RegisterStore {
       branchState: s.branchState,
       branchCountry: s.branchCountry,
       branchPincode: s.branchPincode,
+      branchPhone: s.branchPhone,
+      branchEmail: s.branchEmail,
+      branchLatitude: s.branchLatitude,
+      branchLongitude: s.branchLongitude,
 
       // Credentials
       password: s.password,
@@ -397,6 +716,7 @@ export class RegisterStore {
       // MFA
       mfaEnabled: s.mfaEnabled,
       mfaMethod: s.mfaMethod,
+      mfaCode: s.mfaCode,
 
       // Terms
       termsAccepted: s.termsAccepted,
@@ -409,11 +729,15 @@ export class RegisterStore {
       timezone: s.timezone,
       language: s.language,
       gender: s.gender,
+
+      // Invite
+      inviteCode: s.invitationCode || undefined,
     };
 
     try {
       const res = await firstValueFrom(this.http.post<any>('/api/v1/register/complete', payload));
       this.state.update((s) => ({ ...s, successData: res.data, currentStep: 11, loading: false }));
+      this.clearDraft();
       return true;
     } catch (err: any) {
       const msg =

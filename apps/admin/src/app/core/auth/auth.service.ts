@@ -18,7 +18,6 @@
  *   3. If failure, fall back to login
  */
 import { Injectable, inject, effect, DestroyRef } from '@angular/core';
-import CryptoJS from 'crypto-js';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError, timer, Subscription, from } from 'rxjs';
@@ -53,6 +52,25 @@ const STORAGE = {
   tenantId: 'zcc.tenantId',
   redirect: 'zcc.redirect',
 } as const;
+
+/** Decode a base64 string into raw bytes. */
+function base64ToBytes(base64: string): Uint8Array<ArrayBuffer> {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/** Encode raw bytes as a base64 string. */
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -137,15 +155,24 @@ export class AuthService {
    * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
    * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
    */
-  private encryptAesCbc(plainText: string, keyBase64: string, ivBase64: string): string {
-    const key = CryptoJS.enc.Base64.parse(keyBase64);
-    const iv = CryptoJS.enc.Base64.parse(ivBase64);
-    const encrypted = CryptoJS.AES.encrypt(plainText, key, {
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
-    });
-    return encrypted.toString();
+  private async encryptAesCbc(
+    plainText: string,
+    keyBase64: string,
+    ivBase64: string
+  ): Promise<string> {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      base64ToBytes(keyBase64),
+      { name: 'AES-CBC' },
+      false,
+      ['encrypt']
+    );
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: 'AES-CBC', iv: base64ToBytes(ivBase64) },
+      key,
+      new TextEncoder().encode(plainText)
+    );
+    return bytesToBase64(new Uint8Array(ciphertext));
   }
 
   /**
@@ -189,22 +216,28 @@ export class AuthService {
     return this.http.get<string[]>(`${this.apiUrl}/gettoken`).pipe(
       switchMap((keyToken) => {
         const [keyStr, ivStr] = keyToken;
-        const encClientCode = this.encryptAesCbc(request.clientCode, keyStr, ivStr);
-        const encEmail = this.encryptAesCbc(request.email, keyStr, ivStr);
-        const encPassword = this.encryptAesCbc(request.password, keyStr, ivStr);
-
-        const encryptedRequest = {
-          ...request,
-          clientCode: encClientCode,
-          email: encEmail,
-          password: encPassword,
-          keyToken: keyToken,
-        };
-        return this.http.post<LoginResponse>(`${this.apiUrl}/login`, encryptedRequest, {
-          headers: {
-            'X-Payload-Encrypted': 'true',
-          },
-        });
+        return from(
+          Promise.all([
+            this.encryptAesCbc(request.clientCode, keyStr, ivStr),
+            this.encryptAesCbc(request.email, keyStr, ivStr),
+            this.encryptAesCbc(request.password, keyStr, ivStr),
+          ])
+        ).pipe(
+          switchMap(([encClientCode, encEmail, encPassword]) => {
+            const encryptedRequest = {
+              ...request,
+              clientCode: encClientCode,
+              email: encEmail,
+              password: encPassword,
+              keyToken: keyToken,
+            };
+            return this.http.post<LoginResponse>(`${this.apiUrl}/login`, encryptedRequest, {
+              headers: {
+                'X-Payload-Encrypted': 'true',
+              },
+            });
+          })
+        );
       }),
       tap((res) => {
         if (this.isMfaChallenge(res)) {

@@ -1,0 +1,133 @@
+<section class="step">
+  <header class="step__head">
+    <p class="step__eyebrow">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+        ></path>
+        <path d="M20 3v4"></path>
+        <path d="M22 5h-4"></path>
+      </svg>
+      Welcome aboard
+    </p>
+    <h2 class="step__title">Let&apos;s set up your control center</h2>
+    <p class="step__sub">How would you like to get started?</p>
+  </header>
+
+  <div class="reg-form__body">
+    <button
+      type="button"
+      class="choice"
+      [class.is-active]="store.registrationType() === 'new_org'"
+      (click)="selectType('new_org')"
+    >
+      <span class="choice__icon choice__icon--cyan">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 21h18"></path>
+          <path d="M5 21V7l7-4 7 4v14"></path>
+          <path d="M9 9h.01"></path>
+          <path d="M9 12h.01"></path>
+          <path d="M9 15h.01"></path>
+          <path d="M15 9h.01"></path>
+          <path d="M15 12h.01"></path>
+          <path d="M15 15h.01"></path>
+        </svg>
+      </span>
+      <span class="choice__body">
+        <span class="choice__title">Create New Organization</span>
+        <span class="choice__desc">Set up your organization from scratch and become the owner.</span>
+      </span>
+      <span class="choice__radio">
+        @if (store.registrationType() === 'new_org') {
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        }
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="choice"
+      [class.is-active]="store.registrationType() === 'invite'"
+      (click)="selectType('invite')"
+    >
+      <span class="choice__icon choice__icon--violet">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </span>
+      <span class="choice__body">
+        <span class="choice__title">Join Existing Organization</span>
+        <span class="choice__desc">Have an invitation code? Enter it to join your team.</span>
+      </span>
+      <span class="choice__radio">
+        @if (store.registrationType() === 'invite') {
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        }
+      </span>
+    </button>
+  </div>
+
+  <footer class="form-actions">
+    <button
+      class="btn-primary"
+      [disabled]="!store.registrationType()"
+      (click)="continue()"
+    >
+      Continue
+      <svg
+        class="btn-primary__arrow"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M5 12h14"></path>
+        <path d="M12 5l7 7-7 7"></path>
+      </svg>
+    </button>
+  </footer>
+</section>

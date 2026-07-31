@@ -1,0 +1,154 @@
+<section class="step">
+  <header class="step__head">
+    <p class="step__eyebrow">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M3 3h18v18H3z"></path>
+        <path d="M3 9h18"></path>
+        <path d="M9 21V9"></path>
+      </svg>
+      @if (store.registrationType() === 'new_org') {
+        Create Organization
+      } @else {
+        Join Organization
+      }
+    </p>
+    <h2 class="step__title">
+      @if (store.registrationType() === 'new_org') {
+        You&apos;re creating a new organization
+      } @else {
+        Enter your invitation code
+      }
+    </h2>
+    <p class="step__sub">
+      @if (store.registrationType() === 'new_org') {
+        You will set everything up as the organization owner.
+      } @else {
+        The code was shared with you by your organization admin.
+      }
+    </p>
+  </header>
+
+  <div class="reg-form__body">
+    @if (store.registrationType() === 'invite') {
+      <div class="field">
+        <label class="field__label" for="invite-code">Invitation Code</label>
+        <div class="field__control">
+          <span class="field__icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M7 8h17"></path>
+              <path d="M7 12h17"></path>
+              <path d="M7 16h17"></path>
+              <path d="M2 8h.01"></path>
+              <path d="M2 12h.01"></path>
+              <path d="M2 16h.01"></path>
+            </svg>
+          </span>
+          <input
+            id="invite-code"
+            type="text"
+            [value]="inviteCode()"
+            (input)="onInviteInput($event)"
+            placeholder="e.g. ZCC-XXXX-XXXX"
+            autocomplete="off"
+          />
+        </div>
+        <p class="field__hint">Paste the invitation code you received by email.</p>
+      </div>
+      <button
+        type="button"
+        class="btn-primary btn-primary--block"
+        [disabled]="inviteCode().trim().length < 4 || store.loading()"
+        (click)="verifyInvitation()"
+      >
+        @if (store.loading()) {
+          Verifying…
+        } @else {
+          Verify Code
+          <svg
+            class="btn-primary__arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14"></path>
+            <path d="M12 5l7 7-7 7"></path>
+          </svg>
+        }
+      </button>
+      <button type="button" class="text-link" (click)="skipInvitation()">
+        Skip for now &amp; create a new organization
+      </button>
+    }
+
+    @if (store.registrationType() === 'new_org') {
+      <div class="info-panel">
+        <svg
+          class="info-panel__icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 16v-4"></path>
+          <path d="M12 8h.01"></path>
+        </svg>
+        <p>
+          You&apos;ll create your company profile, head-office branch, owner account and
+          security settings.
+        </p>
+      </div>
+      <button type="button" class="btn-primary btn-primary--block" (click)="store.nextStep()">
+        Continue
+        <svg
+          class="btn-primary__arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 12h14"></path>
+          <path d="M12 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    }
+  </div>
+
+  <footer class="form-actions">
+    <button type="button" class="btn-ghost" (click)="store.prevStep()">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      Back
+    </button>
+  </footer>
+</section>

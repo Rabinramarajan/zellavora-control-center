@@ -26,12 +26,14 @@ import { prisma } from '../../infrastructure/prisma';
 import { logger } from '../../infrastructure/logger';
 import { AppError } from '../../middleware/error';
 import { PasswordService } from '../../services/auth/password.service';
+import { TokenService } from '../../services/auth/token.service';
 import { addQueueJob } from '../../infrastructure/queue';
 import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
 import {
   checkEmailAvailability,
   checkOrganizationCodeAvailability,
+  checkOrganizationNameAvailability,
   generateOrganizationCode,
   validatePasswordStrength,
   checkPasswordHistory,
@@ -53,6 +55,13 @@ const CheckOrgSchema = z.object({
     .min(2, 'Organization code must be at least 2 characters')
     .max(16, 'Organization code cannot exceed 16 characters')
     .regex(/^[A-Za-z0-9-]+$/, 'Organization code can only contain letters, numbers, and hyphens'),
+});
+
+const CheckOrgNameSchema = z.object({
+  organizationName: z
+    .string()
+    .min(3, 'Organization name must be at least 3 characters')
+    .max(100, 'Organization name cannot exceed 100 characters'),
 });
 
 const InitRegistrationSchema = z.object({
@@ -96,6 +105,12 @@ const MfaSetupSchema = z.object({
   method: z.enum(['authenticator', 'email_otp', 'sms']).default('authenticator'),
 });
 
+const VerifyMfaSchema = z.object({
+  sessionId: z.string().uuid().optional(),
+  email: z.string().email(),
+  code: z.string().length(6, 'Code must be exactly 6 digits'),
+});
+
 const CompleteRegistrationSchema = z.object({
   // Session reference
   sessionId: z.string().uuid().optional(),
@@ -127,6 +142,14 @@ const CompleteRegistrationSchema = z.object({
   branchState: z.string().optional(),
   branchCountry: z.string().optional(),
   branchPincode: z.string().optional(),
+  branchPhone: z.string().optional(),
+  branchEmail: z.string().email().optional().or(z.literal('')),
+  branchLatitude: z.union([z.string(), z.number()]).optional(),
+  branchLongitude: z.union([z.string(), z.number()]).optional(),
+
+  // Organization Financials
+  currency: z.string().optional(),
+  fiscalYear: z.string().optional(),
 
   // Admin Info
   firstName: z.string().min(2).max(50),
@@ -164,6 +187,50 @@ const ResendOtpSchema = z.object({
   sessionId: z.string().uuid().optional(),
   email: z.string().email().optional(),
   type: z.enum(['email', 'mobile']).default('email'),
+});
+
+const SaveProgressSchema = z.object({
+  sessionId: z.string().uuid(),
+  currentStep: z.number().int().min(1).max(13).optional(),
+  firstName: z.string().min(2).max(50).optional(),
+  lastName: z.string().min(2).max(50).optional(),
+  displayName: z.string().max(100).optional(),
+  email: z.string().email().optional(),
+  mobile: z.string().optional(),
+  country: z.string().optional(),
+  timezone: z.string().optional(),
+  language: z.string().optional(),
+  gender: z.string().optional(),
+  emailVerified: z.boolean().optional(),
+  mobileVerified: z.boolean().optional(),
+  organizationName: z.string().min(2).max(100).optional(),
+  organizationCode: z.string().min(2).max(16).regex(/^[A-Za-z0-9-]+$/).optional(),
+  industry: z.string().optional(),
+  organizationSize: z.enum(['1-10', '10-50', '50-100', '100-500', '500+']).optional(),
+  website: z.string().url().optional().or(z.literal('')),
+  gstNumber: z.string().optional(),
+  taxNumber: z.string().optional(),
+  logoUrl: z.string().url().optional().or(z.literal('')),
+  useCases: z.array(z.string()).optional(),
+  branchName: z.string().min(2).max(100).optional(),
+  branchAddress: z.string().optional(),
+  branchCity: z.string().optional(),
+  branchState: z.string().optional(),
+  branchCountry: z.string().optional(),
+  branchPincode: z.string().optional(),
+  branchPhone: z.string().optional(),
+  branchEmail: z.string().email().optional().or(z.literal('')),
+  branchLatitude: z.union([z.string(), z.number()]).optional(),
+  branchLongitude: z.union([z.string(), z.number()]).optional(),
+  currency: z.string().optional(),
+  fiscalYear: z.string().optional(),
+  mfaMethod: z.enum(['email_otp', 'authenticator', 'sms']).optional(),
+  mfaEnabled: z.boolean().optional(),
+  termsAccepted: z.boolean().optional(),
+  privacyAccepted: z.boolean().optional(),
+  cookieAccepted: z.boolean().optional(),
+  securityAlertsEnabled: z.boolean().optional(),
+  marketingEmails: z.boolean().optional(),
 });
 
 // =============================================================================
@@ -231,6 +298,20 @@ router.post('/check-org', async (req, res, next) => {
     const { organizationCode } = CheckOrgSchema.parse(req.body);
     const normalizedCode = organizationCode.toLowerCase().replace(/\s+/g, '-');
     const result = await checkOrganizationCodeAvailability(normalizedCode);
+    res.json(result);
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
+ * POST /api/v1/register/check-org-name
+ * Check if an organization name is available
+ */
+router.post('/check-org-name', async (req, res, next) => {
+  try {
+    const { organizationName } = CheckOrgNameSchema.parse(req.body);
+    const result = await checkOrganizationNameAvailability(organizationName);
     res.json(result);
   } catch (e) {
     next(e);
@@ -667,6 +748,52 @@ router.post('/mfa-setup', async (req, res, next) => {
 });
 
 /**
+ * POST /api/v1/register/verify-mfa
+ * Verify the 6-digit TOTP code against the registration session's MFA secret
+ */
+router.post('/verify-mfa', async (req, res, next) => {
+  try {
+    const { sessionId, email, code } = VerifyMfaSchema.parse(req.body);
+
+    const session = sessionId
+      ? await prisma.registrationSession.findUnique({ where: { id: sessionId } })
+      : await prisma.registrationSession.findFirst({
+          where: { email: email.toLowerCase(), status: { not: 'completed' } },
+          orderBy: { createdAt: 'desc' },
+        });
+
+    if (!session) {
+      throw new AppError('Registration session not found', 404, 'SESSION_NOT_FOUND');
+    }
+
+    if (new Date() > session.expiresAt) {
+      throw new AppError('Registration session has expired', 400, 'SESSION_EXPIRED');
+    }
+
+    if (!session.mfaSecret) {
+      throw new AppError(
+        'MFA has not been configured for this session. Request a new QR code.',
+        400,
+        'MFA_NOT_CONFIGURED'
+      );
+    }
+
+    const valid = authenticator.check(code, session.mfaSecret);
+    if (!valid) {
+      throw new AppError('Incorrect authentication code. Please try again.', 400, 'INVALID_MFA_CODE');
+    }
+
+    res.json({
+      success: true,
+      message: 'Authentication code verified',
+      verified: true,
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
  * GET /api/v1/register/session/:id
  * Get registration session status
  */
@@ -752,13 +879,43 @@ router.post('/complete', async (req, res, next) => {
       throw new AppError('Organization code is already taken', 400, 'ORG_CODE_TAKEN');
     }
 
+    // Check organization name availability
+    const orgNameCheck = await checkOrganizationNameAvailability(data.organizationName);
+    if (!orgNameCheck.available) {
+      throw new AppError('Organization name is already taken', 400, 'ORG_NAME_TAKEN');
+    }
+
     // Hash password
     const passwordHash = await PasswordService.hash(data.password);
 
     // Verify MFA if enabled with authenticator
-    if (data.mfaEnabled && data.mfaMethod === 'authenticator' && data.mfaCode) {
-      // MFA verification would happen here
-      // For now, we'll store the secret and verify on first login
+    let mfaSecret: string | null = null;
+    if (data.mfaEnabled && data.mfaMethod === 'authenticator') {
+      // Resolve the registration session to get the stored TOTP secret
+      const session = data.sessionId
+        ? await prisma.registrationSession.findUnique({ where: { id: data.sessionId } })
+        : await prisma.registrationSession.findFirst({
+            where: { email: data.email.toLowerCase(), status: { not: 'completed' } },
+            orderBy: { createdAt: 'desc' },
+          });
+
+      mfaSecret = session?.mfaSecret || null;
+
+      if (!mfaSecret) {
+        throw new AppError(
+          'MFA has not been configured. Please complete the security setup step.',
+          400,
+          'MFA_NOT_CONFIGURED'
+        );
+      }
+
+      if (!data.mfaCode || !authenticator.check(data.mfaCode, mfaSecret)) {
+        throw new AppError(
+          'Incorrect authentication code. Please go back and verify your authenticator code.',
+          400,
+          'INVALID_MFA_CODE'
+        );
+      }
     }
 
     // Get owner role
@@ -812,6 +969,10 @@ router.post('/complete', async (req, res, next) => {
           state: data.branchState || null,
           country: data.branchCountry || data.country,
           pincode: data.branchPincode || null,
+          phone: data.branchPhone || null,
+          email: data.branchEmail || null,
+          latitude: data.branchLatitude !== undefined ? String(data.branchLatitude) : null,
+          longitude: data.branchLongitude !== undefined ? String(data.branchLongitude) : null,
           status: 'active',
         },
       });
@@ -837,7 +998,7 @@ router.post('/complete', async (req, res, next) => {
           emailVerifiedAt: new Date(),
           mfaEnabled: data.mfaEnabled,
           mfaMethod: data.mfaMethod,
-          mfaSecret: data.mfaEnabled ? req.body.mfaSecret || null : null,
+          mfaSecret: data.mfaEnabled ? mfaSecret : null,
           termsAccepted: data.termsAccepted,
           termsAcceptedAt: data.termsAccepted ? new Date() : null,
           privacyAccepted: data.privacyAccepted,
@@ -914,10 +1075,39 @@ router.post('/complete', async (req, res, next) => {
             value: data.mfaEnabled ? 'true' : 'false',
             category: 'security',
           },
+          {
+            organizationId: organization.id,
+            key: 'default_currency',
+            value: data.currency || 'USD',
+            category: 'finance',
+          },
+          {
+            organizationId: organization.id,
+            key: 'fiscal_year',
+            value: data.fiscalYear || 'january-december',
+            category: 'finance',
+          },
         ],
       });
 
-      // 9. Create Audit Log
+      // 9. Create Default Departments
+      const defaultDepartments = [
+        { name: 'Human Resources', code: 'hr', description: 'People, culture and talent management' },
+        { name: 'Finance', code: 'finance', description: 'Accounting, budgeting and financial planning' },
+        { name: 'Information Technology', code: 'it', description: 'Technology infrastructure and support' },
+        { name: 'Sales', code: 'sales', description: 'Revenue generation and client acquisition' },
+        { name: 'Operations', code: 'ops', description: 'Day-to-day business operations' },
+      ];
+      const departments = await tx.department.createManyAndReturn({
+        data: defaultDepartments.map((d) => ({
+          organizationId: organization.id,
+          name: d.name,
+          code: d.code,
+          description: d.description,
+        })),
+      });
+
+      // 10. Create Audit Log
       await tx.auditLog.create({
         data: {
           actorId: user.id,
@@ -936,7 +1126,19 @@ router.post('/complete', async (req, res, next) => {
         },
       });
 
-      // 10. Store password in history
+      // 11. Create Welcome Notification (in-app)
+      await tx.notification.create({
+        data: {
+          organizationId: organization.id,
+          recipientId: user.id,
+          title: 'Welcome to Zellavora Control Center',
+          body: `Your organization "${data.organizationName}" is ready. Complete your workspace setup to get started.`,
+          type: 'success',
+          channels: ['in_app', 'email'],
+        },
+      });
+
+      // 12. Store password in history
       await tx.passwordHistory.create({
         data: {
           userId: user.id,
@@ -944,7 +1146,7 @@ router.post('/complete', async (req, res, next) => {
         },
       });
 
-      return { organization, branch, user };
+      return { organization, branch, user, departments };
     });
 
     // Update registration session if exists
@@ -958,6 +1160,52 @@ router.post('/complete', async (req, res, next) => {
           organizationCode: data.organizationCode,
         },
       });
+    }
+
+    // Issue access + refresh tokens and create a session so the owner is signed in
+    let session: { id: string; accessToken: string; refreshToken: string } | null = null;
+    try {
+      const prismaSession = await prisma.session.create({
+        data: {
+          userId: result.user.id,
+          organizationId: result.organization.id,
+          ipAddress: ip(req),
+          userAgent: ua(req),
+          deviceInfo: {
+            source: 'registration',
+            branchId: result.branch.id,
+          },
+          isActive: true,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          lastActivityAt: new Date(),
+        },
+      });
+
+      const tokenPair = await TokenService.issue({
+        userId: result.user.id,
+        tenantId: result.organization.id,
+        role: 'owner',
+        email: data.email.toLowerCase(),
+        sessionId: prismaSession.id,
+      });
+
+      await prisma.refreshToken.create({
+        data: {
+          token: TokenService.hashRefresh(tokenPair.refreshToken),
+          userId: result.user.id,
+          sessionId: prismaSession.id,
+          organizationId: result.organization.id,
+          expiresAt: tokenPair.refreshTokenExpiresAt,
+        },
+      });
+
+      session = {
+        id: prismaSession.id,
+        accessToken: tokenPair.accessToken,
+        refreshToken: tokenPair.refreshToken,
+      };
+    } catch (sessionErr: any) {
+      logger.warn(`[Registration] Session/token issuance skipped: ${sessionErr.message}`);
     }
 
     // Send welcome email
@@ -993,6 +1241,14 @@ router.post('/complete', async (req, res, next) => {
           id: result.branch.id,
           name: result.branch.name,
         },
+        departments: result.departments.map((d) => ({ id: d.id, name: d.name, code: d.code })),
+        session: session
+          ? {
+              id: session.id,
+              accessToken: session.accessToken,
+              refreshToken: session.refreshToken,
+            }
+          : null,
       },
       nextSteps: [
         'Verify your email if not already done',
@@ -1000,6 +1256,78 @@ router.post('/complete', async (req, res, next) => {
         'Explore your dashboard',
         'Invite team members',
       ],
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
+ * PUT /api/v1/register/save-progress
+ * Save partial registration progress to backend session
+ */
+router.put('/save-progress', async (req, res, next) => {
+  try {
+    const data = SaveProgressSchema.parse(req.body);
+
+    const session = await prisma.registrationSession.findUnique({
+      where: { id: data.sessionId },
+    });
+
+    if (!session) {
+      throw new AppError('Registration session not found', 404, 'SESSION_NOT_FOUND');
+    }
+
+    if (new Date() > session.expiresAt) {
+      throw new AppError('Registration session has expired', 400, 'SESSION_EXPIRED');
+    }
+
+    const updateData: any = {};
+
+    if (data.currentStep !== undefined) updateData.currentStep = data.currentStep;
+    if (data.firstName !== undefined) updateData.firstName = data.firstName;
+    if (data.lastName !== undefined) updateData.lastName = data.lastName;
+    if (data.displayName !== undefined) updateData.displayName = data.displayName;
+    if (data.email !== undefined) updateData.email = data.email?.toLowerCase();
+    if (data.mobile !== undefined) updateData.mobile = data.mobile;
+    if (data.country !== undefined) updateData.country = data.country;
+    if (data.timezone !== undefined) updateData.timezone = data.timezone;
+    if (data.language !== undefined) updateData.language = data.language;
+    if (data.gender !== undefined) updateData.gender = data.gender;
+    if (data.emailVerified !== undefined) updateData.emailVerified = data.emailVerified;
+    if (data.mobileVerified !== undefined) updateData.mobileVerified = data.mobileVerified;
+    if (data.organizationName !== undefined) updateData.organizationName = data.organizationName;
+    if (data.organizationCode !== undefined) updateData.organizationCode = data.organizationCode?.toLowerCase();
+    if (data.industry !== undefined) updateData.industry = data.industry;
+    if (data.organizationSize !== undefined) updateData.size = data.organizationSize;
+    if (data.website !== undefined) updateData.website = data.website || null;
+    if (data.gstNumber !== undefined) updateData.gstNumber = data.gstNumber;
+    if (data.taxNumber !== undefined) updateData.taxNumber = data.taxNumber;
+    if (data.logoUrl !== undefined) updateData.logoUrl = data.logoUrl || null;
+    if (data.useCases !== undefined) updateData.useCases = data.useCases;
+    if (data.branchName !== undefined) updateData.branchName = data.branchName;
+    if (data.branchAddress !== undefined) updateData.branchAddress = data.branchAddress;
+    if (data.branchCity !== undefined) updateData.branchCity = data.branchCity;
+    if (data.branchState !== undefined) updateData.branchState = data.branchState;
+    if (data.branchCountry !== undefined) updateData.branchCountry = data.branchCountry;
+    if (data.branchPincode !== undefined) updateData.branchPincode = data.branchPincode;
+    if (data.mfaMethod !== undefined) updateData.mfaMethod = data.mfaMethod;
+    if (data.mfaEnabled !== undefined) updateData.mfaEnabled = data.mfaEnabled;
+    if (data.termsAccepted !== undefined) updateData.termsAccepted = data.termsAccepted;
+    if (data.privacyAccepted !== undefined) updateData.privacyAccepted = data.privacyAccepted;
+    if (data.cookieAccepted !== undefined) updateData.cookieAccepted = data.cookieAccepted;
+    if (data.securityAlertsEnabled !== undefined) updateData.securityAlertsEnabled = data.securityAlertsEnabled;
+    if (data.marketingEmails !== undefined) updateData.marketingConsent = data.marketingEmails;
+
+    await prisma.registrationSession.update({
+      where: { id: data.sessionId },
+      data: updateData,
+    });
+
+    res.json({
+      success: true,
+      message: 'Progress saved',
+      sessionId: data.sessionId,
     });
   } catch (e) {
     next(e);

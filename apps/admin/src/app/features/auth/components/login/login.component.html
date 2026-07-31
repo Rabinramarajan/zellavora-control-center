@@ -86,158 +86,69 @@
             <p class="text-sm text-slate-400 mb-7">Sign in to continue to your dashboard</p>
 
             <!-- Error Notification -->
-            <div *ngIf="auth.error()" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
-              {{ auth.error() }}
-            </div>
+            @if (auth.error(); as error) {
+              <div class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                {{ error }}
+              </div>
+            }
 
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
               <!-- Client Selector Dropdown -->
-              <div class="relative">
-                <label class="field-label">Organization</label>
-                <button
-                  type="button"
-                  (click)="toggleOrgDropdown()"
-                  class="auth-field auth-field--select"
-                >
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                  </span>
-                  <span class="truncate">
-                    {{ selectedOrg ? selectedOrg.name + ' (' + selectedOrg.clientCode + ')' : 'Select Organization' }}
-                  </span>
-                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
-                  </svg>
-                </button>
-
-                <input type="hidden" formControlName="clientCode" />
-
-                <!-- Dropdown panel -->
-                <div
-                  *ngIf="showOrgDropdown"
-                  class="absolute z-20 w-full mt-2 rounded-2xl border border-white/10 bg-[#0b0e1c] shadow-2xl p-3 space-y-2 backdrop-blur-xl"
-                >
-                  <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                      </svg>
-                    </span>
-                    <input
-                      type="text"
-                      [value]="orgSearchQuery"
-                      (input)="filterOrgs($event)"
-                      class="w-full pl-8 pr-4 py-2 rounded-lg border border-white/5 bg-white/5 text-[13px] text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500"
-                      placeholder="Search organization..."
-                    />
-                  </div>
-
-                  <div class="max-h-40 overflow-y-auto space-y-1 pr-1">
-                    <div *ngIf="loadingOrgs" class="text-center py-4 text-slate-500 text-[13px]">
-                      Loading organizations...
-                    </div>
-                    
-                    <div *ngIf="!loadingOrgs && filteredOrgs.length === 0" class="text-center py-4 text-slate-500 text-[13px]">
-                      No organizations found
-                    </div>
-
-                    <button
-                      type="button"
-                      *ngFor="let org of filteredOrgs"
-                      (click)="selectOrg(org)"
-                      class="w-full px-3 py-2 rounded-lg text-left text-[13px] text-slate-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2"
-                    >
-                      <span class="w-2 h-2 rounded-full" [ngClass]="org.clientCode.toUpperCase() === 'DEMO' ? 'bg-purple-500' : 'bg-blue-500'"></span>
-                      <span class="font-medium truncate">{{ org.name }}</span>
-                      <span class="text-[11px] text-slate-500 font-semibold uppercase">({{ org.clientCode }})</span>
-                    </button>
-                  </div>
-                </div>
-                <p *ngIf="form.get('clientCode')?.hasError('required') && form.get('clientCode')?.touched" class="mt-1.5 text-[12px] text-red-400">
-                  Client code is required
-                </p>
-              </div>
+              <zc-select-control
+                formControlName="clientCode"
+                label="Organization"
+                placeholder="Select Organization"
+                searchPlaceholder="Search organization..."
+                emptyText="No organizations found"
+                loadingText="Loading organizations..."
+                prefixIcon="pi-building"
+                [options]="allOrgs()"
+                [loading]="loadingOrgs()"
+                [optionValue]="orgValue"
+                optionLabel="name"
+                optionSublabel="clientCode"
+                [searchable]="true"
+                (selectionChange)="selectedOrg.set($event)"
+              >
+                <ng-template #option let-org>
+                  <span
+                    class="w-2 h-2 rounded-full shrink-0"
+                    [class]="org.clientCode.toUpperCase() === 'DEMO' ? 'bg-purple-500' : 'bg-blue-500'"
+                  ></span>
+                  <span class="font-medium truncate">{{ org.name }}</span>
+                  <span class="text-[11px] text-slate-500 font-semibold uppercase">({{ org.clientCode }})</span>
+                </ng-template>
+              </zc-select-control>
 
               <!-- Email Field -->
-              <div>
-                <label class="field-label">Email address</label>
-                <div class="relative">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                  </span>
-                  <input
-                    type="email"
-                    formControlName="email"
-                    class="auth-field"
-                    placeholder="you@company.com"
-                  />
-                  <button
-                    *ngIf="form.get('email')?.value"
-                    type="button"
-                    (click)="clearEmail()"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors z-10"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                  </button>
-                </div>
-                <p *ngIf="form.get('email')?.hasError('required') && form.get('email')?.touched" class="mt-1.5 text-[12px] text-red-400">
-                  Email is required
-                </p>
-              </div>
+              <app-input-control
+                formControlName="email"
+                type="email"
+                label="Email address"
+                placeholder="you@company.com"
+                prefixIcon="pi-envelope"
+                autocomplete="email"
+                inputmode="email"
+                [clearable]="true"
+                [trim]="true"
+              />
 
               <!-- Password Field -->
-              <div>
-                <div class="flex items-center justify-between">
-                  <label class="field-label">Password</label>
-                  <a routerLink="/auth/forgot-password" class="field-label text-indigo-400 hover:text-indigo-300 no-underline">Forgot password?</a>
-                </div>
-                <div class="relative">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
-                  </span>
-                  <input
-                    [type]="showPassword ? 'text' : 'password'"
-                    formControlName="password"
-                    class="auth-field pr-16"
-                    placeholder="Enter your password"
-                  />
-                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center gap-2.5 z-10">
-                    <button
-                      *ngIf="form.get('password')?.value"
-                      type="button"
-                      (click)="clearPassword()"
-                      class="text-slate-400 hover:text-white transition-colors"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      (click)="togglePasswordVisibility()"
-                      class="text-slate-400 hover:text-white transition-colors focus:outline-none"
-                    >
-                      <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M21 21L3 3m6.318 6.318a4.5 4.5 0 006.364 6.364m-1.341-1.341l-3.682-3.682"/>
-                      </svg>
-                      <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <p *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched" class="mt-1.5 text-[12px] text-red-400">
-                  Password is required
-                </p>
+              <div class="relative">
+                <a
+                  routerLink="/auth/forgot-password"
+                  class="field-label text-indigo-400 hover:text-indigo-300 no-underline absolute right-0 top-0 z-10"
+                  >Forgot password?</a
+                >
+                <app-input-control
+                  formControlName="password"
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  prefixIcon="pi-lock"
+                  autocomplete="current-password"
+                  [clearable]="true"
+                />
               </div>
 
               <!-- Remember -->
@@ -255,22 +166,25 @@
               <!-- Sign In Button -->
               <button
                 type="submit"
-                [disabled]="!form.valid || auth.isLoading()"
+                [disabled]="!formState().valid || auth.isLoading()"
                 class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:brightness-110 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
               >
-                <span *ngIf="!auth.isLoading()" class="flex items-center gap-2">
-                  Sign In
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                  </svg>
-                </span>
-                <span *ngIf="auth.isLoading()" class="flex items-center gap-2">
-                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Signing in...
-                </span>
+                @if (auth.isLoading()) {
+                  <span class="flex items-center gap-2">
+                    <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                  </span>
+                } @else {
+                  <span class="flex items-center gap-2">
+                    Sign In
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                  </span>
+                }
               </button>
             </form>
 
@@ -321,11 +235,11 @@
           <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-[12px] text-slate-500">
             <a routerLink="/auth/register" class="text-indigo-400 hover:text-indigo-300 font-semibold">Create account</a>
             <div class="flex gap-3">
-              <button type="button" (click)="visiblePrivacy = true" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Privacy Policy</button>
+              <button type="button" (click)="visiblePrivacy.set(true)" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Privacy Policy</button>
               <span>|</span>
-              <button type="button" (click)="visibleTerms = true" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Terms of Service</button>
+              <button type="button" (click)="visibleTerms.set(true)" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Terms of Service</button>
               <span>|</span>
-              <button type="button" (click)="visibleHelp = true" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Help Center</button>
+              <button type="button" (click)="visibleHelp.set(true)" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Help Center</button>
             </div>
           </div>
         </div>
@@ -386,4 +300,3 @@
         </section>
       </div>
     </p-dialog>
-

@@ -260,6 +260,8 @@ model Branch {
   pincode        String?  @map("pincode")
   phone          String?  @map("phone")
   email          String?  @map("email")
+  latitude       String?  @map("latitude")
+  longitude      String?  @map("longitude")
   
   // Status
   status         String   @default("active") @map("status")

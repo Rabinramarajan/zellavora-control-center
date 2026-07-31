@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 
 export interface ActiveSession {
@@ -18,7 +18,7 @@ export interface ActiveSession {
 @Component({
   selector: 'app-session-management',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './session-management.component.html',
   styleUrls: ['../../auth-shell.css', './session-management.component.css'],
 })
