@@ -224,7 +224,7 @@ export class RegisterComponent implements OnInit {
   }
 
   async finishRegistration() {
-    await this.store.submitAll();
+    await this.store.submitRegistration();
   }
 
   navigateToLogin() {
