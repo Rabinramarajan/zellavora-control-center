@@ -8,16 +8,103 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Tenant {
+// ============================================================================
+// ORGANIZATION (formerly Tenant)
+// ============================================================================
+
+model Organization {
   id             String    @id @default(uuid()) @db.Uuid
-  name           String
-  clientCode     String    @unique @map("client_code")
+  
+  // Basic Info
+  name           String    @map("name")                    // Display name
+  legalName      String?   @map("legal_name")              // Legal entity name
+  clientCode     String    @unique @map("client_code")      // Unique URL identifier
   logoUrl        String?   @map("logo_url")
-  plan           String    @default("free")
+  faviconUrl     String?   @map("favicon_url")
+  
+  // Organization Details
+  industry       String?   @map("industry")
+  size           String?   @map("size")                    // 1-10, 10-50, 50-100, 100-500, 500+
+  website        String?   @map("website")
+  gstNumber      String?   @map("gst_number")
+  taxNumber      String?   @map("tax_number")
+  registrationNumber String? @map("registration_number")
+  
+  // Contact Info
+  email          String?   @map("email")
+  phone          String?   @map("phone")
+  address        String?   @map("address")
+  city           String?   @map("city")
+  state          String?   @map("state")
+  country        String?   @map("country")
+  pincode        String?   @map("pincode")
+  
+  // Subscription & Plan
+  plan           String    @default("free") @map("plan")
   enforce2fa     Boolean   @default(false) @map("enforce_2fa")
   allowedDomains Json?     @map("allowed_domains")
   
-  // Auditing & Soft Delete
+  // Verification Status
+  isVerified     Boolean   @default(false) @map("is_verified")
+  verifiedAt     DateTime? @map("verified_at") @db.Timestamptz
+  
+  // Registration Info
+  registrationSource String? @map("registration_source")  // organic, invite, partner, enterprise_sso
+  inviteCode     String?   @map("invite_code")
+  useCases       Json?     @map("use_cases")               // Selected use cases during registration
+  
+  // Theme & Branding
+  primaryColor   String?   @map("primary_color")
+  theme          String    @default("light") @map("theme") // light, dark, system
+  
+  // Terms & Privacy
+  termsAccepted  Boolean   @default(false) @map("terms_accepted")
+  termsAcceptedAt DateTime? @map("terms_accepted_at") @db.Timestamptz
+  privacyAccepted Boolean  @default(false) @map("privacy_accepted")
+  privacyAcceptedAt DateTime? @map("privacy_accepted_at") @db.Timestamptz
+  cookieAccepted Boolean   @default(false) @map("cookie_accepted")
+  cookieAcceptedAt DateTime? @map("cookie_accepted_at") @db.Timestamptz
+  
+  // Marketing Consent
+  marketingConsent Boolean @default(false) @map("marketing_consent")
+  marketingConsentAt DateTime? @map("marketing_consent_at") @db.Timestamptz
+  
+  // Status
+  status         String    @default("active") @map("status") // active, suspended, pending_verification
+  
+  // Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  branches       Branch[]
+  userTenants    UserTenant[]
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+  configurations CommonConfiguration[]
+  departments    Department[]
+  workspaces     Workspace[]
+  settings       OrganizationSettings[]
+  invitedUsers   Invitation[]
+
+  @@map("organizations")
+}
+
+// Alias for backward compatibility
+model Tenant {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String    @map("name")
+  clientCode     String    @unique @map("client_code")
+  logoUrl        String?   @map("logo_url")
+  plan           String    @default("free") @map("plan")
+  enforce2fa     Boolean   @default(false) @map("enforce_2fa")
+  allowedDomains Json?     @map("allowed_domains")
   isDeleted      Boolean   @default(false) @map("is_deleted")
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
   createdBy      String?   @map("created_by") @db.Uuid
@@ -33,64 +120,125 @@ model Tenant {
   configurations CommonConfiguration[]
 
   @@map("organizations")
+  @@ignore
 }
+
+// ============================================================================
+// USER
+// ============================================================================
 
 model User {
   id             String       @id @default(uuid()) @db.Uuid
   email          String       @unique
   emailId        String?      @unique @map("email_id")
   username       String?      @unique
+  
+  // Profile
   fullName       String       @map("full_name")
-  passwordHash   String?      @map("password_hash")
+  firstName      String?      @map("first_name")
+  lastName       String?      @map("last_name")
+  displayName    String?      @map("display_name")
   avatarUrl      String?      @map("avatar_url")
+  bio            String?      @map("bio")
+  headline       String?      @map("headline")
+  
+  // Contact
+  mobile         String?      @map("mobile")
+  mobileVerified Boolean      @default(false) @map("mobile_verified")
+  
+  // Location
+  country        String?      @map("country")
+  timezone       String?      @map("timezone")
+  language       String       @default("en") @map("language")
+  
+  // Authentication
+  passwordHash   String?      @map("password_hash")
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
   role           String       @default("user")
   tenantId       String?      @map("tenant_id") @db.Uuid
   
+  // MFA
   enable2fa      Boolean      @default(false) @map("enable_two_factor_authentication")
   mfaEnabled     Boolean      @default(false) @map("mfa_enabled")
   mfaEnrolledAt  DateTime?    @map("mfa_enrolled_at") @db.Timestamptz
+  mfaMethod      String?      @map("mfa_method")      // email_otp, authenticator, sms
+  mfaSecret      String?      @map("mfa_secret")
+  recoveryCodes  Json?        @map("recovery_codes")
   otp            String?
   
+  // Account Security
   isAccountLocked           Boolean   @default(false) @map("is_account_locked")
   lastLockedDate            DateTime? @map("last_locked_date") @db.Timestamptz
-  successfulLoginAttempts   Int       @default(0) @map("successful_login_attempts")
-  currentLoginDatetime      DateTime? @map("current_login_datetime") @db.Timestamptz
-  lastLoginDatetime         DateTime? @map("last_login_datetime") @db.Timestamptz
-  defaultLandingPage        String?   @map("default_landing_page")
-  passwordResetFlag         Boolean   @default(false) @map("password_reset_flag")
+  failedLoginAttempts       Int       @default(0) @map("failed_login_attempts")
+  successfulLoginAttempts    Int       @default(0) @map("successful_login_attempts")
+  currentLoginDatetime       DateTime? @map("current_login_datetime") @db.Timestamptz
+  lastLoginDatetime          DateTime? @map("last_login_datetime") @db.Timestamptz
+  defaultLandingPage         String?   @map("default_landing_page")
+  passwordResetFlag          Boolean   @default(false) @map("password_reset_flag")
   
-  keyToken           String?  @map("key_token")
-  statusValue        String?  @map("status_value")
-  statusDescription  String?  @map("status_description")
+  // Email Verification
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  emailVerifiedAt   DateTime? @map("email_verified_at") @db.Timestamptz
   
-  // Auditing & Soft Delete
-  isDeleted      Boolean   @default(false) @map("is_deleted")
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
-  createdBy      String?   @map("created_by") @db.Uuid
-  updatedBy      String?   @map("updated_by") @db.Uuid
-  deletedBy      String?   @map("deleted_by") @db.Uuid
-  version        Int      @default(1)
-  msg                String?
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  // Status
+  keyToken          String?  @map("key_token")
+  statusValue       String?  @map("status_value")
+  statusDescription String?  @map("status_description")
+  
+  // Terms Consent (per user)
+  termsAccepted     Boolean  @default(false) @map("terms_accepted")
+  termsAcceptedAt   DateTime? @map("terms_accepted_at") @db.Timestamptz
+  privacyAccepted   Boolean  @default(false) @map("privacy_accepted")
+  privacyAcceptedAt DateTime? @map("privacy_accepted_at") @db.Timestamptz
+  securityAlerts    Boolean  @default(true) @map("security_alerts")
+  marketingEmails   Boolean  @default(false) @map("marketing_emails")
+  
+  // Soft Delete
+  isDeleted         Boolean   @default(false) @map("is_deleted")
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy         String?   @map("created_by") @db.Uuid
+  updatedBy         String?   @map("updated_by") @db.Uuid
+  deletedBy         String?   @map("deleted_by") @db.Uuid
+  version           Int       @default(1)
+  msg               String?
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  userTenants        UserTenant[]
-  profiles           Profile?
-  auditLogs          AuditLog[]
-  notifications      Notification[]
+  userTenants       UserTenant[]
+  profiles          Profile[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  passwordHistory   PasswordHistory[]
+  invitedUsers      Invitation[]   @relation("InvitedBy")
 
   @@map("users")
 }
+
+// ============================================================================
+// USER TENANT MEMBERSHIP
+// ============================================================================
 
 model UserTenant {
   userId   String @map("user_id") @db.Uuid
   tenantId String @map("organization_id") @db.Uuid
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Organization @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Membership Details
+  role     String  @default("member") @map("role")  // owner, admin, manager, employee, viewer
+  departmentId String? @map("department_id") @db.Uuid
+  department Department? @relation(fields: [departmentId], references: [id])
+  isDefault Boolean @default(false) @map("is_default")
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz
 
   @@id([userId, tenantId])
   @@index([tenantId])
   @@map("organization_members")
 }
+
+// ============================================================================
+// PROFILE
+// ============================================================================
 
 model Profile {
   id        String   @id @default(uuid()) @db.Uuid
@@ -104,18 +252,36 @@ model Profile {
   linkedin  String?
   twitter   String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("profiles")
 }
 
+// ============================================================================
+// BRANCH
+// ============================================================================
+
 model Branch {
   id             String   @id @default(uuid()) @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
-  tenant         Tenant   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tenant         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   name           String
   code           String?
+  isHeadOffice   Boolean  @default(false) @map("is_head_office")
   
-  // Auditing & Soft Delete
+  // Address
+  address        String?  @map("address")
+  city           String?  @map("city")
+  state          String?  @map("state")
+  country        String?  @map("country")
+  pincode        String?  @map("pincode")
+  phone          String?  @map("phone")
+  email          String?  @map("email")
+  
+  // Status
+  status         String   @default("active") @map("status")
+  
+  // Soft Delete
   isDeleted      Boolean   @default(false) @map("is_deleted")
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
   createdBy      String?   @map("created_by") @db.Uuid
@@ -123,41 +289,368 @@ model Branch {
   deletedBy      String?   @map("deleted_by") @db.Uuid
   version        Int       @default(1)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@index([organizationId])
   @@map("branches")
 }
 
-model Invitation {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  code      String   @unique
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+// ============================================================================
+// DEPARTMENT
+// ============================================================================
 
+model Department {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  code           String?
+  description    String?
+  parentId       String?  @map("parent_id") @db.Uuid
+  parent         Department? @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children       Department[] @relation("DepartmentHierarchy")
+  
+  // Status
+  status         String   @default("active") @map("status")
+  
+  // Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([organizationId])
+  @@map("departments")
+}
+
+// ============================================================================
+// WORKSPACE
+// ============================================================================
+
+model Workspace {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String   @map("slug")
+  description    String?
+  settings       Json?    @map("settings")
+  
+  // Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("workspaces")
+}
+
+// ============================================================================
+// ORGANIZATION SETTINGS
+// ============================================================================
+
+model OrganizationSettings {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  key            String
+  value          String   @map("value")
+  category       String?
+  isEncrypted    Boolean  @default(false) @map("is_encrypted")
+  
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
+  @@map("organization_settings")
+}
+
+// ============================================================================
+// INVITATION
+// ============================================================================
+
+model Invitation {
+  id             String   @id @default(uuid()) @db.Uuid
+  email          String
+  code           String   @unique
+  organizationId String?  @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           String   @default("employee") @map("role")
+  departmentId   String?  @map("department_id") @db.Uuid
+  invitedById    String?  @map("invited_by_id") @db.Uuid
+  invitedBy      User?    @relation("InvitedBy", fields: [invitedById], references: [id])
+  
+  // Status
+  status         String   @default("pending") @map("status") // pending, accepted, expired, revoked
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz
+  usedAt         DateTime? @map("used_at") @db.Timestamptz
+  used           Boolean  @default(false)
+  
+  // Soft Delete
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([organizationId])
   @@map("invitations")
 }
 
+// ============================================================================
+// OTP
+// ============================================================================
+
 model Otp {
   id        String   @id @default(uuid()) @db.Uuid
-  type      String
-  target    String
+  type      String            // email, mobile, mfa, recovery
+  target    String            // email address or mobile number
   code      String
   expiresAt DateTime @map("expires_at") @db.Timestamptz
   verified  Boolean  @default(false)
+  attempts  Int      @default(0) @map("attempts")
+  maxAttempts Int    @default(5) @map("max_attempts")
+  
+  // Metadata
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  
+  // Verification context
+  userId    String?  @map("user_id") @db.Uuid
+  sessionId String?  @map("session_id")
+  
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([target])
+  @@index([userId])
   @@map("otps")
 }
 
+// ============================================================================
+// PASSWORD HISTORY
+// ============================================================================
+
+model PasswordHistory {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId])
+  @@map("password_history")
+}
+
+// ============================================================================
+// SESSION
+// ============================================================================
+
+model Session {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  refreshToken   String?  @map("refresh_token") @unique
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  deviceInfo     Json?    @map("device_info")
+  
+  // Status
+  isActive       Boolean  @default(true) @map("is_active")
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz
+  lastActivityAt DateTime @map("last_activity_at") @db.Timestamptz
+  
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([refreshToken])
+  @@map("sessions")
+}
+
+// ============================================================================
+// REFRESH TOKEN
+// ============================================================================
+
+model RefreshToken {
+  id           String   @id @default(uuid()) @db.Uuid
+  token        String   @unique
+  userId       String   @map("user_id") @db.Uuid
+  sessionId    String?  @map("session_id") @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz
+  isRevoked    Boolean  @default(false) @map("is_revoked")
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz
+  
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ============================================================================
+// EMAIL VERIFICATION
+// ============================================================================
+
+model EmailVerification {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String
+  token     String   @unique
+  userId    String?  @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  verified  Boolean  @default(false)
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([token])
+  @@map("email_verifications")
+}
+
+// ============================================================================
+// MOBILE VERIFICATION
+// ============================================================================
+
+model MobileVerification {
+  id        String   @id @default(uuid()) @db.Uuid
+  mobile    String
+  countryCode String @map("country_code")
+  otpHash   String   @map("otp_hash")
+  userId    String?  @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  verified  Boolean  @default(false)
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([mobile])
+  @@index([userId])
+  @@map("mobile_verifications")
+}
+
+// ============================================================================
+// PASSWORD RESET
+// ============================================================================
+
+model PasswordReset {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String
+  token     String   @unique
+  userId    String?  @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  used      Boolean  @default(false)
+  
+  // Metadata
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([token])
+  @@map("password_resets")
+}
+
+// ============================================================================
+// REGISTRATION SESSION
+// ============================================================================
+
+model RegistrationSession {
+  id             String   @id @default(uuid()) @db.Uuid
+  email          String
+  emailVerified  Boolean  @default(false) @map("email_verified")
+  mobile         String?  @map("mobile")
+  mobileVerified Boolean  @default(false) @map("mobile_verified")
+  
+  // Personal Info
+  firstName      String?  @map("first_name")
+  lastName       String?  @map("last_name")
+  displayName    String?  @map("display_name")
+  country        String?
+  timezone       String?
+  language       String?
+  
+  // Organization Info
+  organizationName String? @map("organization_name")
+  organizationCode String? @map("organization_code")
+  industry       String?
+  size           String?
+  website        String?
+  gstNumber      String?  @map("gst_number")
+  taxNumber      String?  @map("tax_number")
+  logoUrl        String?  @map("logo_url")
+  useCases       Json?    @map("use_cases")
+  
+  // Branch Info
+  branchName     String?  @map("branch_name")
+  branchCode     String?  @map("branch_code")
+  branchAddress  String?  @map("branch_address")
+  branchCity     String?  @map("branch_city")
+  branchState    String?  @map("branch_state")
+  branchCountry  String?  @map("branch_country")
+  branchPincode  String?  @map("branch_pincode")
+  
+  // Security
+  passwordHash   String?  @map("password_hash")
+  mfaEnabled     Boolean  @default(false) @map("mfa_enabled")
+  mfaMethod      String?  @map("mfa_method")
+  mfaSecret      String?  @map("mfa_secret")
+  
+  // Terms
+  termsAccepted  Boolean  @default(false) @map("terms_accepted")
+  privacyAccepted Boolean @default(false) @map("privacy_accepted")
+  cookieAccepted  Boolean  @default(false) @map("cookie_accepted")
+  marketingConsent Boolean @default(false) @map("marketing_consent")
+  
+  // Status
+  status         String   @default("in_progress") @map("status") // in_progress, email_pending, mobile_pending, mfa_pending, completed, abandoned
+  currentStep    Int      @default(1) @map("current_step")
+  
+  // Metadata
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([status])
+  @@map("registration_sessions")
+}
+
+// ============================================================================
+// ROLE
+// ============================================================================
+
 model Role {
   id             String    @id @default(uuid()) @db.Uuid
-  name           String    @map("key")
+  name           String    @map("name")           // Display name
+  key            String    @unique @map("key")     // System key: owner, admin, manager, employee, viewer
   organizationId String?   @map("organization_id") @db.Uuid
   description    String?
+  isSystem       Boolean   @default(false) @map("is_system") // System roles cannot be deleted
   
-  // Auditing & Soft Delete
+  // Auditing
   isDeleted      Boolean   @default(false) @map("is_deleted")
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
   createdBy      String?   @map("created_by") @db.Uuid
@@ -165,6 +658,7 @@ model Role {
   deletedBy      String?   @map("deleted_by") @db.Uuid
   version        Int       @default(1)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   
   rolePermissions RolePermission[]
   userAssignments UserRoleAssignment[]
@@ -173,23 +667,47 @@ model Role {
   @@map("roles")
 }
 
+// ============================================================================
+// PERMISSION
+// ============================================================================
+
 model Permission {
   id          String   @id @default(uuid()) @db.Uuid
   name        String   @unique
   description String?
   groupId     String?  @map("group_id") @db.Uuid
+  group       PermissionGroup? @relation(fields: [groupId], references: [id])
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  
   rolePermissions RolePermission[]
 
   @@map("permissions")
 }
+
+// ============================================================================
+// PERMISSION GROUP
+// ============================================================================
+
+model PermissionGroup {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @unique
+  description String?
+  permissions Permission[]
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("permission_groups")
+}
+
+// ============================================================================
+// ROLE PERMISSION
+// ============================================================================
 
 model RolePermission {
   id             String     @id @default(uuid()) @db.Uuid
   organizationId String     @map("organization_id") @db.Uuid
   roleId         String     @map("role_id") @db.Uuid
   permissionId   String     @map("permission_id") @db.Uuid
-  effect         String     @default("allow")
+  effect         String     @default("allow") @map("effect") // allow, deny
   role           Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission     Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
@@ -199,12 +717,16 @@ model RolePermission {
   @@map("role_permissions")
 }
 
+// ============================================================================
+// USER ROLE ASSIGNMENT
+// ============================================================================
+
 model UserRoleAssignment {
   id             String   @id @default(uuid()) @db.Uuid
   userId         String   @map("user_id") @db.Uuid
   roleId         String   @map("role_id") @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
-  resourceType   String?  @map("resource_type")
+  resourceType   String?  @map("resource_type")   // branch, department, workspace
   resourceId     String?  @map("resource_id")
   role           Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
@@ -213,23 +735,36 @@ model UserRoleAssignment {
   @@map("user_role_assignments")
 }
 
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+
 model AuditLog {
   id             String   @id @default(uuid()) @db.Uuid
   actorId        String?  @map("actor_id") @db.Uuid
   action         String
+  resource       String?  @map("resource")    // user, organization, branch, etc.
+  resourceId     String?  @map("resource_id")
   organizationId String   @map("organization_id") @db.Uuid
-  severity       String   @default("info")
+  severity       String   @default("info") @map("severity") // debug, info, warning, error, critical
   ipAddress      String?  @map("ip_address")
   userAgent      String?  @map("user_agent")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-
+  requestId      String?  @map("request_id")
+  metadata       Json?    @map("metadata")
+  
   actor        User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
-  organization Tenant  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([actorId])
+  @@index([action])
+  @@index([resourceId])
   @@map("audit_logs")
 }
+
+// ============================================================================
+// NOTIFICATION
+// ============================================================================
 
 model Notification {
   id             String   @id @default(uuid()) @db.Uuid
@@ -237,10 +772,12 @@ model Notification {
   recipientId    String?  @map("recipient_id") @db.Uuid
   title          String?
   body           String
-  channels       Json?
-  status         String   @default("pending")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-
+  type           String   @default("info") @map("type") // info, success, warning, error
+  channels       Json?    @map("channels")    // email, sms, push, in_app
+  status         String   @default("pending") @map("status") // pending, sent, failed
+  sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  readAt         DateTime? @map("read_at") @db.Timestamptz
+  
   organization Tenant @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   recipient    User?  @relation(fields: [recipientId], references: [id], onDelete: SetNull)
 
@@ -249,17 +786,43 @@ model Notification {
   @@map("notifications")
 }
 
+// ============================================================================
+// COMMON CONFIGURATION
+// ============================================================================
+
 model CommonConfiguration {
   id             String   @id @default(uuid()) @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
   key            String
   value          String
   category       String?
+  isEncrypted    Boolean  @default(false) @map("is_encrypted")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  organization Tenant @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, key])
   @@index([organizationId])
   @@map("common_configurations")
+}
+
+// ============================================================================
+// THEME
+// ============================================================================
+
+model Theme {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String   @unique
+  primaryColor   String?  @map("primary_color")
+  secondaryColor String?  @map("secondary_color")
+  accentColor    String?  @map("accent_color")
+  backgroundColor String? @map("background_color")
+  textColor      String?  @map("text_color")
+  mode           String   @default("light") @map("mode") // light, dark
+  isDefault      Boolean  @default(false) @map("is_default")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("themes")
 }

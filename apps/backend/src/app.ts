@@ -35,6 +35,7 @@ import cleanVerifyRoutes from './modules/verification/verification.routes';
 import cleanAuditRoutes from './modules/audit/audit.routes';
 import cleanStorageRoutes from './modules/storage/storage.routes';
 import emailRoutes from './routes/email.routes';
+import { registrationRoutes } from './modules/registration';
 import { buildRbac } from './rbac';
 
 const app = express();
@@ -161,6 +162,9 @@ app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (req, res) => {
 // Core routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/auth/register', registerRoutes);
+
+// New Enterprise Registration routes
+app.use('/api/v1/register', registrationRoutes);
 
 // Modular Clean Architecture routes
 app.use('/api/v1/clean/auth', cleanAuthRoutes);
