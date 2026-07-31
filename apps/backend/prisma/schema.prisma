@@ -123,6 +123,7 @@ model User {
   country        String?      @map("country")
   timezone       String?      @map("timezone")
   language       String       @default("en") @map("language")
+  gender         String?      @map("gender")
   
   // Authentication
   passwordHash   String?      @map("password_hash")
@@ -570,6 +571,7 @@ model RegistrationSession {
   country        String?
   timezone       String?
   language       String?
+  gender         String?
   
   // Organization Info
   organizationName String? @map("organization_name")
@@ -809,4 +811,27 @@ model Theme {
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("themes")
+}
+
+// ============================================================================
+// DDL LISTS (Dropdown Data Lists)
+// Shared key/value lookup lists e.g. countries, languages, genders.
+// ============================================================================
+
+model Ddl {
+  id        String   @id @default(uuid()) @db.Uuid
+  type      String   @map("type") // e.g. 'country', 'language', 'gender', 'industry', ...
+  key       String   @map("key") // e.g. 'IN', 'en', 'male'
+  value     String   @map("value") // e.g. 'India', 'English', 'Male'
+  label     String?  @map("label") // optional display label / description
+  phoneCode String?  @map("phone_code") // e.g. '+91' for countries
+  extra     Json?    @map("extra") // optional extra metadata
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([type, key])
+  @@index([type, isActive])
+  @@map("ddl_lists")
 }

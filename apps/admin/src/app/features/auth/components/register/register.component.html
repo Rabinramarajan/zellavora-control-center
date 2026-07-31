@@ -1,568 +1,2361 @@
-<div class="auth-shell">
-  <!-- Dynamic Glowing Radial Backdrops -->
-  <div class="glow-bg-1"></div>
-  <div class="glow-bg-2"></div>
+<div class="reg-shell">
+  <!-- Ambient aurora layers -->
+  <div class="reg-bg" aria-hidden="true">
+    <div class="reg-bg__orb reg-bg__orb--1"></div>
+    <div class="reg-bg__orb reg-bg__orb--2"></div>
+    <div class="reg-bg__orb reg-bg__orb--3"></div>
+    <div class="reg-grid"></div>
+  </div>
 
-  <!-- LEFT PANEL: Brand Story -->
-  <aside class="brand-panel">
+  <!-- ============ LEFT: BRAND COMMAND DECK ============ -->
+  <aside class="reg-brand">
     <div class="brand-lockup">
-      <div class="brand-mark">Z</div>
+      <div class="brand-mark reg-brand__mark">Z</div>
       <div>
         <h1 class="brand-name">ZELLAVORA</h1>
         <p class="brand-sub">Control Center</p>
       </div>
     </div>
 
-    <h2 class="brand-headline">
-      Build Your<br />
-      Command Center.<br />
-      <span class="headline-accent">Your Way.</span>
+    <h2 class="reg-headline">
+      Command every<br />
+      corner of your<br />
+      <span class="headline-accent">organization.</span>
     </h2>
-    <p class="brand-copy">
-      Zellavora Control Center is the unified platform to manage your organization, teams, and operations — securely and effortlessly.
+    <p class="reg-copy">
+      One secure deck for teams, operations and insights — built for enterprises that move fast and
+      stay in control.
     </p>
 
-    <!-- Progress Indicator -->
-    <div class="mt-12">
-      <div class="text-xs text-gray-400 mb-3">REGISTRATION PROGRESS</div>
-      <div class="flex gap-1">
-        <div *ngFor="let step of visualSteps"
-             [class.bg-blue-500]="step.step <= store.currentStep()"
-             [class.bg-gray-700]="step.step > store.currentStep()"
-             class="h-1 flex-1 rounded transition-colors"></div>
+    <!-- Orbital command visual -->
+    <div class="orbital" aria-hidden="true">
+      <div class="orbital__ring orbital__ring--1"></div>
+      <div class="orbital__ring orbital__ring--2"></div>
+      <div class="orbital__ring orbital__ring--3"></div>
+      <div class="orbital__sweep"></div>
+      <div class="orbital__core">Z</div>
+      <div class="orbital__sat orbital__sat--1">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
       </div>
+      <div class="orbital__sat orbital__sat--2">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M18 20V10"></path>
+          <path d="M12 20V4"></path>
+          <path d="M6 20v-6"></path>
+        </svg>
+      </div>
+      <div class="orbital__sat orbital__sat--3">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Command rail (milestone stepper) -->
+    <div class="rail" aria-label="Registration progress">
+      <div class="rail__track"></div>
+      <div
+        *ngFor="let s of railSteps"
+        class="rail__item"
+        [class.is-done]="store.currentStep() > s.step"
+        [class.is-active]="store.currentStep() === s.step"
+      >
+        <div class="rail__node">
+          <svg
+            *ngIf="store.currentStep() > s.step"
+            class="rail__check"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+          <svg
+            *ngIf="store.currentStep() <= s.step"
+            class="rail__icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path [attr.d]="icons[s.icon]"></path>
+          </svg>
+        </div>
+        <span class="rail__label">{{ s.short }}</span>
+      </div>
+    </div>
+
+    <!-- Trust footer -->
+    <div class="reg-trust">
+      <div class="avatar-stack">
+        <div class="avatar" *ngFor="let a of trustAvatars">{{ a }}</div>
+      </div>
+      <div>
+        <p class="reg-trust__title">Trusted by growing teams</p>
+        <p class="reg-trust__sub">Enterprise-grade security · SOC 2 ready</p>
+      </div>
+      <svg
+        class="reg-trust__shield"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <path d="M9 12l2 2 4-4"></path>
+      </svg>
     </div>
   </aside>
 
-  <!-- RIGHT PANEL: Registration Form -->
-  <main class="form-panel">
-    <div class="form-container">
-      <!-- Error Message -->
-      <div *ngIf="store.error()" class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-        <div class="flex justify-between items-start">
-          <div>
-            <p class="text-red-400 font-semibold">Error</p>
-            <p class="text-red-200 text-sm mt-1">{{ store.error() }}</p>
-          </div>
-          <button (click)="store.updatePersonalInfo({ error: null })" class="text-red-400 hover:text-red-300 font-bold">×</button>
+  <!-- ============ RIGHT: FORM ============ -->
+  <main class="reg-form">
+    <div class="reg-form__topbar">
+      <div class="reg-form__step-pill">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 2v4"></path>
+          <path d="M12 18v4"></path>
+          <path d="M4.93 4.93l2.83 2.83"></path>
+          <path d="M16.24 16.24l2.83 2.83"></path>
+          <path d="M2 12h4"></path>
+          <path d="M18 12h4"></path>
+          <path d="M4.93 19.07l2.83-2.83"></path>
+          <path d="M16.24 7.76l2.83-2.83"></path>
+        </svg>
+        Step {{ store.currentStep() }} / 13
+      </div>
+      <button class="reg-form__signin" (click)="navigateToLogin()">
+        Already have an account?
+        <span class="reg-form__signin-cta">Sign in</span>
+      </button>
+    </div>
+
+    <!-- 13-node progress track -->
+    <div class="track" aria-hidden="true">
+      <div class="track__fill" [style.width.%]="(store.currentStep() / 13) * 100"></div>
+      <div
+        *ngFor="let s of steps"
+        class="track__dot"
+        [class.is-done]="store.currentStep() >= s.step"
+        [class.is-active]="store.currentStep() === s.step"
+      ></div>
+    </div>
+
+    <div class="reg-form__card">
+      <!-- Error banner -->
+      <div *ngIf="store.error()" class="error-banner" role="alert">
+        <svg
+          class="error-banner__icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M15 9l-6 6"></path>
+          <path d="M9 9l6 6"></path>
+        </svg>
+        <div class="error-banner__body">
+          <p class="error-banner__title">Something went wrong</p>
+          <p class="error-banner__msg">{{ store.error() }}</p>
         </div>
+        <button
+          class="error-banner__close"
+          (click)="store.updatePersonalInfo({ error: null })"
+          aria-label="Dismiss"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18 6 6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
       </div>
 
-      <!-- STEP 1: Welcome / Registration Type -->
-      <div *ngIf="store.currentStep() === 1" class="space-y-8">
-        <div>
-          <h1 class="text-4xl font-bold mb-3">Welcome to Zellavora</h1>
-          <p class="text-gray-400 text-lg">Create your organization's control center in minutes</p>
-        </div>
+      <!-- ============ STEP 1: WELCOME / REGISTRATION TYPE ============ -->
+      <section *ngIf="store.currentStep() === 1" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+              ></path>
+              <path d="M20 3v4"></path>
+              <path d="M22 5h-4"></path>
+            </svg>
+            Welcome aboard
+          </p>
+          <h2 class="step__title">Let&apos;s set up your control center</h2>
+          <p class="step__sub">How would you like to get started?</p>
+        </header>
 
-        <div class="space-y-4">
+        <div class="reg-form__body">
           <button
+            type="button"
+            class="choice"
+            [class.is-active]="store.registrationType() === 'new_org'"
             (click)="selectRegistrationType('new_org')"
-            [class.active]="store.registrationType() === 'new_org'"
-            class="w-full p-6 border border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-500/5 transition text-left">
-            <div class="font-bold text-lg">Create New Organization</div>
-            <div class="text-sm text-gray-400 mt-1">Set up your organization from scratch</div>
+          >
+            <span class="choice__icon choice__icon--cyan">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 21h18"></path>
+                <path d="M5 21V7l7-4 7 4v14"></path>
+                <path d="M9 9h.01"></path>
+                <path d="M9 12h.01"></path>
+                <path d="M9 15h.01"></path>
+                <path d="M15 9h.01"></path>
+                <path d="M15 12h.01"></path>
+                <path d="M15 15h.01"></path>
+              </svg>
+            </span>
+            <span class="choice__body">
+              <span class="choice__title">Create New Organization</span>
+              <span class="choice__desc"
+                >Set up your organization from scratch and become the owner.</span
+              >
+            </span>
+            <span class="choice__radio">
+              <svg
+                *ngIf="store.registrationType() === 'new_org'"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            </span>
           </button>
 
           <button
+            type="button"
+            class="choice"
+            [class.is-active]="store.registrationType() === 'invite'"
             (click)="selectRegistrationType('invite')"
-            [class.active]="store.registrationType() === 'invite'"
-            class="w-full p-6 border border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-500/5 transition text-left">
-            <div class="font-bold text-lg">Join Existing Organization</div>
-            <div class="text-sm text-gray-400 mt-1">Use an invitation code to join</div>
+          >
+            <span class="choice__icon choice__icon--violet">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </span>
+            <span class="choice__body">
+              <span class="choice__title">Join Existing Organization</span>
+              <span class="choice__desc">Have an invitation code? Enter it to join your team.</span>
+            </span>
+            <span class="choice__radio">
+              <svg
+                *ngIf="store.registrationType() === 'invite'"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            </span>
           </button>
         </div>
 
-        <button [disabled]="!store.registrationType()" (click)="store.nextStep()" class="btn-primary w-full">
-          Continue
-        </button>
-      </div>
-
-      <!-- STEP 2: Registration Type (Optional Invitation) -->
-      <div *ngIf="store.currentStep() === 2" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">{{ store.registrationType() === 'new_org' ? 'Create Organization' : 'Join Organization' }}</h2>
-          <p class="text-gray-400">{{ store.registrationType() === 'new_org' ? 'You\'ll set up your own organization' : 'Enter your invitation code' }}</p>
-        </div>
-
-        <ng-container *ngIf="store.registrationType() === 'invite'">
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Invitation Code</label>
-            <input
-              type="text"
-              placeholder="Enter your invitation code"
-              #inviteCodeInput
-              class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
-            <button
-              (click)="verifyInvitationCode(inviteCodeInput.value)"
-              class="btn-primary w-full">
-              Verify Code
-            </button>
-          </div>
-        </ng-container>
-
-        <ng-container *ngIf="store.registrationType() === 'new_org'">
-          <button (click)="store.nextStep()" class="btn-primary w-full">
-            Continue
-          </button>
-        </ng-container>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">
-          Back
-        </button>
-      </div>
-
-      <!-- STEP 3: Basic Information -->
-      <div *ngIf="store.currentStep() === 3" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Personal Information</h2>
-          <p class="text-gray-400">Let's start with your details</p>
-        </div>
-
-        <form [formGroup]="basicInfoForm" (ngSubmit)="saveBasicInfo()" class="space-y-6">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium">First Name *</label>
-              <input formControlName="firstName" type="text" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-            </div>
-            <div>
-              <label class="text-sm font-medium">Last Name *</label>
-              <input formControlName="lastName" type="text" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-            </div>
-          </div>
-
-          <div>
-            <label class="text-sm font-medium">Email *</label>
-            <input formControlName="email" type="email" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label class="text-sm font-medium">Mobile Number *</label>
-            <input formControlName="mobile" type="tel" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium">Country *</label>
-              <select formControlName="country" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
-                <option value="">Select Country</option>
-                <option *ngFor="let country of countryOptions" [value]="country">{{ country }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-sm font-medium">Language *</label>
-              <select formControlName="language" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-              </select>
-            </div>
-          </div>
-
-          <button type="submit" [disabled]="basicInfoForm.invalid || store.loading()" class="btn-primary w-full">
-            {{ store.loading() ? 'Processing...' : 'Continue' }}
-          </button>
-        </form>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 4: Email OTP Verification -->
-      <div *ngIf="store.currentStep() === 4" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Verify Your Email</h2>
-          <p class="text-gray-400 text-sm">Enter the 6-digit code sent to <strong>{{ store.email() }}</strong></p>
-        </div>
-
-        <div class="space-y-4">
+        <footer class="form-actions">
           <button
-            *ngIf="!store.emailVerified()"
-            (click)="sendEmailOtp()"
-            [disabled]="store.loading()"
-            class="btn-primary w-full">
-            {{ store.loading() ? 'Sending...' : 'Send OTP Code' }}
+            class="btn-primary"
+            [disabled]="!store.registrationType()"
+            (click)="store.nextStep()"
+          >
+            Continue
+            <svg
+              class="btn-primary__arrow"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14"></path>
+              <path d="M12 5l7 7-7 7"></path>
+            </svg>
           </button>
+        </footer>
+      </section>
 
-          <div *ngIf="store.emailVerified()" class="p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
-            <p class="text-green-400 font-semibold">✓ Email Verified</p>
+      <!-- ============ STEP 2: REGISTRATION TYPE (INVITATION) ============ -->
+      <section *ngIf="store.currentStep() === 2" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 3h18v18H3z"></path>
+              <path d="M3 9h18"></path>
+              <path d="M9 21V9"></path>
+            </svg>
+            {{
+              store.registrationType() === 'new_org' ? 'Create Organization' : 'Join Organization'
+            }}
+          </p>
+          <h2 class="step__title">
+            {{
+              store.registrationType() === 'new_org'
+                ? 'You\'re creating a new organization'
+                : 'Enter your invitation code'
+            }}
+          </h2>
+          <p class="step__sub">
+            {{
+              store.registrationType() === 'new_org'
+                ? 'You will set everything up as the organization owner.'
+                : 'The code was shared with you by your organization admin.'
+            }}
+          </p>
+        </header>
+
+        <div class="reg-form__body">
+          <ng-container *ngIf="store.registrationType() === 'invite'">
+            <div class="field">
+              <label class="field__label" for="invite-code">Invitation Code</label>
+              <div class="field__control">
+                <span class="field__icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M7 8h17"></path>
+                    <path d="M7 12h17"></path>
+                    <path d="M7 16h17"></path>
+                    <path d="M2 8h.01"></path>
+                    <path d="M2 12h.01"></path>
+                    <path d="M2 16h.01"></path>
+                  </svg>
+                </span>
+                <input
+                  id="invite-code"
+                  type="text"
+                  #inviteCodeInput
+                  placeholder="e.g. ZCC-XXXX-XXXX"
+                  autocomplete="off"
+                />
+              </div>
+              <p class="field__hint">Paste the invitation code you received by email.</p>
+            </div>
+            <button
+              type="button"
+              class="btn-primary btn-primary--block"
+              (click)="verifyInvitationCode(inviteCodeInput.value)"
+            >
+              Verify Code
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+            <button type="button" class="text-link" (click)="skipInvitationCode()">
+              Skip for now &amp; create a new organization
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="store.registrationType() === 'new_org'">
+            <div class="info-panel">
+              <svg
+                class="info-panel__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 16v-4"></path>
+                <path d="M12 8h.01"></path>
+              </svg>
+              <p>
+                You&apos;ll create your company profile, head-office branch, owner account and
+                security settings.
+              </p>
+            </div>
+            <button type="button" class="btn-primary btn-primary--block" (click)="store.nextStep()">
+              Continue
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </ng-container>
+        </div>
+
+        <footer class="form-actions">
+          <button type="button" class="btn-ghost" (click)="store.prevStep()">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5"></path>
+              <path d="M12 19l-7-7 7-7"></path>
+            </svg>
+            Back
+          </button>
+        </footer>
+      </section>
+
+      <!-- ============ STEP 3: BASIC INFORMATION ============ -->
+      <section *ngIf="store.currentStep() === 3" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Basic Information
+          </p>
+          <h2 class="step__title">Tell us about yourself</h2>
+          <p class="step__sub">This is the account owner&apos;s profile for your organization.</p>
+        </header>
+
+        <form [formGroup]="basicInfoForm" (ngSubmit)="saveBasicInfo()" novalidate>
+          <div class="reg-form__body">
+            <div class="field-grid">
+              <div class="field" [class.is-error]="showError(basicInfoForm, 'firstName')">
+                <label class="field__label" for="firstName">First Name <em>*</em></label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle></svg
+                  ></span>
+                  <input
+                    id="firstName"
+                    formControlName="firstName"
+                    type="text"
+                    placeholder="Alex"
+                    autocomplete="given-name"
+                  />
+                </div>
+                <p *ngIf="showError(basicInfoForm, 'firstName')" class="field__error">
+                  {{ errorMessage(basicInfoForm, 'firstName') }}
+                </p>
+              </div>
+
+              <div class="field" [class.is-error]="showError(basicInfoForm, 'lastName')">
+                <label class="field__label" for="lastName">Last Name <em>*</em></label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle></svg
+                  ></span>
+                  <input
+                    id="lastName"
+                    formControlName="lastName"
+                    type="text"
+                    placeholder="Morgan"
+                    autocomplete="family-name"
+                  />
+                </div>
+                <p *ngIf="showError(basicInfoForm, 'lastName')" class="field__error">
+                  {{ errorMessage(basicInfoForm, 'lastName') }}
+                </p>
+              </div>
+            </div>
+
+            <div class="field" [class.is-error]="showError(basicInfoForm, 'email')">
+              <label class="field__label" for="email">Work Email <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+                    ></path>
+                    <path d="M22 6l-10 7L2 6"></path></svg
+                ></span>
+                <input
+                  id="email"
+                  formControlName="email"
+                  type="email"
+                  placeholder="you@company.com"
+                  autocomplete="email"
+                />
+              </div>
+              <p *ngIf="showError(basicInfoForm, 'email')" class="field__error">
+                {{ errorMessage(basicInfoForm, 'email') }}
+              </p>
+            </div>
+
+            <div class="field" [class.is-error]="showError(basicInfoForm, 'mobile')">
+              <label class="field__label" for="mobile">Mobile Number <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+                    ></path></svg
+                ></span>
+                <input
+                  id="mobile"
+                  formControlName="mobile"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  autocomplete="tel"
+                />
+              </div>
+              <p *ngIf="showError(basicInfoForm, 'mobile')" class="field__error">
+                {{ errorMessage(basicInfoForm, 'mobile') }}
+              </p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field" [class.is-error]="showError(basicInfoForm, 'country')">
+                <label class="field__label" for="country">Country <em>*</em></label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle></svg
+                  ></span>
+                  <select id="country" formControlName="country">
+                    <option value="" disabled>Select Country</option>
+                    <option *ngFor="let c of store.countryOptions()" [value]="c">{{ c }}</option>
+                  </select>
+                  <svg
+                    class="field__chevron"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6"></path>
+                  </svg>
+                </div>
+                <p *ngIf="showError(basicInfoForm, 'country')" class="field__error">
+                  {{ errorMessage(basicInfoForm, 'country') }}
+                </p>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="language">Language</label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"></path>
+                      <path d="M2 12h20"></path>
+                      <path
+                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                      ></path></svg
+                  ></span>
+                  <select id="language" formControlName="language">
+                    <option value="" disabled>Select Language</option>
+                    <option *ngFor="let l of store.languageOptions()" [value]="l.key">{{ l.value }}</option>
+                  </select>
+                  <svg
+                    class="field__chevron"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="field" [class.is-error]="showError(basicInfoForm, 'gender')">
+                <label class="field__label" for="gender">Gender <em>*</em></label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="5" r="3"></circle>
+                      <path d="M12 8v8"></path>
+                      <path d="M6 21l6-5 6 5"></path></svg
+                  ></span>
+                  <select id="gender" formControlName="gender">
+                    <option value="" disabled>Select Gender</option>
+                    <option *ngFor="let g of store.genderOptions()" [value]="g.key">{{ g.value }}</option>
+                  </select>
+                  <svg
+                    class="field__chevron"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6"></path>
+                  </svg>
+                </div>
+                <p *ngIf="showError(basicInfoForm, 'gender')" class="field__error">
+                  {{ errorMessage(basicInfoForm, 'gender') }}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div *ngIf="!store.emailVerified()" class="space-y-4">
-            <app-otp-input (otpChange)="emailOtpCodeInput.set($event)"></app-otp-input>
+          <footer class="form-actions">
+            <button type="button" class="btn-ghost" (click)="store.prevStep()">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="store.loading()">
+              {{ store.loading() ? 'Saving…' : 'Continue' }}
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </footer>
+        </form>
+      </section>
 
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-gray-400">{{ emailTimer() > 0 ? emailTimer() + 's remaining' : 'Code expired' }}</span>
+      <!-- ============ STEP 4: EMAIL VERIFICATION ============ -->
+      <section *ngIf="store.currentStep() === 4" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+              ></path>
+              <path d="M22 6l-10 7L2 6"></path>
+            </svg>
+            Email Verification
+          </p>
+          <h2 class="step__title">Verify your email</h2>
+          <p class="step__sub">
+            We sent a 6-digit code to <strong class="step__em">{{ store.email() }}</strong>
+          </p>
+        </header>
+
+        <div class="reg-form__body">
+          <div class="otp-card">
+            <div class="otp-card__mail">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+                ></path>
+                <path d="M22 6l-10 7L2 6"></path>
+              </svg>
+            </div>
+
+            <button
+              *ngIf="!store.emailVerified()"
+              type="button"
+              class="btn-primary btn-primary--block"
+              [disabled]="store.loading()"
+              (click)="sendEmailOtp()"
+            >
+              {{ store.loading() ? 'Sending…' : 'Send OTP Code' }}
+            </button>
+
+            <div *ngIf="store.emailVerified()" class="success-chip">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+              Email Verified
+            </div>
+
+            <div *ngIf="!store.emailVerified()" class="otp-card__entry">
+              <app-otp-input (otpChange)="emailOtpCodeInput.set($event)"></app-otp-input>
+
+              <div class="otp-card__meta">
+                <span class="otp-card__timer">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                  </svg>
+                  <span *ngIf="emailTimer() > 0">{{ formatTimer(emailTimer()) }}</span>
+                  <span *ngIf="emailTimer() <= 0">Code expired</span>
+                </span>
+                <button
+                  class="text-link"
+                  [disabled]="emailTimer() > 0 || store.loading()"
+                  (click)="resendEmailOtp()"
+                >
+                  Resend code
+                </button>
+              </div>
+
               <button
-                (click)="resendEmailOtp()"
-                [disabled]="emailTimer() > 0 || store.loading()"
-                class="text-blue-400 hover:text-blue-300">
-                Resend
+                type="button"
+                class="btn-primary btn-primary--block"
+                [disabled]="emailOtpCodeInput().length !== 6 || store.loading()"
+                (click)="verifyEmailOtp()"
+              >
+                {{ store.loading() ? 'Verifying…' : 'Verify Code' }}
+                <svg
+                  class="btn-primary__arrow"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5l7 7-7 7"></path>
+                </svg>
               </button>
             </div>
+          </div>
+        </div>
 
+        <footer class="form-actions">
+          <button type="button" class="btn-ghost" (click)="store.prevStep()">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5"></path>
+              <path d="M12 19l-7-7 7-7"></path>
+            </svg>
+            Back
+          </button>
+        </footer>
+      </section>
+
+      <!-- ============ STEP 5: MOBILE VERIFICATION (OPTIONAL) ============ -->
+      <section *ngIf="store.currentStep() === 5" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+              ></path>
+            </svg>
+            Mobile Verification
+          </p>
+          <h2 class="step__title">Add an extra security layer</h2>
+          <p class="step__sub">Optionally verify your mobile number to secure your account.</p>
+        </header>
+
+        <div class="reg-form__body">
+          <div class="info-panel">
+            <svg
+              class="info-panel__icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+            <p>You can always add mobile verification later from your security settings.</p>
+          </div>
+
+          <button type="button" class="btn-primary btn-primary--block" (click)="sendMobileOtp()">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 2 11 13"></path>
+              <path d="M22 2 15 22l-4-9-9-4 20-7z"></path>
+            </svg>
+            Send SMS Code
+          </button>
+          <button
+            type="button"
+            class="btn-ghost btn-primary--block"
+            (click)="skipMobileVerification()"
+          >
+            Skip for now
+          </button>
+        </div>
+
+        <footer class="form-actions">
+          <button type="button" class="btn-ghost" (click)="store.prevStep()">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5"></path>
+              <path d="M12 19l-7-7 7-7"></path>
+            </svg>
+            Back
+          </button>
+        </footer>
+      </section>
+
+      <!-- ============ STEP 6: ORGANIZATION INFORMATION ============ -->
+      <section *ngIf="store.currentStep() === 6" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 21h18"></path>
+              <path d="M5 21V7l7-4 7 4v14"></path>
+              <path d="M9 9h.01"></path>
+              <path d="M9 12h.01"></path>
+              <path d="M9 15h.01"></path>
+              <path d="M15 9h.01"></path>
+              <path d="M15 12h.01"></path>
+              <path d="M15 15h.01"></path>
+            </svg>
+            Organization Information
+          </p>
+          <h2 class="step__title">Your company profile</h2>
+          <p class="step__sub">Tell us about your organization.</p>
+        </header>
+
+        <form [formGroup]="organizationForm" (ngSubmit)="saveOrganizationInfo()" novalidate>
+          <div class="reg-form__body">
+            <div class="field" [class.is-error]="showError(organizationForm, 'organizationName')">
+              <label class="field__label" for="orgName">Organization Name <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 21h18"></path>
+                    <path d="M5 21V7l7-4 7 4v14"></path>
+                    <path d="M9 9h.01"></path>
+                    <path d="M9 12h.01"></path>
+                    <path d="M9 15h.01"></path>
+                    <path d="M15 9h.01"></path>
+                    <path d="M15 12h.01"></path>
+                    <path d="M15 15h.01"></path></svg
+                ></span>
+                <input
+                  id="orgName"
+                  formControlName="organizationName"
+                  type="text"
+                  placeholder="e.g. Acme Corp"
+                  autocomplete="organization"
+                />
+              </div>
+              <p *ngIf="showError(organizationForm, 'organizationName')" class="field__error">
+                {{ errorMessage(organizationForm, 'organizationName') }}
+              </p>
+            </div>
+
+            <div class="field" [class.is-error]="showError(organizationForm, 'organizationCode')">
+              <label class="field__label" for="orgCode">Organization Code <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M7 8h17"></path>
+                    <path d="M7 12h17"></path>
+                    <path d="M7 16h17"></path>
+                    <path d="M2 8h.01"></path>
+                    <path d="M2 12h.01"></path>
+                    <path d="M2 16h.01"></path></svg
+                ></span>
+                <input
+                  id="orgCode"
+                  formControlName="organizationCode"
+                  type="text"
+                  placeholder="e.g. acme-corp"
+                  (blur)="checkOrgCode()"
+                  autocomplete="off"
+                />
+              </div>
+              <p *ngIf="showError(organizationForm, 'organizationCode')" class="field__error">
+                {{ errorMessage(organizationForm, 'organizationCode') }}
+              </p>
+              <p class="field__hint" *ngIf="!showError(organizationForm, 'organizationCode')">
+                2–16 characters: letters, numbers, hyphens only.
+              </p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field" [class.is-error]="showError(organizationForm, 'industry')">
+                <label class="field__label" for="industry">Industry <em>*</em></label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M3 7h7v7H3z"></path>
+                      <path d="M14 7h7v7h-7z"></path>
+                      <path d="M3 14h7v7H3z"></path>
+                      <path d="M14 14h7v7h-7z"></path></svg
+                  ></span>
+                  <select id="industry" formControlName="industry">
+                    <option value="" disabled>Select Industry</option>
+                    <option *ngFor="let i of industryOptions" [value]="i">{{ i }}</option>
+                  </select>
+                  <svg
+                    class="field__chevron"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6"></path>
+                  </svg>
+                </div>
+                <p *ngIf="showError(organizationForm, 'industry')" class="field__error">
+                  {{ errorMessage(organizationForm, 'industry') }}
+                </p>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="orgSize">Company Size</label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg
+                  ></span>
+                  <select id="orgSize" formControlName="organizationSize">
+                    <option value="1-10">1–10</option>
+                    <option value="10-50">10–50</option>
+                    <option value="50-100">50–100</option>
+                    <option value="100-500">100–500</option>
+                    <option value="500+">500+</option>
+                  </select>
+                  <svg
+                    class="field__chevron"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="website"
+                >Website <span class="field__opt">(optional)</span></label
+              >
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M2 12h20"></path>
+                    <path
+                      d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                    ></path></svg
+                ></span>
+                <input
+                  id="website"
+                  formControlName="website"
+                  type="url"
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label"
+                >Organization Logo <span class="field__opt">(optional)</span></label
+              >
+              <app-drag-drop-upload (upload)="onLogoUploaded($event)"></app-drag-drop-upload>
+            </div>
+
+            <div class="field">
+              <label class="field__label">What will you use Zellavora for?</label>
+              <div class="use-grid">
+                <button
+                  type="button"
+                  *ngFor="let u of useCaseOptions"
+                  class="use-chip"
+                  [class.is-active]="isUseCaseSelected(u.value)"
+                  (click)="toggleUseCase(u.value)"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path [attr.d]="icons[u.icon]"></path>
+                  </svg>
+                  {{ u.label }}
+                  <span *ngIf="isUseCaseSelected(u.value)" class="use-chip__check">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <footer class="form-actions">
+            <button type="button" class="btn-ghost" (click)="store.prevStep()">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="store.loading()">
+              Continue
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </footer>
+        </form>
+      </section>
+
+      <!-- ============ STEP 7: BRANCH SETUP ============ -->
+      <section *ngIf="store.currentStep() === 7" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            Branch Setup
+          </p>
+          <h2 class="step__title">Set up your head office</h2>
+          <p class="step__sub">You can add more branches after your workspace is ready.</p>
+        </header>
+
+        <form [formGroup]="branchForm" (ngSubmit)="saveBranchInfo()" novalidate>
+          <div class="reg-form__body">
+            <div class="field" [class.is-error]="showError(branchForm, 'branchName')">
+              <label class="field__label" for="branchName">Branch Name <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 21h18"></path>
+                    <path d="M5 21V7l7-4 7 4v14"></path>
+                    <path d="M9 9h.01"></path>
+                    <path d="M9 12h.01"></path>
+                    <path d="M9 15h.01"></path>
+                    <path d="M15 9h.01"></path>
+                    <path d="M15 12h.01"></path>
+                    <path d="M15 15h.01"></path></svg
+                ></span>
+                <input
+                  id="branchName"
+                  formControlName="branchName"
+                  type="text"
+                  placeholder="Head Office"
+                />
+              </div>
+              <p *ngIf="showError(branchForm, 'branchName')" class="field__error">
+                {{ errorMessage(branchForm, 'branchName') }}
+              </p>
+            </div>
+
+            <div class="field" [class.is-error]="showError(branchForm, 'branchCountry')">
+              <label class="field__label" for="branchCountry">Country <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle></svg
+                ></span>
+                  <select id="branchCountry" formControlName="branchCountry">
+                    <option value="" disabled>Select Country</option>
+                    <option *ngFor="let c of store.countryOptions()" [value]="c">{{ c }}</option>
+                  </select>
+                <svg
+                  class="field__chevron"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6"></path>
+                </svg>
+              </div>
+              <p *ngIf="showError(branchForm, 'branchCountry')" class="field__error">
+                {{ errorMessage(branchForm, 'branchCountry') }}
+              </p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label class="field__label" for="branchCity">City</label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M3 21h18"></path>
+                      <path d="M5 21V7l7-4 7 4v14"></path>
+                      <path d="M9 9h.01"></path>
+                      <path d="M9 12h.01"></path>
+                      <path d="M9 15h.01"></path>
+                      <path d="M15 9h.01"></path>
+                      <path d="M15 12h.01"></path>
+                      <path d="M15 15h.01"></path></svg
+                  ></span>
+                  <input
+                    id="branchCity"
+                    formControlName="branchCity"
+                    type="text"
+                    placeholder="Mumbai"
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field__label" for="branchPincode">Postal Code</label>
+                <div class="field__control">
+                  <span class="field__icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M7 8h17"></path>
+                      <path d="M7 12h17"></path>
+                      <path d="M7 16h17"></path>
+                      <path d="M2 8h.01"></path>
+                      <path d="M2 12h.01"></path>
+                      <path d="M2 16h.01"></path></svg
+                  ></span>
+                  <input
+                    id="branchPincode"
+                    formControlName="branchPincode"
+                    type="text"
+                    placeholder="400001"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="branchAddress">Address</label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle></svg
+                ></span>
+                <input
+                  id="branchAddress"
+                  formControlName="branchAddress"
+                  type="text"
+                  placeholder="12 Business District Road"
+                />
+              </div>
+            </div>
+          </div>
+
+          <footer class="form-actions">
+            <button type="button" class="btn-ghost" (click)="store.prevStep()">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="store.loading()">
+              Continue
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </footer>
+        </form>
+      </section>
+
+      <!-- ============ STEP 8: PASSWORD CREATION ============ -->
+      <section *ngIf="store.currentStep() === 8" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"
+              ></path>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Password Creation
+          </p>
+          <h2 class="step__title">Secure your account</h2>
+          <p class="step__sub">Create a strong password — at least 12 characters.</p>
+        </header>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" novalidate>
+          <div class="reg-form__body">
+            <div class="field" [class.is-error]="showError(passwordForm, 'password')">
+              <label class="field__label" for="password">Password <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"
+                    ></path>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg
+                ></span>
+                <input
+                  id="password"
+                  formControlName="password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  placeholder="Enter a strong password"
+                  autocomplete="new-password"
+                />
+                <button
+                  type="button"
+                  class="field__toggle"
+                  (click)="showPassword.set(!showPassword())"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                >
+                  <svg
+                    *ngIf="!showPassword()"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg
+                    *ngIf="showPassword()"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                    ></path>
+                    <path
+                      d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+                    ></path>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                    <path d="M1 1l22 22"></path>
+                  </svg>
+                </button>
+              </div>
+              <p *ngIf="showError(passwordForm, 'password')" class="field__error">
+                {{ errorMessage(passwordForm, 'password') }}
+              </p>
+            </div>
+
+            <div
+              class="field"
+              [class.is-error]="passwordMismatch() || showError(passwordForm, 'confirmPassword')"
+            >
+              <label class="field__label" for="confirmPassword">Confirm Password <em>*</em></label>
+              <div class="field__control">
+                <span class="field__icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"
+                    ></path>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg
+                ></span>
+                <input
+                  id="confirmPassword"
+                  formControlName="confirmPassword"
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  placeholder="Re-enter your password"
+                  autocomplete="new-password"
+                />
+                <button
+                  type="button"
+                  class="field__toggle"
+                  (click)="showConfirmPassword.set(!showConfirmPassword())"
+                  [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
+                >
+                  <svg
+                    *ngIf="!showConfirmPassword()"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg
+                    *ngIf="showConfirmPassword()"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                    ></path>
+                    <path
+                      d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+                    ></path>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                    <path d="M1 1l22 22"></path>
+                  </svg>
+                </button>
+              </div>
+              <p *ngIf="passwordMismatch()" class="field__error">Passwords do not match.</p>
+              <p
+                *ngIf="!passwordMismatch() && showError(passwordForm, 'confirmPassword')"
+                class="field__error"
+              >
+                {{ errorMessage(passwordForm, 'confirmPassword') }}
+              </p>
+            </div>
+
+            <app-password-strength
+              [password]="passwordForm.value.password || ''"
+            ></app-password-strength>
+          </div>
+
+          <footer class="form-actions">
+            <button type="button" class="btn-ghost" (click)="store.prevStep()">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </button>
             <button
-              (click)="verifyEmailOtp()"
-              [disabled]="emailOtpCodeInput().length !== 6 || store.loading()"
-              class="btn-primary w-full">
-              {{ store.loading() ? 'Verifying...' : 'Verify Code' }}
+              type="submit"
+              class="btn-primary"
+              [disabled]="store.loading() || passwordForm.invalid"
+            >
+              Continue
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </footer>
+        </form>
+      </section>
+
+      <!-- ============ STEP 9: SECURITY SETUP (MFA) ============ -->
+      <section *ngIf="store.currentStep() === 9" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Security Setup
+          </p>
+          <h2 class="step__title">Choose two-factor authentication</h2>
+          <p class="step__sub">Pick how you want to verify sign-ins.</p>
+        </header>
+
+        <div class="reg-form__body">
+          <div class="mfa-grid">
+            <button
+              *ngFor="let m of mfaMethods"
+              type="button"
+              class="mfa-card"
+              [class.is-active]="store.mfaMethod() === m.value"
+              (click)="selectMfaMethod(m.value)"
+            >
+              <span
+                class="mfa-card__icon"
+                [class.mfa-card__icon--cyan]="m.value === 'email_otp'"
+                [class.mfa-card__icon--violet]="m.value === 'authenticator'"
+                [class.mfa-card__icon--emerald]="m.value === 'sms'"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path [attr.d]="icons[m.icon]"></path>
+                </svg>
+              </span>
+              <span class="mfa-card__body">
+                <span class="mfa-card__title-row">
+                  <span class="mfa-card__title">{{ m.label }}</span>
+                  <span class="mfa-card__badge">{{ m.badge }}</span>
+                </span>
+                <span class="mfa-card__desc">{{ m.desc }}</span>
+              </span>
+              <span class="choice__radio">
+                <svg
+                  *ngIf="store.mfaMethod() === m.value"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5"></path>
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          <!-- Authenticator QR setup -->
+          <div *ngIf="store.mfaMethod() === 'authenticator' && store.mfaQrCode()" class="qr-panel">
+            <div class="qr-panel__qrcode">
+              <img [src]="store.mfaQrCode()" alt="Scan this QR code with your authenticator app" />
+            </div>
+            <div class="qr-panel__body">
+              <p class="qr-panel__title">Scan to add your account</p>
+              <p class="qr-panel__hint">
+                Use Google Authenticator, Authy, or Microsoft Authenticator.
+              </p>
+              <div class="qr-panel__secret">
+                <span class="qr-panel__secret-label">Manual entry key</span>
+                <code>{{ store.mfaSecret() }}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="form-actions">
+          <button type="button" class="btn-ghost" (click)="store.prevStep()">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5"></path>
+              <path d="M12 19l-7-7 7-7"></path>
+            </svg>
+            Back
+          </button>
+          <button type="button" class="btn-primary" (click)="store.nextStep()">
+            Continue
+            <svg
+              class="btn-primary__arrow"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14"></path>
+              <path d="M12 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </footer>
+      </section>
+
+      <!-- ============ STEP 10: TERMS & PRIVACY ============ -->
+      <section *ngIf="store.currentStep() === 10" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2v6h6"></path>
+              <path d="M16 13H8"></path>
+              <path d="M16 17H8"></path>
+              <path d="M10 9H8"></path>
+            </svg>
+            Terms &amp; Privacy
+          </p>
+          <h2 class="step__title">Last few agreements</h2>
+          <p class="step__sub">Review and accept our policies to continue.</p>
+        </header>
+
+        <form [formGroup]="termsForm" (ngSubmit)="saveTermsAndPrivacy()" novalidate>
+          <div class="reg-form__body">
+            <div class="agree-card" [class.is-error]="showError(termsForm, 'termsAccepted')">
+              <label class="agree-card__label">
+                <input formControlName="termsAccepted" type="checkbox" />
+                <span class="agree-card__box">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                </span>
+                <span class="agree-card__text">
+                  I agree to the <a href="#" class="agree-card__link">Terms of Service</a>
+                  <em>*</em>
+                </span>
+              </label>
+            </div>
+
+            <div class="agree-card" [class.is-error]="showError(termsForm, 'privacyAccepted')">
+              <label class="agree-card__label">
+                <input formControlName="privacyAccepted" type="checkbox" />
+                <span class="agree-card__box">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                </span>
+                <span class="agree-card__text">
+                  I agree to the <a href="#" class="agree-card__link">Privacy Policy</a> <em>*</em>
+                </span>
+              </label>
+            </div>
+
+            <div class="agree-card">
+              <label class="agree-card__label">
+                <input formControlName="cookieAccepted" type="checkbox" />
+                <span class="agree-card__box">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                </span>
+                <span class="agree-card__text">
+                  I accept the <a href="#" class="agree-card__link">Cookie Policy</a>
+                </span>
+              </label>
+            </div>
+
+            <div class="agree-card">
+              <label class="agree-card__label">
+                <input formControlName="securityAlertsEnabled" type="checkbox" />
+                <span class="agree-card__box">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                </span>
+                <span class="agree-card__text"> Send me security alerts </span>
+              </label>
+            </div>
+
+            <div class="agree-card">
+              <label class="agree-card__label">
+                <input formControlName="marketingEmails" type="checkbox" />
+                <span class="agree-card__box">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                </span>
+                <span class="agree-card__text"> Send me product news &amp; tips </span>
+              </label>
+            </div>
+          </div>
+
+          <footer class="form-actions">
+            <button type="button" class="btn-ghost" (click)="store.prevStep()">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="store.loading()">
+              Continue
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </footer>
+        </form>
+      </section>
+
+      <!-- ============ STEP 11: REVIEW ============ -->
+      <section *ngIf="store.currentStep() === 11" class="step">
+        <header class="step__head">
+          <p class="step__eyebrow">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 6h.01"></path>
+              <path d="M3 12h.01"></path>
+              <path d="M3 18h.01"></path>
+              <path d="M8 6h13"></path>
+              <path d="M8 12h13"></path>
+              <path d="M8 18h13"></path>
+            </svg>
+            Review
+          </p>
+          <h2 class="step__title">Review your details</h2>
+          <p class="step__sub">Make sure everything looks right before we create your workspace.</p>
+        </header>
+
+        <div class="reg-form__body">
+          <div class="review-card">
+            <div class="review-card__head">
+              <span class="review-card__icon review-card__icon--cyan">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </span>
+              <span class="review-card__title">Owner Account</span>
+            </div>
+            <dl class="review-card__rows">
+              <div class="review-row">
+                <dt>Name</dt>
+                <dd>{{ store.firstName() }} {{ store.lastName() }}</dd>
+              </div>
+              <div class="review-row">
+                <dt>Email</dt>
+                <dd>{{ store.email() }}</dd>
+              </div>
+              <div class="review-row">
+                <dt>Country</dt>
+                <dd>{{ store.country() }}</dd>
+              </div>
+              <div class="review-row">
+                <dt>Gender</dt>
+                <dd>{{ store.gender() || 'Not specified' }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="review-card">
+            <div class="review-card__head">
+              <span class="review-card__icon review-card__icon--violet">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3 21h18"></path>
+                  <path d="M5 21V7l7-4 7 4v14"></path>
+                  <path d="M9 9h.01"></path>
+                  <path d="M9 12h.01"></path>
+                  <path d="M9 15h.01"></path>
+                  <path d="M15 9h.01"></path>
+                  <path d="M15 12h.01"></path>
+                  <path d="M15 15h.01"></path>
+                </svg>
+              </span>
+              <span class="review-card__title">Organization</span>
+            </div>
+            <dl class="review-card__rows">
+              <div class="review-row">
+                <dt>Name</dt>
+                <dd>{{ store.organizationName() }}</dd>
+              </div>
+              <div class="review-row">
+                <dt>Code</dt>
+                <dd>{{ store.organizationCode() }}</dd>
+              </div>
+              <div class="review-row">
+                <dt>Industry</dt>
+                <dd>{{ store.industry() }}</dd>
+              </div>
+              <div class="review-row">
+                <dt>Size</dt>
+                <dd>{{ store.organizationSize() }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="review-card">
+            <div class="review-card__head">
+              <span class="review-card__icon review-card__icon--emerald">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </span>
+              <span class="review-card__title">Branch</span>
+            </div>
+            <dl class="review-card__rows">
+              <div class="review-row">
+                <dt>Name</dt>
+                <dd>{{ store.branchName() }}</dd>
+              </div>
+              <div class="review-row">
+                <dt>Country</dt>
+                <dd>{{ store.branchCountry() }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="review-card">
+            <div class="review-card__head">
+              <span class="review-card__icon review-card__icon--violet">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </span>
+              <span class="review-card__title">Security</span>
+            </div>
+            <dl class="review-card__rows">
+              <div class="review-row">
+                <dt>2FA method</dt>
+                <dd class="capitalize">
+                  {{
+                    store.mfaMethod() === 'email_otp'
+                      ? 'Email OTP'
+                      : store.mfaMethod() === 'authenticator'
+                        ? 'Authenticator App'
+                        : 'SMS'
+                  }}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <footer class="form-actions">
+          <button type="button" class="btn-ghost" (click)="store.prevStep()">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5"></path>
+              <path d="M12 19l-7-7 7-7"></path>
+            </svg>
+            Back
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="store.loading()"
+            (click)="confirmAndCreateAccount()"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            {{ store.loading() ? 'Creating…' : 'Create Account' }}
+          </button>
+        </footer>
+      </section>
+
+      <!-- ============ STEP 12: PROCESSING ============ -->
+      <section *ngIf="store.currentStep() === 12" class="step step--center">
+        <div class="processing">
+          <div class="processing__rings" aria-hidden="true">
+            <div class="processing__ring processing__ring--1"></div>
+            <div class="processing__ring processing__ring--2"></div>
+            <div class="processing__ring processing__ring--3"></div>
+            <div class="processing__core">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 2v4"></path>
+                <path d="M12 18v4"></path>
+                <path d="M4.93 4.93l2.83 2.83"></path>
+                <path d="M16.24 16.24l2.83 2.83"></path>
+                <path d="M2 12h4"></path>
+                <path d="M18 12h4"></path>
+                <path d="M4.93 19.07l2.83-2.83"></path>
+                <path d="M16.24 7.76l2.83-2.83"></path>
+              </svg>
+            </div>
+          </div>
+          <h2 class="processing__title">Creating your workspace</h2>
+          <p class="processing__sub">Provisioning organization, branch, owner and security…</p>
+          <ul class="processing__steps">
+            <li class="processing__step is-active"><span></span> Organization</li>
+            <li class="processing__step is-active"><span></span> Branch</li>
+            <li class="processing__step is-active"><span></span> Owner account</li>
+            <li class="processing__step"><span></span> Security</li>
+            <li class="processing__step"><span></span> Workspace</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ STEP 13: SUCCESS ============ -->
+      <section *ngIf="store.currentStep() === 13" class="step step--center">
+        <div class="success">
+          <div class="success__burst" aria-hidden="true">
+            <div class="success__halo success__halo--1"></div>
+            <div class="success__halo success__halo--2"></div>
+            <div class="success__badge">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            </div>
+          </div>
+          <h2 class="success__title">Welcome, {{ store.firstName() }}!</h2>
+          <p class="success__sub">
+            Your organization <strong class="step__em">{{ store.organizationName() }}</strong> is
+            ready.
+          </p>
+
+          <div class="success__list">
+            <div class="success__item">
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5"></path></svg
+              ></span>
+              Organization created
+            </div>
+            <div class="success__item">
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5"></path></svg
+              ></span>
+              Head-office branch setup
+            </div>
+            <div class="success__item">
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5"></path></svg
+              ></span>
+              Owner account configured
+            </div>
+            <div class="success__item">
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5"></path></svg
+              ></span>
+              Security enabled
+            </div>
+            <div class="success__item">
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5"></path></svg
+              ></span>
+              Workspace ready
+            </div>
+          </div>
+
+          <div class="success__actions">
+            <button type="button" class="btn-primary" (click)="navigateToDashboard()">
+              Go to Dashboard
+              <svg
+                class="btn-primary__arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+            <button type="button" class="btn-ghost" (click)="navigateToLogin()">
+              Sign in instead
             </button>
           </div>
         </div>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 5: Mobile OTP (Optional) -->
-      <div *ngIf="store.currentStep() === 5" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Mobile Verification (Optional)</h2>
-          <p class="text-gray-400 text-sm">Add extra security with mobile verification</p>
-        </div>
-
-        <div class="space-y-4">
-          <button (click)="sendMobileOtp()" class="btn-primary w-full">Send SMS Code</button>
-          <button (click)="skipMobileVerification()" class="btn-secondary w-full">Skip for Now</button>
-        </div>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 6: Organization Information -->
-      <div *ngIf="store.currentStep() === 6" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Organization Information</h2>
-          <p class="text-gray-400">Tell us about your organization</p>
-        </div>
-
-        <form [formGroup]="organizationForm" (ngSubmit)="saveOrganizationInfo()" class="space-y-6">
-          <div>
-            <label class="text-sm font-medium">Organization Name *</label>
-            <input formControlName="organizationName" type="text" placeholder="e.g., Acme Corp" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label class="text-sm font-medium">Organization Code *</label>
-            <input formControlName="organizationCode" type="text" placeholder="e.g., acme-corp" (blur)="checkOrgCode()" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-            <p class="text-xs text-gray-500 mt-1">2-16 characters: letters, numbers, hyphens only</p>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium">Industry *</label>
-              <select formControlName="industry" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
-                <option value="">Select Industry</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="banking">Banking</option>
-                <option value="technology">Technology</option>
-                <option value="retail">Retail</option>
-                <option value="finance">Finance</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-sm font-medium">Company Size *</label>
-              <select formControlName="organizationSize" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
-                <option value="1-10">1-10</option>
-                <option value="10-50">10-50</option>
-                <option value="50-100">50-100</option>
-                <option value="100-500">100-500</option>
-                <option value="500+">500+</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label class="text-sm font-medium">Website (Optional)</label>
-            <input formControlName="website" type="url" placeholder="https://example.com" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <button type="submit" [disabled]="organizationForm.invalid || store.loading()" class="btn-primary w-full">
-            Continue
-          </button>
-        </form>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 7: Branch Setup -->
-      <div *ngIf="store.currentStep() === 7" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Branch Setup</h2>
-          <p class="text-gray-400">Configure your head office location</p>
-        </div>
-
-        <form [formGroup]="branchForm" (ngSubmit)="saveBranchInfo()" class="space-y-6">
-          <div>
-            <label class="text-sm font-medium">Branch Name *</label>
-            <input formControlName="branchName" type="text" placeholder="Head Office" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label class="text-sm font-medium">Country *</label>
-            <select formControlName="branchCountry" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
-              <option value="">Select Country</option>
-              <option *ngFor="let country of countryOptions" [value]="country">{{ country }}</option>
-            </select>
-          </div>
-
-          <button type="submit" [disabled]="branchForm.invalid || store.loading()" class="btn-primary w-full">
-            Continue
-          </button>
-        </form>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 8: Password Creation -->
-      <div *ngIf="store.currentStep() === 8" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Create Password</h2>
-          <p class="text-gray-400">Set a strong password for your account</p>
-        </div>
-
-        <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" class="space-y-6">
-          <div>
-            <label class="text-sm font-medium">Password *</label>
-            <input formControlName="password" type="password" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label class="text-sm font-medium">Confirm Password *</label>
-            <input formControlName="confirmPassword" type="password" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <app-password-strength [password]="passwordForm.value.password || ''"></app-password-strength>
-
-          <button type="submit" [disabled]="passwordForm.invalid || store.loading()" class="btn-primary w-full">
-            Continue
-          </button>
-        </form>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 9: Security Setup (MFA) -->
-      <div *ngIf="store.currentStep() === 9" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Security Setup</h2>
-          <p class="text-gray-400">Choose your two-factor authentication method</p>
-        </div>
-
-        <div class="space-y-3">
-          <button
-            (click)="selectMfaMethod('email_otp')"
-            [class.active]="store.mfaMethod() === 'email_otp'"
-            class="w-full p-4 border border-gray-700 rounded-lg hover:border-blue-500 text-left transition">
-            <div class="font-semibold">Email OTP</div>
-            <div class="text-xs text-gray-400 mt-1">Receive codes via email (Recommended)</div>
-          </button>
-
-          <button
-            (click)="selectMfaMethod('authenticator')"
-            [class.active]="store.mfaMethod() === 'authenticator'"
-            class="w-full p-4 border border-gray-700 rounded-lg hover:border-blue-500 text-left transition">
-            <div class="font-semibold">Authenticator App</div>
-            <div class="text-xs text-gray-400 mt-1">Use Google Authenticator or Authy (Most Secure)</div>
-          </button>
-
-          <button
-            (click)="selectMfaMethod('sms')"
-            [class.active]="store.mfaMethod() === 'sms'"
-            class="w-full p-4 border border-gray-700 rounded-lg hover:border-blue-500 text-left transition">
-            <div class="font-semibold">SMS</div>
-            <div class="text-xs text-gray-400 mt-1">Receive codes via SMS</div>
-          </button>
-        </div>
-
-        <!-- Show QR Code if Authenticator Selected -->
-        <div *ngIf="store.mfaMethod() === 'authenticator' && store.mfaQrCode()" class="space-y-4">
-          <div class="bg-white p-4 rounded-lg inline-block">
-            <img [src]="store.mfaQrCode()" alt="TOTP QR Code" class="w-32 h-32" />
-          </div>
-          <div class="text-xs text-gray-400">
-            <p>Secret Key: <code class="text-yellow-400">{{ store.mfaSecret() }}</code></p>
-            <p class="mt-2">Scan with Google Authenticator, Authy, or Microsoft Authenticator</p>
-          </div>
-        </div>
-
-        <button (click)="store.nextStep()" class="btn-primary w-full">
-          Continue
-        </button>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 10: Terms & Privacy -->
-      <div *ngIf="store.currentStep() === 10" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Terms & Privacy</h2>
-          <p class="text-gray-400">Review and accept our policies</p>
-        </div>
-
-        <form [formGroup]="termsForm" (ngSubmit)="saveTermsAndPrivacy()" class="space-y-6">
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input formControlName="termsAccepted" type="checkbox" class="mt-1" />
-            <span class="text-sm">I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> *</span>
-          </label>
-
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input formControlName="privacyAccepted" type="checkbox" class="mt-1" />
-            <span class="text-sm">I agree to the <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a> *</span>
-          </label>
-
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input formControlName="cookieAccepted" type="checkbox" class="mt-1" />
-            <span class="text-sm">I agree to <a href="#" class="text-blue-400 hover:underline">Cookie Policy</a></span>
-          </label>
-
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input formControlName="securityAlertsEnabled" type="checkbox" class="mt-1" />
-            <span class="text-sm">Send me security alerts</span>
-          </label>
-
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input formControlName="marketingEmails" type="checkbox" class="mt-1" />
-            <span class="text-sm">Send me marketing emails</span>
-          </label>
-
-          <button type="submit" [disabled]="termsForm.invalid || store.loading()" class="btn-primary w-full">
-            Continue
-          </button>
-        </form>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 11: Review -->
-      <div *ngIf="store.currentStep() === 11" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold mb-2">Review Your Details</h2>
-          <p class="text-gray-400">Make sure everything is correct before creating your account</p>
-        </div>
-
-        <div class="space-y-6">
-          <!-- Owner Info -->
-          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
-            <h3 class="font-semibold mb-3">Owner Account</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-400">Name:</span>
-                <span>{{ store.firstName() }} {{ store.lastName() }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-400">Email:</span>
-                <span>{{ store.email() }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-400">Country:</span>
-                <span>{{ store.country() }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Organization Info -->
-          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
-            <h3 class="font-semibold mb-3">Organization</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-400">Name:</span>
-                <span>{{ store.organizationName() }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-400">Code:</span>
-                <span>{{ store.organizationCode() }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-400">Industry:</span>
-                <span>{{ store.industry() }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-400">Size:</span>
-                <span>{{ store.organizationSize() }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Branch Info -->
-          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
-            <h3 class="font-semibold mb-3">Branch</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-400">Name:</span>
-                <span>{{ store.branchName() }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-400">Country:</span>
-                <span>{{ store.branchCountry() }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- MFA Info -->
-          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
-            <h3 class="font-semibold mb-3">Security</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-400">2FA Method:</span>
-                <span class="capitalize">{{ store.mfaMethod() }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button (click)="confirmAndCreateAccount()" [disabled]="store.loading()" class="btn-primary w-full">
-          {{ store.loading() ? 'Creating Account...' : 'Create Account' }}
-        </button>
-
-        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
-      </div>
-
-      <!-- STEP 12: Processing -->
-      <div *ngIf="store.currentStep() === 12" class="space-y-6 text-center py-12">
-        <div class="text-4xl">🔄</div>
-        <h2 class="text-2xl font-bold">Creating Your Account</h2>
-        <p class="text-gray-400">Please wait while we set up your organization...</p>
-        <div class="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-      </div>
-
-      <!-- STEP 13: Success / Welcome -->
-      <div *ngIf="store.currentStep() === 13" class="space-y-6 text-center py-12">
-        <div class="text-6xl">🎉</div>
-        <h1 class="text-3xl font-bold">Welcome, {{ store.firstName() }}!</h1>
-        <p class="text-gray-400">Your organization <strong>{{ store.organizationName() }}</strong> has been created successfully</p>
-
-        <div class="space-y-2 text-left max-w-md mx-auto">
-          <div class="flex gap-2">
-            <span class="text-green-400">✓</span>
-            <span class="text-sm">Organization Created</span>
-          </div>
-          <div class="flex gap-2">
-            <span class="text-green-400">✓</span>
-            <span class="text-sm">Branch Setup</span>
-          </div>
-          <div class="flex gap-2">
-            <span class="text-green-400">✓</span>
-            <span class="text-sm">Admin User Configured</span>
-          </div>
-          <div class="flex gap-2">
-            <span class="text-green-400">✓</span>
-            <span class="text-sm">Security Enabled</span>
-          </div>
-          <div class="flex gap-2">
-            <span class="text-green-400">✓</span>
-            <span class="text-sm">Workspace Ready</span>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <button (click)="navigateToDashboard()" class="btn-primary flex-1">
-            Go to Dashboard
-          </button>
-          <button (click)="navigateToLogin()" class="btn-secondary flex-1">
-            Login
-          </button>
-        </div>
-      </div>
+      </section>
     </div>
   </main>
 </div>

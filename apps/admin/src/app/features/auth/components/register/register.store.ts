@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { DdlApiService, DdlItem } from '../../../../core/api/ddl.api';
 
 export interface RegisterState {
   currentStep: number;
@@ -15,6 +16,7 @@ export interface RegisterState {
   country: string;
   timezone: string;
   language: string;
+  gender: string;
 
   // Step 4: Email Verification
   emailOtpCode: string;
@@ -67,6 +69,11 @@ export interface RegisterState {
   // UI States
   loading: boolean;
   error: string | null;
+
+  // DDL options (loaded from backend)
+  ddlLoaded: boolean;
+  ddlLoading: boolean;
+  ddl: Record<string, DdlItem[]>;
 }
 
 const initial: RegisterState = {
@@ -81,6 +88,7 @@ const initial: RegisterState = {
   country: '',
   timezone: 'UTC',
   language: 'en',
+  gender: '',
 
   emailOtpCode: '',
   emailVerified: false,
@@ -124,14 +132,27 @@ const initial: RegisterState = {
 
   loading: false,
   error: null,
+
+  ddlLoaded: false,
+  ddlLoading: false,
+  ddl: {},
 };
 
 @Injectable()
 export class RegisterStore {
   private readonly http = inject(HttpClient);
+  private readonly ddlApi = inject(DdlApiService);
   private readonly state = signal<RegisterState>(initial);
 
   // Selectors
+  readonly ddl = computed(() => this.state().ddl);
+  readonly ddlLoaded = computed(() => this.state().ddlLoaded);
+  readonly ddlLoading = computed(() => this.state().ddlLoading);
+  readonly countryOptions = computed(() =>
+    this.state().ddl['country']?.map((c) => c.value) ?? []
+  );
+  readonly languageOptions = computed(() => this.state().ddl['language'] ?? []);
+  readonly genderOptions = computed(() => this.state().ddl['gender'] ?? []);
   readonly currentStep = computed(() => this.state().currentStep);
   readonly registrationType = computed(() => this.state().registrationType);
   readonly firstName = computed(() => this.state().firstName);
@@ -142,6 +163,7 @@ export class RegisterStore {
   readonly country = computed(() => this.state().country);
   readonly timezone = computed(() => this.state().timezone);
   readonly language = computed(() => this.state().language);
+  readonly gender = computed(() => this.state().gender);
   readonly emailOtpCode = computed(() => this.state().emailOtpCode);
   readonly emailVerified = computed(() => this.state().emailVerified);
   readonly mobileOtpCode = computed(() => this.state().mobileOtpCode);
@@ -179,108 +201,113 @@ export class RegisterStore {
 
   // Methods
   nextStep() {
-    this.state.update(s => ({ ...s, currentStep: Math.min(s.currentStep + 1, 11), error: null }));
+    this.state.update((s) => ({ ...s, currentStep: Math.min(s.currentStep + 1, 13), error: null }));
   }
 
   prevStep() {
-    this.state.update(s => ({ ...s, currentStep: Math.max(s.currentStep - 1, 1), error: null }));
+    this.state.update((s) => ({ ...s, currentStep: Math.max(s.currentStep - 1, 1), error: null }));
   }
 
   setRegistrationType(type: 'new_org' | 'invite') {
-    this.state.update(s => ({ ...s, registrationType: type }));
+    this.state.update((s) => ({ ...s, registrationType: type }));
   }
 
   updatePersonalInfo(info: Partial<RegisterState>) {
-    this.state.update(s => ({ ...s, ...info }));
+    this.state.update((s) => ({ ...s, ...info }));
   }
 
   updateOrganizationInfo(info: Partial<RegisterState>) {
-    this.state.update(s => ({ ...s, ...info }));
+    this.state.update((s) => ({ ...s, ...info }));
   }
 
   updateBranchInfo(info: Partial<RegisterState>) {
-    this.state.update(s => ({ ...s, ...info }));
+    this.state.update((s) => ({ ...s, ...info }));
   }
 
   updatePassword(info: Partial<RegisterState>) {
-    this.state.update(s => ({ ...s, ...info }));
+    this.state.update((s) => ({ ...s, ...info }));
   }
 
   updateMfaSettings(info: Partial<RegisterState>) {
-    this.state.update(s => ({ ...s, ...info }));
+    this.state.update((s) => ({ ...s, ...info }));
   }
 
   updateTerms(info: Partial<RegisterState>) {
-    this.state.update(s => ({ ...s, ...info }));
+    this.state.update((s) => ({ ...s, ...info }));
   }
 
   setStep(step: number) {
-    this.state.update(s => ({ ...s, currentStep: step }));
+    this.state.update((s) => ({ ...s, currentStep: step }));
   }
 
   async verifyInvitation(code: string): Promise<boolean> {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
       const res = await firstValueFrom(
-        this.http.post<{ success: boolean; email: string }>('/api/v1/clean/invitations/verify', { code })
+        this.http.post<{ success: boolean; email: string }>('/api/v1/clean/invitations/verify', {
+          code,
+        })
       );
-      this.state.update(s => ({
+      this.state.update((s) => ({
         ...s,
         invitationCode: code,
         invitationEmail: res.email,
         adminEmail: res.email,
-        loading: false
+        loading: false,
       }));
       return true;
     } catch (err: any) {
       const msg = err.error?.error || 'Invalid or already used invitation code.';
-      this.state.update(s => ({ ...s, error: msg, loading: false }));
+      this.state.update((s) => ({ ...s, error: msg, loading: false }));
       return false;
     }
   }
 
   async sendEmailOtp(email: string): Promise<boolean> {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
-      await firstValueFrom(
-        this.http.post('/api/v1/register/send-email-otp', { email })
-      );
-      this.state.update(s => ({ ...s, loading: false }));
+      await firstValueFrom(this.http.post('/api/v1/register/send-email-otp', { email }));
+      this.state.update((s) => ({ ...s, loading: false }));
       return true;
     } catch (err: any) {
-      this.state.update(s => ({ ...s, error: 'Failed to send OTP to email.', loading: false }));
+      this.state.update((s) => ({ ...s, error: 'Failed to send OTP to email.', loading: false }));
       return false;
     }
   }
 
   async verifyEmailOtp(email: string, code: string): Promise<boolean> {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
-      await firstValueFrom(
-        this.http.post('/api/v1/register/verify-email', { email, code })
-      );
-      this.state.update(s => ({ ...s, emailOtpCode: code, loading: false }));
+      await firstValueFrom(this.http.post('/api/v1/register/verify-email', { email, code }));
+      this.state.update((s) => ({ ...s, emailOtpCode: code, loading: false }));
       return true;
     } catch (err: any) {
-      this.state.update(s => ({ ...s, error: 'Incorrect email OTP code.', loading: false }));
+      this.state.update((s) => ({ ...s, error: 'Incorrect email OTP code.', loading: false }));
       return false;
     }
   }
 
   async loadMfaSetup(email: string, method: string = 'authenticator') {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
       const res = await firstValueFrom(
-        this.http.post<{ secret: string; qrCode: string }>('/api/v1/register/mfa-setup', { email, method })
+        this.http.post<{ secret: string; qrCode: string }>('/api/v1/register/mfa-setup', {
+          email,
+          method,
+        })
       );
-      this.state.update(s => ({
+      this.state.update((s) => ({
         ...s,
         mfaSecret: res.secret,
         mfaQrCode: res.qrCode,
-        loading: false
+        loading: false,
       }));
     } catch (err: any) {
-      this.state.update(s => ({ ...s, error: 'Failed to set up MFA registration.', loading: false }));
+      this.state.update((s) => ({
+        ...s,
+        error: 'Failed to set up MFA registration.',
+        loading: false,
+      }));
     }
   }
 
@@ -298,7 +325,9 @@ export class RegisterStore {
   async checkOrgCodeAvailability(code: string): Promise<boolean> {
     try {
       const res = await firstValueFrom(
-        this.http.post<{ available: boolean }>('/api/v1/register/check-org', { organizationCode: code })
+        this.http.post<{ available: boolean }>('/api/v1/register/check-org', {
+          organizationCode: code,
+        })
       );
       return res.available;
     } catch {
@@ -307,17 +336,26 @@ export class RegisterStore {
   }
 
   async resendEmailOtp(email: string): Promise<boolean> {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
-      await firstValueFrom(
-        this.http.post('/api/v1/register/resend-otp', { email, type: 'email' })
-      );
-      this.state.update(s => ({ ...s, loading: false }));
+      await firstValueFrom(this.http.post('/api/v1/register/resend-otp', { email, type: 'email' }));
+      this.state.update((s) => ({ ...s, loading: false }));
       return true;
     } catch (err: any) {
       const msg = err.error?.message || 'Failed to resend OTP. Please try again.';
-      this.state.update(s => ({ ...s, error: msg, loading: false }));
+      this.state.update((s) => ({ ...s, error: msg, loading: false }));
       return false;
+    }
+  }
+
+  async loadDdls(): Promise<void> {
+    if (this.state().ddlLoaded || this.state().ddlLoading) return;
+    this.state.update((s) => ({ ...s, ddlLoading: true }));
+    try {
+      const res = await firstValueFrom(this.ddlApi.getAll());
+      this.state.update((s) => ({ ...s, ddl: res.data, ddlLoaded: true, ddlLoading: false }));
+    } catch {
+      this.state.update((s) => ({ ...s, ddlLoading: false }));
     }
   }
 
@@ -326,7 +364,7 @@ export class RegisterStore {
   }
 
   async submitRegistration() {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
     const s = this.state();
 
     const payload = {
@@ -370,17 +408,17 @@ export class RegisterStore {
       country: s.country,
       timezone: s.timezone,
       language: s.language,
+      gender: s.gender,
     };
 
     try {
-      const res = await firstValueFrom(
-        this.http.post<any>('/api/v1/register/complete', payload)
-      );
-      this.state.update(s => ({ ...s, successData: res.data, currentStep: 11, loading: false }));
+      const res = await firstValueFrom(this.http.post<any>('/api/v1/register/complete', payload));
+      this.state.update((s) => ({ ...s, successData: res.data, currentStep: 11, loading: false }));
       return true;
     } catch (err: any) {
-      const msg = err.error?.message || err.error?.error || 'Registration failed. Please check your details.';
-      this.state.update(s => ({ ...s, error: msg, loading: false }));
+      const msg =
+        err.error?.message || err.error?.error || 'Registration failed. Please check your details.';
+      this.state.update((s) => ({ ...s, error: msg, loading: false, currentStep: 11 }));
       return false;
     }
   }

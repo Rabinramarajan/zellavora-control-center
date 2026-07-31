@@ -64,6 +64,7 @@ const InitRegistrationSchema = z.object({
   country: z.string().min(1, 'Country is required'),
   timezone: z.string().optional(),
   language: z.string().default('en'),
+  gender: z.string().optional(),
 });
 
 const SendEmailOtpSchema = z.object({
@@ -138,6 +139,7 @@ const CompleteRegistrationSchema = z.object({
   country: z.string(),
   timezone: z.string().optional(),
   language: z.string().default('en'),
+  gender: z.string().optional(),
 
   // Credentials
   password: z.string().min(12, 'Password must be at least 12 characters'),
@@ -263,6 +265,7 @@ router.post('/init', async (req, res, next) => {
         country: data.country,
         timezone: data.timezone,
         language: data.language,
+        gender: data.gender,
         status: 'in_progress',
         currentStep: 1,
         expiresAt: new Date(Date.now() + REGISTRATION_SESSION_EXPIRY_HOURS * 60 * 60 * 1000),

@@ -496,6 +496,7 @@ export async function createOrganizationWithOwner(data: {
   country: string;
   timezone?: string;
   language?: string;
+  gender?: string;
 
   // Invite
   inviteCode?: string;
@@ -572,6 +573,7 @@ export async function createOrganizationWithOwner(data: {
         country: data.country,
         timezone: data.timezone,
         language: data.language || 'en',
+        gender: data.gender,
         passwordHash: data.passwordHash,
         role: 'owner',
         tenantId: organization.id,

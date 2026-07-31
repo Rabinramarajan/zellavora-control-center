@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PasswordService } from '../services/auth/password.service';
+import { DDL_SEED } from '../modules/ddl/ddl.data';
+import { DdlRepository } from '../modules/ddl/ddl.repository';
 
 const prisma = new PrismaClient();
 
@@ -180,6 +182,13 @@ async function main() {
     },
   });
   console.log('- Default invitation code seeded: ZCC-INVITE-2026');
+
+  // 9. Seed DDL lists (countries, languages, genders, etc.)
+  const ddlRepo = new DdlRepository();
+  for (const item of DDL_SEED) {
+    await ddlRepo.upsert(item);
+  }
+  console.log(`- DDL lists seeded (${DDL_SEED.length} entries)`);
 
   console.log('✅ Seeding Completed Successfully.');
 }
