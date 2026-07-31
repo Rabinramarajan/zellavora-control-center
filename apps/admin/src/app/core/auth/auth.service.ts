@@ -21,7 +21,7 @@ import { Injectable, inject, effect, DestroyRef } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError, timer, Subscription, from } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { catchError, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 import { AuthStore } from './auth.store';
 import {
@@ -137,14 +137,28 @@ export class AuthService {
     return this.http.post<ValidateClientResponse>(`${this.apiUrl}/validate-client`, { clientCode });
   }
 
+  /**
+   * The tenant list is public and static for the lifetime of the app, so the
+   * request is shared: concurrent callers join the in-flight request and later
+   * callers replay the cached response instead of re-hitting the API.
+   */
+  private clients$?: Observable<any>;
+
   loadClients(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/clients`).pipe(
+    this.clients$ ??= this.http.get<any>(`${this.apiUrl}/clients`).pipe(
       tap((res) => {
         if (res && res.tenants) {
           this.store.setAvailableTenants(res.tenants);
         }
-      })
+      }),
+      catchError((err) => {
+        // Don't cache failures — let the next caller retry.
+        this.clients$ = undefined;
+        return throwError(() => err);
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
+    return this.clients$;
   }
 
   // -------------------------------------------------------------------------
