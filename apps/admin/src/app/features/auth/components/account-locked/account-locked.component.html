@@ -1,0 +1,160 @@
+<div class="locked-page">
+  <!-- Ambient background glows -->
+  <div class="glow-bg-red"></div>
+  <div class="glow-bg-orange"></div>
+  <div class="glow-bg-violet"></div>
+
+  <!-- Main card -->
+  <div class="locked-card">
+
+    <!-- Lock icon -->
+    <div class="lock-icon-wrapper">
+      <div class="lock-icon-ring lock-ring--outer"></div>
+      <div class="lock-icon-ring lock-ring--inner"></div>
+      <div class="lock-icon-core">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+             class="lock-svg">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Heading -->
+    <div class="text-center mt-6">
+      <h1 class="locked-heading">Account Temporarily<br><span class="locked-heading-accent">Locked</span></h1>
+      <p class="locked-subtext mt-2">{{ lockReason() }}</p>
+    </div>
+
+    <!-- Countdown timer -->
+    <div class="timer-section">
+      <p class="timer-label">Your account will unlock automatically in</p>
+      <div class="timer-ring-wrapper">
+        <!-- SVG Countdown Ring -->
+        <svg class="countdown-ring" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+          <!-- Defs for gradients -->
+          <defs>
+            <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ef4444"/>
+              <stop offset="50%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#fbbf24"/>
+            </linearGradient>
+            <filter id="ringGlow">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- Track circle -->
+          <circle class="ring-track" cx="64" cy="64" r="54"/>
+          <!-- Progress circle -->
+          <circle
+            class="ring-progress"
+            cx="64" cy="64" r="54"
+            [style.stroke-dasharray]="ringCircumference"
+            [style.stroke-dashoffset]="ringDashoffset"
+            stroke="url(#ringGradient)"
+            filter="url(#ringGlow)"
+          />
+          <!-- Tick marks -->
+          <circle class="ring-tick" cx="64" cy="10" r="2"/>
+          <circle class="ring-tick" cx="118" cy="64" r="2"/>
+          <circle class="ring-tick" cx="64" cy="118" r="2"/>
+          <circle class="ring-tick" cx="10" cy="64" r="2"/>
+        </svg>
+        <!-- Timer display inside ring -->
+        <div class="timer-display">
+          <span class="timer-digits">{{ countdownFormatted }}</span>
+          <span class="timer-unit">remaining</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar-wrapper">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" [style.width.%]="progressPct"></div>
+      </div>
+      <div class="progress-bar-labels">
+        <span>Lock started</span>
+        <span>{{ progressPct | number:'1.0-0' }}% elapsed</span>
+        <span>Unlocked</span>
+      </div>
+    </div>
+
+    <!-- Reason info box -->
+    <div class="info-box">
+      <div class="info-box-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="w-4 h-4">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div>
+        <p class="info-box-label">This happened because:</p>
+        <p class="info-box-text">{{ lockReason() }}</p>
+      </div>
+    </div>
+
+    <!-- What can I do section -->
+    <div class="what-todo-section">
+      <h3 class="what-todo-heading">What can I do?</h3>
+      <ul class="what-todo-list">
+        <li class="what-todo-item">
+          <div class="todo-icon todo-icon--wait">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="w-3.5 h-3.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <p>Wait for the lockout timer to expire — your account will unlock automatically.</p>
+        </li>
+        <li class="what-todo-item">
+          <div class="todo-icon todo-icon--admin">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="w-3.5 h-3.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <p>Contact your administrator for immediate manual access restoration.</p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-row">
+      <button class="btn-support" (click)="goToLogin()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="w-4 h-4">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Contact Support
+      </button>
+      <a routerLink="/auth/login" class="link-login">
+        ← Back to Login
+      </a>
+    </div>
+
+    <!-- Footer ZCC brand -->
+    <div class="locked-footer">
+      <div class="footer-brand-mark">Z</div>
+      <span class="footer-brand-name">ZELLAVORA</span>
+      <span class="footer-brand-dot">·</span>
+      <span class="footer-brand-cc">Control Center</span>
+    </div>
+
+  </div>
+</div>

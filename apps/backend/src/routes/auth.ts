@@ -1574,4 +1574,261 @@ router.get('/oauth/callback', async (req, res, next) => {
   }
 });
 
+// ----------------------------------------------------------------------------
+// GET /auth/sessions — List all active sessions for the authenticated user
+// ----------------------------------------------------------------------------
+router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = req.user!.userId;
+    const { data: sessions, error } = await supabaseAdmin
+      .from('user_sessions')
+      .select('id, device_name, browser, os, ip_address, country, last_login_at, created_at, is_current')
+      .eq('user_id', userId)
+      .eq('revoked', false)
+      .order('last_login_at', { ascending: false });
+
+    if (error) throw new AppError('Failed to load sessions', 500, 'SESSION_LOAD_FAILED');
+
+    res.json({
+      success: true,
+      data: {
+        sessions: (sessions || []).map((s: any) => ({
+          id: s.id,
+          deviceName: s.device_name || 'Unknown Device',
+          browser: s.browser || 'Unknown Browser',
+          os: s.os || 'Unknown OS',
+          ipAddress: s.ip_address || 'Unknown',
+          country: s.country || '',
+          lastLogin: s.last_login_at,
+          loginTime: s.created_at,
+          isCurrent: s.is_current || false,
+        })),
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ----------------------------------------------------------------------------
+// DELETE /auth/sessions/:sessionId — Revoke a specific session
+// ----------------------------------------------------------------------------
+router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = req.user!.userId;
+    const { sessionId } = req.params;
+
+    const { error } = await supabaseAdmin
+      .from('user_sessions')
+      .update({ revoked: true, revoked_at: new Date().toISOString() })
+      .eq('id', sessionId)
+      .eq('user_id', userId);
+
+    if (error) throw new AppError('Failed to revoke session', 500, 'SESSION_REVOKE_FAILED');
+
+    await AuditService.log({
+      organizationId: req.user!.organizationId,
+      actorId: userId,
+      action: 'session_revoked',
+      metadata: { sessionId },
+      ipAddress: ip(req),
+      userAgent: ua(req),
+      requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
+    });
+
+    res.json({ success: true, message: 'Session revoked successfully' });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ----------------------------------------------------------------------------
+// DELETE /auth/sessions — Revoke all sessions except the current one
+// ----------------------------------------------------------------------------
+router.delete('/sessions', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const userId = req.user!.userId;
+    const currentSessionId = req.user!.sessionId;
+
+    const query = supabaseAdmin
+      .from('user_sessions')
+      .update({ revoked: true, revoked_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('revoked', false);
+
+    // Exclude current session if we have it
+    const finalQuery = currentSessionId
+      ? query.neq('id', currentSessionId)
+      : query;
+
+    const { error } = await finalQuery;
+    if (error) throw new AppError('Failed to revoke sessions', 500, 'SESSION_REVOKE_ALL_FAILED');
+
+    await AuditService.log({
+      organizationId: req.user!.organizationId,
+      actorId: userId,
+      action: 'sessions_revoked_all',
+      ipAddress: ip(req),
+      userAgent: ua(req),
+      requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
+    });
+
+    res.json({ success: true, message: 'All other sessions revoked' });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ----------------------------------------------------------------------------
+// POST /auth/send-verification — Send email verification OTP/link
+// ----------------------------------------------------------------------------
+const SendVerificationSchema = z.object({
+  email: z.string().email(),
+});
+
+router.post('/send-verification', async (req, res, next) => {
+  try {
+    const { email } = SendVerificationSchema.parse(req.body);
+
+    // Find the user
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, email_verified, tenant_id')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+
+    if (userError || !user) {
+      // Return success even if not found to prevent email enumeration
+      res.json({ success: true, message: 'If this email exists, a verification code has been sent.' });
+      return;
+    }
+
+    if (user.email_verified) {
+      res.json({ success: true, message: 'Email is already verified.' });
+      return;
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Store OTP (upsert)
+    await supabaseAdmin.from('email_verifications').upsert({
+      user_id: user.id,
+      email: user.email,
+      otp_code: otp,
+      expires_at: expiresAt.toISOString(),
+      used: false,
+    }, { onConflict: 'user_id' });
+
+    // TODO: Send OTP via email service
+    console.log(`[email-verification] OTP for ${email}: ${otp}`);
+
+    res.json({ success: true, message: 'Verification code sent to your email.' });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ----------------------------------------------------------------------------
+// POST /auth/verify-email — Verify email via token or OTP code
+// ----------------------------------------------------------------------------
+const VerifyEmailSchema = z.object({
+  token: z.string().optional(),
+  otp: z.string().optional(),
+  email: z.string().email().optional(),
+});
+
+router.post('/verify-email', async (req, res, next) => {
+  try {
+    const { token, otp, email } = VerifyEmailSchema.parse(req.body);
+
+    if (!token && !otp) {
+      throw new AppError('Either a token or OTP is required', 400, 'MISSING_VERIFICATION');
+    }
+
+    let userId: string | null = null;
+
+    if (otp) {
+      // OTP-based verification
+      const { data: verification, error } = await supabaseAdmin
+        .from('email_verifications')
+        .select('user_id, otp_code, expires_at, used')
+        .eq('otp_code', otp)
+        .maybeSingle();
+
+      if (error || !verification) throw new AppError('Invalid verification code', 400, 'INVALID_OTP');
+      if (verification.used) throw new AppError('Verification code already used', 400, 'OTP_USED');
+      if (new Date(verification.expires_at) < new Date()) throw new AppError('Verification code expired', 400, 'OTP_EXPIRED');
+
+      userId = verification.user_id;
+      await supabaseAdmin.from('email_verifications').update({ used: true }).eq('user_id', userId);
+    } else if (token) {
+      // Token-based verification (from email link)
+      const { data: verification, error } = await supabaseAdmin
+        .from('email_verifications')
+        .select('user_id, expires_at, used')
+        .eq('token', token)
+        .maybeSingle();
+
+      if (error || !verification) throw new AppError('Invalid verification token', 400, 'INVALID_TOKEN');
+      if (verification.used) throw new AppError('Token already used', 400, 'TOKEN_USED');
+      if (new Date(verification.expires_at) < new Date()) throw new AppError('Verification token expired', 400, 'TOKEN_EXPIRED');
+
+      userId = verification.user_id;
+      await supabaseAdmin.from('email_verifications').update({ used: true }).eq('user_id', userId);
+    }
+
+    if (!userId) throw new AppError('Verification failed', 400, 'VERIFICATION_FAILED');
+
+    // Mark user email as verified
+    await supabaseAdmin
+      .from('users')
+      .update({ email_verified: true, email_verified_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    res.json({ success: true, message: 'Email verified successfully.' });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ----------------------------------------------------------------------------
+// POST /auth/resend-otp — Resend verification OTP
+// ----------------------------------------------------------------------------
+router.post('/resend-otp', async (req, res, next) => {
+  try {
+    const { email } = SendVerificationSchema.parse(req.body);
+
+    // Delegate to send-verification logic
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('id, email, email_verified')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+
+    if (!user || user.email_verified) {
+      res.json({ success: true, message: 'If this email exists and is unverified, a new code has been sent.' });
+      return;
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await supabaseAdmin.from('email_verifications').upsert({
+      user_id: user.id,
+      email: user.email,
+      otp_code: otp,
+      expires_at: expiresAt.toISOString(),
+      used: false,
+    }, { onConflict: 'user_id' });
+
+    console.log(`[email-verification] Resent OTP for ${email}: ${otp}`);
+
+    res.json({ success: true, message: 'Verification code resent to your email.' });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;

@@ -1,0 +1,300 @@
+<div class="auth-shell">
+  <!-- Background glows -->
+  <div class="glow-bg-1"></div>
+  <div class="glow-bg-2"></div>
+
+  <!-- ===== LEFT BRAND PANEL ===== -->
+  <aside class="brand-panel">
+    <div class="brand-lockup">
+      <div class="brand-mark">Z</div>
+      <div>
+        <h1 class="brand-name">ZELLAVORA</h1>
+        <p class="brand-sub">Control Center</p>
+      </div>
+    </div>
+
+    <h2 class="brand-headline">
+      Verify Your<br />
+      <span class="headline-accent">Identity.</span>
+    </h2>
+    <p class="brand-copy">
+      We use multi-layer identity verification to ensure only you
+      can access your Zellavora Control Center account.
+    </p>
+
+    <!-- 3D Holographic City -->
+    <div class="city-stage">
+      <span class="float-badge float-badge--gear">⚙️</span>
+      <span class="float-badge float-badge--chart">📊</span>
+      <span class="float-badge float-badge--user">👤</span>
+      <span class="float-badge float-badge--spark">✦</span>
+
+      <div class="city-scene">
+        <div class="city-platform"></div>
+        <div class="city-platform city-platform--inner"></div>
+        <div class="city-skyline">
+          <span class="tower tower--1"></span>
+          <span class="tower tower--2"></span>
+          <span class="tower tower--3"><i class="tower-glyph">Z</i></span>
+          <span class="tower tower--4"></span>
+          <span class="tower tower--5"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Trio -->
+    <div class="feature-grid">
+      <div>
+        <div class="feature-icon feature-icon--cyan">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <h4 class="feature-title">Zero-Trust</h4>
+        <p class="feature-copy">Verify every access attempt</p>
+      </div>
+      <div>
+        <div class="feature-icon feature-icon--violet">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h4 class="feature-title">OTP Protected</h4>
+        <p class="feature-copy">One-time codes expire fast</p>
+      </div>
+      <div>
+        <div class="feature-icon feature-icon--emerald">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h4 class="feature-title">Email Signed</h4>
+        <p class="feature-copy">Cryptographically secured</p>
+      </div>
+    </div>
+
+    <!-- Trust strip -->
+    <div class="trust-card">
+      <div class="trust-shield">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.2 12l2 2 3.6-3.8"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p class="trust-title">Bank-grade verification</p>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11.5px] text-slate-400">
+          <span><span class="text-indigo-400 font-bold">✓</span> TLS 1.3</span>
+          <span><span class="text-indigo-400 font-bold">✓</span> OTP</span>
+          <span><span class="text-indigo-400 font-bold">✓</span> TOTP</span>
+          <span><span class="text-indigo-400 font-bold">✓</span> SOC 2</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== RIGHT PANEL ===== -->
+  <div class="glass-panel auth-card items-center">
+    <div class="auth-scroll w-full flex flex-col justify-center items-center py-2">
+      <div class="auth-form-col">
+
+        <!-- ─── STATE: verifying ─── -->
+        <div *ngIf="step() === 'verifying'" class="flex flex-col items-center justify-center text-center gap-6 py-8">
+          <div class="verifying-ring">
+            <svg class="animate-spin w-10 h-10 text-indigo-400" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+              <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white mb-2">Verifying your email…</h2>
+            <p class="text-sm text-slate-400">Please wait while we confirm your verification link.</p>
+          </div>
+          <div class="flex gap-1.5 mt-2">
+            <span class="dot-pulse dot-pulse--1"></span>
+            <span class="dot-pulse dot-pulse--2"></span>
+            <span class="dot-pulse dot-pulse--3"></span>
+          </div>
+        </div>
+
+        <!-- ─── STATE: success ─── -->
+        <div *ngIf="step() === 'success'" class="flex flex-col items-center text-center gap-5 py-6">
+          <div class="success-ring">
+            <div class="success-checkmark">
+              <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path class="check-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white mb-2">Email Verified!</h2>
+            <p class="text-sm text-slate-400 max-w-xs mx-auto">
+              Your account is ready. You can now sign in to Zellavora Control Center.
+            </p>
+          </div>
+          <div class="w-full p-3.5 rounded-2xl bg-emerald-500/8 border border-emerald-500/20 flex items-center gap-3">
+            <div class="w-8 h-8 shrink-0 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <p class="text-xs text-emerald-300 font-medium">Identity confirmed — access granted.</p>
+          </div>
+          <button (click)="goToLogin()" class="w-full btn-primary mt-2">
+            Go to Login
+            <svg class="w-4 h-4 btn-primary__arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- ─── STATE: error ─── -->
+        <div *ngIf="step() === 'error'" class="flex flex-col items-center text-center gap-5 py-6">
+          <div class="error-ring">
+            <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white mb-2">Verification Failed</h2>
+            <p class="text-sm text-slate-400 max-w-xs mx-auto">{{ errorMsg() }}</p>
+          </div>
+          <div class="w-full p-3.5 rounded-2xl bg-red-500/8 border border-red-500/20 flex items-center gap-3">
+            <div class="w-8 h-8 shrink-0 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <p class="text-xs text-red-300 font-medium">Links expire after 24 hours for security.</p>
+          </div>
+          <a routerLink="/auth/forgot-password"
+             class="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-indigo-500/30 bg-indigo-500/8 text-indigo-300 hover:bg-indigo-500/15 hover:border-indigo-400/50 transition-all font-semibold text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Request New Link
+          </a>
+          <button (click)="goToLogin()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors mt-1">
+            ← Back to Login
+          </button>
+        </div>
+
+        <!-- ─── STATE: otp (default) ─── -->
+        <div *ngIf="step() === 'otp'">
+
+          <!-- Animated email icon -->
+          <div class="flex flex-col items-center mb-6">
+            <div class="email-icon-wrap mb-5">
+              <div class="email-icon-outer">
+                <div class="email-icon-inner">
+                  <svg class="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                  <!-- Animated dot -->
+                  <span class="email-dot"></span>
+                </div>
+              </div>
+              <!-- Pulse rings -->
+              <span class="pulse-ring pulse-ring--1"></span>
+              <span class="pulse-ring pulse-ring--2"></span>
+            </div>
+
+            <h2 class="text-2xl font-bold text-white mb-1.5">Check your email</h2>
+            <p class="text-sm text-slate-400 text-center max-w-xs">
+              We sent a 6-digit verification code to
+              <span *ngIf="email()" class="text-indigo-300 font-semibold break-all">{{ email() }}</span>
+              <span *ngIf="!email()" class="text-indigo-300 font-semibold">your email address</span>
+            </p>
+          </div>
+
+          <!-- OTP Digit Boxes -->
+          <div class="flex gap-2.5 justify-center mb-4" (paste)="onOtpPaste($event)">
+            <input
+              *ngFor="let digit of otpDigits(); let i = index"
+              [id]="'vemail-otp-' + i"
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              [value]="digit"
+              (input)="onOtpInput($event, i)"
+              (keydown)="onOtpKeyDown($event, i)"
+              class="otp-box"
+              [class.otp-box--filled]="digit"
+              autocomplete="one-time-code"
+            />
+          </div>
+
+          <!-- Error message -->
+          <div *ngIf="errorMsg()" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs text-center">
+            {{ errorMsg() }}
+          </div>
+
+          <!-- Verify Button -->
+          <button
+            (click)="verifyOtp()"
+            [disabled]="isLoading() || otpValue.length !== 6"
+            class="w-full btn-primary mb-5"
+          >
+            <span *ngIf="!isLoading()" class="flex items-center gap-2">
+              Verify Email
+              <svg class="w-4 h-4 btn-primary__arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </span>
+            <span *ngIf="isLoading()" class="flex items-center gap-2">
+              <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Verifying…
+            </span>
+          </button>
+
+          <!-- Resend section -->
+          <div class="text-center text-sm text-slate-400">
+            <span>Didn't receive the code?</span>
+            <span *ngIf="resendTimer() > 0" class="ml-1.5 text-slate-500 font-medium tabular-nums">
+              Resend in <span class="text-indigo-400 font-bold">{{ resendTimer() }}s</span>
+            </span>
+            <button
+              *ngIf="resendTimer() === 0"
+              (click)="resendOtp()"
+              [disabled]="isLoading()"
+              class="ml-1.5 text-indigo-400 hover:text-indigo-300 font-semibold transition-colors disabled:opacity-50 bg-transparent border-none p-0 cursor-pointer"
+            >
+              Resend code
+            </button>
+          </div>
+
+          <!-- Divider -->
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-white/8"></div>
+            </div>
+          </div>
+
+          <!-- Wrong email / support -->
+          <div class="text-center text-xs text-slate-500">
+            Wrong email?
+            <a href="mailto:support@zellavora.com" class="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors ml-1">
+              Contact support
+            </a>
+          </div>
+
+          <!-- Trust strip -->
+          <div class="mt-6 flex items-center justify-between gap-3 p-3.5 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 shrink-0 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+              </div>
+              <span class="text-[12px] font-medium text-slate-400">Your code is encrypted and expires in 10 minutes</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

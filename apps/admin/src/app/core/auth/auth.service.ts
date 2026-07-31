@@ -378,6 +378,44 @@ export class AuthService {
   }
 
   // -------------------------------------------------------------------------
+  // Sessions
+  // -------------------------------------------------------------------------
+
+  /** GET /auth/sessions — list all active sessions for the current user. */
+  getSessions(): Observable<{ sessions: any[] }> {
+    return this.http.get<{ sessions: any[] }>(`${this.apiUrl}/sessions`);
+  }
+
+  /** DELETE /auth/session/:id — revoke a specific session. */
+  revokeSession(sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/sessions/${sessionId}`);
+  }
+
+  /** DELETE /auth/sessions — revoke all sessions except current. */
+  revokeAllSessions(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/sessions`);
+  }
+
+  // -------------------------------------------------------------------------
+  // Email Verification
+  // -------------------------------------------------------------------------
+
+  /** POST /auth/send-verification — send or resend email verification OTP/link. */
+  sendVerificationEmail(email: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/send-verification`, { email });
+  }
+
+  /** POST /auth/verify-email — verify email via deep-link token or OTP code. */
+  verifyEmail(token: string, otp: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/verify-email`, { token, otp });
+  }
+
+  /** POST /auth/resend-otp — resend verification OTP to email. */
+  resendOtp(email: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/resend-otp`, { email });
+  }
+
+  // -------------------------------------------------------------------------
   // Internals
   // -------------------------------------------------------------------------
 

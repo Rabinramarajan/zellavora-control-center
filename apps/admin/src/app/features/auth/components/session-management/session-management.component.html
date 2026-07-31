@@ -1,0 +1,204 @@
+<div class="sessions-shell">
+  <!-- Background glows -->
+  <div class="glow-bg-1"></div>
+  <div class="glow-bg-2"></div>
+  <div class="glow-bg-3"></div>
+
+  <!-- Header -->
+  <header class="sessions-header">
+    <div class="sessions-header__inner">
+      <div class="sessions-header__brand">
+        <div class="brand-mark">Z</div>
+        <div>
+          <p class="brand-name">ZELLAVORA</p>
+          <p class="brand-sub">Control Center</p>
+        </div>
+      </div>
+      <div class="sessions-header__actions">
+        <button (click)="goBack()" class="header-back-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Back to Dashboard
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="sessions-main">
+    <div class="sessions-content">
+
+      <!-- Page Title -->
+      <div class="page-title-section">
+        <div class="page-title-icon">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="page-title">Active Sessions</h1>
+          <p class="page-subtitle">Manage where you're signed in. Revoke access from unknown devices immediately.</p>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div *ngIf="successMsg()" class="alert alert--success">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ successMsg() }}
+      </div>
+      <div *ngIf="errorMsg()" class="alert alert--error">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ errorMsg() }}
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar" *ngIf="!isLoading()">
+        <div class="stat-chip">
+          <span class="stat-dot stat-dot--green"></span>
+          {{ sessions().length }} active session{{ sessions().length !== 1 ? 's' : '' }}
+        </div>
+        <div class="stat-chip">
+          <span class="stat-dot stat-dot--blue"></span>
+          {{ sessions().length > 0 ? '1 current device' : 'No sessions' }}
+        </div>
+      </div>
+
+      <!-- Actions Bar -->
+      <div class="actions-bar" *ngIf="!isLoading() && sessions().length > 1">
+        <button
+          (click)="revokeAllSessions()"
+          [disabled]="isRevokingAll()"
+          class="btn-revoke-all"
+        >
+          <svg *ngIf="!isRevokingAll()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          <svg *ngIf="isRevokingAll()" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isRevokingAll() ? 'Revoking...' : 'Revoke All Other Sessions' }}
+        </button>
+
+        <button (click)="logoutCurrentAndAll()" class="btn-logout-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Logout All Devices
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading()" class="loading-state">
+        <div *ngFor="let i of [1,2,3]" class="session-card-skeleton">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line skeleton-line--wide"></div>
+            <div class="skeleton-line skeleton-line--medium"></div>
+            <div class="skeleton-line skeleton-line--short"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading() && sessions().length === 0" class="empty-state">
+        <div class="empty-icon">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2"/>
+          </svg>
+        </div>
+        <h3 class="empty-title">No active sessions found</h3>
+        <p class="empty-desc">Session data could not be loaded or you have no active sessions.</p>
+        <button (click)="loadSessions()" class="btn-refresh">Refresh</button>
+      </div>
+
+      <!-- Sessions List -->
+      <div *ngIf="!isLoading() && sessions().length > 0" class="sessions-list">
+        <div
+          *ngFor="let session of sessions()"
+          class="session-card"
+          [class.session-card--current]="session.isCurrent"
+        >
+          <!-- Device Icon -->
+          <div class="session-device-icon" [class.session-device-icon--current]="session.isCurrent">
+            <span class="text-xl">{{ getOsIcon(session.os) }}</span>
+          </div>
+
+          <!-- Session Info -->
+          <div class="session-info">
+            <div class="session-info__header">
+              <div class="session-device-name">
+                {{ session.deviceName || 'Unknown Device' }}
+                <span *ngIf="session.isCurrent" class="current-badge">Current</span>
+              </div>
+              <div class="session-browser">
+                <span>{{ getBrowserIcon(session.browser) }}</span>
+                {{ session.browser }} on {{ session.os }}
+              </div>
+            </div>
+
+            <div class="session-meta">
+              <span class="session-meta__item">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                {{ session.ipAddress }}
+                <span *ngIf="session.country" class="text-slate-500">· {{ session.country }}</span>
+              </span>
+              <span class="session-meta__item">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Last active: {{ formatDate(session.lastLogin) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Revoke Action -->
+          <div class="session-action">
+            <button
+              *ngIf="!session.isCurrent"
+              (click)="revokeSession(session.id)"
+              [disabled]="isRevoking() === session.id"
+              class="btn-revoke"
+            >
+              <svg *ngIf="isRevoking() !== session.id" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <svg *ngIf="isRevoking() === session.id" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isRevoking() === session.id ? '' : 'Revoke' }}
+            </button>
+            <div *ngIf="session.isCurrent" class="current-label">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Active
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Note -->
+      <div class="security-note-box">
+        <div class="security-note-icon">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <p class="security-note-text">
+          If you see an unfamiliar session, revoke it immediately and <strong>change your password</strong>. Consider enabling MFA for enhanced security.
+        </p>
+      </div>
+
+    </div>
+  </main>
+</div>

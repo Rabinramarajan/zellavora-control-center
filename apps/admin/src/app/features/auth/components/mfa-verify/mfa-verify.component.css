@@ -1,0 +1,350 @@
+/* MFA Verify — component-scoped styles.
+   Shared shell lives in ../../auth-shell.css
+   ===================================================================== */
+
+/* ── Mode Toggle Bar ────────────────────────────────────────────────── */
+.mode-toggle-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.25rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.65rem;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.mode-tab:hover {
+  color: #cbd5e1;
+}
+
+.mode-tab--active {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+}
+
+/* ── MFA Card Wrapper ──────────────────────────────────────────────── */
+.mfa-card {
+  width: 100%;
+  animation: mfaFadeIn 0.3s ease-out;
+}
+
+@keyframes mfaFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── MFA Icon Rings ────────────────────────────────────────────────── */
+.mfa-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 6.5rem;
+  height: 6.5rem;
+  margin: 0 auto 1.5rem;
+}
+
+.mfa-icon-ring {
+  position: absolute;
+  border-radius: 9999px;
+  animation: iconPulse 3s ease-in-out infinite;
+}
+
+.mfa-icon-ring--outer {
+  width: 6rem;
+  height: 6rem;
+  border: 1.5px solid rgba(99, 102, 241, 0.25);
+  background: rgba(99, 102, 241, 0.05);
+  animation-delay: 0s;
+}
+
+.mfa-icon-ring--inner {
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  animation-delay: 0.5s;
+}
+
+.mfa-icon-ring--violet {
+  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.06);
+}
+
+.mfa-icon-ring--violet-inner {
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.mfa-icon-core {
+  position: relative;
+  z-index: 2;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.05));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a5b4fc;
+}
+
+.mfa-icon-core--violet {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05));
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #d8b4fe;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.95;
+  }
+}
+
+/* ── OTP Digit Boxes ───────────────────────────────────────────────── */
+.otp-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.otp-box {
+  width: 3rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  caret-color: #6366f1;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+}
+
+.otp-box::placeholder {
+  color: rgba(255, 255, 255, 0.1);
+}
+
+.otp-box:focus {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.08);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  transform: scale(1.05);
+}
+
+.otp-box--filled {
+  border-color: rgba(34, 211, 238, 0.5);
+  background: rgba(34, 211, 238, 0.1);
+  color: #a5f3fc;
+}
+
+/* ── Error Strip ───────────────────────────────────────────────────── */
+.error-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 0.85rem;
+  margin-bottom: 1.5rem;
+  color: #fca5a5;
+  font-size: 0.875rem;
+  animation: errorFadeIn 0.25s ease-out;
+}
+
+@keyframes errorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Remember Device Checkbox ──────────────────────────────────────── */
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 0.65rem;
+  transition: background 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.remember-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.custom-checkbox-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.4rem;
+  border: 1.5px solid rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox--checked {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.8);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+}
+
+/* ── Mode Switch Link ──────────────────────────────────────────────– */
+.mode-switch-link {
+  background: none;
+  border: none;
+  color: #a5b4fc;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  padding: 0;
+  font-size: inherit;
+}
+
+.mode-switch-link:hover {
+  color: #c7d2fe;
+  text-decoration: underline;
+}
+
+/* ── Auth Field (inherited from shell, but reaffirm here) ──────────── */
+.auth-field {
+  width: 100%;
+  padding: 0.8rem 2.75rem 0.8rem 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.auth-field::placeholder {
+  color: #64748b;
+}
+
+.auth-field:focus {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ── Field Label ───────────────────────────────────────────────────── */
+.field-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .mode-toggle-bar {
+    flex-direction: column;
+  }
+
+  .mode-tab {
+    width: 100%;
+  }
+
+  .otp-row {
+    gap: 0.5rem;
+  }
+
+  .otp-box {
+    width: 2.5rem;
+    height: 3rem;
+    font-size: 1rem;
+  }
+
+  .mfa-icon-wrap {
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .mfa-icon-ring--outer {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .mfa-icon-ring--inner {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .mfa-icon-core {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .mfa-icon-core svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

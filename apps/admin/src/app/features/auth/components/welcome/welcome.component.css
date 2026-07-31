@@ -1,0 +1,478 @@
+/* =====================================================================
+   Welcome Component — ZCC Success / Celebration Screen
+   Inherits brand tokens from ../../auth-shell.css
+   ===================================================================== */
+
+/* ── Host ── */
+:host {
+  display: block;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #05070f;
+  color: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Extra ambient glow specific to this screen ── */
+.glow-bg-3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70vw;
+  height: 70vw;
+  max-width: 900px;
+  max-height: 900px;
+  border-radius: 9999px;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.08) 0%,
+    rgba(168, 85, 247, 0.06) 40%,
+    rgba(6, 182, 212, 0.04) 70%,
+    transparent 100%
+  );
+  animation: ambientPulse 8s ease-in-out infinite;
+}
+
+@keyframes ambientPulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.08); }
+}
+
+/* ══════════════════════════════════════════
+   CONFETTI LAYER
+   ══════════════════════════════════════════ */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.confetti-dot {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: confettiFall linear infinite;
+}
+
+/* Sizes */
+.dot-1,  .dot-4,  .dot-7,  .dot-10, .dot-13, .dot-16 { width: 6px;  height: 6px; }
+.dot-2,  .dot-5,  .dot-8,  .dot-11, .dot-14, .dot-17 { width: 9px;  height: 9px; }
+.dot-3,  .dot-6,  .dot-9,  .dot-12, .dot-15, .dot-18 { width: 5px;  height: 5px; }
+
+/* Colours — brand palette */
+.dot-1,  .dot-7,  .dot-13 { background: #6366f1; }
+.dot-2,  .dot-8,  .dot-14 { background: #22d3ee; }
+.dot-3,  .dot-9,  .dot-15 { background: #a855f7; }
+.dot-4,  .dot-10, .dot-16 { background: #34d399; }
+.dot-5,  .dot-11, .dot-17 { background: #f472b6; }
+.dot-6,  .dot-12, .dot-18 { background: #fbbf24; }
+
+/* Positions & timing — scattered across 0–100% width */
+.dot-1  { left: 4%;   animation-duration: 5.2s;  animation-delay: 0s;    animation-fill-mode: both; }
+.dot-2  { left: 12%;  animation-duration: 4.7s;  animation-delay: 0.4s;  animation-fill-mode: both; }
+.dot-3  { left: 21%;  animation-duration: 6.1s;  animation-delay: 0.9s;  animation-fill-mode: both; }
+.dot-4  { left: 30%;  animation-duration: 5.5s;  animation-delay: 0.2s;  animation-fill-mode: both; }
+.dot-5  { left: 38%;  animation-duration: 4.3s;  animation-delay: 1.1s;  animation-fill-mode: both; }
+.dot-6  { left: 47%;  animation-duration: 6.8s;  animation-delay: 0.6s;  animation-fill-mode: both; }
+.dot-7  { left: 55%;  animation-duration: 5.0s;  animation-delay: 1.5s;  animation-fill-mode: both; }
+.dot-8  { left: 63%;  animation-duration: 4.9s;  animation-delay: 0.3s;  animation-fill-mode: both; }
+.dot-9  { left: 71%;  animation-duration: 5.7s;  animation-delay: 0.8s;  animation-fill-mode: both; }
+.dot-10 { left: 80%;  animation-duration: 4.4s;  animation-delay: 1.3s;  animation-fill-mode: both; }
+.dot-11 { left: 88%;  animation-duration: 6.3s;  animation-delay: 0.1s;  animation-fill-mode: both; }
+.dot-12 { left: 95%;  animation-duration: 5.1s;  animation-delay: 1.8s;  animation-fill-mode: both; }
+.dot-13 { left: 8%;   animation-duration: 7.2s;  animation-delay: 2.1s;  animation-fill-mode: both; }
+.dot-14 { left: 17%;  animation-duration: 4.6s;  animation-delay: 2.5s;  animation-fill-mode: both; }
+.dot-15 { left: 43%;  animation-duration: 5.9s;  animation-delay: 1.7s;  animation-fill-mode: both; }
+.dot-16 { left: 67%;  animation-duration: 4.1s;  animation-delay: 2.9s;  animation-fill-mode: both; }
+.dot-17 { left: 76%;  animation-duration: 6.5s;  animation-delay: 0.5s;  animation-fill-mode: both; }
+.dot-18 { left: 91%;  animation-duration: 5.3s;  animation-delay: 3.2s;  animation-fill-mode: both; }
+
+@keyframes confettiFall {
+  0%   { top: -5%;  opacity: 0;   transform: rotate(0deg)   translateX(0);   }
+  10%  { opacity: 1; }
+  80%  { opacity: 0.7; }
+  100% { top: 105%; opacity: 0;   transform: rotate(720deg) translateX(30px); }
+}
+
+/* Stars */
+.confetti-star {
+  position: absolute;
+  font-size: 1rem;
+  opacity: 0;
+  animation: starFloat ease-in-out infinite;
+}
+
+.star-1 { left: 7%;  top: 20%; color: #a5b4fc; animation-duration: 4.0s; animation-delay: 0.2s; font-size: 0.75rem; }
+.star-2 { left: 25%; top: 10%; color: #22d3ee; animation-duration: 5.5s; animation-delay: 1.1s; font-size: 1.1rem;  }
+.star-3 { left: 50%; top: 8%;  color: #f472b6; animation-duration: 3.8s; animation-delay: 0.7s; font-size: 0.6rem;  }
+.star-4 { left: 70%; top: 15%; color: #a855f7; animation-duration: 4.8s; animation-delay: 1.8s; font-size: 0.9rem;  }
+.star-5 { left: 85%; top: 5%;  color: #fbbf24; animation-duration: 6.1s; animation-delay: 0.4s; font-size: 1.2rem;  }
+.star-6 { left: 92%; top: 30%; color: #34d399; animation-duration: 5.0s; animation-delay: 2.3s; font-size: 0.7rem;  }
+
+@keyframes starFloat {
+  0%, 100% { opacity: 0;   transform: translateY(0)   scale(0.8); }
+  20%       { opacity: 0.9; transform: translateY(-12px) scale(1);   }
+  50%       { opacity: 0.5; transform: translateY(-24px) scale(1.2); }
+  80%       { opacity: 0.8; transform: translateY(-8px)  scale(0.9); }
+}
+
+/* ══════════════════════════════════════════
+   MAIN STAGE
+   ══════════════════════════════════════════ */
+.welcome-stage {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.welcome-card {
+  width: 100%;
+  max-width: 52rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Brand mark hero ── */
+.brand-lockup-center {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  animation: fadeInUp 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.brand-mark-hero {
+  height: 3.5rem;
+  width: 3.5rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, #22d3ee 0%, #6366f1 55%, #a855f7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.03em;
+  animation: logoPulseGlow 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes logoPulseGlow {
+  0%, 100% { box-shadow: 0 0 24px rgba(99, 102, 241, 0.6), 0 0 60px rgba(99, 102, 241, 0.2); }
+  50%       { box-shadow: 0 0 40px rgba(168, 85, 247, 0.8), 0 0 90px rgba(168, 85, 247, 0.35); }
+}
+
+.brand-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.brand-name-hero {
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #fff;
+  line-height: 1;
+}
+
+.brand-sub-hero {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* ── Checkmark ── */
+.check-ring-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInUp 0.7s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.check-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  animation: ringExpand 1s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.check-ring-outer {
+  width: 100px;
+  height: 100px;
+  border-color: rgba(99, 102, 241, 0.25);
+  animation-name: ringExpandOuter, ringPulse;
+  animation-duration: 0.8s, 3s;
+  animation-delay: 0.4s, 1.3s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+}
+
+.check-ring-inner {
+  width: 76px;
+  height: 76px;
+  border-color: rgba(34, 211, 238, 0.2);
+  animation-name: ringExpandInner;
+  animation-duration: 0.8s;
+  animation-delay: 0.55s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+@keyframes ringExpandOuter {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+@keyframes ringExpandInner {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+@keyframes ringPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); border-color: rgba(99, 102, 241, 0.25); }
+  50%       { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.5); }
+}
+
+.check-svg {
+  width: 62px;
+  height: 62px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Circle draw */
+.check-circle {
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+  animation: drawCircle 0.8s 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Tick draw */
+.check-tick {
+  stroke-dasharray: 44;
+  stroke-dashoffset: 44;
+  animation: drawTick 0.45s 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes drawTick {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Heading block ── */
+.welcome-heading-block {
+  text-align: center;
+  animation: fadeInUp 0.7s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.welcome-heading {
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: #fff;
+  margin-bottom: 0.85rem;
+}
+
+.gradient-name {
+  background: linear-gradient(90deg, #22d3ee 0%, #818cf8 55%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.welcome-sub {
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  line-height: 1.7;
+  color: #94a3b8;
+  max-width: 38rem;
+  margin-inline: auto;
+}
+
+.org-highlight {
+  color: #a5b4fc;
+  font-weight: 600;
+}
+
+/* ── Feature showcase grid ── */
+.feature-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 540px) {
+  .feature-showcase-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.feature-showcase-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.feature-showcase-card:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px) !important;
+}
+
+/* Staggered entrance animations */
+.card-delay-0 { animation: cardEntrance 0.6s 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.card-delay-1 { animation: cardEntrance 0.6s 0.70s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.card-delay-2 { animation: cardEntrance 0.6s 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.card-delay-3 { animation: cardEntrance 0.6s 1.00s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.feature-icon-badge {
+  height: 2.75rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  border-radius: 0.85rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.feature-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.3;
+  margin-bottom: 0.3rem;
+}
+
+.feature-card-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* ── Countdown block ── */
+.countdown-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  animation: fadeInUp 0.6s 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.countdown-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.countdown-icon {
+  font-size: 0.9rem;
+}
+
+.countdown-num {
+  color: #a5b4fc;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.8ch;
+  display: inline-block;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.countdown-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.countdown-bar {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #6366f1 0%, #a855f7 60%, #22d3ee 100%);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+  transition: width 0.95s linear;
+  position: relative;
+}
+
+.countdown-bar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35));
+  border-radius: 9999px;
+  animation: barShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes barShimmer {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+
+/* ── CTA button ── */
+.btn-login-now {
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.95rem 2rem;
+  font-size: 1rem;
+  border-radius: 1rem;
+  animation: fadeInUp 0.6s 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Footer note ── */
+.welcome-footer-note {
+  font-size: 0.78rem;
+  color: #475569;
+  text-align: center;
+  animation: fadeInUp 0.6s 1.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

@@ -1,0 +1,200 @@
+/* =====================================================================
+   Verify Email — component-scoped styles.
+   Shared shell lives in ../../auth-shell.css
+   ===================================================================== */
+
+/* ── OTP digit inputs ──────────────────────────────────────────────── */
+.otp-box {
+  width: 3.1rem;
+  height: 3.6rem;
+  border-radius: 0.85rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  caret-color: #6366f1;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.15s ease;
+  letter-spacing: 0;
+}
+
+.otp-box:focus {
+  border-color: rgba(99, 102, 241, 0.75);
+  background: rgba(99, 102, 241, 0.06);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.otp-box--filled {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.08);
+  color: #a5b4fc;
+}
+
+/* ── Animated email icon ───────────────────────────────────────────── */
+.email-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 6rem;
+  height: 6rem;
+}
+
+.email-icon-outer {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.4rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(168, 85, 247, 0.14) 100%);
+  border: 1.5px solid rgba(99, 102, 241, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.25);
+  animation: emailFloat 4s ease-in-out infinite;
+}
+
+.email-icon-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-dot {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.65rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 9999px;
+  background: #6366f1;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.8);
+  animation: dotPing 2.5s ease-in-out infinite;
+}
+
+/* Pulse rings around the email icon */
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.8rem;
+  border: 1.5px solid rgba(99, 102, 241, 0.3);
+  animation: ringExpand 2.8s ease-out infinite;
+  pointer-events: none;
+}
+
+.pulse-ring--2 {
+  animation-delay: 1.4s;
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+@keyframes emailFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+
+@keyframes dotPing {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.7; }
+}
+
+@keyframes ringExpand {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+
+/* ── Verifying state ───────────────────────────────────────────────── */
+.verifying-ring {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1.5px solid rgba(99, 102, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.2);
+}
+
+.dot-pulse {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: #6366f1;
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.dot-pulse--2 { animation-delay: 0.2s; }
+.dot-pulse--3 { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+  40%            { transform: scale(1); opacity: 1; }
+}
+
+/* ── Success state ─────────────────────────────────────────────────── */
+.success-ring {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.2);
+  animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.success-checkmark {
+  animation: checkmarkDraw 0.4s ease 0.2s both;
+}
+
+.check-path {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: dashDraw 0.5s ease 0.25s forwards;
+}
+
+@keyframes successPop {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes checkmarkDraw {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes dashDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Error state ───────────────────────────────────────────────────── */
+.error-ring {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 9999px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.15);
+  animation: errorShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  30%       { transform: translateX(8px); }
+  45%       { transform: translateX(-6px); }
+  60%       { transform: translateX(6px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}

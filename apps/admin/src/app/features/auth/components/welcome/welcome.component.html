@@ -1,0 +1,120 @@
+<!-- Confetti particles (CSS-only animated dots) -->
+<div class="confetti-layer" aria-hidden="true">
+  <span class="confetti-dot dot-1"></span>
+  <span class="confetti-dot dot-2"></span>
+  <span class="confetti-dot dot-3"></span>
+  <span class="confetti-dot dot-4"></span>
+  <span class="confetti-dot dot-5"></span>
+  <span class="confetti-dot dot-6"></span>
+  <span class="confetti-dot dot-7"></span>
+  <span class="confetti-dot dot-8"></span>
+  <span class="confetti-dot dot-9"></span>
+  <span class="confetti-dot dot-10"></span>
+  <span class="confetti-dot dot-11"></span>
+  <span class="confetti-dot dot-12"></span>
+  <span class="confetti-dot dot-13"></span>
+  <span class="confetti-dot dot-14"></span>
+  <span class="confetti-dot dot-15"></span>
+  <span class="confetti-dot dot-16"></span>
+  <span class="confetti-dot dot-17"></span>
+  <span class="confetti-dot dot-18"></span>
+  <span class="confetti-star star-1">✦</span>
+  <span class="confetti-star star-2">✧</span>
+  <span class="confetti-star star-3">✦</span>
+  <span class="confetti-star star-4">✧</span>
+  <span class="confetti-star star-5">✦</span>
+  <span class="confetti-star star-6">✧</span>
+</div>
+
+<!-- Ambient background glows -->
+<div class="glow-bg-1"></div>
+<div class="glow-bg-2"></div>
+<div class="glow-bg-3"></div>
+
+<!-- Main centered content -->
+<main class="welcome-stage">
+  <div class="welcome-card">
+
+    <!-- ZCC Brand mark -->
+    <div class="brand-lockup-center">
+      <div class="brand-mark-hero">Z</div>
+      <div class="brand-text-col">
+        <span class="brand-name-hero">ZELLAVORA</span>
+        <span class="brand-sub-hero">CONTROL CENTER</span>
+      </div>
+    </div>
+
+    <!-- Animated success checkmark -->
+    <div class="check-ring-wrapper">
+      <div class="check-ring check-ring-outer"></div>
+      <div class="check-ring check-ring-inner"></div>
+      <svg class="check-svg" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Success">
+        <circle class="check-circle" cx="26" cy="26" r="24" stroke="url(#checkGrad)" stroke-width="2.5"/>
+        <polyline class="check-tick" points="14,27 22,35 38,18" stroke="url(#tickGrad)" stroke-width="3.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="checkGrad" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#22d3ee"/>
+            <stop offset="100%" stop-color="#a855f7"/>
+          </linearGradient>
+          <linearGradient id="tickGrad" x1="14" y1="27" x2="38" y2="18" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#34d399"/>
+            <stop offset="100%" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <!-- Heading -->
+    <div class="welcome-heading-block">
+      <h1 class="welcome-heading">
+        Welcome to Zellavora,&nbsp;<span class="gradient-name">{{ userName() }}</span>!
+      </h1>
+      <p class="welcome-sub">
+        Your account has been created successfully at
+        <span class="org-highlight">{{ orgName() }}</span>.
+        <br class="hidden sm:block"/>
+        You're all set to take full control of your enterprise platform.
+      </p>
+    </div>
+
+    <!-- Feature 2x2 grid -->
+    <div class="feature-showcase-grid">
+      <div
+        *ngFor="let f of features; let i = index"
+        class="feature-showcase-card"
+        [class]="'feature-showcase-card card-delay-' + i"
+      >
+        <div class="feature-icon-badge">{{ f.icon }}</div>
+        <div>
+          <div class="feature-card-title">{{ f.title }}</div>
+          <div class="feature-card-desc">{{ f.desc }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Countdown bar -->
+    <div class="countdown-block">
+      <div class="countdown-label">
+        <span class="countdown-icon">⏱</span>
+        Redirecting to login in
+        <span class="countdown-num">{{ autoRedirect() }}s</span>&hellip;
+      </div>
+      <div class="countdown-track">
+        <div class="countdown-bar" [style.width]="progressWidth"></div>
+      </div>
+    </div>
+
+    <!-- CTA Button -->
+    <button class="btn-primary btn-login-now" (click)="goToLogin()" type="button">
+      <span>Go to Login Now</span>
+      <span class="btn-primary__arrow">→</span>
+    </button>
+
+    <!-- Footer note -->
+    <p class="welcome-footer-note">
+      🔒 Your session is encrypted and secure · Enterprise-grade privacy
+    </p>
+
+  </div>
+</main>
