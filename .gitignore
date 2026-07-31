@@ -51,3 +51,5 @@ Thumbs.db
 .env.prod
 .env.staging
 .claude/worktrees/agent-ae6b19130678a6621
+
+.vercel

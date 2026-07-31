@@ -38,6 +38,15 @@ const processJobLocally = async (name: string, data: any): Promise<void> => {
       case 'send-otp':
         await sendOtpEmail(data.email, data.otp, data.expiryMinutes);
         break;
+      case 'send-registration-otp':
+        await sendOtpEmail(data.email, data.code, data.expiryMinutes);
+        break;
+      case 'send-sms-otp':
+        logger.warn(`[Queue] SMS service not configured; SMS OTP for ${data.mobile} skipped`);
+        break;
+      case 'send-welcome-email':
+        await sendWelcomeEmail(data.email, data.organizationName || data.tenantName);
+        break;
       case 'send-welcome':
         await sendWelcomeEmail(data.email, data.tenantName);
         break;
