@@ -59,6 +59,7 @@ async function main() {
     create: {
       userId: adminUser.id,
       tenantId: tenant.id,
+      role: 'owner',
     },
   });
 

@@ -191,6 +191,15 @@ model User {
 // USER TENANT MEMBERSHIP
 // ============================================================================
 
+enum OrganizationRole {
+  owner
+  admin
+  manager
+  employee
+  viewer
+  member
+}
+
 model UserTenant {
   userId   String @map("user_id") @db.Uuid
   tenantId String @map("organization_id") @db.Uuid
@@ -198,11 +207,11 @@ model UserTenant {
   tenant   Organization @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   // Membership Details
-  role     String  @default("member") @map("role")  // owner, admin, manager, employee, viewer
+  role     OrganizationRole @default(member) @map("role")
   departmentId String? @map("department_id") @db.Uuid
   department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   isDefault Boolean @default(false) @map("is_default")
-  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz
+  joinedAt DateTime? @default(now()) @map("joined_at") @db.Timestamptz
 
   @@id([userId, tenantId])
   @@index([tenantId])
