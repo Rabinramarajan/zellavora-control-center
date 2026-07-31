@@ -172,7 +172,7 @@ router.post('/submit', async (req, res, next) => {
     // 5. Database transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create tenant
-      const tenant = await tx.tenant.create({
+      const tenant = await tx.organization.create({
         data: {
           name: data.company.name,
           clientCode: data.company.clientCode,

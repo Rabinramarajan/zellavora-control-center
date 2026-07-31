@@ -62,7 +62,7 @@ export class TenantService {
     }
 
     // Use Prisma for direct DB access (bypasses PostgREST schema cache)
-    const org = await prisma.tenant.findFirst({
+    const org = await prisma.organization.findFirst({
       where: {
         clientCode: { equals: code, mode: 'insensitive' },
       },

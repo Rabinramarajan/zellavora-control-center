@@ -7,7 +7,7 @@ async function main() {
   console.log('🌱 Starting Database Seeding...');
 
   // 1. Create Default Tenant
-  const tenant = await prisma.tenant.upsert({
+  const tenant = await prisma.organization.upsert({
     where: { clientCode: 'zellavora-inc' },
     update: {},
     create: {
