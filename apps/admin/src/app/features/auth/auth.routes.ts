@@ -3,6 +3,13 @@ import { authGuard, guestGuard } from '../../core/auth/auth.guard';
 
 export const authRoutes: Routes = [
   {
+    path: 'landing',
+    loadComponent: () =>
+      import('./components/landing/landing.component').then(
+        (m) => m.LandingComponent
+      ),
+  },
+  {
     path: 'login',
     // canActivate: [guestGuard],
     loadComponent: () =>
@@ -77,7 +84,7 @@ export const authRoutes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'landing',
     pathMatch: 'full',
   },
 ];

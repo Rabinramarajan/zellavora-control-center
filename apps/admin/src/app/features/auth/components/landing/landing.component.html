@@ -1,0 +1,186 @@
+<div class="auth-shell landing-shell">
+  <div class="glow-bg-1"></div>
+  <div class="glow-bg-2"></div>
+
+  <!-- ============ LEFT: BRAND STORY ============ -->
+  <aside class="brand-panel landing-brand">
+    <div class="brand-lockup">
+      <div class="brand-mark">Z</div>
+      <div>
+        <h1 class="brand-name">ZELLAVORA</h1>
+        <p class="brand-sub">Control Center</p>
+      </div>
+    </div>
+
+    <div class="landing-hero">
+      <h2 class="brand-headline">
+        Your Command Center.<br />
+        Built for <span class="headline-accent">Scale.</span>
+      </h2>
+      <p class="brand-copy">
+        Zellavora Control Center helps you manage teams, projects, applications, and
+        infrastructure in one unified, secure platform.
+      </p>
+    </div>
+
+    <!-- Four pillars -->
+    <div class="pillar-grid">
+      @for (pillar of pillars; track pillar.title) {
+        <div class="pillar">
+          <span class="pillar-hex" [class]="'pillar-hex--' + pillar.tone">
+            @switch (pillar.icon) {
+              @case ('shield') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z" />
+                  <path d="M9.5 12l1.8 1.8L15 10" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('cube') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke-linejoin="round" />
+                  <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+                </svg>
+              }
+              @case ('bolt') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z" stroke-linejoin="round" />
+                </svg>
+              }
+              @default {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" stroke-linecap="round" />
+                </svg>
+              }
+            }
+          </span>
+          <h3 class="feature-title">{{ pillar.title }}</h3>
+          <p class="feature-copy">{{ pillar.desc }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- 3D holographic stage -->
+    <div class="city-stage">
+      <span class="float-badge float-badge--gear">⚙️</span>
+      <span class="float-badge float-badge--chart">📊</span>
+      <span class="float-badge float-badge--user">👤</span>
+      <span class="float-badge float-badge--spark">✦</span>
+
+      <div class="city-scene">
+        <div class="city-platform"></div>
+        <div class="city-platform city-platform--inner"></div>
+        <div class="city-skyline">
+          <span class="tower tower--1"></span>
+          <span class="tower tower--2"></span>
+          <span class="tower tower--3"><i class="tower-glyph">Z</i></span>
+          <span class="tower tower--4"></span>
+          <span class="tower tower--5"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compliance strip -->
+    <div class="compliance-strip">
+      @for (item of compliance; track item.label) {
+        <div class="compliance-item">
+          <span class="compliance-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M5 12.5l4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span>
+            <strong>{{ item.label }}</strong>
+            <em>{{ item.sub }}</em>
+          </span>
+        </div>
+      }
+    </div>
+
+    <p class="privacy-note">
+      <span aria-hidden="true">🔒</span>
+      Your data is <b>100% private</b> and secure. We never share your information with anyone.
+    </p>
+  </aside>
+
+  <!-- ============ RIGHT: ENTRY CHOICES ============ -->
+  <section class="glass-panel landing-panel">
+    <div class="entry-card">
+      <div class="entry-ribbon">
+        <span aria-hidden="true">✦</span> Welcome to Zellavora Control Center
+      </div>
+
+      <div class="entry-body">
+        <div class="entry-orb">
+          <span class="entry-orb__ring"></span>
+          <span class="entry-orb__core">Z</span>
+        </div>
+
+        <h2 class="entry-title">Let's Get You Started</h2>
+        <p class="entry-sub">
+          Create your organization to unlock the full power of Zellavora Control Center.
+        </p>
+
+        <div class="entry-actions">
+          @for (action of actions; track action.key) {
+            <button
+              type="button"
+              class="entry-action"
+              [class.entry-action--primary]="action.primary"
+              (click)="select(action)"
+            >
+              <span class="entry-action__icon" [class]="'entry-action__icon--' + action.tone">
+                @switch (action.icon) {
+                  @case ('building') {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M4 21V6l7-3v18M11 21h9V10h-9" stroke-linejoin="round" />
+                      <path d="M7 9h1M7 13h1M7 17h1M15 13h1M15 17h1" stroke-linecap="round" />
+                    </svg>
+                  }
+                  @case ('user') {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <circle cx="12" cy="8.5" r="3.5" />
+                      <path d="M5 20a7 7 0 0114 0" stroke-linecap="round" />
+                    </svg>
+                  }
+                  @case ('headset') {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M4 14v-2a8 8 0 0116 0v2" stroke-linecap="round" />
+                      <rect x="3" y="13" width="4" height="6" rx="1.6" />
+                      <rect x="17" y="13" width="4" height="6" rx="1.6" />
+                    </svg>
+                  }
+                  @default {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M11 3h7a3 3 0 013 3v7l-8 8-10-10 8-8z" stroke-linejoin="round" />
+                      <circle cx="16" cy="8" r="1.4" />
+                    </svg>
+                  }
+                }
+              </span>
+
+              <span class="entry-action__text">
+                <strong>{{ action.title }}</strong>
+                <em>{{ action.desc }}</em>
+              </span>
+
+              <svg class="entry-action__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="entry-footer">
+        <span class="avatar-stack">
+          <span class="avatar">👤</span>
+          <span class="avatar">👥</span>
+          <span class="avatar">🧑</span>
+          <span class="avatar">👩</span>
+          <span class="avatar">🧑‍💼</span>
+        </span>
+        <p>Trusted by <b>2,500+</b> organizations worldwide</p>
+      </div>
+    </div>
+  </section>
+</div>
