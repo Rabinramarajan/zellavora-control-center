@@ -96,33 +96,6 @@ model Organization {
   @@map("organizations")
 }
 
-// Alias for backward compatibility
-model Tenant {
-  id             String    @id @default(uuid()) @db.Uuid
-  name           String    @map("name")
-  clientCode     String    @unique @map("client_code")
-  logoUrl        String?   @map("logo_url")
-  plan           String    @default("free") @map("plan")
-  enforce2fa     Boolean   @default(false) @map("enforce_2fa")
-  allowedDomains Json?     @map("allowed_domains")
-  isDeleted      Boolean   @default(false) @map("is_deleted")
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
-  createdBy      String?   @map("created_by") @db.Uuid
-  updatedBy      String?   @map("updated_by") @db.Uuid
-  deletedBy      String?   @map("deleted_by") @db.Uuid
-  version        Int       @default(1)
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-
-  branches       Branch[]
-  userTenants    UserTenant[]
-  auditLogs      AuditLog[]
-  notifications  Notification[]
-  configurations CommonConfiguration[]
-
-  @@map("organizations")
-  @@ignore
-}
-
 // ============================================================================
 // USER
 // ============================================================================
@@ -778,7 +751,7 @@ model Notification {
   sentAt         DateTime? @map("sent_at") @db.Timestamptz
   readAt         DateTime? @map("read_at") @db.Timestamptz
   
-  organization Tenant @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   recipient    User?  @relation(fields: [recipientId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])

@@ -4,72 +4,126 @@ import { firstValueFrom } from 'rxjs';
 
 export interface RegisterState {
   currentStep: number;
-  welcomeType: 'organization' | 'partner' | null;
-  invitationCode: string;
-  invitationEmail: string;
+  registrationType: 'new_org' | 'invite' | null;
 
-  // Company Info
-  companyName: string;
-  companyClientCode: string;
-  companyLogoUrl: string | null;
-  companyIndustry: string;
-  companyEmployees: string;
-  companyCountry: string;
-  companyUseCases: string[];
+  // Step 3: Basic Information
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  email: string;
+  mobile: string;
+  country: string;
+  timezone: string;
+  language: string;
 
-  // Branch Info
-  branchName: string;
-  branchCode: string;
-
-  // Admin Info
-  adminFullName: string;
-  adminEmail: string;
-  adminDesignation: string;
-
-  // Credentials
-  credentialsUsername: string;
-  credentialsPassword: string;
-
-  // Verification Codes
+  // Step 4: Email Verification
   emailOtpCode: string;
-  mfaCode: string;
+  emailVerified: boolean;
 
-  // MFA Details
+  // Step 5: Mobile Verification
+  mobileOtpCode: string;
+  mobileVerified: boolean;
+
+  // Step 6: Organization Information
+  organizationName: string;
+  organizationCode: string;
+  industry: string;
+  organizationSize: string;
+  website: string;
+  gstNumber: string;
+  taxNumber: string;
+  logoUrl: string | null;
+  useCases: string[];
+
+  // Step 7: Branch Setup
+  branchName: string;
+  branchAddress: string;
+  branchCity: string;
+  branchState: string;
+  branchCountry: string;
+  branchPincode: string;
+
+  // Step 8: Password Creation
+  password: string;
+  confirmPassword: string;
+
+  // Step 9: Security Setup (MFA)
+  mfaMethod: 'email_otp' | 'authenticator' | 'sms' | null;
+  mfaEnabled: boolean;
   mfaSecret: string;
   mfaQrCode: string;
+  mfaCode: string;
+
+  // Step 10: Terms & Privacy
+  termsAccepted: boolean;
+  privacyAccepted: boolean;
+  cookieAccepted: boolean;
+  securityAlertsEnabled: boolean;
+  marketingEmails: boolean;
+
+  // Step 12-13: Success
+  successData: any;
 
   // UI States
   loading: boolean;
   error: string | null;
-  successData: any;
 }
 
 const initial: RegisterState = {
   currentStep: 1,
-  welcomeType: null,
-  invitationCode: '',
-  invitationEmail: '',
-  companyName: '',
-  companyClientCode: '',
-  companyLogoUrl: null,
-  companyIndustry: 'technology',
-  companyEmployees: '10-50',
-  companyCountry: '',
-  companyUseCases: [],
-  branchName: '',
-  branchCode: '',
-  adminFullName: '',
-  adminEmail: '',
-  adminDesignation: '',
-  credentialsUsername: '',
-  credentialsPassword: '',
+  registrationType: null,
+
+  firstName: '',
+  lastName: '',
+  displayName: '',
+  email: '',
+  mobile: '',
+  country: '',
+  timezone: 'UTC',
+  language: 'en',
+
   emailOtpCode: '',
-  mfaCode: '',
+  emailVerified: false,
+
+  mobileOtpCode: '',
+  mobileVerified: false,
+
+  organizationName: '',
+  organizationCode: '',
+  industry: '',
+  organizationSize: '10-50',
+  website: '',
+  gstNumber: '',
+  taxNumber: '',
+  logoUrl: null,
+  useCases: [],
+
+  branchName: 'Head Office',
+  branchAddress: '',
+  branchCity: '',
+  branchState: '',
+  branchCountry: '',
+  branchPincode: '',
+
+  password: '',
+  confirmPassword: '',
+
+  mfaMethod: 'email_otp',
+  mfaEnabled: true,
   mfaSecret: '',
   mfaQrCode: '',
+  mfaCode: '',
+
+  termsAccepted: false,
+  privacyAccepted: false,
+  cookieAccepted: false,
+  securityAlertsEnabled: true,
+  marketingEmails: false,
+
+  successData: null,
+
   loading: false,
   error: null,
-  successData: null,
 };
 
 @Injectable()
@@ -79,24 +133,46 @@ export class RegisterStore {
 
   // Selectors
   readonly currentStep = computed(() => this.state().currentStep);
-  readonly welcomeType = computed(() => this.state().welcomeType);
-  readonly invitationCode = computed(() => this.state().invitationCode);
-  readonly companyName = computed(() => this.state().companyName);
-  readonly companyClientCode = computed(() => this.state().companyClientCode);
-  readonly companyLogoUrl = computed(() => this.state().companyLogoUrl);
-  readonly companyIndustry = computed(() => this.state().companyIndustry);
-  readonly companyEmployees = computed(() => this.state().companyEmployees);
-  readonly companyCountry = computed(() => this.state().companyCountry);
-  readonly companyUseCases = computed(() => this.state().companyUseCases);
+  readonly registrationType = computed(() => this.state().registrationType);
+  readonly firstName = computed(() => this.state().firstName);
+  readonly lastName = computed(() => this.state().lastName);
+  readonly displayName = computed(() => this.state().displayName);
+  readonly email = computed(() => this.state().email);
+  readonly mobile = computed(() => this.state().mobile);
+  readonly country = computed(() => this.state().country);
+  readonly timezone = computed(() => this.state().timezone);
+  readonly language = computed(() => this.state().language);
+  readonly emailOtpCode = computed(() => this.state().emailOtpCode);
+  readonly emailVerified = computed(() => this.state().emailVerified);
+  readonly mobileOtpCode = computed(() => this.state().mobileOtpCode);
+  readonly mobileVerified = computed(() => this.state().mobileVerified);
+  readonly organizationName = computed(() => this.state().organizationName);
+  readonly organizationCode = computed(() => this.state().organizationCode);
+  readonly industry = computed(() => this.state().industry);
+  readonly organizationSize = computed(() => this.state().organizationSize);
+  readonly website = computed(() => this.state().website);
+  readonly gstNumber = computed(() => this.state().gstNumber);
+  readonly taxNumber = computed(() => this.state().taxNumber);
+  readonly logoUrl = computed(() => this.state().logoUrl);
+  readonly useCases = computed(() => this.state().useCases);
   readonly branchName = computed(() => this.state().branchName);
-  readonly branchCode = computed(() => this.state().branchCode);
-  readonly adminFullName = computed(() => this.state().adminFullName);
-  readonly adminEmail = computed(() => this.state().adminEmail);
-  readonly adminDesignation = computed(() => this.state().adminDesignation);
-  readonly credentialsUsername = computed(() => this.state().credentialsUsername);
-  readonly credentialsPassword = computed(() => this.state().credentialsPassword);
+  readonly branchAddress = computed(() => this.state().branchAddress);
+  readonly branchCity = computed(() => this.state().branchCity);
+  readonly branchState = computed(() => this.state().branchState);
+  readonly branchCountry = computed(() => this.state().branchCountry);
+  readonly branchPincode = computed(() => this.state().branchPincode);
+  readonly password = computed(() => this.state().password);
+  readonly confirmPassword = computed(() => this.state().confirmPassword);
+  readonly mfaMethod = computed(() => this.state().mfaMethod);
+  readonly mfaEnabled = computed(() => this.state().mfaEnabled);
   readonly mfaSecret = computed(() => this.state().mfaSecret);
   readonly mfaQrCode = computed(() => this.state().mfaQrCode);
+  readonly mfaCode = computed(() => this.state().mfaCode);
+  readonly termsAccepted = computed(() => this.state().termsAccepted);
+  readonly privacyAccepted = computed(() => this.state().privacyAccepted);
+  readonly cookieAccepted = computed(() => this.state().cookieAccepted);
+  readonly securityAlertsEnabled = computed(() => this.state().securityAlertsEnabled);
+  readonly marketingEmails = computed(() => this.state().marketingEmails);
   readonly loading = computed(() => this.state().loading);
   readonly error = computed(() => this.state().error);
   readonly successData = computed(() => this.state().successData);
@@ -110,27 +186,31 @@ export class RegisterStore {
     this.state.update(s => ({ ...s, currentStep: Math.max(s.currentStep - 1, 1), error: null }));
   }
 
-  setWelcomeType(type: 'organization' | 'partner') {
-    this.state.update(s => ({ ...s, welcomeType: type }));
+  setRegistrationType(type: 'new_org' | 'invite') {
+    this.state.update(s => ({ ...s, registrationType: type }));
   }
 
-  updateCompany(info: Partial<RegisterState>) {
+  updatePersonalInfo(info: Partial<RegisterState>) {
     this.state.update(s => ({ ...s, ...info }));
   }
 
-  updateBranch(info: Partial<RegisterState>) {
+  updateOrganizationInfo(info: Partial<RegisterState>) {
     this.state.update(s => ({ ...s, ...info }));
   }
 
-  updateAdmin(info: Partial<RegisterState>) {
+  updateBranchInfo(info: Partial<RegisterState>) {
     this.state.update(s => ({ ...s, ...info }));
   }
 
-  updateCredentials(info: Partial<RegisterState>) {
+  updatePassword(info: Partial<RegisterState>) {
     this.state.update(s => ({ ...s, ...info }));
   }
 
-  updateVerification(info: Partial<RegisterState>) {
+  updateMfaSettings(info: Partial<RegisterState>) {
+    this.state.update(s => ({ ...s, ...info }));
+  }
+
+  updateTerms(info: Partial<RegisterState>) {
     this.state.update(s => ({ ...s, ...info }));
   }
 
@@ -251,40 +331,45 @@ export class RegisterStore {
 
     const payload = {
       // Personal Info
-      email: s.adminEmail,
-      emailVerified: true,
-      firstName: s.adminFullName.split(' ')[0],
-      lastName: s.adminFullName.split(' ').slice(1).join(' '),
+      email: s.email,
+      emailVerified: s.emailVerified,
+      firstName: s.firstName,
+      lastName: s.lastName,
 
       // Organization Info
-      organizationName: s.companyName,
-      organizationCode: s.companyClientCode,
-      industry: s.companyIndustry,
-      size: s.companyEmployees,
-      logoUrl: s.companyLogoUrl,
-      useCases: s.companyUseCases,
+      organizationName: s.organizationName,
+      organizationCode: s.organizationCode,
+      industry: s.industry,
+      size: s.organizationSize,
+      logoUrl: s.logoUrl,
+      useCases: s.useCases,
 
       // Branch Info
-      branchName: s.branchName || 'Head Office',
-      branchCode: s.branchCode || 'HQ',
-      branchCountry: s.companyCountry,
+      branchName: s.branchName,
+      branchAddress: s.branchAddress,
+      branchCity: s.branchCity,
+      branchState: s.branchState,
+      branchCountry: s.branchCountry,
+      branchPincode: s.branchPincode,
 
       // Credentials
-      password: s.credentialsPassword,
-      confirmPassword: s.credentialsPassword,
+      password: s.password,
+      confirmPassword: s.confirmPassword,
 
       // MFA
-      mfaEnabled: true,
-      mfaMethod: 'email_otp',
+      mfaEnabled: s.mfaEnabled,
+      mfaMethod: s.mfaMethod,
 
       // Terms
-      termsAccepted: true,
-      privacyAccepted: true,
-      cookieAccepted: true,
-      marketingConsent: false,
+      termsAccepted: s.termsAccepted,
+      privacyAccepted: s.privacyAccepted,
+      cookieAccepted: s.cookieAccepted,
+      marketingConsent: s.marketingEmails,
 
       // Location
-      country: s.companyCountry,
+      country: s.country,
+      timezone: s.timezone,
+      language: s.language,
     };
 
     try {
