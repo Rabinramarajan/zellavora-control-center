@@ -128,24 +128,30 @@ const CompleteRegistrationSchema = z.object({
   // Admin Info
   firstName: z.string().min(2).max(50),
   lastName: z.string().min(2).max(50),
+  displayName: z.string().max(100).optional(),
   mobile: z.string().optional(),
   mobileVerified: z.boolean().default(false),
-  
+
+  // Location & Preferences
+  country: z.string(),
+  timezone: z.string().optional(),
+  language: z.string().default('en'),
+
   // Credentials
   password: z.string().min(12, 'Password must be at least 12 characters'),
   confirmPassword: z.string(),
-  
+
   // MFA
   mfaEnabled: z.boolean().default(true),
-  mfaMethod: z.enum(['authenticator', 'email_otp']).default('email_otp'),
+  mfaMethod: z.enum(['authenticator', 'email_otp', 'sms']).default('email_otp'),
   mfaCode: z.string().optional(), // Required if mfaEnabled and method is authenticator
-  
+
   // Terms & Consent
   termsAccepted: z.boolean().refine(v => v === true, 'You must accept the Terms of Service'),
   privacyAccepted: z.boolean().refine(v => v === true, 'You must accept the Privacy Policy'),
   cookieAccepted: z.boolean().default(false),
   marketingConsent: z.boolean().default(false),
-  
+
   // Optional invite code
   inviteCode: z.string().optional(),
 });
@@ -179,8 +185,8 @@ const REGISTRATION_SESSION_EXPIRY_HOURS = 24;
  */
 router.get('/status', async (req, res, next) => {
   try {
-    // In production, this would check a configuration setting
-    const registrationEnabled = config.ALLOW_SELF_REGISTRATION !== 'false';
+    // Check if self-registration is enabled
+    const registrationEnabled = config.ALLOW_SELF_REGISTRATION === true;
     
     res.json({
       enabled: registrationEnabled,

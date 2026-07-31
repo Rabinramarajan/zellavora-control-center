@@ -110,6 +110,7 @@ export const config = {
   enableOAuth: process.env.ENABLE_OAUTH === 'true',
   enableSAML: process.env.ENABLE_SAML === 'true',
   enableApiKeys: process.env.ENABLE_API_KEYS !== 'false',
+  ALLOW_SELF_REGISTRATION: process.env.ALLOW_SELF_REGISTRATION !== 'false',
 
   // ============================================================================
   // OAuth Providers
