@@ -1579,7 +1579,7 @@ router.get('/oauth/callback', async (req, res, next) => {
 // ----------------------------------------------------------------------------
 router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.userId!;
     const { data: sessions, error } = await supabaseAdmin
       .from('user_sessions')
       .select('id, device_name, browser, os, ip_address, country, last_login_at, created_at, is_current')
@@ -1615,7 +1615,7 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
 // ----------------------------------------------------------------------------
 router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.userId!;
     const { sessionId } = req.params;
 
     const { error } = await supabaseAdmin
@@ -1627,7 +1627,7 @@ router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res
     if (error) throw new AppError('Failed to revoke session', 500, 'SESSION_REVOKE_FAILED');
 
     await AuditService.log({
-      organizationId: req.user!.organizationId,
+      organizationId: req.tenantId!,
       actorId: userId,
       action: 'session_revoked',
       metadata: { sessionId },
@@ -1647,8 +1647,8 @@ router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res
 // ----------------------------------------------------------------------------
 router.delete('/sessions', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const userId = req.user!.userId;
-    const currentSessionId = req.user!.sessionId;
+    const userId = req.userId!;
+    const currentSessionId = req.sessionId;
 
     const query = supabaseAdmin
       .from('user_sessions')
@@ -1665,9 +1665,9 @@ router.delete('/sessions', authenticate, async (req: AuthRequest, res, next) => 
     if (error) throw new AppError('Failed to revoke sessions', 500, 'SESSION_REVOKE_ALL_FAILED');
 
     await AuditService.log({
-      organizationId: req.user!.organizationId,
+      organizationId: req.tenantId!,
       actorId: userId,
-      action: 'sessions_revoked_all',
+      action: 'all_sessions_revoked',
       ipAddress: ip(req),
       userAgent: ua(req),
       requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),

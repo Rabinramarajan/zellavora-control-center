@@ -1,3 +1,4 @@
+import { Invitation } from '@prisma/client';
 import { InvitationService } from './invitation.service';
 import { InvitationRepository } from './invitation.repository';
 
@@ -14,7 +15,7 @@ describe('InvitationService', () => {
   });
 
   it('should successfully verify a valid invitation code', async () => {
-    const mockInvite = { id: '1', email: 'test@zellavora.com', code: 'ZCC-XYZ', used: false, createdAt: new Date() };
+    const mockInvite = { id: '1', email: 'test@zellavora.com', code: 'ZCC-XYZ', used: false, createdAt: new Date() } as Invitation;
     mockRepo.findByCode.mockResolvedValue(mockInvite);
 
     const result = await service.verify('ZCC-XYZ');

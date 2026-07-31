@@ -725,6 +725,7 @@ model AuditLog {
   userAgent      String?  @map("user_agent")
   requestId      String?  @map("request_id")
   metadata       Json?    @map("metadata")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   
   actor        User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

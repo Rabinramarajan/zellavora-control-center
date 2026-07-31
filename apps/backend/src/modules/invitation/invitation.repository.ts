@@ -15,8 +15,9 @@ export class InvitationRepository extends BaseRepository {
   }
 
   async create(email: string, code: string, tx?: TxClient) {
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     return this.getDb(tx).invitation.create({
-      data: { email, code, used: false }
+      data: { email, code, used: false, expiresAt }
     });
   }
 }

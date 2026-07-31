@@ -13,9 +13,11 @@ export class RoleRepository extends BaseRepository {
     });
   }
 
-  async create(data: { name: string; organizationId?: string | null; description?: string | null }, tx?: TxClient) {
+  async create(data: { name: string; organizationId?: string | null; description?: string | null; key?: string }, tx?: TxClient) {
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const key = data.key ?? (data.organizationId ? `${data.organizationId}_${slug}` : slug);
     return this.getDb(tx).role.create({
-      data
+      data: { ...data, key }
     });
   }
 

@@ -70,6 +70,7 @@ async function main() {
     ownerRole = await prisma.role.create({
       data: {
         name: 'Owner',
+        key: `${tenant.id}_owner`,
         organizationId: tenant.id,
         description: 'Full workspace owner access controls',
       },
@@ -83,6 +84,7 @@ async function main() {
     adminRole = await prisma.role.create({
       data: {
         name: 'Admin',
+        key: `${tenant.id}_admin`,
         organizationId: tenant.id,
         description: 'General system administration permissions',
       },
@@ -96,6 +98,7 @@ async function main() {
     userRole = await prisma.role.create({
       data: {
         name: 'User',
+        key: `${tenant.id}_user`,
         organizationId: tenant.id,
         description: 'Standard operational team member privileges',
       },
@@ -166,12 +169,13 @@ async function main() {
 
   // 8. Create a default invitation code for registration testing
   await prisma.invitation.upsert({
-    where: { email: 'admin@zellavora.com' },
+    where: { code: 'ZCC-INVITE-2026' },
     update: { used: false },
     create: {
       email: 'admin@zellavora.com',
       code: 'ZCC-INVITE-2026',
       used: false,
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     },
   });
   console.log('- Default invitation code seeded: ZCC-INVITE-2026');
