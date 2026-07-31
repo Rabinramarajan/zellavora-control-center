@@ -1,8 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { catchError, tap } from 'rxjs/operators';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 export interface RegisterState {
   currentStep: number;
@@ -77,8 +75,6 @@ const initial: RegisterState = {
 @Injectable()
 export class RegisterStore {
   private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
-  
   private readonly state = signal<RegisterState>(initial);
 
   // Selectors
@@ -146,7 +142,7 @@ export class RegisterStore {
     this.state.update(s => ({ ...s, loading: true, error: null }));
     try {
       const res = await firstValueFrom(
-        this.http.post<{ success: boolean; email: string }>('/api/v1/auth/register/verify-invitation', { code })
+        this.http.post<{ success: boolean; email: string }>('/api/v1/clean/invitations/verify', { code })
       );
       this.state.update(s => ({
         ...s,
@@ -167,7 +163,7 @@ export class RegisterStore {
     this.state.update(s => ({ ...s, loading: true, error: null }));
     try {
       await firstValueFrom(
-        this.http.post('/api/v1/auth/register/send-email-otp', { email })
+        this.http.post('/api/v1/register/send-email-otp', { email })
       );
       this.state.update(s => ({ ...s, loading: false }));
       return true;
@@ -181,7 +177,7 @@ export class RegisterStore {
     this.state.update(s => ({ ...s, loading: true, error: null }));
     try {
       await firstValueFrom(
-        this.http.post('/api/v1/auth/register/verify-email-otp', { email, code })
+        this.http.post('/api/v1/register/verify-email', { email, code })
       );
       this.state.update(s => ({ ...s, emailOtpCode: code, loading: false }));
       return true;
@@ -191,16 +187,16 @@ export class RegisterStore {
     }
   }
 
-  async loadMfaSetup(email: string) {
+  async loadMfaSetup(email: string, method: string = 'authenticator') {
     this.state.update(s => ({ ...s, loading: true, error: null }));
     try {
       const res = await firstValueFrom(
-        this.http.get<{ secret: string; qrCodeDataUrl: string }>(`/api/v1/auth/register/mfa-setup?email=${encodeURIComponent(email)}`)
+        this.http.post<{ secret: string; qrCode: string }>('/api/v1/register/mfa-setup', { email, method })
       );
       this.state.update(s => ({
         ...s,
         mfaSecret: res.secret,
-        mfaQrCode: res.qrCodeDataUrl,
+        mfaQrCode: res.qrCode,
         loading: false
       }));
     } catch (err: any) {
@@ -208,46 +204,99 @@ export class RegisterStore {
     }
   }
 
-  async submitAll() {
+  async checkEmailAvailability(email: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{ available: boolean }>('/api/v1/register/check-email', { email })
+      );
+      return res.available;
+    } catch {
+      return false;
+    }
+  }
+
+  async checkOrgCodeAvailability(code: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{ available: boolean }>('/api/v1/register/check-org', { organizationCode: code })
+      );
+      return res.available;
+    } catch {
+      return false;
+    }
+  }
+
+  async resendEmailOtp(email: string): Promise<boolean> {
+    this.state.update(s => ({ ...s, loading: true, error: null }));
+    try {
+      await firstValueFrom(
+        this.http.post('/api/v1/register/resend-otp', { email, type: 'email' })
+      );
+      this.state.update(s => ({ ...s, loading: false }));
+      return true;
+    } catch (err: any) {
+      const msg = err.error?.message || 'Failed to resend OTP. Please try again.';
+      this.state.update(s => ({ ...s, error: msg, loading: false }));
+      return false;
+    }
+  }
+
+  resetForm() {
+    this.state.set(initial);
+  }
+
+  async submitRegistration() {
     this.state.update(s => ({ ...s, loading: true, error: null }));
     const s = this.state();
-    
+
     const payload = {
-      invitationCode: s.invitationCode,
-      company: {
-        name: s.companyName,
-        clientCode: s.companyClientCode,
-        logoUrl: s.companyLogoUrl,
-        industry: s.companyIndustry,
-        employees: s.companyEmployees,
-        country: s.companyCountry,
-        useCases: s.companyUseCases,
-      },
-      branch: {
-        name: s.branchName,
-        code: s.branchCode,
-      },
-      admin: {
-        fullName: s.adminFullName,
-        email: s.adminEmail,
-        designation: s.adminDesignation,
-      },
-      credentials: {
-        username: s.credentialsUsername,
-        password: s.credentialsPassword,
-      },
-      mfaSecret: s.mfaSecret,
-      mfaCode: s.mfaCode,
+      // Personal Info
+      email: s.adminEmail,
+      emailVerified: true,
+      firstName: s.adminFullName.split(' ')[0],
+      lastName: s.adminFullName.split(' ').slice(1).join(' '),
+
+      // Organization Info
+      organizationName: s.companyName,
+      organizationCode: s.companyClientCode,
+      industry: s.companyIndustry,
+      size: s.companyEmployees,
+      logoUrl: s.companyLogoUrl,
+      useCases: s.companyUseCases,
+
+      // Branch Info
+      branchName: s.branchName || 'Head Office',
+      branchCode: s.branchCode || 'HQ',
+      branchCountry: s.companyCountry,
+
+      // Credentials
+      password: s.credentialsPassword,
+      confirmPassword: s.credentialsPassword,
+
+      // MFA
+      mfaEnabled: true,
+      mfaMethod: 'email_otp',
+
+      // Terms
+      termsAccepted: true,
+      privacyAccepted: true,
+      cookieAccepted: true,
+      marketingConsent: false,
+
+      // Location
+      country: s.companyCountry,
     };
 
     try {
       const res = await firstValueFrom(
-        this.http.post<any>('/api/v1/auth/register/submit', payload)
+        this.http.post<any>('/api/v1/register/complete', payload)
       );
       this.state.update(s => ({ ...s, successData: res.data, currentStep: 11, loading: false }));
+      return true;
     } catch (err: any) {
-      const msg = err.error?.error || 'Registration submission failed. Please verify your MFA key code.';
+      const msg = err.error?.message || err.error?.error || 'Registration failed. Please check your details.';
       this.state.update(s => ({ ...s, error: msg, loading: false }));
+      return false;
     }
   }
 }
