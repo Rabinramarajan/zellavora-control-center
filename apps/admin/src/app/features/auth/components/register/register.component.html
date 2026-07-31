@@ -3,9 +3,8 @@
   <div class="glow-bg-1"></div>
   <div class="glow-bg-2"></div>
 
-  <!-- LEFT PANEL: Brand Story, 3D City & Trust -->
+  <!-- LEFT PANEL: Brand Story -->
   <aside class="brand-panel">
-    <!-- Logo Lockup -->
     <div class="brand-lockup">
       <div class="brand-mark">Z</div>
       <div>
@@ -14,691 +13,556 @@
       </div>
     </div>
 
-    <!-- Headline -->
     <h2 class="brand-headline">
       Build Your<br />
       Command Center.<br />
       <span class="headline-accent">Your Way.</span>
     </h2>
     <p class="brand-copy">
-      Zellavora Control Center is the unified platform to manage your organization,
-      teams, and operations — securely and effortlessly.
+      Zellavora Control Center is the unified platform to manage your organization, teams, and operations — securely and effortlessly.
     </p>
 
-    <!-- 3D Holographic City -->
-    <div class="city-stage">
-      <span class="float-badge float-badge--gear">⚙️</span>
-      <span class="float-badge float-badge--chart">📊</span>
-      <span class="float-badge float-badge--user">👤</span>
-      <span class="float-badge float-badge--spark">✦</span>
-
-      <div class="city-scene">
-        <div class="city-platform"></div>
-        <div class="city-platform city-platform--inner"></div>
-        <div class="city-skyline">
-          <span class="tower tower--1"></span>
-          <span class="tower tower--2"></span>
-          <span class="tower tower--3"><i class="tower-glyph">Z</i></span>
-          <span class="tower tower--4"></span>
-          <span class="tower tower--5"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feature Trio -->
-    <div class="feature-grid">
-      <div>
-        <div class="feature-icon feature-icon--cyan">🛡️</div>
-        <h4 class="feature-title">Enterprise Grade</h4>
-        <p class="feature-copy">Secure, compliant and audit ready</p>
-      </div>
-      <div>
-        <div class="feature-icon feature-icon--violet">⚡</div>
-        <h4 class="feature-title">Built for Scale</h4>
-        <p class="feature-copy">Grow your business without limits</p>
-      </div>
-      <div>
-        <div class="feature-icon feature-icon--emerald">🕸️</div>
-        <h4 class="feature-title">Unified Control</h4>
-        <p class="feature-copy">Everything you need in one place</p>
-      </div>
-    </div>
-
-    <!-- Social Proof -->
-    <div class="trust-card">
-      <div class="trust-shield">🛡️</div>
-      <div class="flex-1">
-        <p class="trust-title">Trusted by modern teams worldwide</p>
-        <div class="flex items-center gap-2 mt-1.5">
-          <div class="avatar-stack">
-            @for (a of trustAvatars; track a) {
-              <span class="avatar">{{ a }}</span>
-            }
-          </div>
-          <span class="text-[11px] text-gray-400 font-medium">+2.5K teams</span>
-        </div>
+    <!-- Progress Indicator -->
+    <div class="mt-12">
+      <div class="text-xs text-gray-400 mb-3">REGISTRATION PROGRESS</div>
+      <div class="flex gap-1">
+        <div *ngFor="let step of visualSteps"
+             [class.bg-blue-500]="step.step <= store.currentStep()"
+             [class.bg-gray-700]="step.step > store.currentStep()"
+             class="h-1 flex-1 rounded transition-colors"></div>
       </div>
     </div>
   </aside>
 
-  <!-- RIGHT CARD: The Multi-Step Form Wizard -->
-  <div class="glass-panel auth-card">
-
-      <!-- Top Stepper Header (7 Visual Steps representation with horizontal line) -->
-      @if (store.currentStep() <= 10) {
-        <div class="stepper">
-          @for (item of visualSteps; track $index) {
-            <div
-              class="stepper-node"
-              [class.is-active]="activeVisualStep() === $index"
-              [class.is-done]="activeVisualStep() > $index"
-            >
-              <div class="hex">
-                <span class="hex-inner">
-                  @if (activeVisualStep() > $index) {
-                    ✓
-                  } @else {
-                    {{ item.icon }}
-                  }
-                </span>
-              </div>
-              <span class="stepper-label">{{ item.title }}</span>
-            </div>
-
-            @if (!$last) {
-              <span class="stepper-link" [class.is-done]="activeVisualStep() > $index"></span>
-            }
-          }
+  <!-- RIGHT PANEL: Registration Form -->
+  <main class="form-panel">
+    <div class="form-container">
+      <!-- Error Message -->
+      <div *ngIf="store.error()" class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-red-400 font-semibold">Error</p>
+            <p class="text-red-200 text-sm mt-1">{{ store.error() }}</p>
+          </div>
+          <button (click)="store.updatePersonalInfo({ error: null })" class="text-red-400 hover:text-red-300 font-bold">×</button>
         </div>
-      }
-
-      <!-- Main Form Step Switcher Content (only scrollable region on the page) -->
-      <div class="auth-scroll py-5 pr-1">
-
-        <!-- Error Alert Alerting Box -->
-        @if (store.error()) {
-          <div class="bg-red-500/10 border border-red-500/20 text-red-300 text-sm px-4 py-3 rounded-lg flex items-center justify-between mb-6 animate-pulse-slow">
-            <span>⚠️ {{ store.error() }}</span>
-            <button (click)="store.updateCompany({ error: null })" class="text-red-400 hover:text-red-300 font-bold">×</button>
-          </div>
-        }
-
-        <!-- STEP 1: WELCOME / CHOOSE SETUP ROLE -->
-        @if (store.currentStep() === 1) {
-          <div class="space-y-6">
-            <div class="space-y-1">
-              <h2 class="text-xl font-bold text-white">Welcome! Let's choose your setup mode</h2>
-              <p class="text-gray-400 text-sm font-light">Select the tenant profile representing your operational integration.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Organization Card -->
-              <div
-                (click)="store.setWelcomeType('organization')"
-                class="mode-card"
-                [class.active]="store.welcomeType() === 'organization'"
-              >
-                <div>
-                  <span class="text-2xl">🏢</span>
-                  <h3 class="text-base font-bold mt-2 text-white">Enterprise Organization</h3>
-                  <p class="text-gray-400 text-xs mt-1 leading-relaxed">Configure full administrative capabilities, host corporate branches, and connect workloads.</p>
-                </div>
-                <span class="text-xs font-semibold text-indigo-400">Select Organization →</span>
-              </div>
-
-              <!-- Partner Card -->
-              <div
-                (click)="store.setWelcomeType('partner')"
-                class="mode-card"
-                [class.active]="store.welcomeType() === 'partner'"
-              >
-                <div>
-                  <span class="text-2xl">🤝</span>
-                  <h3 class="text-base font-bold mt-2 text-white">Integration Partner</h3>
-                  <p class="text-gray-400 text-xs mt-1 leading-relaxed">Implement customized microservices, build dynamic plugins, and access telemetry channels.</p>
-                </div>
-                <span class="text-xs font-semibold text-indigo-400">Select Partner →</span>
-              </div>
-            </div>
-
-            <div class="form-footer">
-              <div class="security-note">
-                <span class="security-note__icon">🛡️</span>
-                <div class="text-[12px] leading-snug">
-                  <p class="text-gray-300">Your data is 100% secure and encrypted.</p>
-                  <p class="text-gray-500">You can change these settings anytime.</p>
-                </div>
-              </div>
-              <button [disabled]="!store.welcomeType()" (click)="store.nextStep()" class="btn-primary">
-                Continue <span class="btn-primary__arrow">→</span>
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- STEP 2: INVITATION TOKEN VERIFICATION -->
-        @if (store.currentStep() === 2) {
-          <form [formGroup]="inviteForm" (ngSubmit)="verifyInvitationCode()" class="space-y-6 max-w-md mx-auto">
-            <div class="space-y-1 text-center">
-              <h2 class="text-xl font-bold">Verify Invitation Code</h2>
-              <p class="text-gray-400 text-sm">Please input the unique system-issued invite code.</p>
-            </div>
-
-            <div class="space-y-1.5">
-              <label class="block text-xs font-semibold text-gray-400 uppercase">Invitation Key</label>
-              <div class="custom-input-group">
-                <span class="input-icon">🔑</span>
-                <input
-                  type="text"
-                  formControlName="code"
-                  placeholder="e.g. ZCC-INVITE-2026"
-                  class="custom-input"
-                />
-              </div>
-            </div>
-
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="submit"
-                [disabled]="inviteForm.invalid || store.loading()"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                {{ store.loading() ? 'Verifying...' : 'Verify & Continue' }}
-              </button>
-            </div>
-          </form>
-        }
-
-        <!-- STEP 3: COMPANY PROFILE & LOGO -->
-        @if (store.currentStep() === 3) {
-          <form [formGroup]="companyForm" (ngSubmit)="saveCompanyInfo()" class="space-y-6">
-            <div class="space-y-1">
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <span class="text-indigo-400">✦</span> Let's set up your organization
-              </h2>
-              <p class="text-gray-400 text-sm">Provide the basic details to create your workspace.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Organization Name</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">🏢</span>
-                  <input
-                    type="text"
-                    formControlName="name"
-                    placeholder="e.g., Acme Corporation"
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Workspace Slug</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">🌐</span>
-                  <input
-                    type="text"
-                    formControlName="clientCode"
-                    placeholder="e.g., acme-corp"
-                    class="custom-input pr-[7.5rem]"
-                  />
-                  <span class="absolute right-3 text-xs text-gray-500 font-medium">.zellavora.app</span>
-                </div>
-                <p class="text-[10px] text-gray-500">This will be your unique workspace URL.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Organization Size</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">👥</span>
-                  <select formControlName="employees" class="custom-input custom-select">
-                    <option value="1-10">1-10 Employees</option>
-                    <option value="10-50">10-50 Employees</option>
-                    <option value="50-250">50-250 Employees</option>
-                    <option value="250+">250+ Employees</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Industry</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">🗂️</span>
-                  <select formControlName="industry" class="custom-input custom-select">
-                    <option value="technology">Technology</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="finance">Finance</option>
-                    <option value="retail">Retail</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Primary Use Case -->
-            <div class="space-y-2.5">
-              <label class="block text-xs font-semibold text-gray-300 tracking-wide">
-                Primary Use Case <span class="text-gray-500 font-normal">(Select all that apply)</span>
-              </label>
-              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                @for (uc of useCaseOptions; track uc.value) {
-                  <button
-                    type="button"
-                    (click)="toggleUseCase(uc.value)"
-                    class="use-case-card"
-                    [class.active]="isUseCaseSelected(uc.value)"
-                  >
-                    <span class="use-case-icon">{{ uc.icon }}</span>
-                    <span class="use-case-label">{{ uc.label }}</span>
-                    @if (isUseCaseSelected(uc.value)) {
-                      <span class="use-case-check">✓</span>
-                    }
-                  </button>
-                }
-              </div>
-            </div>
-
-            <!-- Country / Region -->
-            <div class="space-y-1.5 md:w-1/2 md:pr-2">
-              <label class="block text-xs font-semibold text-gray-300 tracking-wide">Country / Region</label>
-              <div class="custom-input-group">
-                <span class="input-icon">🌍</span>
-                <select formControlName="country" class="custom-input custom-select">
-                  <option value="" disabled>Select your country</option>
-                  @for (c of countryOptions; track c) {
-                    <option [value]="c">{{ c }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-
-            <!-- Brand Logo -->
-            <div class="space-y-1.5">
-              <label class="block text-xs font-semibold text-gray-300 tracking-wide">Brand Identity Logo</label>
-              <app-drag-drop-upload (upload)="onLogoUploaded($event)"></app-drag-drop-upload>
-            </div>
-
-            <!-- Footer: security notice + primary action -->
-            <div class="form-footer">
-              <div class="security-note">
-                <span class="security-note__icon">🛡️</span>
-                <div class="text-[12px] leading-snug">
-                  <p class="text-gray-300">Your data is 100% secure and encrypted.</p>
-                  <p class="text-gray-500">You can change these settings anytime.</p>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-3">
-                <button type="button" (click)="store.prevStep()" class="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                  Back
-                </button>
-                <button type="submit" [disabled]="companyForm.invalid" class="btn-primary">
-                  Continue <span class="btn-primary__arrow">→</span>
-                </button>
-              </div>
-            </div>
-          </form>
-        }
-
-        <!-- STEP 4: BRANCH INFORMATION -->
-        @if (store.currentStep() === 4) {
-          <form [formGroup]="branchForm" (ngSubmit)="saveBranchInfo()" class="space-y-6 max-w-md mx-auto">
-            <div class="space-y-1 text-center">
-              <h2 class="text-xl font-bold">Branch Location</h2>
-              <p class="text-gray-400 text-sm">Designate the physical operational branch or HQ office details.</p>
-            </div>
-
-            <div class="space-y-3">
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase">Branch Name</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">📍</span>
-                  <input
-                    type="text"
-                    formControlName="name"
-                    placeholder="e.g. London Office"
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase">Branch ID Code</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">📌</span>
-                  <input
-                    type="text"
-                    formControlName="code"
-                    placeholder="e.g. LDN-01"
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="submit"
-                [disabled]="branchForm.invalid"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                Continue <span>→</span>
-              </button>
-            </div>
-          </form>
-        }
-
-        <!-- STEP 5: SUPER ADMINISTRATOR PROFILE -->
-        @if (store.currentStep() === 5) {
-          <form [formGroup]="adminForm" (ngSubmit)="saveAdminInfo()" class="space-y-6 max-w-md mx-auto">
-            <div class="space-y-1 text-center">
-              <h2 class="text-xl font-bold">Admin Profile</h2>
-              <p class="text-gray-400 text-sm">Provide your name and designation.</p>
-            </div>
-
-            <div class="space-y-3">
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase">Full Name</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">👤</span>
-                  <input
-                    type="text"
-                    formControlName="fullName"
-                    placeholder="John Doe"
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase">Designation</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">💼</span>
-                  <input
-                    type="text"
-                    formControlName="designation"
-                    placeholder="Chief Technology Officer"
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-
-            </div>
-
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="submit"
-                [disabled]="adminForm.invalid"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                Continue <span>→</span>
-              </button>
-            </div>
-          </form>
-        }
-
-        <!-- STEP 6: ACCOUNT CREDENTIALS -->
-        @if (store.currentStep() === 6) {
-          <form [formGroup]="credentialsForm" (ngSubmit)="saveCredentialsInfo()" class="space-y-6 max-w-md mx-auto">
-            <div class="space-y-1 text-center">
-              <h2 class="text-xl font-bold">Secure Account Credentials</h2>
-              <p class="text-gray-400 text-sm">Choose a strong login password and active username.</p>
-            </div>
-
-            <div class="space-y-3">
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase">System Username</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">🆔</span>
-                  <input
-                    type="text"
-                    formControlName="username"
-                    placeholder="e.g. admin_corp"
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-gray-400 uppercase">Account Password</label>
-                <div class="custom-input-group">
-                  <span class="input-icon">🔒</span>
-                  <input
-                    type="password"
-                    formControlName="password"
-                    placeholder="••••••••••••"
-                    class="custom-input mb-2"
-                  />
-                </div>
-                <app-password-strength [password]="credentialsForm.value.password || ''"></app-password-strength>
-              </div>
-            </div>
-
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="submit"
-                [disabled]="credentialsForm.invalid"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                Continue <span>→</span>
-              </button>
-            </div>
-          </form>
-        }
-
-        <!-- STEP 7: EMAIL VERIFICATION -->
-        @if (store.currentStep() === 7) {
-          <div class="space-y-6 max-w-md mx-auto text-center">
-            <div class="space-y-1">
-              <h2 class="text-xl font-bold">Email OTP Verification</h2>
-              <p class="text-gray-400 text-sm font-light">Verify email <strong>{{ store.adminEmail() }}</strong>.</p>
-            </div>
-
-            <div class="space-y-4 py-4">
-              <button
-                type="button"
-                (click)="triggerEmailOtp()"
-                [disabled]="emailTimer() > 0"
-                class="px-5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-indigo-400 transition-all border border-white/5"
-              >
-                {{ emailTimer() > 0 ? ('Resend code in ' + emailTimer() + 's') : 'Send OTP Pin' }}
-              </button>
-
-              <div class="pt-2">
-                <app-otp-input (otpChange)="emailOtpCode.set($event)"></app-otp-input>
-              </div>
-            </div>
-
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="button"
-                [disabled]="emailOtpCode().length !== 6 || store.loading()"
-                (click)="verifyEmailOtp()"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                {{ store.loading() ? 'Verifying...' : 'Verify OTP' }}
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- STEP 8: MFA AUTHENTICATOR ENROLLMENT -->
-        @if (store.currentStep() === 8) {
-          <div class="space-y-6 max-w-md mx-auto text-center">
-            <div class="space-y-1">
-              <h2 class="text-xl font-bold">Enroll Two-Factor Auth</h2>
-              <p class="text-gray-400 text-sm">Scan this QR Code in Google Authenticator or Authy to secure your admin account.</p>
-            </div>
-
-            <div class="flex flex-col items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-6">
-              <img [src]="store.mfaQrCode()" alt="MFA QR Code" class="h-40 w-40 rounded-xl bg-white p-2" />
-              <div class="text-xs text-left w-full space-y-1">
-                <span class="block font-semibold uppercase text-gray-500">Security Key Secret</span>
-                <code class="block font-mono bg-black/40 px-3 py-2 rounded text-indigo-300 break-all select-all">{{ store.mfaSecret() }}</code>
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Verify Authenticator Pin</label>
-              <app-otp-input (otpChange)="onMfaCodeChange($event)"></app-otp-input>
-            </div>
-
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="button"
-                [disabled]="localMfaCode().length !== 6"
-                (click)="submitMfaVerification()"
-                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                Verify & Continue
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- STEP 9: REVIEW SUMMARY -->
-        @if (store.currentStep() === 9) {
-          <div class="space-y-6">
-            <div class="space-y-1">
-              <h2 class="text-xl font-bold">Review & Activate</h2>
-              <p class="text-gray-400 text-sm">Please verify the correctness of all details prior to establishing the tenant.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Company Summary -->
-              <div class="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">Organization</h3>
-                    <button (click)="store.setStep(3)" class="text-xs text-gray-400 hover:text-white underline">Edit</button>
-                  </div>
-                  <p class="text-base font-semibold">{{ store.companyName() }}</p>
-                  <p class="text-xs text-gray-500">Slug: {{ store.companyClientCode() }}.zellavora.app</p>
-                  <p class="text-xs text-gray-500">Scale: {{ store.companyEmployees() }} • Sector: {{ store.companyIndustry() }}</p>
-                </div>
-              </div>
-
-              <!-- Branch Summary -->
-              <div class="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">HQ Branch</h3>
-                    <button (click)="store.setStep(4)" class="text-xs text-gray-400 hover:text-white underline">Edit</button>
-                  </div>
-                  <p class="text-base font-semibold">{{ store.branchName() }}</p>
-                  <p class="text-xs text-gray-500">Identifier Code: {{ store.branchCode() }}</p>
-                </div>
-              </div>
-
-              <!-- Admin Summary -->
-              <div class="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">Superadmin Profile</h3>
-                    <button (click)="store.setStep(5)" class="text-xs text-gray-400 hover:text-white underline">Edit</button>
-                  </div>
-                  <p class="text-base font-semibold">{{ store.adminFullName() }}</p>
-                  <p class="text-xs text-gray-500">{{ store.adminDesignation() }}</p>
-                  <p class="text-xs text-gray-500">Email: {{ store.adminEmail() }}</p>
-                </div>
-              </div>
-
-              <!-- Security Summary -->
-              <div class="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">Security Setup</h3>
-                    <button (click)="store.setStep(6)" class="text-xs text-gray-400 hover:text-white underline">Edit</button>
-                  </div>
-                  <p class="text-base font-semibold">User: {{ store.credentialsUsername() }}</p>
-                  <p class="text-xs text-green-400 mt-1">✓ Email Verification Complete</p>
-                  <p class="text-xs text-green-400">✓ MFA Enrollment Valid</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex justify-between border-t border-white/5 pt-6">
-              <button type="button" (click)="store.prevStep()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold transition-all">
-                Back
-              </button>
-              <button
-                type="button"
-                [disabled]="store.loading()"
-                (click)="finishRegistration()"
-                class="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-lg text-white"
-              >
-                {{ store.loading() ? 'Activating Workspace...' : 'Activate Workspace' }}
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- STEP 10: COMPLETE WORKSPACE REGISTRATION (PROCESSING/LOADING STATE) -->
-        @if (store.currentStep() === 10) {
-          <div class="space-y-6 text-center max-w-md mx-auto py-8">
-            <div class="h-16 w-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <div class="space-y-2">
-              <h2 class="text-xl font-bold text-white">Initializing your environment</h2>
-              <p class="text-gray-400 text-sm font-light">Please hold while we compile microservices, set up tenant databases, and verify credentials...</p>
-            </div>
-          </div>
-        }
-
-        <!-- STEP 11: SUCCESS & WORKSPACE PROFILE SUMMARY -->
-        @if (store.currentStep() === 11) {
-          <div class="space-y-6 text-center max-w-md mx-auto py-6">
-            <div class="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-4xl mx-auto animate-bounce">
-              🎉
-            </div>
-            
-            <div class="space-y-2">
-              <h2 class="text-2xl font-bold text-emerald-400">Workspace Active!</h2>
-              <p class="text-gray-400 text-sm font-light">Your administrative panel is generated and ready to manage workloads.</p>
-            </div>
-
-            <div class="bg-white/5 border border-white/5 rounded-2xl p-5 text-left space-y-3">
-              <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">Tenant Profile</h3>
-              <div class="text-xs space-y-1 font-light text-gray-300">
-                <p><span class="text-gray-500">Tenant ID:</span> {{ store.successData()?.tenant?.id }}</p>
-                <p><span class="text-gray-500">Tenant Name:</span> {{ store.successData()?.tenant?.name }}</p>
-                <p><span class="text-gray-500">Client Code:</span> <code class="bg-black/30 px-1 py-0.5 rounded text-indigo-300">{{ store.successData()?.tenant?.clientCode }}</code></p>
-                <p><span class="text-gray-500">Domain:</span> <code class="bg-black/30 px-1 py-0.5 rounded text-indigo-300">{{ store.successData()?.tenant?.clientCode }}.zellavora.app</code></p>
-                <p><span class="text-gray-500">Superadmin:</span> {{ store.successData()?.user?.username }} ({{ store.successData()?.user?.email }})</p>
-              </div>
-            </div>
-
-            <div class="pt-4">
-              <button
-                (click)="navigateToLogin()"
-                class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 font-bold transition-all shadow-md text-white"
-              >
-                Proceed to Login Console
-              </button>
-            </div>
-          </div>
-        }
-
       </div>
 
-  </div>
+      <!-- STEP 1: Welcome / Registration Type -->
+      <div *ngIf="store.currentStep() === 1" class="space-y-8">
+        <div>
+          <h1 class="text-4xl font-bold mb-3">Welcome to Zellavora</h1>
+          <p class="text-gray-400 text-lg">Create your organization's control center in minutes</p>
+        </div>
+
+        <div class="space-y-4">
+          <button
+            (click)="selectRegistrationType('new_org')"
+            [class.active]="store.registrationType() === 'new_org'"
+            class="w-full p-6 border border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-500/5 transition text-left">
+            <div class="font-bold text-lg">Create New Organization</div>
+            <div class="text-sm text-gray-400 mt-1">Set up your organization from scratch</div>
+          </button>
+
+          <button
+            (click)="selectRegistrationType('invite')"
+            [class.active]="store.registrationType() === 'invite'"
+            class="w-full p-6 border border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-500/5 transition text-left">
+            <div class="font-bold text-lg">Join Existing Organization</div>
+            <div class="text-sm text-gray-400 mt-1">Use an invitation code to join</div>
+          </button>
+        </div>
+
+        <button [disabled]="!store.registrationType()" (click)="store.nextStep()" class="btn-primary w-full">
+          Continue
+        </button>
+      </div>
+
+      <!-- STEP 2: Registration Type (Optional Invitation) -->
+      <div *ngIf="store.currentStep() === 2" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">{{ store.registrationType() === 'new_org' ? 'Create Organization' : 'Join Organization' }}</h2>
+          <p class="text-gray-400">{{ store.registrationType() === 'new_org' ? 'You\'ll set up your own organization' : 'Enter your invitation code' }}</p>
+        </div>
+
+        <ng-container *ngIf="store.registrationType() === 'invite'">
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Invitation Code</label>
+            <input
+              type="text"
+              placeholder="Enter your invitation code"
+              #inviteCodeInput
+              class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+            <button
+              (click)="verifyInvitationCode(inviteCodeInput.value)"
+              class="btn-primary w-full">
+              Verify Code
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="store.registrationType() === 'new_org'">
+          <button (click)="store.nextStep()" class="btn-primary w-full">
+            Continue
+          </button>
+        </ng-container>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">
+          Back
+        </button>
+      </div>
+
+      <!-- STEP 3: Basic Information -->
+      <div *ngIf="store.currentStep() === 3" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Personal Information</h2>
+          <p class="text-gray-400">Let's start with your details</p>
+        </div>
+
+        <form [formGroup]="basicInfoForm" (ngSubmit)="saveBasicInfo()" class="space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium">First Name *</label>
+              <input formControlName="firstName" type="text" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+            </div>
+            <div>
+              <label class="text-sm font-medium">Last Name *</label>
+              <input formControlName="lastName" type="text" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Email *</label>
+            <input formControlName="email" type="email" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Mobile Number *</label>
+            <input formControlName="mobile" type="tel" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium">Country *</label>
+              <select formControlName="country" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <option value="">Select Country</option>
+                <option *ngFor="let country of countryOptions" [value]="country">{{ country }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium">Language *</label>
+              <select formControlName="language" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" [disabled]="basicInfoForm.invalid || store.loading()" class="btn-primary w-full">
+            {{ store.loading() ? 'Processing...' : 'Continue' }}
+          </button>
+        </form>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 4: Email OTP Verification -->
+      <div *ngIf="store.currentStep() === 4" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Verify Your Email</h2>
+          <p class="text-gray-400 text-sm">Enter the 6-digit code sent to <strong>{{ store.email() }}</strong></p>
+        </div>
+
+        <div class="space-y-4">
+          <button
+            *ngIf="!store.emailVerified()"
+            (click)="sendEmailOtp()"
+            [disabled]="store.loading()"
+            class="btn-primary w-full">
+            {{ store.loading() ? 'Sending...' : 'Send OTP Code' }}
+          </button>
+
+          <div *ngIf="store.emailVerified()" class="p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
+            <p class="text-green-400 font-semibold">✓ Email Verified</p>
+          </div>
+
+          <div *ngIf="!store.emailVerified()" class="space-y-4">
+            <app-otp-input (otpChange)="emailOtpCodeInput.set($event)"></app-otp-input>
+
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-gray-400">{{ emailTimer() > 0 ? emailTimer() + 's remaining' : 'Code expired' }}</span>
+              <button
+                (click)="resendEmailOtp()"
+                [disabled]="emailTimer() > 0 || store.loading()"
+                class="text-blue-400 hover:text-blue-300">
+                Resend
+              </button>
+            </div>
+
+            <button
+              (click)="verifyEmailOtp()"
+              [disabled]="emailOtpCodeInput().length !== 6 || store.loading()"
+              class="btn-primary w-full">
+              {{ store.loading() ? 'Verifying...' : 'Verify Code' }}
+            </button>
+          </div>
+        </div>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 5: Mobile OTP (Optional) -->
+      <div *ngIf="store.currentStep() === 5" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Mobile Verification (Optional)</h2>
+          <p class="text-gray-400 text-sm">Add extra security with mobile verification</p>
+        </div>
+
+        <div class="space-y-4">
+          <button (click)="sendMobileOtp()" class="btn-primary w-full">Send SMS Code</button>
+          <button (click)="skipMobileVerification()" class="btn-secondary w-full">Skip for Now</button>
+        </div>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 6: Organization Information -->
+      <div *ngIf="store.currentStep() === 6" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Organization Information</h2>
+          <p class="text-gray-400">Tell us about your organization</p>
+        </div>
+
+        <form [formGroup]="organizationForm" (ngSubmit)="saveOrganizationInfo()" class="space-y-6">
+          <div>
+            <label class="text-sm font-medium">Organization Name *</label>
+            <input formControlName="organizationName" type="text" placeholder="e.g., Acme Corp" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Organization Code *</label>
+            <input formControlName="organizationCode" type="text" placeholder="e.g., acme-corp" (blur)="checkOrgCode()" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+            <p class="text-xs text-gray-500 mt-1">2-16 characters: letters, numbers, hyphens only</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium">Industry *</label>
+              <select formControlName="industry" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <option value="">Select Industry</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="banking">Banking</option>
+                <option value="technology">Technology</option>
+                <option value="retail">Retail</option>
+                <option value="finance">Finance</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium">Company Size *</label>
+              <select formControlName="organizationSize" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <option value="1-10">1-10</option>
+                <option value="10-50">10-50</option>
+                <option value="50-100">50-100</option>
+                <option value="100-500">100-500</option>
+                <option value="500+">500+</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Website (Optional)</label>
+            <input formControlName="website" type="url" placeholder="https://example.com" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <button type="submit" [disabled]="organizationForm.invalid || store.loading()" class="btn-primary w-full">
+            Continue
+          </button>
+        </form>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 7: Branch Setup -->
+      <div *ngIf="store.currentStep() === 7" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Branch Setup</h2>
+          <p class="text-gray-400">Configure your head office location</p>
+        </div>
+
+        <form [formGroup]="branchForm" (ngSubmit)="saveBranchInfo()" class="space-y-6">
+          <div>
+            <label class="text-sm font-medium">Branch Name *</label>
+            <input formControlName="branchName" type="text" placeholder="Head Office" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Country *</label>
+            <select formControlName="branchCountry" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500">
+              <option value="">Select Country</option>
+              <option *ngFor="let country of countryOptions" [value]="country">{{ country }}</option>
+            </select>
+          </div>
+
+          <button type="submit" [disabled]="branchForm.invalid || store.loading()" class="btn-primary w-full">
+            Continue
+          </button>
+        </form>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 8: Password Creation -->
+      <div *ngIf="store.currentStep() === 8" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Create Password</h2>
+          <p class="text-gray-400">Set a strong password for your account</p>
+        </div>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" class="space-y-6">
+          <div>
+            <label class="text-sm font-medium">Password *</label>
+            <input formControlName="password" type="password" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Confirm Password *</label>
+            <input formControlName="confirmPassword" type="password" class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <app-password-strength [password]="passwordForm.value.password || ''"></app-password-strength>
+
+          <button type="submit" [disabled]="passwordForm.invalid || store.loading()" class="btn-primary w-full">
+            Continue
+          </button>
+        </form>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 9: Security Setup (MFA) -->
+      <div *ngIf="store.currentStep() === 9" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Security Setup</h2>
+          <p class="text-gray-400">Choose your two-factor authentication method</p>
+        </div>
+
+        <div class="space-y-3">
+          <button
+            (click)="selectMfaMethod('email_otp')"
+            [class.active]="store.mfaMethod() === 'email_otp'"
+            class="w-full p-4 border border-gray-700 rounded-lg hover:border-blue-500 text-left transition">
+            <div class="font-semibold">Email OTP</div>
+            <div class="text-xs text-gray-400 mt-1">Receive codes via email (Recommended)</div>
+          </button>
+
+          <button
+            (click)="selectMfaMethod('authenticator')"
+            [class.active]="store.mfaMethod() === 'authenticator'"
+            class="w-full p-4 border border-gray-700 rounded-lg hover:border-blue-500 text-left transition">
+            <div class="font-semibold">Authenticator App</div>
+            <div class="text-xs text-gray-400 mt-1">Use Google Authenticator or Authy (Most Secure)</div>
+          </button>
+
+          <button
+            (click)="selectMfaMethod('sms')"
+            [class.active]="store.mfaMethod() === 'sms'"
+            class="w-full p-4 border border-gray-700 rounded-lg hover:border-blue-500 text-left transition">
+            <div class="font-semibold">SMS</div>
+            <div class="text-xs text-gray-400 mt-1">Receive codes via SMS</div>
+          </button>
+        </div>
+
+        <!-- Show QR Code if Authenticator Selected -->
+        <div *ngIf="store.mfaMethod() === 'authenticator' && store.mfaQrCode()" class="space-y-4">
+          <div class="bg-white p-4 rounded-lg inline-block">
+            <img [src]="store.mfaQrCode()" alt="TOTP QR Code" class="w-32 h-32" />
+          </div>
+          <div class="text-xs text-gray-400">
+            <p>Secret Key: <code class="text-yellow-400">{{ store.mfaSecret() }}</code></p>
+            <p class="mt-2">Scan with Google Authenticator, Authy, or Microsoft Authenticator</p>
+          </div>
+        </div>
+
+        <button (click)="store.nextStep()" class="btn-primary w-full">
+          Continue
+        </button>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 10: Terms & Privacy -->
+      <div *ngIf="store.currentStep() === 10" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Terms & Privacy</h2>
+          <p class="text-gray-400">Review and accept our policies</p>
+        </div>
+
+        <form [formGroup]="termsForm" (ngSubmit)="saveTermsAndPrivacy()" class="space-y-6">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input formControlName="termsAccepted" type="checkbox" class="mt-1" />
+            <span class="text-sm">I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> *</span>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input formControlName="privacyAccepted" type="checkbox" class="mt-1" />
+            <span class="text-sm">I agree to the <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a> *</span>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input formControlName="cookieAccepted" type="checkbox" class="mt-1" />
+            <span class="text-sm">I agree to <a href="#" class="text-blue-400 hover:underline">Cookie Policy</a></span>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input formControlName="securityAlertsEnabled" type="checkbox" class="mt-1" />
+            <span class="text-sm">Send me security alerts</span>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input formControlName="marketingEmails" type="checkbox" class="mt-1" />
+            <span class="text-sm">Send me marketing emails</span>
+          </label>
+
+          <button type="submit" [disabled]="termsForm.invalid || store.loading()" class="btn-primary w-full">
+            Continue
+          </button>
+        </form>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 11: Review -->
+      <div *ngIf="store.currentStep() === 11" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">Review Your Details</h2>
+          <p class="text-gray-400">Make sure everything is correct before creating your account</p>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Owner Info -->
+          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+            <h3 class="font-semibold mb-3">Owner Account</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Name:</span>
+                <span>{{ store.firstName() }} {{ store.lastName() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Email:</span>
+                <span>{{ store.email() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Country:</span>
+                <span>{{ store.country() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Organization Info -->
+          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+            <h3 class="font-semibold mb-3">Organization</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Name:</span>
+                <span>{{ store.organizationName() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Code:</span>
+                <span>{{ store.organizationCode() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Industry:</span>
+                <span>{{ store.industry() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Size:</span>
+                <span>{{ store.organizationSize() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Branch Info -->
+          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+            <h3 class="font-semibold mb-3">Branch</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Name:</span>
+                <span>{{ store.branchName() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Country:</span>
+                <span>{{ store.branchCountry() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MFA Info -->
+          <div class="p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+            <h3 class="font-semibold mb-3">Security</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">2FA Method:</span>
+                <span class="capitalize">{{ store.mfaMethod() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button (click)="confirmAndCreateAccount()" [disabled]="store.loading()" class="btn-primary w-full">
+          {{ store.loading() ? 'Creating Account...' : 'Create Account' }}
+        </button>
+
+        <button (click)="store.prevStep()" class="btn-secondary w-full">Back</button>
+      </div>
+
+      <!-- STEP 12: Processing -->
+      <div *ngIf="store.currentStep() === 12" class="space-y-6 text-center py-12">
+        <div class="text-4xl">🔄</div>
+        <h2 class="text-2xl font-bold">Creating Your Account</h2>
+        <p class="text-gray-400">Please wait while we set up your organization...</p>
+        <div class="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+      </div>
+
+      <!-- STEP 13: Success / Welcome -->
+      <div *ngIf="store.currentStep() === 13" class="space-y-6 text-center py-12">
+        <div class="text-6xl">🎉</div>
+        <h1 class="text-3xl font-bold">Welcome, {{ store.firstName() }}!</h1>
+        <p class="text-gray-400">Your organization <strong>{{ store.organizationName() }}</strong> has been created successfully</p>
+
+        <div class="space-y-2 text-left max-w-md mx-auto">
+          <div class="flex gap-2">
+            <span class="text-green-400">✓</span>
+            <span class="text-sm">Organization Created</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-green-400">✓</span>
+            <span class="text-sm">Branch Setup</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-green-400">✓</span>
+            <span class="text-sm">Admin User Configured</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-green-400">✓</span>
+            <span class="text-sm">Security Enabled</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-green-400">✓</span>
+            <span class="text-sm">Workspace Ready</span>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <button (click)="navigateToDashboard()" class="btn-primary flex-1">
+            Go to Dashboard
+          </button>
+          <button (click)="navigateToLogin()" class="btn-secondary flex-1">
+            Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
