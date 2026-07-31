@@ -282,7 +282,8 @@ model Department {
   parentId       String?  @map("parent_id") @db.Uuid
   parent         Department? @relation("DepartmentHierarchy", fields: [parentId], references: [id])
   children       Department[] @relation("DepartmentHierarchy")
-  
+  userTenants    UserTenant[] @relation(onDelete: SetNull)
+
   // Status
   status         String   @default("active") @map("status")
   
