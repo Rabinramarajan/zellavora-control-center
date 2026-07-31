@@ -15,7 +15,13 @@ describe('InvitationService', () => {
   });
 
   it('should successfully verify a valid invitation code', async () => {
-    const mockInvite = { id: '1', email: 'test@zellavora.com', code: 'ZCC-XYZ', used: false, createdAt: new Date() } as Invitation;
+    const mockInvite = {
+      id: '1',
+      email: 'test@zellavora.com',
+      code: 'ZCC-XYZ',
+      used: false,
+      createdAt: new Date(),
+    } as Invitation;
     mockRepo.findByCode.mockResolvedValue(mockInvite);
 
     const result = await service.verify('ZCC-XYZ');
@@ -25,6 +31,8 @@ describe('InvitationService', () => {
   it('should throw an error for an invalid invitation code', async () => {
     mockRepo.findByCode.mockResolvedValue(null);
 
-    await expect(service.verify('INVALID-CODE')).rejects.toThrow('Invalid or expired invitation code');
+    await expect(service.verify('INVALID-CODE')).rejects.toThrow(
+      'Invalid or expired invitation code'
+    );
   });
 });

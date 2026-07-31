@@ -5,10 +5,7 @@
 import type Redis from 'ioredis';
 import type { PolicyCache } from './policy-cache';
 
-export async function startInvalidationListener(
-  redis: Redis,
-  cache: PolicyCache
-): Promise<void> {
+export async function startInvalidationListener(redis: Redis, cache: PolicyCache): Promise<void> {
   const subscriber = redis.duplicate();
   const pattern = 'rbac:invalidate:*';
 

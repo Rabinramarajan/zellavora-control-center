@@ -19,7 +19,11 @@ export class AuthService {
     if (user.isAccountLocked && user.lastLockedDate) {
       const lockDurationMs = 15 * 60 * 1000; // 15 mins lock
       if (Date.now() - user.lastLockedDate.getTime() < lockDurationMs) {
-        throw new AppError('Account is temporarily locked. Try again later.', 403, 'ACCOUNT_LOCKED');
+        throw new AppError(
+          'Account is temporarily locked. Try again later.',
+          403,
+          'ACCOUNT_LOCKED'
+        );
       } else {
         // Unlock
         await this.userRepo.update(user.id, { isAccountLocked: false, lastLockedDate: null });
@@ -76,17 +80,17 @@ export class AuthService {
 
   private generateTokens(userId: string, email: string, role: string) {
     const accessToken = jwt.sign({ userId, email, role }, config.jwtSecret as string, {
-      expiresIn: config.jwtExpiry as any
+      expiresIn: config.jwtExpiry as any,
     });
 
     const refreshToken = jwt.sign({ userId }, config.refreshTokenSecret as string, {
-      expiresIn: config.refreshTokenExpiry as any
+      expiresIn: config.refreshTokenExpiry as any,
     });
 
     return {
       accessToken,
       refreshToken,
-      expiresIn: config.jwtExpiry
+      expiresIn: config.jwtExpiry,
     };
   }
 }

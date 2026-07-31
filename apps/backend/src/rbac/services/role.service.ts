@@ -37,7 +37,7 @@ export class RoleService {
 
   async listPermissions(filter: { type?: string; groupId?: string } = {}) {
     let q = this.db.from('permissions').select('*, group:permission_groups(*)');
-    if (filter.type)    q = q.eq('type', filter.type);
+    if (filter.type) q = q.eq('type', filter.type);
     if (filter.groupId) q = q.eq('group_id', filter.groupId);
     const { data } = await q.order('label', { ascending: true });
     return data ?? [];
@@ -53,11 +53,7 @@ export class RoleService {
   }
 
   async getDetail(roleId: string) {
-    const { data: role, error } = await this.db
-      .from('roles')
-      .select('*')
-      .eq('id', roleId)
-      .single();
+    const { data: role, error } = await this.db.from('roles').select('*').eq('id', roleId).single();
     if (error || !role) throw Object.assign(new Error('Role not found'), { status: 404 });
 
     const [{ data: perms }, { data: parents }, { data: children }] = await Promise.all([
@@ -72,19 +68,19 @@ export class RoleService {
       this.db
         .from('role_inheritance')
         .select('role_id, roles!role_inheritance_role_id_fkey(id, key, label, level)')
-        .eq('parent_role_id', roleId)
+        .eq('parent_role_id', roleId),
     ]);
 
     return {
       ...role,
-      permissions: (perms ?? []).map(p => ({
+      permissions: (perms ?? []).map((p) => ({
         key: (p as any).permissions.key,
         label: (p as any).permissions.label,
         type: (p as any).permissions.type,
-        effect: p.effect
+        effect: p.effect,
       })),
-      inheritsFrom: (parents ?? []).map(p => (p as any).roles),
-      inheritedBy:  (children ?? []).map(c => (c as any).roles)
+      inheritsFrom: (parents ?? []).map((p) => (p as any).roles),
+      inheritedBy: (children ?? []).map((c) => (c as any).roles),
     };
   }
 
@@ -101,7 +97,7 @@ export class RoleService {
         description: input.description,
         level: input.level ?? 0,
         color: input.color,
-        is_system: false
+        is_system: false,
       })
       .select()
       .single();
@@ -124,7 +120,7 @@ export class RoleService {
       resourceType: 'role',
       resourceId: role.id,
       newValues: role,
-      description: `Created role ${role.key}`
+      description: `Created role ${role.key}`,
     });
 
     await this.engine.invalidateOrg(orgId);
@@ -134,8 +130,7 @@ export class RoleService {
   // ---------- Update ----------
 
   async update(roleId: string, patch: Partial<CreateRoleInput>, actorId: string) {
-    const { data: before } = await this.db
-      .from('roles').select('*').eq('id', roleId).single();
+    const { data: before } = await this.db.from('roles').select('*').eq('id', roleId).single();
 
     const { data: role, error } = await this.db
       .from('roles')
@@ -144,7 +139,7 @@ export class RoleService {
         label: patch.label,
         description: patch.description,
         level: patch.level,
-        color: patch.color
+        color: patch.color,
       })
       .eq('id', roleId)
       .select()
@@ -165,7 +160,7 @@ export class RoleService {
       resourceType: 'role',
       resourceId: roleId,
       oldValues: before,
-      newValues: role
+      newValues: role,
     });
 
     await this.engine.invalidateOrg(before?.organization_id);
@@ -175,8 +170,7 @@ export class RoleService {
   // ---------- Delete ----------
 
   async delete(roleId: string, actorId: string) {
-    const { data: before } = await this.db
-      .from('roles').select('*').eq('id', roleId).single();
+    const { data: before } = await this.db.from('roles').select('*').eq('id', roleId).single();
     if (!before) throw Object.assign(new Error('Not found'), { status: 404 });
     if (before.is_system) {
       throw Object.assign(new Error('System roles cannot be deleted'), { status: 400 });
@@ -189,10 +183,9 @@ export class RoleService {
       .eq('role_id', roleId)
       .eq('status', 'active');
     if (count && count > 0) {
-      throw Object.assign(
-        new Error(`Role is assigned to ${count} user(s); revoke first`),
-        { status: 409 }
-      );
+      throw Object.assign(new Error(`Role is assigned to ${count} user(s); revoke first`), {
+        status: 409,
+      });
     }
 
     const { error } = await this.db.from('roles').delete().eq('id', roleId);
@@ -204,7 +197,7 @@ export class RoleService {
       action: 'role.delete',
       resourceType: 'role',
       resourceId: roleId,
-      oldValues: before
+      oldValues: before,
     });
 
     await this.engine.invalidateOrg(before.organization_id);
@@ -218,7 +211,10 @@ export class RoleService {
     actorId: string
   ) {
     const { data: role } = await this.db
-      .from('roles').select('organization_id').eq('id', roleId).single();
+      .from('roles')
+      .select('organization_id')
+      .eq('id', roleId)
+      .single();
     if (!role) throw Object.assign(new Error('Not found'), { status: 404 });
 
     await this.setPermissionsInternal(roleId, perms, actorId);
@@ -229,7 +225,7 @@ export class RoleService {
       action: 'role.permission.set',
       resourceType: 'role',
       resourceId: roleId,
-      newValues: { permissions: perms }
+      newValues: { permissions: perms },
     });
 
     await this.engine.invalidateOrg(role.organization_id);
@@ -244,25 +240,25 @@ export class RoleService {
     const { data: permRows } = await this.db
       .from('permissions')
       .select('id, key')
-      .in('key', perms.map(p => p.key));
-    const byKey = new Map((permRows ?? []).map(p => [p.key, p.id]));
-    const missing = perms.filter(p => !byKey.has(p.key)).map(p => p.key);
-    if (missing.length > 0) {
-      throw Object.assign(
-        new Error(`Unknown permissions: ${missing.join(', ')}`),
-        { status: 400 }
+      .in(
+        'key',
+        perms.map((p) => p.key)
       );
+    const byKey = new Map((permRows ?? []).map((p) => [p.key, p.id]));
+    const missing = perms.filter((p) => !byKey.has(p.key)).map((p) => p.key);
+    if (missing.length > 0) {
+      throw Object.assign(new Error(`Unknown permissions: ${missing.join(', ')}`), { status: 400 });
     }
 
     // Replace strategy: delete then insert (simple, correct)
     await this.db.from('role_permissions').delete().eq('role_id', roleId);
     if (perms.length > 0) {
       await this.db.from('role_permissions').insert(
-        perms.map(p => ({
+        perms.map((p) => ({
           role_id: roleId,
           permission_id: byKey.get(p.key)!,
           effect: p.effect,
-          granted_by: actorId
+          granted_by: actorId,
         }))
       );
     }
@@ -272,16 +268,18 @@ export class RoleService {
 
   async setInheritance(roleId: string, parentIds: string[], actorId: string) {
     const { data: role } = await this.db
-      .from('roles').select('organization_id').eq('id', roleId).single();
+      .from('roles')
+      .select('organization_id')
+      .eq('id', roleId)
+      .single();
     if (!role) throw Object.assign(new Error('Not found'), { status: 404 });
 
     // Cycle pre-check (faster than the trigger error path)
     for (const parent of parentIds) {
       if (await wouldCreateCycle(this.db, roleId, parent)) {
-        throw Object.assign(
-          new Error(`Inheritance from ${parent} would create a cycle`),
-          { status: 400 }
-        );
+        throw Object.assign(new Error(`Inheritance from ${parent} would create a cycle`), {
+          status: 400,
+        });
       }
     }
 
@@ -293,7 +291,7 @@ export class RoleService {
       action: 'role.inheritance.set',
       resourceType: 'role',
       resourceId: roleId,
-      newValues: { parents: parentIds }
+      newValues: { parents: parentIds },
     });
 
     await this.engine.invalidateOrg(role.organization_id);
@@ -302,9 +300,9 @@ export class RoleService {
   private async setInheritanceInternal(roleId: string, parentIds: string[], actorId: string) {
     await this.db.from('role_inheritance').delete().eq('role_id', roleId);
     if (parentIds.length > 0) {
-      await this.db.from('role_inheritance').insert(
-        parentIds.map(pid => ({ role_id: roleId, parent_role_id: pid }))
-      );
+      await this.db
+        .from('role_inheritance')
+        .insert(parentIds.map((pid) => ({ role_id: roleId, parent_role_id: pid })));
     }
   }
 
@@ -323,7 +321,7 @@ export class RoleService {
         description: src.description,
         level: src.level,
         color: src.color,
-        is_system: false
+        is_system: false,
       })
       .select()
       .single();
@@ -333,7 +331,7 @@ export class RoleService {
     if (src.permissions.length > 0) {
       await this.setPermissionsInternal(
         role.id,
-        src.permissions.map(p => ({ key: p.key, effect: p.effect as any })),
+        src.permissions.map((p) => ({ key: p.key, effect: p.effect as any })),
         actorId
       );
     }
@@ -353,7 +351,7 @@ export class RoleService {
       action: 'role.clone',
       resourceType: 'role',
       resourceId: role.id,
-      newValues: { source: sourceId, key: newKey, label: newLabel }
+      newValues: { source: sourceId, key: newKey, label: newLabel },
     });
 
     await this.engine.invalidateOrg(orgId);

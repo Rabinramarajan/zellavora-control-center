@@ -20,8 +20,8 @@ const cleanConnectionString = connectionString.replace(/"/g, '');
 const client = new Client({
   connectionString: cleanConnectionString,
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+  },
 });
 
 async function main() {
@@ -45,7 +45,9 @@ async function main() {
       console.log(`✅ ${file} applied successfully.`);
     } catch (err: any) {
       console.error(`❌ Error applying ${file}:`);
-      console.error(`Statement failed: ${err.position ? sql.substring(Math.max(0, err.position - 50), err.position + 150) : 'unknown'}`);
+      console.error(
+        `Statement failed: ${err.position ? sql.substring(Math.max(0, err.position - 50), err.position + 150) : 'unknown'}`
+      );
       console.error(err.stack || err.message || err);
       process.exit(1);
     }

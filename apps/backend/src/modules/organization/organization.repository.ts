@@ -3,13 +3,13 @@ import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 export class OrganizationRepository extends BaseRepository {
   async findById(id: string, tx?: TxClient) {
     return this.getDb(tx).organization.findUnique({
-      where: { id }
+      where: { id },
     });
   }
 
   async findByClientCode(clientCode: string, tx?: TxClient) {
     return this.getDb(tx).organization.findUnique({
-      where: { clientCode }
+      where: { clientCode },
     });
   }
 
@@ -21,20 +21,24 @@ export class OrganizationRepository extends BaseRepository {
         logoUrl: data.logoUrl,
         plan: 'enterprise',
         enforce2fa: true,
-      }
+      },
     });
   }
 
-  async update(id: string, data: { name?: string; logoUrl?: string | null; plan?: string; enforce2fa?: boolean }, tx?: TxClient) {
+  async update(
+    id: string,
+    data: { name?: string; logoUrl?: string | null; plan?: string; enforce2fa?: boolean },
+    tx?: TxClient
+  ) {
     return this.getDb(tx).organization.update({
       where: { id },
-      data
+      data,
     });
   }
 
   async delete(id: string, tx?: TxClient) {
     return this.getDb(tx).organization.delete({
-      where: { id }
+      where: { id },
     });
   }
 }

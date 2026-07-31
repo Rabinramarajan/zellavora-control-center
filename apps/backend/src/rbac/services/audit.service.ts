@@ -41,7 +41,7 @@ export class AuditService {
       p_description: entry.description ?? null,
       p_old_values: entry.oldValues ? JSON.stringify(entry.oldValues) : null,
       p_new_values: entry.newValues ? JSON.stringify(entry.newValues) : null,
-      p_context: JSON.stringify(entry.context ?? {})
+      p_context: JSON.stringify(entry.context ?? {}),
     });
     if (error) throw new Error(`Audit log failed: ${error.message}`);
     return data as number;
@@ -72,10 +72,10 @@ export class AuditService {
       .order('created_at', { ascending: false })
       .range(offset, offset + pageSize - 1);
 
-    if (opts.actor)  q = q.eq('actor_id', opts.actor);
+    if (opts.actor) q = q.eq('actor_id', opts.actor);
     if (opts.action) q = q.eq('action', opts.action);
-    if (opts.from)   q = q.gte('created_at', opts.from);
-    if (opts.to)     q = q.lte('created_at', opts.to);
+    if (opts.from) q = q.gte('created_at', opts.from);
+    if (opts.to) q = q.lte('created_at', opts.to);
 
     const { data, count, error } = await q;
     if (error) throw new Error(`Audit search failed: ${error.message}`);
@@ -86,8 +86,8 @@ export class AuditService {
         page,
         pageSize,
         total: count ?? 0,
-        totalPages: Math.ceil((count ?? 0) / pageSize)
-      }
+        totalPages: Math.ceil((count ?? 0) / pageSize),
+      },
     };
   }
 
@@ -97,7 +97,7 @@ export class AuditService {
    */
   async verifyChain(orgId: string): Promise<number | null> {
     const { data, error } = await this.db.rpc('verify_audit_chain', {
-      p_org_id: orgId
+      p_org_id: orgId,
     });
     if (error) throw new Error(`Chain verify failed: ${error.message}`);
     return data as number | null;

@@ -12,22 +12,22 @@ const store: Record<string, any> = {
     timezone: 'GMT+5:30 Asia/Kolkata',
     dateFormat: 'MMM DD, YYYY',
     itemsPerPage: 10,
-    maintenanceMode: false
+    maintenanceMode: false,
   },
   profile: {
     fullName: 'Rabin R',
     email: 'rabin@zellavora.com',
     bio: 'Frontend Angular Consultant with 4+ years of experience building scalable, accessible and high-performance web applications.',
     location: 'Chennai, Tamil Nadu, India',
-    phone: '+91 8765432109'
+    phone: '+91 8765432109',
   },
   preferences: {
     theme: 'dark',
     emailNotifications: true,
     pushNotifications: true,
     weeklyDigest: true,
-    language: 'en'
-  }
+    language: 'en',
+  },
 };
 
 // GET /api/v1/settings or /api/v1/settings/:section

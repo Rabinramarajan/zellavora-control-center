@@ -103,10 +103,12 @@ export class TenantService {
   static async listForUser(userId: string): Promise<Array<Tenant & { role: string }>> {
     const { data, error } = await supabaseAdmin
       .from('organization_members')
-      .select(`
+      .select(
+        `
         role,
         organization:organizations(*)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .is('deleted_at', null);
 

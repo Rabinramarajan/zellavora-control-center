@@ -64,7 +64,9 @@ export class PermissionService {
   ): Promise<boolean> {
     try {
       const context = await this.getUserPermissionContext(userId, organizationId);
-      return context.permissions.has(permissionKey) && !context.deniedPermissions.has(permissionKey);
+      return (
+        context.permissions.has(permissionKey) && !context.deniedPermissions.has(permissionKey)
+      );
     } catch (error) {
       console.error('Permission check failed', error);
       return false;
@@ -81,7 +83,7 @@ export class PermissionService {
   ): Promise<boolean> {
     const context = await this.getUserPermissionContext(userId, organizationId);
     return permissionKeys.some(
-      key => context.permissions.has(key) && !context.deniedPermissions.has(key)
+      (key) => context.permissions.has(key) && !context.deniedPermissions.has(key)
     );
   }
 
@@ -95,17 +97,14 @@ export class PermissionService {
   ): Promise<boolean> {
     const context = await this.getUserPermissionContext(userId, organizationId);
     return permissionKeys.every(
-      key => context.permissions.has(key) && !context.deniedPermissions.has(key)
+      (key) => context.permissions.has(key) && !context.deniedPermissions.has(key)
     );
   }
 
   /**
    * Get user's accessible screens
    */
-  async getUserScreens(
-    userId: string,
-    organizationId: string
-  ): Promise<Screen[]> {
+  async getUserScreens(userId: string, organizationId: string): Promise<Screen[]> {
     try {
       const cacheKey = `${this.PERMISSION_CACHE_PREFIX}screens:${organizationId}:${userId}`;
       const cached = await this.redis.get<Screen[]>(cacheKey);
@@ -140,7 +139,7 @@ export class PermissionService {
           }
 
           // Check if user has all required permissions
-          const allPermissionsGranted = screenPerms.every(sp => {
+          const allPermissionsGranted = screenPerms.every((sp) => {
             if (!sp.required) return true;
             // Get permission key from permission_id
             // This would require additional query or caching
@@ -272,32 +271,34 @@ export class PermissionService {
     } = {}
   ): Promise<void> {
     try {
-      await this.supabase
-        .from('permission_audit_logs')
-        .insert({
-          user_id: userId,
-          organization_id: organizationId,
-          permission_id: permissionId,
-          screen_id: screenId,
-          action,
-          status,
-          ip_address: context.ipAddress,
-          user_agent: context.userAgent,
-          session_id: context.sessionId,
-          resource_type: context.resourceType,
-          resource_id: context.resourceId,
-          deny_reason: context.denyReason,
-          change_data: context.changeData,
-          response_time_ms: context.responseTimeMs,
-        });
+      await this.supabase.from('permission_audit_logs').insert({
+        user_id: userId,
+        organization_id: organizationId,
+        permission_id: permissionId,
+        screen_id: screenId,
+        action,
+        status,
+        ip_address: context.ipAddress,
+        user_agent: context.userAgent,
+        session_id: context.sessionId,
+        resource_type: context.resourceType,
+        resource_id: context.resourceId,
+        deny_reason: context.denyReason,
+        change_data: context.changeData,
+        response_time_ms: context.responseTimeMs,
+      });
 
       // Also cache in Redis for real-time queries
       const auditKey = `audit:${organizationId}:${userId}:${Date.now()}`;
-      await this.redis.set(auditKey, {
-        action,
-        status,
-        timestamp: new Date().toISOString(),
-      }, 3600); // 1 hour
+      await this.redis.set(
+        auditKey,
+        {
+          action,
+          status,
+          timestamp: new Date().toISOString(),
+        },
+        3600
+      ); // 1 hour
     } catch (error) {
       console.error('Failed to audit log', error);
       // Don't throw - audit logging shouldn't break the operation
@@ -307,12 +308,7 @@ export class PermissionService {
   /**
    * Get audit logs for user
    */
-  async getAuditLogs(
-    organizationId: string,
-    userId?: string,
-    limit = 100,
-    offset = 0
-  ) {
+  async getAuditLogs(organizationId: string, userId?: string, limit = 100, offset = 0) {
     try {
       let query = this.supabase
         .from('permission_audit_logs')
@@ -347,20 +343,18 @@ export class PermissionService {
     expiresAt?: Date
   ): Promise<void> {
     try {
-      await this.supabase
-        .from('user_permissions')
-        .upsert(
-          {
-            user_id: userId,
-            permission_id: permissionId,
-            organization_id: organizationId,
-            granted: true,
-            reason,
-            expiration_date: expiresAt,
-            created_by: grantedBy,
-          },
-          { onConflict: 'user_id,permission_id' }
-        );
+      await this.supabase.from('user_permissions').upsert(
+        {
+          user_id: userId,
+          permission_id: permissionId,
+          organization_id: organizationId,
+          granted: true,
+          reason,
+          expiration_date: expiresAt,
+          created_by: grantedBy,
+        },
+        { onConflict: 'user_id,permission_id' }
+      );
 
       // Invalidate cache
       await this.invalidateUserCache(userId, organizationId);
@@ -381,19 +375,17 @@ export class PermissionService {
     reason?: string
   ): Promise<void> {
     try {
-      await this.supabase
-        .from('user_permissions')
-        .upsert(
-          {
-            user_id: userId,
-            permission_id: permissionId,
-            organization_id: organizationId,
-            granted: false,
-            reason,
-            created_by: deniedBy,
-          },
-          { onConflict: 'user_id,permission_id' }
-        );
+      await this.supabase.from('user_permissions').upsert(
+        {
+          user_id: userId,
+          permission_id: permissionId,
+          organization_id: organizationId,
+          granted: false,
+          reason,
+          created_by: deniedBy,
+        },
+        { onConflict: 'user_id,permission_id' }
+      );
 
       // Invalidate cache
       await this.invalidateUserCache(userId, organizationId);
@@ -420,7 +412,7 @@ export class PermissionService {
 
       if (error) throw error;
 
-      const transformed = (perms || []).map(p => this.transformPermission(p));
+      const transformed = (perms || []).map((p) => this.transformPermission(p));
       await this.redis.set(cacheKey, transformed, this.CACHE_TTL);
 
       return transformed;
@@ -433,12 +425,9 @@ export class PermissionService {
   /**
    * Get permissions by resource
    */
-  async getPermissionsByResource(
-    organizationId: string,
-    resource: string
-  ): Promise<Permission[]> {
+  async getPermissionsByResource(organizationId: string, resource: string): Promise<Permission[]> {
     const allPerms = await this.getPermissions(organizationId);
-    return allPerms.filter(p => p.resource === resource);
+    return allPerms.filter((p) => p.resource === resource);
   }
 
   /**
@@ -459,7 +448,7 @@ export class PermissionService {
 
       if (error) throw error;
 
-      const transformed = (screens || []).map(s => this.transformScreen(s));
+      const transformed = (screens || []).map((s) => this.transformScreen(s));
       await this.redis.set(cacheKey, transformed, this.CACHE_TTL);
 
       return transformed;

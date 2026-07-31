@@ -46,8 +46,8 @@ export class MenuService {
       order_index: number;
     };
 
-    const visible = (data ?? []).filter((r: Row) =>
-      !r.required_permission || PermissionService.has(perms, r.required_permission)
+    const visible = (data ?? []).filter(
+      (r: Row) => !r.required_permission || PermissionService.has(perms, r.required_permission)
     ) as Row[];
 
     // Index by id, then build the tree.

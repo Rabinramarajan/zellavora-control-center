@@ -20,7 +20,10 @@ export class OrganizationService {
     return this.repo.create(data);
   }
 
-  async updateOrganization(id: string, data: { name?: string; logoUrl?: string | null; enforce2fa?: boolean }) {
+  async updateOrganization(
+    id: string,
+    data: { name?: string; logoUrl?: string | null; enforce2fa?: boolean }
+  ) {
     await this.getOrganization(id);
     return this.repo.update(id, data);
   }

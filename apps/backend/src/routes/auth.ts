@@ -46,11 +46,19 @@ const router: ExpressRouter = Router();
 // ----------------------------------------------------------------------------
 
 const ValidateClientSchema = z.object({
-  clientCode: z.string().min(2).max(16).regex(/^[A-Za-z0-9-]+$/),
+  clientCode: z
+    .string()
+    .min(2)
+    .max(16)
+    .regex(/^[A-Za-z0-9-]+$/),
 });
 
 const LoginSchema = z.object({
-  clientCode: z.string().min(2).max(16).regex(/^[A-Za-z0-9-]+$/),
+  clientCode: z
+    .string()
+    .min(2)
+    .max(16)
+    .regex(/^[A-Za-z0-9-]+$/),
   email: z.string().email().max(255),
   password: z.string().min(1).max(128), // policy checked on hash
   rememberMe: z.boolean().optional(),
@@ -78,8 +86,8 @@ const LoginSchema = z.object({
 });
 
 const LoginMfaSchema = z.object({
-  mfaToken: z.string().uuid(),             // opaque token returned by /login when MFA is required
-  code: z.string().min(6).max(20),         // TOTP (6 digits) or recovery code
+  mfaToken: z.string().uuid(), // opaque token returned by /login when MFA is required
+  code: z.string().min(6).max(20), // TOTP (6 digits) or recovery code
   rememberMe: z.boolean().optional(),
 });
 
@@ -112,15 +120,21 @@ const SwitchTenantSchema = z.object({
 });
 
 const ip = (req: any) =>
-  ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? '0.0.0.0');
+  (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? '0.0.0.0';
 const ua = (req: any) => (req.headers['user-agent'] as string) ?? 'unknown';
 
 // In-memory store for short-lived MFA challenges (use Redis in production).
 // Key: mfaToken, Value: { userId, organizationId, attempts, expiresAt }
 const MFA_CHALLENGE_TTL_MS = 5 * 60 * 1000;
-const mfaChallenges = new Map<string, { userId: string; organizationId: string; attempts: number; expiresAt: number }>();
+const mfaChallenges = new Map<
+  string,
+  { userId: string; organizationId: string; attempts: number; expiresAt: number }
+>();
 const newMfaToken = () => crypto.randomUUID();
-const remember = (token: string, value: Omit<NonNullable<ReturnType<typeof consumeMfa>>, 'expiresAt'>) => {
+const remember = (
+  token: string,
+  value: Omit<NonNullable<ReturnType<typeof consumeMfa>>, 'expiresAt'>
+) => {
   mfaChallenges.set(token, { ...value, expiresAt: Date.now() + MFA_CHALLENGE_TTL_MS });
 };
 const consumeMfa = (token: string) => {
@@ -131,9 +145,6 @@ const consumeMfa = (token: string) => {
   }
   return v;
 };
-
-
-
 
 // ----------------------------------------------------------------------------
 // POST /auth/validate-client
@@ -205,19 +216,18 @@ router.get('/clients', async (req, res, next) => {
     }
 
     res.status(200).json({
-      tenants: (orgs || []).map(o => ({
+      tenants: (orgs || []).map((o) => ({
         id: o.id,
         name: o.name,
         clientCode: o.client_code,
         logoUrl: o.logo_url,
-        status: o.status
-      }))
+        status: o.status,
+      })),
     });
   } catch (e) {
     next(e);
   }
 });
-
 
 router.post('/validate-client', async (req, res, next) => {
   try {
@@ -238,7 +248,6 @@ router.post('/validate-client', async (req, res, next) => {
     next(e);
   }
 });
-
 
 // ----------------------------------------------------------------------------
 // GET /auth/gettoken
@@ -265,15 +274,11 @@ router.get('/gettoken', (req, res, next) => {
   try {
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
-    res.json([
-      key.toString('base64'),
-      iv.toString('base64'),
-    ]);
+    res.json([key.toString('base64'), iv.toString('base64')]);
   } catch (e) {
     next(e);
   }
 });
-
 
 // ----------------------------------------------------------------------------
 // POST /auth/login  —  primary login
@@ -376,7 +381,7 @@ router.get('/gettoken', (req, res, next) => {
  */
 router.post('/login', async (req, res, next) => {
   try {
-    let loginData = { ...req.body };
+    const loginData = { ...req.body };
     // Map emailId or userName to email for compatibility if email is not directly specified
     if (!loginData.email && loginData.emailId) {
       loginData.email = loginData.emailId;
@@ -398,7 +403,7 @@ router.post('/login', async (req, res, next) => {
             const decrypted = CryptoJS.AES.decrypt(cipherText, key, {
               iv: iv,
               mode: CryptoJS.mode.CBC,
-              padding: CryptoJS.pad.Pkcs7
+              padding: CryptoJS.pad.Pkcs7,
             });
             return decrypted.toString(CryptoJS.enc.Utf8);
           };
@@ -426,21 +431,23 @@ router.post('/login', async (req, res, next) => {
         tenantId: tenant.id,
       },
     });
-    const user = prismaUser ? {
-      id: prismaUser.id,
-      email: prismaUser.email,
-      full_name: prismaUser.fullName,
-      role: prismaUser.role,
-      password_hash: prismaUser.passwordHash,
-      mfa_enabled: prismaUser.mfaEnabled,
-      is_active: !prismaUser.isDeleted,
-      deleted_at: prismaUser.deletedAt?.toISOString() ?? null,
-      locked_until: null as string | null,
-      failed_login_attempts: 0,
-      current_login_datetime: prismaUser.currentLoginDatetime?.toISOString() ?? null,
-      successful_login_attempts: prismaUser.successfulLoginAttempts,
-      version: prismaUser.version,
-    } : null;
+    const user = prismaUser
+      ? {
+          id: prismaUser.id,
+          email: prismaUser.email,
+          full_name: prismaUser.fullName,
+          role: prismaUser.role,
+          password_hash: prismaUser.passwordHash,
+          mfa_enabled: prismaUser.mfaEnabled,
+          is_active: !prismaUser.isDeleted,
+          deleted_at: prismaUser.deletedAt?.toISOString() ?? null,
+          locked_until: null as string | null,
+          failed_login_attempts: 0,
+          current_login_datetime: prismaUser.currentLoginDatetime?.toISOString() ?? null,
+          successful_login_attempts: prismaUser.successfulLoginAttempts,
+          version: prismaUser.version,
+        }
+      : null;
     const error = null;
 
     // Same response shape whether user doesn't exist or password is wrong (anti-enumeration)
@@ -476,7 +483,11 @@ router.post('/login', async (req, res, next) => {
 
     // 5. Enforce org-level 2FA policy
     if (tenant.enforce2fa && !user.mfa_enabled) {
-      throw new AppError('This organization requires two-factor authentication.', 403, 'MFA_REQUIRED_BY_ORG');
+      throw new AppError(
+        'This organization requires two-factor authentication.',
+        403,
+        'MFA_REQUIRED_BY_ORG'
+      );
     }
 
     // 6. Issue MFA challenge if user has 2FA enabled
@@ -545,8 +556,19 @@ router.post('/login', async (req, res, next) => {
 
     res.json({
       mfaRequired: false,
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, mfaEnabled: user.mfa_enabled },
-      tenant: { id: tenant.id, name: tenant.name, clientCode: tenant.clientCode, logoUrl: tenant.logoUrl },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        mfaEnabled: user.mfa_enabled,
+      },
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        clientCode: tenant.clientCode,
+        logoUrl: tenant.logoUrl,
+      },
       currentLoginDatetime: currentLogin,
       lastLoginDatetime: lastLogin,
       successfulLoginAttempts: nextAttempts,
@@ -616,7 +638,12 @@ router.post('/login/mfa', async (req, res, next) => {
   try {
     const body = LoginMfaSchema.parse(req.body);
     const challenge = consumeMfa(body.mfaToken);
-    if (!challenge) throw new AppError('MFA challenge expired. Please log in again.', 401, 'MFA_CHALLENGE_EXPIRED');
+    if (!challenge)
+      throw new AppError(
+        'MFA challenge expired. Please log in again.',
+        401,
+        'MFA_CHALLENGE_EXPIRED'
+      );
     if (challenge.attempts >= 5) {
       mfaChallenges.delete(body.mfaToken);
       throw new AppError('Too many MFA attempts', 429, 'MFA_TOO_MANY_ATTEMPTS');
@@ -684,9 +711,18 @@ router.post('/login/mfa', async (req, res, next) => {
 
     res.json({
       mfaRequired: false,
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, mfaEnabled: user.mfa_enabled },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        mfaEnabled: user.mfa_enabled,
+      },
       tenant: tenant && {
-        id: tenant.id, name: tenant.name, clientCode: tenant.clientCode, logoUrl: tenant.logoUrl,
+        id: tenant.id,
+        name: tenant.name,
+        clientCode: tenant.clientCode,
+        logoUrl: tenant.logoUrl,
       },
       ...tokens,
     });
@@ -894,7 +930,9 @@ router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('id, email, full_name, role, mfa_enabled, mfa_enrolled_at, avatar_url, last_login_at, created_at')
+      .select(
+        'id, email, full_name, role, mfa_enabled, mfa_enrolled_at, avatar_url, last_login_at, created_at'
+      )
       .eq('id', req.userId!)
       .single();
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
@@ -1040,7 +1078,12 @@ router.post('/switch-tenant', authenticate, async (req: AuthRequest, res, next) 
     });
 
     res.json({
-      tenant: { id: tenant.id, name: tenant.name, clientCode: tenant.clientCode, logoUrl: tenant.logoUrl },
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        clientCode: tenant.clientCode,
+        logoUrl: tenant.logoUrl,
+      },
       ...tokens,
     });
   } catch (e) {
@@ -1180,7 +1223,9 @@ router.post('/forgot-password', async (req, res, next) => {
         user_id: user.id,
         token_hash: tokenHash,
         email: user.email,
-        expires_at: new Date(Date.now() + config.passwordResetTokenExpiryMinutes * 60 * 1000).toISOString(),
+        expires_at: new Date(
+          Date.now() + config.passwordResetTokenExpiryMinutes * 60 * 1000
+        ).toISOString(),
       });
       // TODO: email the user. For now, log to console.
       // eslint-disable-next-line no-console
@@ -1482,7 +1527,7 @@ router.get('/oauth/:provider', async (req, res, next) => {
     const supabaseProvider = provider === 'microsoft' ? 'azure' : provider;
 
     const redirectUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/oauth/callback`;
-    
+
     // Create Supabase Anon client for sign-in redirection URL generation
     const { supabaseAnon } = await import('../config/supabase');
     const { data, error } = await supabaseAnon.auth.signInWithOAuth({
@@ -1493,7 +1538,11 @@ router.get('/oauth/:provider', async (req, res, next) => {
     });
 
     if (error || !data?.url) {
-      throw new AppError(error?.message || 'Failed to initiate OAuth', 400, 'OAUTH_INITIATION_FAILED');
+      throw new AppError(
+        error?.message || 'Failed to initiate OAuth',
+        400,
+        'OAUTH_INITIATION_FAILED'
+      );
     }
 
     res.redirect(data.url);
@@ -1564,11 +1613,13 @@ router.get('/oauth/callback', async (req, res, next) => {
       action: 'login',
       ipAddress: ip(req),
       userAgent: ua(req),
-      requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
+      requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     });
 
     // Redirect to Angular app with credentials
-    res.redirect(`${frontendUrl}/#/auth/login?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`);
+    res.redirect(
+      `${frontendUrl}/#/auth/login?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
+    );
   } catch (e) {
     next(e);
   }
@@ -1582,7 +1633,9 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
     const userId = req.userId!;
     const { data: sessions, error } = await supabaseAdmin
       .from('user_sessions')
-      .select('id, device_name, browser, os, ip_address, country, last_login_at, created_at, is_current')
+      .select(
+        'id, device_name, browser, os, ip_address, country, last_login_at, created_at, is_current'
+      )
       .eq('user_id', userId)
       .eq('revoked', false)
       .order('last_login_at', { ascending: false });
@@ -1633,7 +1686,7 @@ router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res
       metadata: { sessionId },
       ipAddress: ip(req),
       userAgent: ua(req),
-      requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
+      requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     });
 
     res.json({ success: true, message: 'Session revoked successfully' });
@@ -1657,9 +1710,7 @@ router.delete('/sessions', authenticate, async (req: AuthRequest, res, next) => 
       .eq('revoked', false);
 
     // Exclude current session if we have it
-    const finalQuery = currentSessionId
-      ? query.neq('id', currentSessionId)
-      : query;
+    const finalQuery = currentSessionId ? query.neq('id', currentSessionId) : query;
 
     const { error } = await finalQuery;
     if (error) throw new AppError('Failed to revoke sessions', 500, 'SESSION_REVOKE_ALL_FAILED');
@@ -1670,7 +1721,7 @@ router.delete('/sessions', authenticate, async (req: AuthRequest, res, next) => 
       action: 'all_sessions_revoked',
       ipAddress: ip(req),
       userAgent: ua(req),
-      requestId: req.headers['x-request-id'] as string || crypto.randomUUID(),
+      requestId: (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     });
 
     res.json({ success: true, message: 'All other sessions revoked' });
@@ -1699,7 +1750,10 @@ router.post('/send-verification', async (req, res, next) => {
 
     if (userError || !user) {
       // Return success even if not found to prevent email enumeration
-      res.json({ success: true, message: 'If this email exists, a verification code has been sent.' });
+      res.json({
+        success: true,
+        message: 'If this email exists, a verification code has been sent.',
+      });
       return;
     }
 
@@ -1713,13 +1767,16 @@ router.post('/send-verification', async (req, res, next) => {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     // Store OTP (upsert)
-    await supabaseAdmin.from('email_verifications').upsert({
-      user_id: user.id,
-      email: user.email,
-      otp_code: otp,
-      expires_at: expiresAt.toISOString(),
-      used: false,
-    }, { onConflict: 'user_id' });
+    await supabaseAdmin.from('email_verifications').upsert(
+      {
+        user_id: user.id,
+        email: user.email,
+        otp_code: otp,
+        expires_at: expiresAt.toISOString(),
+        used: false,
+      },
+      { onConflict: 'user_id' }
+    );
 
     // TODO: Send OTP via email service
     console.log(`[email-verification] OTP for ${email}: ${otp}`);
@@ -1757,9 +1814,11 @@ router.post('/verify-email', async (req, res, next) => {
         .eq('otp_code', otp)
         .maybeSingle();
 
-      if (error || !verification) throw new AppError('Invalid verification code', 400, 'INVALID_OTP');
+      if (error || !verification)
+        throw new AppError('Invalid verification code', 400, 'INVALID_OTP');
       if (verification.used) throw new AppError('Verification code already used', 400, 'OTP_USED');
-      if (new Date(verification.expires_at) < new Date()) throw new AppError('Verification code expired', 400, 'OTP_EXPIRED');
+      if (new Date(verification.expires_at) < new Date())
+        throw new AppError('Verification code expired', 400, 'OTP_EXPIRED');
 
       userId = verification.user_id;
       await supabaseAdmin.from('email_verifications').update({ used: true }).eq('user_id', userId);
@@ -1771,9 +1830,11 @@ router.post('/verify-email', async (req, res, next) => {
         .eq('token', token)
         .maybeSingle();
 
-      if (error || !verification) throw new AppError('Invalid verification token', 400, 'INVALID_TOKEN');
+      if (error || !verification)
+        throw new AppError('Invalid verification token', 400, 'INVALID_TOKEN');
       if (verification.used) throw new AppError('Token already used', 400, 'TOKEN_USED');
-      if (new Date(verification.expires_at) < new Date()) throw new AppError('Verification token expired', 400, 'TOKEN_EXPIRED');
+      if (new Date(verification.expires_at) < new Date())
+        throw new AppError('Verification token expired', 400, 'TOKEN_EXPIRED');
 
       userId = verification.user_id;
       await supabaseAdmin.from('email_verifications').update({ used: true }).eq('user_id', userId);
@@ -1808,20 +1869,26 @@ router.post('/resend-otp', async (req, res, next) => {
       .maybeSingle();
 
     if (!user || user.email_verified) {
-      res.json({ success: true, message: 'If this email exists and is unverified, a new code has been sent.' });
+      res.json({
+        success: true,
+        message: 'If this email exists and is unverified, a new code has been sent.',
+      });
       return;
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    await supabaseAdmin.from('email_verifications').upsert({
-      user_id: user.id,
-      email: user.email,
-      otp_code: otp,
-      expires_at: expiresAt.toISOString(),
-      used: false,
-    }, { onConflict: 'user_id' });
+    await supabaseAdmin.from('email_verifications').upsert(
+      {
+        user_id: user.id,
+        email: user.email,
+        otp_code: otp,
+        expires_at: expiresAt.toISOString(),
+        used: false,
+      },
+      { onConflict: 'user_id' }
+    );
 
     console.log(`[email-verification] Resent OTP for ${email}: ${otp}`);
 

@@ -43,11 +43,11 @@ export const wrapResponse = (data: any) => ({
   data,
   infoMessage: { msgID: 0, msgType: 'Info', msgDescription: '' },
   errorMessage: [],
-  hasError: false
+  hasError: false,
 });
 
 // Shared Mock Branch Data
-export let mockBranches = [
+export const mockBranches = [
   {
     admBranchId: 1,
     actCompanyId: 1,
@@ -57,7 +57,7 @@ export let mockBranches = [
     effectiveDate: '2026-01-01T00:00:00Z',
     statusId: 1,
     statusValue: 'Active',
-    branchCode: 'HQ-001'
+    branchCode: 'HQ-001',
   },
   {
     admBranchId: 2,
@@ -68,6 +68,6 @@ export let mockBranches = [
     effectiveDate: '2026-01-01T00:00:00Z',
     statusId: 1,
     statusValue: 'Active',
-    branchCode: 'NY-002'
-  }
+    branchCode: 'NY-002',
+  },
 ];

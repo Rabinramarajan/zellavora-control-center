@@ -128,12 +128,14 @@ export class EmailHelper {
    * Send multiple emails in batch
    * Use with caution - recommended for max 50 emails per batch
    */
-  static async sendBatch(emails: Array<{
-    to: string;
-    subject: string;
-    text: string;
-    html: string;
-  }>): Promise<number> {
+  static async sendBatch(
+    emails: Array<{
+      to: string;
+      subject: string;
+      text: string;
+      html: string;
+    }>
+  ): Promise<number> {
     try {
       if (emails.length === 0) {
         return 0;
@@ -200,7 +202,7 @@ export class EmailHelper {
     const valid: string[] = [];
     const invalid: string[] = [];
 
-    emails.forEach(email => {
+    emails.forEach((email) => {
       if (this.isValidEmail(email)) {
         valid.push(email);
       } else {

@@ -1,9 +1,19 @@
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 
 export class AuditRepository extends BaseRepository {
-  async createLog(data: { actorId?: string | null; action: string; organizationId: string; severity?: string; ipAddress?: string | null; userAgent?: string | null }, tx?: TxClient) {
+  async createLog(
+    data: {
+      actorId?: string | null;
+      action: string;
+      organizationId: string;
+      severity?: string;
+      ipAddress?: string | null;
+      userAgent?: string | null;
+    },
+    tx?: TxClient
+  ) {
     return this.getDb(tx).auditLog.create({
-      data
+      data,
     });
   }
 
@@ -13,11 +23,11 @@ export class AuditRepository extends BaseRepository {
         where: { organizationId },
         take: limit,
         skip: offset,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       }),
       this.getDb(tx).auditLog.count({
-        where: { organizationId }
-      })
+        where: { organizationId },
+      }),
     ]);
     return { data, total };
   }

@@ -153,10 +153,7 @@ if (process.env.SWAGGER_ENABLED !== 'false') {
 app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (req, res) => {
   const key = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
-  res.json([
-    key.toString('binary'),
-    iv.toString('binary'),
-  ]);
+  res.json([key.toString('binary'), iv.toString('binary')]);
 });
 
 // Core routes

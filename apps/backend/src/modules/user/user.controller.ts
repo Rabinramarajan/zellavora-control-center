@@ -16,7 +16,13 @@ export class UserController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = CreateUserSchema.parse(req.body) as { email: string; username: string; fullName: string; passwordPlain: string; role?: string };
+      const data = CreateUserSchema.parse(req.body) as {
+        email: string;
+        username: string;
+        fullName: string;
+        passwordPlain: string;
+        role?: string;
+      };
       const user = await this.service.createUser(data);
       res.json({ success: true, data: user });
     } catch (err) {

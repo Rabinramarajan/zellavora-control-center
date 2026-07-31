@@ -46,12 +46,18 @@ export class RateLimitService {
       .eq('success', false)
       .gte('attempted_at', since);
     if ((count ?? 0) >= IP_LIMIT) {
-      throw new AppError('Too many failed attempts. Try again in 15 minutes.', 429, 'RATE_LIMITED_IP');
+      throw new AppError(
+        'Too many failed attempts. Try again in 15 minutes.',
+        429,
+        'RATE_LIMITED_IP'
+      );
     }
   }
 
   /** Throws AppError(423) if the account is currently locked. */
-  static async assertAccountAllowed(email: string): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
+  static async assertAccountAllowed(
+    email: string
+  ): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
     const since = new Date(Date.now() - WINDOW_MS).toISOString();
     const { count } = await supabaseAdmin
       .from('login_attempts')
@@ -70,9 +76,6 @@ export class RateLimitService {
 
   /** Clear the failure history for an email on successful login. */
   static async clearForEmail(email: string): Promise<void> {
-    await supabaseAdmin
-      .from('login_attempts')
-      .delete()
-      .eq('email', email.toLowerCase());
+    await supabaseAdmin.from('login_attempts').delete().eq('email', email.toLowerCase());
   }
 }

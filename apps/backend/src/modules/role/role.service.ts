@@ -16,7 +16,11 @@ export class RoleService {
     return this.repo.listByOrganizationId(orgId);
   }
 
-  async createRole(data: { name: string; organizationId?: string | null; description?: string | null }) {
+  async createRole(data: {
+    name: string;
+    organizationId?: string | null;
+    description?: string | null;
+  }) {
     return this.repo.create(data);
   }
 

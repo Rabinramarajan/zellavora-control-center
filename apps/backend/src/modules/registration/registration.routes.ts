@@ -1,8 +1,8 @@
 /**
  * Registration Routes — Enterprise Self-Registration Flow
- * 
+ *
  * Complete registration flow endpoints:
- * 
+ *
  * Public (no auth required):
  *   GET  /api/v1/register/status          → Check if registration is enabled
  *   POST /api/v1/register/check-email    → Check if email is available
@@ -29,12 +29,12 @@ import { PasswordService } from '../../services/auth/password.service';
 import { addQueueJob } from '../../infrastructure/queue';
 import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
-import { 
-  checkEmailAvailability, 
+import {
+  checkEmailAvailability,
   checkOrganizationCodeAvailability,
   generateOrganizationCode,
   validatePasswordStrength,
-  checkPasswordHistory
+  checkPasswordHistory,
 } from './registration.service';
 
 const router: ExpressRouter = Router();
@@ -48,7 +48,8 @@ const CheckEmailSchema = z.object({
 });
 
 const CheckOrgSchema = z.object({
-  organizationCode: z.string()
+  organizationCode: z
+    .string()
     .min(2, 'Organization code must be at least 2 characters')
     .max(16, 'Organization code cannot exceed 16 characters')
     .regex(/^[A-Za-z0-9-]+$/, 'Organization code can only contain letters, numbers, and hyphens'),
@@ -97,14 +98,15 @@ const MfaSetupSchema = z.object({
 const CompleteRegistrationSchema = z.object({
   // Session reference
   sessionId: z.string().uuid().optional(),
-  
+
   // Personal Info (for verification)
   email: z.string().email(),
   emailVerified: z.boolean(),
-  
+
   // Organization Info
   organizationName: z.string().min(2, 'Organization name is required').max(100),
-  organizationCode: z.string()
+  organizationCode: z
+    .string()
     .min(2)
     .max(16)
     .regex(/^[A-Za-z0-9-]+$/),
@@ -115,7 +117,7 @@ const CompleteRegistrationSchema = z.object({
   taxNumber: z.string().optional(),
   logoUrl: z.string().url().optional().or(z.literal('')),
   useCases: z.array(z.string()).optional(),
-  
+
   // Branch Info
   branchName: z.string().min(2, 'Branch name is required').max(100),
   branchCode: z.string().optional(),
@@ -124,7 +126,7 @@ const CompleteRegistrationSchema = z.object({
   branchState: z.string().optional(),
   branchCountry: z.string().optional(),
   branchPincode: z.string().optional(),
-  
+
   // Admin Info
   firstName: z.string().min(2).max(50),
   lastName: z.string().min(2).max(50),
@@ -147,8 +149,8 @@ const CompleteRegistrationSchema = z.object({
   mfaCode: z.string().optional(), // Required if mfaEnabled and method is authenticator
 
   // Terms & Consent
-  termsAccepted: z.boolean().refine(v => v === true, 'You must accept the Terms of Service'),
-  privacyAccepted: z.boolean().refine(v => v === true, 'You must accept the Privacy Policy'),
+  termsAccepted: z.boolean().refine((v) => v === true, 'You must accept the Terms of Service'),
+  privacyAccepted: z.boolean().refine((v) => v === true, 'You must accept the Privacy Policy'),
   cookieAccepted: z.boolean().default(false),
   marketingConsent: z.boolean().default(false),
 
@@ -167,7 +169,7 @@ const ResendOtpSchema = z.object({
 // =============================================================================
 
 const ip = (req: any) =>
-  ((req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? '0.0.0.0');
+  (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? '0.0.0.0';
 const ua = (req: any) => (req.headers['user-agent'] as string) ?? 'unknown';
 
 const OTP_EXPIRY_MINUTES = 15;
@@ -187,7 +189,7 @@ router.get('/status', async (req, res, next) => {
   try {
     // Check if self-registration is enabled
     const registrationEnabled = config.ALLOW_SELF_REGISTRATION === true;
-    
+
     res.json({
       enabled: registrationEnabled,
       features: {
@@ -240,16 +242,16 @@ router.post('/check-org', async (req, res, next) => {
 router.post('/init', async (req, res, next) => {
   try {
     const data = InitRegistrationSchema.parse(req.body);
-    
+
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email.toLowerCase() },
     });
-    
+
     if (existingUser) {
       throw new AppError('Email is already registered', 400, 'EMAIL_EXISTS');
     }
-    
+
     // Create registration session
     const session = await prisma.registrationSession.create({
       data: {
@@ -268,7 +270,7 @@ router.post('/init', async (req, res, next) => {
         userAgent: ua(req),
       },
     });
-    
+
     res.status(201).json({
       sessionId: session.id,
       email: session.email,
@@ -287,7 +289,7 @@ router.post('/init', async (req, res, next) => {
 router.post('/send-email-otp', async (req, res, next) => {
   try {
     const { sessionId, email } = SendEmailOtpSchema.parse(req.body);
-    
+
     // Rate limiting check
     const recentOtps = await prisma.otp.count({
       where: {
@@ -298,15 +300,19 @@ router.post('/send-email-otp', async (req, res, next) => {
         },
       },
     });
-    
+
     if (recentOtps >= 3) {
-      throw new AppError('Too many OTP requests. Please wait before trying again.', 429, 'RATE_LIMITED');
+      throw new AppError(
+        'Too many OTP requests. Please wait before trying again.',
+        429,
+        'RATE_LIMITED'
+      );
     }
-    
+
     // Generate OTP
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
-    
+
     // Get or create session reference
     let sessionData: any = {};
     if (sessionId) {
@@ -317,7 +323,7 @@ router.post('/send-email-otp', async (req, res, next) => {
         sessionData = { sessionId: session.id };
       }
     }
-    
+
     await prisma.otp.create({
       data: {
         type: 'email',
@@ -329,14 +335,14 @@ router.post('/send-email-otp', async (req, res, next) => {
         ...sessionData,
       },
     });
-    
+
     // Queue email job
     await addQueueJob('send-registration-otp', {
       email: email.toLowerCase(),
       code,
       type: 'email_verification',
     });
-    
+
     // Calculate resend cooldown
     const lastOtp = await prisma.otp.findFirst({
       where: {
@@ -345,11 +351,11 @@ router.post('/send-email-otp', async (req, res, next) => {
       },
       orderBy: { createdAt: 'desc' },
     });
-    
-    const cooldownEnd = lastOtp 
+
+    const cooldownEnd = lastOtp
       ? new Date(lastOtp.createdAt.getTime() + OTP_COOLDOWN_SECONDS * 1000)
       : new Date();
-    
+
     res.json({
       success: true,
       message: 'OTP sent successfully',
@@ -369,7 +375,7 @@ router.post('/send-email-otp', async (req, res, next) => {
 router.post('/verify-email', async (req, res, next) => {
   try {
     const { sessionId, email, code } = VerifyEmailOtpSchema.parse(req.body);
-    
+
     const otp = await prisma.otp.findFirst({
       where: {
         type: 'email',
@@ -379,11 +385,11 @@ router.post('/verify-email', async (req, res, next) => {
       },
       orderBy: { createdAt: 'desc' },
     });
-    
+
     if (!otp) {
       throw new AppError('Invalid or expired OTP', 400, 'INVALID_OTP');
     }
-    
+
     // Check attempts
     if (otp.attempts >= otp.maxAttempts) {
       await prisma.otp.update({
@@ -392,7 +398,7 @@ router.post('/verify-email', async (req, res, next) => {
       });
       throw new AppError('Too many attempts. Please request a new OTP.', 400, 'OTP_EXHAUSTED');
     }
-    
+
     // Verify code
     if (otp.code !== code) {
       await prisma.otp.update({
@@ -401,13 +407,13 @@ router.post('/verify-email', async (req, res, next) => {
       });
       throw new AppError('Incorrect OTP', 400, 'INVALID_OTP');
     }
-    
+
     // Mark OTP as verified
     await prisma.otp.update({
       where: { id: otp.id },
       data: { verified: true },
     });
-    
+
     // Update session if provided
     if (sessionId) {
       await prisma.registrationSession.update({
@@ -415,7 +421,7 @@ router.post('/verify-email', async (req, res, next) => {
         data: { emailVerified: true, currentStep: 2 },
       });
     }
-    
+
     res.json({
       success: true,
       message: 'Email verified successfully',
@@ -433,16 +439,16 @@ router.post('/verify-email', async (req, res, next) => {
 router.post('/send-mobile-otp', async (req, res, next) => {
   try {
     const { sessionId, mobile, countryCode } = SendMobileOtpSchema.parse(req.body);
-    
+
     // Generate OTP
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
-    
+
     let sessionData: any = {};
     if (sessionId) {
       sessionData = { sessionId };
     }
-    
+
     await prisma.otp.create({
       data: {
         type: 'mobile',
@@ -454,13 +460,13 @@ router.post('/send-mobile-otp', async (req, res, next) => {
         ...sessionData,
       },
     });
-    
+
     // Queue SMS job
     await addQueueJob('send-sms-otp', {
       mobile: `${countryCode}${mobile}`,
       code,
     });
-    
+
     res.json({
       success: true,
       message: 'SMS OTP sent successfully',
@@ -478,7 +484,7 @@ router.post('/send-mobile-otp', async (req, res, next) => {
 router.post('/verify-mobile', async (req, res, next) => {
   try {
     const { sessionId, mobile, code } = VerifyMobileOtpSchema.parse(req.body);
-    
+
     const otp = await prisma.otp.findFirst({
       where: {
         type: 'mobile',
@@ -488,11 +494,11 @@ router.post('/verify-mobile', async (req, res, next) => {
       },
       orderBy: { createdAt: 'desc' },
     });
-    
+
     if (!otp) {
       throw new AppError('Invalid or expired OTP', 400, 'INVALID_OTP');
     }
-    
+
     if (otp.code !== code) {
       await prisma.otp.update({
         where: { id: otp.id },
@@ -500,19 +506,19 @@ router.post('/verify-mobile', async (req, res, next) => {
       });
       throw new AppError('Incorrect OTP', 400, 'INVALID_OTP');
     }
-    
+
     await prisma.otp.update({
       where: { id: otp.id },
       data: { verified: true },
     });
-    
+
     if (sessionId) {
       await prisma.registrationSession.update({
         where: { id: sessionId },
         data: { mobileVerified: true, currentStep: 3 },
       });
     }
-    
+
     res.json({
       success: true,
       message: 'Mobile verified successfully',
@@ -530,7 +536,7 @@ router.post('/verify-mobile', async (req, res, next) => {
 router.post('/resend-otp', async (req, res, next) => {
   try {
     const { sessionId, email, type } = ResendOtpSchema.parse(req.body);
-    
+
     // Check cooldown
     const lastOtp = await prisma.otp.findFirst({
       where: {
@@ -539,7 +545,7 @@ router.post('/resend-otp', async (req, res, next) => {
       },
       orderBy: { createdAt: 'desc' },
     });
-    
+
     if (lastOtp) {
       const timeSinceLastOtp = Date.now() - lastOtp.createdAt.getTime();
       if (timeSinceLastOtp < OTP_COOLDOWN_SECONDS * 1000) {
@@ -550,7 +556,7 @@ router.post('/resend-otp', async (req, res, next) => {
           'COOLDOWN_ACTIVE'
         );
       }
-      
+
       // Check max resends
       const resendCount = await prisma.otp.count({
         where: {
@@ -561,7 +567,7 @@ router.post('/resend-otp', async (req, res, next) => {
           },
         },
       });
-      
+
       if (resendCount >= OTP_MAX_RESENDS) {
         throw new AppError(
           'Maximum resend limit reached. Please try again later.',
@@ -570,11 +576,11 @@ router.post('/resend-otp', async (req, res, next) => {
         );
       }
     }
-    
+
     // Send new OTP
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
-    
+
     await prisma.otp.create({
       data: {
         type: type,
@@ -586,7 +592,7 @@ router.post('/resend-otp', async (req, res, next) => {
         sessionId: sessionId || undefined,
       },
     });
-    
+
     // Queue job
     if (type === 'email') {
       await addQueueJob('send-registration-otp', {
@@ -600,7 +606,7 @@ router.post('/resend-otp', async (req, res, next) => {
         code: newCode,
       });
     }
-    
+
     res.json({
       success: true,
       message: 'OTP resent successfully',
@@ -619,13 +625,13 @@ router.post('/resend-otp', async (req, res, next) => {
 router.post('/mfa-setup', async (req, res, next) => {
   try {
     const { sessionId, email, method } = MfaSetupSchema.parse(req.body);
-    
+
     if (method === 'authenticator') {
       // Generate TOTP secret
       const secret = authenticator.generateSecret();
       const otpauth = authenticator.keyuri(email, 'ZELLAVORA', secret);
       const qrCodeDataUrl = await qrcode.toDataURL(otpauth);
-      
+
       // Store secret in session if available
       if (sessionId) {
         await prisma.registrationSession.update({
@@ -637,12 +643,13 @@ router.post('/mfa-setup', async (req, res, next) => {
           },
         });
       }
-      
+
       res.json({
         method,
         secret,
         qrCode: qrCodeDataUrl,
-        instructions: 'Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)',
+        instructions:
+          'Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)',
       });
     } else {
       // Email OTP method - no setup needed, just verify email first
@@ -690,15 +697,15 @@ router.get('/session/:id', async (req, res, next) => {
         createdAt: true,
       },
     });
-    
+
     if (!session) {
       throw new AppError('Registration session not found', 404, 'SESSION_NOT_FOUND');
     }
-    
+
     if (new Date() > session.expiresAt) {
       throw new AppError('Registration session has expired', 400, 'SESSION_EXPIRED');
     }
-    
+
     res.json({
       ...session,
       isExpired: new Date() > session.expiresAt,
@@ -715,47 +722,51 @@ router.get('/session/:id', async (req, res, next) => {
 router.post('/complete', async (req, res, next) => {
   try {
     const data = CompleteRegistrationSchema.parse(req.body);
-    
+
     // Validate password match
     if (data.password !== data.confirmPassword) {
       throw new AppError('Passwords do not match', 400, 'PASSWORD_MISMATCH');
     }
-    
+
     // Validate password strength
     const passwordValidation = await validatePasswordStrength(data.password);
     if (!passwordValidation.isValid) {
       throw new AppError(passwordValidation.errors.join(', '), 400, 'WEAK_PASSWORD');
     }
-    
+
     // Check email verification
     if (!data.emailVerified) {
-      throw new AppError('Email must be verified before completing registration', 400, 'EMAIL_NOT_VERIFIED');
+      throw new AppError(
+        'Email must be verified before completing registration',
+        400,
+        'EMAIL_NOT_VERIFIED'
+      );
     }
-    
+
     // Check organization code availability
     const orgCheck = await checkOrganizationCodeAvailability(data.organizationCode);
     if (!orgCheck.available) {
       throw new AppError('Organization code is already taken', 400, 'ORG_CODE_TAKEN');
     }
-    
+
     // Hash password
     const passwordHash = await PasswordService.hash(data.password);
-    
+
     // Verify MFA if enabled with authenticator
     if (data.mfaEnabled && data.mfaMethod === 'authenticator' && data.mfaCode) {
       // MFA verification would happen here
       // For now, we'll store the secret and verify on first login
     }
-    
+
     // Get owner role
     const ownerRole = await prisma.role.findFirst({
       where: { key: 'owner' },
     });
-    
+
     if (!ownerRole) {
       throw new AppError('System configuration error', 500, 'ROLE_NOT_FOUND');
     }
-    
+
     // Create everything in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create Organization
@@ -785,7 +796,7 @@ router.post('/complete', async (req, res, next) => {
           status: 'active',
         },
       });
-      
+
       // 2. Create Head Office Branch
       const branch = await tx.branch.create({
         data: {
@@ -801,7 +812,7 @@ router.post('/complete', async (req, res, next) => {
           status: 'active',
         },
       });
-      
+
       // 3. Create Owner User
       const user = await tx.user.create({
         data: {
@@ -834,7 +845,7 @@ router.post('/complete', async (req, res, next) => {
           statusDescription: 'Active',
         },
       });
-      
+
       // 4. Create User-Tenant membership
       await tx.userTenant.create({
         data: {
@@ -846,7 +857,7 @@ router.post('/complete', async (req, res, next) => {
           joinedAt: new Date(),
         },
       });
-      
+
       // 5. Create User Role Assignment
       await tx.userRoleAssignment.create({
         data: {
@@ -855,14 +866,14 @@ router.post('/complete', async (req, res, next) => {
           organizationId: organization.id,
         },
       });
-      
+
       // 6. Create Profile
       await tx.profile.create({
         data: {
           userId: user.id,
         },
       });
-      
+
       // 7. Create Default Workspace
       await tx.workspace.create({
         data: {
@@ -872,17 +883,37 @@ router.post('/complete', async (req, res, next) => {
           description: 'Default workspace for your organization',
         },
       });
-      
+
       // 8. Create Default Settings
       await tx.organizationSettings.createMany({
         data: [
-          { organizationId: organization.id, key: 'default_language', value: data.language || 'en', category: 'general' },
-          { organizationId: organization.id, key: 'default_timezone', value: data.timezone || 'UTC', category: 'general' },
-          { organizationId: organization.id, key: 'session_timeout', value: '3600', category: 'security' },
-          { organizationId: organization.id, key: 'mfa_required', value: data.mfaEnabled ? 'true' : 'false', category: 'security' },
+          {
+            organizationId: organization.id,
+            key: 'default_language',
+            value: data.language || 'en',
+            category: 'general',
+          },
+          {
+            organizationId: organization.id,
+            key: 'default_timezone',
+            value: data.timezone || 'UTC',
+            category: 'general',
+          },
+          {
+            organizationId: organization.id,
+            key: 'session_timeout',
+            value: '3600',
+            category: 'security',
+          },
+          {
+            organizationId: organization.id,
+            key: 'mfa_required',
+            value: data.mfaEnabled ? 'true' : 'false',
+            category: 'security',
+          },
         ],
       });
-      
+
       // 9. Create Audit Log
       await tx.auditLog.create({
         data: {
@@ -901,7 +932,7 @@ router.post('/complete', async (req, res, next) => {
           },
         },
       });
-      
+
       // 10. Store password in history
       await tx.passwordHistory.create({
         data: {
@@ -909,10 +940,10 @@ router.post('/complete', async (req, res, next) => {
           passwordHash,
         },
       });
-      
+
       return { organization, branch, user };
     });
-    
+
     // Update registration session if exists
     if (data.sessionId) {
       await prisma.registrationSession.update({
@@ -925,7 +956,7 @@ router.post('/complete', async (req, res, next) => {
         },
       });
     }
-    
+
     // Send welcome email
     await addQueueJob('send-welcome-email', {
       email: data.email.toLowerCase(),
@@ -933,13 +964,13 @@ router.post('/complete', async (req, res, next) => {
       organizationName: data.organizationName,
       clientCode: data.organizationCode,
     });
-    
+
     logger.info(`Organization created: ${result.organization.id}`, {
       organizationId: result.organization.id,
       userId: result.user.id,
       organizationCode: data.organizationCode,
     });
-    
+
     res.status(201).json({
       success: true,
       message: 'Registration completed successfully',

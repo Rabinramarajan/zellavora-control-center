@@ -38,8 +38,8 @@ export class MfaService {
     const qrCodeDataUrl = await qrcode.toDataURL(otpauth, { errorCorrectionLevel: 'M' });
 
     return {
-      secret,        // shown ONCE to the user, never again
-      otpauth,       // used by authenticator apps
+      secret, // shown ONCE to the user, never again
+      otpauth, // used by authenticator apps
       qrCodeDataUrl, // for QR rendering in the UI
     };
   }
@@ -71,9 +71,7 @@ export class MfaService {
       .eq('id', opts.userId);
 
     // Recovery codes
-    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () =>
-      this.generateRecoveryCode()
-    );
+    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () => this.generateRecoveryCode());
     const rows = await Promise.all(
       plain.map(async (code) => ({
         id: uuidv4(),
@@ -155,9 +153,7 @@ export class MfaService {
   /** Re-generate recovery codes (old codes are invalidated). */
   static async regenerateRecoveryCodes(userId: string): Promise<string[]> {
     await supabaseAdmin.from('mfa_recovery_codes').delete().eq('user_id', userId);
-    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () =>
-      this.generateRecoveryCode()
-    );
+    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () => this.generateRecoveryCode());
     const rows = await Promise.all(
       plain.map(async (code) => ({
         id: uuidv4(),

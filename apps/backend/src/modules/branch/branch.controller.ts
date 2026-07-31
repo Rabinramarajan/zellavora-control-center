@@ -26,7 +26,11 @@ export class BranchController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = CreateBranchSchema.parse(req.body) as { organizationId: string; name: string; code?: string | null };
+      const data = CreateBranchSchema.parse(req.body) as {
+        organizationId: string;
+        name: string;
+        code?: string | null;
+      };
       const branch = await this.service.createBranch(data);
       res.json({ success: true, data: branch });
     } catch (err) {

@@ -29,7 +29,12 @@ export class SettingsController {
   save = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = SaveSettingSchema.parse(req.body);
-      const config = await this.service.saveSetting(data.organizationId, data.key, data.value, data.category);
+      const config = await this.service.saveSetting(
+        data.organizationId,
+        data.key,
+        data.value,
+        data.category
+      );
       res.json({ success: true, data: config });
     } catch (err) {
       next(err);

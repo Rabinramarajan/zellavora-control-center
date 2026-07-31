@@ -91,11 +91,13 @@ router.get('/role/initialize', authenticate, async (req, res, next) => {
 
 router.get('/role/search', authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({
-      pageSize: 10,
-      pageNumber: 1,
-      ascending: true
-    }));
+    res.json(
+      wrapResponse({
+        pageSize: 10,
+        pageNumber: 1,
+        ascending: true,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -114,16 +116,18 @@ router.post('/role/search', authenticate, async (req, res, next) => {
         moduleDescription: 'Admin',
         beginDate: role.created_at,
         endDate: '2099-12-31T23:59:59Z',
-        statusDescription: 'Active'
+        statusDescription: 'Active',
       };
     });
 
-    res.json(wrapResponse({
-      searchResult,
-      totalCount: searchResult.length,
-      pageSize: req.body.pageSize || 10,
-      pageNumber: req.body.pageNumber || 1
-    }));
+    res.json(
+      wrapResponse({
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: req.body.pageSize || 10,
+        pageNumber: req.body.pageNumber || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -131,18 +135,20 @@ router.post('/role/search', authenticate, async (req, res, next) => {
 
 router.get('/role/new', authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({
-      roleId: 0,
-      roleName: '',
-      statusId: 1,
-      statusValue: 'Active',
-      beginDate: new Date().toISOString(),
-      endDate: '2099-12-31T23:59:59Z',
-      moduleId: 1,
-      moduleValue: 'Admin',
-      statusDescription: 'Active',
-      moduleDescription: 'Admin Module'
-    }));
+    res.json(
+      wrapResponse({
+        roleId: 0,
+        roleName: '',
+        statusId: 1,
+        statusValue: 'Active',
+        beginDate: new Date().toISOString(),
+        endDate: '2099-12-31T23:59:59Z',
+        moduleId: 1,
+        moduleValue: 'Admin',
+        statusDescription: 'Active',
+        moduleDescription: 'Admin Module',
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -159,18 +165,20 @@ router.post('/role/open', authenticate, async (req, res, next) => {
     const { data: role, error } = await supabase.from('roles').select('*').eq('id', uuid).single();
     if (error) throw error;
 
-    res.json(wrapResponse({
-      roleId: serial,
-      roleName: role.label || role.key,
-      statusId: 1,
-      statusValue: 'Active',
-      beginDate: role.created_at,
-      endDate: '2099-12-31T23:59:59Z',
-      moduleId: 1,
-      moduleValue: 'Admin',
-      statusDescription: 'Active',
-      moduleDescription: 'Admin Module'
-    }));
+    res.json(
+      wrapResponse({
+        roleId: serial,
+        roleName: role.label || role.key,
+        statusId: 1,
+        statusValue: 'Active',
+        beginDate: role.created_at,
+        endDate: '2099-12-31T23:59:59Z',
+        moduleId: 1,
+        moduleValue: 'Admin',
+        statusDescription: 'Active',
+        moduleDescription: 'Admin Module',
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -186,7 +194,7 @@ router.post('/role/save', authenticate, async (req: AuthRequest, res, next) => {
       const { data, error } = await supabase
         .from('roles')
         .update({
-          label: rData.roleName
+          label: rData.roleName,
         })
         .eq('id', uuid)
         .select()
@@ -201,7 +209,7 @@ router.post('/role/save', authenticate, async (req: AuthRequest, res, next) => {
           organization_id: req.tenantId || null,
           key: rData.roleName.toLowerCase().replace(/\s+/g, '_'),
           label: rData.roleName,
-          level: 10
+          level: 10,
         })
         .select()
         .single();
@@ -210,10 +218,12 @@ router.post('/role/save', authenticate, async (req: AuthRequest, res, next) => {
     }
 
     const serial = getOrAddRoleSerial(role.id);
-    res.json(wrapResponse({
-      ...rData,
-      roleId: serial
-    }));
+    res.json(
+      wrapResponse({
+        ...rData,
+        roleId: serial,
+      })
+    );
   } catch (error) {
     next(error);
   }

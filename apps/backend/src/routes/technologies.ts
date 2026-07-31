@@ -143,37 +143,41 @@ router.get('/projects/:projectId/technologies', async (req, res, next) => {
  *       404:
  *         description: Project not found
  */
-router.post('/projects/:projectId/technologies', authenticateToken, async (req: AuthRequest, res, next) => {
-  try {
-    const { technologyId } = req.body;
+router.post(
+  '/projects/:projectId/technologies',
+  authenticateToken,
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { technologyId } = req.body;
 
-    const { data: project, error: projError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.projectId)
-      .single();
+      const { data: project, error: projError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.projectId)
+        .single();
 
-    if (projError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      if (projError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      const { data, error } = await supabase
+        .from('project_technologies')
+        .insert({ project_id: req.params.projectId, technology_id: technologyId })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
     }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    const { data, error } = await supabase
-      .from('project_technologies')
-      .insert({ project_id: req.params.projectId, technology_id: technologyId })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    res.status(201).json(data);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * @swagger
@@ -209,40 +213,47 @@ router.post('/projects/:projectId/technologies', authenticateToken, async (req: 
  *       403:
  *         description: Not the project owner
  */
-router.put('/projects/:projectId/technologies', authenticateToken, async (req: AuthRequest, res, next) => {
-  try {
-    const { technologyIds } = req.body;
+router.put(
+  '/projects/:projectId/technologies',
+  authenticateToken,
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { technologyIds } = req.body;
 
-    const { data: project, error: projError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.projectId)
-      .single();
+      const { data: project, error: projError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.projectId)
+        .single();
 
-    if (projError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      if (projError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      await supabase.from('project_technologies').delete().eq('project_id', req.params.projectId);
+
+      const newAssociations = technologyIds.map((techId: string) => ({
+        project_id: req.params.projectId,
+        technology_id: techId,
+      }));
+
+      const { data, error } = await supabase
+        .from('project_technologies')
+        .insert(newAssociations)
+        .select();
+
+      if (error) throw error;
+
+      res.json(data);
+    } catch (error) {
+      next(error);
     }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    await supabase.from('project_technologies').delete().eq('project_id', req.params.projectId);
-
-    const newAssociations = technologyIds.map((techId: string) => ({
-      project_id: req.params.projectId,
-      technology_id: techId,
-    }));
-
-    const { data, error } = await supabase.from('project_technologies').insert(newAssociations).select();
-
-    if (error) throw error;
-
-    res.json(data);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * @swagger
@@ -271,34 +282,38 @@ router.put('/projects/:projectId/technologies', authenticateToken, async (req: A
  *       403:
  *         description: Not the project owner
  */
-router.delete('/projects/:projectId/technologies/:technologyId', authenticateToken, async (req: AuthRequest, res, next) => {
-  try {
-    const { data: project, error: projError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.projectId)
-      .single();
+router.delete(
+  '/projects/:projectId/technologies/:technologyId',
+  authenticateToken,
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { data: project, error: projError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.projectId)
+        .single();
 
-    if (projError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      if (projError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      const { error } = await supabase
+        .from('project_technologies')
+        .delete()
+        .eq('project_id', req.params.projectId)
+        .eq('technology_id', req.params.technologyId);
+
+      if (error) throw error;
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    const { error } = await supabase
-      .from('project_technologies')
-      .delete()
-      .eq('project_id', req.params.projectId)
-      .eq('technology_id', req.params.technologyId);
-
-    if (error) throw error;
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 export default router;

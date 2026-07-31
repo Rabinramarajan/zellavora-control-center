@@ -37,12 +37,14 @@ const createMenuSchema = z.object({
   visible: z.boolean().default(true),
   visibilityType: z.enum(['all', 'authenticated', 'role', 'custom']).default('all'),
   visibilityCondition: z.record(z.any()).optional(),
-  badge: z.object({
-    icon: z.string().optional(),
-    value: z.union([z.number(), z.string()]).optional(),
-    style: z.enum(['default', 'success', 'danger', 'warning', 'info']).default('default'),
-    animated: z.boolean().optional(),
-  }).optional(),
+  badge: z
+    .object({
+      icon: z.string().optional(),
+      value: z.union([z.number(), z.string()]).optional(),
+      style: z.enum(['default', 'success', 'danger', 'warning', 'info']).default('default'),
+      animated: z.boolean().optional(),
+    })
+    .optional(),
   metadata: z.record(z.any()).optional(),
 });
 
@@ -100,68 +102,56 @@ export function createMenuRoutes(menuService: MenuService): Router {
    *       401:
    *         description: Unauthorized
    */
-  router.get(
-    '/',
-    authenticate,
-    async (req: AuthRequest, res: Response, next: NextFunction) => {
-      try {
-        if (!req.user?.organizationId) {
-          return res.status(403).json({ error: 'No organization context' });
-        }
-
-        const { includeHidden, category, forceRefresh } = getMenuTreeSchema.parse(req.query);
-
-        const tree = await menuService.getMenuTree(
-          req.user.organizationId,
-          req.user.id,
-          {
-            includeHidden,
-            category,
-            forceRefresh,
-          }
-        );
-
-        // Set cache headers
-        res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
-        res.set('ETag', `"${tree.timestamp.getTime()}"`);
-
-        return res.json(tree);
-      } catch (error) {
-        next(error);
+  router.get('/', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user?.organizationId) {
+        return res.status(403).json({ error: 'No organization context' });
       }
+
+      const { includeHidden, category, forceRefresh } = getMenuTreeSchema.parse(req.query);
+
+      const tree = await menuService.getMenuTree(req.user.organizationId, req.user.id, {
+        includeHidden,
+        category,
+        forceRefresh,
+      });
+
+      // Set cache headers
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
+      res.set('ETag', `"${tree.timestamp.getTime()}"`);
+
+      return res.json(tree);
+    } catch (error) {
+      next(error);
     }
-  );
+  });
 
   /**
    * GET /api/v1/menus/:id
    * Get single menu item with full hierarchy
    */
-  router.get(
-    '/:id',
-    authenticate,
-    async (req: AuthRequest, res: Response, next: NextFunction) => {
-      try {
-        if (!req.user?.organizationId) {
-          return res.status(403).json({ error: 'No organization context' });
-        }
-
-        const menu = await menuService.getMenuById(
-          req.params.id,
-          req.user.organizationId,
-          req.user.id
-        );
-
-        if (!menu) {
-          return res.status(404).json({ error: 'Menu not found' });
-        }
-
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.json(menu);
-      } catch (error) {
-        next(error);
+  router.get('/:id', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user?.organizationId) {
+        return res.status(403).json({ error: 'No organization context' });
       }
+
+      const menu = await menuService.getMenuById(
+        req.params.id,
+        req.user.organizationId,
+        req.user.id
+      );
+
+      if (!menu) {
+        return res.status(404).json({ error: 'Menu not found' });
+      }
+
+      res.set('Cache-Control', 'public, max-age=300');
+      return res.json(menu);
+    } catch (error) {
+      next(error);
     }
-  );
+  });
 
   /**
    * GET /api/v1/menus/:id/children
@@ -203,10 +193,7 @@ export function createMenuRoutes(menuService: MenuService): Router {
           return res.status(403).json({ error: 'No organization context' });
         }
 
-        const favorites = await menuService.getFavoriteMenus(
-          req.user.organizationId,
-          req.user.id
-        );
+        const favorites = await menuService.getFavoriteMenus(req.user.organizationId, req.user.id);
 
         res.set('Cache-Control', 'private, max-age=300');
         return res.json({ items: favorites });
@@ -362,11 +349,7 @@ export function createMenuRoutes(menuService: MenuService): Router {
           return res.status(403).json({ error: 'No organization context' });
         }
 
-        await menuService.deleteMenu(
-          req.params.id,
-          req.user.organizationId,
-          req.user.id
-        );
+        await menuService.deleteMenu(req.params.id, req.user.organizationId, req.user.id);
 
         return res.status(204).send();
       } catch (error) {
@@ -388,11 +371,7 @@ export function createMenuRoutes(menuService: MenuService): Router {
           return res.status(403).json({ error: 'No organization context' });
         }
 
-        await menuService.toggleFavorite(
-          req.params.id,
-          req.user.organizationId,
-          req.user.id
-        );
+        await menuService.toggleFavorite(req.params.id, req.user.organizationId, req.user.id);
 
         return res.json({ success: true });
       } catch (error) {
@@ -414,11 +393,7 @@ export function createMenuRoutes(menuService: MenuService): Router {
           return res.status(403).json({ error: 'No organization context' });
         }
 
-        await menuService.trackMenuAccess(
-          req.params.id,
-          req.user.organizationId,
-          req.user.id
-        );
+        await menuService.trackMenuAccess(req.params.id, req.user.organizationId, req.user.id);
 
         return res.json({ success: true });
       } catch (error) {
@@ -506,11 +481,7 @@ export function createMenuRoutes(menuService: MenuService): Router {
         }
 
         // Force refresh for current user
-        await menuService.getMenuTree(
-          req.user.organizationId,
-          req.user.id,
-          { forceRefresh: true }
-        );
+        await menuService.getMenuTree(req.user.organizationId, req.user.id, { forceRefresh: true });
 
         return res.json({ success: true, message: 'Cache rebuilt' });
       } catch (error) {

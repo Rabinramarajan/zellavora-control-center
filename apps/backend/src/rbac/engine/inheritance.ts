@@ -29,8 +29,7 @@ export async function expandRoleGraph(
   if (seedRoleIds.length === 0) return [];
 
   const visited = new Set<string>(seedRoleIds);
-  const queue: Array<{ id: string; depth: number }> =
-    seedRoleIds.map(id => ({ id, depth: 0 }));
+  const queue: Array<{ id: string; depth: number }> = seedRoleIds.map((id) => ({ id, depth: 0 }));
   const collected: RoleNode[] = [];
 
   while (queue.length > 0) {

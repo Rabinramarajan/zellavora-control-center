@@ -3,23 +3,33 @@ import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 export class UserRepository extends BaseRepository {
   async findById(id: string, tx?: TxClient) {
     return this.getDb(tx).user.findUnique({
-      where: { id }
+      where: { id },
     });
   }
 
   async findByEmail(email: string, tx?: TxClient) {
     return this.getDb(tx).user.findUnique({
-      where: { email }
+      where: { email },
     });
   }
 
   async findByUsername(username: string, tx?: TxClient) {
     return this.getDb(tx).user.findUnique({
-      where: { username }
+      where: { username },
     });
   }
 
-  async create(data: { email: string; emailId?: string | null; username: string; fullName: string; passwordHash: string; role?: string }, tx?: TxClient) {
+  async create(
+    data: {
+      email: string;
+      emailId?: string | null;
+      username: string;
+      fullName: string;
+      passwordHash: string;
+      role?: string;
+    },
+    tx?: TxClient
+  ) {
     return this.getDb(tx).user.create({
       data: {
         email: data.email,
@@ -27,21 +37,44 @@ export class UserRepository extends BaseRepository {
         username: data.username,
         fullName: data.fullName,
         passwordHash: data.passwordHash,
-        role: data.role || 'user'
-      }
+        role: data.role || 'user',
+      },
     });
   }
 
-  async update(id: string, data: { fullName?: string; passwordHash?: string; avatarUrl?: string | null; enable2fa?: boolean; mfaEnabled?: boolean; mfaEnrolledAt?: Date | null; otp?: string | null; isAccountLocked?: boolean; lastLockedDate?: Date | null; successfulLoginAttempts?: number; currentLoginDatetime?: Date | null; lastLoginDatetime?: Date | null; defaultLandingPage?: string | null; keyToken?: string | null; statusValue?: string | null; statusDescription?: string | null; version?: number; msg?: string | null }, tx?: TxClient) {
+  async update(
+    id: string,
+    data: {
+      fullName?: string;
+      passwordHash?: string;
+      avatarUrl?: string | null;
+      enable2fa?: boolean;
+      mfaEnabled?: boolean;
+      mfaEnrolledAt?: Date | null;
+      otp?: string | null;
+      isAccountLocked?: boolean;
+      lastLockedDate?: Date | null;
+      successfulLoginAttempts?: number;
+      currentLoginDatetime?: Date | null;
+      lastLoginDatetime?: Date | null;
+      defaultLandingPage?: string | null;
+      keyToken?: string | null;
+      statusValue?: string | null;
+      statusDescription?: string | null;
+      version?: number;
+      msg?: string | null;
+    },
+    tx?: TxClient
+  ) {
     return this.getDb(tx).user.update({
       where: { id },
-      data
+      data,
     });
   }
 
   async delete(id: string, tx?: TxClient) {
     return this.getDb(tx).user.delete({
-      where: { id }
+      where: { id },
     });
   }
 }

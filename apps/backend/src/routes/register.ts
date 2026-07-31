@@ -70,7 +70,7 @@ router.post('/verify-invitation', async (req, res, next) => {
 router.post('/send-email-otp', async (req, res, next) => {
   try {
     const { email } = SendOtpSchema.parse(req.body);
-    
+
     // Generate 6 digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
@@ -96,7 +96,7 @@ router.post('/send-email-otp', async (req, res, next) => {
 router.post('/verify-email-otp', async (req, res, next) => {
   try {
     const { email, code } = VerifyOtpSchema.parse(req.body);
-    
+
     const otp = await prisma.otp.findFirst({
       where: {
         type: 'email',
@@ -150,10 +150,7 @@ router.post('/submit', async (req, res, next) => {
     // 2. Check for username/email duplicates
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: data.admin.email },
-          { username: data.credentials.username },
-        ],
+        OR: [{ email: data.admin.email }, { username: data.credentials.username }],
       },
     });
     if (existingUser) {

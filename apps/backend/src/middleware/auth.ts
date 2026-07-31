@@ -13,7 +13,12 @@
  */
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { TokenService, type AccessTokenClaims, SessionService, TenantService } from '../services/auth';
+import {
+  TokenService,
+  type AccessTokenClaims,
+  SessionService,
+  TenantService,
+} from '../services/auth';
 import { AppError } from './error';
 
 export interface AuthRequest extends Request {
@@ -66,7 +71,9 @@ export const authenticate = async (
     attachMetadata(req);
 
     // Touch the session for sliding-window idle tracking
-    SessionService.touch(claims.sid).catch(() => {/* best-effort */});
+    SessionService.touch(claims.sid).catch(() => {
+      /* best-effort */
+    });
 
     next();
   } catch (e) {
@@ -75,11 +82,7 @@ export const authenticate = async (
 };
 
 /** Block requests whose X-Tenant-ID doesn't match the JWT's tenant. */
-export const assertSameTenant = (
-  req: AuthRequest,
-  _res: Response,
-  next: NextFunction
-): void => {
+export const assertSameTenant = (req: AuthRequest, _res: Response, next: NextFunction): void => {
   const headerTenant = (req.headers['x-tenant-id'] as string)?.toLowerCase();
   if (headerTenant && req.tenantId && headerTenant !== req.tenantId.toLowerCase()) {
     return next(new AppError('Tenant context mismatch', 403, 'TENANT_MISMATCH'));

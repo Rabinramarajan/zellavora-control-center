@@ -9,9 +9,7 @@ const cache = new Map<string, RegExp>();
 function compile(pattern: string): RegExp {
   if (cache.has(pattern)) return cache.get(pattern)!;
 
-  const escaped = pattern
-    .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-    .replace(/\*/g, '[^:]*');
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^:]*');
 
   const re = new RegExp('^' + escaped + '$');
   cache.set(pattern, re);

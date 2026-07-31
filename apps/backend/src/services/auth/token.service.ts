@@ -22,11 +22,11 @@ import { supabaseAdmin } from '../../config/supabase';
 import { AppError } from '../../middleware/error';
 
 export interface AccessTokenClaims {
-  sub: string;            // userId
-  tid: string;            // tenantId (organization)
-  role: string;           // 'owner' | 'admin' | 'member'
-  sid: string;            // sessionId
-  jti: string;            // unique token id
+  sub: string; // userId
+  tid: string; // tenantId (organization)
+  role: string; // 'owner' | 'admin' | 'member'
+  sid: string; // sessionId
+  jti: string; // unique token id
   email: string;
   iat: number;
   exp: number;
@@ -35,9 +35,9 @@ export interface AccessTokenClaims {
 }
 
 export interface RefreshTokenClaims {
-  sub: string;            // userId
-  sid: string;            // sessionId
-  fam: string;            // family id
+  sub: string; // userId
+  sid: string; // sessionId
+  fam: string; // family id
   jti: string;
   type: 'refresh';
   iat: number;
@@ -89,7 +89,9 @@ export class TokenService {
       }
     );
 
-    const refreshExpiry = opts.rememberMe ? '30d' : (config.refreshTokenExpiry as SignOptions['expiresIn']);
+    const refreshExpiry = opts.rememberMe
+      ? '30d'
+      : (config.refreshTokenExpiry as SignOptions['expiresIn']);
     const refreshToken = jwt.sign(
       {
         sub: opts.userId,
@@ -175,7 +177,12 @@ export class TokenService {
   }
 
   /** Revoke an access token by jti (until it would have expired anyway). */
-  static async revokeAccess(jti: string, userId: string, reason: string, expiresAt: Date): Promise<void> {
+  static async revokeAccess(
+    jti: string,
+    userId: string,
+    reason: string,
+    expiresAt: Date
+  ): Promise<void> {
     await supabaseAdmin.from('revoked_tokens').upsert({
       jti,
       user_id: userId,

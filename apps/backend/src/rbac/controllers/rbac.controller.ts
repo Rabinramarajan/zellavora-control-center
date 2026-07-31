@@ -34,20 +34,29 @@ const CreateRole = z.object({
   label: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   level: z.number().int().min(0).max(100).default(0),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
   inheritsFrom: z.array(z.string().uuid()).default([]),
-  permissions: z.array(z.object({
-    key: z.string().min(3).max(200),
-    effect: z.enum(['allow', 'deny']).default('allow')
-  })).default([])
+  permissions: z
+    .array(
+      z.object({
+        key: z.string().min(3).max(200),
+        effect: z.enum(['allow', 'deny']).default('allow'),
+      })
+    )
+    .default([]),
 });
 
 const UpdateRole = CreateRole.partial();
 
-const PermissionsSet = z.array(z.object({
-  key: z.string(),
-  effect: z.enum(['allow', 'deny'])
-}));
+const PermissionsSet = z.array(
+  z.object({
+    key: z.string(),
+    effect: z.enum(['allow', 'deny']),
+  })
+);
 
 const InheritanceSet = z.array(z.string().uuid());
 
@@ -55,11 +64,11 @@ const AssignRole = z.object({
   roleId: z.string().uuid(),
   resourceType: z.string().max(50).optional(),
   resourceId: z.string().uuid().optional(),
-  validUntil: z.string().datetime().optional()
+  validUntil: z.string().datetime().optional(),
 });
 
 const CheckBody = z.object({
-  checks: z.array(z.string()).min(1).max(100)
+  checks: z.array(z.string()).min(1).max(100),
 });
 
 // ---------- Router factory ----------
@@ -72,8 +81,10 @@ export function buildRbacRouter(deps: {
 }): Router {
   const router = Router();
   const { engine, roleService, userRoleService, audit } = deps;
-  const wrap = (h: (req: Request, res: Response) => Promise<unknown>) =>
-    (req: Request, res: Response, next: NextFunction) => h(req, res).catch(next);
+  const wrap =
+    (h: (req: Request, res: Response) => Promise<unknown>) =>
+    (req: Request, res: Response, next: NextFunction) =>
+      h(req, res).catch(next);
 
   // ---------- Permissions ----------
 
@@ -113,7 +124,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:read
    */
-  router.get('/permissions', requirePermission('system:rbac:read'),
+  router.get(
+    '/permissions',
+    requirePermission('system:rbac:read'),
     wrap(async (req, res) => {
       const type = req.query.type as string | undefined;
       const groupId = req.query.groupId as string | undefined;
@@ -145,7 +158,8 @@ export function buildRbacRouter(deps: {
    *       401:
    *         description: Unauthorized
    */
-  router.get('/permissions/groups',
+  router.get(
+    '/permissions/groups',
     wrap(async (_req, res) => {
       const groups = await roleService.listPermissionGroups();
       res.json({ data: groups });
@@ -179,7 +193,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:read
    */
-  router.get('/roles', requirePermission('system:rbac:read'),
+  router.get(
+    '/roles',
+    requirePermission('system:rbac:read'),
     wrap(async (req, res) => {
       const orgId = req.auth!.tenantId;
       const roles = await roleService.list(orgId);
@@ -220,7 +236,9 @@ export function buildRbacRouter(deps: {
    *       404:
    *         description: Role not found
    */
-  router.get('/roles/:id', requirePermission('system:rbac:read'),
+  router.get(
+    '/roles/:id',
+    requirePermission('system:rbac:read'),
     wrap(async (req, res) => {
       const role = await roleService.getDetail(req.params.id);
       res.json({ data: role });
@@ -258,14 +276,12 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:write
    */
-  router.post('/roles', requirePermission('system:rbac:write'),
+  router.post(
+    '/roles',
+    requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
       const input = CreateRole.parse(req.body) as CreateRoleInput;
-      const role = await roleService.create(
-        req.auth!.tenantId,
-        input,
-        req.auth!.userId
-      );
+      const role = await roleService.create(req.auth!.tenantId, input, req.auth!.userId);
       res.status(201).json({ data: role });
     })
   );
@@ -311,7 +327,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:write
    */
-  router.patch('/roles/:id', requirePermission('system:rbac:write'),
+  router.patch(
+    '/roles/:id',
+    requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
       const input = UpdateRole.parse(req.body) as Partial<CreateRoleInput>;
       const role = await roleService.update(req.params.id, input, req.auth!.userId);
@@ -353,7 +371,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:write
    */
-  router.delete('/roles/:id', requirePermission('system:rbac:write'),
+  router.delete(
+    '/roles/:id',
+    requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
       await roleService.delete(req.params.id, req.auth!.userId);
       res.json({ data: { ok: true } });
@@ -411,9 +431,14 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:write
    */
-  router.put('/roles/:id/permissions', requirePermission('system:rbac:write'),
+  router.put(
+    '/roles/:id/permissions',
+    requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
-      const perms = PermissionsSet.parse(req.body) as Array<{ key: string; effect: 'allow' | 'deny' }>;
+      const perms = PermissionsSet.parse(req.body) as Array<{
+        key: string;
+        effect: 'allow' | 'deny';
+      }>;
       await roleService.setPermissions(req.params.id, perms, req.auth!.userId);
       res.json({ data: { ok: true } });
     })
@@ -463,7 +488,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:write
    */
-  router.put('/roles/:id/inheritance', requirePermission('system:rbac:write'),
+  router.put(
+    '/roles/:id/inheritance',
+    requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
       const parents = InheritanceSet.parse(req.body);
       await roleService.setInheritance(req.params.id, parents, req.auth!.userId);
@@ -520,12 +547,16 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:write
    */
-  router.post('/roles/:id/clone', requirePermission('system:rbac:write'),
+  router.post(
+    '/roles/:id/clone',
+    requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
-      const body = z.object({
-        key: z.string().regex(/^[a-z0-9_]{3,50}$/),
-        label: z.string().min(1).max(200)
-      }).parse(req.body);
+      const body = z
+        .object({
+          key: z.string().regex(/^[a-z0-9_]{3,50}$/),
+          label: z.string().min(1).max(200),
+        })
+        .parse(req.body);
       const clone = await roleService.clone(
         req.params.id,
         body.key,
@@ -572,7 +603,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:rbac:read
    */
-  router.get('/users/:userId/roles', requirePermission('system:rbac:read'),
+  router.get(
+    '/users/:userId/roles',
+    requirePermission('system:rbac:read'),
     wrap(async (req, res) => {
       const orgId = req.auth!.tenantId;
       const list = await userRoleService.listForUser(req.params.userId, orgId);
@@ -617,7 +650,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires users:role:assign
    */
-  router.post('/users/:userId/roles', requirePermission('users:role:assign'),
+  router.post(
+    '/users/:userId/roles',
+    requirePermission('users:role:assign'),
     wrap(async (req, res) => {
       const input = AssignRole.parse(req.body) as AssignRoleInput;
       const assignment = await userRoleService.assign(
@@ -671,13 +706,11 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires users:role:assign
    */
-  router.delete('/users/:userId/roles/:assignmentId', requirePermission('users:role:assign'),
+  router.delete(
+    '/users/:userId/roles/:assignmentId',
+    requirePermission('users:role:assign'),
     wrap(async (req, res) => {
-      await userRoleService.revoke(
-        req.params.assignmentId,
-        req.auth!.userId,
-        req.body?.reason
-      );
+      await userRoleService.revoke(req.params.assignmentId, req.auth!.userId, req.body?.reason);
       res.json({ data: { ok: true } });
     })
   );
@@ -710,7 +743,8 @@ export function buildRbacRouter(deps: {
    *       401:
    *         description: Unauthorized
    */
-  router.get('/me/policy',
+  router.get(
+    '/me/policy',
     wrap(async (req, res) => {
       const policy = await engine.resolve(req.auth!.userId, req.auth!.tenantId);
       res.setHeader('X-Policy-Version', String(policy.version));
@@ -769,7 +803,8 @@ export function buildRbacRouter(deps: {
    *       401:
    *         description: Unauthorized
    */
-  router.post('/check',
+  router.post(
+    '/check',
     wrap(async (req, res) => {
       const { checks } = CheckBody.parse(req.body);
       const { results, version } = await engine.checkMany(
@@ -850,7 +885,9 @@ export function buildRbacRouter(deps: {
    *       403:
    *         description: Forbidden — requires system:audit:read
    */
-  router.get('/audit-logs', requirePermission('system:audit:read'),
+  router.get(
+    '/audit-logs',
+    requirePermission('system:audit:read'),
     wrap(async (req, res) => {
       const orgId = req.auth!.tenantId;
       const page = await audit.search(orgId, {
@@ -859,7 +896,7 @@ export function buildRbacRouter(deps: {
         from: req.query.from as string | undefined,
         to: req.query.to as string | undefined,
         page: req.query.page ? Number(req.query.page) : 1,
-        pageSize: req.query.pageSize ? Number(req.query.pageSize) : 50
+        pageSize: req.query.pageSize ? Number(req.query.pageSize) : 50,
       });
       res.json(page);
     })

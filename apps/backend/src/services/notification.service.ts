@@ -111,7 +111,7 @@ export class NotificationService extends EventEmitter {
 
       // Filter channels based on preferences
       if (preferences) {
-        channels = channels.filter(ch => {
+        channels = channels.filter((ch) => {
           switch (ch) {
             case 'email':
               return preferences.emailEnabled;
@@ -280,7 +280,7 @@ export class NotificationService extends EventEmitter {
       if (error || !notifications) return { notifications: [], total: 0 };
 
       return {
-        notifications: notifications.map(n => this.transformNotification(n)),
+        notifications: notifications.map((n) => this.transformNotification(n)),
         total: count || 0,
       };
     } catch (error) {
@@ -375,7 +375,10 @@ export class NotificationService extends EventEmitter {
   /**
    * Get notification template
    */
-  async getTemplate(organizationId: string, templateKey: string): Promise<NotificationTemplate | null> {
+  async getTemplate(
+    organizationId: string,
+    templateKey: string
+  ): Promise<NotificationTemplate | null> {
     try {
       const cacheKey = `template:${organizationId}:${templateKey}`;
       const cached = await this.redis.get<NotificationTemplate>(cacheKey);
@@ -404,7 +407,10 @@ export class NotificationService extends EventEmitter {
   /**
    * Get user preferences
    */
-  async getPreferences(organizationId: string, userId?: string): Promise<NotificationPreferences | null> {
+  async getPreferences(
+    organizationId: string,
+    userId?: string
+  ): Promise<NotificationPreferences | null> {
     if (!userId) return null;
 
     try {
@@ -479,13 +485,11 @@ export class NotificationService extends EventEmitter {
         updateData.unsubscribed_categories = updates.unsubscribedCategories;
       }
 
-      const { error } = await this.supabase
-        .from('notification_preferences')
-        .upsert({
-          organization_id: organizationId,
-          user_id: userId,
-          ...updateData,
-        });
+      const { error } = await this.supabase.from('notification_preferences').upsert({
+        organization_id: organizationId,
+        user_id: userId,
+        ...updateData,
+      });
 
       if (error) throw error;
 
@@ -503,10 +507,7 @@ export class NotificationService extends EventEmitter {
   /**
    * Get notification audit logs
    */
-  async getAuditLogs(
-    notificationId: string,
-    options?: { limit?: number }
-  ): Promise<any[]> {
+  async getAuditLogs(notificationId: string, options?: { limit?: number }): Promise<any[]> {
     try {
       let query = this.supabase
         .from('notification_audit_logs')
@@ -623,7 +624,10 @@ export class NotificationService extends EventEmitter {
       console.error('Failed to process queue item', error);
 
       // Retry logic
-      await this.handleQueueFailure(queueId, error instanceof Error ? error.message : 'Unknown error');
+      await this.handleQueueFailure(
+        queueId,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
   }
 

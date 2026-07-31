@@ -13,15 +13,31 @@ import { AppError } from '../../middleware/error';
 
 export type AuditSeverity = 'info' | 'warn' | 'critical';
 export type AuditAction =
-  | 'login' | 'logout' | 'login_failed' | 'lockout'
-  | 'password_change' | 'password_reset_requested' | 'password_reset_completed'
-  | 'email_verified' | 'mfa_enrolled' | 'mfa_disabled' | 'mfa_recovery_used'
-  | 'user_created' | 'user_updated' | 'user_deleted' | 'user_invited'
-  | 'permission_updated' | 'role_changed'
-  | 'api_key_created' | 'api_key_revoked'
-  | 'session_revoked' | 'all_sessions_revoked'
+  | 'login'
+  | 'logout'
+  | 'login_failed'
+  | 'lockout'
+  | 'password_change'
+  | 'password_reset_requested'
+  | 'password_reset_completed'
+  | 'email_verified'
+  | 'mfa_enrolled'
+  | 'mfa_disabled'
+  | 'mfa_recovery_used'
+  | 'user_created'
+  | 'user_updated'
+  | 'user_deleted'
+  | 'user_invited'
+  | 'permission_updated'
+  | 'role_changed'
+  | 'api_key_created'
+  | 'api_key_revoked'
+  | 'session_revoked'
+  | 'all_sessions_revoked'
   | 'tenant_switched'
-  | 'resource_created' | 'resource_updated' | 'resource_deleted';
+  | 'resource_created'
+  | 'resource_updated'
+  | 'resource_deleted';
 
 export interface AuditEvent {
   organizationId: string;

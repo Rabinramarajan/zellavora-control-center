@@ -16,7 +16,11 @@ export class OrganizationController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = CreateOrganizationSchema.parse(req.body) as { name: string; clientCode: string; logoUrl?: string | null };
+      const data = CreateOrganizationSchema.parse(req.body) as {
+        name: string;
+        clientCode: string;
+        logoUrl?: string | null;
+      };
       const org = await this.service.createOrganization(data);
       res.json({ success: true, data: org });
     } catch (err) {

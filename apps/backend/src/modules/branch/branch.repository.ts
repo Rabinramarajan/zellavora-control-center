@@ -3,32 +3,35 @@ import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 export class BranchRepository extends BaseRepository {
   async findById(id: string, tx?: TxClient) {
     return this.getDb(tx).branch.findUnique({
-      where: { id }
+      where: { id },
     });
   }
 
   async listByOrganizationId(organizationId: string, tx?: TxClient) {
     return this.getDb(tx).branch.findMany({
-      where: { organizationId }
+      where: { organizationId },
     });
   }
 
-  async create(data: { organizationId: string; name: string; code?: string | null }, tx?: TxClient) {
+  async create(
+    data: { organizationId: string; name: string; code?: string | null },
+    tx?: TxClient
+  ) {
     return this.getDb(tx).branch.create({
-      data
+      data,
     });
   }
 
   async update(id: string, data: { name?: string; code?: string | null }, tx?: TxClient) {
     return this.getDb(tx).branch.update({
       where: { id },
-      data
+      data,
     });
   }
 
   async delete(id: string, tx?: TxClient) {
     return this.getDb(tx).branch.delete({
-      where: { id }
+      where: { id },
     });
   }
 }

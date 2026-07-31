@@ -21,7 +21,13 @@ export class UserService {
     return user;
   }
 
-  async createUser(data: { email: string; username: string; fullName: string; passwordPlain: string; role?: string }) {
+  async createUser(data: {
+    email: string;
+    username: string;
+    fullName: string;
+    passwordPlain: string;
+    role?: string;
+  }) {
     // Check duplicates
     const dupEmail = await this.repo.findByEmail(data.email);
     if (dupEmail) throw new AppError('Email address already registered', 400, 'EMAIL_TAKEN');
@@ -36,14 +42,17 @@ export class UserService {
       username: data.username,
       fullName: data.fullName,
       passwordHash,
-      role: data.role
+      role: data.role,
     });
   }
 
-  async updateUser(id: string, data: { fullName?: string; passwordPlain?: string; avatarUrl?: string | null }) {
+  async updateUser(
+    id: string,
+    data: { fullName?: string; passwordPlain?: string; avatarUrl?: string | null }
+  ) {
     await this.getUser(id);
     const updateData: any = { ...data };
-    
+
     if (data.passwordPlain) {
       updateData.passwordHash = await PasswordService.hash(data.passwordPlain);
       delete updateData.passwordPlain;

@@ -72,10 +72,7 @@ export class FeatureFlagService {
   /**
    * Get all enabled features for user
    */
-  async getEnabledFeatures(
-    organizationId: string,
-    context: EvaluationContext
-  ): Promise<string[]> {
+  async getEnabledFeatures(organizationId: string, context: EvaluationContext): Promise<string[]> {
     try {
       // Check cache first
       const cacheKey = this.getCacheKey(organizationId, context.userId);
@@ -189,11 +186,7 @@ export class FeatureFlagService {
 
       // Check targeting rules
       if (flag.targeting_enabled) {
-        const targetingMatch = await this.checkTargetingRules(
-          flag.id,
-          organizationId,
-          context
-        );
+        const targetingMatch = await this.checkTargetingRules(flag.id, organizationId, context);
 
         if (targetingMatch !== undefined) {
           return {
@@ -377,11 +370,7 @@ export class FeatureFlagService {
   /**
    * Match version strings
    */
-  private matchesVersion(
-    version: string,
-    targetVersion: string,
-    condition: string
-  ): boolean {
+  private matchesVersion(version: string, targetVersion: string, condition: string): boolean {
     switch (condition) {
       case 'equals':
         return version === targetVersion;
@@ -454,10 +443,7 @@ export class FeatureFlagService {
   /**
    * Get feature flag details
    */
-  async getFlag(
-    flagKey: string,
-    organizationId: string
-  ): Promise<FeatureFlag | null> {
+  async getFlag(flagKey: string, organizationId: string): Promise<FeatureFlag | null> {
     try {
       const { data: flag } = await this.supabase
         .from('feature_flags')
@@ -486,7 +472,7 @@ export class FeatureFlagService {
         .eq('organization_id', organizationId)
         .order('created_at', { ascending: false });
 
-      return (flags || []).map(f => this.transformFlag(f));
+      return (flags || []).map((f) => this.transformFlag(f));
     } catch (error) {
       console.error('Failed to get flags', error);
       return [];
@@ -594,12 +580,8 @@ export class FeatureFlagService {
       blocks: data.blocks,
       scheduledAt: data.scheduled_at ? new Date(data.scheduled_at) : undefined,
       expiresAt: data.expires_at ? new Date(data.expires_at) : undefined,
-      rolloutStartDate: data.rollout_start_date
-        ? new Date(data.rollout_start_date)
-        : undefined,
-      rolloutEndDate: data.rollout_end_date
-        ? new Date(data.rollout_end_date)
-        : undefined,
+      rolloutStartDate: data.rollout_start_date ? new Date(data.rollout_start_date) : undefined,
+      rolloutEndDate: data.rollout_end_date ? new Date(data.rollout_end_date) : undefined,
       metadata: data.metadata,
     };
   }

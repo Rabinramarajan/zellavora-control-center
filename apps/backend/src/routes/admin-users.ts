@@ -1,7 +1,12 @@
 import { Router, Response, NextFunction } from 'express';
 import { supabase } from '../config/supabase';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { getOrAddUserSerial, getUserUuidFromSerial, wrapResponse, mockBranches } from './admin-helpers';
+import {
+  getOrAddUserSerial,
+  getUserUuidFromSerial,
+  wrapResponse,
+  mockBranches,
+} from './admin-helpers';
 
 const router = Router();
 
@@ -91,11 +96,13 @@ router.get('/user/initialize', authenticate, async (req, res, next) => {
 
 router.get('/user/search', authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({
-      pageSize: 10,
-      pageNumber: 1,
-      ascending: true
-    }));
+    res.json(
+      wrapResponse({
+        pageSize: 10,
+        pageNumber: 1,
+        ascending: true,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -119,16 +126,18 @@ router.post('/user/search', authenticate, async (req: AuthRequest, res, next) =>
         employeeCode: `EMP-${1000 + serial}`,
         statusDescription: user.is_active ? 'Active' : 'Inactive',
         beginDateFrom: user.created_at,
-        endDateFrom: null
+        endDateFrom: null,
       };
     });
 
-    res.json(wrapResponse({
-      searchResult,
-      totalCount: searchResult.length,
-      pageSize: req.body.pageSize || 10,
-      pageNumber: req.body.pageNumber || 1
-    }));
+    res.json(
+      wrapResponse({
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: req.body.pageSize || 10,
+        pageNumber: req.body.pageNumber || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -136,35 +145,37 @@ router.post('/user/search', authenticate, async (req: AuthRequest, res, next) =>
 
 router.get('/user/new', authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({
-      userSerialId: 0,
-      userLoginId: '',
-      firstName: '',
-      lastName: '',
-      emailId: '',
-      userName: '',
-      contactNumber: '',
-      genderId: 1,
-      genderValue: 'Male',
-      beginDate: new Date().toISOString(),
-      endDate: '2099-12-31T23:59:59Z',
-      statusId: 1,
-      statusValue: 'Active',
-      designationId: 1,
-      designationValue: 'Viewer',
-      branchId: 1,
-      branchValue: 'Headquarters',
-      employeeCode: '',
-      departmentId: 1,
-      departmentValue: 'Staff',
-      teamId: 1,
-      teamValue: 'General',
-      enableTwoFactorAuthentication: false,
-      isAccountLocked: false,
-      successfulLoginAttempts: 0,
-      passwordResetFlag: false,
-      version: 1
-    }));
+    res.json(
+      wrapResponse({
+        userSerialId: 0,
+        userLoginId: '',
+        firstName: '',
+        lastName: '',
+        emailId: '',
+        userName: '',
+        contactNumber: '',
+        genderId: 1,
+        genderValue: 'Male',
+        beginDate: new Date().toISOString(),
+        endDate: '2099-12-31T23:59:59Z',
+        statusId: 1,
+        statusValue: 'Active',
+        designationId: 1,
+        designationValue: 'Viewer',
+        branchId: 1,
+        branchValue: 'Headquarters',
+        employeeCode: '',
+        departmentId: 1,
+        departmentValue: 'Staff',
+        teamId: 1,
+        teamValue: 'General',
+        enableTwoFactorAuthentication: false,
+        isAccountLocked: false,
+        successfulLoginAttempts: 0,
+        passwordResetFlag: false,
+        version: 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -181,46 +192,48 @@ router.post('/user/open', authenticate, async (req, res, next) => {
     const { data: user, error } = await supabase.from('users').select('*').eq('id', uuid).single();
     if (error) throw error;
 
-    res.json(wrapResponse({
-      userSerialId: serial,
-      userLoginId: user.email,
-      firstName: user.full_name.split(' ')[0] || '',
-      lastName: user.full_name.split(' ').slice(1).join(' ') || '',
-      emailId: user.email_id || user.email,
-      userName: user.username,
-      contactNumber: '+1 555-0100',
-      genderId: 1,
-      genderValue: 'Male',
-      beginDate: user.created_at,
-      endDate: '2099-12-31T23:59:59Z',
-      statusId: user.is_active ? 1 : 2,
-      statusValue: user.is_active ? 'Active' : 'Inactive',
-      designationId: 1,
-      designationValue: 'Viewer',
-      branchId: 1,
-      branchValue: 'Headquarters',
-      employeeCode: `EMP-${1000 + serial}`,
-      departmentId: 1,
-      departmentValue: 'Staff',
-      teamId: 1,
-      teamValue: 'General',
-      fullname: user.full_name,
-      
-      // Mapped Login/Auth fields
-      currentLoginDatetime: user.current_login_datetime,
-      lastLoginDatetime: user.last_login_datetime,
-      defaultLandingPage: user.default_landing_page,
-      enableTwoFactorAuthentication: user.enable_two_factor_authentication,
-      isAccountLocked: user.is_account_locked,
-      lastLockedDate: user.last_locked_date,
-      keyToken: user.key_token,
-      msg: user.msg,
-      otp: user.otp,
-      passwordResetFlag: user.password_reset_flag,
-      statusDescription: user.status_description,
-      version: user.version,
-      successfulLoginAttempts: user.successful_login_attempts
-    }));
+    res.json(
+      wrapResponse({
+        userSerialId: serial,
+        userLoginId: user.email,
+        firstName: user.full_name.split(' ')[0] || '',
+        lastName: user.full_name.split(' ').slice(1).join(' ') || '',
+        emailId: user.email_id || user.email,
+        userName: user.username,
+        contactNumber: '+1 555-0100',
+        genderId: 1,
+        genderValue: 'Male',
+        beginDate: user.created_at,
+        endDate: '2099-12-31T23:59:59Z',
+        statusId: user.is_active ? 1 : 2,
+        statusValue: user.is_active ? 'Active' : 'Inactive',
+        designationId: 1,
+        designationValue: 'Viewer',
+        branchId: 1,
+        branchValue: 'Headquarters',
+        employeeCode: `EMP-${1000 + serial}`,
+        departmentId: 1,
+        departmentValue: 'Staff',
+        teamId: 1,
+        teamValue: 'General',
+        fullname: user.full_name,
+
+        // Mapped Login/Auth fields
+        currentLoginDatetime: user.current_login_datetime,
+        lastLoginDatetime: user.last_login_datetime,
+        defaultLandingPage: user.default_landing_page,
+        enableTwoFactorAuthentication: user.enable_two_factor_authentication,
+        isAccountLocked: user.is_account_locked,
+        lastLockedDate: user.last_locked_date,
+        keyToken: user.key_token,
+        msg: user.msg,
+        otp: user.otp,
+        passwordResetFlag: user.password_reset_flag,
+        statusDescription: user.status_description,
+        version: user.version,
+        successfulLoginAttempts: user.successful_login_attempts,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -250,7 +263,7 @@ router.post('/user/save', authenticate, async (req, res, next) => {
       version: uData.version,
       msg: uData.msg,
       otp: uData.otp,
-      successful_login_attempts: uData.successfulLoginAttempts
+      successful_login_attempts: uData.successfulLoginAttempts,
     };
 
     let user;
@@ -271,7 +284,7 @@ router.post('/user/save', authenticate, async (req, res, next) => {
         .from('users')
         .insert({
           ...dbPayload,
-          role: 'viewer'
+          role: 'viewer',
         })
         .select()
         .single();
@@ -280,11 +293,13 @@ router.post('/user/save', authenticate, async (req, res, next) => {
     }
 
     const serial = getOrAddUserSerial(user.id);
-    res.json(wrapResponse({
-      ...uData,
-      userSerialId: serial,
-      fullname: user.full_name
-    }));
+    res.json(
+      wrapResponse({
+        ...uData,
+        userSerialId: serial,
+        fullname: user.full_name,
+      })
+    );
   } catch (error) {
     next(error);
   }

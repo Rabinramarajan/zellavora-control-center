@@ -45,10 +45,12 @@ class EmailService {
         host: config.smtpHost,
         port: config.smtpPort,
         secure: config.smtpPort === 465,
-        auth: config.smtpUser ? {
-          user: config.smtpUser,
-          pass: config.smtpPassword,
-        } : undefined,
+        auth: config.smtpUser
+          ? {
+              user: config.smtpUser,
+              pass: config.smtpPassword,
+            }
+          : undefined,
       });
 
       this.smtpTransporter.verify((err, success) => {
@@ -132,7 +134,7 @@ class EmailService {
         cc: options.cc,
         bcc: options.bcc,
         replyTo: options.replyTo,
-        attachments: options.attachments?.map(att => ({
+        attachments: options.attachments?.map((att) => ({
           filename: att.filename,
           content: att.content || (att.path ? require('fs').readFileSync(att.path) : ''),
           type: att.contentType,
@@ -164,11 +166,9 @@ class EmailService {
   }
 
   async sendBatch(emailsList: EmailOptions[]): Promise<SendEmailResponse[]> {
-    const results = await Promise.allSettled(
-      emailsList.map(email => this.sendEmail(email))
-    );
+    const results = await Promise.allSettled(emailsList.map((email) => this.sendEmail(email)));
 
-    return results.map(result => {
+    return results.map((result) => {
       if (result.status === 'fulfilled') {
         return result.value;
       }

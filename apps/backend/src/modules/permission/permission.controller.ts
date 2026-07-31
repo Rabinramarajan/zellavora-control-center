@@ -16,7 +16,11 @@ export class PermissionController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = CreatePermissionSchema.parse(req.body) as { name: string; description?: string | null; groupId?: string | null };
+      const data = CreatePermissionSchema.parse(req.body) as {
+        name: string;
+        description?: string | null;
+        groupId?: string | null;
+      };
       const perm = await this.service.createPermission(data);
       res.json({ success: true, data: perm });
     } catch (err) {
@@ -27,7 +31,12 @@ export class PermissionController {
   assign = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = AssignPermissionSchema.parse(req.body);
-      const result = await this.service.assignPermissionToRole(data.roleId, data.permissionId, data.effect, data.organizationId);
+      const result = await this.service.assignPermissionToRole(
+        data.roleId,
+        data.permissionId,
+        data.effect,
+        data.organizationId
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);

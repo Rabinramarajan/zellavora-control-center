@@ -21,13 +21,13 @@ export async function checkEmailAvailability(email: string): Promise<{
   suggestion?: string;
 }> {
   const normalizedEmail = email.toLowerCase().trim();
-  
+
   // Check if email exists in users
   const existingUser = await prisma.user.findUnique({
     where: { email: normalizedEmail },
     select: { id: true, email: true },
   });
-  
+
   if (existingUser) {
     // Generate suggestion
     const [localPart] = normalizedEmail.split('@');
@@ -35,14 +35,14 @@ export async function checkEmailAvailability(email: string): Promise<{
       `${localPart}+work@${normalizedEmail.split('@')[1]}`,
       `${localPart}.${new Date().getFullYear()}@${normalizedEmail.split('@')[1]}`,
     ];
-    
+
     return {
       available: false,
       message: 'This email is already registered',
       suggestion: suggestions[0],
     };
   }
-  
+
   return {
     available: true,
     message: 'Email is available',
@@ -58,33 +58,82 @@ export async function checkOrganizationCodeAvailability(code: string): Promise<{
   message?: string;
   suggestion?: string;
 }> {
-  const normalizedCode = code.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  
+  const normalizedCode = code
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+
   if (normalizedCode.length < 2) {
     return {
       available: false,
       message: 'Organization code must be at least 2 characters',
     };
   }
-  
+
   if (normalizedCode.length > 16) {
     return {
       available: false,
       message: 'Organization code cannot exceed 16 characters',
     };
   }
-  
+
   // Reserved codes
   const reservedCodes = [
-    'admin', 'api', 'app', 'auth', 'blog', 'cdn', 'dashboard', 'dev', 
-    'docs', 'email', 'ftp', 'github', 'help', 'host', 'login', 'mail',
-    'mobile', 'new', 'oauth', 'old', 'panel', 'password', 'portal', 'public',
-    'secure', 'security', 'server', 'shop', 'site', 'smtp', 'ssh', 'stage',
-    'static', 'status', 'store', 'support', 'test', 'testing', 'tmp', 
-    'update', 'upload', 'vpn', 'web', 'webmail', 'websocket', 'www',
-    'zellavora', 'zcc', 'admin', 'root', 'system', 'superadmin', 'owner'
+    'admin',
+    'api',
+    'app',
+    'auth',
+    'blog',
+    'cdn',
+    'dashboard',
+    'dev',
+    'docs',
+    'email',
+    'ftp',
+    'github',
+    'help',
+    'host',
+    'login',
+    'mail',
+    'mobile',
+    'new',
+    'oauth',
+    'old',
+    'panel',
+    'password',
+    'portal',
+    'public',
+    'secure',
+    'security',
+    'server',
+    'shop',
+    'site',
+    'smtp',
+    'ssh',
+    'stage',
+    'static',
+    'status',
+    'store',
+    'support',
+    'test',
+    'testing',
+    'tmp',
+    'update',
+    'upload',
+    'vpn',
+    'web',
+    'webmail',
+    'websocket',
+    'www',
+    'zellavora',
+    'zcc',
+    'admin',
+    'root',
+    'system',
+    'superadmin',
+    'owner',
   ];
-  
+
   if (reservedCodes.includes(normalizedCode)) {
     return {
       available: false,
@@ -92,16 +141,16 @@ export async function checkOrganizationCodeAvailability(code: string): Promise<{
       suggestion: `${normalizedCode}-org`,
     };
   }
-  
+
   // Check if code exists
   const existingOrg = await prisma.organization.findFirst({
-    where: { 
+    where: {
       clientCode: normalizedCode,
       isDeleted: false,
     },
     select: { id: true, name: true },
   });
-  
+
   if (existingOrg) {
     // Generate suggestion
     const suggestion = `${normalizedCode}${Math.floor(Math.random() * 1000)}`;
@@ -111,7 +160,7 @@ export async function checkOrganizationCodeAvailability(code: string): Promise<{
       suggestion,
     };
   }
-  
+
   return {
     available: true,
     message: 'Organization code is available',
@@ -129,18 +178,18 @@ export async function generateOrganizationCode(name: string): Promise<string> {
     .replace(/[^a-z0-9\s]/g, '')
     .split(/\s+/)
     .slice(0, 3)
-    .map(word => word.substring(0, 4))
+    .map((word) => word.substring(0, 4))
     .join('');
-  
+
   // Ensure minimum length
   if (baseCode.length < 3) {
     baseCode = baseCode.padEnd(3, '0');
   }
-  
+
   // Ensure it's unique
   let code = baseCode.substring(0, 12);
   let attempts = 0;
-  
+
   while (attempts < 100) {
     const check = await checkOrganizationCodeAvailability(code);
     if (check.available) {
@@ -149,7 +198,7 @@ export async function generateOrganizationCode(name: string): Promise<string> {
     code = `${baseCode}${Math.floor(Math.random() * 100)}`.substring(0, 12);
     attempts++;
   }
-  
+
   // Fallback to random code
   return `${baseCode.substring(0, 8)}${crypto.randomInt(1000, 9999)}`;
 }
@@ -166,11 +215,13 @@ export interface PasswordValidationResult {
   strength: 'weak' | 'fair' | 'good' | 'strong' | 'excellent';
 }
 
-export async function validatePasswordStrength(password: string): Promise<PasswordValidationResult> {
+export async function validatePasswordStrength(
+  password: string
+): Promise<PasswordValidationResult> {
   const errors: string[] = [];
   const suggestions: string[] = [];
   let score = 0;
-  
+
   // Length check
   if (password.length < PASSWORD_MIN_LENGTH) {
     errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters`);
@@ -178,7 +229,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
   } else {
     score += 1;
   }
-  
+
   // Uppercase check
   if (!/[A-Z]/.test(password)) {
     errors.push('Password must contain at least one uppercase letter');
@@ -186,7 +237,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
   } else {
     score += 1;
   }
-  
+
   // Lowercase check
   if (!/[a-z]/.test(password)) {
     errors.push('Password must contain at least one lowercase letter');
@@ -194,7 +245,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
   } else {
     score += 1;
   }
-  
+
   // Number check
   if (!/[0-9]/.test(password)) {
     errors.push('Password must contain at least one number');
@@ -202,7 +253,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
   } else {
     score += 1;
   }
-  
+
   // Special character check
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
@@ -210,7 +261,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
   } else {
     score += 1;
   }
-  
+
   // Additional checks for strong passwords
   if (password.length >= 16) score += 1;
   if (/\d{3,}/.test(password)) score += 1; // Multiple consecutive numbers
@@ -220,7 +271,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
     score = Math.max(0, score - 1);
     errors.push('Avoid repeated characters');
   }
-  
+
   // Common patterns to avoid
   const commonPatterns = [
     /password/i,
@@ -234,7 +285,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
     /master/i,
     /login/i,
   ];
-  
+
   for (const pattern of commonPatterns) {
     if (pattern.test(password)) {
       errors.push('Avoid common passwords or patterns');
@@ -243,7 +294,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
       break;
     }
   }
-  
+
   // Determine strength label
   let strength: PasswordValidationResult['strength'];
   if (score < 3) {
@@ -257,7 +308,7 @@ export async function validatePasswordStrength(password: string): Promise<Passwo
   } else {
     strength = 'excellent';
   }
-  
+
   return {
     isValid: errors.length === 0,
     score: Math.min(score, 10),
@@ -282,11 +333,11 @@ export async function checkPasswordHistory(
     take: PASSWORD_HISTORY_LIMIT,
     select: { passwordHash: true },
   });
-  
+
   if (history.length === 0) {
     return { valid: true };
   }
-  
+
   // Check against history
   for (const record of history) {
     const isMatch = await PasswordService.verify(newPassword, record.passwordHash);
@@ -297,7 +348,7 @@ export async function checkPasswordHistory(
       };
     }
   }
-  
+
   return { valid: true };
 }
 
@@ -305,9 +356,7 @@ export async function checkPasswordHistory(
 // INVITATION PROCESSING
 // =============================================================================
 
-export async function processInvitation(
-  code: string
-): Promise<{
+export async function processInvitation(code: string): Promise<{
   valid: boolean;
   invitation?: any;
   error?: string;
@@ -323,26 +372,26 @@ export async function processInvitation(
       organization: true,
     },
   });
-  
+
   if (!invitation) {
     return {
       valid: false,
       error: 'Invalid or expired invitation code',
     };
   }
-  
+
   // Check if email already registered
   const existingUser = await prisma.user.findUnique({
     where: { email: invitation.email },
   });
-  
+
   if (existingUser) {
     return {
       valid: false,
       error: 'This email is already registered. Please login instead.',
     };
   }
-  
+
   return {
     valid: true,
     invitation,
@@ -357,15 +406,15 @@ export async function getRegistrationSession(sessionId: string) {
   const session = await prisma.registrationSession.findUnique({
     where: { id: sessionId },
   });
-  
+
   if (!session) {
     throw new AppError('Registration session not found', 404, 'SESSION_NOT_FOUND');
   }
-  
+
   if (new Date() > session.expiresAt) {
     throw new AppError('Registration session has expired', 400, 'SESSION_EXPIRED');
   }
-  
+
   return session;
 }
 
@@ -413,7 +462,7 @@ export async function createOrganizationWithOwner(data: {
   taxNumber?: string;
   logoUrl?: string;
   useCases?: string[];
-  
+
   // Branch
   branchName: string;
   branchCode?: string;
@@ -422,7 +471,7 @@ export async function createOrganizationWithOwner(data: {
   branchState?: string;
   branchCountry?: string;
   branchPincode?: string;
-  
+
   // User
   email: string;
   firstName: string;
@@ -431,26 +480,26 @@ export async function createOrganizationWithOwner(data: {
   mobile?: string;
   mobileVerified?: boolean;
   passwordHash: string;
-  
+
   // MFA
   mfaEnabled: boolean;
   mfaMethod?: string;
   mfaSecret?: string;
-  
+
   // Terms
   termsAccepted: boolean;
   privacyAccepted: boolean;
   cookieAccepted?: boolean;
   marketingConsent?: boolean;
-  
+
   // Location
   country: string;
   timezone?: string;
   language?: string;
-  
+
   // Invite
   inviteCode?: string;
-  
+
   // Metadata
   ipAddress?: string;
   userAgent?: string;
@@ -460,11 +509,11 @@ export async function createOrganizationWithOwner(data: {
     const ownerRole = await tx.role.findFirst({
       where: { key: 'owner' },
     });
-    
+
     if (!ownerRole) {
       throw new AppError('System configuration error: Owner role not found', 500);
     }
-    
+
     // Create Organization
     const organization = await tx.organization.create({
       data: {
@@ -492,7 +541,7 @@ export async function createOrganizationWithOwner(data: {
         status: 'active',
       },
     });
-    
+
     // Create Branch
     const branch = await tx.branch.create({
       data: {
@@ -508,7 +557,7 @@ export async function createOrganizationWithOwner(data: {
         status: 'active',
       },
     });
-    
+
     // Create User
     const user = await tx.user.create({
       data: {
@@ -541,7 +590,7 @@ export async function createOrganizationWithOwner(data: {
         statusDescription: 'Active',
       },
     });
-    
+
     // Create Membership
     await tx.userTenant.create({
       data: {
@@ -552,7 +601,7 @@ export async function createOrganizationWithOwner(data: {
         joinedAt: new Date(),
       },
     });
-    
+
     // Create Role Assignment
     await tx.userRoleAssignment.create({
       data: {
@@ -561,14 +610,14 @@ export async function createOrganizationWithOwner(data: {
         organizationId: organization.id,
       },
     });
-    
+
     // Create Profile
     await tx.profile.create({
       data: {
         userId: user.id,
       },
     });
-    
+
     // Create Default Workspace
     await tx.workspace.create({
       data: {
@@ -578,17 +627,37 @@ export async function createOrganizationWithOwner(data: {
         description: 'Default workspace for your organization',
       },
     });
-    
+
     // Create Default Settings
     await tx.organizationSettings.createMany({
       data: [
-        { organizationId: organization.id, key: 'default_language', value: data.language || 'en', category: 'general' },
-        { organizationId: organization.id, key: 'default_timezone', value: data.timezone || 'UTC', category: 'general' },
-        { organizationId: organization.id, key: 'session_timeout', value: '3600', category: 'security' },
-        { organizationId: organization.id, key: 'mfa_required', value: data.mfaEnabled ? 'true' : 'false', category: 'security' },
+        {
+          organizationId: organization.id,
+          key: 'default_language',
+          value: data.language || 'en',
+          category: 'general',
+        },
+        {
+          organizationId: organization.id,
+          key: 'default_timezone',
+          value: data.timezone || 'UTC',
+          category: 'general',
+        },
+        {
+          organizationId: organization.id,
+          key: 'session_timeout',
+          value: '3600',
+          category: 'security',
+        },
+        {
+          organizationId: organization.id,
+          key: 'mfa_required',
+          value: data.mfaEnabled ? 'true' : 'false',
+          category: 'security',
+        },
       ],
     });
-    
+
     // Create Audit Log
     await tx.auditLog.create({
       data: {
@@ -607,7 +676,7 @@ export async function createOrganizationWithOwner(data: {
         },
       },
     });
-    
+
     // Store password in history
     await tx.passwordHistory.create({
       data: {
@@ -615,7 +684,7 @@ export async function createOrganizationWithOwner(data: {
         passwordHash: data.passwordHash,
       },
     });
-    
+
     // Mark invitation as used if exists
     if (data.inviteCode) {
       await tx.invitation.updateMany({
@@ -627,7 +696,7 @@ export async function createOrganizationWithOwner(data: {
         },
       });
     }
-    
+
     return { organization, branch, user };
   });
 }

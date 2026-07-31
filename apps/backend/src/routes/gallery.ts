@@ -84,56 +84,60 @@ router.get('/projects/:projectId/gallery', async (req, res, next) => {
  *       404:
  *         description: Project not found
  */
-router.post('/projects/:projectId/gallery', authenticateToken, async (req: AuthRequest, res, next) => {
-  try {
-    const { mediaUrl, caption } = req.body;
+router.post(
+  '/projects/:projectId/gallery',
+  authenticateToken,
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { mediaUrl, caption } = req.body;
 
-    if (!mediaUrl) {
-      throw new AppError('mediaUrl is required', 400, 'MISSING_MEDIA_URL');
+      if (!mediaUrl) {
+        throw new AppError('mediaUrl is required', 400, 'MISSING_MEDIA_URL');
+      }
+
+      const { data: project, error: projError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.projectId)
+        .single();
+
+      if (projError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      const { data: lastItem } = await supabase
+        .from('project_gallery')
+        .select('order_index')
+        .eq('project_id', req.params.projectId)
+        .order('order_index', { ascending: false })
+        .limit(1)
+        .single();
+
+      const nextIndex = (lastItem?.order_index || -1) + 1;
+
+      const { data, error } = await supabase
+        .from('project_gallery')
+        .insert({
+          project_id: req.params.projectId,
+          media_url: mediaUrl,
+          caption: caption || null,
+          order_index: nextIndex,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
     }
-
-    const { data: project, error: projError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.projectId)
-      .single();
-
-    if (projError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
-    }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    const { data: lastItem } = await supabase
-      .from('project_gallery')
-      .select('order_index')
-      .eq('project_id', req.params.projectId)
-      .order('order_index', { ascending: false })
-      .limit(1)
-      .single();
-
-    const nextIndex = (lastItem?.order_index || -1) + 1;
-
-    const { data, error } = await supabase
-      .from('project_gallery')
-      .insert({
-        project_id: req.params.projectId,
-        media_url: mediaUrl,
-        caption: caption || null,
-        order_index: nextIndex,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    res.status(201).json(data);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * @swagger
@@ -176,37 +180,41 @@ router.post('/projects/:projectId/gallery', authenticateToken, async (req: AuthR
  *       403:
  *         description: Not the project owner
  */
-router.put('/projects/:projectId/gallery/:imageId', authenticateToken, async (req: AuthRequest, res, next) => {
-  try {
-    const { data: project, error: projError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.projectId)
-      .single();
+router.put(
+  '/projects/:projectId/gallery/:imageId',
+  authenticateToken,
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { data: project, error: projError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.projectId)
+        .single();
 
-    if (projError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      if (projError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      const { data, error } = await supabase
+        .from('project_gallery')
+        .update(req.body)
+        .eq('id', req.params.imageId)
+        .eq('project_id', req.params.projectId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json(data);
+    } catch (error) {
+      next(error);
     }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    const { data, error } = await supabase
-      .from('project_gallery')
-      .update(req.body)
-      .eq('id', req.params.imageId)
-      .eq('project_id', req.params.projectId)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    res.json(data);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * @swagger
@@ -235,34 +243,38 @@ router.put('/projects/:projectId/gallery/:imageId', authenticateToken, async (re
  *       403:
  *         description: Not the project owner
  */
-router.delete('/projects/:projectId/gallery/:imageId', authenticateToken, async (req: AuthRequest, res, next) => {
-  try {
-    const { data: project, error: projError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.projectId)
-      .single();
+router.delete(
+  '/projects/:projectId/gallery/:imageId',
+  authenticateToken,
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { data: project, error: projError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.projectId)
+        .single();
 
-    if (projError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      if (projError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      const { error } = await supabase
+        .from('project_gallery')
+        .delete()
+        .eq('id', req.params.imageId)
+        .eq('project_id', req.params.projectId);
+
+      if (error) throw error;
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    const { error } = await supabase
-      .from('project_gallery')
-      .delete()
-      .eq('id', req.params.imageId)
-      .eq('project_id', req.params.projectId);
-
-    if (error) throw error;
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 export default router;

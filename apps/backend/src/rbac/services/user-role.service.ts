@@ -22,10 +22,12 @@ export class UserRoleService {
   async listForUser(userId: string, orgId: string) {
     const { data } = await this.db
       .from('user_roles')
-      .select(`
+      .select(
+        `
         id, role_id, organization_id, resource_type, resource_id,
         status, valid_from, valid_until, assigned_at, assigned_by
-      `)
+      `
+      )
       .eq('user_id', userId)
       .eq('organization_id', orgId)
       .order('assigned_at', { ascending: false });
@@ -43,10 +45,7 @@ export class UserRoleService {
       throw Object.assign(new Error('Role not found'), { status: 404 });
     }
     if (role.organization_id && role.organization_id !== orgId) {
-      throw Object.assign(
-        new Error('Role does not belong to this organization'),
-        { status: 400 }
-      );
+      throw Object.assign(new Error('Role does not belong to this organization'), { status: 400 });
     }
 
     // Detect duplicate active assignment
@@ -59,10 +58,7 @@ export class UserRoleService {
       .eq('status', 'active')
       .maybeSingle();
     if (existing) {
-      throw Object.assign(
-        new Error('User already has this role active'),
-        { status: 409 }
-      );
+      throw Object.assign(new Error('User already has this role active'), { status: 409 });
     }
 
     const { data, error } = await this.db
@@ -76,7 +72,7 @@ export class UserRoleService {
         status: 'active',
         valid_from: new Date().toISOString(),
         valid_until: input.validUntil,
-        assigned_by: actorId
+        assigned_by: actorId,
       })
       .select()
       .single();
@@ -89,7 +85,7 @@ export class UserRoleService {
       resourceType: 'user_role',
       resourceId: data.id,
       newValues: data,
-      description: `Assigned role ${input.roleId} to user ${userId}`
+      description: `Assigned role ${input.roleId} to user ${userId}`,
     });
 
     // Invalidate the affected user's policy
@@ -99,7 +95,10 @@ export class UserRoleService {
 
   async revoke(assignmentId: string, actorId: string, reason?: string) {
     const { data: before } = await this.db
-      .from('user_roles').select('*').eq('id', assignmentId).single();
+      .from('user_roles')
+      .select('*')
+      .eq('id', assignmentId)
+      .single();
     if (!before) throw Object.assign(new Error('Not found'), { status: 404 });
 
     const { error } = await this.db
@@ -108,7 +107,7 @@ export class UserRoleService {
         status: 'suspended',
         revoked_at: new Date().toISOString(),
         revoked_by: actorId,
-        revoke_reason: reason
+        revoke_reason: reason,
       })
       .eq('id', assignmentId);
     if (error) throw new Error(`Revoke failed: ${error.message}`);
@@ -120,7 +119,7 @@ export class UserRoleService {
       resourceType: 'user_role',
       resourceId: assignmentId,
       oldValues: before,
-      newValues: { status: 'suspended', reason }
+      newValues: { status: 'suspended', reason },
     });
 
     await this.engine.invalidate(before.user_id, before.organization_id);
@@ -136,7 +135,9 @@ export class UserRoleService {
     orgId: string,
     actorId: string
   ): Promise<{ inserted: number; skipped: number; errors: number }> {
-    let inserted = 0, skipped = 0, errors = 0;
+    let inserted = 0,
+      skipped = 0,
+      errors = 0;
     for (const userId of userIds) {
       try {
         await this.assign(userId, { roleId }, orgId, actorId);
@@ -151,7 +152,7 @@ export class UserRoleService {
       actorId,
       action: 'user_role.bulk_assign',
       description: `Bulk-assigned role ${roleId} to ${userIds.length} users`,
-      newValues: { roleId, requested: userIds.length, inserted, skipped, errors }
+      newValues: { roleId, requested: userIds.length, inserted, skipped, errors },
     });
     return { inserted, skipped, errors };
   }

@@ -125,20 +125,16 @@ export class MenuService {
 
     const favoriteIds = new Set<string>(favorites?.map((f: any) => f.menu_id) || []);
     const usageMap = new Map<string, any>(
-      (favorites || []).map((f: any) => [f.menu_id, { last_accessed_at: f.last_accessed_at, access_count: f.access_count }])
+      (favorites || []).map((f: any) => [
+        f.menu_id,
+        { last_accessed_at: f.last_accessed_at, access_count: f.access_count },
+      ])
     );
 
     // Filter and transform menus
     const menuNodes = await Promise.all(
       rawMenus!.map((menu, index) =>
-        this.transformMenuNode(
-          menu,
-          userId,
-          organizationId,
-          favoriteIds,
-          usageMap,
-          rawMenus!
-        )
+        this.transformMenuNode(menu, userId, organizationId, favoriteIds, usageMap, rawMenus!)
       )
     );
 
@@ -147,14 +143,14 @@ export class MenuService {
 
     // Filter by category if specified
     const filteredTree = options?.category
-      ? tree.filter(m => m.category === options.category)
+      ? tree.filter((m) => m.category === options.category)
       : tree;
 
     const result: MenuTree = {
       items: filteredTree,
       timestamp: new Date(),
       version: 1,
-      categories: (categories || []).map(c => ({
+      categories: (categories || []).map((c) => ({
         id: c.id,
         key: c.key,
         label: c.label,
@@ -206,7 +202,9 @@ export class MenuService {
       userId,
       organizationId,
       new Set([menuId]),
-      new Map<string, any>([[menuId, { last_accessed_at: usage?.last_accessed_at, access_count: usage?.access_count }]]),
+      new Map<string, any>([
+        [menuId, { last_accessed_at: usage?.last_accessed_at, access_count: usage?.access_count }],
+      ]),
       allMenus || []
     );
   }
@@ -243,8 +241,15 @@ export class MenuService {
     const favoriteIds = new Set<string>(favorites?.map((f: any) => f.menu_id) || []);
 
     return Promise.all(
-      (menus || []).map(menu =>
-        this.transformMenuNode(menu, userId, organizationId, favoriteIds, new Map<string, any>(), allMenus || [])
+      (menus || []).map((menu) =>
+        this.transformMenuNode(
+          menu,
+          userId,
+          organizationId,
+          favoriteIds,
+          new Map<string, any>(),
+          allMenus || []
+        )
       )
     );
   }
@@ -252,10 +257,7 @@ export class MenuService {
   /**
    * Get user's favorite menus
    */
-  async getFavoriteMenus(
-    organizationId: string,
-    userId: string
-  ): Promise<MenuNode[]> {
+  async getFavoriteMenus(organizationId: string, userId: string): Promise<MenuNode[]> {
     const { data: usage, error } = await this.supabase
       .from('menu_usage')
       .select('menu_id')
@@ -265,7 +267,7 @@ export class MenuService {
 
     if (error || !usage) return [];
 
-    const menuIds = usage.map(u => u.menu_id);
+    const menuIds = usage.map((u) => u.menu_id);
     if (!menuIds.length) return [];
 
     const { data: menus } = await this.supabase
@@ -283,8 +285,15 @@ export class MenuService {
       .eq('organization_id', organizationId);
 
     return Promise.all(
-      menus.map(menu =>
-        this.transformMenuNode(menu, userId, organizationId, new Set(menuIds), new Map<string, any>(), allMenus || [])
+      menus.map((menu) =>
+        this.transformMenuNode(
+          menu,
+          userId,
+          organizationId,
+          new Set(menuIds),
+          new Map<string, any>(),
+          allMenus || []
+        )
       )
     );
   }
@@ -292,11 +301,7 @@ export class MenuService {
   /**
    * Get user's recently accessed menus
    */
-  async getRecentMenus(
-    organizationId: string,
-    userId: string,
-    limit = 5
-  ): Promise<MenuNode[]> {
+  async getRecentMenus(organizationId: string, userId: string, limit = 5): Promise<MenuNode[]> {
     const { data: usage, error } = await this.supabase
       .from('menu_usage')
       .select('menu_id, last_accessed_at')
@@ -307,7 +312,7 @@ export class MenuService {
 
     if (error || !usage) return [];
 
-    const menuIds = usage.map(u => u.menu_id);
+    const menuIds = usage.map((u) => u.menu_id);
     if (!menuIds.length) return [];
 
     const { data: menus } = await this.supabase
@@ -326,8 +331,15 @@ export class MenuService {
     const usageMap = new Map<string, any>(usage.map((u: any) => [u.menu_id, u]));
 
     return Promise.all(
-      menus.map(menu =>
-        this.transformMenuNode(menu, userId, organizationId, new Set<string>(), usageMap, allMenus || [])
+      menus.map((menu) =>
+        this.transformMenuNode(
+          menu,
+          userId,
+          organizationId,
+          new Set<string>(),
+          usageMap,
+          allMenus || []
+        )
       )
     );
   }
@@ -335,11 +347,7 @@ export class MenuService {
   /**
    * Track menu access (for recent/favorites)
    */
-  async trackMenuAccess(
-    menuId: string,
-    organizationId: string,
-    userId: string
-  ): Promise<void> {
+  async trackMenuAccess(menuId: string, organizationId: string, userId: string): Promise<void> {
     const { data: existing } = await this.supabase
       .from('menu_usage')
       .select('*')
@@ -358,14 +366,12 @@ export class MenuService {
         .eq('menu_id', menuId)
         .eq('user_id', userId);
     } else {
-      await this.supabase
-        .from('menu_usage')
-        .insert({
-          menu_id: menuId,
-          user_id: userId,
-          organization_id: organizationId,
-          access_count: 1,
-        });
+      await this.supabase.from('menu_usage').insert({
+        menu_id: menuId,
+        user_id: userId,
+        organization_id: organizationId,
+        access_count: 1,
+      });
     }
 
     // Invalidate cache
@@ -375,11 +381,7 @@ export class MenuService {
   /**
    * Toggle menu favorite status
    */
-  async toggleFavorite(
-    menuId: string,
-    organizationId: string,
-    userId: string
-  ): Promise<void> {
+  async toggleFavorite(menuId: string, organizationId: string, userId: string): Promise<void> {
     const { data: existing } = await this.supabase
       .from('menu_usage')
       .select('is_favorite')
@@ -397,14 +399,12 @@ export class MenuService {
         .eq('menu_id', menuId)
         .eq('user_id', userId);
     } else {
-      await this.supabase
-        .from('menu_usage')
-        .insert({
-          menu_id: menuId,
-          user_id: userId,
-          organization_id: organizationId,
-          is_favorite: true,
-        });
+      await this.supabase.from('menu_usage').insert({
+        menu_id: menuId,
+        user_id: userId,
+        organization_id: organizationId,
+        is_favorite: true,
+      });
     }
 
     // Invalidate cache
@@ -420,7 +420,7 @@ export class MenuService {
     menuData: Partial<MenuNode>
   ): Promise<MenuNode> {
     const parentId = menuData.parentId;
-    const nestingLevel = parentId ? await this.getNestingLevel(parentId, organizationId) + 1 : 0;
+    const nestingLevel = parentId ? (await this.getNestingLevel(parentId, organizationId)) + 1 : 0;
 
     const { data: newMenu, error } = await this.supabase
       .from('menus')
@@ -544,17 +544,15 @@ export class MenuService {
     // Invalidate cache
     await this.invalidateOrgCache(organizationId);
 
-    return this.transformMenuNode(updatedMenu, userId, organizationId, new Set(), new Map(), [updatedMenu]);
+    return this.transformMenuNode(updatedMenu, userId, organizationId, new Set(), new Map(), [
+      updatedMenu,
+    ]);
   }
 
   /**
    * Delete menu item (soft delete by setting visible=false)
    */
-  async deleteMenu(
-    menuId: string,
-    organizationId: string,
-    userId: string
-  ): Promise<void> {
+  async deleteMenu(menuId: string, organizationId: string, userId: string): Promise<void> {
     const { data: menu } = await this.supabase
       .from('menus')
       .select('*')
@@ -594,7 +592,7 @@ export class MenuService {
 
     if (error) return [];
 
-    return categories.map(c => ({
+    return categories.map((c) => ({
       id: c.id,
       key: c.key,
       label: c.label,
@@ -618,12 +616,18 @@ export class MenuService {
     allMenus: any[]
   ): Promise<MenuNode> {
     // Check permissions
-    if (!await this.checkMenuPermissions(menu, userId, organizationId)) {
+    if (!(await this.checkMenuPermissions(menu, userId, organizationId))) {
       return null as any;
     }
 
     // Check feature flags
-    if (menu.feature_flag && !await this.featureFlagService.isEnabled(menu.feature_flag, organizationId, { userId, organizationId })) {
+    if (
+      menu.feature_flag &&
+      !(await this.featureFlagService.isEnabled(menu.feature_flag, organizationId, {
+        userId,
+        organizationId,
+      }))
+    ) {
       return null as any;
     }
 
@@ -652,11 +656,13 @@ export class MenuService {
       visible: menu.visible,
       visibilityType: menu.visibility_type,
       visibilityCondition: menu.visibility_condition,
-      badge: menu.badge_icon ? {
-        icon: menu.badge_icon,
-        value: menu.badge_counter_value,
-        style: menu.badge_style || 'default',
-      } : undefined,
+      badge: menu.badge_icon
+        ? {
+            icon: menu.badge_icon,
+            value: menu.badge_counter_value,
+            style: menu.badge_style || 'default',
+          }
+        : undefined,
       isFavorite: favoriteIds.has(menu.id),
       isRecent: !!usage,
       viewCount: menu.view_count,
@@ -668,7 +674,7 @@ export class MenuService {
 
   private buildMenuTree(nodes: (MenuNode | null)[]): MenuNode[] {
     const validNodes = nodes.filter((n): n is MenuNode => n !== null);
-    const map = new Map(validNodes.map(n => [n.id, { ...n, children: [] }]));
+    const map = new Map(validNodes.map((n) => [n.id, { ...n, children: [] }]));
     const tree: MenuNode[] = [];
 
     for (const node of map.values()) {
@@ -703,18 +709,18 @@ export class MenuService {
     if (menu.required_permissions && menu.required_permissions.length > 0) {
       if (menu.requires_all_permissions) {
         const allHave = await Promise.all(
-          menu.required_permissions.map(p =>
+          menu.required_permissions.map((p) =>
             this.permissionService.hasPermission(p, userId, organizationId)
           )
         );
-        if (!allHave.every(h => h)) return false;
+        if (!allHave.every((h) => h)) return false;
       } else {
         const anyHave = await Promise.all(
-          menu.required_permissions.map(p =>
+          menu.required_permissions.map((p) =>
             this.permissionService.hasPermission(p, userId, organizationId)
           )
         );
-        if (!anyHave.some(h => h)) return false;
+        if (!anyHave.some((h) => h)) return false;
       }
     }
 
@@ -749,17 +755,15 @@ export class MenuService {
 
     const nextVersion = (latestVersion?.version_number || 0) + 1;
 
-    await this.supabase
-      .from('menu_versions')
-      .insert({
-        organization_id: organizationId,
-        menu_id: menu.id,
-        version_number: nextVersion,
-        snapshot: menu,
-        change_type: changeType,
-        changed_fields: changedFields,
-        changed_by: userId,
-      });
+    await this.supabase.from('menu_versions').insert({
+      organization_id: organizationId,
+      menu_id: menu.id,
+      version_number: nextVersion,
+      snapshot: menu,
+      change_type: changeType,
+      changed_fields: changedFields,
+      changed_by: userId,
+    });
   }
 
   private getCacheKey(organizationId: string, userId: string, category?: string): string {

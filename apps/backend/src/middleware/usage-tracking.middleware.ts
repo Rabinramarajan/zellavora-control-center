@@ -34,7 +34,7 @@ export class UsageTrackingMiddleware {
               'endpoint',
               req.method + ' ' + req.path
             )
-            .catch(err => console.error('Failed to track usage', err));
+            .catch((err) => console.error('Failed to track usage', err));
         }
 
         return originalSend.call(this, data);
@@ -90,7 +90,7 @@ export class UsageTrackingMiddleware {
 
       // Only track if request is for report generation
       if (req.path.includes('/report') && req.method === 'POST' && organizationId && user) {
-        const reportId = (req.body?.id || 'unknown-report');
+        const reportId = req.body?.id || 'unknown-report';
 
         await this.subscriptionService.trackUsageEvent(
           organizationId,
@@ -122,7 +122,7 @@ export class UsageTrackingMiddleware {
         user &&
         res.statusCode === 201
       ) {
-        const newUserId = (req.body?.id || 'unknown-user');
+        const newUserId = req.body?.id || 'unknown-user';
 
         await this.subscriptionService.trackUsageEvent(
           organizationId,
@@ -153,7 +153,7 @@ export class UsageTrackingMiddleware {
         user &&
         res.statusCode === 201
       ) {
-        const projectId = (req.body?.id || 'unknown-project');
+        const projectId = req.body?.id || 'unknown-project';
 
         await this.subscriptionService.trackUsageEvent(
           organizationId,
@@ -184,7 +184,7 @@ export class UsageTrackingMiddleware {
         organizationId &&
         user
       ) {
-        const workflowId = (req.params?.workflowId || 'unknown-workflow');
+        const workflowId = req.params?.workflowId || 'unknown-workflow';
 
         await this.subscriptionService.trackUsageEvent(
           organizationId,
@@ -209,7 +209,9 @@ export class UsageTrackingMiddleware {
       const organizationId = this.extractOrganizationId(req);
 
       if (
-        (req.path.includes('/ai') || req.path.includes('/chat') || req.path.includes('/generate')) &&
+        (req.path.includes('/ai') ||
+          req.path.includes('/chat') ||
+          req.path.includes('/generate')) &&
         req.method === 'POST' &&
         organizationId &&
         user
@@ -246,7 +248,7 @@ export class UsageTrackingMiddleware {
         user &&
         res.statusCode === 201
       ) {
-        const integrationName = (req.body?.type || 'unknown');
+        const integrationName = req.body?.type || 'unknown';
 
         await this.subscriptionService.trackUsageEvent(
           organizationId,
@@ -280,7 +282,7 @@ export class UsageTrackingMiddleware {
           // Check if this is a limit-exceeding operation
           const limitType = this.getLimitTypeFromPath(req.path);
 
-          if (limits.errors.some(e => e.includes(limitType))) {
+          if (limits.errors.some((e) => e.includes(limitType))) {
             return res.status(402).json({
               error: 'License limit exceeded',
               limitType,
@@ -313,10 +315,7 @@ export class UsageTrackingMiddleware {
       }
 
       try {
-        const hasFeature = await this.subscriptionService.hasFeature(
-          organizationId,
-          featureKey
-        );
+        const hasFeature = await this.subscriptionService.hasFeature(organizationId, featureKey);
 
         if (!hasFeature) {
           return res.status(403).json({
@@ -346,10 +345,7 @@ export class UsageTrackingMiddleware {
       }
 
       try {
-        const hasModule = await this.subscriptionService.hasModuleAccess(
-          organizationId,
-          moduleKey
-        );
+        const hasModule = await this.subscriptionService.hasModuleAccess(organizationId, moduleKey);
 
         if (!hasModule) {
           return res.status(403).json({
@@ -399,8 +395,6 @@ export class UsageTrackingMiddleware {
 /**
  * Factory function to create usage tracking middleware
  */
-export function createUsageTrackingMiddleware(
-  subscriptionService: SubscriptionService
-) {
+export function createUsageTrackingMiddleware(subscriptionService: SubscriptionService) {
   return new UsageTrackingMiddleware(subscriptionService);
 }

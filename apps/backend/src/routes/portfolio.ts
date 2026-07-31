@@ -77,26 +77,22 @@ router.get('/profile', async (req: AuthRequest, res, next) => {
  *       401:
  *         description: Unauthorized
  */
-router.put(
-  '/profile',
-  authenticateToken,
-  async (req: AuthRequest, res, next) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(req.body)
-        .eq('user_id', req.userId)
-        .select()
-        .single();
+router.put('/profile', authenticateToken, async (req: AuthRequest, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(req.body)
+      .eq('user_id', req.userId)
+      .select()
+      .single();
 
-      if (error) throw error;
+    if (error) throw error;
 
-      res.json(data);
-    } catch (error) {
-      next(error);
-    }
+    res.json(data);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 // ============================================================================
 // SKILLS

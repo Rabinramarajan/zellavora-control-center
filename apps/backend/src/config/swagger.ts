@@ -466,10 +466,7 @@ All endpoints are prefixed with \`/api/v1\`.
     const scanDir = isProduction
       ? path.resolve(configDir, '..').replace(/\\/g, '/') // dist/src
       : path.resolve(configDir, '..').replace(/\\/g, '/'); // src
-    return [
-      `${scanDir}/**/*.ts`,
-      `${scanDir}/**/*.js`,
-    ];
+    return [`${scanDir}/**/*.ts`, `${scanDir}/**/*.js`];
   })(),
 };
 
@@ -480,7 +477,9 @@ All endpoints are prefixed with \`/api/v1\`.
  */
 function buildSpec(): object {
   if (process.env.VERCEL) {
-    console.log('[swagger] Running on Vercel, serving base definition to prevent cold-start filesystem scanning');
+    console.log(
+      '[swagger] Running on Vercel, serving base definition to prevent cold-start filesystem scanning'
+    );
     return options.definition as object;
   }
   try {
@@ -495,5 +494,3 @@ function buildSpec(): object {
 }
 
 export const swaggerSpec = buildSpec();
-
-

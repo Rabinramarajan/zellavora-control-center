@@ -242,11 +242,11 @@ export class WorkflowService {
       if (!workflow) return { success: false, error: 'Workflow not found' };
 
       // Find current state
-      const currentStateConfig = workflow.states.find(s => s.name === instance.currentState);
+      const currentStateConfig = workflow.states.find((s) => s.name === instance.currentState);
       if (!currentStateConfig) return { success: false, error: 'Invalid state' };
 
       // Find transition
-      const transition = currentStateConfig.transitions.find(t => t.action === request.action);
+      const transition = currentStateConfig.transitions.find((t) => t.action === request.action);
       if (!transition) return { success: false, error: 'Invalid action' };
 
       // Check conditions
@@ -682,16 +682,12 @@ export class WorkflowService {
    * Private helper methods
    */
 
-  private async handleStateEntered(
-    instance: any,
-    newState: string,
-    userId: string
-  ): Promise<void> {
+  private async handleStateEntered(instance: any, newState: string, userId: string): Promise<void> {
     // Handle specific state logic
     const workflow = await this.getWorkflow(instance.workflow_id);
     if (!workflow) return;
 
-    const stateConfig = workflow.states.find(s => s.name === newState);
+    const stateConfig = workflow.states.find((s) => s.name === newState);
     if (!stateConfig) return;
 
     // If terminal state, mark as completed
@@ -715,10 +711,7 @@ export class WorkflowService {
     return true;
   }
 
-  private async checkApprovalChainComplete(
-    instanceId: string,
-    chainId: string
-  ): Promise<boolean> {
+  private async checkApprovalChainComplete(instanceId: string, chainId: string): Promise<boolean> {
     const { data: approvals, error } = await (this.supabase as any)
       .from('approvals')
       .select('status')

@@ -8,21 +8,27 @@ export class NotificationService {
     return this.repo.listByOrganization(orgId);
   }
 
-  async sendNotification(data: { organizationId: string; recipientId?: string | null; title?: string | null; body: string; channels?: string[] }) {
+  async sendNotification(data: {
+    organizationId: string;
+    recipientId?: string | null;
+    title?: string | null;
+    body: string;
+    channels?: string[];
+  }) {
     const notification = await this.repo.create({
       organizationId: data.organizationId,
       recipientId: data.recipientId,
       title: data.title,
       body: data.body,
       channels: data.channels || ['email'],
-      status: 'pending'
+      status: 'pending',
     });
 
     if (data.channels?.includes('email')) {
       // Trigger background email task using BullMQ queue
       await addQueueJob('send-otp', {
         email: 'admin@zellavora.com', // Real impl maps to recipient email
-        otp: data.body
+        otp: data.body,
       });
       await this.repo.updateStatus(notification.id, 'sent');
     }

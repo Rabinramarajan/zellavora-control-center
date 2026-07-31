@@ -4,11 +4,8 @@ export class AuthRepository extends BaseRepository {
   async findUserByUsernameOrEmail(identifier: string, tx?: TxClient) {
     return this.getDb(tx).user.findFirst({
       where: {
-        OR: [
-          { email: identifier },
-          { username: identifier }
-        ]
-      }
+        OR: [{ email: identifier }, { username: identifier }],
+      },
     });
   }
 
@@ -17,8 +14,8 @@ export class AuthRepository extends BaseRepository {
       where: { id },
       data: {
         isAccountLocked: true,
-        lastLockedDate: new Date()
-      }
+        lastLockedDate: new Date(),
+      },
     });
   }
 
@@ -26,8 +23,8 @@ export class AuthRepository extends BaseRepository {
     return this.getDb(tx).user.update({
       where: { id },
       data: {
-        successfulLoginAttempts: 0
-      }
+        successfulLoginAttempts: 0,
+      },
     });
   }
 
@@ -35,8 +32,8 @@ export class AuthRepository extends BaseRepository {
     return this.getDb(tx).user.update({
       where: { id },
       data: {
-        successfulLoginAttempts: { increment: 1 }
-      }
+        successfulLoginAttempts: { increment: 1 },
+      },
     });
   }
 }

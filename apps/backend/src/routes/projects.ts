@@ -59,7 +59,7 @@ router.get('/', async (req, res, next) => {
   try {
     const { page = 1, pageSize = 20, status } = req.query;
 
-    let query = supabase
+    const query = supabase
       .from('projects')
       .select('*', { count: 'exact' })
       .eq('status', status || 'published');
@@ -199,23 +199,28 @@ router.get('/:id', async (req, res, next) => {
  *       403:
  *         description: Insufficient role
  */
-router.post('/', authenticateToken, authorize('admin', 'editor'), async (req: AuthRequest, res, next) => {
-  try {
-    const data = CreateProjectSchema.parse(req.body);
+router.post(
+  '/',
+  authenticateToken,
+  authorize('admin', 'editor'),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const data = CreateProjectSchema.parse(req.body);
 
-    const { data: project, error } = await supabase
-      .from('projects')
-      .insert({ user_id: req.userId, ...data, status: 'draft' })
-      .select()
-      .single();
+      const { data: project, error } = await supabase
+        .from('projects')
+        .insert({ user_id: req.userId, ...data, status: 'draft' })
+        .select()
+        .single();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    res.status(201).json(project);
-  } catch (error) {
-    next(error);
+      res.status(201).json(project);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -250,36 +255,41 @@ router.post('/', authenticateToken, authorize('admin', 'editor'), async (req: Au
  *       404:
  *         description: Project not found
  */
-router.put('/:id', authenticateToken, authorize('admin', 'editor'), async (req: AuthRequest, res, next) => {
-  try {
-    const { data: project, error: fetchError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.id)
-      .single();
+router.put(
+  '/:id',
+  authenticateToken,
+  authorize('admin', 'editor'),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { data: project, error: fetchError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.id)
+        .single();
 
-    if (fetchError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      if (fetchError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      const { data: updated, error } = await supabase
+        .from('projects')
+        .update(req.body)
+        .eq('id', req.params.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json(updated);
+    } catch (error) {
+      next(error);
     }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    const { data: updated, error } = await supabase
-      .from('projects')
-      .update(req.body)
-      .eq('id', req.params.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    res.json(updated);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * @swagger
@@ -304,31 +314,36 @@ router.put('/:id', authenticateToken, authorize('admin', 'editor'), async (req: 
  *       404:
  *         description: Project not found
  */
-router.delete('/:id', authenticateToken, authorize('admin', 'editor'), async (req: AuthRequest, res, next) => {
-  try {
-    const { data: project, error: fetchError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', req.params.id)
-      .single();
+router.delete(
+  '/:id',
+  authenticateToken,
+  authorize('admin', 'editor'),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { data: project, error: fetchError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', req.params.id)
+        .single();
 
-    if (fetchError || !project) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      if (fetchError || !project) {
+        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+      }
+
+      if (project.user_id !== req.userId) {
+        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+      }
+
+      const { error } = await supabase.from('projects').delete().eq('id', req.params.id);
+
+      if (error) throw error;
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
-
-    if (project.user_id !== req.userId) {
-      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-    }
-
-    const { error } = await supabase.from('projects').delete().eq('id', req.params.id);
-
-    if (error) throw error;
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * @swagger
@@ -353,22 +368,31 @@ router.delete('/:id', authenticateToken, authorize('admin', 'editor'), async (re
  *             schema:
  *               $ref: '#/components/schemas/Project'
  */
-router.post('/:id/publish', authenticateToken, authorize('admin', 'editor'), async (req: AuthRequest, res, next) => {
-  try {
-    const { error } = await supabase
-      .from('projects')
-      .update({ status: 'published', published_at: new Date().toISOString() })
-      .eq('id', req.params.id);
+router.post(
+  '/:id/publish',
+  authenticateToken,
+  authorize('admin', 'editor'),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'published', published_at: new Date().toISOString() })
+        .eq('id', req.params.id);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    const { data: project } = await supabase.from('projects').select().eq('id', req.params.id).single();
+      const { data: project } = await supabase
+        .from('projects')
+        .select()
+        .eq('id', req.params.id)
+        .single();
 
-    res.json(project);
-  } catch (error) {
-    next(error);
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -393,18 +417,30 @@ router.post('/:id/publish', authenticateToken, authorize('admin', 'editor'), asy
  *             schema:
  *               $ref: '#/components/schemas/Project'
  */
-router.post('/:id/archive', authenticateToken, authorize('admin', 'editor'), async (req: AuthRequest, res, next) => {
-  try {
-    const { error } = await supabase.from('projects').update({ status: 'archived' }).eq('id', req.params.id);
+router.post(
+  '/:id/archive',
+  authenticateToken,
+  authorize('admin', 'editor'),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'archived' })
+        .eq('id', req.params.id);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    const { data: project } = await supabase.from('projects').select().eq('id', req.params.id).single();
+      const { data: project } = await supabase
+        .from('projects')
+        .select()
+        .eq('id', req.params.id)
+        .single();
 
-    res.json(project);
-  } catch (error) {
-    next(error);
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;

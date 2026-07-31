@@ -409,10 +409,10 @@ export function createPermissionRoutes(permissionService: PermissionService): Ro
         // Filter by action and status if provided
         let filtered = logs;
         if (action) {
-          filtered = filtered.filter(log => log.action === action);
+          filtered = filtered.filter((log) => log.action === action);
         }
         if (status) {
-          filtered = filtered.filter(log => log.status === status);
+          filtered = filtered.filter((log) => log.status === status);
         }
 
         return res.json({

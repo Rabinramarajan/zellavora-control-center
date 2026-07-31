@@ -9,10 +9,7 @@ const format = winston.format.combine(
 
 const transports = [
   new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize({ all: true }),
-      format
-    )
+    format: winston.format.combine(winston.format.colorize({ all: true }), format),
   }),
 ];
 

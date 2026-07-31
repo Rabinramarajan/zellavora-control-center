@@ -252,10 +252,7 @@ export function createLicensingRoutes(subscriptionService: SubscriptionService):
    */
   router.get('/:orgId/license/features/:featureKey', async (req: Request, res: Response) => {
     try {
-      const enabled = await subscriptionService.hasFeature(
-        req.params.orgId,
-        req.params.featureKey
-      );
+      const enabled = await subscriptionService.hasFeature(req.params.orgId, req.params.featureKey);
       res.json({ feature: req.params.featureKey, enabled });
     } catch (error) {
       console.error('Failed to check feature', error);

@@ -29,13 +29,15 @@ const router = Router();
 router.post('/message/send', authenticate, async (req, res, next) => {
   try {
     const { recipientId, body } = req.body;
-    res.json(wrapResponse({
-      messageId: 1,
-      status: 'Sent',
-      recipientId,
-      body,
-      timestamp: new Date().toISOString()
-    }));
+    res.json(
+      wrapResponse({
+        messageId: 1,
+        status: 'Sent',
+        recipientId,
+        body,
+        timestamp: new Date().toISOString(),
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -44,13 +46,15 @@ router.post('/message/send', authenticate, async (req, res, next) => {
 router.post('/email/send', authenticate, async (req, res, next) => {
   try {
     const { toEmail, subject, content } = req.body;
-    res.json(wrapResponse({
-      emailId: 1,
-      status: 'Queued',
-      toEmail,
-      subject,
-      timestamp: new Date().toISOString()
-    }));
+    res.json(
+      wrapResponse({
+        emailId: 1,
+        status: 'Queued',
+        toEmail,
+        subject,
+        timestamp: new Date().toISOString(),
+      })
+    );
   } catch (error) {
     next(error);
   }

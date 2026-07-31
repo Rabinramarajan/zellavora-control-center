@@ -9,14 +9,14 @@ let mockConfigs = [
     configSerialId: 1,
     configId: 101,
     configValue: 'Enabled',
-    configDescription: 'Enable Multi-Factor Authentication'
+    configDescription: 'Enable Multi-Factor Authentication',
   },
   {
     configSerialId: 2,
     configId: 102,
     configValue: '5',
-    configDescription: 'Maximum login attempts before lock'
-  }
+    configDescription: 'Maximum login attempts before lock',
+  },
 ];
 
 let currentBranches = [...mockBranches];
@@ -126,27 +126,33 @@ let currentBranches = [...mockBranches];
 
 // ==================== BRANCH / REGION ENDPOINTS ====================
 
-router.get('/MAsterConfig/Region/GetMaasterConfigInitialData', authenticate, async (req, res, next) => {
-  try {
-    res.json(wrapResponse({ regions: [] }));
-  } catch (error) {
-    next(error);
+router.get(
+  '/MAsterConfig/Region/GetMaasterConfigInitialData',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      res.json(wrapResponse({ regions: [] }));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 router.get('/Branch/Branch/new', authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({
-      admBranchId: 0,
-      actCompanyId: 1,
-      admLocationId: 1,
-      admRegionId: 1,
-      branchName: '',
-      effectiveDate: new Date().toISOString(),
-      statusId: 1,
-      statusValue: 'Active',
-      branchCode: ''
-    }));
+    res.json(
+      wrapResponse({
+        admBranchId: 0,
+        actCompanyId: 1,
+        admLocationId: 1,
+        admRegionId: 1,
+        branchName: '',
+        effectiveDate: new Date().toISOString(),
+        statusId: 1,
+        statusValue: 'Active',
+        branchCode: '',
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -162,18 +168,20 @@ router.get('/Branch/Branch/search', authenticate, async (req, res, next) => {
 
 router.post('/Branch/Branch/Search', authenticate, async (req, res, next) => {
   try {
-    const searchResultSet = currentBranches.map(b => ({
+    const searchResultSet = currentBranches.map((b) => ({
       admBranchId: String(b.admBranchId),
       branchName: b.branchName,
       effectiveDate: b.effectiveDate,
-      statusDescription: b.statusValue
+      statusDescription: b.statusValue,
     }));
-    res.json(wrapResponse({
-      searchResultSet,
-      totalCount: searchResultSet.length,
-      pageSize: req.body.pageSize || 10,
-      pageNumber: req.body.pageNumber || 1
-    }));
+    res.json(
+      wrapResponse({
+        searchResultSet,
+        totalCount: searchResultSet.length,
+        pageSize: req.body.pageSize || 10,
+        pageNumber: req.body.pageNumber || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -182,7 +190,7 @@ router.post('/Branch/Branch/Search', authenticate, async (req, res, next) => {
 router.post('/Branch/Branch/open', authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
-    const branch = currentBranches.find(b => b.admBranchId === id);
+    const branch = currentBranches.find((b) => b.admBranchId === id);
     res.json(wrapResponse(branch || currentBranches[0]));
   } catch (error) {
     next(error);
@@ -193,7 +201,9 @@ router.post('/Branch/Branch/save', authenticate, async (req, res, next) => {
   try {
     const branch = req.body;
     if (branch.admBranchId > 0) {
-      currentBranches = currentBranches.map(b => b.admBranchId === branch.admBranchId ? branch : b);
+      currentBranches = currentBranches.map((b) =>
+        b.admBranchId === branch.admBranchId ? branch : b
+      );
     } else {
       branch.admBranchId = currentBranches.length + 1;
       currentBranches.push(branch);
@@ -207,7 +217,7 @@ router.post('/Branch/Branch/save', authenticate, async (req, res, next) => {
 router.post('/Branch/Branch/delete', authenticate, async (req, res, next) => {
   try {
     const id = req.body.admBranchId;
-    currentBranches = currentBranches.filter(b => b.admBranchId !== id);
+    currentBranches = currentBranches.filter((b) => b.admBranchId !== id);
     res.json(wrapResponse({ admBranchId: id }));
   } catch (error) {
     next(error);
@@ -226,18 +236,20 @@ router.get('/config/search', authenticate, async (req, res, next) => {
 
 router.post('/config/search', authenticate, async (req, res, next) => {
   try {
-    const searchResult = mockConfigs.map(c => ({
+    const searchResult = mockConfigs.map((c) => ({
       configSerialId: c.configSerialId,
       configId: c.configId,
       configValue: c.configValue,
-      configDescription: c.configDescription
+      configDescription: c.configDescription,
     }));
-    res.json(wrapResponse({
-      searchResult,
-      totalCount: searchResult.length,
-      pageSize: req.body.pageSize || 10,
-      pageNumber: req.body.pageNumber || 1
-    }));
+    res.json(
+      wrapResponse({
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: req.body.pageSize || 10,
+        pageNumber: req.body.pageNumber || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -246,7 +258,7 @@ router.post('/config/search', authenticate, async (req, res, next) => {
 router.post('/config/open', authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
-    const conf = mockConfigs.find(c => c.configSerialId === id);
+    const conf = mockConfigs.find((c) => c.configSerialId === id);
     res.json(wrapResponse(conf || mockConfigs[0]));
   } catch (error) {
     next(error);
@@ -257,7 +269,7 @@ router.post('/config/save', authenticate, async (req, res, next) => {
   try {
     const conf = req.body;
     if (conf.configSerialId > 0) {
-      mockConfigs = mockConfigs.map(c => c.configSerialId === conf.configSerialId ? conf : c);
+      mockConfigs = mockConfigs.map((c) => (c.configSerialId === conf.configSerialId ? conf : c));
     } else {
       conf.configSerialId = mockConfigs.length + 1;
       mockConfigs.push(conf);
@@ -279,7 +291,7 @@ router.post('/config/Load', authenticate, async (req, res, next) => {
 router.post('/config/delete', authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
-    mockConfigs = mockConfigs.filter(c => c.configSerialId !== id);
+    mockConfigs = mockConfigs.filter((c) => c.configSerialId !== id);
     res.json(wrapResponse({ configSerialId: id }));
   } catch (error) {
     next(error);

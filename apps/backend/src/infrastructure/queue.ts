@@ -6,9 +6,10 @@ import { emailTemplates } from '../services/email.templates';
 
 const redisConnectionOptions = config.redisUrl ? { url: config.redisUrl } : undefined;
 
-export const emailQueue = redisConnectionOptions && config.redisEnabled
-  ? new Queue('email-queue', { connection: { host: '127.0.0.1', port: 6379 } })
-  : null;
+export const emailQueue =
+  redisConnectionOptions && config.redisEnabled
+    ? new Queue('email-queue', { connection: { host: '127.0.0.1', port: 6379 } })
+    : null;
 
 export interface EmailJob {
   name: string;
@@ -47,7 +48,12 @@ const processJobLocally = async (name: string, data: any): Promise<void> => {
         await sendPasswordResetEmail(data.email, data.resetLink, data.expiryHours);
         break;
       case 'send-user-invitation':
-        await sendUserInvitationEmail(data.email, data.invitationLink, data.invitedBy, data.tenantName);
+        await sendUserInvitationEmail(
+          data.email,
+          data.invitationLink,
+          data.invitedBy,
+          data.tenantName
+        );
         break;
       case 'send-2fa-code':
         await send2FACodeEmail(data.email, data.code, data.expiryMinutes);
@@ -65,7 +71,11 @@ const processJobLocally = async (name: string, data: any): Promise<void> => {
 };
 
 // OTP Email
-export const sendOtpEmail = async (email: string, otp: string, expiryMinutes: number = 10): Promise<boolean> => {
+export const sendOtpEmail = async (
+  email: string,
+  otp: string,
+  expiryMinutes: number = 10
+): Promise<boolean> => {
   try {
     const template = emailTemplates.otpVerification(otp, expiryMinutes);
     const result = await emailService.sendEmail({
@@ -111,7 +121,10 @@ export const sendWelcomeEmail = async (email: string, tenantName: string): Promi
 };
 
 // Email Verification
-export const sendEmailVerificationEmail = async (email: string, verificationLink: string): Promise<boolean> => {
+export const sendEmailVerificationEmail = async (
+  email: string,
+  verificationLink: string
+): Promise<boolean> => {
   try {
     const template = emailTemplates.emailVerification(verificationLink);
     const result = await emailService.sendEmail({
@@ -247,7 +260,7 @@ export const sendBatchEmails = async (emailList: Array<any>): Promise<any[]> => 
   try {
     logger.info(`[Queue] Processing batch of ${emailList.length} emails`);
     const results = await emailService.sendBatch(emailList);
-    const successful = results.filter(r => r.success).length;
+    const successful = results.filter((r) => r.success).length;
     logger.info(`[Queue] Batch email send completed: ${successful}/${emailList.length} successful`);
     return results;
   } catch (err: any) {

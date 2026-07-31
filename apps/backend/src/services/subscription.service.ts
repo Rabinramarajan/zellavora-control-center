@@ -147,7 +147,7 @@ export class SubscriptionService {
 
       if (error || !plans) return [];
 
-      const transformed = plans.map(p => this.transformPlan(p));
+      const transformed = plans.map((p) => this.transformPlan(p));
       await this.redis.set(cacheKey, transformed, this.CACHE_TTL);
       return transformed;
     } catch (error) {
@@ -235,7 +235,7 @@ export class SubscriptionService {
 
       if (error || !entitlements) return [];
 
-      const transformed = entitlements.map(e => this.transformEntitlement(e));
+      const transformed = entitlements.map((e) => this.transformEntitlement(e));
       await this.redis.set(cacheKey, transformed, this.CACHE_TTL);
       return transformed;
     } catch (error) {
@@ -290,7 +290,7 @@ export class SubscriptionService {
 
       if (error || !modules) return [];
 
-      const transformed = modules.map(m => ({
+      const transformed = modules.map((m) => ({
         moduleKey: m.module_key,
         moduleName: m.module_name,
         enabled: m.enabled,
@@ -317,16 +317,14 @@ export class SubscriptionService {
     resourceId?: string
   ): Promise<void> {
     try {
-      await this.supabase
-        .from('usage_events')
-        .insert({
-          organization_id: organizationId,
-          user_id: userId,
-          event_type: eventType,
-          quantity,
-          resource_type: resourceType,
-          resource_id: resourceId,
-        });
+      await this.supabase.from('usage_events').insert({
+        organization_id: organizationId,
+        user_id: userId,
+        event_type: eventType,
+        quantity,
+        resource_type: resourceType,
+        resource_id: resourceId,
+      });
 
       // Invalidate usage cache
       await this.invalidateUsageCache(organizationId);
@@ -341,18 +339,16 @@ export class SubscriptionService {
    */
   async updateLicenseUsage(usage: LicenseUsage): Promise<void> {
     try {
-      const { error } = await this.supabase
-        .from('license_usage')
-        .upsert({
-          organization_id: usage.organizationId,
-          period_start: usage.periodStart.toISOString(),
-          period_end: usage.periodEnd.toISOString(),
-          active_users: usage.activeUsers,
-          storage_used_gb: usage.storageUsedGb,
-          projects_created: usage.projectsCreated,
-          api_calls_used: usage.apiCallsUsed,
-          status: usage.status,
-        });
+      const { error } = await this.supabase.from('license_usage').upsert({
+        organization_id: usage.organizationId,
+        period_start: usage.periodStart.toISOString(),
+        period_end: usage.periodEnd.toISOString(),
+        active_users: usage.activeUsers,
+        storage_used_gb: usage.storageUsedGb,
+        projects_created: usage.projectsCreated,
+        api_calls_used: usage.apiCallsUsed,
+        status: usage.status,
+      });
 
       if (error) throw error;
 
@@ -366,9 +362,7 @@ export class SubscriptionService {
   /**
    * Check usage limits
    */
-  async checkUsageLimits(
-    organizationId: string
-  ): Promise<{
+  async checkUsageLimits(organizationId: string): Promise<{
     withinLimits: boolean;
     warnings: string[];
     errors: string[];
@@ -376,7 +370,7 @@ export class SubscriptionService {
     try {
       const license = await this.getOrganizationLicense(organizationId);
       const usage = await this.getLicenseUsage(organizationId);
-      const plan = license && await this.getLicensePlan(license.licensePlanId);
+      const plan = license && (await this.getLicensePlan(license.licensePlanId));
 
       if (!license || !usage || !plan) {
         return { withinLimits: false, warnings: [], errors: ['License or usage not found'] };
@@ -414,7 +408,9 @@ export class SubscriptionService {
       if (usage.apiCallsUsed >= maxApiCalls) {
         errors.push(`API call limit (${maxApiCalls}/day) reached`);
       } else if (usage.apiCallsUsed >= maxApiCalls * 0.8) {
-        warnings.push(`Using ${Math.round((usage.apiCallsUsed / maxApiCalls) * 100)}% of API limit`);
+        warnings.push(
+          `Using ${Math.round((usage.apiCallsUsed / maxApiCalls) * 100)}% of API limit`
+        );
       }
 
       return {
@@ -507,7 +503,7 @@ export class SubscriptionService {
       // Send notification
       await this.sendNotification(organizationId, 'trial_started', {
         expiresAt: trialExpiresAt,
-        planName: await this.getLicensePlan(planId).then(p => p?.name || 'Trial'),
+        planName: await this.getLicensePlan(planId).then((p) => p?.name || 'Trial'),
       });
 
       // Invalidate cache

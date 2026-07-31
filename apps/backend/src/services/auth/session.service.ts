@@ -45,9 +45,7 @@ export class SessionService {
   static async create(input: CreateSessionInput): Promise<{ sessionId: string }> {
     const sessionId = uuidv4();
     const sessionToken = `sess_${crypto.randomUUID().replace(/-/g, '')}`;
-    const expiresAt = new Date(
-      Date.now() + (input.rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000
-    );
+    const expiresAt = new Date(Date.now() + (input.rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000);
 
     const { error } = await supabaseAdmin.from('sessions').insert({
       id: sessionId,
@@ -62,7 +60,11 @@ export class SessionService {
 
     if (error) {
       console.error('Session creation error:', error);
-      throw new AppError(`Failed to create session: ${error?.message || 'Unknown error'}`, 500, 'SESSION_CREATE_FAILED');
+      throw new AppError(
+        `Failed to create session: ${error?.message || 'Unknown error'}`,
+        500,
+        'SESSION_CREATE_FAILED'
+      );
     }
     return { sessionId };
   }

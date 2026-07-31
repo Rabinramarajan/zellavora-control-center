@@ -22,7 +22,15 @@ export const PasswordPolicySchema = z
 
 /** Top 100k breached passwords — checked as a deny-list. Real impl would use HIBP API or a local k-anonymity prefix check. */
 const COMMON_PASSWORDS = new Set<string>([
-  'password', 'password1', '12345678', 'qwerty', 'letmein', 'welcome', 'admin', 'admin123', 'iloveyou',
+  'password',
+  'password1',
+  '12345678',
+  'qwerty',
+  'letmein',
+  'welcome',
+  'admin',
+  'admin123',
+  'iloveyou',
 ]);
 
 export class PasswordService {

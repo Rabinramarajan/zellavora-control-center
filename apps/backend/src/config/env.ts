@@ -34,8 +34,14 @@ export const config = {
   // Password & Security
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10),
   sessionTimeoutMinutes: parseInt(process.env.SESSION_TIMEOUT_MINUTES || '30', 10),
-  passwordResetTokenExpiryMinutes: parseInt(process.env.PASSWORD_RESET_TOKEN_EXPIRY_MINUTES || '15', 10),
-  emailVerificationTokenExpiryHours: parseInt(process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS || '24', 10),
+  passwordResetTokenExpiryMinutes: parseInt(
+    process.env.PASSWORD_RESET_TOKEN_EXPIRY_MINUTES || '15',
+    10
+  ),
+  emailVerificationTokenExpiryHours: parseInt(
+    process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS || '24',
+    10
+  ),
 
   // ============================================================================
   // Multi-Tenancy

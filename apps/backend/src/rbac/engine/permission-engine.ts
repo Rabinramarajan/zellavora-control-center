@@ -85,15 +85,17 @@ export class PermissionEngine {
         .lte('valid_from', new Date().toISOString())
         .or('valid_until.is.null,valid_until.gt.' + new Date().toISOString());
 
-      const seedRoles = (assignments ?? []).map(a => a.role_id);
+      const seedRoles = (assignments ?? []).map((a) => a.role_id);
       if (seedRoles.length === 0) {
         return {
-          userId, orgId, version,
+          userId,
+          orgId,
+          version,
           allowed: [],
           denied: [],
           roles: [],
           resolvedAt: Date.now(),
-          source: 'fresh'
+          source: 'fresh',
         };
       }
 
@@ -104,7 +106,10 @@ export class PermissionEngine {
       const { data: rolePerms } = await this.db
         .from('role_permissions')
         .select('effect, permissions!inner(key)')
-        .in('role_id', effectiveRoles.map(r => r.id));
+        .in(
+          'role_id',
+          effectiveRoles.map((r) => r.id)
+        );
 
       // 4. Direct user overrides
       const { data: userOverrides } = await this.db
@@ -116,7 +121,7 @@ export class PermissionEngine {
 
       // 5. Resolve: DENY wins
       const allowed = new Set<string>();
-      const denied  = new Set<string>();
+      const denied = new Set<string>();
 
       for (const rp of rolePerms ?? []) {
         const key = (rp as any).permissions?.key;
@@ -131,14 +136,19 @@ export class PermissionEngine {
       for (const k of denied) allowed.delete(k);
 
       return {
-        userId, orgId, version,
+        userId,
+        orgId,
+        version,
         allowed: [...allowed],
         denied: [...denied],
-        roles: effectiveRoles.map(r => ({
-          id: r.id, key: r.key, label: r.label, level: r.level
+        roles: effectiveRoles.map((r) => ({
+          id: r.id,
+          key: r.key,
+          label: r.label,
+          level: r.level,
         })),
         resolvedAt: Date.now(),
-        source: 'fresh'
+        source: 'fresh',
       };
     });
   }
@@ -153,10 +163,10 @@ export class PermissionEngine {
   ): Promise<{ allowed: boolean; source: CheckSource }> {
     const policy = await this.resolve(userId, orgId);
 
-    if (policy.denied.includes(permission))  return { allowed: false, source: 'deny' };
-    if (policy.allowed.includes(permission)) return { allowed: true,  source: 'role' };
+    if (policy.denied.includes(permission)) return { allowed: false, source: 'deny' };
+    if (policy.allowed.includes(permission)) return { allowed: true, source: 'role' };
 
-    const inherited = policy.allowed.find(k => matchesGlob(k, permission));
+    const inherited = policy.allowed.find((k) => matchesGlob(k, permission));
     return { allowed: !!inherited, source: inherited ? 'inherited' : null };
   }
 
@@ -172,14 +182,14 @@ export class PermissionEngine {
     const deniedSet = new Set(policy.denied);
     const allowedSet = new Set(policy.allowed);
 
-    const results: CheckResult[] = permissions.map(p => {
-      if (deniedSet.has(p))  return { permission: p, allowed: false, source: 'deny' };
-      if (allowedSet.has(p)) return { permission: p, allowed: true,  source: 'role' };
-      const inherited = policy.allowed.find(k => matchesGlob(k, p));
+    const results: CheckResult[] = permissions.map((p) => {
+      if (deniedSet.has(p)) return { permission: p, allowed: false, source: 'deny' };
+      if (allowedSet.has(p)) return { permission: p, allowed: true, source: 'role' };
+      const inherited = policy.allowed.find((k) => matchesGlob(k, p));
       return {
         permission: p,
         allowed: !!inherited,
-        source: inherited ? 'inherited' : null
+        source: inherited ? 'inherited' : null,
       };
     });
 

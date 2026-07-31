@@ -17,7 +17,13 @@ export class NotificationController {
 
   send = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = SendNotificationSchema.parse(req.body) as { organizationId: string; recipientId?: string | null; title?: string | null; body: string; channels?: string[] };
+      const data = SendNotificationSchema.parse(req.body) as {
+        organizationId: string;
+        recipientId?: string | null;
+        title?: string | null;
+        body: string;
+        channels?: string[];
+      };
       const result = await this.service.sendNotification(data);
       res.json({ success: true, data: result });
     } catch (err) {

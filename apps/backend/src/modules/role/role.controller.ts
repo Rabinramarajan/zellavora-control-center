@@ -26,7 +26,11 @@ export class RoleController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = CreateRoleSchema.parse(req.body) as { name: string; organizationId?: string | null; description?: string | null };
+      const data = CreateRoleSchema.parse(req.body) as {
+        name: string;
+        organizationId?: string | null;
+        description?: string | null;
+      };
       const role = await this.service.createRole(data);
       res.json({ success: true, data: role });
     } catch (err) {

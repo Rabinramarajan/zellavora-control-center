@@ -12,8 +12,8 @@ let mockGroups = [
     endDate: '2099-12-31T23:59:59Z',
     statusId: 1,
     statusValue: 'Active',
-    statusDescription: 'Active'
-  }
+    statusDescription: 'Active',
+  },
 ];
 
 /**
@@ -66,19 +66,21 @@ router.get('/group/search', authenticate, async (req, res, next) => {
 
 router.post('/group/search', authenticate, async (req, res, next) => {
   try {
-    const searchResult = mockGroups.map(g => ({
+    const searchResult = mockGroups.map((g) => ({
       groupId: g.groupId,
       groupName: g.groupName,
       beginDate: g.beginDate,
       endDate: g.endDate,
-      statusDescription: g.statusDescription
+      statusDescription: g.statusDescription,
     }));
-    res.json(wrapResponse({
-      searchResult,
-      totalCount: searchResult.length,
-      pageSize: req.body.pageSize || 10,
-      pageNumber: req.body.pageNumber || 1
-    }));
+    res.json(
+      wrapResponse({
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: req.body.pageSize || 10,
+        pageNumber: req.body.pageNumber || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -87,7 +89,7 @@ router.post('/group/search', authenticate, async (req, res, next) => {
 router.post('/group/open', authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
-    const grp = mockGroups.find(g => g.groupId === id);
+    const grp = mockGroups.find((g) => g.groupId === id);
     res.json(wrapResponse(grp || mockGroups[0]));
   } catch (error) {
     next(error);
@@ -98,7 +100,7 @@ router.post('/group/save', authenticate, async (req, res, next) => {
   try {
     const grp = req.body;
     if (grp.groupId > 0) {
-      mockGroups = mockGroups.map(g => g.groupId === grp.groupId ? grp : g);
+      mockGroups = mockGroups.map((g) => (g.groupId === grp.groupId ? grp : g));
     } else {
       grp.groupId = mockGroups.length + 1;
       mockGroups.push(grp);
@@ -112,7 +114,7 @@ router.post('/group/save', authenticate, async (req, res, next) => {
 router.post('/group/delete', authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
-    mockGroups = mockGroups.filter(g => g.groupId !== id);
+    mockGroups = mockGroups.filter((g) => g.groupId !== id);
     res.json(wrapResponse({ groupId: id }));
   } catch (error) {
     next(error);

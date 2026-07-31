@@ -10,10 +10,10 @@ import { LRUCache } from 'lru-cache';
 import type Redis from 'ioredis';
 import type { EffectivePolicy } from '../engine/permission-engine';
 
-const L1_TTL_MS = 60_000;        // 1 min in-process
-const L2_TTL_SEC = 300;          // 5 min Redis
-const NEG_TTL_SEC = 60;          // 1 min negative cache
-const LOCK_TTL_SEC = 5;          // single-flight lock
+const L1_TTL_MS = 60_000; // 1 min in-process
+const L2_TTL_SEC = 300; // 5 min Redis
+const NEG_TTL_SEC = 60; // 1 min negative cache
+const LOCK_TTL_SEC = 5; // single-flight lock
 
 export class PolicyCache {
   private l1: LRUCache<string, EffectivePolicy>;
@@ -24,7 +24,7 @@ export class PolicyCache {
   ) {
     this.l1 = new LRUCache<string, EffectivePolicy>({
       max: l1Max,
-      ttl: L1_TTL_MS
+      ttl: L1_TTL_MS,
     });
   }
 
@@ -39,11 +39,7 @@ export class PolicyCache {
   /**
    * L1 + L2 lookup. Returns null on miss.
    */
-  async get(
-    userId: string,
-    orgId: string,
-    version: number
-  ): Promise<EffectivePolicy | null> {
+  async get(userId: string, orgId: string, version: number): Promise<EffectivePolicy | null> {
     const k = PolicyCache.k(orgId, userId, version);
 
     // L1
@@ -97,7 +93,7 @@ export class PolicyCache {
 
     if (!acquired) {
       // Another worker is computing — brief wait then re-read
-      await new Promise(r => setTimeout(r, 50));
+      await new Promise((r) => setTimeout(r, 50));
       const second = await this.get(userId, userId, version);
       if (second) return second as T;
     }
@@ -115,12 +111,7 @@ export class PolicyCache {
    * Cache deny result for hot path. Optional.
    */
   async setDeny(orgId: string, userId: string, permKey: string): Promise<void> {
-    await this.redis.set(
-      `rbac:deny:${orgId}:${userId}:${permKey}`,
-      '1',
-      'EX',
-      NEG_TTL_SEC
-    );
+    await this.redis.set(`rbac:deny:${orgId}:${userId}:${permKey}`, '1', 'EX', NEG_TTL_SEC);
   }
 
   async isDenied(orgId: string, userId: string, permKey: string): Promise<boolean> {
@@ -139,7 +130,7 @@ export class PolicyCache {
 
     // L2: pattern delete via SCAN
     const stream = this.redis.scanStream({
-      match: `rbac:policy:${orgId}:${userId}:*`
+      match: `rbac:policy:${orgId}:${userId}:*`,
     });
     const toDelete: string[] = [];
     for await (const keys of stream) {
@@ -159,7 +150,7 @@ export class PolicyCache {
     }
 
     const stream = this.redis.scanStream({
-      match: `rbac:policy:${orgId}:*`
+      match: `rbac:policy:${orgId}:*`,
     });
     const toDelete: string[] = [];
     for await (const keys of stream) {
