@@ -38,7 +38,7 @@ const CUSTOM_CSS = `
   .swagger-ui .topbar { background: linear-gradient(135deg, #1e1e2e 0%, #313244 100%); }
   .swagger-ui .topbar .download-url-wrapper { display: none; }
   .swagger-ui .info .title { color: #cba6f7; }
-  .swagger-ui .scheme-container { background: #1e1e2e; box-shadow: none; padding: 16px; }
+  .swagger-ui .scheme-container { background: #1e1e2e; box-shadow: none; }
   .swagger-ui .opblock-summary-path-description-wrapper { justify-content: flex-start !important; }
   .swagger-ui .opblock-summary-description { flex: 0 1 auto !important; text-align: left !important; margin-left: 12px !important; }
   .swagger-ui .opblock-summary-method { text-transform: lowercase !important; }
@@ -98,7 +98,7 @@ router.get('/api-docs.json', (_req, res) => {
  *       200:
  *         description: Returns the Swagger UI HTML page
  */
-router.get(['/swagger', '/swagger/', '/swagger/index.html'], (_req, res) => {
+router.get(['/swagger/index.html'], (_req, res) => {
   res.type('text/html').send(SWAGGER_HTML);
 });
 
