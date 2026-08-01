@@ -1,5 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
+import { existsSync, statSync } from 'fs';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -456,34 +457,71 @@ All endpoints are prefixed with \`/api/v1\`.
     },
     security: [{ BearerAuth: [] }],
   },
-  // Globs are resolved relative to THIS file, never process.cwd(). On a
-  // serverless platform cwd is the task root and the source tree may not be
-  // part of the bundle, so a cwd-based glob silently matches nothing.
-  apis: (() => {
-    const configDir = __dirname;
-    // In development (tsx), __dirname is src/config; in production (compiled), it's dist/src/config
-    const isProduction = configDir.includes('dist');
-    const scanDir = isProduction
-      ? path.resolve(configDir, '..').replace(/\\/g, '/') // dist/src
-      : path.resolve(configDir, '..').replace(/\\/g, '/'); // src
-    return [`${scanDir}/**/*.ts`, `${scanDir}/**/*.js`];
-  })(),
 };
 
 /**
- * The JSDoc scan walks the source tree, which may be absent or read-only in a
- * deployed bundle. A failure here must degrade to a spec built from the static
+ * Candidate roots for the JSDoc scan.
+ *
+ *   dev (tsx)            -> __dirname is src/config, parent is src
+ *   compiled (tsc)       -> __dirname is dist/src/config, parent is dist/src
+ *   Vercel bundle (ncc)  -> the source tree is copied into the function dir
+ *                           by vercel.json `includeFiles: "src/**"`, so the
+ *                           files live under <root>/src (or <root>/dist/src).
+ *
+ * Only existing source directories are returned — never a bare root — so the
+ * glob walk can never descend into node_modules (which swagger-jsdoc does not
+ * let us ignore and would hang on during a cold start).
+ */
+function scanRoots(): string[] {
+  const here = __dirname;
+  const cwd = process.cwd();
+  const roots = new Set<string>();
+
+  // Local dev / compiled runs live in a `src/config` / `dist/src/config` dir.
+  if (path.basename(here) === 'config') {
+    roots.add(path.resolve(here, '..'));
+  }
+
+  // Serverless bundle: source copied into the function root by includeFiles.
+  roots.add(path.resolve(cwd, 'src'));
+  roots.add(path.resolve(cwd, 'dist', 'src'));
+  roots.add(path.resolve(here, 'src'));
+  roots.add(path.resolve(here, 'dist', 'src'));
+
+  return [...roots].filter((r) => {
+    try {
+      return existsSync(r) && statSync(r).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+}
+
+/**
+ * The JSDoc scan walks the source tree, which may be absent in a deployed
+ * bundle. A failure here must degrade to a spec built from the static
  * `definition` above rather than crash the function during cold start.
  */
 function buildSpec(): object {
-  if (process.env.VERCEL) {
-    console.log(
-      '[swagger] Running on Vercel, serving base definition to prevent cold-start filesystem scanning'
-    );
+  const apis = scanRoots().flatMap((root) => {
+    const dir = root.replace(/\\/g, '/');
+    return [`${dir}/**/*.ts`, `${dir}/**/*.js`];
+  });
+
+  if (!apis.length) {
+    console.warn('[swagger] No source roots found; serving base definition only');
     return options.definition as object;
   }
+
   try {
-    return swaggerJsdoc(options) as object;
+    const spec = swaggerJsdoc({ ...options, apis }) as { paths?: Record<string, unknown> };
+    const pathCount = Object.keys(spec.paths ?? {}).length;
+    if (pathCount > 0) {
+      console.log(`[swagger] Built spec with ${pathCount} paths`);
+      return spec;
+    }
+    console.warn('[swagger] JSDoc scan found no paths; serving base definition only');
+    return options.definition as object;
   } catch (err) {
     console.warn(
       '[swagger] JSDoc scan failed, serving base definition only:',

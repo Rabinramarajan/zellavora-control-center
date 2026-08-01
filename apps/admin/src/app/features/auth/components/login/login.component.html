@@ -82,15 +82,9 @@
         <div class="auth-form-col">
           <!-- Sign-in form -->
           <div class="login-card">
+            <p-toast></p-toast>
             <h2 class="text-2xl font-bold text-white mb-1.5">Welcome back</h2>
             <p class="text-sm text-slate-400 mb-7">Sign in to continue to your dashboard</p>
-
-            <!-- Error Notification -->
-            @if (auth.error(); as error) {
-              <div class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
-                {{ error }}
-              </div>
-            }
 
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
               <!-- Client Selector Dropdown -->

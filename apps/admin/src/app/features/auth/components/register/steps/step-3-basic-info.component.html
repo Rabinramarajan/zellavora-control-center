@@ -21,243 +21,79 @@
   <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
     <div class="reg-form__body">
       <div class="field-grid">
-        <div class="field" [class.is-error]="showError('firstName')">
-          <label class="field__label" for="firstName">First Name <em>*</em></label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle></svg
-            ></span>
-            <input
-              id="firstName"
-              formControlName="firstName"
-              type="text"
-              placeholder="Alex"
-              autocomplete="given-name"
-            />
-          </div>
-          @if (showError('firstName')) {
-            <p class="field__error">{{ errorMessage('firstName') }}</p>
-          }
-        </div>
-
-        <div class="field" [class.is-error]="showError('lastName')">
-          <label class="field__label" for="lastName">Last Name <em>*</em></label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle></svg
-            ></span>
-            <input
-              id="lastName"
-              formControlName="lastName"
-              type="text"
-              placeholder="Morgan"
-              autocomplete="family-name"
-            />
-          </div>
-          @if (showError('lastName')) {
-            <p class="field__error">{{ errorMessage('lastName') }}</p>
-          }
-        </div>
+        <app-input-control
+          formControlName="firstName"
+          label="First Name"
+          placeholder="Alex"
+          prefixIcon="pi-user"
+          autocomplete="given-name"
+          [clearable]="true"
+          [trim]="true"
+        />
+        <app-input-control
+          formControlName="lastName"
+          label="Last Name"
+          placeholder="Morgan"
+          prefixIcon="pi-user"
+          autocomplete="family-name"
+          [clearable]="true"
+          [trim]="true"
+        />
       </div>
 
-      <div class="field" [class.is-error]="showError('email')">
-        <label class="field__label" for="email">Work Email <em>*</em></label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
-              ></path>
-              <path d="M22 6l-10 7L2 6"></path></svg
-          ></span>
-          <input
-            id="email"
-            formControlName="email"
-            type="email"
-            placeholder="you@company.com"
-            autocomplete="email"
-          />
-        </div>
-        @if (showError('email')) {
-          @if (form.get('email')?.hasError('emailTaken')) {
-            <p class="field__error">This email is already registered.</p>
-          } @else {
-            <p class="field__error">{{ errorMessage('email') }}</p>
-          }
-        } @else if (emailPending()) {
-          <p class="field__hint">Checking availability…</p>
-        }
-      </div>
+      <app-input-control
+        formControlName="email"
+        type="email"
+        label="Work Email"
+        placeholder="you@company.com"
+        prefixIcon="pi-envelope"
+        autocomplete="email"
+        inputmode="email"
+        [clearable]="true"
+        [trim]="true"
+        [hint]="emailPending() ? 'Checking availability…' : ''"
+      />
 
-      <div class="field" [class.is-error]="showError('mobile')">
-        <label class="field__label" for="mobile">Mobile Number <em>*</em></label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
-              ></path></svg
-          ></span>
-          <input
-            id="mobile"
-            formControlName="mobile"
-            type="tel"
-            placeholder="+1 (555) 000-0000"
-            autocomplete="tel"
-          />
-        </div>
-        @if (showError('mobile')) {
-          <p class="field__error">{{ errorMessage('mobile') }}</p>
-        }
-      </div>
+      <app-input-control
+        formControlName="mobile"
+        type="tel"
+        label="Mobile Number"
+        placeholder="+1 (555) 000-0000"
+        prefixIcon="pi-phone"
+        autocomplete="tel"
+        inputmode="tel"
+        [clearable]="true"
+      />
 
       <div class="field-grid">
-        <div class="field" [class.is-error]="showError('country')">
-          <label class="field__label" for="country">Country <em>*</em></label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle></svg
-            ></span>
-            <select id="country" formControlName="country">
-              <option value="" disabled>Select Country</option>
-              @for (c of store.countryOptions(); track c) {
-                <option [value]="c">{{ c }}</option>
-              }
-            </select>
-            <svg
-              class="field__chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
-          </div>
-          @if (showError('country')) {
-            <p class="field__error">{{ errorMessage('country') }}</p>
-          }
-        </div>
+        <zc-select-control
+          formControlName="country"
+          label="Country"
+          placeholder="Select Country"
+          prefixIcon="pi-globe"
+          [options]="store.countryOptions()"
+          optionLabel=""
+        />
 
-        <div class="field">
-          <label class="field__label" for="language">Language</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"></path>
-                <path d="M2 12h20"></path>
-                <path
-                  d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                ></path></svg
-            ></span>
-            <select id="language" formControlName="language">
-              <option value="" disabled>Select Language</option>
-              @for (l of store.languageOptions(); track l.key) {
-                <option [value]="l.key">{{ l.value }}</option>
-              }
-            </select>
-            <svg
-              class="field__chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
-          </div>
-        </div>
+        <zc-select-control
+          formControlName="language"
+          label="Language"
+          placeholder="Select Language"
+          prefixIcon="pi-language"
+          [options]="store.languageOptions()"
+          optionValue="key"
+          optionLabel="value"
+        />
 
-        <div class="field" [class.is-error]="showError('gender')">
-          <label class="field__label" for="gender">Gender <em>*</em></label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="12" cy="5" r="3"></circle>
-                <path d="M12 8v8"></path>
-                <path d="M6 21l6-5 6 5"></path></svg
-            ></span>
-            <select id="gender" formControlName="gender">
-              <option value="" disabled>Select Gender</option>
-              @for (g of store.genderOptions(); track g.key) {
-                <option [value]="g.key">{{ g.value }}</option>
-              }
-            </select>
-            <svg
-              class="field__chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
-          </div>
-          @if (showError('gender')) {
-            <p class="field__error">{{ errorMessage('gender') }}</p>
-          }
-        </div>
+        <zc-select-control
+          formControlName="gender"
+          label="Gender"
+          placeholder="Select Gender"
+          prefixIcon="pi-user"
+          [options]="store.genderOptions()"
+          optionValue="key"
+          optionLabel="value"
+        />
       </div>
     </div>
 

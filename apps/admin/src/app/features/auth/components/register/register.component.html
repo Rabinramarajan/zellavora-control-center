@@ -187,45 +187,7 @@
     </div>
 
     <div class="reg-form__card">
-      <!-- Error banner -->
-      @if (store.error()) {
-        <div class="error-banner" role="alert">
-          <svg
-            class="error-banner__icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M15 9l-6 6"></path>
-            <path d="M9 9l6 6"></path>
-          </svg>
-          <div class="error-banner__body">
-            <p class="error-banner__title">Something went wrong</p>
-            <p class="error-banner__msg">{{ store.error() }}</p>
-          </div>
-          <button
-            class="error-banner__close"
-            (click)="dismissError()"
-            aria-label="Dismiss"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M18 6 6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-      }
+      <p-toast></p-toast>
 
       @switch (store.currentStep()) {
         @case (1) {

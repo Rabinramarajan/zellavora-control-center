@@ -123,6 +123,26 @@ const ip = (req: any) =>
   (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? '0.0.0.0';
 const ua = (req: any) => (req.headers['user-agent'] as string) ?? 'unknown';
 
+const parseBrowser = (userAgent: string): string => {
+  const u = userAgent.toLowerCase();
+  if (u.includes('edg/')) return 'Edge';
+  if (u.includes('opr/') || u.includes('opera')) return 'Opera';
+  if (u.includes('firefox/')) return 'Firefox';
+  if (u.includes('chrome/') || u.includes('crios/')) return 'Chrome';
+  if (u.includes('safari/')) return 'Safari';
+  return 'Unknown Browser';
+};
+
+const parseOs = (userAgent: string): string => {
+  const u = userAgent.toLowerCase();
+  if (u.includes('windows')) return 'Windows';
+  if (u.includes('mac os') || u.includes('macintosh')) return 'macOS';
+  if (u.includes('android')) return 'Android';
+  if (u.includes('iphone') || u.includes('ipad') || u.includes('ios')) return 'iOS';
+  if (u.includes('linux')) return 'Linux';
+  return 'Unknown OS';
+};
+
 // In-memory store for short-lived MFA challenges (use Redis in production).
 // Key: mfaToken, Value: { userId, organizationId, attempts, expiresAt }
 const MFA_CHALLENGE_TTL_MS = 5 * 60 * 1000;
@@ -1631,30 +1651,21 @@ router.get('/oauth/callback', async (req, res, next) => {
 router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const userId = req.userId!;
-    const { data: sessions, error } = await supabaseAdmin
-      .from('user_sessions')
-      .select(
-        'id, device_name, browser, os, ip_address, country, last_login_at, created_at, is_current'
-      )
-      .eq('user_id', userId)
-      .eq('revoked', false)
-      .order('last_login_at', { ascending: false });
-
-    if (error) throw new AppError('Failed to load sessions', 500, 'SESSION_LOAD_FAILED');
+    const rows = await SessionService.listForUser(userId);
 
     res.json({
       success: true,
       data: {
-        sessions: (sessions || []).map((s: any) => ({
+        sessions: rows.map((s) => ({
           id: s.id,
-          deviceName: s.device_name || 'Unknown Device',
-          browser: s.browser || 'Unknown Browser',
-          os: s.os || 'Unknown OS',
+          deviceName: s.device_fingerprint || 'Unknown Device',
+          browser: parseBrowser(s.user_agent),
+          os: parseOs(s.user_agent),
           ipAddress: s.ip_address || 'Unknown',
-          country: s.country || '',
-          lastLogin: s.last_login_at,
+          country: '',
+          lastLogin: s.last_activity_at,
           loginTime: s.created_at,
-          isCurrent: s.is_current || false,
+          isCurrent: s.id === req.sessionId,
         })),
       },
     });
@@ -1671,13 +1682,7 @@ router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res
     const userId = req.userId!;
     const { sessionId } = req.params;
 
-    const { error } = await supabaseAdmin
-      .from('user_sessions')
-      .update({ revoked: true, revoked_at: new Date().toISOString() })
-      .eq('id', sessionId)
-      .eq('user_id', userId);
-
-    if (error) throw new AppError('Failed to revoke session', 500, 'SESSION_REVOKE_FAILED');
+    await SessionService.revoke(sessionId);
 
     await AuditService.log({
       organizationId: req.tenantId!,
@@ -1703,17 +1708,24 @@ router.delete('/sessions', authenticate, async (req: AuthRequest, res, next) => 
     const userId = req.userId!;
     const currentSessionId = req.sessionId;
 
-    const query = supabaseAdmin
-      .from('user_sessions')
-      .update({ revoked: true, revoked_at: new Date().toISOString() })
+    const { data: sessions, error } = await supabaseAdmin
+      .from('sessions')
+      .select('id')
       .eq('user_id', userId)
-      .eq('revoked', false);
+      .is('revoked_at', null);
 
-    // Exclude current session if we have it
-    const finalQuery = currentSessionId ? query.neq('id', currentSessionId) : query;
-
-    const { error } = await finalQuery;
     if (error) throw new AppError('Failed to revoke sessions', 500, 'SESSION_REVOKE_ALL_FAILED');
+
+    const others = (sessions ?? [])
+      .filter((s: any) => s.id !== currentSessionId)
+      .map((s: any) => s.id);
+
+    if (others.length) {
+      await supabaseAdmin
+        .from('sessions')
+        .update({ revoked_at: new Date().toISOString() })
+        .in('id', others);
+    }
 
     await AuditService.log({
       organizationId: req.tenantId!,

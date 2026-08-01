@@ -37,37 +37,17 @@
 
   <div class="reg-form__body">
     @if (store.registrationType() === 'invite') {
-      <div class="field">
-        <label class="field__label" for="invite-code">Invitation Code</label>
-        <div class="field__control">
-          <span class="field__icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M7 8h17"></path>
-              <path d="M7 12h17"></path>
-              <path d="M7 16h17"></path>
-              <path d="M2 8h.01"></path>
-              <path d="M2 12h.01"></path>
-              <path d="M2 16h.01"></path>
-            </svg>
-          </span>
-          <input
-            id="invite-code"
-            type="text"
-            [value]="inviteCode()"
-            (input)="onInviteInput($event)"
-            placeholder="e.g. ZCC-XXXX-XXXX"
-            autocomplete="off"
-          />
-        </div>
-        <p class="field__hint">Paste the invitation code you received by email.</p>
-      </div>
+      <app-input-control
+        [value]="inviteCode()"
+        (valueChange)="inviteCode.set($event)"
+        label="Invitation Code"
+        placeholder="e.g. ZCC-XXXX-XXXX"
+        prefixIcon="pi-hashtag"
+        autocomplete="off"
+        hint="Paste the invitation code you received by email."
+        [clearable]="true"
+        [trim]="true"
+      />
       <button
         type="button"
         class="btn-primary btn-primary--block"

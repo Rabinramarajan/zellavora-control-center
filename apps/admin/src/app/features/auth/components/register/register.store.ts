@@ -203,6 +203,7 @@ export class RegisterStore {
   readonly languageOptions = computed(() => this.state().ddl['language'] ?? []);
   readonly genderOptions = computed(() => this.state().ddl['gender'] ?? []);
   readonly currentStep = computed(() => this.state().currentStep);
+  readonly sessionId = computed(() => this.state().sessionId);
   readonly registrationType = computed(() => this.state().registrationType);
   readonly firstName = computed(() => this.state().firstName);
   readonly lastName = computed(() => this.state().lastName);
@@ -736,8 +737,20 @@ export class RegisterStore {
 
     try {
       const res = await firstValueFrom(this.http.post<any>('/api/v1/register/complete', payload));
-      this.state.update((s) => ({ ...s, successData: res.data, currentStep: 11, loading: false }));
+      this.state.update((s) => ({ ...s, successData: res.data, currentStep: 13, loading: false }));
       this.clearDraft();
+      try {
+        sessionStorage.setItem(
+          'zcc.welcomeName',
+          res.data?.user?.fullName?.split(' ')[0] || s.firstName || 'there'
+        );
+        sessionStorage.setItem(
+          'zcc.welcomeOrg',
+          res.data?.organization?.name || s.organizationName || 'your organization'
+        );
+      } catch {
+        // sessionStorage unavailable
+      }
       return true;
     } catch (err: any) {
       const msg =

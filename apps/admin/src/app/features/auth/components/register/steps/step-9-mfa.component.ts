@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MessageService } from 'primeng/api';
 import { RegisterStore } from '../register.store';
 import { OtpInputComponent } from '../../../../../shared/components/otp-input.component';
 
@@ -20,6 +21,7 @@ interface MfaMethod {
 })
 export class Step9MfaComponent {
   readonly store = inject(RegisterStore);
+  private readonly messageService = inject(MessageService);
   readonly mfaCodeInput = signal('');
 
   readonly mfaMethods: MfaMethod[] = [
@@ -86,6 +88,12 @@ export class Step9MfaComponent {
     if (code.length !== 6) return;
     const ok = await this.store.verifyMfaCode(code);
     if (ok) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Security enabled',
+        detail: 'Two-factor authentication is now active.',
+        life: 3000,
+      });
       this.store.nextStep();
       this.store.syncProgressToBackend();
     }

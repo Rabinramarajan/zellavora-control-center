@@ -2,11 +2,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RegisterStore } from '../register.store';
+import { InputControlComponent } from '@shared/components/input-control';
+import { SelectControlComponent } from '@shared/components/select-control';
 
 @Component({
   selector: 'app-step-7-branch',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, InputControlComponent, SelectControlComponent],
   templateUrl: './step-7-branch.component.html',
   styleUrls: ['../step-styles.css'],
 })
@@ -43,24 +45,6 @@ export class Step7BranchComponent implements OnInit {
       branchLatitude: s.branchLatitude() || '',
       branchLongitude: s.branchLongitude() || '',
     });
-  }
-
-  showError(field: string): boolean {
-    const control = this.form.get(field);
-    return !!control && control.invalid && (control.touched || control.dirty);
-  }
-
-  errorMessage(field: string): string {
-    const control = this.form.get(field);
-    if (!control || !control.errors) return '';
-    const errors = control.errors;
-    if (errors['required']) return 'This field is required.';
-    if (errors['email']) return 'Enter a valid email address.';
-    if (errors['pattern']) return 'Invalid format.';
-    if (errors['minlength']) {
-      return `Must be at least ${errors['minlength'].requiredLength} characters.`;
-    }
-    return 'Please fix this field.';
   }
 
   useCurrentLocation() {

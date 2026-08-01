@@ -1,5 +1,6 @@
 import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MessageService } from 'primeng/api';
 import { RegisterStore } from '../register.store';
 import { OtpInputComponent } from '../../../../../shared/components/otp-input.component';
 
@@ -12,6 +13,7 @@ import { OtpInputComponent } from '../../../../../shared/components/otp-input.co
 })
 export class Step5MobileOtpComponent implements OnDestroy {
   readonly store = inject(RegisterStore);
+  private readonly messageService = inject(MessageService);
   readonly mobileOtpCodeInput = signal('');
   readonly mobileTimer = signal(0);
   private mobileInterval: ReturnType<typeof setInterval> | null = null;
@@ -38,7 +40,15 @@ export class Step5MobileOtpComponent implements OnDestroy {
     const mobile = this.store.mobile();
     if (!mobile) return;
     const ok = await this.store.sendMobileOtp(mobile);
-    if (ok) this.startTimer();
+    if (ok) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'OTP sent',
+        detail: `A verification code was sent to ${mobile}`,
+        life: 4000,
+      });
+      this.startTimer();
+    }
   }
 
   startTimer() {
@@ -62,6 +72,12 @@ export class Step5MobileOtpComponent implements OnDestroy {
   async verifyMobileOtp() {
     const ok = await this.store.verifyMobileOtp(this.store.mobile(), this.mobileOtpCodeInput());
     if (ok) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Mobile verified',
+        detail: 'Your mobile number has been confirmed.',
+        life: 3000,
+      });
       this.clearTimer();
       this.store.nextStep();
       this.store.syncProgressToBackend();
@@ -70,7 +86,15 @@ export class Step5MobileOtpComponent implements OnDestroy {
 
   async resendMobileOtp() {
     const ok = await this.store.resendMobileOtp(this.store.mobile());
-    if (ok) this.startTimer();
+    if (ok) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'OTP resent',
+        detail: 'A new verification code is on its way.',
+        life: 3000,
+      });
+      this.startTimer();
+    }
   }
 
   skipMobileVerification() {

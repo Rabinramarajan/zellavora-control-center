@@ -7,11 +7,13 @@ import {
   Validators,
 } from '@angular/forms';
 import { RegisterStore } from '../register.store';
+import { InputControlComponent } from '@shared/components/input-control';
+import { SelectControlComponent } from '@shared/components/select-control';
 
 @Component({
   selector: 'app-step-3-basic-info',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, InputControlComponent, SelectControlComponent],
   templateUrl: './step-3-basic-info.component.html',
   styleUrls: ['../step-styles.css'],
 })
@@ -64,27 +66,6 @@ export class Step3BasicInfoComponent implements OnInit {
     } catch {
       return 'UTC';
     }
-  }
-
-  showError(field: string): boolean {
-    const control = this.form.get(field);
-    return !!control && control.invalid && (control.touched || control.dirty);
-  }
-
-  errorMessage(field: string): string {
-    const control = this.form.get(field);
-    if (!control || !control.errors) return '';
-    const errors = control.errors;
-    if (errors['required']) return 'This field is required.';
-    if (errors['email']) return 'Enter a valid email address.';
-    if (errors['pattern']) return 'Enter a valid phone number.';
-    if (errors['minlength']) {
-      return `Must be at least ${errors['minlength'].requiredLength} characters.`;
-    }
-    if (errors['maxlength']) {
-      return `Must be at most ${errors['maxlength'].requiredLength} characters.`;
-    }
-    return 'Please fix this field.';
   }
 
   emailPending(): boolean {

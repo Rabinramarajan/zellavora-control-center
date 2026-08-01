@@ -1,5 +1,6 @@
 import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MessageService } from 'primeng/api';
 import { RegisterStore } from '../register.store';
 import { OtpInputComponent } from '../../../../../shared/components/otp-input.component';
 
@@ -12,6 +13,7 @@ import { OtpInputComponent } from '../../../../../shared/components/otp-input.co
 })
 export class Step4EmailOtpComponent implements OnDestroy {
   readonly store = inject(RegisterStore);
+  private readonly messageService = inject(MessageService);
   readonly emailOtpCodeInput = signal('');
   readonly emailTimer = signal(0);
   private emailInterval: ReturnType<typeof setInterval> | null = null;
@@ -31,7 +33,15 @@ export class Step4EmailOtpComponent implements OnDestroy {
     const email = this.store.email();
     if (!email) return;
     const ok = await this.store.sendEmailOtp(email);
-    if (ok) this.startEmailTimer();
+    if (ok) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'OTP sent',
+        detail: `A verification code was sent to ${email}`,
+        life: 4000,
+      });
+      this.startEmailTimer();
+    }
   }
 
   startEmailTimer() {
@@ -55,6 +65,12 @@ export class Step4EmailOtpComponent implements OnDestroy {
   async verifyEmailOtp() {
     const ok = await this.store.verifyEmailOtp(this.store.email(), this.emailOtpCodeInput());
     if (ok) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Email verified',
+        detail: 'Your email address has been confirmed.',
+        life: 3000,
+      });
       this.clearTimer();
       this.store.nextStep();
     }
@@ -62,6 +78,14 @@ export class Step4EmailOtpComponent implements OnDestroy {
 
   async resendEmailOtp() {
     const ok = await this.store.resendEmailOtp(this.store.email());
-    if (ok) this.startEmailTimer();
+    if (ok) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'OTP resent',
+        detail: 'A new verification code is on its way.',
+        life: 3000,
+      });
+      this.startEmailTimer();
+    }
   }
 }

@@ -20,275 +20,91 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
     <div class="reg-form__body">
-      <div class="field" [class.is-error]="showError('branchName')">
-        <label class="field__label" for="branchName">Branch Name <em>*</em></label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 21h18"></path>
-              <path d="M5 21V7l7-4 7 4v14"></path>
-              <path d="M9 9h.01"></path>
-              <path d="M9 12h.01"></path>
-              <path d="M9 15h.01"></path>
-              <path d="M15 9h.01"></path>
-              <path d="M15 12h.01"></path>
-              <path d="M15 15h.01"></path></svg
-          ></span>
-          <input
-            id="branchName"
-            formControlName="branchName"
-            type="text"
-            placeholder="Head Office"
-          />
-        </div>
-        @if (showError('branchName')) {
-          <p class="field__error">{{ errorMessage('branchName') }}</p>
-        }
+      <app-input-control
+        formControlName="branchName"
+        label="Branch Name"
+        placeholder="Head Office"
+        prefixIcon="pi-building"
+        [clearable]="true"
+        [trim]="true"
+      />
+
+      <zc-select-control
+        formControlName="branchCountry"
+        label="Country"
+        placeholder="Select Country"
+        prefixIcon="pi-globe"
+        [options]="store.countryOptions()"
+        optionLabel=""
+      />
+
+      <div class="field-grid">
+        <app-input-control
+          formControlName="branchCity"
+          label="City"
+          placeholder="Mumbai"
+          prefixIcon="pi-building"
+          [clearable]="true"
+          [trim]="true"
+        />
+        <app-input-control
+          formControlName="branchPincode"
+          label="Postal Code"
+          placeholder="400001"
+          prefixIcon="pi-hashtag"
+          [clearable]="true"
+          [trim]="true"
+        />
       </div>
 
-      <div class="field" [class.is-error]="showError('branchCountry')">
-        <label class="field__label" for="branchCountry">Country <em>*</em></label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle></svg
-          ></span>
-          <select id="branchCountry" formControlName="branchCountry">
-            <option value="" disabled>Select Country</option>
-            @for (c of store.countryOptions(); track c) {
-              <option [value]="c">{{ c }}</option>
-            }
-          </select>
-          <svg
-            class="field__chevron"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M6 9l6 6 6-6"></path>
-          </svg>
-        </div>
-        @if (showError('branchCountry')) {
-          <p class="field__error">{{ errorMessage('branchCountry') }}</p>
-        }
+      <app-input-control
+        formControlName="branchAddress"
+        label="Address"
+        placeholder="12 Business District Road"
+        prefixIcon="pi-map-marker"
+        [clearable]="true"
+        [trim]="true"
+      />
+
+      <div class="field-grid">
+        <app-input-control
+          formControlName="branchPhone"
+          type="tel"
+          label="Contact Number"
+          placeholder="+1 (555) 000-0000"
+          prefixIcon="pi-phone"
+          inputmode="tel"
+          [clearable]="true"
+        />
+        <app-input-control
+          formControlName="branchEmail"
+          type="email"
+          label="Branch Email"
+          placeholder="office@acme.com"
+          prefixIcon="pi-envelope"
+          inputmode="email"
+          [clearable]="true"
+          [trim]="true"
+        />
       </div>
 
       <div class="field-grid">
-        <div class="field">
-          <label class="field__label" for="branchCity">City</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M3 21h18"></path>
-                <path d="M5 21V7l7-4 7 4v14"></path>
-                <path d="M9 9h.01"></path>
-                <path d="M9 12h.01"></path>
-                <path d="M9 15h.01"></path>
-                <path d="M15 9h.01"></path>
-                <path d="M15 12h.01"></path>
-                <path d="M15 15h.01"></path></svg
-            ></span>
-            <input
-              id="branchCity"
-              formControlName="branchCity"
-              type="text"
-              placeholder="Mumbai"
-            />
-          </div>
-        </div>
-        <div class="field">
-          <label class="field__label" for="branchPincode">Postal Code</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M7 8h17"></path>
-                <path d="M7 12h17"></path>
-                <path d="M7 16h17"></path>
-                <path d="M2 8h.01"></path>
-                <path d="M2 12h.01"></path>
-                <path d="M2 16h.01"></path></svg
-            ></span>
-            <input
-              id="branchPincode"
-              formControlName="branchPincode"
-              type="text"
-              placeholder="400001"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="branchAddress">Address</label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle></svg
-          ></span>
-          <input
-            id="branchAddress"
-            formControlName="branchAddress"
-            type="text"
-            placeholder="12 Business District Road"
-          />
-        </div>
-      </div>
-
-      <div class="field-grid">
-        <div class="field" [class.is-error]="showError('branchPhone')">
-          <label class="field__label" for="branchPhone">Contact Number</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
-                ></path></svg
-            ></span>
-            <input
-              id="branchPhone"
-              formControlName="branchPhone"
-              type="tel"
-              placeholder="+1 (555) 000-0000"
-            />
-          </div>
-          @if (showError('branchPhone')) {
-            <p class="field__error">{{ errorMessage('branchPhone') }}</p>
-          }
-        </div>
-
-        <div class="field" [class.is-error]="showError('branchEmail')">
-          <label class="field__label" for="branchEmail">Branch Email</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
-                ></path>
-                <path d="M22 6l-10 7L2 6"></path></svg
-            ></span>
-            <input
-              id="branchEmail"
-              formControlName="branchEmail"
-              type="email"
-              placeholder="office@acme.com"
-            />
-          </div>
-          @if (showError('branchEmail')) {
-            <p class="field__error">{{ errorMessage('branchEmail') }}</p>
-          }
-        </div>
-      </div>
-
-      <div class="field-grid">
-        <div class="field" [class.is-error]="showError('branchLatitude')">
-          <label class="field__label" for="branchLatitude">Latitude</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <path d="M12 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg
-            ></span>
-            <input
-              id="branchLatitude"
-              formControlName="branchLatitude"
-              type="text"
-              inputmode="decimal"
-              placeholder="19.0760"
-            />
-          </div>
-          @if (showError('branchLatitude')) {
-            <p class="field__error">{{ errorMessage('branchLatitude') }}</p>
-          }
-        </div>
-
-        <div class="field" [class.is-error]="showError('branchLongitude')">
-          <label class="field__label" for="branchLongitude">Longitude</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <path d="M12 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg
-            ></span>
-            <input
-              id="branchLongitude"
-              formControlName="branchLongitude"
-              type="text"
-              inputmode="decimal"
-              placeholder="72.8777"
-            />
-          </div>
-          @if (showError('branchLongitude')) {
-            <p class="field__error">{{ errorMessage('branchLongitude') }}</p>
-          }
-        </div>
+        <app-input-control
+          formControlName="branchLatitude"
+          label="Latitude"
+          placeholder="19.0760"
+          prefixIcon="pi-compass"
+          inputmode="decimal"
+          [clearable]="true"
+        />
+        <app-input-control
+          formControlName="branchLongitude"
+          label="Longitude"
+          placeholder="72.8777"
+          prefixIcon="pi-compass"
+          inputmode="decimal"
+          [clearable]="true"
+        />
       </div>
 
       <button

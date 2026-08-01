@@ -1,6 +1,8 @@
-import { Component, inject, OnInit, computed } from '@angular/core';
+import { Component, inject, OnInit, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { RegisterStore } from './register.store';
 
 import { Step1WelcomeComponent } from './steps/step-1-welcome.component';
@@ -30,6 +32,7 @@ interface StepDef {
   standalone: true,
   imports: [
     CommonModule,
+    ToastModule,
     Step1WelcomeComponent,
     Step2RegistrationTypeComponent,
     Step3BasicInfoComponent,
@@ -44,13 +47,14 @@ interface StepDef {
     Step12ProcessingComponent,
     Step13SuccessComponent,
   ],
-  providers: [RegisterStore],
+  providers: [RegisterStore, MessageService],
   templateUrl: './register.component.html',
   styleUrls: ['../../auth-shell.css', './register.component.css'],
 })
 export class RegisterComponent implements OnInit {
   readonly store = inject(RegisterStore);
   private readonly router = inject(Router);
+  private readonly messageService = inject(MessageService);
 
   // 13-Step Flow per Specification
   readonly steps: StepDef[] = [
@@ -135,14 +139,35 @@ export class RegisterComponent implements OnInit {
 
   readonly progressPercent = computed(() => (this.store.currentStep() / 13) * 100);
 
+  constructor() {
+    // Surface store errors as error toasts.
+    effect(() => {
+      const error = this.store.error();
+      if (error) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Something went wrong',
+          detail: error,
+          life: 5000,
+        });
+      }
+    });
+
+    // Initialize the backend registration session once an email is known
+    // (basic info lives on step 3, but the initial ngOnInit call has no email).
+    effect(() => {
+      const email = this.store.email();
+      const hasSession = this.store.sessionId();
+      if (email && !hasSession) {
+        untracked(() => this.store.initializeSession());
+      }
+    });
+  }
+
   ngOnInit() {
     this.store.restoreDraft();
     this.store.initializeSession();
     this.store.loadDdls();
-  }
-
-  dismissError() {
-    this.store.updatePersonalInfo({ error: null });
   }
 
   navigateToLogin() {

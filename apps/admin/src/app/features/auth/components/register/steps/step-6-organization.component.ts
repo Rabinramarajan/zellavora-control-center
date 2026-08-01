@@ -8,6 +8,8 @@ import {
 } from '@angular/forms';
 import { RegisterStore } from '../register.store';
 import { DragDropUploadComponent } from '../../../../../shared/components/drag-drop-upload.component';
+import { InputControlComponent } from '@shared/components/input-control';
+import { SelectControlComponent } from '@shared/components/select-control';
 
 interface UseCaseOption {
   value: string;
@@ -18,7 +20,13 @@ interface UseCaseOption {
 @Component({
   selector: 'app-step-6-organization',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DragDropUploadComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    DragDropUploadComponent,
+    InputControlComponent,
+    SelectControlComponent,
+  ],
   templateUrl: './step-6-organization.component.html',
   styleUrls: ['../step-styles.css'],
 })
@@ -64,6 +72,14 @@ export class Step6OrganizationComponent implements OnInit {
     'Real Estate',
     'Logistics',
     'Other',
+  ];
+
+  readonly organizationSizeOptions: { key: string; label: string }[] = [
+    { key: '1-10', label: '1–10' },
+    { key: '10-50', label: '10–50' },
+    { key: '50-100', label: '50–100' },
+    { key: '100-500', label: '100–500' },
+    { key: '500+', label: '500+' },
   ];
 
   readonly currencyOptions: { key: string; value: string }[] = [
@@ -174,28 +190,8 @@ export class Step6OrganizationComponent implements OnInit {
     );
   }
 
-  showError(field: string): boolean {
-    const control = this.form.get(field);
-    return !!control && control.invalid && (control.touched || control.dirty);
-  }
-
   orgNamePending(): boolean {
     return this.form.get('organizationName')?.status === 'PENDING';
-  }
-
-  errorMessage(field: string): string {
-    const control = this.form.get(field);
-    if (!control || !control.errors) return '';
-    const errors = control.errors;
-    if (errors['required']) return 'This field is required.';
-    if (errors['pattern']) return 'Use 2–16 characters: letters, numbers, hyphens only.';
-    if (errors['minlength']) {
-      return `Must be at least ${errors['minlength'].requiredLength} characters.`;
-    }
-    if (errors['maxlength']) {
-      return `Must be at most ${errors['maxlength'].requiredLength} characters.`;
-    }
-    return 'Please fix this field.';
   }
 
   async checkOrgCode() {

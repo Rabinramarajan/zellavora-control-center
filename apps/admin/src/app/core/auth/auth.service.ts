@@ -255,7 +255,9 @@ export class AuthService {
       }),
       tap((res) => {
         if (this.isMfaChallenge(res)) {
+          sessionStorage.setItem('zcc.mfaToken', res.mfaToken);
           this.store.setLoading(false);
+          this.router.navigate(['/auth/mfa-verify'], { replaceUrl: true });
           return;
         }
         this.handleSuccess(res);

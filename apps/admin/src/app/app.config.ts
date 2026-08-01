@@ -12,6 +12,7 @@ import { retryInterceptor } from './core/http/retry.interceptor';
 import { errorInterceptor } from './core/error/error.interceptor';
 import { PolicyVersionInterceptor } from './core/rbac/interceptors/policy-version.interceptor';
 import { ConfigService } from './core/config/config.service';
+import { INPUT_VALIDATION_MESSAGES } from './shared/components/input-control/input-control.types';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,6 +29,13 @@ export const appConfig: ApplicationConfig = {
       withInterceptorsFromDi()
     ),
     { provide: HTTP_INTERCEPTORS, useClass: PolicyVersionInterceptor, multi: true },
+    {
+      provide: INPUT_VALIDATION_MESSAGES,
+      useValue: {
+        emailTaken: 'This email is already registered.',
+        orgNameTaken: 'This organization name is already registered.',
+      },
+    },
     providePrimeNG({
       theme: {
         preset: Aura

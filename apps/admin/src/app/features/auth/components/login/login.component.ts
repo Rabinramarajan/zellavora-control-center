@@ -14,6 +14,8 @@ import { AuthService } from '@core/auth/auth.service';
 import { AuthStore } from '@core/auth/auth.store';
 import { ConfigService } from '@core/config/config.service';
 import { Dialog } from 'primeng/dialog';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { InputControlComponent } from '@shared/components/input-control';
 import { SelectControlComponent } from '@shared/components/select-control';
 
@@ -33,7 +35,8 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, Dialog, InputControlComponent, SelectControlComponent],
+  imports: [ReactiveFormsModule, RouterLink, Dialog, ToastModule, InputControlComponent, SelectControlComponent],
+  providers: [MessageService],
   templateUrl: './login.component.html',
   styleUrls: ['../../auth-shell.css', './login.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +46,7 @@ export class LoginComponent {
   private readonly authStore = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly configService = inject(ConfigService);
+  private readonly messageService = inject(MessageService);
   readonly auth = inject(AuthService);
 
   // --- Dialog visibility ---------------------------------------------------
@@ -99,7 +103,9 @@ export class LoginComponent {
           return;
         }
         if (error) {
-          this.authStore.setError(OAUTH_ERROR_MESSAGES[error] ?? 'Social sign-in failed.');
+          const message = OAUTH_ERROR_MESSAGES[error] ?? 'Social sign-in failed.';
+          this.authStore.setError(message);
+          this.messageService.add({ severity: 'error', summary: 'Sign-in failed', detail: message, life: 5000 });
         }
       });
     });
@@ -156,8 +162,25 @@ export class LoginComponent {
     const request = this.form.getRawValue();
 
     this.auth.login(request).subscribe({
-      next: () => sessionStorage.setItem('zcc.clientCode', request.clientCode),
-      error: (error) => console.error('Login error:', error),
+      next: (res) => {
+        sessionStorage.setItem('zcc.clientCode', request.clientCode);
+        if (res.mfaRequired) return;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Welcome back',
+          detail: 'Signed in successfully',
+          life: 3000,
+        });
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Sign-in failed',
+          detail: this.auth.error() ?? 'Please check your credentials and try again.',
+          life: 5000,
+        });
+        console.error('Login error:', error);
+      },
     });
   }
 }

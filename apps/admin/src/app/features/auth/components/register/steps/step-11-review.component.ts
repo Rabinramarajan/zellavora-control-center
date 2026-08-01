@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { RegisterStore } from '../register.store';
 
 @Component({
@@ -12,16 +12,18 @@ import { RegisterStore } from '../register.store';
 })
 export class Step11ReviewComponent {
   readonly store = inject(RegisterStore);
-  private readonly router = inject(Router);
+  private readonly messageService = inject(MessageService);
 
   async confirmAndCreateAccount() {
     this.store.nextStep();
     const success = await this.store.submitRegistration();
     if (success) {
-      this.store.nextStep();
-      setTimeout(() => {
-        this.router.navigate(['/auth/welcome']);
-      }, 2000);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Account created',
+        detail: 'Your organization has been registered successfully.',
+        life: 4000,
+      });
     }
   }
 }

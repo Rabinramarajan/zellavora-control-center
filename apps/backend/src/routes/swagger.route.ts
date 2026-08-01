@@ -89,6 +89,21 @@ router.get('/api-docs.json', (_req, res) => {
 
 /**
  * @swagger
+ * /swagger/index.html:
+ *   get:
+ *     summary: swaggerUIInteractiveAPIExplorer
+ *     tags: [health]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Returns the Swagger UI HTML page
+ */
+router.get(['/swagger', '/swagger/', '/swagger/index.html'], (_req, res) => {
+  res.type('text/html').send(SWAGGER_HTML);
+});
+
+/**
+ * @swagger
  * /api-docs:
  *   get:
  *     summary: swaggerUIInteractiveAPIExplorer

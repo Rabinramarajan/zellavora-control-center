@@ -26,327 +26,96 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
     <div class="reg-form__body">
-      <div class="field" [class.is-error]="showError('organizationName')">
-        <label class="field__label" for="orgName">Organization Name <em>*</em></label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 21h18"></path>
-              <path d="M5 21V7l7-4 7 4v14"></path>
-              <path d="M9 9h.01"></path>
-              <path d="M9 12h.01"></path>
-              <path d="M9 15h.01"></path>
-              <path d="M15 9h.01"></path>
-              <path d="M15 12h.01"></path>
-              <path d="M15 15h.01"></path></svg
-          ></span>
-          <input
-            id="orgName"
-            formControlName="organizationName"
-            type="text"
-            placeholder="e.g. Acme Corp"
-            autocomplete="organization"
-          />
-        </div>
-        @if (showError('organizationName')) {
-          @if (form.get('organizationName')?.hasError('orgNameTaken')) {
-            <p class="field__error">This organization name is already registered.</p>
-          } @else {
-            <p class="field__error">{{ errorMessage('organizationName') }}</p>
-          }
-        } @else if (orgNamePending()) {
-          <p class="field__hint">Checking availability…</p>
-        }
-      </div>
+      <app-input-control
+        formControlName="organizationName"
+        label="Organization Name"
+        placeholder="e.g. Acme Corp"
+        prefixIcon="pi-building"
+        autocomplete="organization"
+        [clearable]="true"
+        [trim]="true"
+        [hint]="orgNamePending() ? 'Checking availability…' : ''"
+      />
 
-      <div class="field" [class.is-error]="showError('organizationCode')">
-        <label class="field__label" for="orgCode">Organization Code <em>*</em></label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M7 8h17"></path>
-              <path d="M7 12h17"></path>
-              <path d="M7 16h17"></path>
-              <path d="M2 8h.01"></path>
-              <path d="M2 12h.01"></path>
-              <path d="M2 16h.01"></path></svg
-          ></span>
-          <input
-            id="orgCode"
-            formControlName="organizationCode"
-            type="text"
-            placeholder="e.g. acme-corp"
-            (blur)="checkOrgCode()"
-            autocomplete="off"
-          />
-          <button
-            type="button"
-            class="field__toggle"
-            title="Generate from organization name"
-            [disabled]="!form.get('organizationName')?.value"
-            (click)="generateCodeFromName()"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
-            </svg>
-          </button>
-        </div>
-        @if (showError('organizationCode')) {
-          <p class="field__error">{{ errorMessage('organizationCode') }}</p>
-        } @else {
-          <p class="field__hint">2–16 characters: letters, numbers, hyphens only.</p>
-        }
+      <app-input-control
+        formControlName="organizationCode"
+        label="Organization Code"
+        placeholder="e.g. acme-corp"
+        prefixIcon="pi-hashtag"
+        autocomplete="off"
+        hint="2–16 characters: letters, numbers, hyphens only."
+        (blurred)="checkOrgCode()"
+      />
+      <button
+        type="button"
+        class="text-link"
+        [disabled]="!form.get('organizationName')?.value"
+        (click)="generateCodeFromName()"
+      >
+        Generate from organization name
+      </button>
+
+      <div class="field-grid">
+        <zc-select-control
+          formControlName="industry"
+          label="Industry"
+          placeholder="Select Industry"
+          prefixIcon="pi-th-large"
+          [options]="industryOptions"
+          optionLabel=""
+        />
+
+        <zc-select-control
+          formControlName="organizationSize"
+          label="Company Size"
+          placeholder="Select Size"
+          prefixIcon="pi-users"
+          [options]="organizationSizeOptions"
+          optionValue="key"
+          optionLabel="label"
+        />
       </div>
 
       <div class="field-grid">
-        <div class="field" [class.is-error]="showError('industry')">
-          <label class="field__label" for="industry">Industry <em>*</em></label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M3 7h7v7H3z"></path>
-                <path d="M14 7h7v7h-7z"></path>
-                <path d="M3 14h7v7H3z"></path>
-                <path d="M14 14h7v7h-7z"></path></svg
-            ></span>
-            <select id="industry" formControlName="industry">
-              <option value="" disabled>Select Industry</option>
-              @for (i of industryOptions; track i) {
-                <option [value]="i">{{ i }}</option>
-              }
-            </select>
-            <svg
-              class="field__chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
-          </div>
-          @if (showError('industry')) {
-            <p class="field__error">{{ errorMessage('industry') }}</p>
-          }
-        </div>
+        <zc-select-control
+          formControlName="currency"
+          label="Base Currency"
+          placeholder="Select Currency"
+          prefixIcon="pi-dollar"
+          [options]="currencyOptions"
+          optionValue="key"
+          optionLabel="value"
+        />
 
-        <div class="field">
-          <label class="field__label" for="orgSize">Company Size</label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg
-            ></span>
-            <select id="orgSize" formControlName="organizationSize">
-              <option value="1-10">1–10</option>
-              <option value="10-50">10–50</option>
-              <option value="50-100">50–100</option>
-              <option value="100-500">100–500</option>
-              <option value="500+">500+</option>
-            </select>
-            <svg
-              class="field__chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
-          </div>
-        </div>
+        <zc-select-control
+          formControlName="fiscalYear"
+          label="Fiscal Year"
+          placeholder="Select Fiscal Year"
+          prefixIcon="pi-calendar"
+          [options]="fiscalYearOptions"
+          optionValue="key"
+          optionLabel="value"
+        />
       </div>
 
-      <div class="field-grid">
-        <div class="field" [class.is-error]="showError('currency')">
-          <label class="field__label" for="currency">Base Currency <em>*</em></label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M2 12h20"></path>
-                <path d="M12 2v20"></path>
-              </svg></span
-            >
-            <select id="currency" formControlName="currency">
-              <option value="" disabled>Select Currency</option>
-              @for (c of currencyOptions; track c.key) {
-                <option [value]="c.key">{{ c.value }}</option>
-              }
-            </select>
-            <svg
-              class="field__chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
-          </div>
-          @if (showError('currency')) {
-            <p class="field__error">{{ errorMessage('currency') }}</p>
-          }
-        </div>
+      <zc-select-control
+        formControlName="timezone"
+        label="Timezone"
+        placeholder="Select Timezone"
+        prefixIcon="pi-clock"
+        [options]="timezoneOptions"
+        optionLabel=""
+      />
 
-        <div class="field" [class.is-error]="showError('fiscalYear')">
-          <label class="field__label" for="fiscalYear">Fiscal Year <em>*</em></label>
-          <div class="field__control">
-            <span class="field__icon"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                <path d="M16 2v4"></path>
-                <path d="M8 2v4"></path>
-                <path d="M3 10h18"></path>
-              </svg></span
-            >
-            <select id="fiscalYear" formControlName="fiscalYear">
-              <option value="" disabled>Select Fiscal Year</option>
-              @for (f of fiscalYearOptions; track f.key) {
-                <option [value]="f.key">{{ f.value }}</option>
-              }
-            </select>
-            <svg
-              class="field__chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
-          </div>
-          @if (showError('fiscalYear')) {
-            <p class="field__error">{{ errorMessage('fiscalYear') }}</p>
-          }
-        </div>
-      </div>
-
-      <div class="field" [class.is-error]="showError('timezone')">
-        <label class="field__label" for="orgTimezone">Timezone <em>*</em></label>
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 6v6l4 2"></path></svg
-          ></span>
-          <select id="orgTimezone" formControlName="timezone">
-            <option value="" disabled>Select Timezone</option>
-            @for (t of timezoneOptions; track t) {
-              <option [value]="t">{{ t }}</option>
-            }
-          </select>
-          <svg
-            class="field__chevron"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M6 9l6 6 6-6"></path>
-          </svg>
-        </div>
-        @if (showError('timezone')) {
-          <p class="field__error">{{ errorMessage('timezone') }}</p>
-        }
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="website"
-          >Website <span class="field__opt">(optional)</span></label
-        >
-        <div class="field__control">
-          <span class="field__icon"
-            ><svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M2 12h20"></path>
-              <path
-                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-              ></path></svg
-          ></span>
-          <input
-            id="website"
-            formControlName="website"
-            type="url"
-            placeholder="https://example.com"
-          />
-        </div>
-      </div>
+      <app-input-control
+        formControlName="website"
+        type="url"
+        label="Website (optional)"
+        placeholder="https://example.com"
+        prefixIcon="pi-globe"
+        [clearable]="true"
+        [trim]="true"
+      />
 
       <div class="field">
         <label class="field__label"
