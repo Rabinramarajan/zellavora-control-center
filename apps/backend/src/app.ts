@@ -121,6 +121,23 @@ app.get('/health', (_req, res) => {
  * @swagger
  * /:
  *   get:
+ *     summary: redirectToSwaggerUI
+ *     tags: [health]
+ *     security: []
+ *     responses:
+ *       302:
+ *         description: Redirects to the Swagger UI explorer
+ */
+// Root index redirects to the API docs so the bare domain lands somewhere
+// useful instead of a JSON blob (or the 404 handler).
+app.get('/', (_req, res) => {
+  res.redirect(302, '/swagger/index.html');
+});
+
+/**
+ * @swagger
+ * /info:
+ *   get:
  *     summary: aPIIndexServiceMetadataAndEntrypoints
  *     tags: [health]
  *     security: []
@@ -128,9 +145,8 @@ app.get('/health', (_req, res) => {
  *       200:
  *         description: Service descriptor
  */
-// Root index. Without this, `/` falls through to the 404 handler, which looks
-// like a deployment failure even though the function is healthy.
-app.get('/', (_req, res) => {
+// Service descriptor — the historical `/` payload, preserved at `/info`.
+app.get('/info', (_req, res) => {
   res.json({
     service: 'Zellavora Control Center — Backend API',
     version: '1.0.0',
@@ -138,7 +154,7 @@ app.get('/', (_req, res) => {
     environment: config.nodeEnv,
     endpoints: {
       health: '/health',
-      docs: '/api-docs',
+      docs: '/swagger/index.html',
       openapi: '/api-docs.json',
       api: `/api/${config.apiVersion}`,
     },
