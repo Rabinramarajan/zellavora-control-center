@@ -16,14 +16,16 @@ export class AccountLockedComponent implements OnInit, OnDestroy {
   countdown = signal<number>(0);
   lockReason = signal<string>('Too many failed login attempts');
   attemptsCount = signal<number>(5);
+  private totalDuration = 900;
   private timerInterval: any;
 
   ngOnInit() {
     const reason = this.route.snapshot.queryParamMap.get('reason') || 'Too many failed login attempts';
     const lockTime = this.route.snapshot.queryParamMap.get('lockTime');
     this.lockReason.set(reason);
-    // Default: 15 minute lock
+    // Default: 15 minute lock; use retryAfterSeconds from the API when provided.
     const lockDuration = lockTime ? parseInt(lockTime) : 900;
+    this.totalDuration = lockDuration;
     this.countdown.set(lockDuration);
     this.timerInterval = setInterval(() => {
       if (this.countdown() > 0) this.countdown.update(t => t - 1);
@@ -44,14 +46,14 @@ export class AccountLockedComponent implements OnInit, OnDestroy {
   }
 
   get progressPct(): number {
-    return (1 - this.countdown() / 900) * 100;
+    return (1 - this.countdown() / this.totalDuration) * 100;
   }
 
   /** SVG ring circumference for a circle of r=54 */
   readonly ringCircumference = 2 * Math.PI * 54; // ≈ 339.29
 
   get ringDashoffset(): number {
-    const pct = this.countdown() / 900; // 1 = full, 0 = empty
+    const pct = this.countdown() / this.totalDuration; // 1 = full, 0 = empty
     return this.ringCircumference * (1 - pct);
   }
 

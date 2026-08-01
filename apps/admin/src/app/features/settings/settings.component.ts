@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -9,6 +9,7 @@ import { ToastModule } from 'primeng/toast';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { ApiIntegrationService } from '@core/services/api-integration.service';
+import { AuthService } from '@core/auth/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
@@ -33,6 +34,7 @@ export class SettingsComponent implements OnInit {
   private apiService = inject(ApiIntegrationService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private auth = inject(AuthService);
 
   activeTab = 'general';
 
@@ -202,5 +204,130 @@ export class SettingsComponent implements OnInit {
         });
       }
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // SECURITY TAB — change password + MFA management
+  // -------------------------------------------------------------------------
+
+  passwordModel = { currentPassword: '', newPassword: '', confirmPassword: '' };
+  passwordSaving = false;
+  passwordMessage: { severity: 'success' | 'error'; text: string } | null = null;
+
+  mfaStep = signal<'idle' | 'qr' | 'codes'>('idle');
+  mfaEnabled = computed(() => !!this.auth.user()?.mfaEnabled);
+  mfaSecret = '';
+  mfaQrCode = '';
+  mfaCodeInput = '';
+  mfaBusy = false;
+  mfaError: string | null = null;
+  recoveryCodes: string[] = [];
+  disablePassword = '';
+
+  changePassword() {
+    const { currentPassword, newPassword, confirmPassword } = this.passwordModel;
+    if (!currentPassword) {
+      this.passwordMessage = { severity: 'error', text: 'Enter your current password.' };
+      return;
+    }
+    if (newPassword.length < 12) {
+      this.passwordMessage = { severity: 'error', text: 'New password must be at least 12 characters.' };
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      this.passwordMessage = { severity: 'error', text: 'New passwords do not match.' };
+      return;
+    }
+    this.passwordSaving = true;
+    this.passwordMessage = null;
+    this.auth.changePassword({ currentPassword, newPassword }).subscribe({
+      next: () => {
+        this.passwordSaving = false;
+        this.passwordModel = { currentPassword: '', newPassword: '', confirmPassword: '' };
+        this.passwordMessage = { severity: 'success', text: 'Password updated successfully.' };
+      },
+      error: (err: any) => {
+        this.passwordSaving = false;
+        this.passwordMessage = {
+          severity: 'error',
+          text: err?.error?.error?.message || 'Failed to update password.',
+        };
+      },
+    });
+  }
+
+  startMfaEnrollment() {
+    this.mfaBusy = true;
+    this.mfaError = null;
+    this.auth.startMfaEnrollment().subscribe({
+      next: (res) => {
+        this.mfaSecret = res.secret;
+        this.mfaQrCode = res.qrCodeDataUrl;
+        this.mfaCodeInput = '';
+        this.mfaStep.set('qr');
+        this.mfaBusy = false;
+      },
+      error: (err: any) => {
+        this.mfaBusy = false;
+        this.mfaError = err?.error?.error?.message || 'Failed to start enrollment.';
+      },
+    });
+  }
+
+  confirmMfa() {
+    if (this.mfaCodeInput.length !== 6) return;
+    this.mfaBusy = true;
+    this.mfaError = null;
+    this.auth.confirmMfaEnrollment({ secret: this.mfaSecret, code: this.mfaCodeInput }).subscribe({
+      next: (res) => {
+        this.recoveryCodes = res.recoveryCodes ?? [];
+        this.mfaSecret = '';
+        this.mfaCodeInput = '';
+        this.mfaStep.set('codes');
+        this.mfaBusy = false;
+      },
+      error: (err: any) => {
+        this.mfaBusy = false;
+        this.mfaError = err?.error?.error?.message || 'Invalid code. Please try again.';
+      },
+    });
+  }
+
+  regenerateCodes() {
+    this.mfaBusy = true;
+    this.mfaError = null;
+    this.auth.regenerateRecoveryCodes().subscribe({
+      next: (res) => {
+        this.recoveryCodes = res.recoveryCodes ?? [];
+        this.mfaStep.set('codes');
+        this.mfaBusy = false;
+      },
+      error: (err: any) => {
+        this.mfaBusy = false;
+        this.mfaError = err?.error?.error?.message || 'Failed to regenerate codes.';
+      },
+    });
+  }
+
+  disableMfa() {
+    if (!this.disablePassword) return;
+    this.mfaBusy = true;
+    this.mfaError = null;
+    this.auth.disableMfa({ password: this.disablePassword }).subscribe({
+      next: () => {
+        this.disablePassword = '';
+        this.mfaStep.set('idle');
+        this.mfaBusy = false;
+      },
+      error: (err: any) => {
+        this.mfaBusy = false;
+        this.mfaError = err?.error?.error?.message || 'Failed to disable MFA.';
+      },
+    });
+  }
+
+  closeCodes() {
+    this.mfaStep.set('idle');
+    this.recoveryCodes = [];
   }
 }

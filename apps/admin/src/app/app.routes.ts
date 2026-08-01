@@ -77,6 +77,12 @@ export const appRoutes: Routes = [
       import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
   {
+    path: 'iam',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/iam/iam.routes').then((m) => m.iamRoutes),
+  },
+  {
     path: 'theme-builder',
     canActivate: [authGuard],
     loadComponent: () =>

@@ -131,3 +131,5 @@ export const requirePermission =
  */
 export const authenticateToken = authenticate;
 export const authorize = requireRole;
+/** `authGuard` alias so the foundation naming matches module prompts. */
+export const authGuard = authenticate;

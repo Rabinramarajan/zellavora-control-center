@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc/spec",
     "types": [
-      "jest",
+      "jasmine",
       "node"
     ],
     "esModuleInterop": true,
@@ -13,7 +13,6 @@
     "src/test-setup.ts"
   ],
   "include": [
-    "jest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.d.ts"

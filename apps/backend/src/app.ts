@@ -1,11 +1,14 @@
 import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import Redis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
 import type { RequestHandler } from 'express';
 import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
+import { requestContext } from './middleware/request-context';
 import authRoutes from './routes/auth';
 import registerRoutes from './routes/register';
 import crypto from 'crypto';
@@ -38,6 +41,11 @@ import cleanDdlRoutes from './modules/ddl/ddl.routes';
 import emailRoutes from './routes/email.routes';
 import { registrationRoutes } from './modules/registration';
 import { buildRbac } from './rbac';
+import dashboardRoutes from './modules/dashboard/dashboard.routes';
+import resourceRoutes from './modules/resources/resource.routes';
+import roleRoutes from './modules/roles/role.routes';
+import groupRoutes from './modules/groups/group.routes';
+import iamUserRoutes from './modules/users/iam-user.routes';
 
 const app = express();
 
@@ -77,11 +85,60 @@ app.use(
   })
 );
 
+// Security headers. CSP is deliberately permissive (unsafe-inline) because the
+// Angular SPA and Swagger UI rely on inline styles/scripts when served from
+// this origin — everything else gets strict, sane defaults.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://cdn.jsdelivr.net',
+          'https://cdnjs.cloudflare.com',
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://cdn.jsdelivr.net',
+          'https://fonts.googleapis.com',
+        ],
+        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        connectSrc: ["'self'"],
+        upgradeInsecureRequests: null,
+      },
+    },
+    hsts: config.nodeEnv === 'production' ? { maxAge: 15552000, includeSubDomains: true } : false,
+  })
+);
+
+// Coarse global rate limit on the auth surface (brute-force / credential
+// stuffing protection). Per-account + per-IP enforcement happens inside the
+// login handler via RateLimitService.
+app.use(
+  '/api/v1/auth',
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Please slow down.', code: 'RATE_LIMITED' },
+  })
+);
+
 // Request logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
   next();
 });
+
+// Request context (AsyncLocalStorage) for the audit service — must run before
+// the clean-module routes so @Audited decorators can resolve actor metadata.
+app.use(requestContext);
 
 /**
  * @swagger
@@ -194,6 +251,15 @@ app.use('/api/v1/clean/verifications', cleanVerifyRoutes);
 app.use('/api/v1/clean/audits', cleanAuditRoutes);
 app.use('/api/v1/clean/storage', cleanStorageRoutes);
 app.use('/api/v1/clean/ddls', cleanDdlRoutes);
+
+// Operations Dashboard (tenant-scoped)
+app.use('/api/v1/dashboard', dashboardRoutes);
+
+// IAM Admin Console — RBAC modules (Resources first; Roles, Groups, Users follow)
+app.use('/api/v1/iam/resources', resourceRoutes);
+app.use('/api/v1/iam/roles', roleRoutes);
+app.use('/api/v1/iam/groups', groupRoutes);
+app.use('/api/v1/iam/users', iamUserRoutes);
 app.use('/api/v1', projectRoutes);
 app.use('/api/v1', portfolioRoutes);
 app.use('/api/v1', galleryRoutes);

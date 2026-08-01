@@ -4,13 +4,15 @@ import { config } from '../config/env';
 export interface ApiError extends Error {
   status?: number;
   code?: string;
+  details?: Record<string, unknown>;
 }
 
 export class AppError extends Error implements ApiError {
   constructor(
     message: string,
     public status: number = 500,
-    public code: string = 'INTERNAL_SERVER_ERROR'
+    public code: string = 'INTERNAL_SERVER_ERROR',
+    public details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'AppError';
@@ -39,6 +41,7 @@ export const errorHandler = (
         message: error.message,
         code: error.code,
         status: error.status,
+        ...(error.details ?? {}),
       },
     });
     return;

@@ -13,14 +13,36 @@ describe('AdminStoreService', () => {
     firstName: 'Test',
     lastName: 'User',
     emailId: 'test@example.com',
+    contactNumber: '1234567890',
+    genderId: 1,
+    genderValue: 'Male',
+    beginDate: '2024-01-01',
+    endDate: '2099-12-31',
+    statusId: 1,
     statusValue: 'Active',
-    statusDescription: 'Active',
+    designationId: 1,
+    designationValue: 'Engineer',
+    locationId: 1,
+    locationValue: 'HQ',
+    branchId: 1,
+    branchValue: 'Main',
+    employeeCode: 'E001',
+    departmentId: 1,
+    departmentValue: 'Engineering',
+    teamId: 1,
+    teamValue: 'Platform',
   };
 
   const mockRole: Role = {
     roleId: 1,
     roleName: 'Test Role',
-    roleActive: true,
+    statusId: 1,
+    statusValue: 'Active',
+    beginDate: '2024-01-01',
+    endDate: '2099-12-31',
+    moduleId: 1,
+    moduleValue: 'Platform',
+    ilstRoleResource: [],
   };
 
   beforeEach(() => {
@@ -64,8 +86,8 @@ describe('AdminStoreService', () => {
 
   describe('User Operations', () => {
     it('should load users', async () => {
-      const mockResponse = { searchResult: [mockUser] };
-      apiService.searchUsers.and.returnValue(Promise.resolve(mockResponse));
+      const mockResponse = { searchResult: [mockUser], totalCount: 1, pageSize: 10, pageNumber: 1 };
+      apiService.searchUsers.and.returnValue(Promise.resolve(mockResponse as never));
 
       const criteria = { pageSize: 10, pageNumber: 1, ascending: true };
       const result = await service.loadUsers(criteria);
@@ -98,8 +120,8 @@ describe('AdminStoreService', () => {
 
   describe('Role Operations', () => {
     it('should load roles', async () => {
-      const mockResponse = { searchResult: [mockRole] };
-      apiService.searchRoles.and.returnValue(Promise.resolve(mockResponse));
+      const mockResponse = { searchResult: [mockRole], totalCount: 1, pageSize: 10, pageNumber: 1 };
+      apiService.searchRoles.and.returnValue(Promise.resolve(mockResponse as never));
 
       const criteria = { pageSize: 10, pageNumber: 1, ascending: true };
       const result = await service.loadRoles(criteria);
@@ -110,7 +132,7 @@ describe('AdminStoreService', () => {
 
     it('should delete a role', async () => {
       service['state'].update(s => ({ ...s, roles: [mockRole] }));
-      apiService.deleteRole.and.returnValue(Promise.resolve());
+      apiService.deleteRole.and.returnValue(Promise.resolve() as never);
 
       await service.deleteRole(mockRole.roleId);
 

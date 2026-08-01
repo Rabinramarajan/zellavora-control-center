@@ -24,9 +24,12 @@ import { z } from 'zod';
 import { config } from '../../config/env';
 import { prisma } from '../../infrastructure/prisma';
 import { logger } from '../../infrastructure/logger';
+import { supabaseAdmin } from '../../config/supabase';
 import { AppError } from '../../middleware/error';
 import { PasswordService } from '../../services/auth/password.service';
 import { TokenService } from '../../services/auth/token.service';
+import { SessionService } from '../../services/auth/session.service';
+import { EncryptionService } from '../../services/auth/encryption.service';
 import { addQueueJob } from '../../infrastructure/queue';
 import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
@@ -1162,23 +1165,47 @@ router.post('/complete', async (req, res, next) => {
       });
     }
 
+    // Mirror the owner into the Supabase users table (the auth "handshake"
+    // layer). Login reads users.mfa_secret_encrypted + mfa_last_used_counter for
+    // MFA and writes last_login_at there, so self-registered owners must exist
+    // in Supabase with the encrypted TOTP secret.
+    const mfaSecretEncrypted =
+      data.mfaEnabled && data.mfaMethod === 'authenticator' && mfaSecret
+        ? EncryptionService.encrypt(mfaSecret)
+        : null;
+
+    await supabaseAdmin.from('users').upsert(
+      {
+        id: result.user.id,
+        email: result.user.email,
+        full_name: result.user.fullName,
+        role: 'owner',
+        tenant_id: result.organization.id,
+        email_verified: true,
+        email_verified_at: new Date().toISOString(),
+        mfa_enabled: data.mfaEnabled,
+        mfa_method: data.mfaMethod,
+        mfa_enrolled_at: mfaSecretEncrypted ? new Date().toISOString() : null,
+        mfa_secret_encrypted: mfaSecretEncrypted,
+        mfa_last_used_counter: mfaSecretEncrypted ? 0 : null,
+        status_value: 'ACTIVE',
+        status_description: 'Active',
+        version: 1,
+      },
+      { onConflict: 'id' }
+    );
+
     // Issue access + refresh tokens and create a session so the owner is signed in
     let session: { id: string; accessToken: string; refreshToken: string } | null = null;
     try {
-      const prismaSession = await prisma.session.create({
-        data: {
-          userId: result.user.id,
-          organizationId: result.organization.id,
-          ipAddress: ip(req),
-          userAgent: ua(req),
-          deviceInfo: {
-            source: 'registration',
-            branchId: result.branch.id,
-          },
-          isActive: true,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          lastActivityAt: new Date(),
-        },
+      // Use the canonical Supabase-backed session so refresh-token rotation
+      // (/auth/refresh) can find and rotate the token.
+      const { sessionId } = await SessionService.create({
+        userId: result.user.id,
+        organizationId: result.organization.id,
+        ipAddress: ip(req),
+        userAgent: ua(req),
+        rememberMe: true,
       });
 
       const tokenPair = await TokenService.issue({
@@ -1186,21 +1213,11 @@ router.post('/complete', async (req, res, next) => {
         tenantId: result.organization.id,
         role: 'owner',
         email: data.email.toLowerCase(),
-        sessionId: prismaSession.id,
-      });
-
-      await prisma.refreshToken.create({
-        data: {
-          token: TokenService.hashRefresh(tokenPair.refreshToken),
-          userId: result.user.id,
-          sessionId: prismaSession.id,
-          organizationId: result.organization.id,
-          expiresAt: tokenPair.refreshTokenExpiresAt,
-        },
+        sessionId,
       });
 
       session = {
-        id: prismaSession.id,
+        id: sessionId,
         accessToken: tokenPair.accessToken,
         refreshToken: tokenPair.refreshToken,
       };

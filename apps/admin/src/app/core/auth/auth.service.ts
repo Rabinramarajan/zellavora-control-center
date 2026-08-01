@@ -82,6 +82,10 @@ export class AuthService {
   private refreshTimer: Subscription | null = null;
   private apiUrl = '/api/v1/auth';
 
+  // "Remember me" refreshes survive the browser session (localStorage);
+  // otherwise they are session-scoped (sessionStorage).
+  private refreshStorage: Storage = sessionStorage;
+
   constructor() {
     // Effect: when isAuthenticated flips false, kick the user to /auth/login.
     effect(() => {
@@ -114,11 +118,14 @@ export class AuthService {
    */
   initialize(): Observable<boolean> {
     this.store.markInitialized();
-    const refreshToken = sessionStorage.getItem(STORAGE.refresh);
+    const refreshToken =
+      sessionStorage.getItem(STORAGE.refresh) ?? localStorage.getItem(STORAGE.refresh);
     if (!refreshToken) {
       this.store.reset();
       return of(false);
     }
+    // Persist into whichever storage the token came from so refreshes stay put.
+    this.refreshStorage = localStorage.getItem(STORAGE.refresh) ? localStorage : sessionStorage;
     return this.refresh({ refreshToken }, { silent: true }).pipe(
       switchMap((ok) => (ok ? this.loadMe() : of(false))),
       tap((ok) => ok || this.clearLocalSession()),
@@ -227,6 +234,7 @@ export class AuthService {
   login(request: LoginRequest): Observable<LoginResponse> {
     this.store.setLoading(true);
     this.store.setError(null);
+    this.refreshStorage = request.rememberMe ? localStorage : sessionStorage;
     return this.http.get<string[]>(`${this.apiUrl}/gettoken`).pipe(
       switchMap((keyToken) => {
         const [keyStr, ivStr] = keyToken;
@@ -256,6 +264,7 @@ export class AuthService {
       tap((res) => {
         if (this.isMfaChallenge(res)) {
           sessionStorage.setItem('zcc.mfaToken', res.mfaToken);
+          sessionStorage.setItem('zcc.mfaMethod', (res as MfaChallengeResponse).mfaMethods?.[0] ?? 'totp');
           this.store.setLoading(false);
           this.router.navigate(['/auth/mfa-verify'], { replaceUrl: true });
           return;
@@ -263,6 +272,28 @@ export class AuthService {
         this.handleSuccess(res);
       }),
       catchError((err) => {
+        const code = this.extractErrorCode(err);
+        if (code === 'ACCOUNT_LOCKED') {
+          const details = (err as HttpErrorResponse)?.error?.error ?? {};
+          this.store.setLoading(false);
+          this.router.navigate(['/auth/account-locked'], {
+            queryParams: {
+              lockTime: details.retryAfterSeconds ?? 900,
+              reason: details.message ?? 'Too many failed login attempts',
+            },
+          });
+          return throwError(() => err);
+        }
+        if (code === 'ACCOUNT_SUSPENDED') {
+          const details = (err as HttpErrorResponse)?.error?.error ?? {};
+          this.store.setLoading(false);
+          this.router.navigate(['/auth/account-suspended'], {
+            queryParams: {
+              reason: details.message ?? 'Account suspended by administrator',
+            },
+          });
+          return throwError(() => err);
+        }
         this.store.setError(this.extractErrorMessage(err), this.extractErrorCode(err));
         this.store.setLoading(false);
         return throwError(() => err);
@@ -274,6 +305,7 @@ export class AuthService {
   loginMfa(request: LoginMfaRequest): Observable<LoginSuccessResponse> {
     this.store.setLoading(true);
     this.store.setError(null);
+    this.refreshStorage = request.rememberMe ? localStorage : sessionStorage;
     return this.http
       .post<LoginSuccessResponse>(`${this.apiUrl}/login/mfa`, request)
       .pipe(
@@ -451,16 +483,20 @@ export class AuthService {
 
   /** POST /auth/send-verification — send or resend email verification OTP/link. */
   sendVerificationEmail(email: string): Observable<void> {
+    sessionStorage.setItem('zcc.pendingEmail', email);
     return this.http.post<void>(`${this.apiUrl}/send-verification`, { email });
   }
 
   /** POST /auth/verify-email — verify email via deep-link token or OTP code. */
   verifyEmail(token: string, otp: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/verify-email`, { token, otp });
+    return this.http.post<void>(`${this.apiUrl}/verify-email`, { token, otp }).pipe(
+      tap(() => sessionStorage.removeItem('zcc.pendingEmail'))
+    );
   }
 
   /** POST /auth/resend-otp — resend verification OTP to email. */
   resendOtp(email: string): Observable<void> {
+    sessionStorage.setItem('zcc.pendingEmail', email);
     return this.http.post<void>(`${this.apiUrl}/resend-otp`, { email });
   }
 
@@ -511,7 +547,7 @@ export class AuthService {
   }
 
   private persistRefreshToken(token: string): void {
-    sessionStorage.setItem(STORAGE.refresh, token);
+    this.refreshStorage.setItem(STORAGE.refresh, token);
   }
 
   private persistUser(user: unknown): void {
@@ -522,6 +558,8 @@ export class AuthService {
     sessionStorage.removeItem(STORAGE.refresh);
     sessionStorage.removeItem(STORAGE.user);
     sessionStorage.removeItem(STORAGE.tenantId);
+    localStorage.removeItem(STORAGE.refresh);
+    sessionStorage.removeItem('zcc.mfaMethod');
     this.store.reset();
   }
 

@@ -59,17 +59,38 @@ export class RateLimitService {
     email: string
   ): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
     const since = new Date(Date.now() - WINDOW_MS).toISOString();
-    const { count } = await supabaseAdmin
+    const { data: failures, error } = await supabaseAdmin
       .from('login_attempts')
-      .select('id', { count: 'exact', head: true })
+      .select('attempted_at')
       .eq('email', email.toLowerCase())
       .eq('success', false)
-      .gte('attempted_at', since);
+      .gte('attempted_at', since)
+      .order('attempted_at', { ascending: true });
 
-    const failedAttempts = count ?? 0;
+    if (error) {
+      throw new AppError('Failed to check account status', 500, 'LOCKOUT_CHECK_FAILED');
+    }
+
+    const failedAttempts = failures?.length ?? 0;
     if (failedAttempts >= ACCOUNT_LIMIT) {
-      const lockedUntil = new Date(Date.now() + LOCKOUT_MS);
-      throw new AppError('Account temporarily locked. Try again later.', 423, 'ACCOUNT_LOCKED');
+      // Lock expires LOCKOUT_MS after the first failure in the window.
+      const earliest = failures?.[0]?.attempted_at
+        ? new Date(failures[0].attempted_at)
+        : new Date();
+      const lockedUntil = new Date(earliest.getTime() + LOCKOUT_MS);
+      const retryAfterSeconds = Math.max(
+        Math.ceil((lockedUntil.getTime() - Date.now()) / 1000),
+        1
+      );
+      throw new AppError(
+        'Account temporarily locked. Try again later.',
+        423,
+        'ACCOUNT_LOCKED',
+        {
+          lockedUntil: lockedUntil.toISOString(),
+          retryAfterSeconds,
+        }
+      );
     }
     return { lockedUntil: null, failedAttempts };
   }

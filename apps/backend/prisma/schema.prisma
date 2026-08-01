@@ -118,6 +118,11 @@ model User {
   // Contact
   mobile         String?      @map("mobile")
   mobileVerified Boolean      @default(false) @map("mobile_verified")
+
+  // IAM / Admin fields
+  department     String?      @map("department")
+  jobTitle       String?      @map("job_title")
+  status         UserStatus   @default(ACTIVE) @map("status")
   
   // Location
   country        String?      @map("country")
@@ -184,6 +189,8 @@ model User {
   notifications     Notification[]
   passwordHistory   PasswordHistory[]
   invitedUsers      Invitation[]   @relation("InvitedBy")
+  userGroups        UserGroup[]
+  roleAssignments   UserRoleAssignment[]
 
   @@map("users")
 }
@@ -199,6 +206,46 @@ enum OrganizationRole {
   employee
   viewer
   member
+}
+
+// ============================================================================
+// IAM ENUMS (Admin Console)
+// ============================================================================
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  LOCKED
+  PENDING
+  SUSPENDED
+}
+
+enum EntityStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum GroupType {
+  SECURITY
+  ORG
+  DISTRIBUTION
+  PROJECT
+  DYNAMIC
+}
+
+enum ResourceType {
+  API
+  FEATURE
+  DATA
+  MENU
+  REPORT
+  INTEGRATION
+}
+
+enum RoleScope {
+  GLOBAL
+  ORG
+  RESOURCE
 }
 
 model UserTenant {
@@ -635,6 +682,8 @@ model Role {
   key            String    @unique @map("key")     // System key: owner, admin, manager, employee, viewer
   organizationId String?   @map("organization_id") @db.Uuid
   description    String?
+  scope          RoleScope @default(ORG) @map("scope")
+  status         EntityStatus @default(ACTIVE) @map("status")
   isSystem       Boolean   @default(false) @map("is_system") // System roles cannot be deleted
   
   // Auditing
@@ -649,6 +698,7 @@ model Role {
   
   rolePermissions RolePermission[]
   userAssignments UserRoleAssignment[]
+  groupRoles      GroupRole[]
 
   @@index([organizationId])
   @@map("roles")
@@ -661,12 +711,16 @@ model Role {
 model Permission {
   id          String   @id @default(uuid()) @db.Uuid
   name        String   @unique
+  key         String   @unique @map("key")   // e.g. users:read
+  resource    String?  @map("resource")      // e.g. users
+  action      String?  @map("action")        // e.g. read
   description String?
   groupId     String?  @map("group_id") @db.Uuid
   group       PermissionGroup? @relation(fields: [groupId], references: [id])
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   
   rolePermissions RolePermission[]
+  resourceActions  ResourceAction[]
 
   @@map("permissions")
 }
@@ -716,6 +770,7 @@ model UserRoleAssignment {
   resourceType   String?  @map("resource_type")   // branch, department, workspace
   resourceId     String?  @map("resource_id")
   role           Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([organizationId])
@@ -836,4 +891,113 @@ model Ddl {
   @@unique([type, key])
   @@index([type, isActive])
   @@map("ddl_lists")
+}
+
+// ============================================================================
+// IAM — GROUP (Admin Console)
+// Security/org/distribution/project groups with nesting, membership and roles.
+// ============================================================================
+
+model Group {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String    @unique
+  slug           String    @unique
+  description    String?
+  type           GroupType @default(SECURITY) @map("type")
+  status         EntityStatus @default(ACTIVE) @map("status")
+  parentId       String?   @map("parent_id") @db.Uuid
+  parent         Group?    @relation("GroupHierarchy", fields: [parentId], references: [id])
+  children       Group[]   @relation("GroupHierarchy")
+  ownerId        String?   @map("owner_id") @db.Uuid
+  isSystem       Boolean   @default(false) @map("is_system")
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  members        UserGroup[]
+  groupRoles     GroupRole[]
+
+  @@index([parentId])
+  @@map("groups")
+}
+
+model UserGroup {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  groupId   String   @map("group_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+  @@map("user_groups")
+}
+
+model GroupRole {
+  id        String   @id @default(uuid()) @db.Uuid
+  groupId   String   @map("group_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, roleId])
+  @@index([roleId])
+  @@map("group_roles")
+}
+
+// ============================================================================
+// IAM — RESOURCE (Admin Console)
+// Protected resources/entitlements; each action maps to a Permission key.
+// ============================================================================
+
+model Resource {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String
+  key            String       @unique   // e.g. billing.invoices
+  type           ResourceType @default(FEATURE) @map("type")
+  category       String?
+  description    String?
+  status         EntityStatus @default(ACTIVE) @map("status")
+  parentId       String?      @map("parent_id") @db.Uuid
+  parent         Resource?    @relation("ResourceHierarchy", fields: [parentId], references: [id])
+  children       Resource[]   @relation("ResourceHierarchy")
+  ownerId        String?      @map("owner_id") @db.Uuid
+  metadata       Json?        @map("metadata")
+  isSystem       Boolean      @default(false) @map("is_system")
+  isDeleted      Boolean      @default(false) @map("is_deleted")
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz
+  createdBy      String?      @map("created_by") @db.Uuid
+  updatedBy      String?      @map("updated_by") @db.Uuid
+  deletedBy      String?      @map("deleted_by") @db.Uuid
+  version        Int          @default(1)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  actions        ResourceAction[]
+
+  @@index([parentId])
+  @@index([type])
+  @@map("resources")
+}
+
+model ResourceAction {
+  id           String    @id @default(uuid()) @db.Uuid
+  resourceId   String    @map("resource_id") @db.Uuid
+  resource     Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  action       String    // read, write, delete, approve...
+  permissionId String?   @map("permission_id") @db.Uuid
+  permission   Permission? @relation(fields: [permissionId], references: [id], onDelete: SetNull)
+
+  @@unique([resourceId, action])
+  @@index([permissionId])
+  @@map("resource_actions")
 }

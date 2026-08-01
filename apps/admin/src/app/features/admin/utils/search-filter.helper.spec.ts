@@ -1,5 +1,5 @@
 import { SearchFilterHelper } from './search-filter.helper';
-import { User, Role, Resource } from '../models';
+import { User, Role, Branch } from '../models';
 
 describe('SearchFilterHelper', () => {
   const mockUsers: User[] = [
@@ -9,8 +9,24 @@ describe('SearchFilterHelper', () => {
       firstName: 'John',
       lastName: 'Doe',
       emailId: 'john@example.com',
+      contactNumber: '1234567890',
+      genderId: 1,
+      genderValue: 'Male',
+      beginDate: '2024-01-01',
+      endDate: '2099-12-31',
+      statusId: 1,
       statusValue: 'Active',
-      statusDescription: 'Active',
+      designationId: 1,
+      designationValue: 'Engineer',
+      locationId: 1,
+      locationValue: 'HQ',
+      branchId: 1,
+      branchValue: 'Main',
+      employeeCode: 'E001',
+      departmentId: 1,
+      departmentValue: 'Engineering',
+      teamId: 1,
+      teamValue: 'Platform',
     },
     {
       userSerialId: 2,
@@ -18,8 +34,24 @@ describe('SearchFilterHelper', () => {
       firstName: 'Jane',
       lastName: 'Smith',
       emailId: 'jane@example.com',
+      contactNumber: '0987654321',
+      genderId: 2,
+      genderValue: 'Female',
+      beginDate: '2024-01-01',
+      endDate: '2099-12-31',
+      statusId: 2,
       statusValue: 'Inactive',
-      statusDescription: 'Inactive',
+      designationId: 1,
+      designationValue: 'Engineer',
+      locationId: 1,
+      locationValue: 'HQ',
+      branchId: 1,
+      branchValue: 'Main',
+      employeeCode: 'E002',
+      departmentId: 1,
+      departmentValue: 'Engineering',
+      teamId: 1,
+      teamValue: 'Platform',
     },
   ];
 
@@ -27,14 +59,24 @@ describe('SearchFilterHelper', () => {
     {
       roleId: 1,
       roleName: 'Admin',
-      roleDescription: 'Administrator role',
-      roleActive: true,
+      statusId: 1,
+      statusValue: 'Active',
+      beginDate: '2024-01-01',
+      endDate: '2099-12-31',
+      moduleId: 1,
+      moduleValue: 'Platform',
+      ilstRoleResource: [],
     },
     {
       roleId: 2,
       roleName: 'User',
-      roleDescription: 'Regular user role',
-      roleActive: false,
+      statusId: 2,
+      statusValue: 'Inactive',
+      beginDate: '2024-01-01',
+      endDate: '2099-12-31',
+      moduleId: 1,
+      moduleValue: 'Platform',
+      ilstRoleResource: [],
     },
   ];
 
@@ -89,15 +131,27 @@ describe('SearchFilterHelper', () => {
       const result = SearchFilterHelper.filterRoles(mockRoles, { activeOnly: true });
 
       expect(result.length).toBe(1);
-      expect(result[0].roleActive).toBe(true);
+      expect(result[0].statusValue).toBe('Active');
     });
   });
 
   describe('filterBranches', () => {
+    const makeBranch = (admBranchId: number, branchCode: string, branchName: string, statusValue: string): Branch => ({
+      admBranchId,
+      actCompanyId: 1,
+      admLocationId: 1,
+      admRegionId: 1,
+      branchName,
+      effectiveDate: '2024-01-01',
+      statusId: statusValue === 'Active' ? 1 : 2,
+      statusValue,
+      branchCode,
+    });
+
     it('should filter branches by search term', () => {
       const mockBranches = [
-        { admBranchId: 1, branchCode: 'BR001', branchName: 'Main Branch', isActive: true },
-        { admBranchId: 2, branchCode: 'BR002', branchName: 'Sub Branch', isActive: false },
+        makeBranch(1, 'BR001', 'Main Branch', 'Active'),
+        makeBranch(2, 'BR002', 'Sub Branch', 'Inactive'),
       ];
 
       const result = SearchFilterHelper.filterBranches(mockBranches, 'main');
@@ -108,8 +162,8 @@ describe('SearchFilterHelper', () => {
 
     it('should return all branches when no search term', () => {
       const mockBranches = [
-        { admBranchId: 1, branchCode: 'BR001', branchName: 'Main Branch', isActive: true },
-        { admBranchId: 2, branchCode: 'BR002', branchName: 'Sub Branch', isActive: false },
+        makeBranch(1, 'BR001', 'Main Branch', 'Active'),
+        makeBranch(2, 'BR002', 'Sub Branch', 'Inactive'),
       ];
 
       const result = SearchFilterHelper.filterBranches(mockBranches);

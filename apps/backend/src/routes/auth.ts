@@ -26,6 +26,7 @@ import { config } from '../config/env';
 import { supabase, supabaseAdmin } from '../config/supabase';
 import { AppError } from '../middleware/error';
 import { prisma } from '../infrastructure/prisma';
+import { addQueueJob } from '../infrastructure/queue';
 import { authenticate, type AuthRequest, requirePermission } from '../middleware/auth';
 import {
   PasswordService,
@@ -144,11 +145,17 @@ const parseOs = (userAgent: string): string => {
 };
 
 // In-memory store for short-lived MFA challenges (use Redis in production).
-// Key: mfaToken, Value: { userId, organizationId, attempts, expiresAt }
+// Key: mfaToken, Value: { userId, organizationId, attempts, method, expiresAt }
 const MFA_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const mfaChallenges = new Map<
   string,
-  { userId: string; organizationId: string; attempts: number; expiresAt: number }
+  {
+    userId: string;
+    organizationId: string;
+    attempts: number;
+    method: 'totp' | 'email_otp' | 'sms';
+    expiresAt: number;
+  }
 >();
 const newMfaToken = () => crypto.randomUUID();
 const remember = (
@@ -438,8 +445,9 @@ router.post('/login', async (req, res, next) => {
     }
     const body = LoginSchema.parse(loginData);
 
-    // 1. Rate-limit the IP
+    // 1. Rate-limit the IP and check the account isn't locked
     await RateLimitService.assertIpAllowed(ip(req));
+    await RateLimitService.assertAccountAllowed(body.email);
 
     // 2. Resolve tenant by client code
     const tenant = await TenantService.resolveByClientCode(body.clientCode);
@@ -459,10 +467,10 @@ router.post('/login', async (req, res, next) => {
           role: prismaUser.role,
           password_hash: prismaUser.passwordHash,
           mfa_enabled: prismaUser.mfaEnabled,
-          is_active: !prismaUser.isDeleted,
+          is_active: !prismaUser.isDeleted && !prismaUser.isAccountLocked,
           deleted_at: prismaUser.deletedAt?.toISOString() ?? null,
-          locked_until: null as string | null,
-          failed_login_attempts: 0,
+          locked_until: prismaUser.lastLockedDate?.toISOString() ?? null,
+          failed_login_attempts: prismaUser.failedLoginAttempts,
           current_login_datetime: prismaUser.currentLoginDatetime?.toISOString() ?? null,
           successful_login_attempts: prismaUser.successfulLoginAttempts,
           version: prismaUser.version,
@@ -493,6 +501,9 @@ router.post('/login', async (req, res, next) => {
     if (error || !user) return invalid();
     if (user.deleted_at) return invalid();
     if (user.is_active === false) return invalid();
+    if (prismaUser.statusValue?.toLowerCase() === 'suspended') {
+      throw new AppError('Account suspended. Contact your administrator.', 403, 'ACCOUNT_SUSPENDED');
+    }
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
       throw new AppError('Account is locked. Try again later.', 423, 'ACCOUNT_LOCKED');
     }
@@ -513,7 +524,43 @@ router.post('/login', async (req, res, next) => {
     // 6. Issue MFA challenge if user has 2FA enabled
     if (user.mfa_enabled) {
       const mfaToken = newMfaToken();
-      remember(mfaToken, { userId: user.id, organizationId: tenant.id, attempts: 0 });
+      const mfaMethod: 'totp' | 'email_otp' | 'sms' =
+        prismaUser.mfaMethod === 'email_otp' || prismaUser.mfaMethod === 'sms'
+          ? prismaUser.mfaMethod
+          : 'totp';
+
+      // Email/SMS OTP MFA — generate a one-time code and deliver it.
+      if (mfaMethod !== 'totp') {
+        const code = crypto.randomInt(100000, 1000000).toString();
+        const target = mfaMethod === 'email_otp' ? user.email : (prismaUser.mobile ?? user.email);
+        await prisma.otp.create({
+          data: {
+            type: 'mfa',
+            target,
+            code,
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+            userId: user.id,
+            ipAddress: ip(req),
+            userAgent: ua(req),
+          },
+        });
+        await addQueueJob(mfaMethod === 'email_otp' ? 'send-2fa-code' : 'send-sms-otp', {
+          email: user.email,
+          mobile: target,
+          code,
+          expiryMinutes: 5,
+        });
+
+        remember(mfaToken, { userId: user.id, organizationId: tenant.id, attempts: 0, method: mfaMethod });
+        res.status(200).json({
+          mfaRequired: true,
+          mfaToken,
+          mfaMethods: [mfaMethod],
+        });
+        return;
+      }
+
+      remember(mfaToken, { userId: user.id, organizationId: tenant.id, attempts: 0, method: 'totp' });
       res.status(200).json({
         mfaRequired: true,
         mfaToken,
@@ -670,10 +717,32 @@ router.post('/login/mfa', async (req, res, next) => {
     }
     challenge.attempts++;
 
-    const isRecovery = /[a-zA-Z]/.test(body.code);
-    const ok = isRecovery
-      ? await MfaService.verifyRecoveryCode(challenge.userId, body.code)
-      : (await MfaService.verifyTotp(challenge.userId, body.code)).valid;
+    // Verify the code against the challenge's method:
+    //  - email_otp / sms  → one-time code from the otps table
+    //  - totp / recovery  → authenticator TOTP or recovery code
+    let ok: boolean;
+    let isRecovery = false;
+    if (challenge.method === 'email_otp' || challenge.method === 'sms') {
+      const otpRow = await prisma.otp.findFirst({
+        where: {
+          type: 'mfa',
+          userId: challenge.userId,
+          code: body.code,
+          verified: false,
+          expiresAt: { gte: new Date() },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      ok = !!otpRow;
+      if (otpRow) {
+        await prisma.otp.update({ where: { id: otpRow.id }, data: { verified: true } });
+      }
+    } else {
+      isRecovery = /[a-zA-Z]/.test(body.code);
+      ok = isRecovery
+        ? await MfaService.verifyRecoveryCode(challenge.userId, body.code)
+        : (await MfaService.verifyTotp(challenge.userId, body.code)).valid;
+    }
 
     if (!ok) {
       await AuditService.logLoginFailure({
@@ -695,6 +764,11 @@ router.post('/login/mfa', async (req, res, next) => {
       .single();
 
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+
+    const prismaMfaUser = await prisma.user.findUnique({ where: { id: user.id } });
+    if (prismaMfaUser?.statusValue?.toLowerCase() === 'suspended') {
+      throw new AppError('Account suspended. Contact your administrator.', 403, 'ACCOUNT_SUSPENDED');
+    }
 
     const { sessionId } = await SessionService.create({
       userId: user.id,
@@ -1151,17 +1225,39 @@ router.post('/switch-tenant', authenticate, async (req: AuthRequest, res, next) 
 router.post('/change-password', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { currentPassword, newPassword } = ChangePasswordSchema.parse(req.body);
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('password_hash')
-      .eq('id', req.userId!)
-      .single();
+
+    // Login verifies against the Prisma user, so use that as the source of truth.
+    const user = await prisma.user.findUnique({ where: { id: req.userId! } });
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
 
-    const ok = await PasswordService.verify(currentPassword, user.password_hash ?? '');
+    const ok = await PasswordService.verify(currentPassword, user.passwordHash ?? '');
     if (!ok) throw new AppError('Current password is incorrect', 401, 'INVALID_CURRENT_PASSWORD');
 
+    // Enforce "no reusing recent passwords" using the password history.
+    const recent = await prisma.passwordHistory.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+    for (const entry of recent) {
+      if (await PasswordService.verify(newPassword, entry.passwordHash)) {
+        throw new AppError(
+          'New password cannot match any of your last 5 passwords',
+          400,
+          'PASSWORD_REUSE'
+        );
+      }
+    }
+
     const newHash = await PasswordService.hash(newPassword);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: newHash, passwordChangedAt: new Date() },
+    });
+    await prisma.passwordHistory.create({
+      data: { userId: user.id, passwordHash: newHash },
+    });
+    // Keep the Supabase handshake row in sync.
     await supabaseAdmin
       .from('users')
       .update({
@@ -1247,9 +1343,14 @@ router.post('/forgot-password', async (req, res, next) => {
           Date.now() + config.passwordResetTokenExpiryMinutes * 60 * 1000
         ).toISOString(),
       });
-      // TODO: email the user. For now, log to console.
-      // eslint-disable-next-line no-console
-      console.log(`[password-reset] link for ${user.email}: /reset-password?token=${token}`);
+      // Queue the reset email (falls back to console logging when email/queue is unavailable).
+      const baseUrl = req.get('origin') ?? `https://${req.get('host') ?? 'zcc-backend.vercel.app'}`;
+      const resetLink = `${baseUrl}/reset-password?token=${token}`;
+      await addQueueJob('send-password-reset', {
+        email: user.email,
+        resetLink,
+        expiryHours: Math.max(config.passwordResetTokenExpiryMinutes / 60, 1),
+      });
 
       await AuditService.log({
         organizationId: tenant.id,
@@ -1320,6 +1421,11 @@ router.post('/reset-password', async (req, res, next) => {
       .from('users')
       .update({ password_hash: newHash, password_changed_at: new Date().toISOString() })
       .eq('id', row.user_id);
+    // Login verifies against the Prisma user, so keep both stores in sync.
+    await prisma.user.update({
+      where: { id: row.user_id },
+      data: { passwordHash: newHash, passwordChangedAt: new Date() },
+    });
     await supabaseAdmin
       .from('password_reset_tokens')
       .update({ used_at: new Date().toISOString() })
@@ -1373,6 +1479,7 @@ router.post('/mfa/enroll', authenticate, async (req: AuthRequest, res, next) => 
     res.json({
       otpauth: enrollment.otpauth,
       qrCodeDataUrl: enrollment.qrCodeDataUrl,
+      secret: enrollment.secret, // needed by the client to complete /confirm
     });
   } catch (e) {
     next(e);
@@ -1752,16 +1859,13 @@ const SendVerificationSchema = z.object({
 router.post('/send-verification', async (req, res, next) => {
   try {
     const { email } = SendVerificationSchema.parse(req.body);
+    const normalized = email.toLowerCase();
 
-    // Find the user
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('id, email, email_verified, tenant_id')
-      .eq('email', email.toLowerCase())
-      .maybeSingle();
+    // Prisma user is the source of truth (mirrored to Supabase on registration).
+    const user = await prisma.user.findUnique({ where: { email: normalized } });
 
-    if (userError || !user) {
-      // Return success even if not found to prevent email enumeration
+    if (!user || user.emailVerified) {
+      // Return success even if not found to prevent email enumeration.
       res.json({
         success: true,
         message: 'If this email exists, a verification code has been sent.',
@@ -1769,29 +1873,36 @@ router.post('/send-verification', async (req, res, next) => {
       return;
     }
 
-    if (user.email_verified) {
-      res.json({ success: true, message: 'Email is already verified.' });
-      return;
+    // Rate-limit OTP sends per address (3 per minute).
+    const recentOtps = await prisma.otp.count({
+      where: {
+        type: 'email_verification',
+        target: normalized,
+        createdAt: { gte: new Date(Date.now() - 60_000) },
+      },
+    });
+    if (recentOtps >= 3) {
+      throw new AppError('Too many requests. Please wait before trying again.', 429, 'RATE_LIMITED');
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    // Store OTP (upsert)
-    await supabaseAdmin.from('email_verifications').upsert(
-      {
-        user_id: user.id,
-        email: user.email,
-        otp_code: otp,
-        expires_at: expiresAt.toISOString(),
-        used: false,
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    await prisma.otp.create({
+      data: {
+        type: 'email_verification',
+        target: normalized,
+        code: otp,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        userId: user.id,
+        ipAddress: ip(req),
+        userAgent: ua(req),
       },
-      { onConflict: 'user_id' }
-    );
+    });
 
-    // TODO: Send OTP via email service
-    console.log(`[email-verification] OTP for ${email}: ${otp}`);
+    await addQueueJob('send-registration-otp', {
+      email: normalized,
+      code: otp,
+      type: 'email_verification',
+    });
 
     res.json({ success: true, message: 'Verification code sent to your email.' });
   } catch (e) {
@@ -1819,42 +1930,43 @@ router.post('/verify-email', async (req, res, next) => {
     let userId: string | null = null;
 
     if (otp) {
-      // OTP-based verification
-      const { data: verification, error } = await supabaseAdmin
-        .from('email_verifications')
-        .select('user_id, otp_code, expires_at, used')
-        .eq('otp_code', otp)
-        .maybeSingle();
+      // OTP-based verification (stored in the shared otps table).
+      const otpRow = await prisma.otp.findFirst({
+        where: {
+          type: 'email_verification',
+          code: otp,
+          verified: false,
+          expiresAt: { gte: new Date() },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
 
-      if (error || !verification)
-        throw new AppError('Invalid verification code', 400, 'INVALID_OTP');
-      if (verification.used) throw new AppError('Verification code already used', 400, 'OTP_USED');
-      if (new Date(verification.expires_at) < new Date())
-        throw new AppError('Verification code expired', 400, 'OTP_EXPIRED');
+      if (!otpRow) throw new AppError('Invalid or expired verification code', 400, 'INVALID_OTP');
 
-      userId = verification.user_id;
-      await supabaseAdmin.from('email_verifications').update({ used: true }).eq('user_id', userId);
+      userId = otpRow.userId;
+      await prisma.otp.update({ where: { id: otpRow.id }, data: { verified: true } });
     } else if (token) {
-      // Token-based verification (from email link)
-      const { data: verification, error } = await supabaseAdmin
-        .from('email_verifications')
-        .select('user_id, expires_at, used')
-        .eq('token', token)
-        .maybeSingle();
+      // Token-based verification (from an email link).
+      const row = await prisma.emailVerification.findFirst({
+        where: { token, verified: false, expiresAt: { gte: new Date() } },
+      });
 
-      if (error || !verification)
-        throw new AppError('Invalid verification token', 400, 'INVALID_TOKEN');
-      if (verification.used) throw new AppError('Token already used', 400, 'TOKEN_USED');
-      if (new Date(verification.expires_at) < new Date())
-        throw new AppError('Verification token expired', 400, 'TOKEN_EXPIRED');
+      if (!row) throw new AppError('Invalid or expired verification token', 400, 'INVALID_TOKEN');
 
-      userId = verification.user_id;
-      await supabaseAdmin.from('email_verifications').update({ used: true }).eq('user_id', userId);
+      userId = row.userId;
+      await prisma.emailVerification.update({
+        where: { id: row.id },
+        data: { verified: true, verifiedAt: new Date() },
+      });
     }
 
     if (!userId) throw new AppError('Verification failed', 400, 'VERIFICATION_FAILED');
 
-    // Mark user email as verified
+    // Mark the user verified in both stores.
+    await prisma.user.update({
+      where: { id: userId },
+      data: { emailVerified: true, emailVerifiedAt: new Date() },
+    });
     await supabaseAdmin
       .from('users')
       .update({ email_verified: true, email_verified_at: new Date().toISOString() })
@@ -1872,15 +1984,11 @@ router.post('/verify-email', async (req, res, next) => {
 router.post('/resend-otp', async (req, res, next) => {
   try {
     const { email } = SendVerificationSchema.parse(req.body);
+    const normalized = email.toLowerCase();
 
-    // Delegate to send-verification logic
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id, email, email_verified')
-      .eq('email', email.toLowerCase())
-      .maybeSingle();
+    const user = await prisma.user.findUnique({ where: { email: normalized } });
 
-    if (!user || user.email_verified) {
+    if (!user || user.emailVerified) {
       res.json({
         success: true,
         message: 'If this email exists and is unverified, a new code has been sent.',
@@ -1888,21 +1996,24 @@ router.post('/resend-otp', async (req, res, next) => {
       return;
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-    await supabaseAdmin.from('email_verifications').upsert(
-      {
-        user_id: user.id,
-        email: user.email,
-        otp_code: otp,
-        expires_at: expiresAt.toISOString(),
-        used: false,
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    await prisma.otp.create({
+      data: {
+        type: 'email_verification',
+        target: normalized,
+        code: otp,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        userId: user.id,
+        ipAddress: ip(req),
+        userAgent: ua(req),
       },
-      { onConflict: 'user_id' }
-    );
+    });
 
-    console.log(`[email-verification] Resent OTP for ${email}: ${otp}`);
+    await addQueueJob('send-registration-otp', {
+      email: normalized,
+      code: otp,
+      type: 'email_verification',
+    });
 
     res.json({ success: true, message: 'Verification code resent to your email.' });
   } catch (e) {

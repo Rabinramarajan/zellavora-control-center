@@ -228,6 +228,7 @@ export interface MeResponse {
 export interface MfaEnrollStartResponse {
   otpauth: string;
   qrCodeDataUrl: string;
+  secret: string; // returned once so the client can confirm enrollment
 }
 
 export interface MfaEnrollConfirmRequest {
@@ -541,6 +542,7 @@ export * from './notification.model';
 export * from './audit.model';
 export * from './system-health.model';
 export * from './cms-builder.model';
+export * from './iam.model';
 
 
 

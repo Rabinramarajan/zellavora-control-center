@@ -1,55 +1,155 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ProgressBarModule } from 'primeng/progressbar';
-import { RippleModule } from 'primeng/ripple';
+import { RouterLink } from '@angular/router';
+import { DashboardStore } from './dashboard.store';
+import { DashboardApiService } from './dashboard.api';
+import { DashboardRange, DashboardOverview, AuditSeverity } from './dashboard.models';
+import { KpiCardComponent } from './components/kpi-card/kpi-card.component';
+import { ActivityFeedComponent } from './components/activity-feed/activity-feed.component';
+import { SkeletonCardComponent } from './components/skeletons/skeleton-block.component';
+import { DashboardEmptyComponent, DashboardErrorComponent } from './components/states/dashboard-states.component';
+import { ApexChartComponent } from '@shared/components/apex-chart/apex-chart.component';
+import { CsvExporter } from '@shared/utils/csv-exporter';
 
-interface Task {
-  id: number;
-  title: string;
-  category: string;
-  categoryClass: string;
-  completed: boolean;
-}
-
-interface Activity {
-  id: number;
-  message: string;
-  time: string;
-  iconBg: string;
-  iconColor: string;
-  type: string;
-}
+const SEVERITY_OPTIONS: Array<{ label: string; value: AuditSeverity }> = [
+  { label: 'All severities', value: 'info' },
+  { label: 'Debug', value: 'debug' },
+  { label: 'Info', value: 'info' },
+  { label: 'Warning', value: 'warning' },
+  { label: 'Error', value: 'error' },
+  { label: 'Critical', value: 'critical' },
+];
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    ButtonModule, 
-    CheckboxModule, 
-    ProgressBarModule, 
-    RippleModule
+    CommonModule,
+    RouterLink,
+    KpiCardComponent,
+    ActivityFeedComponent,
+    SkeletonCardComponent,
+    DashboardEmptyComponent,
+    DashboardErrorComponent,
+    ApexChartComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent {
-  tasks: Task[] = [
-    { id: 1, title: 'Review wireframes', category: 'Design', categoryClass: 'bg-purple-500/10 border border-purple-500/20 text-purple-400', completed: true },
-    { id: 2, title: 'Client meeting', category: 'Meeting', categoryClass: 'bg-blue-500/10 border border-blue-500/20 text-blue-400', completed: true },
-    { id: 3, title: 'API integration', category: 'Development', categoryClass: 'bg-amber-500/10 border border-amber-500/20 text-amber-400', completed: false },
-    { id: 4, title: 'Testing & QA', category: 'Testing', categoryClass: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400', completed: false },
-  ];
+export class DashboardComponent implements OnInit {
+  readonly store = inject(DashboardStore);
 
-  activities: Activity[] = [
-    { id: 1, message: 'Project <strong>Apollo</strong> was completed', time: '2 minutes ago', iconBg: 'bg-emerald-500/10 text-emerald-400', iconColor: 'emerald', type: 'project' },
-    { id: 2, message: 'New client <strong>TechNova Inc.</strong> added', time: '15 minutes ago', iconBg: 'bg-purple-500/10 text-purple-400', iconColor: 'purple', type: 'client' },
-    { id: 3, message: 'Invoice <strong>#INV-2025-0042</strong> paid', time: '1 hour ago', iconBg: 'bg-blue-500/10 text-blue-400', iconColor: 'blue', type: 'invoice' },
-    { id: 4, message: 'Deployment <strong>v2.4.1</strong> successful', time: '3 hours ago', iconBg: 'bg-amber-500/10 text-amber-400', iconColor: 'amber', type: 'deployment' },
-    { id: 5, message: 'New user <strong>John Doe</strong> joined', time: '5 hours ago', iconBg: 'bg-pink-500/10 text-pink-400', iconColor: 'pink', type: 'user' },
-  ];
+  readonly severityOptions = SEVERITY_OPTIONS;
+
+  readonly Math = Math;
+
+  severityClass(severity: AuditSeverity): string {
+    const tones: Record<AuditSeverity, string> = {
+      debug: 'bg-slate-500/10 text-slate-400',
+      info: 'bg-blue-500/10 text-blue-400',
+      warning: 'bg-amber-500/10 text-amber-400',
+      error: 'bg-red-500/10 text-red-400',
+      critical: 'bg-rose-500/10 text-rose-400',
+    };
+    return tones[severity];
+  }
+
+  readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  });
+
+  readonly trendChartConfig = computed(() => ({
+    chart: { type: 'area' as const, stacked: false, zoom: { enabled: false } },
+    series: [
+      {
+        name: 'Activity',
+        data: this.store.activitySeries(),
+      },
+      {
+        name: 'Members',
+        data: this.store.membersSeries(),
+      },
+    ],
+    colors: ['#a855f7', '#3b82f6'],
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth' as const, width: 2.5 },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.25, opacityTo: 0.02 } },
+    grid: { borderColor: '#13112b' },
+    xaxis: { categories: this.store.trendLabels(), labels: { style: { colors: '#a3a1b8' } } },
+    yaxis: { labels: { style: { colors: '#a3a1b8' } } },
+    legend: { labels: { colors: '#a3a1b8' }, position: 'top' as const },
+    tooltip: { theme: 'dark' as const },
+  }));
+
+  readonly planChartConfig = computed(() => ({
+    chart: { type: 'donut' as const },
+    series: this.store.planDistribution().map((p) => p.count),
+    labels: this.store.planDistribution().map((p) => this.planLabel(p.plan)),
+    colors: ['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+    legend: { labels: { colors: '#a3a1b8' }, position: 'bottom' as const },
+    dataLabels: { enabled: false },
+    tooltip: { theme: 'dark' as const },
+  }));
+
+  ngOnInit(): void {
+    if (this.store.isStale()) {
+      void this.store.loadOverview();
+      void this.store.loadActivity(1);
+    }
+  }
+
+  setRange(range: DashboardRange): void {
+    this.store.setRange(range);
+  }
+
+  /** Template helper — string literal from the template cast to DashboardRange. */
+  setRangeValue(value: string): void {
+    this.setRange(value as DashboardRange);
+  }
+
+  readonly hasTrendData = computed(() => (this.store.trends()?.activity.length ?? 0) > 0);
+
+  applySeverityFilter(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as AuditSeverity;
+    this.store.setActivityFilters(
+      value === 'info' ? {} : { severity: value }
+    );
+  }
+
+  exportActivityCsv(): void {
+    const rows = this.store.activity()?.items ?? [];
+    CsvExporter.export(
+      `zcc-activity-${new Date().toISOString().slice(0, 10)}`,
+      ['Timestamp', 'Actor', 'Action', 'Resource', 'Severity'],
+      rows.map((e) => [e.createdAt, e.actorEmail ?? 'system', e.action, e.resource ?? '', e.severity])
+    );
+  }
+
+  exportOverviewCsv(): void {
+    const overview = this.store.overview();
+    if (!overview) return;
+    CsvExporter.export(
+      `zcc-overview-${new Date().toISOString().slice(0, 10)}`,
+      ['Metric', 'Value'],
+      [
+        ['Organizations', overview.kpis.organizations],
+        ['Members', overview.kpis.members],
+        ['Active sessions', overview.kpis.activeSessions],
+        ['Pending invitations', overview.kpis.pendingInvitations],
+        ['Audit events (24h)', overview.kpis.auditEvents24h],
+        ['Critical alerts (24h)', overview.kpis.criticalAlerts24h],
+      ]
+    );
+  }
+
+  printDashboard(): void {
+    window.print();
+  }
+
+  private planLabel(plan: string): string {
+    return plan.charAt(0).toUpperCase() + plan.slice(1);
+  }
 }

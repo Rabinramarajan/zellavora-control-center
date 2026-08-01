@@ -473,7 +473,10 @@ export class RegisterStore {
   async sendEmailOtp(email: string): Promise<boolean> {
     this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
-      await firstValueFrom(this.http.post('/api/v1/register/send-email-otp', { email }));
+      const sessionId = this.getSessionId() ?? undefined;
+      await firstValueFrom(
+        this.http.post('/api/v1/register/send-email-otp', { email, sessionId })
+      );
       this.state.update((s) => ({ ...s, loading: false }));
       return true;
     } catch (err: any) {
@@ -485,8 +488,17 @@ export class RegisterStore {
   async verifyEmailOtp(email: string, code: string): Promise<boolean> {
     this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
-      await firstValueFrom(this.http.post('/api/v1/register/verify-email', { email, code }));
-      this.state.update((s) => ({ ...s, emailOtpCode: code, loading: false }));
+      const sessionId = this.getSessionId() ?? undefined;
+      await firstValueFrom(
+        this.http.post('/api/v1/register/verify-email', { email, code, sessionId })
+      );
+      this.state.update((s) => ({
+        ...s,
+        emailOtpCode: code,
+        emailVerified: true,
+        loading: false,
+      }));
+      this.saveDraft();
       return true;
     } catch (err: any) {
       this.state.update((s) => ({ ...s, error: 'Incorrect email OTP code.', loading: false }));
@@ -545,7 +557,10 @@ export class RegisterStore {
   async resendEmailOtp(email: string): Promise<boolean> {
     this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
-      await firstValueFrom(this.http.post('/api/v1/register/resend-otp', { email, type: 'email' }));
+      const sessionId = this.getSessionId() ?? undefined;
+      await firstValueFrom(
+        this.http.post('/api/v1/register/resend-otp', { email, type: 'email', sessionId })
+      );
       this.state.update((s) => ({ ...s, loading: false }));
       return true;
     } catch (err: any) {

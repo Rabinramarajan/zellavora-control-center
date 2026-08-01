@@ -18,6 +18,7 @@ export class MfaVerifyComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
 
   mode = signal<'totp' | 'backup'>('totp');
+  method = signal<'totp' | 'email_otp' | 'sms'>('totp');
   isLoading = signal<boolean>(false);
   errorMsg = signal<string>('');
   rememberDevice = signal<boolean>(false);
@@ -32,6 +33,10 @@ export class MfaVerifyComponent implements OnInit, OnDestroy {
       sessionStorage.getItem('zcc.mfaToken') ||
       '';
     this.mfaToken.set(token);
+    const storedMethod = sessionStorage.getItem('zcc.mfaMethod');
+    if (storedMethod === 'email_otp' || storedMethod === 'sms') {
+      this.method.set(storedMethod);
+    }
     this.backupForm = this.fb.group({
       backupCode: ['', [Validators.required, Validators.minLength(8)]],
     });

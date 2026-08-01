@@ -3,6 +3,7 @@ import { NotificationsComponent } from './notifications.component';
 import { NotificationRepository } from '@core/repositories/notification.repository';
 import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { signal } from '@angular/core';
 
 describe('NotificationsComponent', () => {
   let component: NotificationsComponent;
@@ -10,7 +11,10 @@ describe('NotificationsComponent', () => {
   let repoMock: jasmine.SpyObj<NotificationRepository>;
 
   beforeEach(() => {
-    const spy = jasmine.createSpyObj('NotificationRepository', ['loadNotifications', 'loadTemplates', 'sendBroadcast']);
+    const spy = jasmine.createSpyObj('NotificationRepository', ['loadNotifications', 'loadTemplates', 'sendBroadcast'], {
+      templates: signal([]),
+      notifications: signal([]),
+    });
     spy.loadNotifications.and.returnValue(of([]));
     spy.loadTemplates.and.returnValue(of([]));
     spy.sendBroadcast.and.returnValue(of({} as any));

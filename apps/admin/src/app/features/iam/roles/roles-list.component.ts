@@ -1,0 +1,179 @@
+import { Component, computed, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { IamApiService, unwrap } from '@core/api/iam.api';
+import { RoleListItem } from '@shared/models/iam.model';
+import { createListStore } from '@shared/utils/create-list-store';
+import {
+  DataTableComponent,
+  DataTableColumn,
+  FilterBarComponent,
+  PaginationBarComponent,
+  StatusChipComponent,
+  EmptyStateComponent,
+} from '@shared/components/iam';
+
+@Component({
+  selector: 'zcc-roles-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterLink,
+    DataTableComponent,
+    FilterBarComponent,
+    PaginationBarComponent,
+    StatusChipComponent,
+    EmptyStateComponent,
+  ],
+  template: `
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Roles</h1>
+        <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+          Roles bundle permissions into reusable entitlements.
+        </p>
+      </div>
+      <a
+        routerLink="/iam/roles/new"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-600"
+      >
+        <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+        New Role
+      </a>
+    </div>
+
+    <div class="mb-4">
+      <zcc-filter-bar
+        [query]="store.q()"
+        [filters]="filters()"
+        [selected]="selectedFilters()"
+        (search)="onSearch($event)"
+        (filtersChange)="onFiltersChange($event)"
+        (resetClicked)="onReset()"
+      />
+    </div>
+
+    @if (store.loading()) {
+      <div class="space-y-2">
+        @for (_ of [1, 2, 3, 4, 5]; track $index) {
+          <div class="h-12 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+        }
+      </div>
+    } @else if (store.error()) {
+      <zcc-empty-state
+        icon="pi pi-exclamation-triangle"
+        title="Failed to load roles"
+        [message]="store.error()!"
+      />
+    } @else if (store.hasItems()) {
+      <zcc-data-table
+        [columns]="columns()"
+        [rows]="store.items()"
+        [rowTemplate]="rowTpl"
+        [rowClickable]="true"
+        (rowClick)="onRowClick($event)"
+      >
+        <ng-template #rowTpl let-r>
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/iam/roles', r.id]"
+              class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+              (click)="$event.stopPropagation()"
+            >
+              {{ r.name }}
+            </a>
+            @if (r.isSystem) {
+              <span
+                class="ml-2 rounded-full bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-400 ring-1 ring-inset ring-purple-500/20"
+              >
+                system
+              </span>
+            }
+          </td>
+          <td class="px-4 py-3 font-mono text-xs text-gray-400">{{ r.key }}</td>
+          <td class="px-4 py-3">
+            <zcc-status-chip [value]="r.scope" [label]="r.scope" />
+          </td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+            <span class="tabular-nums">{{ r.permissionCount }}</span>
+          </td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+            <span class="tabular-nums">{{ r.userCount }}</span>
+          </td>
+          <td class="px-4 py-3">
+            <zcc-status-chip [value]="r.status" [label]="r.status === 'ACTIVE' ? 'Active' : 'Inactive'" />
+          </td>
+        </ng-template>
+      </zcc-data-table>
+
+      <zcc-pagination-bar
+        [page]="store.page()"
+        [pageSize]="store.pageSize()"
+        [total]="store.total()"
+        (pageChange)="store.setPage($event)"
+      />
+    } @else {
+      <zcc-empty-state
+        icon="pi pi-shield"
+        title="No roles found"
+        message="Try adjusting your search or create a new role."
+      />
+    }
+  `,
+})
+export class RolesListComponent {
+  private readonly api = inject(IamApiService);
+
+  readonly store = createListStore<RoleListItem>({
+    filterKeys: ['scope'],
+    loader: (query) => firstValueFrom(this.api.listRoles(query)).then(unwrap),
+  });
+
+  readonly filters = () => [
+    {
+      key: 'scope',
+      label: 'Scope',
+      options: [
+        { label: 'Global', value: 'GLOBAL' },
+        { label: 'Organization', value: 'ORG' },
+        { label: 'Resource', value: 'RESOURCE' },
+      ],
+      allLabel: 'All scopes',
+    },
+  ];
+
+  readonly selectedFilters = computed<Record<string, string>>((): Record<string, string> => {
+    const s = this.store.filters()['scope'];
+    return s ? { scope: String(s) } : {};
+  });
+
+  readonly columns = () =>
+    [
+      { key: 'name', label: 'Role' },
+      { key: 'key', label: 'Key' },
+      { key: 'scope', label: 'Scope' },
+      { key: 'permissionCount', label: 'Permissions' },
+      { key: 'userCount', label: 'Users' },
+      { key: 'status', label: 'Status' },
+    ] satisfies DataTableColumn[];
+
+  onSearch(q: string): void {
+    this.store.setQ(q);
+  }
+
+  onFiltersChange(next: Record<string, string>): void {
+    const filters: Record<string, unknown> = {};
+    if (next['scope']) filters['scope'] = next['scope'];
+    this.store.setFilters(filters);
+  }
+
+  onReset(): void {
+    this.store.setFilters({});
+    this.store.setQ('');
+  }
+
+  onRowClick(_row: RoleListItem): void {
+    /* cell links navigate */
+  }
+}

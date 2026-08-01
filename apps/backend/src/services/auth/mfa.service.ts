@@ -19,6 +19,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { supabaseAdmin } from '../../config/supabase';
+import { prisma } from '../../infrastructure/prisma';
 import { config } from '../../config/env';
 import { AppError } from '../../middleware/error';
 import { EncryptionService } from './encryption.service';
@@ -69,6 +70,17 @@ export class MfaService {
         mfa_last_used_counter: counter,
       })
       .eq('id', opts.userId);
+
+    // Login checks Prisma users.mfaEnabled, so keep it in sync too.
+    await prisma.user.update({
+      where: { id: opts.userId },
+      data: {
+        mfaEnabled: true,
+        mfaMethod: 'authenticator',
+        mfaEnrolledAt: new Date(),
+        mfaSecret: opts.secret,
+      },
+    });
 
     // Recovery codes
     const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () => this.generateRecoveryCode());
@@ -148,6 +160,10 @@ export class MfaService {
       })
       .eq('id', userId);
     await supabaseAdmin.from('mfa_recovery_codes').delete().eq('user_id', userId);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { mfaEnabled: false, mfaEnrolledAt: null, mfaSecret: null },
+    });
   }
 
   /** Re-generate recovery codes (old codes are invalidated). */

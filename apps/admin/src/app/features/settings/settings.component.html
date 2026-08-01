@@ -236,8 +236,150 @@
         </div>
       </div>
 
+      <!-- SECURITY TAB -->
+      <div *ngIf="activeTab === 'security'" class="glass-panel p-6 rounded-3xl space-y-8">
+
+        <!-- Change Password -->
+        <section class="space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-white leading-none">Change Password</h2>
+            <p class="text-xs text-slate-400 mt-1.5 leading-none">Update the password used to sign in to your account.</p>
+          </div>
+          <div class="space-y-3 max-w-md">
+            <div>
+              <label class="text-xs font-bold text-white block mb-1.5">Current Password</label>
+              <input
+                type="password"
+                autocomplete="current-password"
+                [(ngModel)]="passwordModel.currentPassword"
+                class="w-full bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="text-xs font-bold text-white block mb-1.5">New Password</label>
+              <input
+                type="password"
+                autocomplete="new-password"
+                [(ngModel)]="passwordModel.newPassword"
+                class="w-full bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="text-xs font-bold text-white block mb-1.5">Confirm New Password</label>
+              <input
+                type="password"
+                autocomplete="new-password"
+                [(ngModel)]="passwordModel.confirmPassword"
+                class="w-full bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+              />
+            </div>
+            <div *ngIf="passwordMessage" [class]="passwordMessage.severity === 'success' ? 'text-emerald-400 text-xs' : 'text-red-400 text-xs'">
+              {{ passwordMessage.text }}
+            </div>
+            <button
+              (click)="changePassword()"
+              [disabled]="passwordSaving"
+              class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
+            >
+              {{ passwordSaving ? 'Saving…' : 'Update Password' }}
+            </button>
+          </div>
+        </section>
+
+        <div class="border-t border-white/5"></div>
+
+        <!-- Two-Factor Authentication -->
+        <section class="space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-bold text-white leading-none">Two-Factor Authentication</h2>
+              <p class="text-xs text-slate-400 mt-1.5 leading-none">
+                {{ mfaEnabled() ? 'MFA is enabled on your account.' : 'MFA is disabled on your account.' }}
+              </p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg text-[9px] font-bold shrink-0"
+              [class]="mfaEnabled() ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-white/10'">
+              {{ mfaEnabled() ? 'ENABLED' : 'DISABLED' }}
+            </span>
+          </div>
+
+          <div *ngIf="mfaError" class="text-red-400 text-xs">{{ mfaError }}</div>
+
+          <!-- Disabled: offer to enable -->
+          <div *ngIf="!mfaEnabled() && mfaStep() === 'idle'" class="flex items-center gap-3">
+            <button
+              (click)="startMfaEnrollment()"
+              [disabled]="mfaBusy"
+              class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl transition-all"
+            >
+              {{ mfaBusy ? 'Generating…' : 'Enable MFA' }}
+            </button>
+          </div>
+
+          <!-- QR scan step -->
+          <div *ngIf="mfaStep() === 'qr'" class="space-y-4">
+            <p class="text-xs text-slate-400">
+              Scan this QR code with Google Authenticator, Authy or a compatible app, then enter the 6-digit code to confirm.
+            </p>
+            <img [src]="mfaQrCode" alt="MFA QR code" class="w-44 h-44 rounded-xl bg-white p-2" />
+            <div class="flex items-center gap-3">
+              <input
+                type="text"
+                maxlength="6"
+                inputmode="numeric"
+                [(ngModel)]="mfaCodeInput"
+                placeholder="6-digit code"
+                class="w-40 bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+              />
+              <button
+                (click)="confirmMfa()"
+                [disabled]="mfaBusy || mfaCodeInput.length !== 6"
+                class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl transition-all"
+              >
+                {{ mfaBusy ? 'Verifying…' : 'Verify & Enable' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Recovery codes -->
+          <div *ngIf="mfaStep() === 'codes'" class="space-y-4">
+            <p class="text-xs text-amber-400">
+              Store these backup codes somewhere safe. Each code can only be used once to recover your account.
+            </p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-md">
+              <div *ngFor="let code of recoveryCodes" class="bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-center text-[11px] font-mono text-slate-300">{{ code }}</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button (click)="regenerateCodes()" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-white font-bold text-[10px] rounded-lg transition-all">Regenerate</button>
+              <button (click)="closeCodes()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] rounded-lg transition-all">Done</button>
+            </div>
+          </div>
+
+          <!-- Enabled: offer to disable -->
+          <div *ngIf="mfaEnabled() && mfaStep() === 'idle'" class="flex flex-col items-start gap-3 max-w-md">
+            <p class="text-xs text-slate-400">Disabling MFA requires your current password.</p>
+            <div class="flex items-center gap-3 w-full">
+              <input
+                type="password"
+                autocomplete="current-password"
+                [(ngModel)]="disablePassword"
+                placeholder="Current password"
+                class="flex-1 bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+              />
+              <button
+                (click)="disableMfa()"
+                [disabled]="mfaBusy || !disablePassword"
+                class="px-4 py-2.5 bg-red-600/80 hover:bg-red-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl transition-all"
+              >
+                {{ mfaBusy ? '…' : 'Disable' }}
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
       <!-- Other tabs dynamic forms placeholder -->
-      <div *ngIf="activeTab !== 'general' && activeTab !== 'profile'" class="glass-panel p-6 rounded-3xl space-y-6">
+      <div *ngIf="activeTab !== 'general' && activeTab !== 'profile' && activeTab !== 'security'" class="glass-panel p-6 rounded-3xl space-y-6">
         <div>
           <h2 class="text-base font-bold text-white leading-none">{{ activeTab | titlecase }} Settings</h2>
           <p class="text-xs text-slate-400 mt-1.5 leading-none">Configure your {{ activeTab }} settings and credentials.</p>
@@ -284,8 +426,8 @@
               <span class="text-[8px] text-slate-500 block">Secure your account</span>
             </div>
           </div>
-          <button class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors">
-            Enable
+          <button (click)="selectTab('security')" class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors">
+            {{ mfaEnabled() ? 'Manage' : 'Enable' }}
           </button>
         </div>
 

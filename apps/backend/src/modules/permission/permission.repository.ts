@@ -12,11 +12,19 @@ export class PermissionRepository extends BaseRepository {
   }
 
   async create(
-    data: { name: string; description?: string | null; groupId?: string | null },
+    data: {
+      name: string;
+      key?: string;
+      resource?: string | null;
+      action?: string | null;
+      description?: string | null;
+      groupId?: string | null;
+    },
     tx?: TxClient
   ) {
+    const key = data.key ?? data.name.toLowerCase().replace(/[^a-z0-9]+/g, ':');
     return this.getDb(tx).permission.create({
-      data,
+      data: { ...data, key },
     });
   }
 

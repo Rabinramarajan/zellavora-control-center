@@ -53,6 +53,7 @@ export class LoginComponent {
   readonly visiblePrivacy = signal(false);
   readonly visibleTerms = signal(false);
   readonly visibleHelp = signal(false);
+  readonly capsLock = signal(false);
 
   // --- Organization state --------------------------------------------------
   readonly allOrgs = signal<Org[]>([]);
@@ -154,6 +155,10 @@ export class LoginComponent {
     const adminApiUrl =
       this.configService.get('apiUrls.adminApi') || 'https://zcc-backend.vercel.app';
     window.location.href = `${adminApiUrl}/api/v1/auth/oauth/${provider}`;
+  }
+
+  onPasswordKeyup(event: KeyboardEvent): void {
+    this.capsLock.set(event.getModifierState?.('CapsLock') ?? false);
   }
 
   onSubmit(): void {

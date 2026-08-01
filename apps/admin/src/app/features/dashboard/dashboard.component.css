@@ -1,1 +1,26 @@
+/* Skeleton shimmer used by dashboard loaders. */
+.skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: zcc-skeleton 1.4s ease-in-out infinite;
+}
 
+@keyframes zcc-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-pulse {
+    animation: none;
+  }
+}

@@ -111,9 +111,27 @@ async function main() {
 
   // 5. Create Permissions
   const permissionsData = [
-    { name: 'read:dashboard', description: 'View workspace monitoring metrics' },
-    { name: 'write:settings', description: 'Modify organization configuration settings' },
-    { name: 'manage:users', description: 'Provision and revoke system access roles' },
+    {
+      name: 'read:dashboard',
+      key: 'dashboard:read',
+      resource: 'dashboard',
+      action: 'read',
+      description: 'View workspace monitoring metrics',
+    },
+    {
+      name: 'write:settings',
+      key: 'settings:write',
+      resource: 'settings',
+      action: 'write',
+      description: 'Modify organization configuration settings',
+    },
+    {
+      name: 'manage:users',
+      key: 'users:manage',
+      resource: 'users',
+      action: 'manage',
+      description: 'Provision and revoke system access roles',
+    },
   ];
 
   const permissionsList = [];

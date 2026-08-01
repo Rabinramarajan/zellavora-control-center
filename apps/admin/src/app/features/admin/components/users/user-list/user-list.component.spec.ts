@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { UserListComponent } from './user-list.component';
 import { AdminStoreService } from '../../../services';
 import { User } from '../../../models';
@@ -9,25 +10,35 @@ describe('UserListComponent', () => {
   let fixture: ComponentFixture<UserListComponent>;
   let storeService: jasmine.SpyObj<AdminStoreService>;
 
+  const makeUser = (userSerialId: number, userLoginId: string, firstName: string, lastName: string, emailId: string, statusValue: string): User => ({
+    userSerialId,
+    userLoginId,
+    firstName,
+    lastName,
+    emailId,
+    contactNumber: '1234567890',
+    genderId: 1,
+    genderValue: 'Male',
+    beginDate: '2024-01-01',
+    endDate: '2099-12-31',
+    statusId: statusValue === 'Active' ? 1 : 2,
+    statusValue,
+    designationId: 1,
+    designationValue: 'Engineer',
+    locationId: 1,
+    locationValue: 'HQ',
+    branchId: 1,
+    branchValue: 'Main',
+    employeeCode: `E00${userSerialId}`,
+    departmentId: 1,
+    departmentValue: 'Engineering',
+    teamId: 1,
+    teamValue: 'Platform',
+  });
+
   const mockUsers: User[] = [
-    {
-      userSerialId: 1,
-      userLoginId: 'user1',
-      firstName: 'John',
-      lastName: 'Doe',
-      emailId: 'john@example.com',
-      statusValue: 'Active',
-      statusDescription: 'Active',
-    },
-    {
-      userSerialId: 2,
-      userLoginId: 'user2',
-      firstName: 'Jane',
-      lastName: 'Smith',
-      emailId: 'jane@example.com',
-      statusValue: 'Inactive',
-      statusDescription: 'Inactive',
-    },
+    makeUser(1, 'user1', 'John', 'Doe', 'john@example.com', 'Active'),
+    makeUser(2, 'user2', 'Jane', 'Smith', 'jane@example.com', 'Inactive'),
   ];
 
   beforeEach(async () => {
@@ -43,7 +54,7 @@ describe('UserListComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [UserListComponent],
-      providers: [{ provide: AdminStoreService, useValue: storeServiceSpy }]
+      providers: [provideRouter([]), { provide: AdminStoreService, useValue: storeServiceSpy }]
     }).compileComponents();
 
     storeService = TestBed.inject(AdminStoreService) as jasmine.SpyObj<AdminStoreService>;

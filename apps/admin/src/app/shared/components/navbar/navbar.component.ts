@@ -134,6 +134,14 @@ interface BreadcrumbSegment {
               <span>⚙️</span> Settings
             </a>
 
+            <a
+              routerLink="/auth/sessions"
+              (click)="closeUserMenu()"
+              class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-white/5 text-xs text-[#a3a1b8] hover:text-white transition-colors"
+            >
+              <span>🖥️</span> Sessions
+            </a>
+
             <!-- Logout action -->
             <button
               (click)="logout()"

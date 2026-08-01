@@ -99,7 +99,7 @@
       <div class="auth-form-col">
 
         <!-- Mode Toggle Tabs -->
-        <div class="mode-toggle-bar">
+        <div class="mode-toggle-bar" *ngIf="method() === 'totp'">
           <button
             type="button"
             class="mode-tab"
@@ -124,7 +124,7 @@
           </button>
         </div>
 
-        <!-- =================== TOTP MODE =================== -->
+        <!-- =================== TOTP / OTP MODE =================== -->
         <div *ngIf="mode() === 'totp'" class="mfa-card">
 
           <!-- Shield animated icon -->
@@ -141,7 +141,15 @@
 
           <h2 class="text-2xl font-bold text-white mb-1.5 text-center">2-Step Verification</h2>
           <p class="text-sm text-slate-400 mb-7 text-center leading-relaxed">
-            Enter the 6-digit code from your<br />authenticator app.
+            <ng-container *ngIf="method() === 'email_otp'">
+              Enter the 6-digit code sent to<br />your email.
+            </ng-container>
+            <ng-container *ngIf="method() === 'sms'">
+              Enter the 6-digit code sent to<br />your phone.
+            </ng-container>
+            <ng-container *ngIf="method() === 'totp'">
+              Enter the 6-digit code from your<br />authenticator app.
+            </ng-container>
           </p>
 
           <!-- OTP digit inputs -->
@@ -211,7 +219,7 @@
           </button>
 
           <!-- Switch to backup -->
-          <p class="text-center text-[12.5px] text-slate-500 mt-4">
+          <p class="text-center text-[12.5px] text-slate-500 mt-4" *ngIf="method() === 'totp'">
             Can't access your authenticator?
             <button type="button" class="mode-switch-link" (click)="switchMode('backup')">Use a backup code</button>
           </p>
