@@ -1,0 +1,204 @@
+<div class="dt-toolbar">
+    <div class="dt-toolbar__left">
+        @if (selectable() && selectedCount() > 0) {
+        <span class="dt-chip">{{ selectedCount() }} selected</span>
+        }
+        <ng-content select="[toolbar-start]" />
+    </div>
+
+    <div class="dt-toolbar__right">
+        @if (searchable()) {
+        <input class="dt-search" type="search" [placeholder]="searchPlaceholder()" [value]="search()"
+            (input)="search.set($any($event.target).value)" aria-label="Search table" />
+        }
+
+        @if (columnToggle()) {
+        <div class="dt-menuwrap">
+            <button class="dt-btn" (click)="toggleColPanel()" aria-haspopup="true">Columns &#9662;</button>
+            @if (colPanelOpen()) {
+            <div class="dt-menu dt-menu--right">
+                @for (col of allColumns(); track col.key) {
+                <label class="dt-menu__item">
+                    <input type="checkbox" [checked]="!hidden().has(col.key)" (change)="toggleColumn(col.key)" />
+                    {{ col.header }}
+                </label>
+                }
+            </div>
+            }
+        </div>
+        }
+
+        <ng-content select="[toolbar-end]" />
+    </div>
+</div>
+
+<!-- ================= Table ================= -->
+@if (virtualScroll()) {
+<cdk-virtual-scroll-viewport [itemSize]="virtualScrollItemSize()" class="dt-scroll dt-scroll--virtual"
+    [style.height]="virtualHeight()">
+    <table class="dt-table" [class.dt-table--fixed]="hasFrozen()">
+        <ng-container [ngTemplateOutlet]="colgroupTpl" />
+        <thead><ng-container [ngTemplateOutlet]="theadTpl" /></thead>
+        <tbody>
+            <tr *cdkVirtualFor="let row of pageRows(); let i = index; trackBy: trackRow"
+                [style.height.px]="virtualScrollItemSize()" (click)="rowClick.emit(row)">
+                <ng-container [ngTemplateOutlet]="rowTpl" [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
+            </tr>
+        </tbody>
+    </table>
+</cdk-virtual-scroll-viewport>
+} @else {
+<div class="dt-scroll">
+    <table class="dt-table" [class.dt-table--fixed]="hasFrozen()">
+        <ng-container [ngTemplateOutlet]="colgroupTpl" />
+        <thead><ng-container [ngTemplateOutlet]="theadTpl" /></thead>
+
+        <tbody cdkDropList [cdkDropListDisabled]="!reorderable()" (cdkDropListDropped)="onDrop($event)">
+            @if (loading()) {
+            @for (s of skeletonArray(); track s) {
+            <tr class="dt-skeleton-row">
+                @if (selectable()) { <td class="dt-td--check"><span class="dt-skel dt-skel--check"></span></td> }
+                @if (reorderable()) { <td class="dt-td--handle"></td> }
+                @for (col of visibleColumns(); track col.key) {
+                <td><span class="dt-skel"></span></td>
+                }
+            </tr>
+            }
+            } @else if (pageRows().length === 0) {
+            <tr>
+                <td [attr.colspan]="leafColspan()" class="dt-state">
+                    @if (emptyTpl()) {
+                    <ng-container [ngTemplateOutlet]="emptyTpl()!.template" />
+                    } @else {
+                    {{ emptyMessage() }}
+                    }
+                </td>
+            </tr>
+            } @else {
+            @for (row of pageRows(); track trackRow($index, row); let i = $index) {
+            <tr cdkDrag [cdkDragDisabled]="!reorderable()" [cdkDragData]="row"
+                [class.dt-row--selected]="isSelected(row)" [class.dt-row--freeze-first]="freezeFirstRow() && i === 0"
+                [class.dt-row--freeze-last]="freezeLastRow() && i === pageRows().length - 1"
+                (click)="rowClick.emit(row)">
+                <ng-container [ngTemplateOutlet]="rowTpl" [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
+            </tr>
+            }
+            }
+        </tbody>
+    </table>
+</div>
+}
+
+<!-- ================= Footer ================= -->
+@if (!virtualScroll()) {
+<div class="dt-footer">
+    <span class="dt-count">
+        @if (total() === 0) { No results }
+        @else { {{ rangeStart() }}&ndash;{{ rangeEnd() }} of {{ total() }} }
+    </span>
+    <div class="dt-pager">
+        @if (pageSizeOptions().length) {
+        <select class="dt-btn" [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value)"
+            aria-label="Rows per page">
+            @for (n of pageSizeOptions(); track n) { <option [value]="n">{{ n }} / page</option> }
+        </select>
+        }
+        <button class="dt-btn" [disabled]="safePage() <= 1" (click)="goto(1)">&laquo;</button>
+        <button class="dt-btn" [disabled]="safePage() <= 1" (click)="goto(safePage() - 1)">&lsaquo;</button>
+        <span class="dt-pageinfo">{{ safePage() }} / {{ totalPages() }}</span>
+        <button class="dt-btn" [disabled]="safePage() >= totalPages()" (click)="goto(safePage() + 1)">&rsaquo;</button>
+        <button class="dt-btn" [disabled]="safePage() >= totalPages()" (click)="goto(totalPages())">&raquo;</button>
+    </div>
+</div>
+} @else {
+<div class="dt-footer"><span class="dt-count">{{ total() }} rows</span></div>
+}
+
+<!-- ============ reusable colgroup ============ -->
+<ng-template #colgroupTpl>
+    <colgroup>
+        @if (selectable()) {
+        <col style="width:44px" /> }
+        @if (reorderable()) {
+        <col style="width:36px" /> }
+        @for (col of visibleColumns(); track col.key) {
+        <col [style.width]="col.width" /> }
+    </colgroup>
+</ng-template>
+
+<!-- ============ reusable thead (incl. #3 multi-level) ============ -->
+<ng-template #theadTpl>
+    @for (group of headerGroups(); track $index) {
+    <tr>
+        @if (selectable() && $first) { <th [attr.rowspan]="headerRowCount()" class="dt-th--check">
+            <input type="checkbox" [checked]="allSelected()" [indeterminate]="someSelected()" (change)="toggleAll()"
+                aria-label="Select all" />
+        </th> }
+        @if (reorderable() && $first) { <th [attr.rowspan]="headerRowCount()"></th> }
+        @for (cell of group; track $index) {
+        <th [attr.colspan]="cell.colspan" [attr.rowspan]="cell.rowspan" [style.text-align]="cell.align ?? 'left'">{{
+            cell.label }}</th>
+        }
+    </tr>
+    }
+    <tr>
+        @if (selectable() && !headerGroups().length) { <th class="dt-th--check">
+            <input type="checkbox" [checked]="allSelected()" [indeterminate]="someSelected()" (change)="toggleAll()"
+                aria-label="Select all" />
+        </th> }
+        @if (reorderable() && !headerGroups().length) { <th></th> }
+        @for (col of visibleColumns(); track col.key) {
+        <th class="dt-th" [class.dt-th--frozen]="isFrozen(col.key)" [style.left.px]="frozenOffset(col.key)"
+            [style.text-align]="col.align ?? 'left'" [class.dt-th--sortable]="col.sortable"
+            [attr.aria-sort]="ariaSort(col)">
+            <span class="dt-th__label" (click)="col.sortable && toggleSort(col.key)">
+                {{ col.header }}
+                @if (col.sortable) {
+                <span class="dt-sort">{{ sortIndicator(col) === 'asc' ? '\u25B2' : sortIndicator(col) === 'desc' ?
+                    '\u25BC' : '\u2195' }}</span>
+                }
+            </span>
+            @if (editable()) {
+            <button class="dt-colmenu-btn" (click)="openMenu(col.key, $event)" aria-label="Column menu">&#8942;</button>
+            }
+        </th>
+        }
+    </tr>
+</ng-template>
+
+<!-- ============ reusable row body ============ -->
+<ng-template #rowTpl let-row let-i="index">
+    @if (selectable()) {
+    <td class="dt-td--check" (click)="$event.stopPropagation()">
+        <input type="checkbox" [checked]="isSelected(row)" (change)="toggleRow(row)" />
+    </td>
+    }
+    @if (reorderable()) {
+    <td class="dt-td--handle" cdkDragHandle (click)="$event.stopPropagation()">&#8942;&#8942;</td>
+    }
+    @for (col of visibleColumns(); track col.key) {
+    <td [style.text-align]="col.align ?? 'left'" [class.dt-td--frozen]="isFrozen(col.key)"
+        [style.left.px]="frozenOffset(col.key)" (dblclick)="editable() && col.editable && beginEdit(row, col)">
+        @if (isEditing(row, col)) {
+        <input class="dt-editor" [value]="rawValue(col, row)" #ed (blur)="commitEdit(row, col, ed.value)"
+            (keydown.enter)="commitEdit(row, col, ed.value)" (keydown.escape)="cancelEdit()" />
+        } @else if (cellTemplate(col.key); as tpl) {
+        <ng-container [ngTemplateOutlet]="tpl"
+            [ngTemplateOutletContext]="{ $implicit: row, value: rawValue(col, row), index: i }" />
+        } @else {
+        {{ display(col, row) }}
+        }
+    </td>
+    }
+</ng-template>
+
+<!-- ============ #9 per-column menu ============ -->
+@if (menuKey(); as mk) {
+<div class="dt-menu dt-colmenu" [style.left.px]="menuPos().x" [style.top.px]="menuPos().y">
+    <button class="dt-menu__item" (click)="menuSort(mk, 'asc')">Sort ascending</button>
+    <button class="dt-menu__item" (click)="menuSort(mk, 'desc')">Sort descending</button>
+    <button class="dt-menu__item" (click)="copyColumn(mk)">Copy column</button>
+    <button class="dt-menu__item" (click)="toggleColumn(mk); closeMenu()">Hide column</button>
+</div>
+<div class="dt-menu-backdrop" (click)="closeMenu()"></div>
+}

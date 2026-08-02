@@ -1,76 +1,48 @@
 <div class="branch-manager">
-      <header class="page-header">
-        <h1>Branches</h1>
+  <header class="page-header">
+    <h1>Branches</h1>
+    <button
+      *hasPermission="'admin:branches:create'"
+      class="btn btn-primary"
+      (click)="onCreate()"
+    >
+      + New Branch
+    </button>
+  </header>
+
+  <div class="error" *ngIf="error()">{{ error() }}</div>
+
+  <app-table
+    [rows]="branches()"
+    [columns]="columns"
+    [loading]="loading()"
+    [trackBy]="trackBy"
+    searchPlaceholder="Search branches..."
+    [columnToggle]="true"
+  >
+    <ng-template [appCell]="'status'" let-branch>
+      <span [class]="'badge ' + (branch.statusValue === 'Active' ? 'badge-active' : 'badge-inactive')">
+        {{ branch.statusValue }}
+      </span>
+    </ng-template>
+
+    <ng-template [appCell]="'actions'" let-branch>
+      <div class="actions">
         <button
-          *hasPermission="'admin:branches:create'"
-          class="btn btn-primary"
-          (click)="onCreate()"
+          *hasPermission="'admin:branches:read'"
+          class="btn btn-sm btn-ghost"
+          (click)="onView(branch)"
         >
-          + New Branch
+          View
         </button>
-      </header>
-
-      <div class="filters-section">
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          (ngModelChange)="onSearch($event)"
-          placeholder="Search branches..."
-          class="search-input"
-        />
-        <button class="btn btn-secondary" (click)="onReset()">Reset</button>
+        <button
+          *hasPermission="'admin:branches:update'"
+          class="btn btn-sm btn-ghost"
+          (click)="onEdit(branch)"
+        >
+          Edit
+        </button>
       </div>
-
-      <div class="loading" *ngIf="loading()">Loading branches...</div>
-      <div class="error" *ngIf="error()">{{ error() }}</div>
-
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Branch Code</th>
-              <th>Branch Name</th>
-              <th>Address</th>
-              <th>City</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (branch of filteredBranches(); track branch.admBranchId) {
-              <tr>
-                <td>{{ branch.branchCode }}</td>
-                <td>{{ branch.branchName }}</td>
-                <td>{{ branch.effectiveDate || '—' }}</td>
-                <td>{{ branch.statusValue || '—' }}</td>
-                <td>
-                  <span [class]="'badge ' + (branch.statusValue === 'Active' ? 'badge-active' : 'badge-inactive')">
-                    {{ branch.statusValue }}
-                  </span>
-                </td>
-                <td class="actions">
-                  <button
-                    *hasPermission="'admin:branches:read'"
-                    class="btn btn-sm btn-ghost"
-                    (click)="onView(branch)"
-                  >
-                    View
-                  </button>
-                  <button
-                    *hasPermission="'admin:branches:update'"
-                    class="btn btn-sm btn-ghost"
-                    (click)="onEdit(branch)"
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="6" class="empty">No branches found.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </ng-template>
+  </app-table>
+</div>

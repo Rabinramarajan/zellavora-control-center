@@ -6,14 +6,14 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HasPermissionDirective } from '@core/rbac';
+import { Table, ColumnDef, CellDirective } from '@shared/components/table/table';
 import { AdminStoreService } from '../../../services';
 import { User, UserSearchCriteria } from '../../../models';
-import { SearchFilterHelper } from '../../../utils';
 
 @Component({
   selector: 'zcc-user-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, HasPermissionDirective],
+  imports: [CommonModule, RouterLink, FormsModule, HasPermissionDirective, Table, CellDirective],
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.css'
 })
@@ -21,37 +21,27 @@ export class UserListComponent implements OnInit {
   private store = inject(AdminStoreService);
   private router = inject(Router);
 
-  readonly searchTerm = signal<string>('');
   readonly statusFilter = signal<string>('');
-  readonly currentPage = signal<number>(1);
-  readonly pageSize = signal<number>(10);
-
   readonly users = this.store.users;
   readonly loading = this.store.loading;
   readonly error = this.store.error;
 
   readonly filteredUsers = computed(() => {
-    const term = this.searchTerm().toLowerCase();
     const status = this.statusFilter();
-
-    return SearchFilterHelper.filterUsers(this.users(), {
-      searchTerm: term,
-      statusFilter: status
-    });
+    return this.users().filter(user => !status || user.statusValue === status);
   });
 
-  readonly totalCount = computed(() => this.filteredUsers().length);
-  readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.totalCount() / this.pageSize()))
-  );
-  readonly startIndex = computed(() =>
-    (this.currentPage() - 1) * this.pageSize()
-  );
-  readonly endIndex = computed(() =>
-    Math.min(this.startIndex() + this.pageSize(), this.totalCount())
-  );
-  readonly canPreviousPage = computed(() => this.currentPage() > 1);
-  readonly canNextPage = computed(() => this.currentPage() < this.totalPages());
+  readonly trackBy = (user: User) => user.userSerialId;
+
+  readonly columns: ColumnDef<User>[] = [
+    { key: 'userLoginId', header: 'Login ID', sortable: true },
+    { key: 'fullName', header: 'Full Name', sortable: true, value: (u) => [u.firstName, u.middleName, u.lastName].filter(Boolean).join(' ') },
+    { key: 'emailId', header: 'Email', sortable: true },
+    { key: 'employeeCode', header: 'Employee Code', sortable: true },
+    { key: 'department', header: 'Department', value: (u) => u.departmentDescription ?? u.departmentValue ?? '' },
+    { key: 'status', header: 'Status', sortable: true, value: (u) => u.statusDescription ?? u.statusValue ?? '' },
+    { key: 'actions', header: 'Actions', align: 'right' },
+  ];
 
   ngOnInit(): void {
     this.load();
@@ -70,32 +60,12 @@ export class UserListComponent implements OnInit {
     }
   }
 
-  onSearch(term: string): void {
-    this.searchTerm.set(term);
-    this.currentPage.set(1);
-  }
-
   onStatusFilterChange(status: string): void {
     this.statusFilter.set(status);
-    this.currentPage.set(1);
   }
 
   onReset(): void {
-    this.searchTerm.set('');
     this.statusFilter.set('');
-    this.currentPage.set(1);
-  }
-
-  onPrevPage(): void {
-    if (this.canPreviousPage()) {
-      this.currentPage.update(p => p - 1);
-    }
-  }
-
-  onNextPage(): void {
-    if (this.canNextPage()) {
-      this.currentPage.update(p => p + 1);
-    }
   }
 
   onCreate(): void {

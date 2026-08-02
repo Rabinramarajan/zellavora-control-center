@@ -1,97 +1,68 @@
 <div class="user-list">
-      <header class="page-header">
-        <h1>Users</h1>
-        <button
-          *hasPermission="'admin:users:create'"
-          class="btn btn-primary"
-          (click)="onCreate()"
-        >
-          + New User
-        </button>
-      </header>
+  <header class="page-header">
+    <h1>Users</h1>
+    <button
+      *hasPermission="'admin:users:create'"
+      class="btn btn-primary"
+      (click)="onCreate()"
+    >
+      + New User
+    </button>
+  </header>
 
-      <div class="filters-section">
-        <input
-          type="text"
-          [ngModel]="searchTerm()"
-          (ngModelChange)="onSearch($event)"
-          placeholder="Search by name, email, or employee code..."
-          class="search-input"
-        />
-        <select [ngModel]="statusFilter()" (ngModelChange)="onStatusFilterChange($event)">
-          <option value="">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-          <option value="Suspended">Suspended</option>
-        </select>
-        <button class="btn btn-secondary" (click)="onReset()">Reset</button>
-      </div>
+  <div class="error" *ngIf="error()">{{ error() }}</div>
 
-      <div class="loading" *ngIf="loading()">Loading users...</div>
-      <div class="error" *ngIf="error()">{{ error() }}</div>
-
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Login ID</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Employee Code</th>
-              <th>Department</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (user of filteredUsers(); track user.userSerialId) {
-              <tr>
-                <td>{{ user.userLoginId }}</td>
-                <td>
-                  <a [routerLink]="['/admin/users', user.userSerialId]">
-                    {{ user.firstName }} {{ user.lastName }}
-                  </a>
-                </td>
-                <td>{{ user.emailId }}</td>
-                <td>{{ user.employeeCode || '—' }}</td>
-                <td>{{ user.departmentDescription || '—' }}</td>
-                <td>
-                  <span [class]="'badge badge-' + (user.statusValue || 'unknown').toLowerCase()">
-                    {{ user.statusDescription }}
-                  </span>
-                </td>
-                <td class="actions">
-                  <button
-                    *hasPermission="'admin:users:read'"
-                    class="btn btn-sm btn-ghost"
-                    (click)="onView(user)"
-                  >
-                    View
-                  </button>
-                  <button
-                    *hasPermission="'admin:users:update'"
-                    class="btn btn-sm btn-ghost"
-                    (click)="onEdit(user)"
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="7" class="empty">No users found.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pagination-section" *ngIf="totalCount() > 0">
-        <div class="info">Showing {{ startIndex() + 1 }} to {{ endIndex() }} of {{ totalCount() }}</div>
-        <div class="controls">
-          <button (click)="onPrevPage()" [disabled]="!canPreviousPage()">← Previous</button>
-          <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
-          <button (click)="onNextPage()" [disabled]="!canNextPage()">Next →</button>
-        </div>
-      </div>
+  <app-table
+    [rows]="filteredUsers()"
+    [columns]="columns"
+    [loading]="loading()"
+    [trackBy]="trackBy"
+    searchPlaceholder="Search by name, email, or employee code..."
+    [columnToggle]="true"
+  >
+    <div toolbar-start>
+      <select
+        [ngModel]="statusFilter()"
+        (ngModelChange)="onStatusFilterChange($event)"
+        class="status-filter"
+        aria-label="Filter by status"
+      >
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Suspended">Suspended</option>
+      </select>
     </div>
+
+    <ng-template [appCell]="'fullName'" let-user>
+      <a [routerLink]="['/admin/users', user.userSerialId]">
+        {{ user.firstName }} {{ user.lastName }}
+      </a>
+    </ng-template>
+
+    <ng-template [appCell]="'status'" let-user>
+      <span [class]="'badge badge-' + (user.statusValue || 'unknown').toLowerCase()">
+        {{ user.statusDescription || user.statusValue }}
+      </span>
+    </ng-template>
+
+    <ng-template [appCell]="'actions'" let-user>
+      <div class="actions">
+        <button
+          *hasPermission="'admin:users:read'"
+          class="btn btn-sm btn-ghost"
+          (click)="onView(user)"
+        >
+          View
+        </button>
+        <button
+          *hasPermission="'admin:users:update'"
+          class="btn btn-sm btn-ghost"
+          (click)="onEdit(user)"
+        >
+          Edit
+        </button>
+      </div>
+    </ng-template>
+  </app-table>
+</div>

@@ -73,15 +73,6 @@ describe('UserListComponent', () => {
     expect(storeService.loadUsers).toHaveBeenCalled();
   });
 
-  it('should filter users by search term', () => {
-    component.searchTerm.set('john');
-    fixture.detectChanges();
-
-    const filtered = component.filteredUsers();
-    expect(filtered.length).toBe(1);
-    expect(filtered[0].firstName).toBe('John');
-  });
-
   it('should filter users by status', () => {
     component.statusFilter.set('Active');
     fixture.detectChanges();
@@ -91,26 +82,29 @@ describe('UserListComponent', () => {
     expect(filtered[0].statusValue).toBe('Active');
   });
 
-  it('should reset filters', () => {
-    component.searchTerm.set('john');
+  it('should show all users when no status filter', () => {
+    expect(component.filteredUsers().length).toBe(2);
+  });
+
+  it('should reset the status filter', () => {
     component.statusFilter.set('Active');
 
     component.onReset();
 
-    expect(component.searchTerm()).toBe('');
     expect(component.statusFilter()).toBe('');
+    expect(component.filteredUsers().length).toBe(2);
   });
 
-  it('should handle pagination', () => {
-    component.pageSize.set(1);
-    fixture.detectChanges();
+  it('should define searchable table columns', () => {
+    expect(component.columns.length).toBeGreaterThan(0);
+    expect(component.columns.map(c => c.key)).toContain('userLoginId');
+    expect(component.columns.map(c => c.key)).toContain('fullName');
+    expect(component.columns.map(c => c.key)).toContain('status');
+    expect(component.columns.map(c => c.key)).toContain('actions');
+  });
 
-    expect(component.totalPages()).toBe(2);
-    expect(component.canNextPage()).toBe(true);
-    expect(component.canPreviousPage()).toBe(false);
-
-    component.onNextPage();
-    expect(component.currentPage()).toBe(2);
-    expect(component.canPreviousPage()).toBe(true);
+  it('should render the app-table', () => {
+    const tableEl = fixture.nativeElement.querySelector('app-table');
+    expect(tableEl).toBeTruthy();
   });
 });
