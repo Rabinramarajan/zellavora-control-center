@@ -1,27 +1,13 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { LayoutService } from '@core/services/layout.service';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-
-interface SubNavItem {
-  label: string;
-  route: string;
-  path: string;
-}
-
-interface NavItem {
-  label: string;
-  icon: string;
-  route: string;
-  path: string;
-  badge?: number;
-  children?: SubNavItem[];
-}
+import { AuthStore } from '@core/auth/auth.store';
+import { SidebarNavNodeComponent } from './sidebar-nav-node.component';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, SidebarNavNodeComponent],
   template: `
     <!-- Sidebar Toggle Button (Mobile) -->
     <button
@@ -56,75 +42,14 @@ interface NavItem {
           </div>
         </div>
 
-        <!-- Navigation Section -->
-        <nav class="flex-1 overflow-y-auto px-4 space-y-4 mb-6 custom-sidebar-scrollbar">
-          <!-- Main Category -->
-          <div>
-            <p *ngIf="!layoutService.isSidebarCollapsed()" class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
-              MAIN NAVIGATION
-            </p>
-            <div *ngIf="layoutService.isSidebarCollapsed()" class="border-t border-[#13112b] my-4 mx-1"></div>
-
-            <div class="space-y-1">
-              <div *ngFor="let item of mainNavItems" class="space-y-1">
-                <!-- Parent Link -->
-                <a
-                  [routerLink]="item.route"
-                  routerLinkActive="bg-[#13112b] text-white"
-                  [routerLinkActiveOptions]="{ exact: item.route === '/portfolio' || item.route === '/dashboard' ? true : false }"
-                  (click)="item.children ? togglePortfolio($event) : closeSidebarOnMobile()"
-                  [class.justify-center]="layoutService.isSidebarCollapsed()"
-                  class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
-                >
-                  <div class="flex items-center gap-3">
-                    <span class="text-base shrink-0">{{ item.icon }}</span>
-                    <span *ngIf="!layoutService.isSidebarCollapsed()">{{ item.label }}</span>
-                  </div>
-                  <span class="text-[9px] text-[#4e4b70] font-normal font-mono" *ngIf="!layoutService.isSidebarCollapsed() && (!item.children || !isPortfolioExpanded())">{{ item.path }}</span>
-                </a>
-
-                <!-- Submenu for Portfolio (if active/expanded) -->
-                <div *ngIf="item.children && isPortfolioExpanded() && !layoutService.isSidebarCollapsed()" class="pl-3.5 pr-1 py-1 space-y-1 border-l border-[#13112b] ml-5">
-                  <a
-                    *ngFor="let sub of item.children"
-                    [routerLink]="sub.route"
-                    routerLinkActive="active-sub text-white shadow-lg shadow-purple-600/10"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    (click)="closeSidebarOnMobile()"
-                    class="flex items-center justify-between px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#8b88a5] hover:bg-[#13112b]/30 hover:text-white transition-all"
-                  >
-                    <span>{{ sub.label }}</span>
-                    <span class="text-[8px] text-[#4e4b70] font-normal font-mono sub-path">{{ sub.path }}</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Admin Category -->
-          <div>
-            <p *ngIf="!layoutService.isSidebarCollapsed()" class="text-[9px] font-bold text-[#474466] uppercase tracking-wider px-3 mb-3">
-              ADMIN NAVIGATION
-            </p>
-            <div *ngIf="layoutService.isSidebarCollapsed()" class="border-t border-[#13112b] my-4 mx-1"></div>
-
-            <div class="space-y-1">
-              <a
-                *ngFor="let item of adminNavItems"
-                [routerLink]="item.route"
-                routerLinkActive="bg-[#13112b] text-white"
-                (click)="closeSidebarOnMobile()"
-                [class.justify-center]="layoutService.isSidebarCollapsed()"
-                class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
-              >
-                <div class="flex items-center gap-3">
-                  <span class="text-base shrink-0">{{ item.icon }}</span>
-                  <span *ngIf="!layoutService.isSidebarCollapsed()">{{ item.label }}</span>
-                </div>
-                <span *ngIf="!layoutService.isSidebarCollapsed()" class="text-[9px] text-[#4e4b70] font-normal font-mono">{{ item.path }}</span>
-              </a>
-            </div>
-          </div>
+        <!-- Navigation Section (backend-driven) -->
+        <nav class="flex-1 overflow-y-auto px-4 space-y-1 mb-6 custom-sidebar-scrollbar">
+          @for (item of authStore.menu(); track item.id) {
+            <app-sidebar-nav-node
+              [node]="item"
+              [collapsed]="layoutService.isSidebarCollapsed()"
+            />
+          }
         </nav>
 
         <!-- Upgrade Section (Fixed at bottom) -->
@@ -176,58 +101,5 @@ interface NavItem {
 })
 export class SidebarComponent {
   layoutService = inject(LayoutService);
-  isPortfolioExpanded = signal(true); // Defaults to expanded in the mockup
-
-  mainNavItems: NavItem[] = [
-    { label: 'Dashboard', icon: '📊', route: '/dashboard', path: '/dashboard' },
-    {
-      label: 'Portfolio',
-      icon: '👤',
-      route: '/portfolio',
-      path: '/portfolio',
-      children: [
-        { label: 'Overview', route: '/portfolio/profile', path: '/profile' },
-        { label: 'About', route: '/portfolio/about', path: '/about' },
-        { label: 'Experience', route: '/portfolio/experience', path: '/experience' },
-        { label: 'Education', route: '/portfolio/education', path: '/education' },
-        { label: 'Skills', route: '/portfolio/skills', path: '/skills' },
-        { label: 'Services', route: '/portfolio/services', path: '/services' },
-        { label: 'Testimonials', route: '/portfolio/testimonials', path: '/testimonials' }
-      ]
-    },
-    { label: 'Projects', icon: '💼', route: '/projects', path: '/projects' },
-    { label: 'Blog', icon: '📝', route: '/blog', path: '/blog' },
-    { label: 'Media', icon: '🖼️', route: '/media', path: '/media' },
-    { label: 'Analytics', icon: '📈', route: '/analytics', path: '/analytics', badge: 3 },
-  ];
-
-  adminNavItems: NavItem[] = [
-    { label: 'Users', icon: '👥', route: '/users', path: '/users' },
-    { label: 'Settings', icon: '⚙️', route: '/settings', path: '/settings' },
-    { label: 'Admin Console', icon: '🔐', route: '/admin', path: '/admin' },
-    { label: 'Manage Users', icon: '👤', route: '/admin/users', path: '/admin/users' },
-    { label: 'Manage Roles', icon: '🛡️', route: '/admin/roles', path: '/admin/roles' },
-    { label: 'Resources', icon: '📦', route: '/admin/resources', path: '/admin/resources' },
-    { label: 'Branches', icon: '🌍', route: '/admin/branches', path: '/admin/branches' },
-  ];
-
-  toggleSidebar(): void {
-    this.layoutService.toggleSidebar();
-  }
-
-  closeSidebar(): void {
-    this.layoutService.closeSidebar();
-  }
-
-  closeSidebarOnMobile(): void {
-    if (window.innerWidth < 768) {
-      this.layoutService.closeSidebar();
-    }
-  }
-
-  togglePortfolio(event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isPortfolioExpanded.update((v) => !v);
-  }
+  authStore = inject(AuthStore);
 }
