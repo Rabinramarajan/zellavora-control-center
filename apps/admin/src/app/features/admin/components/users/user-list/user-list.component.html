@@ -13,12 +13,12 @@
       <div class="filters-section">
         <input
           type="text"
-          [(ngModel)]="searchTerm"
+          [ngModel]="searchTerm()"
           (ngModelChange)="onSearch($event)"
           placeholder="Search by name, email, or employee code..."
           class="search-input"
         />
-        <select [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange($event)">
+        <select [ngModel]="statusFilter()" (ngModelChange)="onStatusFilterChange($event)">
           <option value="">All Statuses</option>
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>

@@ -3,12 +3,12 @@
  */
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HasPermissionDirective } from '@core/rbac';
 import { AdminStoreService } from '../../../services';
 import { User, UserSearchCriteria } from '../../../models';
-import { SearchFilterHelper, PaginationHelper } from '../../../utils';
+import { SearchFilterHelper } from '../../../utils';
 
 @Component({
   selector: 'zcc-user-list',
@@ -19,6 +19,7 @@ import { SearchFilterHelper, PaginationHelper } from '../../../utils';
 })
 export class UserListComponent implements OnInit {
   private store = inject(AdminStoreService);
+  private router = inject(Router);
 
   readonly searchTerm = signal<string>('');
   readonly statusFilter = signal<string>('');
@@ -41,7 +42,7 @@ export class UserListComponent implements OnInit {
 
   readonly totalCount = computed(() => this.filteredUsers().length);
   readonly totalPages = computed(() =>
-    Math.ceil(this.totalCount() / this.pageSize())
+    Math.max(1, Math.ceil(this.totalCount() / this.pageSize()))
   );
   readonly startIndex = computed(() =>
     (this.currentPage() - 1) * this.pageSize()
@@ -98,14 +99,14 @@ export class UserListComponent implements OnInit {
   }
 
   onCreate(): void {
-    // Navigate to new user form
+    this.router.navigate(['/admin/users/new']);
   }
 
   onView(user: User): void {
-    // Navigate to user detail
+    this.router.navigate(['/admin/users', user.userSerialId]);
   }
 
   onEdit(user: User): void {
-    // Navigate to user edit
+    this.router.navigate(['/admin/users', user.userSerialId]);
   }
 }

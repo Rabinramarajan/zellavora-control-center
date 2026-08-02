@@ -37,302 +37,454 @@ export class AdminApiService {
   private http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/admin';
 
+  /**
+   * The legacy admin backend wraps every payload in a `{ data, infoMessage,
+   * errorMessage, hasError }` envelope. Unwrap it so callers get the payload
+   * directly.
+   */
+  private unwrap<T>(res: ApiResponse<T> | null | undefined): T {
+    return (res?.data ?? ({} as T)) as T;
+  }
+
   // ==================== USER ENDPOINTS ====================
 
   async getUserInitialData(): Promise<any> {
-    return lastValueFrom(this.http.get(`${this.baseUrl}/user/initialize`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/user/initialize`)
+    );
+    return this.unwrap(res);
   }
 
   async getUserSearchTemplate(): Promise<UserSearchCriteria> {
-    return lastValueFrom(this.http.get<UserSearchCriteria>(`${this.baseUrl}/user/search`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<UserSearchCriteria>>(`${this.baseUrl}/user/search`)
+    );
+    return this.unwrap(res);
   }
 
   async searchUsers(criteria: UserSearchCriteria): Promise<UserSearchResult> {
-    return lastValueFrom(
-      this.http.post<UserSearchResult>(`${this.baseUrl}/user/search`, criteria)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<UserSearchResult>>(
+        `${this.baseUrl}/user/search`,
+        criteria
+      )
     );
+    return this.unwrap(res);
   }
 
   async createNewUser(): Promise<User> {
-    return lastValueFrom(this.http.get<User>(`${this.baseUrl}/user/new`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<User>>(`${this.baseUrl}/user/new`)
+    );
+    return this.unwrap(res);
   }
 
   async openUser(userSerialId: number): Promise<User> {
-    return lastValueFrom(
-      this.http.post<User>(`${this.baseUrl}/user/open`, { data: userSerialId })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<User>>(`${this.baseUrl}/user/open`, {
+        data: userSerialId,
+      })
     );
+    return this.unwrap(res);
   }
 
   async saveUser(user: User): Promise<User> {
-    return lastValueFrom(this.http.post<User>(`${this.baseUrl}/user/save`, user));
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<User>>(`${this.baseUrl}/user/save`, user)
+    );
+    return this.unwrap(res);
   }
 
   async getUserRoles(): Promise<any> {
-    return lastValueFrom(this.http.get(`${this.baseUrl}/user/role/get`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/user/role/get`)
+    );
+    return this.unwrap(res);
   }
 
   async getUsersByTeam(teamId: string): Promise<any> {
-    return lastValueFrom(
-      this.http.post(`${this.baseUrl}/user/team/user/get`, { data: teamId })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<any>>(`${this.baseUrl}/user/team/user/get`, {
+        data: teamId,
+      })
     );
+    return this.unwrap(res);
   }
 
   async getUsersByBranch(branchId: number): Promise<any> {
-    return lastValueFrom(
-      this.http.post(`${this.baseUrl}/user/LoadBranchDDLByUserLoginId`, {
-        longData1: branchId,
-      })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<any>>(
+        `${this.baseUrl}/user/LoadBranchDDLByUserLoginId`,
+        {
+          longData1: branchId,
+        }
+      )
     );
+    return this.unwrap(res);
   }
 
   // ==================== ROLE ENDPOINTS ====================
 
   async getRoleInitialData(): Promise<any> {
-    return lastValueFrom(this.http.get(`${this.baseUrl}/role/initialize`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/role/initialize`)
+    );
+    return this.unwrap(res);
   }
 
   async getRoleSearchTemplate(): Promise<RoleSearchCriteria> {
-    return lastValueFrom(
-      this.http.get<RoleSearchCriteria>(`${this.baseUrl}/role/search`)
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<RoleSearchCriteria>>(
+        `${this.baseUrl}/role/search`
+      )
     );
+    return this.unwrap(res);
   }
 
   async searchRoles(criteria: RoleSearchCriteria): Promise<RoleSearchResult> {
-    return lastValueFrom(
-      this.http.post<RoleSearchResult>(`${this.baseUrl}/role/search`, criteria)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<RoleSearchResult>>(
+        `${this.baseUrl}/role/search`,
+        criteria
+      )
     );
+    return this.unwrap(res);
   }
 
   async createNewRole(): Promise<Role> {
-    return lastValueFrom(this.http.get<Role>(`${this.baseUrl}/role/new`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<Role>>(`${this.baseUrl}/role/new`)
+    );
+    return this.unwrap(res);
   }
 
   async openRole(roleId: number): Promise<Role> {
-    return lastValueFrom(
-      this.http.post<Role>(`${this.baseUrl}/role/open`, { data: roleId })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/role/open`, {
+        data: roleId,
+      })
     );
+    return this.unwrap(res);
   }
 
   async saveRole(role: Role): Promise<Role> {
-    return lastValueFrom(this.http.post<Role>(`${this.baseUrl}/role/save`, role));
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/role/save`, role)
+    );
+    return this.unwrap(res);
   }
 
   async deleteRole(roleId: number): Promise<Role> {
-    return lastValueFrom(
-      this.http.post<Role>(`${this.baseUrl}/role/delete`, { data: roleId })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/role/delete`, {
+        data: roleId,
+      })
     );
+    return this.unwrap(res);
   }
 
   async loadRoleResources(roleId: number): Promise<any> {
-    return lastValueFrom(
-      this.http.post(`${this.baseUrl}/role/role-resource/load`, {
-        stringparam: '',
-        longparam: roleId,
-      })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<any>>(
+        `${this.baseUrl}/role/role-resource/load`,
+        {
+          stringparam: '',
+          longparam: roleId,
+        }
+      )
     );
+    return this.unwrap(res);
   }
 
   async saveRoleResources(roleData: any): Promise<any> {
-    return lastValueFrom(
-      this.http.post(`${this.baseUrl}/role/role-resource/save`, roleData)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<any>>(
+        `${this.baseUrl}/role/role-resource/save`,
+        roleData
+      )
     );
+    return this.unwrap(res);
   }
 
   // ==================== RESOURCE ENDPOINTS ====================
 
   async getResourceInitialData(): Promise<any> {
-    return lastValueFrom(this.http.get(`${this.baseUrl}/resource/initialize`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/resource/initialize`)
+    );
+    return this.unwrap(res);
   }
 
   async getResourceSearchTemplate(): Promise<ResourceSearchCriteria> {
-    return lastValueFrom(
-      this.http.get<ResourceSearchCriteria>(`${this.baseUrl}/resource/search`)
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<ResourceSearchCriteria>>(
+        `${this.baseUrl}/resource/search`
+      )
     );
+    return this.unwrap(res);
   }
 
   async searchResources(
     criteria: ResourceSearchCriteria
   ): Promise<ResourceSearchResult> {
-    return lastValueFrom(
-      this.http.post<ResourceSearchResult>(
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<ResourceSearchResult>>(
         `${this.baseUrl}/resource/search`,
         criteria
       )
     );
+    return this.unwrap(res);
   }
 
   async createNewResource(): Promise<Resource> {
-    return lastValueFrom(this.http.get<Resource>(`${this.baseUrl}/resource/new`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<Resource>>(`${this.baseUrl}/resource/new`)
+    );
+    return this.unwrap(res);
   }
 
   async openResource(resourceId: number): Promise<Resource> {
-    return lastValueFrom(
-      this.http.post<Resource>(`${this.baseUrl}/resource/open`, {
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Resource>>(`${this.baseUrl}/resource/open`, {
         data: resourceId,
       })
     );
+    return this.unwrap(res);
   }
 
   async saveResource(resource: Resource): Promise<Resource> {
-    return lastValueFrom(
-      this.http.post<Resource>(`${this.baseUrl}/resource/save`, resource)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Resource>>(
+        `${this.baseUrl}/resource/save`,
+        resource
+      )
     );
+    return this.unwrap(res);
   }
 
   async deleteResource(resourceId: number): Promise<Resource> {
-    return lastValueFrom(
-      this.http.post<Resource>(`${this.baseUrl}/resource/delete`, {
-        data: resourceId,
-      })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Resource>>(
+        `${this.baseUrl}/resource/delete`,
+        {
+          data: resourceId,
+        }
+      )
     );
+    return this.unwrap(res);
   }
 
   async saveResourceList(resources: Resource[]): Promise<any> {
-    return lastValueFrom(
-      this.http.post(`${this.baseUrl}/resource/SaveListResource`, {
-        lstentResource: resources,
-      })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<any>>(
+        `${this.baseUrl}/resource/SaveListResource`,
+        {
+          lstentResource: resources,
+        }
+      )
     );
+    return this.unwrap(res);
   }
 
   // ==================== BRANCH ENDPOINTS ====================
 
   async getBranchInitialData(): Promise<any> {
-    return lastValueFrom(
-      this.http.get(
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<any>>(
         `${this.baseUrl}/MAsterConfig/Region/GetMaasterConfigInitialData`
       )
     );
+    return this.unwrap(res);
   }
 
   async getBranchSearchTemplate(): Promise<BranchSearchCriteria> {
-    return lastValueFrom(
-      this.http.get<BranchSearchCriteria>(`${this.baseUrl}/Branch/Branch/search`)
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<BranchSearchCriteria>>(
+        `${this.baseUrl}/Branch/Branch/search`
+      )
     );
+    return this.unwrap(res);
   }
 
   async searchBranches(criteria: BranchSearchCriteria): Promise<BranchSearchResult> {
-    return lastValueFrom(
-      this.http.post<BranchSearchResult>(
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<BranchSearchResult>>(
         `${this.baseUrl}/Branch/Branch/Search`,
         criteria
       )
     );
+    return this.unwrap(res);
   }
 
   async createNewBranch(): Promise<Branch> {
-    return lastValueFrom(this.http.get<Branch>(`${this.baseUrl}/Branch/Branch/new`));
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<Branch>>(`${this.baseUrl}/Branch/Branch/new`)
+    );
+    return this.unwrap(res);
   }
 
   async openBranch(branchId: number): Promise<Branch> {
-    return lastValueFrom(
-      this.http.post<Branch>(`${this.baseUrl}/Branch/Branch/open`, {
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Branch>>(`${this.baseUrl}/Branch/Branch/open`, {
         data: branchId,
       })
     );
+    return this.unwrap(res);
   }
 
   async saveBranch(branch: Branch): Promise<Branch> {
-    return lastValueFrom(
-      this.http.post<Branch>(`${this.baseUrl}/Branch/Branch/save`, branch)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Branch>>(
+        `${this.baseUrl}/Branch/Branch/save`,
+        branch
+      )
     );
+    return this.unwrap(res);
   }
 
   async deleteBranch(branchId: number): Promise<Branch> {
-    return lastValueFrom(
-      this.http.post<Branch>(`${this.baseUrl}/Branch/Branch/delete`, {
-        admBranchId: branchId,
-      })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Branch>>(
+        `${this.baseUrl}/Branch/Branch/delete`,
+        {
+          admBranchId: branchId,
+        }
+      )
     );
+    return this.unwrap(res);
   }
 
   // ==================== AUDIT LOG ENDPOINTS ====================
 
   async getAuditLogSearchTemplate(): Promise<AuditLogSearchCriteria> {
-    return lastValueFrom(
-      this.http.get<AuditLogSearchCriteria>(`${this.baseUrl}/auditlog/search`)
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<AuditLogSearchCriteria>>(
+        `${this.baseUrl}/auditlog/search`
+      )
     );
+    return this.unwrap(res);
   }
 
   async searchAuditLogs(criteria: AuditLogSearchCriteria): Promise<AuditLogSearchResult> {
-    return lastValueFrom(
-      this.http.post<AuditLogSearchResult>(`${this.baseUrl}/auditlog/search`, criteria)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<AuditLogSearchResult>>(
+        `${this.baseUrl}/auditlog/search`,
+        criteria
+      )
     );
+    return this.unwrap(res);
   }
 
   async loadAuditLogDetails(auditLogId: number): Promise<AuditLog> {
-    return lastValueFrom(
-      this.http.post<AuditLog>(`${this.baseUrl}/auditlog/LoadAuditLogDetails`, {
-        data: auditLogId,
-      })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<AuditLog>>(
+        `${this.baseUrl}/auditlog/LoadAuditLogDetails`,
+        {
+          data: auditLogId,
+        }
+      )
     );
+    return this.unwrap(res);
   }
 
   // ==================== CONFIG ENDPOINTS ====================
 
   async getConfigSearchTemplate(): Promise<ConfigSearchCriteria> {
-    return lastValueFrom(
-      this.http.get<ConfigSearchCriteria>(`${this.baseUrl}/config/search`)
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<ConfigSearchCriteria>>(
+        `${this.baseUrl}/config/search`
+      )
     );
+    return this.unwrap(res);
   }
 
   async searchConfigs(criteria: ConfigSearchCriteria): Promise<ConfigSearchResult> {
-    return lastValueFrom(
-      this.http.post<ConfigSearchResult>(`${this.baseUrl}/config/search`, criteria)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<ConfigSearchResult>>(
+        `${this.baseUrl}/config/search`,
+        criteria
+      )
     );
+    return this.unwrap(res);
   }
 
   async openConfig(configId: number): Promise<Config> {
-    return lastValueFrom(
-      this.http.post<Config>(`${this.baseUrl}/config/open`, { data: configId })
-    );
-  }
-
-  async saveConfig(config: Config): Promise<Config> {
-    return lastValueFrom(this.http.post<Config>(`${this.baseUrl}/config/save`, config));
-  }
-
-  async loadConfigValuesByIds(configIds: string): Promise<any> {
-    return lastValueFrom(
-      this.http.post(`${this.baseUrl}/config/Load`, { data: configIds })
-    );
-  }
-
-  async deleteConfig(configId: number): Promise<Config> {
-    return lastValueFrom(
-      this.http.post<Config>(`${this.baseUrl}/config/delete`, {
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/config/open`, {
         data: configId,
       })
     );
+    return this.unwrap(res);
+  }
+
+  async saveConfig(config: Config): Promise<Config> {
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/config/save`, config)
+    );
+    return this.unwrap(res);
+  }
+
+  async loadConfigValuesByIds(configIds: string): Promise<any> {
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<any>>(`${this.baseUrl}/config/Load`, {
+        data: configIds,
+      })
+    );
+    return this.unwrap(res);
+  }
+
+  async deleteConfig(configId: number): Promise<Config> {
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/config/delete`, {
+        data: configId,
+      })
+    );
+    return this.unwrap(res);
   }
 
   // ==================== GROUP ENDPOINTS ====================
 
   async getGroupSearchTemplate(): Promise<GroupSearchCriteria> {
-    return lastValueFrom(
-      this.http.get<GroupSearchCriteria>(`${this.baseUrl}/group/search`)
+    const res = await lastValueFrom(
+      this.http.get<ApiResponse<GroupSearchCriteria>>(
+        `${this.baseUrl}/group/search`
+      )
     );
+    return this.unwrap(res);
   }
 
   async searchGroups(criteria: GroupSearchCriteria): Promise<GroupSearchResult> {
-    return lastValueFrom(
-      this.http.post<GroupSearchResult>(`${this.baseUrl}/group/search`, criteria)
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<GroupSearchResult>>(
+        `${this.baseUrl}/group/search`,
+        criteria
+      )
     );
+    return this.unwrap(res);
   }
 
   async openGroup(groupId: number): Promise<Group> {
-    return lastValueFrom(
-      this.http.post<Group>(`${this.baseUrl}/group/open`, { data: groupId })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/group/open`, {
+        data: groupId,
+      })
     );
+    return this.unwrap(res);
   }
 
   async saveGroup(group: Group): Promise<Group> {
-    return lastValueFrom(this.http.post<Group>(`${this.baseUrl}/group/save`, group));
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/group/save`, group)
+    );
+    return this.unwrap(res);
   }
 
   async deleteGroup(groupId: number): Promise<Group> {
-    return lastValueFrom(
-      this.http.post<Group>(`${this.baseUrl}/group/delete`, { data: groupId })
+    const res = await lastValueFrom(
+      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/group/delete`, {
+        data: groupId,
+      })
     );
+    return this.unwrap(res);
   }
 }

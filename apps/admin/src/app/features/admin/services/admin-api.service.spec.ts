@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { AdminApiService } from './admin-api.service';
-import { User, Role, UserSearchCriteria, RoleSearchCriteria } from '../models';
+import { User, Role, UserSearchCriteria, RoleSearchCriteria, ApiResponse } from '../models';
+
+const wrap = <T>(data: T): ApiResponse<T> => ({
+  data,
+  infoMessage: { msgID: 0, msgType: 'Info', msgDescription: '' },
+  errorMessage: [],
+  hasError: false,
+});
 
 describe('AdminApiService', () => {
   let service: AdminApiService;
@@ -69,7 +76,7 @@ describe('AdminApiService', () => {
         pageNumber: 1,
         ascending: true,
       };
-      const mockResponse = { searchResult: [], totalCount: 0, pageSize: 10, pageNumber: 1 };
+      const mockResponse = wrap({ searchResult: [], totalCount: 0, pageSize: 10, pageNumber: 1 });
 
       const promise = service.searchUsers(mockCriteria);
 
@@ -78,17 +85,18 @@ describe('AdminApiService', () => {
       req.flush(mockResponse);
 
       const result = await promise;
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponse.data!);
     });
 
     it('should create a new user', async () => {
       const mockUser = makeUser(0, '');
+      const mockResponse = wrap(mockUser);
 
       const promise = service.createNewUser();
 
       const req = httpMock.expectOne('/api/v1/admin/user/new');
       expect(req.request.method).toBe('GET');
-      req.flush(mockUser);
+      req.flush(mockResponse);
 
       const result = await promise;
       expect(result).toEqual(mockUser);
@@ -96,12 +104,13 @@ describe('AdminApiService', () => {
 
     it('should save a user', async () => {
       const mockUser = makeUser(1, 'test');
+      const mockResponse = wrap(mockUser);
 
       const promise = service.saveUser(mockUser);
 
       const req = httpMock.expectOne('/api/v1/admin/user/save');
       expect(req.request.method).toBe('POST');
-      req.flush(mockUser);
+      req.flush(mockResponse);
 
       const result = await promise;
       expect(result).toEqual(mockUser);
@@ -115,7 +124,7 @@ describe('AdminApiService', () => {
         pageNumber: 1,
         ascending: true,
       };
-      const mockResponse = { searchResult: [], totalCount: 0, pageSize: 10, pageNumber: 1 };
+      const mockResponse = wrap({ searchResult: [], totalCount: 0, pageSize: 10, pageNumber: 1 });
 
       const promise = service.searchRoles(mockCriteria);
 
@@ -124,18 +133,19 @@ describe('AdminApiService', () => {
       req.flush(mockResponse);
 
       const result = await promise;
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponse.data!);
     });
 
     it('should delete a role', async () => {
       const roleId = 1;
       const mockRole = makeRole(roleId, 'Test');
+      const mockResponse = wrap(mockRole);
 
       const promise = service.deleteRole(roleId);
 
       const req = httpMock.expectOne('/api/v1/admin/role/delete');
       expect(req.request.method).toBe('POST');
-      req.flush(mockRole);
+      req.flush(mockResponse);
 
       const result = await promise;
       expect(result).toEqual(mockRole);

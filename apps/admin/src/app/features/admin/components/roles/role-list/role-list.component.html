@@ -13,7 +13,7 @@
       <div class="filters-section">
         <input
           type="text"
-          [(ngModel)]="searchTerm"
+          [ngModel]="searchTerm()"
           (ngModelChange)="onSearch($event)"
           placeholder="Search roles..."
           class="search-input"
