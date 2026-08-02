@@ -2,6 +2,7 @@ import { Component, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PortfolioService } from '../../services/portfolio.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-profile-editor',
@@ -41,20 +42,18 @@ export class ProfileEditorComponent {
     });
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (!this.form.valid) return;
 
-    this.portfolio.updateProfile(this.form.value).subscribe({
-      next: () => {
-        this.savedSuccessfully = true;
-        setTimeout(() => {
-          this.savedSuccessfully = false;
-        }, 3000);
-      },
-      error: (error) => {
-        console.error('Save error:', error);
-      },
-    });
+    try {
+      await firstValueFrom(this.portfolio.updateProfile(this.form.value));
+      this.savedSuccessfully = true;
+      setTimeout(() => {
+        this.savedSuccessfully = false;
+      }, 3000);
+    } catch (error) {
+      console.error('Save error:', error);
+    }
   }
 
   resetForm(): void {

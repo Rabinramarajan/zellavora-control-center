@@ -4,6 +4,7 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { LayoutService } from '@core/services/layout.service';
+import { firstValueFrom } from 'rxjs';
 
 interface BreadcrumbSegment {
   label: string;
@@ -173,7 +174,7 @@ export class NavbarComponent {
 
   logout(): void {
     this.closeUserMenu();
-    this.auth.logout().subscribe();
+    void firstValueFrom(this.auth.logout());
   }
 
   getBreadcrumbs(): BreadcrumbSegment[] {

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SystemHealthRepository } from '@core/repositories/system-health.repository';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-system-health',
@@ -13,10 +14,10 @@ export class SystemHealthComponent {
   readonly repository = inject(SystemHealthRepository);
 
   constructor() {
-    this.refreshMetrics();
+    void this.refreshMetrics();
   }
 
-  refreshMetrics() {
-    this.repository.loadHealthMetrics().subscribe();
+  async refreshMetrics() {
+    await firstValueFrom(this.repository.loadHealthMetrics());
   }
 }

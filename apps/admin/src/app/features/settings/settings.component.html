@@ -23,14 +23,14 @@
           *ngFor="let tab of settingsTabs"
           (click)="selectTab(tab.id)"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-semibold text-left"
-          [class.tab-btn-active]="activeTab === tab.id"
-          [class.tab-btn-inactive]="activeTab !== tab.id"
+          [class.tab-btn-active]="activeTab() === tab.id"
+          [class.tab-btn-inactive]="activeTab() !== tab.id"
         >
           <span class="text-base shrink-0">{{ tab.icon }}</span>
           <div>
             <div class="font-bold leading-none">{{ tab.label }}</div>
-            <div class="text-[9px] text-slate-500 font-medium mt-1 leading-none" *ngIf="activeTab !== tab.id">{{ tab.desc }}</div>
-            <div class="text-[9px] text-purple-300 font-medium mt-1 leading-none" *ngIf="activeTab === tab.id">{{ tab.desc }}</div>
+            <div class="text-[9px] text-slate-500 font-medium mt-1 leading-none" *ngIf="activeTab() !== tab.id">{{ tab.desc }}</div>
+            <div class="text-[9px] text-purple-300 font-medium mt-1 leading-none" *ngIf="activeTab() === tab.id">{{ tab.desc }}</div>
           </div>
         </button>
       </div>
@@ -51,7 +51,7 @@
     <!-- Center Column: Active Tab Content -->
     <div class="lg:col-span-6 space-y-6">
       <!-- General Tab Content -->
-      <div *ngIf="activeTab === 'general'" class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+      <div *ngIf="activeTab() === 'general'" class="glass-panel p-6 rounded-3xl relative overflow-hidden">
         <!-- Tilted Gear 3D Graphic background decoration -->
         <div class="absolute top-6 right-6 hidden md:block select-none opacity-80 pointer-events-none">
           <div class="relative w-24 h-24 flex items-center justify-center">
@@ -210,7 +210,7 @@
       </div>
 
       <!-- Other tabs dynamic forms -->
-      <div *ngIf="activeTab === 'profile'" class="glass-panel p-6 rounded-3xl space-y-6">
+      <div *ngIf="activeTab() === 'profile'" class="glass-panel p-6 rounded-3xl space-y-6">
         <div>
           <h2 class="text-base font-bold text-white leading-none">Profile Settings</h2>
           <p class="text-xs text-slate-400 mt-1.5 leading-none">Configure your personal information and biography.</p>
@@ -237,7 +237,7 @@
       </div>
 
       <!-- SECURITY TAB -->
-      <div *ngIf="activeTab === 'security'" class="glass-panel p-6 rounded-3xl space-y-8">
+      <div *ngIf="activeTab() === 'security'" class="glass-panel p-6 rounded-3xl space-y-8">
 
         <!-- Change Password -->
         <section class="space-y-4">
@@ -379,13 +379,13 @@
       </div>
 
       <!-- Other tabs dynamic forms placeholder -->
-      <div *ngIf="activeTab !== 'general' && activeTab !== 'profile' && activeTab !== 'security'" class="glass-panel p-6 rounded-3xl space-y-6">
+      <div *ngIf="activeTab() !== 'general' && activeTab() !== 'profile' && activeTab() !== 'security'" class="glass-panel p-6 rounded-3xl space-y-6">
         <div>
-          <h2 class="text-base font-bold text-white leading-none">{{ activeTab | titlecase }} Settings</h2>
-          <p class="text-xs text-slate-400 mt-1.5 leading-none">Configure your {{ activeTab }} settings and credentials.</p>
+          <h2 class="text-base font-bold text-white leading-none">{{ activeTab() | titlecase }} Settings</h2>
+          <p class="text-xs text-slate-400 mt-1.5 leading-none">Configure your {{ activeTab() }} settings and credentials.</p>
         </div>
         <div class="border-t border-white/5 pt-6 text-center text-slate-500 text-xs py-12">
-          ⚙️ Content for the {{ activeTab }} tab is loaded dynamically. Click Save Changes when ready.
+          ⚙️ Content for the {{ activeTab() }} tab is loaded dynamically. Click Save Changes when ready.
         </div>
       </div>
     </div>

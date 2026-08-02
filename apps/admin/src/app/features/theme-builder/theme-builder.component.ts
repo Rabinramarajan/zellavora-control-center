@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeBuilderRepository } from '@core/repositories/theme-builder.repository';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-theme-builder',
@@ -20,17 +21,20 @@ export class ThemeBuilderComponent {
   spacing = 4;
 
   constructor() {
-    this.repository.loadThemeConfig().subscribe((config) => {
-      this.primaryColor = config.primaryColor;
-      this.secondaryColor = config.secondaryColor;
-      this.fontFamily = config.fontFamily;
-      this.borderRadius = config.borderRadius;
-      this.spacing = config.spacing;
-    });
+    void this.loadConfig();
   }
 
-  applyChange() {
-    this.repository.saveThemeConfig({
+  private async loadConfig(): Promise<void> {
+    const config = await firstValueFrom(this.repository.loadThemeConfig());
+    this.primaryColor = config.primaryColor;
+    this.secondaryColor = config.secondaryColor;
+    this.fontFamily = config.fontFamily;
+    this.borderRadius = config.borderRadius;
+    this.spacing = config.spacing;
+  }
+
+  async applyChange() {
+    await firstValueFrom(this.repository.saveThemeConfig({
       primaryColor: this.primaryColor,
       secondaryColor: this.secondaryColor,
       fontFamily: this.fontFamily,
@@ -39,7 +43,7 @@ export class ThemeBuilderComponent {
       isDarkMode: false,
       logoUrl: null,
       faviconUrl: null,
-    }).subscribe();
+    }));
   }
 
   saveTheme() {

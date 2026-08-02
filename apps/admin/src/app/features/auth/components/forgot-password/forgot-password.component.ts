@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-forgot-password',
@@ -52,10 +53,10 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.errorMsg.set('');
     try {
       const clientCode = sessionStorage.getItem('zcc.clientCode') || '';
-      await this.auth.forgotPassword({
+      await firstValueFrom(this.auth.forgotPassword({
         clientCode,
         email: this.emailForm.value.email
-      }).toPromise();
+      }));
       this.step.set(2);
       this.startResendTimer();
     } catch (e: any) {
@@ -70,10 +71,10 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     try {
       const clientCode = sessionStorage.getItem('zcc.clientCode') || '';
-      await this.auth.forgotPassword({
+      await firstValueFrom(this.auth.forgotPassword({
         clientCode,
         email: this.emailForm.value.email
-      }).toPromise();
+      }));
       this.startResendTimer();
     } finally {
       this.isLoading.set(false);

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-reset-password',
@@ -102,9 +103,9 @@ export class ResetPasswordComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
-      await this.auth
-        .resetPassword({ token: this.token(), newPassword: this.form.value.newPassword })
-        .toPromise();
+      await firstValueFrom(
+        this.auth.resetPassword({ token: this.token(), newPassword: this.form.value.newPassword })
+      );
       this.step.set('success');
     } catch (e: any) {
       this.errorMsg.set(

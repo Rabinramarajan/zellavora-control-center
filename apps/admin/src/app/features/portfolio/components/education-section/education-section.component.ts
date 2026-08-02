@@ -9,6 +9,7 @@ import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { PortfolioService } from '../../services/portfolio.service';
 import { Education } from '@shared/models';
+import { firstValueFrom } from 'rxjs';
 
 interface RichEducation {
   id?: string;
@@ -93,7 +94,7 @@ export class EducationSectionComponent implements OnInit {
     return Math.round((completed.length / list.length) * 100);
   });
 
-  ngOnInit() {
+  async ngOnInit() {
     // Generate years from 1980 to next 10 years
     const currentYear = new Date().getFullYear();
     for (let y = currentYear + 5; y >= 1980; y--) {
@@ -101,11 +102,8 @@ export class EducationSectionComponent implements OnInit {
     }
 
     // Load initial data
-    this.portfolioService.getEducation().subscribe({
-      next: (eduList) => {
-        this.parseDatabaseEntries(eduList);
-      },
-    });
+    const eduList = await firstValueFrom(this.portfolioService.getEducation());
+    this.parseDatabaseEntries(eduList);
   }
 
   parseDatabaseEntries(eduList: Education[]) {
@@ -210,7 +208,7 @@ export class EducationSectionComponent implements OnInit {
     });
   }
 
-  saveForm() {
+  async saveForm() {
     const form = this.editingForm();
     if (!form.institution || !form.degree) {
       this.messageService.add({
@@ -245,52 +243,40 @@ export class EducationSectionComponent implements OnInit {
     const id = this.selectedId();
     if (id) {
       // Update
-      this.portfolioService.updateEducation(id, dbPayload).subscribe({
-        next: (updated) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Updated',
-            detail: 'Education entry updated successfully',
-          });
-          this.refreshData();
-        },
+      await firstValueFrom(this.portfolioService.updateEducation(id, dbPayload));
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Updated',
+        detail: 'Education entry updated successfully',
       });
+      await this.refreshData();
     } else {
       // Create
-      this.portfolioService.createEducation(dbPayload).subscribe({
-        next: (created) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Created',
-            detail: 'Education entry created successfully',
-          });
-          this.refreshData();
-        },
+      await firstValueFrom(this.portfolioService.createEducation(dbPayload));
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Created',
+        detail: 'Education entry created successfully',
       });
+      await this.refreshData();
     }
   }
 
-  deleteEntry() {
+  async deleteEntry() {
     const id = this.selectedId();
     if (!id) return;
 
-    this.portfolioService.deleteEducation(id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Deleted',
-          detail: 'Education entry deleted successfully',
-        });
-        this.refreshData();
-      },
+    await firstValueFrom(this.portfolioService.deleteEducation(id));
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Deleted',
+      detail: 'Education entry deleted successfully',
     });
+    await this.refreshData();
   }
 
-  refreshData() {
-    this.portfolioService.getEducation().subscribe({
-      next: (eduList) => {
-        this.parseDatabaseEntries(eduList);
-      },
-    });
+  async refreshData() {
+    const eduList = await firstValueFrom(this.portfolioService.getEducation());
+    this.parseDatabaseEntries(eduList);
   }
 }

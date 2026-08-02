@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-project-editor',
@@ -41,34 +42,25 @@ export class ProjectEditorComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.projectId = this.route.snapshot.paramMap.get('id');
 
     if (this.projectId) {
       this.isNew = false;
-      this.projects.getProject(this.projectId).subscribe({
-        next: (project) => {
-          this.form.patchValue(project);
-        },
-      });
+      const project = await firstValueFrom(this.projects.getProject(this.projectId));
+      this.form.patchValue(project);
     }
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (!this.form.valid) return;
 
     if (this.isNew) {
-      this.projects.createProject(this.form.value).subscribe({
-        next: () => {
-          this.showSuccess();
-        },
-      });
+      await firstValueFrom(this.projects.createProject(this.form.value));
+      this.showSuccess();
     } else if (this.projectId) {
-      this.projects.updateProject(this.projectId, this.form.value).subscribe({
-        next: () => {
-          this.showSuccess();
-        },
-      });
+      await firstValueFrom(this.projects.updateProject(this.projectId, this.form.value));
+      this.showSuccess();
     }
   }
 

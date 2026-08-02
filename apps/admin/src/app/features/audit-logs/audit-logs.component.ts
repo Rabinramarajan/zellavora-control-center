@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuditRepository } from '@core/repositories/audit.repository';
 import { AuditRecord } from '@shared/models';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-audit-logs',
@@ -18,7 +19,7 @@ export class AuditLogsComponent {
   searchTerm = '';
 
   constructor() {
-    this.repository.loadAuditLogs().subscribe();
+    void firstValueFrom(this.repository.loadAuditLogs());
   }
 
   filteredLogs(): AuditRecord[] {
@@ -31,14 +32,13 @@ export class AuditLogsComponent {
     });
   }
 
-  exportCSV() {
-    this.repository.exportLogs().subscribe((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-    });
+  async exportCSV() {
+    const blob = await firstValueFrom(this.repository.exportLogs());
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 }

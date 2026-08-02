@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PortfolioService } from '../../services/portfolio.service';
 import { Skill } from '@shared/models';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-skills-manager',
@@ -27,22 +28,20 @@ export class SkillsManagerComponent {
     });
   }
 
-  addSkill(): void {
+  async addSkill(): Promise<void> {
     if (!this.form.valid) return;
 
-    this.portfolio.createSkill(this.form.value).subscribe({
-      next: () => {
-        this.resetForm();
-      },
-      error: (error) => {
-        console.error('Error adding skill:', error);
-      },
-    });
+    try {
+      await firstValueFrom(this.portfolio.createSkill(this.form.value));
+      this.resetForm();
+    } catch (error) {
+      console.error('Error adding skill:', error);
+    }
   }
 
-  deleteSkill(id: string): void {
+  async deleteSkill(id: string): Promise<void> {
     if (confirm('Are you sure you want to delete this skill?')) {
-      this.portfolio.deleteSkill(id).subscribe();
+      await firstValueFrom(this.portfolio.deleteSkill(id));
     }
   }
 

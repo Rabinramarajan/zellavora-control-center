@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { AuthStore } from '@core/auth/auth.store';
@@ -100,7 +101,7 @@ export class LoginComponent {
 
       untracked(() => {
         if (accessToken && refreshToken) {
-          this.auth.loginWithTokens(accessToken, refreshToken).subscribe();
+          void firstValueFrom(this.auth.loginWithTokens(accessToken, refreshToken));
           return;
         }
         if (error) {
@@ -139,15 +140,16 @@ export class LoginComponent {
     this.loadOrgs();
   }
 
-  private loadOrgs(): void {
+  private async loadOrgs(): Promise<void> {
     this.loadingOrgs.set(true);
-    this.auth.loadClients().subscribe({
-      next: (res) => {
-        this.allOrgs.set(res?.tenants ?? []);
-        this.loadingOrgs.set(false);
-      },
-      error: () => this.loadingOrgs.set(false),
-    });
+    try {
+      const res = await firstValueFrom(this.auth.loadClients());
+      this.allOrgs.set(res?.tenants ?? []);
+    } catch {
+      /* ignore */
+    } finally {
+      this.loadingOrgs.set(false);
+    }
   }
 
   // --- Actions -------------------------------------------------------------
@@ -161,31 +163,29 @@ export class LoginComponent {
     this.capsLock.set(event.getModifierState?.('CapsLock') ?? false);
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.form.invalid || this.auth.isLoading()) return;
 
     const request = this.form.getRawValue();
 
-    this.auth.login(request).subscribe({
-      next: (res) => {
-        sessionStorage.setItem('zcc.clientCode', request.clientCode);
-        if (res.mfaRequired) return;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Welcome back',
-          detail: 'Signed in successfully',
-          life: 3000,
-        });
-      },
-      error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Sign-in failed',
-          detail: this.auth.error() ?? 'Please check your credentials and try again.',
-          life: 5000,
-        });
-        console.error('Login error:', error);
-      },
-    });
+    try {
+      const res = await firstValueFrom(this.auth.login(request));
+      sessionStorage.setItem('zcc.clientCode', request.clientCode);
+      if (res.mfaRequired) return;
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Welcome back',
+        detail: 'Signed in successfully',
+        life: 3000,
+      });
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Sign-in failed',
+        detail: this.auth.error() ?? 'Please check your credentials and try again.',
+        life: 5000,
+      });
+      console.error('Login error:', error);
+    }
   }
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-verify-email',
@@ -88,7 +89,7 @@ export class VerifyEmailComponent implements OnInit, OnDestroy {
   async verifyWithToken(token: string) {
     this.step.set('verifying');
     try {
-      await this.auth.verifyEmail(token, '').toPromise();
+      await firstValueFrom(this.auth.verifyEmail(token, ''));
       this.step.set('success');
     } catch {
       this.step.set('error');
@@ -104,7 +105,7 @@ export class VerifyEmailComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
-      await this.auth.verifyEmail('', this.otpValue).toPromise();
+      await firstValueFrom(this.auth.verifyEmail('', this.otpValue));
       this.step.set('success');
     } catch (e: any) {
       this.errorMsg.set(
@@ -119,7 +120,7 @@ export class VerifyEmailComponent implements OnInit, OnDestroy {
     if (this.resendTimer() > 0) return;
     this.isLoading.set(true);
     try {
-      await this.auth.resendOtp(this.email()).toPromise();
+      await firstValueFrom(this.auth.resendOtp(this.email()));
       this.startResendTimer();
       this.otpDigits.set(['', '', '', '', '', '']);
     } finally {

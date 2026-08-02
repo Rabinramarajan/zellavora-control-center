@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RegisterStore } from '../register.store';
 import { AuthService } from '@core/auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-step-13-success',
@@ -20,7 +21,7 @@ export class Step13SuccessComponent {
     const session = this.store.successData()?.session;
     if (session?.accessToken && session?.refreshToken) {
       // Registration issued a real session — sign the owner straight in.
-      this.auth.loginWithTokens(session.accessToken, session.refreshToken).subscribe();
+      void firstValueFrom(this.auth.loginWithTokens(session.accessToken, session.refreshToken));
     } else {
       this.router.navigate(['/auth/login']);
     }

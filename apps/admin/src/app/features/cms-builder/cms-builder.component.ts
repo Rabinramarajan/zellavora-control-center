@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CmsBuilderRepository } from '@core/repositories/cms-builder.repository';
 import { CmsPage, CmsSection } from '@shared/models';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-cms-builder',
@@ -19,13 +20,16 @@ export class CmsBuilderComponent {
   activeSections: CmsSection[] = [];
 
   constructor() {
-    this.repository.loadPages().subscribe((pages) => {
-      if (pages.length > 0) {
-        this.pageTitle = pages[0].title;
-        this.pageSlug = pages[0].slug;
-        this.activeSections = [...pages[0].sections];
-      }
-    });
+    void this.loadPages();
+  }
+
+  private async loadPages(): Promise<void> {
+    const pages = await firstValueFrom(this.repository.loadPages());
+    if (pages.length > 0) {
+      this.pageTitle = pages[0].title;
+      this.pageSlug = pages[0].slug;
+      this.activeSections = [...pages[0].sections];
+    }
   }
 
   addSection(type: 'hero' | 'cta' | 'header' | 'footer') {
@@ -57,13 +61,12 @@ export class CmsBuilderComponent {
     this.activeSections[index + 1] = temp;
   }
 
-  saveActivePage() {
-    this.repository.savePage({
+  async saveActivePage() {
+    await firstValueFrom(this.repository.savePage({
       title: this.pageTitle,
       slug: this.pageSlug,
       sections: this.activeSections,
-    }).subscribe(() => {
-      alert('CMS Dynamic Page saved and published successfully!');
-    });
+    }));
+    alert('CMS Dynamic Page saved and published successfully!');
   }
 }

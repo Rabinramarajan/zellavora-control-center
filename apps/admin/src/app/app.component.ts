@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs/operators';
 import { AdminLayoutComponent } from './shared/components/admin-layout/admin-layout.component';
 
 @Component({
@@ -20,20 +21,19 @@ import { AdminLayoutComponent } from './shared/components/admin-layout/admin-lay
   styles: [],
 })
 export class AppComponent {
-  private router = inject(Router);
-  showAdminLayout = signal(false);
+  private readonly router = inject(Router);
 
-  constructor() {
-    // Track router URL to decide when to show the admin layout
+  /** Emits the post-redirect URL on every completed navigation. */
+  private readonly currentUrl = toSignal(
     this.router.events.pipe(
-      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-    ).subscribe((event: NavigationEnd) => {
-      const url = event.urlAfterRedirects || event.url || '';
-      this.showAdminLayout.set(!url.includes('/auth'));
-    });
-    
-    // Set initial value based on current URL
-    const currentUrl = this.router.url || '';
-    this.showAdminLayout.set(!currentUrl.includes('/auth'));
-  }
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects || event.url)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  readonly showAdminLayout = computed(() => {
+    const url = this.currentUrl();
+    return !url.includes('/auth');
+  });
 }

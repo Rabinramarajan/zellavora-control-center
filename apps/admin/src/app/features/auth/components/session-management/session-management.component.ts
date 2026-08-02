@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 export interface ActiveSession {
   id: string;
@@ -41,7 +42,7 @@ export class SessionManagementComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
-      const res = await this.auth.getSessions().toPromise();
+      const res = await firstValueFrom(this.auth.getSessions());
       this.sessions.set(res?.sessions || []);
     } catch (e: any) {
       this.errorMsg.set('Failed to load sessions. Please try again.');
@@ -54,7 +55,7 @@ export class SessionManagementComponent implements OnInit {
     this.isRevoking.set(sessionId);
     this.errorMsg.set('');
     try {
-      await this.auth.revokeSession(sessionId).toPromise();
+      await firstValueFrom(this.auth.revokeSession(sessionId));
       this.sessions.update(sessions => sessions.filter(s => s.id !== sessionId));
       this.successMsg.set('Session revoked successfully.');
       setTimeout(() => this.successMsg.set(''), 3000);
@@ -69,7 +70,7 @@ export class SessionManagementComponent implements OnInit {
     this.isRevokingAll.set(true);
     this.errorMsg.set('');
     try {
-      await this.auth.revokeAllSessions().toPromise();
+      await firstValueFrom(this.auth.revokeAllSessions());
       this.successMsg.set('All other sessions have been revoked.');
       this.sessions.update(sessions => sessions.filter(s => s.isCurrent));
       setTimeout(() => this.successMsg.set(''), 3000);
@@ -114,7 +115,7 @@ export class SessionManagementComponent implements OnInit {
   }
 
   async logoutCurrentAndAll() {
-    await this.auth.logoutAll().toPromise();
+    await firstValueFrom(this.auth.logoutAll());
     this.router.navigate(['/auth/login'], { replaceUrl: true });
   }
 }

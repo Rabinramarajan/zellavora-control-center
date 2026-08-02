@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '@core/auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-mfa-verify',
@@ -84,13 +85,13 @@ export class MfaVerifyComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
-      await this.auth
-        .loginMfa({
+      await firstValueFrom(
+        this.auth.loginMfa({
           mfaToken: this.mfaToken(),
           code: this.otpValue,
           rememberMe: this.rememberDevice(),
         })
-        .toPromise();
+      );
       sessionStorage.removeItem('zcc.mfaToken');
     } catch (e: any) {
       this.errorMsg.set(e?.error?.error?.message || 'Invalid code. Please try again.');
@@ -106,13 +107,13 @@ export class MfaVerifyComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
-      await this.auth
-        .loginMfa({
+      await firstValueFrom(
+        this.auth.loginMfa({
           mfaToken: this.mfaToken(),
           code: this.backupForm.value.backupCode,
           rememberMe: this.rememberDevice(),
         })
-        .toPromise();
+      );
       sessionStorage.removeItem('zcc.mfaToken');
     } catch (e: any) {
       this.errorMsg.set(e?.error?.error?.message || 'Invalid backup code.');

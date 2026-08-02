@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-projects-list',
@@ -21,9 +22,9 @@ export class ProjectsListComponent {
     return this.projects.projects().filter((p) => p.status === this.filterStatus);
   }
 
-  deleteProject(id: string): void {
+  async deleteProject(id: string): Promise<void> {
     if (confirm('Are you sure you want to delete this project?')) {
-      this.projects.deleteProject(id).subscribe();
+      await firstValueFrom(this.projects.deleteProject(id));
     }
   }
 }

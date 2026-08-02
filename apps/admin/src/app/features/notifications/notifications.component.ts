@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NotificationRepository } from '@core/repositories/notification.repository';
 import { NotificationTemplate } from '@shared/models';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
@@ -23,11 +24,11 @@ export class NotificationsComponent {
   };
 
   constructor() {
-    this.repository.loadNotifications().subscribe();
-    this.repository.loadTemplates().subscribe();
+    void firstValueFrom(this.repository.loadNotifications());
+    void firstValueFrom(this.repository.loadTemplates());
   }
 
-  sendBroadcast() {
+  async sendBroadcast() {
     if (!this.broadcastBody.trim()) {
       alert('Broadcast message body cannot be empty.');
       return;
@@ -38,14 +39,13 @@ export class NotificationsComponent {
     if (this.channels.email) selectedChannels.push('email');
     if (this.channels.push) selectedChannels.push('push');
 
-    this.repository.sendBroadcast({
+    await firstValueFrom(this.repository.sendBroadcast({
       title: this.broadcastTitle || 'Global Announcement',
       body: this.broadcastBody,
       channels: selectedChannels,
-    }).subscribe(() => {
-      this.broadcastTitle = '';
-      this.broadcastBody = '';
-      alert('Broadcast dispatched successfully!');
-    });
+    }));
+    this.broadcastTitle = '';
+    this.broadcastBody = '';
+    alert('Broadcast dispatched successfully!');
   }
 }

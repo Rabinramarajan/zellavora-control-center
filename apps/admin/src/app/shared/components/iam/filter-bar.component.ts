@@ -45,7 +45,7 @@ export interface FilterDescriptor {
             {{ filter.label }}
           </label>
           <select
-            [value]="selected()[filter.key] ?? ''"
+            [value]="selected()[filter.key]"
             (change)="onFilterChange(filter.key, $event)"
             class="rounded-lg border border-gray-300 dark:border-white/10 bg-white/10 dark:bg-black/20 px-2.5 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
           >

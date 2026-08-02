@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -11,6 +11,8 @@ import { MessageService } from 'primeng/api';
 import { ApiIntegrationService } from '@core/services/api-integration.service';
 import { AuthService } from '@core/auth/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
@@ -29,14 +31,27 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent {
   private messageService = inject(MessageService);
   private apiService = inject(ApiIntegrationService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private auth = inject(AuthService);
 
-  activeTab = 'general';
+  activeTab = signal('general');
+
+  /** Active tab driven by the route param (e.g. /settings/security). */
+  private readonly tabParam = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+
+  constructor() {
+    effect(() => {
+      const tab = this.tabParam()?.get('tab');
+      untracked(() => {
+        if (tab) this.activeTab.set(tab);
+      });
+    });
+    void this.loadAllSettings();
+  }
 
   settingsTabs = [
     { id: 'general', label: 'General', desc: 'Basic application settings', icon: '⚙️' },
@@ -102,108 +117,91 @@ export class SettingsComponent implements OnInit {
     { label: 'Spanish', value: 'es' },
   ];
 
-  ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const tab = params.get('tab');
-      if (tab) {
-        this.activeTab = tab;
-      }
-    });
-    this.loadAllSettings();
-  }
-
   selectTab(tabId: string) {
+    this.activeTab.set(tabId);
     this.router.navigate(['/settings', tabId]);
   }
 
-  loadAllSettings() {
-    this.apiService.getSettings().subscribe({
-      next: (response) => {
-        if (response && response.data) {
-          const data = response.data;
-          if (data.general) {
-            this.generalSettings = { ...this.generalSettings, ...data.general };
-          }
-          if (data.profile) {
-            this.profileSettings = { ...this.profileSettings, ...data.profile };
-          }
-          if (data.preferences) {
-            this.preferenceSettings = { ...this.preferenceSettings, ...data.preferences };
-          }
+  async loadAllSettings() {
+    try {
+      const response = await firstValueFrom(this.apiService.getSettings());
+      if (response && response.data) {
+        const data = response.data;
+        if (data.general) {
+          this.generalSettings = { ...this.generalSettings, ...data.general };
         }
-      },
-      error: (err) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load settings',
-          life: 3000
-        });
+        if (data.profile) {
+          this.profileSettings = { ...this.profileSettings, ...data.profile };
+        }
+        if (data.preferences) {
+          this.preferenceSettings = { ...this.preferenceSettings, ...data.preferences };
+        }
       }
-    });
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to load settings',
+        life: 3000
+      });
+    }
   }
 
-  saveGeneralSettings() {
-    this.apiService.updateSettings('general', this.generalSettings).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Saved',
-          detail: 'General settings saved successfully',
-          life: 3000,
-        });
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to save general settings',
-          life: 3000,
-        });
-      }
-    });
+  async saveGeneralSettings() {
+    try {
+      await firstValueFrom(this.apiService.updateSettings('general', this.generalSettings));
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Saved',
+        detail: 'General settings saved successfully',
+        life: 3000,
+      });
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to save general settings',
+        life: 3000,
+      });
+    }
   }
 
-  saveProfileSettings() {
-    this.apiService.updateSettings('profile', this.profileSettings).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Saved',
-          detail: 'Profile settings saved successfully',
-          life: 3000,
-        });
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to save profile settings',
-          life: 3000,
-        });
-      }
-    });
+  async saveProfileSettings() {
+    try {
+      await firstValueFrom(this.apiService.updateSettings('profile', this.profileSettings));
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Saved',
+        detail: 'Profile settings saved successfully',
+        life: 3000,
+      });
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to save profile settings',
+        life: 3000,
+      });
+    }
   }
 
-  savePreferences() {
-    this.apiService.updateSettings('preferences', this.preferenceSettings).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Saved',
-          detail: 'Preferences saved successfully',
-          life: 3000,
-        });
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to save preferences',
-          life: 3000,
-        });
-      }
-    });
+  async savePreferences() {
+    try {
+      await firstValueFrom(this.apiService.updateSettings('preferences', this.preferenceSettings));
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Saved',
+        detail: 'Preferences saved successfully',
+        life: 3000,
+      });
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to save preferences',
+        life: 3000,
+      });
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -224,7 +222,7 @@ export class SettingsComponent implements OnInit {
   recoveryCodes: string[] = [];
   disablePassword = '';
 
-  changePassword() {
+  async changePassword() {
     const { currentPassword, newPassword, confirmPassword } = this.passwordModel;
     if (!currentPassword) {
       this.passwordMessage = { severity: 'error', text: 'Enter your current password.' };
@@ -240,90 +238,80 @@ export class SettingsComponent implements OnInit {
     }
     this.passwordSaving = true;
     this.passwordMessage = null;
-    this.auth.changePassword({ currentPassword, newPassword }).subscribe({
-      next: () => {
-        this.passwordSaving = false;
-        this.passwordModel = { currentPassword: '', newPassword: '', confirmPassword: '' };
-        this.passwordMessage = { severity: 'success', text: 'Password updated successfully.' };
-      },
-      error: (err: any) => {
-        this.passwordSaving = false;
-        this.passwordMessage = {
-          severity: 'error',
-          text: err?.error?.error?.message || 'Failed to update password.',
-        };
-      },
-    });
+    try {
+      await firstValueFrom(this.auth.changePassword({ currentPassword, newPassword }));
+      this.passwordSaving = false;
+      this.passwordModel = { currentPassword: '', newPassword: '', confirmPassword: '' };
+      this.passwordMessage = { severity: 'success', text: 'Password updated successfully.' };
+    } catch (err: any) {
+      this.passwordSaving = false;
+      this.passwordMessage = {
+        severity: 'error',
+        text: err?.error?.error?.message || 'Failed to update password.',
+      };
+    }
   }
 
-  startMfaEnrollment() {
+  async startMfaEnrollment() {
     this.mfaBusy = true;
     this.mfaError = null;
-    this.auth.startMfaEnrollment().subscribe({
-      next: (res) => {
-        this.mfaSecret = res.secret;
-        this.mfaQrCode = res.qrCodeDataUrl;
-        this.mfaCodeInput = '';
-        this.mfaStep.set('qr');
-        this.mfaBusy = false;
-      },
-      error: (err: any) => {
-        this.mfaBusy = false;
-        this.mfaError = err?.error?.error?.message || 'Failed to start enrollment.';
-      },
-    });
+    try {
+      const res = await firstValueFrom(this.auth.startMfaEnrollment());
+      this.mfaSecret = res.secret;
+      this.mfaQrCode = res.qrCodeDataUrl;
+      this.mfaCodeInput = '';
+      this.mfaStep.set('qr');
+      this.mfaBusy = false;
+    } catch (err: any) {
+      this.mfaBusy = false;
+      this.mfaError = err?.error?.error?.message || 'Failed to start enrollment.';
+    }
   }
 
-  confirmMfa() {
+  async confirmMfa() {
     if (this.mfaCodeInput.length !== 6) return;
     this.mfaBusy = true;
     this.mfaError = null;
-    this.auth.confirmMfaEnrollment({ secret: this.mfaSecret, code: this.mfaCodeInput }).subscribe({
-      next: (res) => {
-        this.recoveryCodes = res.recoveryCodes ?? [];
-        this.mfaSecret = '';
-        this.mfaCodeInput = '';
-        this.mfaStep.set('codes');
-        this.mfaBusy = false;
-      },
-      error: (err: any) => {
-        this.mfaBusy = false;
-        this.mfaError = err?.error?.error?.message || 'Invalid code. Please try again.';
-      },
-    });
+    try {
+      const res = await firstValueFrom(this.auth.confirmMfaEnrollment({ secret: this.mfaSecret, code: this.mfaCodeInput }));
+      this.recoveryCodes = res.recoveryCodes ?? [];
+      this.mfaSecret = '';
+      this.mfaCodeInput = '';
+      this.mfaStep.set('codes');
+      this.mfaBusy = false;
+    } catch (err: any) {
+      this.mfaBusy = false;
+      this.mfaError = err?.error?.error?.message || 'Invalid code. Please try again.';
+    }
   }
 
-  regenerateCodes() {
+  async regenerateCodes() {
     this.mfaBusy = true;
     this.mfaError = null;
-    this.auth.regenerateRecoveryCodes().subscribe({
-      next: (res) => {
-        this.recoveryCodes = res.recoveryCodes ?? [];
-        this.mfaStep.set('codes');
-        this.mfaBusy = false;
-      },
-      error: (err: any) => {
-        this.mfaBusy = false;
-        this.mfaError = err?.error?.error?.message || 'Failed to regenerate codes.';
-      },
-    });
+    try {
+      const res = await firstValueFrom(this.auth.regenerateRecoveryCodes());
+      this.recoveryCodes = res.recoveryCodes ?? [];
+      this.mfaStep.set('codes');
+      this.mfaBusy = false;
+    } catch (err: any) {
+      this.mfaBusy = false;
+      this.mfaError = err?.error?.error?.message || 'Failed to regenerate codes.';
+    }
   }
 
-  disableMfa() {
+  async disableMfa() {
     if (!this.disablePassword) return;
     this.mfaBusy = true;
     this.mfaError = null;
-    this.auth.disableMfa({ password: this.disablePassword }).subscribe({
-      next: () => {
-        this.disablePassword = '';
-        this.mfaStep.set('idle');
-        this.mfaBusy = false;
-      },
-      error: (err: any) => {
-        this.mfaBusy = false;
-        this.mfaError = err?.error?.error?.message || 'Failed to disable MFA.';
-      },
-    });
+    try {
+      await firstValueFrom(this.auth.disableMfa({ password: this.disablePassword }));
+      this.disablePassword = '';
+      this.mfaStep.set('idle');
+      this.mfaBusy = false;
+    } catch (err: any) {
+      this.mfaBusy = false;
+      this.mfaError = err?.error?.error?.message || 'Failed to disable MFA.';
+    }
   }
 
   closeCodes() {
