@@ -1,37 +1,52 @@
 -- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'LOCKED', 'PENDING', 'SUSPENDED');
+DO $$ BEGIN
+  CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'LOCKED', 'PENDING', 'SUSPENDED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "EntityStatus" AS ENUM ('ACTIVE', 'INACTIVE');
+DO $$ BEGIN
+  CREATE TYPE "EntityStatus" AS ENUM ('ACTIVE', 'INACTIVE');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "GroupType" AS ENUM ('SECURITY', 'ORG', 'DISTRIBUTION', 'PROJECT', 'DYNAMIC');
+DO $$ BEGIN
+  CREATE TYPE "GroupType" AS ENUM ('SECURITY', 'ORG', 'DISTRIBUTION', 'PROJECT', 'DYNAMIC');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "ResourceType" AS ENUM ('API', 'FEATURE', 'DATA', 'MENU', 'REPORT', 'INTEGRATION');
+DO $$ BEGIN
+  CREATE TYPE "ResourceType" AS ENUM ('API', 'FEATURE', 'DATA', 'MENU', 'REPORT', 'INTEGRATION');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "RoleScope" AS ENUM ('GLOBAL', 'ORG', 'RESOURCE');
+DO $$ BEGIN
+  CREATE TYPE "RoleScope" AS ENUM ('GLOBAL', 'ORG', 'RESOURCE');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AlterTable
-ALTER TABLE "users" ADD COLUMN "department" TEXT,
-ADD COLUMN "job_title" TEXT,
-ADD COLUMN "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE';
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "department" TEXT,
+ADD COLUMN IF NOT EXISTS "job_title" TEXT,
+ADD COLUMN IF NOT EXISTS "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE';
 
 -- AlterTable
-ALTER TABLE "roles" ADD COLUMN "scope" "RoleScope" NOT NULL DEFAULT 'ORG',
-ADD COLUMN "status" "EntityStatus" NOT NULL DEFAULT 'ACTIVE';
+ALTER TABLE "roles" ADD COLUMN IF NOT EXISTS "scope" "RoleScope" NOT NULL DEFAULT 'ORG',
+ADD COLUMN IF NOT EXISTS "status" "EntityStatus" NOT NULL DEFAULT 'ACTIVE';
 
 -- AlterTable
-ALTER TABLE "permissions" ADD COLUMN "key" TEXT,
-ADD COLUMN "resource" TEXT,
-ADD COLUMN "action" TEXT;
+ALTER TABLE "permissions" ADD COLUMN IF NOT EXISTS "key" TEXT,
+ADD COLUMN IF NOT EXISTS "resource" TEXT,
+ADD COLUMN IF NOT EXISTS "action" TEXT;
 
 -- CreateIndex
-CREATE UNIQUE INDEX "permissions_key_key" ON "permissions"("key");
+CREATE UNIQUE INDEX IF NOT EXISTS "permissions_key_key" ON "permissions"("key");
 
 -- CreateTable
-CREATE TABLE "groups" (
+CREATE TABLE IF NOT EXISTS "groups" (
     "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -53,7 +68,7 @@ CREATE TABLE "groups" (
 );
 
 -- CreateTable
-CREATE TABLE "user_groups" (
+CREATE TABLE IF NOT EXISTS "user_groups" (
     "id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
     "group_id" UUID NOT NULL,
@@ -62,7 +77,7 @@ CREATE TABLE "user_groups" (
 );
 
 -- CreateTable
-CREATE TABLE "group_roles" (
+CREATE TABLE IF NOT EXISTS "group_roles" (
     "id" UUID NOT NULL,
     "group_id" UUID NOT NULL,
     "role_id" UUID NOT NULL,
@@ -71,7 +86,7 @@ CREATE TABLE "group_roles" (
 );
 
 -- CreateTable
-CREATE TABLE "resources" (
+CREATE TABLE IF NOT EXISTS "resources" (
     "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "key" TEXT NOT NULL,
@@ -95,7 +110,7 @@ CREATE TABLE "resources" (
 );
 
 -- CreateTable
-CREATE TABLE "resource_actions" (
+CREATE TABLE IF NOT EXISTS "resource_actions" (
     "id" UUID NOT NULL,
     "resource_id" UUID NOT NULL,
     "action" TEXT NOT NULL,
@@ -104,64 +119,88 @@ CREATE TABLE "resource_actions" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "groups_name_key" ON "groups"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "groups_name_key" ON "groups"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "groups_slug_key" ON "groups"("slug");
+CREATE UNIQUE INDEX IF NOT EXISTS "groups_slug_key" ON "groups"("slug");
 
 -- CreateIndex
-CREATE INDEX "groups_parent_id_idx" ON "groups"("parent_id");
+CREATE INDEX IF NOT EXISTS "groups_parent_id_idx" ON "groups"("parent_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_groups_user_id_group_id_key" ON "user_groups"("user_id", "group_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "user_groups_user_id_group_id_key" ON "user_groups"("user_id", "group_id");
 
 -- CreateIndex
-CREATE INDEX "user_groups_group_id_idx" ON "user_groups"("group_id");
+CREATE INDEX IF NOT EXISTS "user_groups_group_id_idx" ON "user_groups"("group_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "group_roles_group_id_role_id_key" ON "group_roles"("group_id", "role_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "group_roles_group_id_role_id_key" ON "group_roles"("group_id", "role_id");
 
 -- CreateIndex
-CREATE INDEX "group_roles_role_id_idx" ON "group_roles"("role_id");
+CREATE INDEX IF NOT EXISTS "group_roles_role_id_idx" ON "group_roles"("role_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "resources_key_key" ON "resources"("key");
+CREATE UNIQUE INDEX IF NOT EXISTS "resources_key_key" ON "resources"("key");
 
 -- CreateIndex
-CREATE INDEX "resources_parent_id_idx" ON "resources"("parent_id");
+CREATE INDEX IF NOT EXISTS "resources_parent_id_idx" ON "resources"("parent_id");
 
 -- CreateIndex
-CREATE INDEX "resources_type_idx" ON "resources"("type");
+CREATE INDEX IF NOT EXISTS "resources_type_idx" ON "resources"("type");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "resource_actions_resource_id_action_key" ON "resource_actions"("resource_id", "action");
+CREATE UNIQUE INDEX IF NOT EXISTS "resource_actions_resource_id_action_key" ON "resource_actions"("resource_id", "action");
 
 -- CreateIndex
-CREATE INDEX "resource_actions_permission_id_idx" ON "resource_actions"("permission_id");
+CREATE INDEX IF NOT EXISTS "resource_actions_permission_id_idx" ON "resource_actions"("permission_id");
 
 -- AddForeignKey
-ALTER TABLE "groups" ADD CONSTRAINT "groups_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "groups"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "groups" ADD CONSTRAINT "groups_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "groups"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "user_groups" ADD CONSTRAINT "user_groups_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "user_groups" ADD CONSTRAINT "user_groups_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "user_groups" ADD CONSTRAINT "user_groups_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "user_groups" ADD CONSTRAINT "user_groups_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "group_roles" ADD CONSTRAINT "group_roles_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "group_roles" ADD CONSTRAINT "group_roles_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "group_roles" ADD CONSTRAINT "group_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "group_roles" ADD CONSTRAINT "group_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "resources" ADD CONSTRAINT "resources_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "resources"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "resources" ADD CONSTRAINT "resources_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "resources"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "resource_actions" ADD CONSTRAINT "resource_actions_resource_id_fkey" FOREIGN KEY ("resource_id") REFERENCES "resources"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "resource_actions" ADD CONSTRAINT "resource_actions_resource_id_fkey" FOREIGN KEY ("resource_id") REFERENCES "resources"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "resource_actions" ADD CONSTRAINT "resource_actions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "resource_actions" ADD CONSTRAINT "resource_actions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Backfill permission keys for existing permissions (name -> resource:action heuristics).
 UPDATE "permissions" SET

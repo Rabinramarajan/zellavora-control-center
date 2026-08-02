@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "login_attempts" (
+CREATE TABLE IF NOT EXISTS "login_attempts" (
     "id" UUID NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "client_code" VARCHAR(16),
@@ -13,10 +13,10 @@ CREATE TABLE "login_attempts" (
 );
 
 -- CreateIndex
-CREATE INDEX "idx_login_attempts_email_time" ON "login_attempts"("email", "attempted_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_login_attempts_email_time" ON "login_attempts"("email", "attempted_at" DESC);
 
 -- CreateIndex
-CREATE INDEX "idx_login_attempts_ip_time" ON "login_attempts"("ip_address", "attempted_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_login_attempts_ip_time" ON "login_attempts"("ip_address", "attempted_at" DESC);
 
 -- CreateIndex
-CREATE INDEX "idx_login_attempts_time" ON "login_attempts"("attempted_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_login_attempts_time" ON "login_attempts"("attempted_at" DESC);
