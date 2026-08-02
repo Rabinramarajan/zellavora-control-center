@@ -39,15 +39,25 @@ export class RateLimitService {
   /** Throws AppError(429) if the IP is over the per-IP cap. */
   static async assertIpAllowed(ipAddress: string): Promise<void> {
     const since = new Date(Date.now() - WINDOW_MS).toISOString();
-    const { count, error } = await supabaseAdmin
-      .from('login_attempts')
-      .select('id', { count: 'exact', head: true })
-      .eq('ip_address', ipAddress)
-      .eq('success', false)
-      .gte('attempted_at', since);
+    let result: { count: number | null; error: { message?: string; details?: string } | null };
+    try {
+      result = await supabaseAdmin
+        .from('login_attempts')
+        .select('id', { count: 'exact', head: true })
+        .eq('ip_address', ipAddress)
+        .eq('success', false)
+        .gte('attempted_at', since);
+    } catch (err) {
+      // supabase-js can throw (network, schema-cache miss, invalid cast) without
+      // returning an error object — surface the real cause instead of masking it.
+      throw new AppError('Failed to check IP rate limit', 500, 'RATE_LIMIT_CHECK_FAILED', {
+        details: (err as Error).message ?? String(err),
+      });
+    }
+    const { count, error } = result;
     if (error) {
       throw new AppError('Failed to check IP rate limit', 500, 'RATE_LIMIT_CHECK_FAILED', {
-        details: error.message,
+        details: error.message || error.details || 'Unknown supabase error',
       });
     }
     if ((count ?? 0) >= IP_LIMIT) {
@@ -64,17 +74,25 @@ export class RateLimitService {
     email: string
   ): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
     const since = new Date(Date.now() - WINDOW_MS).toISOString();
-    const { data: failures, error } = await supabaseAdmin
-      .from('login_attempts')
-      .select('attempted_at')
-      .eq('email', email.toLowerCase())
-      .eq('success', false)
-      .gte('attempted_at', since)
-      .order('attempted_at', { ascending: true });
+    let result: { data: { attempted_at: string | Date }[] | null; error: { message?: string; details?: string } | null };
+    try {
+      result = await supabaseAdmin
+        .from('login_attempts')
+        .select('attempted_at')
+        .eq('email', email.toLowerCase())
+        .eq('success', false)
+        .gte('attempted_at', since)
+        .order('attempted_at', { ascending: true });
+    } catch (err) {
+      throw new AppError('Failed to check account status', 500, 'LOCKOUT_CHECK_FAILED', {
+        details: (err as Error).message ?? String(err),
+      });
+    }
 
+    const { data: failures, error } = result;
     if (error) {
       throw new AppError('Failed to check account status', 500, 'LOCKOUT_CHECK_FAILED', {
-        details: error.message,
+        details: error.message || error.details || 'Unknown supabase error',
       });
     }
 

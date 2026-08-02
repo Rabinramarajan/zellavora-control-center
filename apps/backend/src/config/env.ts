@@ -18,11 +18,19 @@ export const config = {
 
   // Trust the platform's proxy/CDN so Express resolves the real client IP from
   // X-Forwarded-For. Required for express-rate-limit's identity validation on
-  // Vercel (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR) and for accurate per-IP
-  // rate limiting. Override with TRUST_PROXY=true|false.
+  // Vercel (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR) and for accurate per-IP rate
+  // limiting. Use a single trusted hop (1) rather than `true`: express-rate-
+  // limit rejects `true` as ERR_ERL_PERMISSIVE_TRUST_PROXY because it lets any
+  // caller spoof the client IP. Override with TRUST_PROXY=true|false|number.
   trustProxy: process.env.TRUST_PROXY
-    ? process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1'
-    : Boolean(process.env.VERCEL),
+    ? process.env.TRUST_PROXY === 'true'
+      ? true
+      : process.env.TRUST_PROXY === 'false'
+        ? false
+        : parseInt(process.env.TRUST_PROXY, 10)
+    : process.env.VERCEL
+      ? 1
+      : false,
 
   // ============================================================================
   // Supabase
