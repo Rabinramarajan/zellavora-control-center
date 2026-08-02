@@ -109,29 +109,43 @@ export class TenantService {
         organization:organizations(*)
       `
       )
-      .eq('user_id', userId)
-      .is('deleted_at', null);
+      .eq('user_id', userId);
 
     if (error) throw new AppError('Failed to list tenants', 500, 'TENANT_LIST_FAILED');
-    return (data ?? []).map((row: any) => ({
+    const rows = (data ?? []).map((row: any) => ({
       ...toTenant(row.organization),
       role: row.role,
     }));
+    if (rows.length) return rows;
+
+    // Same fallback as assertMembership: users linked only via users.tenant_id.
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, tenantId: true },
+    });
+    if (!user?.tenantId) return [];
+    const tenant = await TenantService.getById(user.tenantId);
+    return tenant ? [{ ...tenant, role: user.role }] : [];
   }
 
   /** Confirm the user is an active member of the org (used during login & switch). */
   static async assertMembership(userId: string, orgId: string): Promise<string> {
-    const { data, error } = await supabaseAdmin
-      .from('organization_members')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('organization_id', orgId)
-      .is('deleted_at', null)
-      .maybeSingle();
+    const membership = await prisma.userTenant.findUnique({
+      where: { userId_tenantId: { userId, tenantId: orgId } },
+      select: { role: true },
+    });
+    if (membership) return membership.role;
 
-    if (error || !data) {
+    // No explicit membership row: fall back to the user's own tenant, which is
+    // what login authorizes against (users.tenant_id + users.role). Many users
+    // predate organization_members and only have this link.
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, tenantId: true, isDeleted: true },
+    });
+    if (!user || user.isDeleted || user.tenantId !== orgId) {
       throw new AppError('User is not a member of this organization', 403, 'NOT_A_MEMBER');
     }
-    return data.role;
+    return user.role;
   }
 }

@@ -3,8 +3,10 @@ import { provideRouter, withHashLocation } from '@angular/router';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
+import { switchMap } from 'rxjs/operators';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { AuthService } from './core/auth/auth.service';
 import { apiBaseUrlInterceptor } from './core/http/api-base-url.interceptor';
 import { correlationIdInterceptor } from './core/http/correlation-id.interceptor';
 import { loggingInterceptor } from './core/http/logging.interceptor';
@@ -43,7 +45,13 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => {
       const configService = inject(ConfigService);
-      return configService.loadConfig();
+      const authService = inject(AuthService);
+      // 1. Load the runtime config first (the API base-url interceptor needs it).
+      // 2. Then silently restore any existing session from the stored refresh
+      //    token so a page refresh keeps the user logged in.
+      return configService
+        .loadConfig()
+        .pipe(switchMap(() => authService.initialize()));
     }),
   ],
 };

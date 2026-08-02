@@ -94,20 +94,38 @@
 <div class="dt-footer">
     <span class="dt-count">
         @if (total() === 0) { No results }
-        @else { {{ rangeStart() }}&ndash;{{ rangeEnd() }} of {{ total() }} }
+        @else { Showing {{ rangeStart() }}&ndash;{{ rangeEnd() }} of {{ total() }} }
     </span>
     <div class="dt-pager">
         @if (pageSizeOptions().length) {
-        <select class="dt-btn" [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value)"
-            aria-label="Rows per page">
-            @for (n of pageSizeOptions(); track n) { <option [value]="n">{{ n }} / page</option> }
-        </select>
+        <label class="dt-pagesize">
+            <span class="dt-pagesize__label">Rows</span>
+            <select [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value)"
+                aria-label="Rows per page">
+                @for (n of pageSizeOptions(); track n) { <option [value]="n">{{ n }}</option> }
+            </select>
+        </label>
         }
-        <button class="dt-btn" [disabled]="safePage() <= 1" (click)="goto(1)">&laquo;</button>
-        <button class="dt-btn" [disabled]="safePage() <= 1" (click)="goto(safePage() - 1)">&lsaquo;</button>
-        <span class="dt-pageinfo">{{ safePage() }} / {{ totalPages() }}</span>
-        <button class="dt-btn" [disabled]="safePage() >= totalPages()" (click)="goto(safePage() + 1)">&rsaquo;</button>
-        <button class="dt-btn" [disabled]="safePage() >= totalPages()" (click)="goto(totalPages())">&raquo;</button>
+        @if (total() > 0 && totalPages() > 1) {
+        <div class="dt-pager__btns">
+            <button class="dt-btn dt-btn--icon" [disabled]="safePage() <= 1" (click)="goto(1)"
+                aria-label="First page">&laquo;</button>
+            <button class="dt-btn dt-btn--icon" [disabled]="safePage() <= 1" (click)="goto(safePage() - 1)"
+                aria-label="Previous page">&lsaquo;</button>
+            @for (p of pages(); track $index) {
+            @if (p === null) {
+            <span class="dt-page-gap">&hellip;</span>
+            } @else {
+            <button class="dt-page" [class.dt-page--active]="p === safePage()" (click)="goto(p)"
+                [attr.aria-current]="p === safePage() ? 'page' : null">{{ p }}</button>
+            }
+            }
+            <button class="dt-btn dt-btn--icon" [disabled]="safePage() >= totalPages()" (click)="goto(safePage() + 1)"
+                aria-label="Next page">&rsaquo;</button>
+            <button class="dt-btn dt-btn--icon" [disabled]="safePage() >= totalPages()" (click)="goto(totalPages())"
+                aria-label="Last page">&raquo;</button>
+        </div>
+        }
     </div>
 </div>
 } @else {

@@ -102,6 +102,26 @@ describe('Table', () => {
     expect(c.pageRows().length).toBe(1);
   });
 
+  it('should build the numbered pagination list with ellipsis gaps', () => {
+    const many: Row[] = Array.from({ length: 50 }, (_, i) => ({ id: i + 1, name: 'Row ' + (i + 1), active: true }));
+    setInput('rows', many);
+    component.pageSize.set(2);
+    fixture.detectChanges();
+    expect(c.totalPages()).toBe(25);
+
+    component.page.set(1);
+    fixture.detectChanges();
+    expect(c.pages()).toEqual([1, 2, null, 25]);
+
+    component.page.set(13);
+    fixture.detectChanges();
+    expect(c.pages()).toEqual([1, null, 12, 13, 14, null, 25]);
+
+    component.page.set(25);
+    fixture.detectChanges();
+    expect(c.pages()).toEqual([1, null, 24, 25]);
+  });
+
   it('should apply search and sort before pagination', () => {
     setInput('rows', rows);
     component.pageSize.set(1);

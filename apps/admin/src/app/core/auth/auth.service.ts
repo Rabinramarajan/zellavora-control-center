@@ -117,10 +117,11 @@ export class AuthService {
    * Safe to call on every app boot.
    */
   initialize(): Observable<boolean> {
-    this.store.markInitialized();
     const refreshToken =
       sessionStorage.getItem(STORAGE.refresh) ?? localStorage.getItem(STORAGE.refresh);
     if (!refreshToken) {
+      // No stored session — leave isInitialized false so the boot-time
+      // kick-to-login effect stays inert; route guards handle the redirect.
       this.store.reset();
       return of(false);
     }
@@ -128,7 +129,17 @@ export class AuthService {
     this.refreshStorage = localStorage.getItem(STORAGE.refresh) ? localStorage : sessionStorage;
     return this.refresh({ refreshToken }, { silent: true }).pipe(
       switchMap((ok) => (ok ? this.loadMe() : of(false))),
-      tap((ok) => ok || this.clearLocalSession()),
+      tap((ok) => {
+        // Only mark initialized once the restore has settled. Marking it before
+        // the async refresh/loadMe completes would arm the kick-to-login effect
+        // while isAuthenticated is still false, redirecting a valid refresh
+        // straight to /auth/login.
+        if (ok) {
+          this.store.markInitialized();
+        } else {
+          this.clearLocalSession();
+        }
+      }),
       catchError(() => {
         this.clearLocalSession();
         return of(false);

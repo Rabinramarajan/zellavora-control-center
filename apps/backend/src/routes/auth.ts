@@ -890,15 +890,18 @@ router.post('/refresh', async (req, res, next) => {
 
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('id, email, role, tenant_id')
+      .select('id, email, role')
       .eq('id', session.user_id)
       .single();
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
 
-    const role = await TenantService.assertMembership(user.id, user.tenant_id);
+    // The session's organization_id is authoritative — it's the tenant the user
+    // authenticated against at login (resolved from the client code). The users
+    // table's tenant_id is NOT reliable (often null/stale), so never use it here.
+    const role = await TenantService.assertMembership(user.id, session.organization_id);
     const tokens = await TokenService.issue({
       userId: user.id,
-      tenantId: user.tenant_id,
+      tenantId: session.organization_id,
       role,
       email: user.email,
       sessionId: session.id,
