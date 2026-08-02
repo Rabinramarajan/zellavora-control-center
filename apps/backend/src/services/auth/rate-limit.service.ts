@@ -39,12 +39,17 @@ export class RateLimitService {
   /** Throws AppError(429) if the IP is over the per-IP cap. */
   static async assertIpAllowed(ipAddress: string): Promise<void> {
     const since = new Date(Date.now() - WINDOW_MS).toISOString();
-    const { count } = await supabaseAdmin
+    const { count, error } = await supabaseAdmin
       .from('login_attempts')
       .select('id', { count: 'exact', head: true })
       .eq('ip_address', ipAddress)
       .eq('success', false)
       .gte('attempted_at', since);
+    if (error) {
+      throw new AppError('Failed to check IP rate limit', 500, 'RATE_LIMIT_CHECK_FAILED', {
+        details: error.message,
+      });
+    }
     if ((count ?? 0) >= IP_LIMIT) {
       throw new AppError(
         'Too many failed attempts. Try again in 15 minutes.',
@@ -68,7 +73,9 @@ export class RateLimitService {
       .order('attempted_at', { ascending: true });
 
     if (error) {
-      throw new AppError('Failed to check account status', 500, 'LOCKOUT_CHECK_FAILED');
+      throw new AppError('Failed to check account status', 500, 'LOCKOUT_CHECK_FAILED', {
+        details: error.message,
+      });
     }
 
     const failedAttempts = failures?.length ?? 0;

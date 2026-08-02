@@ -336,12 +336,15 @@ export class RateLimitService {
   static async assertIpAllowed(ipAddress: string): Promise<void> {
     const admin = getSupabaseAdmin();
     const since = new Date(Date.now() - WINDOW_MS).toISOString();
-    const { count } = await admin
+    const { count, error } = await admin
       .from('login_attempts')
       .select('id', { count: 'exact', head: true })
       .eq('ip_address', ipAddress)
       .eq('success', false)
       .gte('attempted_at', since);
+    if (error) {
+      throw new Error(`Failed to check IP rate limit: ${error.message}`);
+    }
     if ((count ?? 0) >= IP_LIMIT) {
       throw new AppError('Too many failed attempts. Try again in 15 minutes.', 429, 'RATE_LIMITED_IP');
     }
