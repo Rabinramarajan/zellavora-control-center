@@ -16,6 +16,14 @@ export const config = {
   port: parseInt(process.env.PORT),
   nodeEnv: process.env.NODE_ENV || 'development',
 
+  // Trust the platform's proxy/CDN so Express resolves the real client IP from
+  // X-Forwarded-For. Required for express-rate-limit's identity validation on
+  // Vercel (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR) and for accurate per-IP
+  // rate limiting. Override with TRUST_PROXY=true|false.
+  trustProxy: process.env.TRUST_PROXY
+    ? process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1'
+    : Boolean(process.env.VERCEL),
+
   // ============================================================================
   // Supabase
   // ============================================================================

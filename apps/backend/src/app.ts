@@ -49,6 +49,11 @@ import iamUserRoutes from './modules/users/iam-user.routes';
 
 const app = express();
 
+// Behind a proxy/CDN (Vercel), the client IP arrives via X-Forwarded-For.
+// Without `trust proxy`, express-rate-limit's validation rejects every auth
+// request with ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and req.ip stays the proxy.
+app.set('trust proxy', config.trustProxy);
+
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
