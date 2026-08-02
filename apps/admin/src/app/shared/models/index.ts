@@ -109,6 +109,7 @@ export interface LoginSuccessResponse {
   mfaRequired: false;
   user: AuthUser;
   tenant: TenantSummary;
+  defaultLandingPage?: string;
   accessToken: string;
   refreshToken: string;
   accessTokenExpiresAt: string;

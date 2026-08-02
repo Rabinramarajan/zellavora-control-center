@@ -32,7 +32,7 @@ let mockResources = [
 /**
  * @swagger
  * /api/v1/admin/resource/search:
- *   post:
+ *   get:
  *     summary: searchResources
  *     tags: [resource]
  *     security:
@@ -40,6 +40,81 @@ let mockResources = [
  *     responses:
  *       200:
  *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
+ *   post:
+ *     summary: searchResources
+ *     tags: [resource]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               pageSize:
+ *                 type: integer
+ *                 default: 10
+ *               pageNumber:
+ *                 type: integer
+ *                 default: 1
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     searchResult:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           resourceId: { type: integer }
+ *                           viewNameId: { type: integer }
+ *                           viewNameValue: { type: string }
+ *                           resourceName: { type: string }
+ *                           resourceTypeId: { type: integer }
+ *                           resourceTypeValue: { type: string }
+ *                           resourceDescription: { type: string }
+ *                           viewNameDescription: { type: string }
+ *                           resourceTypeDescription: { type: string }
+ *                     totalCount: { type: integer }
+ *                     pageSize: { type: integer }
+ *                     pageNumber: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/resource/initialize:
  *   get:
  *     summary: initializeResourceMetadata
@@ -49,6 +124,26 @@ let mockResources = [
  *     responses:
  *       200:
  *         description: Initial state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     status: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/resource/new:
  *   get:
  *     summary: getTemplateForNewResource
@@ -58,42 +153,236 @@ let mockResources = [
  *     responses:
  *       200:
  *         description: New resource template
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     resourceId: { type: integer }
+ *                     viewNameId: { type: integer }
+ *                     viewNameValue: { type: string }
+ *                     resourceName: { type: string }
+ *                     resourceTypeId: { type: integer }
+ *                     resourceTypeValue: { type: string }
+ *                     resourceDescription: { type: string }
+ *                     viewNameDescription: { type: string }
+ *                     resourceTypeDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/resource/open:
  *   post:
  *     summary: loadResourceDetailsById
  *     tags: [resource]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Resource profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     resourceId: { type: integer }
+ *                     viewNameId: { type: integer }
+ *                     viewNameValue: { type: string }
+ *                     resourceName: { type: string }
+ *                     resourceTypeId: { type: integer }
+ *                     resourceTypeValue: { type: string }
+ *                     resourceDescription: { type: string }
+ *                     viewNameDescription: { type: string }
+ *                     resourceTypeDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/resource/save:
  *   post:
  *     summary: saveResourceDetails
  *     tags: [resource]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [resourceId, resourceName, resourceTypeId, resourceTypeValue]
+ *             properties:
+ *               resourceId: { type: integer }
+ *               viewNameId: { type: integer }
+ *               viewNameValue: { type: string }
+ *               resourceName: { type: string }
+ *               resourceTypeId: { type: integer }
+ *               resourceTypeValue: { type: string }
+ *               resourceDescription: { type: string }
+ *               viewNameDescription: { type: string }
+ *               resourceTypeDescription: { type: string }
  *     responses:
  *       200:
  *         description: Saved resource details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     resourceId: { type: integer }
+ *                     viewNameId: { type: integer }
+ *                     viewNameValue: { type: string }
+ *                     resourceName: { type: string }
+ *                     resourceTypeId: { type: integer }
+ *                     resourceTypeValue: { type: string }
+ *                     resourceDescription: { type: string }
+ *                     viewNameDescription: { type: string }
+ *                     resourceTypeDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/resource/delete:
  *   post:
  *     summary: deleteResource
  *     tags: [resource]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Deletion confirmation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     resourceId: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/resource/SaveListResource:
  *   post:
  *     summary: saveAListOfResources
  *     tags: [resource]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               lstentResource:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     resourceId: { type: integer }
+ *                     viewNameId: { type: integer }
+ *                     viewNameValue: { type: string }
+ *                     resourceName: { type: string }
+ *                     resourceTypeId: { type: integer }
+ *                     resourceTypeValue: { type: string }
+ *                     resourceDescription: { type: string }
+ *                     viewNameDescription: { type: string }
+ *                     resourceTypeDescription: { type: string }
  *     responses:
  *       200:
  *         description: Action status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       resourceId: { type: integer }
+ *                       viewNameId: { type: integer }
+ *                       viewNameValue: { type: string }
+ *                       resourceName: { type: string }
+ *                       resourceTypeId: { type: integer }
+ *                       resourceTypeValue: { type: string }
+ *                       resourceDescription: { type: string }
+ *                       viewNameDescription: { type: string }
+ *                       resourceTypeDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  */
 
 router.get('/resource/initialize', authenticate, async (req, res, next) => {

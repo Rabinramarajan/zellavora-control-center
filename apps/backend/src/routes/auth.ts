@@ -224,6 +224,15 @@ const consumeMfa = (token: string) => {
  *     responses:
  *       200:
  *         description: List of active clients
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tenants:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Tenant'
  */
 router.get('/clients', async (req, res, next) => {
   try {
@@ -636,6 +645,7 @@ router.post('/login', async (req, res, next) => {
         clientCode: tenant.clientCode,
         logoUrl: tenant.logoUrl,
       },
+      defaultLandingPage: prismaUser.defaultLandingPage ?? '/dashboard',
       currentLoginDatetime: currentLogin,
       lastLoginDatetime: lastLogin,
       successfulLoginAttempts: nextAttempts,
@@ -818,6 +828,7 @@ router.post('/login/mfa', async (req, res, next) => {
         clientCode: tenant.clientCode,
         logoUrl: tenant.logoUrl,
       },
+      defaultLandingPage: prismaMfaUser?.defaultLandingPage ?? '/dashboard',
       ...tokens,
     });
   } catch (e) {
@@ -1013,13 +1024,13 @@ router.post('/logout-all', authenticate, async (req: AuthRequest, res, next) => 
  *                   type: array
  *                   items:
  *                     type: string
- *                 menu:
- *                   type: array
- *                   items:
- *                     type: object
- *       401:
- *         description: Unauthorized
- */
+  *                 menu:
+  *                   type: array
+  *                   items:
+  *                     $ref: '#/components/schemas/MenuItem'
+  *       401:
+  *         description: Unauthorized
+  */
 router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { data: user } = await supabaseAdmin
@@ -1451,19 +1462,21 @@ router.post('/reset-password', async (req, res, next) => {
  *     tags: [auth]
  *     security:
  *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Enrollment started
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 otpauth:
- *                   type: string
- *                 qrCodeDataUrl:
- *                   type: string
- */
+  *     responses:
+  *       200:
+  *         description: Enrollment started
+  *         content:
+  *           application/json:
+  *             schema:
+  *               type: object
+  *               properties:
+  *                 otpauth:
+  *                   type: string
+  *                 qrCodeDataUrl:
+  *                   type: string
+  *                 secret:
+  *                   type: string
+  */
 router.post('/mfa/enroll', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const tenant = await TenantService.getById(req.tenantId!);
@@ -1647,6 +1660,26 @@ router.post(
 // OAuth Social Sign-In (Google, Microsoft, GitHub)
 // ----------------------------------------------------------------------------
 
+/**
+ * @swagger
+ * /api/v1/auth/oauth/{provider}:
+ *   get:
+ *     summary: initiateOAuthSignInRedirectsToTheIdentityProvider
+ *     tags: [auth]
+ *     security: []
+ *     parameters:
+ *       - in: path
+ *         name: provider
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [google, github, microsoft]
+ *     responses:
+ *       302:
+ *         description: Redirect to the identity provider
+ *       400:
+ *         description: Failed to initiate OAuth
+ */
 router.get('/oauth/:provider', async (req, res, next) => {
   try {
     const provider = req.params.provider;
@@ -1678,6 +1711,23 @@ router.get('/oauth/:provider', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/v1/auth/oauth/callback:
+ *   get:
+ *     summary: handleOAuthCallbackRedirectsBackToTheFrontendWithTokens
+ *     tags: [auth]
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       302:
+ *         description: Redirect to the frontend with accessToken/refreshToken or an error
+ */
 router.get('/oauth/callback', async (req, res, next) => {
   try {
     const code = req.query.code as string;
@@ -1755,6 +1805,56 @@ router.get('/oauth/callback', async (req, res, next) => {
 // ----------------------------------------------------------------------------
 // GET /auth/sessions — List all active sessions for the authenticated user
 // ----------------------------------------------------------------------------
+/**
+ * @swagger
+ * /api/v1/auth/sessions:
+ *   get:
+ *     summary: listAllActiveSessionsForTheAuthenticatedUser
+ *     tags: [auth]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of active sessions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     sessions:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           deviceName:
+ *                             type: string
+ *                           browser:
+ *                             type: string
+ *                           os:
+ *                             type: string
+ *                           ipAddress:
+ *                             type: string
+ *                           country:
+ *                             type: string
+ *                           lastLogin:
+ *                             type: string
+ *                             format: date-time
+ *                           loginTime:
+ *                             type: string
+ *                             format: date-time
+ *                           isCurrent:
+ *                             type: boolean
+ *       401:
+ *         description: Unauthorized
+ */
 router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const userId = req.userId!;
@@ -1784,6 +1884,36 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
 // ----------------------------------------------------------------------------
 // DELETE /auth/sessions/:sessionId — Revoke a specific session
 // ----------------------------------------------------------------------------
+/**
+ * @swagger
+ * /api/v1/auth/sessions/{sessionId}:
+ *   delete:
+ *     summary: revokeASpecificSession
+ *     tags: [auth]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Session revoked
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ */
 router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const userId = req.userId!;
@@ -1810,6 +1940,29 @@ router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res
 // ----------------------------------------------------------------------------
 // DELETE /auth/sessions — Revoke all sessions except the current one
 // ----------------------------------------------------------------------------
+/**
+ * @swagger
+ * /api/v1/auth/sessions:
+ *   delete:
+ *     summary: revokeAllSessionsExceptTheCurrentOne
+ *     tags: [auth]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All other sessions revoked
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ */
 router.delete('/sessions', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const userId = req.userId!;
@@ -1856,6 +2009,39 @@ const SendVerificationSchema = z.object({
   email: z.string().email(),
 });
 
+/**
+ * @swagger
+ * /api/v1/auth/send-verification:
+ *   post:
+ *     summary: sendOrResendEmailVerificationCode
+ *     tags: [auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Verification code sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       429:
+ *         description: Too many requests
+ */
 router.post('/send-verification', async (req, res, next) => {
   try {
     const { email } = SendVerificationSchema.parse(req.body);
@@ -1919,6 +2105,42 @@ const VerifyEmailSchema = z.object({
   email: z.string().email().optional(),
 });
 
+/**
+ * @swagger
+ * /api/v1/auth/verify-email:
+ *   post:
+ *     summary: verifyEmailWithATokenOrOtpCode
+ *     tags: [auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Email verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid or expired code/token
+ */
 router.post('/verify-email', async (req, res, next) => {
   try {
     const { token, otp, email } = VerifyEmailSchema.parse(req.body);
@@ -1981,6 +2203,37 @@ router.post('/verify-email', async (req, res, next) => {
 // ----------------------------------------------------------------------------
 // POST /auth/resend-otp — Resend verification OTP
 // ----------------------------------------------------------------------------
+/**
+ * @swagger
+ * /api/v1/auth/resend-otp:
+ *   post:
+ *     summary: resendEmailVerificationOtp
+ *     tags: [auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: OTP resent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.post('/resend-otp', async (req, res, next) => {
   try {
     const { email } = SendVerificationSchema.parse(req.body);

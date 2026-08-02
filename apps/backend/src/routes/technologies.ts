@@ -55,6 +55,12 @@ router.get('/technologies', async (req, res, next) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Technology'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/technologies', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -138,10 +144,35 @@ router.get('/projects/:projectId/technologies', async (req, res, next) => {
  *     responses:
  *       201:
  *         description: Technology added to project
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 project_id:
+ *                   type: string
+ *                   format: uuid
+ *                 technology_id:
+ *                   type: string
+ *                   format: uuid
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Not the project owner
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Project not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
   '/projects/:projectId/technologies',
@@ -210,8 +241,37 @@ router.post(
  *     responses:
  *       200:
  *         description: Technologies updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   project_id:
+ *                     type: string
+ *                     format: uuid
+ *                   technology_id:
+ *                     type: string
+ *                     format: uuid
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Not the project owner
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Project not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put(
   '/projects/:projectId/technologies',
@@ -279,8 +339,24 @@ router.put(
  *     responses:
  *       204:
  *         description: Technology removed from project
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Not the project owner
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Project not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete(
   '/projects/:projectId/technologies/:technologyId',

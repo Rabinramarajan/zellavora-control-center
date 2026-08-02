@@ -79,10 +79,30 @@ router.get('/projects/:projectId/gallery', async (req, res, next) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/GalleryItem'
+ *       400:
+ *         description: mediaUrl is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Not the project owner
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Project not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
   '/projects/:projectId/gallery',
@@ -166,6 +186,8 @@ router.post(
  *           schema:
  *             type: object
  *             properties:
+ *               media_url:
+ *                 type: string
  *               caption:
  *                 type: string
  *               order_index:
@@ -177,8 +199,24 @@ router.post(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/GalleryItem'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Not the project owner
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Project not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put(
   '/projects/:projectId/gallery/:imageId',
@@ -240,8 +278,24 @@ router.put(
  *     responses:
  *       204:
  *         description: Gallery item deleted
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Not the project owner
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Project not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete(
   '/projects/:projectId/gallery/:imageId',

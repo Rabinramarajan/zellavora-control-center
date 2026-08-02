@@ -11,7 +11,7 @@ const router: ExpressRouter = Router();
 
 /**
  * @swagger
- * /portfolio/profile:
+ * /api/v1/profile:
  *   get:
  *     summary: getAUsersProfile
  *     tags: [portfolio]
@@ -32,6 +32,10 @@ const router: ExpressRouter = Router();
  *               $ref: '#/components/schemas/Profile'
  *       404:
  *         description: Profile not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/profile', async (req: AuthRequest, res, next) => {
   try {
@@ -55,7 +59,7 @@ router.get('/profile', async (req: AuthRequest, res, next) => {
 
 /**
  * @swagger
- * /portfolio/profile:
+ * /api/v1/profile:
  *   put:
  *     summary: updateTheAuthenticatedUsersProfile
  *     tags: [portfolio]
@@ -76,6 +80,10 @@ router.get('/profile', async (req: AuthRequest, res, next) => {
  *               $ref: '#/components/schemas/Profile'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/profile', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -100,7 +108,7 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res, next) =>
 
 /**
  * @swagger
- * /portfolio/skills:
+ * /api/v1/skills:
  *   get:
  *     summary: listSkillsForAUser
  *     tags: [portfolio]
@@ -142,7 +150,7 @@ router.get('/skills', async (req, res, next) => {
 
 /**
  * @swagger
- * /portfolio/skills:
+ * /api/v1/skills:
  *   post:
  *     summary: createANewSkill
  *     tags: [portfolio]
@@ -163,6 +171,10 @@ router.get('/skills', async (req, res, next) => {
  *               $ref: '#/components/schemas/Skill'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/skills', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -185,7 +197,7 @@ router.post('/skills', authenticateToken, async (req: AuthRequest, res, next) =>
 
 /**
  * @swagger
- * /portfolio/skills/{id}:
+ * /api/v1/skills/{id}:
  *   put:
  *     summary: updateASkill
  *     tags: [portfolio]
@@ -213,6 +225,10 @@ router.post('/skills', authenticateToken, async (req: AuthRequest, res, next) =>
  *               $ref: '#/components/schemas/Skill'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/skills/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -234,7 +250,7 @@ router.put('/skills/:id', authenticateToken, async (req: AuthRequest, res, next)
 
 /**
  * @swagger
- * /portfolio/skills/{id}:
+ * /api/v1/skills/{id}:
  *   delete:
  *     summary: deleteASkill
  *     tags: [portfolio]
@@ -252,6 +268,10 @@ router.put('/skills/:id', authenticateToken, async (req: AuthRequest, res, next)
  *         description: Skill deleted successfully
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete('/skills/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -275,7 +295,7 @@ router.delete('/skills/:id', authenticateToken, async (req: AuthRequest, res, ne
 
 /**
  * @swagger
- * /portfolio/experience:
+ * /api/v1/experience:
  *   get:
  *     summary: listExperienceEntriesForAUser
  *     tags: [portfolio]
@@ -317,7 +337,7 @@ router.get('/experience', async (req, res, next) => {
 
 /**
  * @swagger
- * /portfolio/experience:
+ * /api/v1/experience:
  *   post:
  *     summary: createANewExperienceEntry
  *     tags: [portfolio]
@@ -338,6 +358,10 @@ router.get('/experience', async (req, res, next) => {
  *               $ref: '#/components/schemas/Experience'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/experience', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -360,7 +384,7 @@ router.post('/experience', authenticateToken, async (req: AuthRequest, res, next
 
 /**
  * @swagger
- * /portfolio/experience/{id}:
+ * /api/v1/experience/{id}:
  *   put:
  *     summary: updateAnExperienceEntry
  *     tags: [portfolio]
@@ -388,6 +412,10 @@ router.post('/experience', authenticateToken, async (req: AuthRequest, res, next
  *               $ref: '#/components/schemas/Experience'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/experience/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -409,7 +437,7 @@ router.put('/experience/:id', authenticateToken, async (req: AuthRequest, res, n
 
 /**
  * @swagger
- * /portfolio/experience/{id}:
+ * /api/v1/experience/{id}:
  *   delete:
  *     summary: deleteAnExperienceEntry
  *     tags: [portfolio]
@@ -427,6 +455,10 @@ router.put('/experience/:id', authenticateToken, async (req: AuthRequest, res, n
  *         description: Experience entry deleted successfully
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete('/experience/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -450,7 +482,7 @@ router.delete('/experience/:id', authenticateToken, async (req: AuthRequest, res
 
 /**
  * @swagger
- * /portfolio/education:
+ * /api/v1/education:
  *   get:
  *     summary: listEducationEntriesForAUser
  *     tags: [portfolio]
@@ -492,7 +524,7 @@ router.get('/education', async (req, res, next) => {
 
 /**
  * @swagger
- * /portfolio/education:
+ * /api/v1/education:
  *   post:
  *     summary: createANewEducationEntry
  *     tags: [portfolio]
@@ -513,6 +545,10 @@ router.get('/education', async (req, res, next) => {
  *               $ref: '#/components/schemas/Education'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/education', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -535,7 +571,7 @@ router.post('/education', authenticateToken, async (req: AuthRequest, res, next)
 
 /**
  * @swagger
- * /portfolio/education/{id}:
+ * /api/v1/education/{id}:
  *   put:
  *     summary: updateAnEducationEntry
  *     tags: [portfolio]
@@ -563,6 +599,10 @@ router.post('/education', authenticateToken, async (req: AuthRequest, res, next)
  *               $ref: '#/components/schemas/Education'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/education/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -584,7 +624,7 @@ router.put('/education/:id', authenticateToken, async (req: AuthRequest, res, ne
 
 /**
  * @swagger
- * /portfolio/education/{id}:
+ * /api/v1/education/{id}:
  *   delete:
  *     summary: deleteAnEducationEntry
  *     tags: [portfolio]
@@ -602,6 +642,10 @@ router.put('/education/:id', authenticateToken, async (req: AuthRequest, res, ne
  *         description: Education entry deleted successfully
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete('/education/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -625,7 +669,7 @@ router.delete('/education/:id', authenticateToken, async (req: AuthRequest, res,
 
 /**
  * @swagger
- * /portfolio/services:
+ * /api/v1/services:
  *   get:
  *     summary: listServicesForAUser
  *     tags: [portfolio]
@@ -667,7 +711,7 @@ router.get('/services', async (req, res, next) => {
 
 /**
  * @swagger
- * /portfolio/services:
+ * /api/v1/services:
  *   post:
  *     summary: createANewService
  *     tags: [portfolio]
@@ -688,6 +732,10 @@ router.get('/services', async (req, res, next) => {
  *               $ref: '#/components/schemas/ServiceItem'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/services', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -710,7 +758,7 @@ router.post('/services', authenticateToken, async (req: AuthRequest, res, next) 
 
 /**
  * @swagger
- * /portfolio/services/{id}:
+ * /api/v1/services/{id}:
  *   put:
  *     summary: updateAService
  *     tags: [portfolio]
@@ -738,6 +786,10 @@ router.post('/services', authenticateToken, async (req: AuthRequest, res, next) 
  *               $ref: '#/components/schemas/ServiceItem'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/services/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -759,7 +811,7 @@ router.put('/services/:id', authenticateToken, async (req: AuthRequest, res, nex
 
 /**
  * @swagger
- * /portfolio/services/{id}:
+ * /api/v1/services/{id}:
  *   delete:
  *     summary: deleteAService
  *     tags: [portfolio]
@@ -777,6 +829,10 @@ router.put('/services/:id', authenticateToken, async (req: AuthRequest, res, nex
  *         description: Service deleted successfully
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete('/services/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -800,7 +856,7 @@ router.delete('/services/:id', authenticateToken, async (req: AuthRequest, res, 
 
 /**
  * @swagger
- * /portfolio/testimonials:
+ * /api/v1/testimonials:
  *   get:
  *     summary: listTestimonialsForAUser
  *     tags: [portfolio]
@@ -842,7 +898,7 @@ router.get('/testimonials', async (req, res, next) => {
 
 /**
  * @swagger
- * /portfolio/testimonials:
+ * /api/v1/testimonials:
  *   post:
  *     summary: createANewTestimonial
  *     tags: [portfolio]
@@ -863,6 +919,10 @@ router.get('/testimonials', async (req, res, next) => {
  *               $ref: '#/components/schemas/Testimonial'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/testimonials', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -885,7 +945,7 @@ router.post('/testimonials', authenticateToken, async (req: AuthRequest, res, ne
 
 /**
  * @swagger
- * /portfolio/testimonials/{id}:
+ * /api/v1/testimonials/{id}:
  *   put:
  *     summary: updateATestimonial
  *     tags: [portfolio]
@@ -913,6 +973,10 @@ router.post('/testimonials', authenticateToken, async (req: AuthRequest, res, ne
  *               $ref: '#/components/schemas/Testimonial'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/testimonials/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
@@ -934,7 +998,7 @@ router.put('/testimonials/:id', authenticateToken, async (req: AuthRequest, res,
 
 /**
  * @swagger
- * /portfolio/testimonials/{id}:
+ * /api/v1/testimonials/{id}:
  *   delete:
  *     summary: deleteATestimonial
  *     tags: [portfolio]
@@ -952,6 +1016,10 @@ router.put('/testimonials/:id', authenticateToken, async (req: AuthRequest, res,
  *         description: Testimonial deleted successfully
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete('/testimonials/:id', authenticateToken, async (req: AuthRequest, res, next) => {
   try {

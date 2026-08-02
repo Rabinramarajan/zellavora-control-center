@@ -50,6 +50,45 @@ const RegisterSubmitSchema = z.object({
 });
 
 // Endpoints
+/**
+ * @swagger
+ * /api/v1/auth/register/verify-invitation:
+ *   post:
+ *     summary: verifyInvitationCode
+ *     description: Validates a registration invitation code.
+ *     tags: [auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [code]
+ *             properties:
+ *               code:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Invitation code is valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *       400:
+ *         description: Invalid or already used invitation code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/verify-invitation', async (req, res, next) => {
   try {
     const { code } = VerifyInvitationSchema.parse(req.body);
@@ -67,6 +106,43 @@ router.post('/verify-invitation', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/v1/auth/register/send-email-otp:
+ *   post:
+ *     summary: sendRegistrationEmailOtp
+ *     description: Generates a 6-digit OTP for the given email and queues it for delivery.
+ *     tags: [auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: OTP generated and queued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Invalid email address
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/send-email-otp', async (req, res, next) => {
   try {
     const { email } = SendOtpSchema.parse(req.body);
@@ -93,6 +169,47 @@ router.post('/send-email-otp', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/v1/auth/register/verify-email-otp:
+ *   post:
+ *     summary: verifyRegistrationEmailOtp
+ *     description: Verifies a 6-digit OTP previously sent to the given email.
+ *     tags: [auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, code]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               code:
+ *                 type: string
+ *                 minLength: 6
+ *                 maxLength: 6
+ *     responses:
+ *       200:
+ *         description: OTP verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Invalid or expired verification code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/verify-email-otp', async (req, res, next) => {
   try {
     const { email, code } = VerifyOtpSchema.parse(req.body);
@@ -122,6 +239,36 @@ router.post('/verify-email-otp', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/v1/auth/register/mfa-setup:
+ *   get:
+ *     summary: generateMfaSetup
+ *     description: Generates a TOTP secret and QR code for MFA enrollment.
+ *     tags: [auth]
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: Account email embedded in the otpauth URI (defaults to admin@zellavora.com)
+ *     responses:
+ *       200:
+ *         description: MFA secret and QR code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 secret:
+ *                   type: string
+ *                 qrCodeDataUrl:
+ *                   type: string
+ *                   format: data-url
+ */
 router.get('/mfa-setup', async (req, res, next) => {
   try {
     const email = (req.query.email as string) || 'admin@zellavora.com';
@@ -135,6 +282,133 @@ router.get('/mfa-setup', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/v1/auth/register/submit:
+ *   post:
+ *     summary: submitRegistration
+ *     description: Completes tenant, branch, and super-admin registration. Verifies invitation, duplicates, and MFA code before provisioning.
+ *     tags: [auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - invitationCode
+ *               - company
+ *               - branch
+ *               - admin
+ *               - credentials
+ *               - mfaSecret
+ *               - mfaCode
+ *             properties:
+ *               invitationCode:
+ *                 type: string
+ *               company:
+ *                 type: object
+ *                 required: [name, clientCode]
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                   clientCode:
+ *                     type: string
+ *                   logoUrl:
+ *                     type: string
+ *                     nullable: true
+ *                   industry:
+ *                     type: string
+ *                   employees:
+ *                     type: string
+ *               branch:
+ *                 type: object
+ *                 required: [name]
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                   code:
+ *                     type: string
+ *               admin:
+ *                 type: object
+ *                 required: [fullName, email]
+ *                 properties:
+ *                   fullName:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                   designation:
+ *                     type: string
+ *               credentials:
+ *                 type: object
+ *                 required: [username, password]
+ *                 properties:
+ *                   username:
+ *                     type: string
+ *                   password:
+ *                     type: string
+ *                     format: password
+ *               mfaSecret:
+ *                 type: string
+ *                 description: TOTP secret returned by the mfa-setup endpoint
+ *               mfaCode:
+ *                 type: string
+ *                 description: Current TOTP code proving possession of the secret
+ *     responses:
+ *       200:
+ *         description: Registration completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Registration completed successfully.
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     tenant:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           format: uuid
+ *                         name:
+ *                           type: string
+ *                         clientCode:
+ *                           type: string
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           format: uuid
+ *                         email:
+ *                           type: string
+ *                           format: email
+ *                         username:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *       400:
+ *         description: Invalid invitation code, duplicate user, or invalid MFA code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Registration failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/submit', async (req, res, next) => {
   try {
     const data = RegisterSubmitSchema.parse(req.body);

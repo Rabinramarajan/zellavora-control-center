@@ -8,7 +8,7 @@ const router = Router();
 /**
  * @swagger
  * /api/v1/admin/role/search:
- *   post:
+ *   get:
  *     summary: searchRoles
  *     tags: [roleSearch]
  *     security:
@@ -16,6 +16,82 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     pageSize: { type: integer }
+ *                     pageNumber: { type: integer }
+ *                     ascending: { type: boolean }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
+ *   post:
+ *     summary: searchRoles
+ *     tags: [roleSearch]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               pageSize:
+ *                 type: integer
+ *                 default: 10
+ *               pageNumber:
+ *                 type: integer
+ *                 default: 1
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     searchResult:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           roleId: { type: integer }
+ *                           roleName: { type: string }
+ *                           moduleDescription: { type: string }
+ *                           beginDate: { type: string, format: date-time }
+ *                           endDate: { type: string, format: date-time }
+ *                           statusDescription: { type: string }
+ *                     totalCount: { type: integer }
+ *                     pageSize: { type: integer }
+ *                     pageNumber: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/role/initialize:
  *   get:
  *     summary: initializeRoleMetadata
@@ -25,6 +101,26 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Initial state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     status: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/role/new:
  *   get:
  *     summary: getTemplateForNewRole
@@ -34,33 +130,170 @@ const router = Router();
  *     responses:
  *       200:
  *         description: New role template
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     roleId: { type: integer }
+ *                     roleName: { type: string }
+ *                     statusId: { type: integer }
+ *                     statusValue: { type: string }
+ *                     beginDate: { type: string, format: date-time }
+ *                     endDate: { type: string, format: date-time }
+ *                     moduleId: { type: integer }
+ *                     moduleValue: { type: string }
+ *                     statusDescription: { type: string }
+ *                     moduleDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/role/open:
  *   post:
  *     summary: loadRoleDetailsById
  *     tags: [roleDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Role profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     roleId: { type: integer }
+ *                     roleName: { type: string }
+ *                     statusId: { type: integer }
+ *                     statusValue: { type: string }
+ *                     beginDate: { type: string, format: date-time }
+ *                     endDate: { type: string, format: date-time }
+ *                     moduleId: { type: integer }
+ *                     moduleValue: { type: string }
+ *                     statusDescription: { type: string }
+ *                     moduleDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
+ *       404:
+ *         description: Role serial not mapped
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  * /api/v1/admin/role/save:
  *   post:
  *     summary: saveRoleDetails
  *     tags: [roleDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [roleName]
+ *             properties:
+ *               roleId: { type: integer }
+ *               roleName: { type: string }
  *     responses:
  *       200:
  *         description: Saved role details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     roleId: { type: integer }
+ *                     roleName: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/role/delete:
  *   post:
  *     summary: deleteRole
  *     tags: [roleDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Deletion confirmation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     roleId: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/role/role-resource/load:
  *   post:
  *     summary: loadRoleResourceMappings
@@ -70,6 +303,26 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Mappings list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/role/role-resource/save:
  *   post:
  *     summary: saveRoleResourceMappings
@@ -79,6 +332,26 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Action status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     ok: { type: boolean }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  */
 
 router.get('/role/initialize', authenticate, async (req, res, next) => {

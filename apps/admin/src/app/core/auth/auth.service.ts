@@ -525,8 +525,12 @@ export class AuthService {
     // Continue: load /me so we get permissions + menu
     this.loadMe().subscribe();
 
-    // Redirect to the originally-requested URL or /dashboard
-    const redirect = sessionStorage.getItem(STORAGE.redirect) ?? '/dashboard';
+    // Redirect to the originally-requested URL, or the user's default landing
+    // page, or /dashboard.
+    const redirect =
+      sessionStorage.getItem(STORAGE.redirect) ??
+      res.defaultLandingPage ??
+      '/dashboard';
     sessionStorage.removeItem(STORAGE.redirect);
     this.router.navigateByUrl(redirect, { replaceUrl: true });
   }

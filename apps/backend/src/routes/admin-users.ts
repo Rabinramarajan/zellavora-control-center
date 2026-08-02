@@ -13,7 +13,7 @@ const router = Router();
 /**
  * @swagger
  * /api/v1/admin/user/search:
- *   post:
+ *   get:
  *     summary: searchUsers
  *     tags: [userSearch]
  *     security:
@@ -21,6 +21,87 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     pageSize: { type: integer }
+ *                     pageNumber: { type: integer }
+ *                     ascending: { type: boolean }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
+ *   post:
+ *     summary: searchUsers
+ *     tags: [userSearch]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               pageSize:
+ *                 type: integer
+ *                 default: 10
+ *               pageNumber:
+ *                 type: integer
+ *                 default: 1
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     searchResult:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           userSerialId: { type: integer }
+ *                           userLoginId: { type: string }
+ *                           firstName: { type: string }
+ *                           lastName: { type: string }
+ *                           emailId: { type: string }
+ *                           userName: { type: string }
+ *                           contactNumber: { type: string }
+ *                           employeeCode: { type: string }
+ *                           statusDescription: { type: string }
+ *                           beginDateFrom: { type: string, format: date-time }
+ *                           endDateFrom: { type: string, format: date-time, nullable: true }
+ *                     totalCount: { type: integer }
+ *                     pageSize: { type: integer }
+ *                     pageNumber: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/user/initialize:
  *   get:
  *     summary: initializeUserData
@@ -30,6 +111,26 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Initial state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     status: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/user/new:
  *   get:
  *     summary: getTemplateForNewUser
@@ -39,24 +140,207 @@ const router = Router();
  *     responses:
  *       200:
  *         description: New user template
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userSerialId: { type: integer }
+ *                     userLoginId: { type: string }
+ *                     firstName: { type: string }
+ *                     lastName: { type: string }
+ *                     emailId: { type: string }
+ *                     userName: { type: string }
+ *                     contactNumber: { type: string }
+ *                     genderId: { type: integer }
+ *                     genderValue: { type: string }
+ *                     beginDate: { type: string, format: date-time }
+ *                     endDate: { type: string, format: date-time }
+ *                     statusId: { type: integer }
+ *                     statusValue: { type: string }
+ *                     designationId: { type: integer }
+ *                     designationValue: { type: string }
+ *                     branchId: { type: integer }
+ *                     branchValue: { type: string }
+ *                     employeeCode: { type: string }
+ *                     departmentId: { type: integer }
+ *                     departmentValue: { type: string }
+ *                     teamId: { type: integer }
+ *                     teamValue: { type: string }
+ *                     enableTwoFactorAuthentication: { type: boolean }
+ *                     isAccountLocked: { type: boolean }
+ *                     successfulLoginAttempts: { type: integer }
+ *                     passwordResetFlag: { type: boolean }
+ *                     version: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/user/open:
  *   post:
  *     summary: loadUserDetailsBySerialId
  *     tags: [userDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Loaded user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userSerialId: { type: integer }
+ *                     userLoginId: { type: string }
+ *                     firstName: { type: string }
+ *                     lastName: { type: string }
+ *                     emailId: { type: string }
+ *                     userName: { type: string }
+ *                     contactNumber: { type: string }
+ *                     genderId: { type: integer }
+ *                     genderValue: { type: string }
+ *                     beginDate: { type: string, format: date-time }
+ *                     endDate: { type: string, format: date-time }
+ *                     statusId: { type: integer }
+ *                     statusValue: { type: string }
+ *                     designationId: { type: integer }
+ *                     designationValue: { type: string }
+ *                     branchId: { type: integer }
+ *                     branchValue: { type: string }
+ *                     employeeCode: { type: string }
+ *                     departmentId: { type: integer }
+ *                     departmentValue: { type: string }
+ *                     teamId: { type: integer }
+ *                     teamValue: { type: string }
+ *                     fullname: { type: string }
+ *                     currentLoginDatetime: { type: string, format: date-time, nullable: true }
+ *                     lastLoginDatetime: { type: string, format: date-time, nullable: true }
+ *                     defaultLandingPage: { type: string }
+ *                     enableTwoFactorAuthentication: { type: boolean }
+ *                     isAccountLocked: { type: boolean }
+ *                     lastLockedDate: { type: string, format: date-time, nullable: true }
+ *                     keyToken: { type: string }
+ *                     msg: { type: string }
+ *                     otp: { type: string }
+ *                     passwordResetFlag: { type: boolean }
+ *                     statusDescription: { type: string }
+ *                     version: { type: integer }
+ *                     successfulLoginAttempts: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
+ *       404:
+ *         description: User serial not mapped
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  * /api/v1/admin/user/save:
  *   post:
  *     summary: saveUserDetails
  *     tags: [userDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userSerialId, firstName, lastName, emailId, userLoginId]
+ *             properties:
+ *               userSerialId: { type: integer }
+ *               userLoginId: { type: string }
+ *               firstName: { type: string }
+ *               lastName: { type: string }
+ *               emailId: { type: string }
+ *               userName: { type: string }
+ *               contactNumber: { type: string }
+ *               genderId: { type: integer }
+ *               genderValue: { type: string }
+ *               statusId: { type: integer }
+ *               statusValue: { type: string }
+ *               designationId: { type: integer }
+ *               designationValue: { type: string }
+ *               branchId: { type: integer }
+ *               branchValue: { type: string }
+ *               departmentId: { type: integer }
+ *               departmentValue: { type: string }
+ *               teamId: { type: integer }
+ *               teamValue: { type: string }
+ *               enableTwoFactorAuthentication: { type: boolean }
+ *               isAccountLocked: { type: boolean }
+ *               lastLockedDate: { type: string, format: date-time }
+ *               currentLoginDatetime: { type: string, format: date-time }
+ *               lastLoginDatetime: { type: string, format: date-time }
+ *               defaultLandingPage: { type: string }
+ *               passwordResetFlag: { type: boolean }
+ *               keyToken: { type: string }
+ *               statusDescription: { type: string }
+ *               version: { type: integer }
+ *               msg: { type: string }
+ *               otp: { type: string }
+ *               successfulLoginAttempts: { type: integer }
  *     responses:
  *       200:
  *         description: Saved user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userSerialId: { type: integer }
+ *                     userLoginId: { type: string }
+ *                     firstName: { type: string }
+ *                     lastName: { type: string }
+ *                     emailId: { type: string }
+ *                     fullname: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/user/role/get:
  *   get:
  *     summary: getRolesAssignableToUser
@@ -66,6 +350,26 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Available roles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/user/team/user/get:
  *   post:
  *     summary: getTeamUsers
@@ -75,6 +379,26 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Team users list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/user/LoadBranchDDLByUserLoginId:
  *   post:
  *     summary: loadBranchDropdownDetails
@@ -84,6 +408,36 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Branches dropdown
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       admBranchId: { type: integer }
+ *                       actCompanyId: { type: integer }
+ *                       admLocationId: { type: integer }
+ *                       admRegionId: { type: integer }
+ *                       branchName: { type: string }
+ *                       effectiveDate: { type: string, format: date-time }
+ *                       statusId: { type: integer }
+ *                       statusValue: { type: string }
+ *                       branchCode: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  */
 
 router.get('/user/initialize', authenticate, async (req, res, next) => {

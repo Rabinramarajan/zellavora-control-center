@@ -19,7 +19,7 @@ let mockGroups = [
 /**
  * @swagger
  * /api/v1/admin/group/search:
- *   post:
+ *   get:
  *     summary: searchGroups
  *     tags: [groupSearch]
  *     security:
@@ -27,33 +27,213 @@ let mockGroups = [
  *     responses:
  *       200:
  *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
+ *   post:
+ *     summary: searchGroups
+ *     tags: [groupSearch]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               pageSize:
+ *                 type: integer
+ *                 default: 10
+ *               pageNumber:
+ *                 type: integer
+ *                 default: 1
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     searchResult:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           groupId: { type: integer }
+ *                           groupName: { type: string }
+ *                           beginDate: { type: string, format: date-time }
+ *                           endDate: { type: string, format: date-time }
+ *                           statusDescription: { type: string }
+ *                     totalCount: { type: integer }
+ *                     pageSize: { type: integer }
+ *                     pageNumber: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/group/open:
  *   post:
  *     summary: loadGroupDetails
  *     tags: [groupDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Group details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     groupId: { type: integer }
+ *                     groupName: { type: string }
+ *                     beginDate: { type: string, format: date-time }
+ *                     endDate: { type: string, format: date-time }
+ *                     statusId: { type: integer }
+ *                     statusValue: { type: string }
+ *                     statusDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/group/save:
  *   post:
  *     summary: saveGroupDetails
  *     tags: [groupDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [groupId, groupName, beginDate, endDate, statusId, statusValue]
+ *             properties:
+ *               groupId: { type: integer }
+ *               groupName: { type: string }
+ *               beginDate: { type: string, format: date-time }
+ *               endDate: { type: string, format: date-time }
+ *               statusId: { type: integer }
+ *               statusValue: { type: string }
+ *               statusDescription: { type: string }
  *     responses:
  *       200:
  *         description: Saved group details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     groupId: { type: integer }
+ *                     groupName: { type: string }
+ *                     beginDate: { type: string, format: date-time }
+ *                     endDate: { type: string, format: date-time }
+ *                     statusId: { type: integer }
+ *                     statusValue: { type: string }
+ *                     statusDescription: { type: string }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  * /api/v1/admin/group/delete:
  *   post:
  *     summary: deleteGroup
  *     tags: [groupDetail]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Deletion confirmation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     groupId: { type: integer }
+ *                 infoMessage:
+ *                   type: object
+ *                   properties:
+ *                     msgID: { type: integer }
+ *                     msgType: { type: string }
+ *                     msgDescription: { type: string }
+ *                 errorMessage:
+ *                   type: array
+ *                   items: { type: string }
+ *                 hasError:
+ *                   type: boolean
  */
 
 router.get('/group/search', authenticate, async (req, res, next) => {
