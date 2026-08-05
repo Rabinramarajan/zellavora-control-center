@@ -13,9 +13,8 @@ export class TeamsRepository {
         },
       },
       include: {
-        members: { select: { id: true, email: true, name: true } },
+        members: { select: { id: true, email: true, fullName: true } },
         organization: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, email: true } },
       },
     });
   }
@@ -24,10 +23,8 @@ export class TeamsRepository {
     return prisma.team.findUnique({
       where: { id },
       include: {
-        members: { select: { id: true, email: true, name: true } },
+        members: { select: { id: true, email: true, fullName: true } },
         organization: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, email: true, name: true } },
-        updatedBy: { select: { id: true, email: true, name: true } },
       },
     });
   }
@@ -66,9 +63,8 @@ export class TeamsRepository {
       take: options?.take || 20,
       orderBy,
       include: {
-        members: { select: { id: true, email: true, name: true } },
+        members: { select: { id: true, email: true, fullName: true } },
         organization: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, email: true } },
         _count: { select: { members: true } },
       },
     });
@@ -85,10 +81,10 @@ export class TeamsRepository {
       where: { id },
       data: {
         ...data,
-        updatedBy: { connect: { id: userId } },
+        updatedBy: userId,
       },
       include: {
-        members: { select: { id: true, email: true, name: true } },
+        members: { select: { id: true, email: true, fullName: true } },
         _count: { select: { members: true } },
       },
     });
@@ -108,7 +104,7 @@ export class TeamsRepository {
         members: { connect: { id: userId } },
       },
       include: {
-        members: { select: { id: true, email: true, name: true } },
+        members: { select: { id: true, email: true, fullName: true } },
         _count: { select: { members: true } },
       },
     });
@@ -121,7 +117,7 @@ export class TeamsRepository {
         members: { disconnect: { id: userId } },
       },
       include: {
-        members: { select: { id: true, email: true, name: true } },
+        members: { select: { id: true, email: true, fullName: true } },
         _count: { select: { members: true } },
       },
     });
@@ -136,8 +132,8 @@ export class TeamsRepository {
       select: {
         id: true,
         email: true,
-        name: true,
-        avatar: true,
+        fullName: true,
+        avatarUrl: true,
         createdAt: true,
       },
       skip,

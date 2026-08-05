@@ -1,5 +1,5 @@
 import { TeamsRepository } from './teams.repository';
-import { CreateTeamDTOType, UpdateTeamDTOType, AddTeamMemberDTOType } from './teams.dto';
+import { CreateTeamDTOType, UpdateTeamDTOType } from './teams.dto';
 import { AppError } from '../../middleware/error';
 import { AuditService } from '../audit/audit.service';
 
@@ -7,19 +7,17 @@ export class TeamsService {
   private repo = new TeamsRepository();
   private auditService = new AuditService();
 
-  async create(data: CreateTeamDTOType, userId: string) {
+  async create(data: CreateTeamDTOType, userId: string, organizationId: string) {
     try {
       const team = await this.repo.create({
         ...data,
         members: [userId, ...(data.members || [])], // Add creator as member
       });
 
-      await this.auditService.log({
-        action: 'CREATE',
-        entityType: 'Team',
-        entityId: team.id,
-        userId,
-        details: { name: team.name },
+      await this.auditService.logActivity({
+        actorId: userId,
+        action: `CREATE_TEAM:${team.name}`,
+        organizationId,
         severity: 'info',
       });
 
@@ -46,68 +44,60 @@ export class TeamsService {
     return { total };
   }
 
-  async update(id: string, data: UpdateTeamDTOType, userId: string) {
-    const team = await this.getById(id);
+  async update(id: string, data: UpdateTeamDTOType, userId: string, organizationId: string) {
+    await this.getById(id);
 
     const updated = await this.repo.update(id, data, userId);
 
-    await this.auditService.log({
-      action: 'UPDATE',
-      entityType: 'Team',
-      entityId: id,
-      userId,
-      details: { name: updated.name, changes: data },
+    await this.auditService.logActivity({
+      actorId: userId,
+      action: `UPDATE_TEAM:${updated.name}`,
+      organizationId,
       severity: 'info',
     });
 
     return updated;
   }
 
-  async delete(id: string, userId: string) {
+  async delete(id: string, userId: string, organizationId: string) {
     const team = await this.getById(id);
 
     await this.repo.delete(id);
 
-    await this.auditService.log({
-      action: 'DELETE',
-      entityType: 'Team',
-      entityId: id,
-      userId,
-      details: { name: team.name },
+    await this.auditService.logActivity({
+      actorId: userId,
+      action: `DELETE_TEAM:${team.name}`,
+      organizationId,
       severity: 'warning',
     });
 
     return { success: true, id };
   }
 
-  async addMember(teamId: string, memberId: string, userId: string, role = 'member') {
+  async addMember(teamId: string, memberId: string, userId: string, organizationId: string, role = 'member') {
     const team = await this.getById(teamId);
 
     const updated = await this.repo.addMember(teamId, memberId, role);
 
-    await this.auditService.log({
-      action: 'ADD_MEMBER',
-      entityType: 'Team',
-      entityId: teamId,
-      userId,
-      details: { teamName: team.name, memberId, role },
+    await this.auditService.logActivity({
+      actorId: userId,
+      action: `ADD_TEAM_MEMBER:${team.name}`,
+      organizationId,
       severity: 'info',
     });
 
     return updated;
   }
 
-  async removeMember(teamId: string, memberId: string, userId: string) {
+  async removeMember(teamId: string, memberId: string, userId: string, organizationId: string) {
     const team = await this.getById(teamId);
 
     const updated = await this.repo.removeMember(teamId, memberId);
 
-    await this.auditService.log({
-      action: 'REMOVE_MEMBER',
-      entityType: 'Team',
-      entityId: teamId,
-      userId,
-      details: { teamName: team.name, memberId },
+    await this.auditService.logActivity({
+      actorId: userId,
+      action: `REMOVE_TEAM_MEMBER:${team.name}`,
+      organizationId,
       severity: 'info',
     });
 

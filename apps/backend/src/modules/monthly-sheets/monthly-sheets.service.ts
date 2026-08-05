@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { prisma } from '../../infrastructure/prisma';
+
+
 import {
   CreateMonthlySheetDTO,
   UpdateMonthlySheetDTO,
@@ -9,13 +10,13 @@ import {
 } from './monthly-sheets.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 
-@Injectable()
+
 export class MonthlySheetsService {
-  constructor(private prisma: PrismaService) {}
+  
 
   async create(dto: CreateMonthlySheetDTO, organizationId: string, userId: string) {
     // Get all daily sheets for calculation
-    const dailySheets = await this.prisma.dailySheet.findMany({
+    const dailySheets = await prisma.dailySheet.findMany({
       where: {
         id: { in: dto.dailySheetIds },
         organizationId,
@@ -38,7 +39,7 @@ export class MonthlySheetsService {
       ? totalAmount.dividedBy(totalHours)
       : new Decimal(0);
 
-    const monthlySheet = await this.prisma.monthlySheet.create({
+    const monthlySheet = await prisma.monthlySheet.create({
       data: {
         organizationId,
         userId: dto.userId,
@@ -59,7 +60,7 @@ export class MonthlySheetsService {
   }
 
   async update(id: string, dto: UpdateMonthlySheetDTO, organizationId: string, userId: string) {
-    const existingSheet = await this.prisma.monthlySheet.findUniqueOrThrow({
+    const existingSheet = await prisma.monthlySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -69,7 +70,7 @@ export class MonthlySheetsService {
 
     // Recalculate if daily sheet IDs changed
     if (dto.dailySheetIds) {
-      const dailySheets = await this.prisma.dailySheet.findMany({
+      const dailySheets = await prisma.dailySheet.findMany({
         where: {
           id: { in: dto.dailySheetIds },
           organizationId,
@@ -91,7 +92,7 @@ export class MonthlySheetsService {
         ? totalAmount.dividedBy(totalHours)
         : new Decimal(0);
 
-      return this.prisma.monthlySheet.update({
+      return prisma.monthlySheet.update({
         where: { id },
         data: {
           totalHours,
@@ -104,7 +105,7 @@ export class MonthlySheetsService {
       });
     }
 
-    return this.prisma.monthlySheet.update({
+    return prisma.monthlySheet.update({
       where: { id },
       data: {
         updatedBy: userId,
@@ -113,7 +114,7 @@ export class MonthlySheetsService {
   }
 
   async submitForApproval(id: string, organizationId: string, userId: string) {
-    const sheet = await this.prisma.monthlySheet.findUniqueOrThrow({
+    const sheet = await prisma.monthlySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -121,7 +122,7 @@ export class MonthlySheetsService {
       throw new Error('Cannot submit non-draft sheet');
     }
 
-    return this.prisma.monthlySheet.update({
+    return prisma.monthlySheet.update({
       where: { id },
       data: {
         status: 'submitted',
@@ -132,7 +133,7 @@ export class MonthlySheetsService {
   }
 
   async approve(id: string, dto: ApproveMonthlySheetDTO, organizationId: string, userId: string) {
-    const sheet = await this.prisma.monthlySheet.findUniqueOrThrow({
+    const sheet = await prisma.monthlySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -140,7 +141,7 @@ export class MonthlySheetsService {
       throw new Error('Cannot approve non-submitted sheet');
     }
 
-    return this.prisma.monthlySheet.update({
+    return prisma.monthlySheet.update({
       where: { id },
       data: {
         status: dto.approved ? 'approved' : 'rejected',
@@ -153,7 +154,7 @@ export class MonthlySheetsService {
   }
 
   async markAsPaid(id: string, dto: MarkAsPaidDTO, organizationId: string, userId: string) {
-    const sheet = await this.prisma.monthlySheet.findUniqueOrThrow({
+    const sheet = await prisma.monthlySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -161,7 +162,7 @@ export class MonthlySheetsService {
       throw new Error('Cannot mark non-approved sheet as paid');
     }
 
-    return this.prisma.monthlySheet.update({
+    return prisma.monthlySheet.update({
       where: { id },
       data: {
         status: 'paid',
@@ -172,7 +173,7 @@ export class MonthlySheetsService {
   }
 
   async getById(id: string, organizationId: string) {
-    return this.prisma.monthlySheet.findFirstOrThrow({
+    return prisma.monthlySheet.findFirstOrThrow({
       where: {
         id,
         organizationId,
@@ -204,13 +205,13 @@ export class MonthlySheetsService {
     }
 
     const [sheets, total] = await Promise.all([
-      this.prisma.monthlySheet.findMany({
+      prisma.monthlySheet.findMany({
         where,
         skip,
         take: query.pageSize,
         orderBy: [{ year: 'desc' }, { month: 'desc' }],
       }),
-      this.prisma.monthlySheet.count({ where }),
+      prisma.monthlySheet.count({ where }),
     ]);
 
     return {
@@ -222,7 +223,7 @@ export class MonthlySheetsService {
   }
 
   async delete(id: string, organizationId: string) {
-    const sheet = await this.prisma.monthlySheet.findUniqueOrThrow({
+    const sheet = await prisma.monthlySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -230,6 +231,6 @@ export class MonthlySheetsService {
       throw new Error('Cannot delete non-draft sheet');
     }
 
-    return this.prisma.monthlySheet.delete({ where: { id } });
+    return prisma.monthlySheet.delete({ where: { id } });
   }
 }

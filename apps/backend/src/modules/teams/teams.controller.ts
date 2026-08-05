@@ -1,41 +1,40 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../../middleware/auth';
 import { TeamsService } from './teams.service';
 import { CreateTeamDTO, UpdateTeamDTO, TeamQueryDTO, AddTeamMemberDTO, RemoveTeamMemberDTO } from './teams.dto';
-import { Logger } from '../../infrastructure/logger';
+import { logger } from '../../infrastructure/logger';
 
 export class TeamsController {
   private service = new TeamsService();
-  private logger = new Logger('TeamsController');
 
-  async create(req: Request, res: Response) {
+  async create(req: AuthRequest, res: Response) {
     try {
       const validated = CreateTeamDTO.parse(req.body);
-      const team = await this.service.create(validated, req.user.id);
+      const team = await this.service.create(validated, req.userId!, req.tenantId!);
 
       res.status(201).json({
         success: true,
         data: team,
       });
     } catch (error) {
-      this.logger.error('Create team failed', error);
+      logger.error('Create team failed', error);
       throw error;
     }
   }
 
-  async getAll(req: Request, res: Response) {
+  async getAll(req: AuthRequest, res: Response) {
     try {
       const query = TeamQueryDTO.parse(req.query);
       const skip = (query.page - 1) * query.pageSize;
 
-      const [teams, total, stats] = await Promise.all([
-        this.service.getAll(req.user.organizationId, {
+      const [teams, stats] = await Promise.all([
+        this.service.getAll(req.tenantId!, {
           skip,
           take: query.pageSize,
           search: query.search,
           sortBy: query.sortBy,
         }),
-        this.service.getStats(req.user.organizationId),
-        this.service.getStats(req.user.organizationId),
+        this.service.getStats(req.tenantId!),
       ]);
 
       res.json({
@@ -48,12 +47,12 @@ export class TeamsController {
         },
       });
     } catch (error) {
-      this.logger.error('Get teams failed', error);
+      logger.error('Get teams failed', error);
       throw error;
     }
   }
 
-  async getById(req: Request, res: Response) {
+  async getById(req: AuthRequest, res: Response) {
     try {
       const team = await this.service.getById(req.params.id);
 
@@ -62,41 +61,41 @@ export class TeamsController {
         data: team,
       });
     } catch (error) {
-      this.logger.error('Get team failed', error);
+      logger.error('Get team failed', error);
       throw error;
     }
   }
 
-  async update(req: Request, res: Response) {
+  async update(req: AuthRequest, res: Response) {
     try {
       const validated = UpdateTeamDTO.parse(req.body);
-      const team = await this.service.update(req.params.id, validated, req.user.id);
+      const team = await this.service.update(req.params.id, validated, req.userId!, req.tenantId!);
 
       res.json({
         success: true,
         data: team,
       });
     } catch (error) {
-      this.logger.error('Update team failed', error);
+      logger.error('Update team failed', error);
       throw error;
     }
   }
 
-  async delete(req: Request, res: Response) {
+  async delete(req: AuthRequest, res: Response) {
     try {
-      const result = await this.service.delete(req.params.id, req.user.id);
+      const result = await this.service.delete(req.params.id, req.userId!, req.tenantId!);
 
       res.json({
         success: true,
         data: result,
       });
     } catch (error) {
-      this.logger.error('Delete team failed', error);
+      logger.error('Delete team failed', error);
       throw error;
     }
   }
 
-  async getMembers(req: Request, res: Response) {
+  async getMembers(req: AuthRequest, res: Response) {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const pageSize = parseInt(req.query.pageSize as string) || 20;
@@ -113,18 +112,19 @@ export class TeamsController {
         pagination: { page, pageSize, total },
       });
     } catch (error) {
-      this.logger.error('Get team members failed', error);
+      logger.error('Get team members failed', error);
       throw error;
     }
   }
 
-  async addMember(req: Request, res: Response) {
+  async addMember(req: AuthRequest, res: Response) {
     try {
       const validated = AddTeamMemberDTO.parse(req.body);
       const team = await this.service.addMember(
         req.params.id,
         validated.userId,
-        req.user.id,
+        req.userId!,
+        req.tenantId!,
         validated.role
       );
 
@@ -133,22 +133,22 @@ export class TeamsController {
         data: team,
       });
     } catch (error) {
-      this.logger.error('Add team member failed', error);
+      logger.error('Add team member failed', error);
       throw error;
     }
   }
 
-  async removeMember(req: Request, res: Response) {
+  async removeMember(req: AuthRequest, res: Response) {
     try {
       const validated = RemoveTeamMemberDTO.parse(req.body);
-      const team = await this.service.removeMember(req.params.id, validated.userId, req.user.id);
+      const team = await this.service.removeMember(req.params.id, validated.userId, req.userId!, req.tenantId!);
 
       res.json({
         success: true,
         data: team,
       });
     } catch (error) {
-      this.logger.error('Remove team member failed', error);
+      logger.error('Remove team member failed', error);
       throw error;
     }
   }

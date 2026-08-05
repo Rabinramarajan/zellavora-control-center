@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Response } from 'express';
+import { AuthRequest } from '../../middleware/auth';
 import { DailySheetsService } from './daily-sheets.service';
 import {
   CreateDailySheetSchema,
@@ -6,49 +7,82 @@ import {
   ApproveDailySheetSchema,
   DailySheetQuerySchema,
 } from './daily-sheets.dto';
-import type { AuthRequest } from '../../middleware/auth';
-import { Req } from '@nestjs/common';
+import { logger } from '../../infrastructure/logger';
 
-@Controller('api/v1/daily-sheets')
 export class DailySheetsController {
-  constructor(private service: DailySheetsService) {}
+  private service = new DailySheetsService();
 
-  @Post()
-  async create(@Req() req: AuthRequest, @Body() body: any) {
-    const dto = CreateDailySheetSchema.parse(body);
-    return this.service.create(dto, req.organizationId, req.userId);
+  async create(req: AuthRequest, res: Response) {
+    try {
+      const dto = CreateDailySheetSchema.parse(req.body);
+      const sheet = await this.service.create(dto, req.tenantId!, req.userId!);
+      res.status(201).json({ success: true, data: sheet });
+    } catch (error) {
+      logger.error('Create daily sheet failed', error);
+      throw error;
+    }
   }
 
-  @Get()
-  async list(@Req() req: AuthRequest, @Query() query: any) {
-    const dto = DailySheetQuerySchema.parse(query);
-    return this.service.list(req.organizationId, dto);
+  async list(req: AuthRequest, res: Response) {
+    try {
+      const dto = DailySheetQuerySchema.parse(req.query);
+      const sheets = await this.service.list(req.tenantId!, dto);
+      res.json({ success: true, data: sheets });
+    } catch (error) {
+      logger.error('List daily sheets failed', error);
+      throw error;
+    }
   }
 
-  @Get(':id')
-  async getById(@Req() req: AuthRequest, @Param('id') id: string) {
-    return this.service.getById(id, req.organizationId);
+  async getById(req: AuthRequest, res: Response) {
+    try {
+      const sheet = await this.service.getById(req.params.id, req.tenantId!);
+      res.json({ success: true, data: sheet });
+    } catch (error) {
+      logger.error('Get daily sheet failed', error);
+      throw error;
+    }
   }
 
-  @Put(':id')
-  async update(@Req() req: AuthRequest, @Param('id') id: string, @Body() body: any) {
-    const dto = UpdateDailySheetSchema.parse(body);
-    return this.service.update(id, dto, req.organizationId, req.userId);
+  async update(req: AuthRequest, res: Response) {
+    try {
+      const dto = UpdateDailySheetSchema.parse(req.body);
+      const sheet = await this.service.update(req.params.id, dto, req.tenantId!, req.userId!);
+      res.json({ success: true, data: sheet });
+    } catch (error) {
+      logger.error('Update daily sheet failed', error);
+      throw error;
+    }
   }
 
-  @Post(':id/submit')
-  async submit(@Req() req: AuthRequest, @Param('id') id: string) {
-    return this.service.submitForApproval(id, req.organizationId, req.userId);
+  async submit(req: AuthRequest, res: Response) {
+    try {
+      const sheet = await this.service.submitForApproval(req.params.id, req.tenantId!, req.userId!);
+      res.json({ success: true, data: sheet });
+    } catch (error) {
+      logger.error('Submit daily sheet failed', error);
+      throw error;
+    }
   }
 
-  @Post(':id/approve')
-  async approve(@Req() req: AuthRequest, @Param('id') id: string, @Body() body: any) {
-    const dto = ApproveDailySheetSchema.parse(body);
-    return this.service.approve(id, dto, req.organizationId, req.userId);
+  async approve(req: AuthRequest, res: Response) {
+    try {
+      const dto = ApproveDailySheetSchema.parse(req.body);
+      const sheet = await this.service.approve(req.params.id, dto, req.tenantId!, req.userId!);
+      res.json({ success: true, data: sheet });
+    } catch (error) {
+      logger.error('Approve daily sheet failed', error);
+      throw error;
+    }
   }
 
-  @Delete(':id')
-  async delete(@Req() req: AuthRequest, @Param('id') id: string) {
-    return this.service.delete(id, req.organizationId);
+  async delete(req: AuthRequest, res: Response) {
+    try {
+      const result = await this.service.delete(req.params.id, req.tenantId!);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Delete daily sheet failed', error);
+      throw error;
+    }
   }
 }

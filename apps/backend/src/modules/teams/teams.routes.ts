@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { TeamsController } from './teams.controller';
-import { authMiddleware } from '../../middleware/auth';
+import { authGuard } from '../../middleware/auth';
 
 const router = Router();
 const controller = new TeamsController();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authGuard);
 
 /**
  * @route GET /api/v1/teams

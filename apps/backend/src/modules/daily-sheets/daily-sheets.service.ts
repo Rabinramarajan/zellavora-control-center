@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { prisma } from '../../infrastructure/prisma';
 import { CreateDailySheetDTO, UpdateDailySheetDTO, ApproveDailySheetDTO, DailySheetQueryDTO } from './daily-sheets.dto';
 import { Decimal } from '@prisma/client/runtime/library';
+import { AppError } from '../../middleware/error';
+import { AuditService } from '../audit/audit.service';
 
-@Injectable()
 export class DailySheetsService {
-  constructor(private prisma: PrismaService) {}
+  private auditService = new AuditService();
 
   async create(dto: CreateDailySheetDTO, organizationId: string, userId: string) {
     const totalAmount = new Decimal(dto.hoursWorked).times(new Decimal(dto.hourlyRate));
 
-    const dailySheet = await this.prisma.dailySheet.create({
+    const dailySheet = await prisma.dailySheet.create({
       data: {
         organizationId,
         userId: dto.userId,
@@ -43,7 +43,7 @@ export class DailySheetsService {
   }
 
   async update(id: string, dto: UpdateDailySheetDTO, organizationId: string, userId: string) {
-    const existingSheet = await this.prisma.dailySheet.findUniqueOrThrow({
+    const existingSheet = await prisma.dailySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -57,12 +57,12 @@ export class DailySheetsService {
 
     // Delete existing line items if new ones provided
     if (dto.lineItems) {
-      await this.prisma.dailySheetLineItem.deleteMany({
+      await prisma.dailySheetLineItem.deleteMany({
         where: { dailySheetId: id },
       });
     }
 
-    return this.prisma.dailySheet.update({
+    return prisma.dailySheet.update({
       where: { id },
       data: {
         hoursWorked: hoursWorked,
@@ -91,7 +91,7 @@ export class DailySheetsService {
   }
 
   async submitForApproval(id: string, organizationId: string, userId: string) {
-    const sheet = await this.prisma.dailySheet.findUniqueOrThrow({
+    const sheet = await prisma.dailySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -99,7 +99,7 @@ export class DailySheetsService {
       throw new Error('Cannot submit non-draft sheet');
     }
 
-    return this.prisma.dailySheet.update({
+    return prisma.dailySheet.update({
       where: { id },
       data: {
         status: 'submitted',
@@ -109,7 +109,7 @@ export class DailySheetsService {
   }
 
   async approve(id: string, dto: ApproveDailySheetDTO, organizationId: string, userId: string) {
-    const sheet = await this.prisma.dailySheet.findUniqueOrThrow({
+    const sheet = await prisma.dailySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -117,7 +117,7 @@ export class DailySheetsService {
       throw new Error('Cannot approve non-submitted sheet');
     }
 
-    return this.prisma.dailySheet.update({
+    return prisma.dailySheet.update({
       where: { id },
       data: {
         status: dto.approved ? 'approved' : 'rejected',
@@ -130,7 +130,7 @@ export class DailySheetsService {
   }
 
   async getById(id: string, organizationId: string) {
-    return this.prisma.dailySheet.findFirstOrThrow({
+    return prisma.dailySheet.findFirstOrThrow({
       where: {
         id,
         organizationId,
@@ -165,14 +165,14 @@ export class DailySheetsService {
     }
 
     const [sheets, total] = await Promise.all([
-      this.prisma.dailySheet.findMany({
+      prisma.dailySheet.findMany({
         where,
         skip,
         take: query.pageSize,
         orderBy: { sheetDate: 'desc' },
         include: { lineItems: true },
       }),
-      this.prisma.dailySheet.count({ where }),
+      prisma.dailySheet.count({ where }),
     ]);
 
     return {
@@ -184,7 +184,7 @@ export class DailySheetsService {
   }
 
   async delete(id: string, organizationId: string) {
-    const sheet = await this.prisma.dailySheet.findUniqueOrThrow({
+    const sheet = await prisma.dailySheet.findUniqueOrThrow({
       where: { id },
     });
 
@@ -192,6 +192,6 @@ export class DailySheetsService {
       throw new Error('Cannot delete non-draft sheet');
     }
 
-    return this.prisma.dailySheet.delete({ where: { id } });
+    return prisma.dailySheet.delete({ where: { id } });
   }
 }

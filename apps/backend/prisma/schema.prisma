@@ -94,6 +94,7 @@ model Organization {
   invitedUsers   Invitation[]
   dailySheets    DailySheet[]
   monthlySheets  MonthlySheet[]
+  teams          Team[]
 
   @@map("organizations")
 }
@@ -199,6 +200,9 @@ model User {
   dailySheetApprovals DailySheet[] @relation("DailySheetApprover")
   monthlySheets     MonthlySheet[] @relation("MonthlySheetUser")
   monthlySheetApprovals MonthlySheet[] @relation("MonthlySheetApprover")
+
+  // Teams
+  teams             Team[]
 
   @@map("users")
 }
@@ -1145,4 +1149,32 @@ model MonthlySheet {
   @@index([userId, year, month(sort: Desc)])
   @@index([status])
   @@map("monthly_sheets")
+}
+
+// ============================================================================
+// TEAMS
+// ============================================================================
+
+model Team {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  name            String
+  description     String?   @db.Text
+  memberCount     Int       @default(0) @map("member_count")
+
+  // Relations
+  members         User[]
+  createdBy       String?   @map("created_by") @db.Uuid
+  updatedBy       String?   @map("updated_by") @db.Uuid
+
+  // Audit
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([createdAt(sort: Desc)])
+  @@map("teams")
 }
