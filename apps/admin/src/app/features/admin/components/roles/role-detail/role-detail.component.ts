@@ -44,8 +44,8 @@ export class RoleDetailComponent implements OnInit {
     try {
       await this.store.saveRole(this.role()!);
       this.router.navigate(['/admin/roles']);
-    } catch (error) {
-      console.error('Failed to save role:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 
@@ -54,8 +54,8 @@ export class RoleDetailComponent implements OnInit {
     try {
       await this.store.deleteRole(this.role()!.roleId);
       this.router.navigate(['/admin/roles']);
-    } catch (error) {
-      console.error('Failed to delete role:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 }

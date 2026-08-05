@@ -51,8 +51,8 @@ export class ProfileEditorComponent {
       setTimeout(() => {
         this.savedSuccessfully = false;
       }, 3000);
-    } catch (error) {
-      console.error('Save error:', error);
+    } catch {
+      // Error handling is done by the service
     }
   }
 

@@ -44,8 +44,8 @@ export class UserDetailComponent implements OnInit {
     try {
       await this.store.saveUser(this.user()!);
       this.router.navigate(['/admin/users']);
-    } catch (error) {
-      console.error('Failed to save user:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 }

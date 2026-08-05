@@ -223,8 +223,8 @@ export class SettingsStore {
         const parsed = JSON.parse(stored) as Settings;
         this.settings.set(parsed);
         this.applyTheme();
-      } catch (e) {
-        console.error('Failed to load settings from storage', e);
+      } catch {
+        // Use default settings if storage is corrupted
       }
     }
   }

@@ -70,7 +70,6 @@ export class WebSocketService {
     const token = this.authService.token();
 
     if (!token) {
-      console.warn('WebSocket: No auth token available');
       this.isConnecting.set(false);
       return;
     }
@@ -81,12 +80,11 @@ export class WebSocketService {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected');
         this.isConnected.set(true);
         this.isConnecting.set(false);
         this.reconnectAttempts = 0;
         this.connectionSubject.next(true);
-        this.sendMessage({ type: 'ping' });
+        this.sendMessage({ type: 'ping', data: {} });
       };
 
       this.ws.onmessage = (event) => {
@@ -98,24 +96,21 @@ export class WebSocketService {
           }
 
           this.messageSubject.next(message);
-        } catch (error) {
-          console.error('Failed to parse WebSocket message', error);
+        } catch {
+          // Silently ignore parse errors
         }
       };
 
-      this.ws.onerror = (event) => {
-        console.error('WebSocket error', event);
+      this.ws.onerror = () => {
         this.isConnecting.set(false);
       };
 
       this.ws.onclose = () => {
-        console.log('WebSocket disconnected');
         this.isConnected.set(false);
         this.connectionSubject.next(false);
         this.attemptReconnect();
       };
-    } catch (error) {
-      console.error('Failed to connect WebSocket', error);
+    } catch {
       this.isConnecting.set(false);
       this.attemptReconnect();
     }
@@ -132,14 +127,13 @@ export class WebSocketService {
 
   sendMessage(message: WebSocketMessage): void {
     if (!this.isConnected() || !this.ws) {
-      console.warn('WebSocket is not connected');
       return;
     }
 
     try {
       this.ws.send(JSON.stringify(message));
-    } catch (error) {
-      console.error('Failed to send WebSocket message', error);
+    } catch {
+      // Silently handle send errors
     }
   }
 
@@ -166,14 +160,11 @@ export class WebSocketService {
 
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max WebSocket reconnect attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-
-    console.log(`Attempting to reconnect WebSocket in ${delay}ms...`);
     setTimeout(() => this.connect(), delay);
   }
 

@@ -1,6 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { ApiIntegrationService } from '../../core/services/api-integration.service';
 
 interface Team {
   id: string;
@@ -28,6 +27,8 @@ interface TeamsState {
   providedIn: 'root',
 })
 export class TeamsStore {
+  private api = inject(ApiIntegrationService);
+
   private state = signal<TeamsState>({
     items: [],
     selectedTeam: null,
@@ -89,48 +90,110 @@ export class TeamsStore {
     this.state.update((s) => ({ ...s, error: null }));
   }
 
-  // Stub methods for API calls (implement when backend is ready)
   loadTeams(): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
-    setTimeout(() => {
-      this.state.update((s) => ({
-        ...s,
-        items: [
-          {
-            id: '1',
-            name: 'Engineering',
-            description: 'Engineering team',
-            memberCount: 5,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            createdBy: 'admin',
-          },
-        ],
-        totalCount: 1,
-        isLoading: false,
-      }));
-    }, 500);
+    const params = this.buildQueryParams();
+    this.api.getTeams(params).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          items: response.data,
+          totalCount: response.total || 0,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to load teams',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   loadTeam(id: string): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.getTeamById(id).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          selectedTeam: response.data,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to load team',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   createTeam(data: Omit<Team, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.createTeam(data).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          items: [...s.items, response.data],
+          totalCount: s.totalCount + 1,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to create team',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   updateTeam(id: string, data: Partial<Team>): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.updateTeam(id, data).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          items: s.items.map((t) => (t.id === id ? response.data : t)),
+          selectedTeam: s.selectedTeam?.id === id ? response.data : s.selectedTeam,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to update team',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   deleteTeam(id: string): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.deleteTeam(id).subscribe({
+      next: () => {
+        this.state.update((s) => ({
+          ...s,
+          items: s.items.filter((t) => t.id !== id),
+          totalCount: s.totalCount - 1,
+          selectedTeam: s.selectedTeam?.id === id ? null : s.selectedTeam,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to delete team',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   private sortTeams(teams: Team[]): Team[] {
@@ -148,5 +211,20 @@ export class TeamsStore {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
     }
+  }
+
+  private buildQueryParams(): Record<string, any> {
+    const params: Record<string, any> = {
+      page: this.currentPage(),
+      pageSize: this.pageSize(),
+    };
+
+    if (this.searchQuery()) {
+      params.search = this.searchQuery();
+    }
+
+    params.sortBy = this.sortBy();
+
+    return params;
   }
 }

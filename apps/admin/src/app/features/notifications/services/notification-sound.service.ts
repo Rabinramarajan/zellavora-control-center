@@ -33,8 +33,8 @@ export class NotificationSoundService {
       if (AudioContextClass) {
         this.audioContext = new AudioContextClass();
       }
-    } catch (e) {
-      console.warn('Web Audio API not supported', e);
+    } catch {
+      // Web Audio API not supported - fallback to audio files
     }
   }
 
@@ -107,8 +107,8 @@ export class NotificationSoundService {
 
       oscillator.start(this.audioContext.currentTime);
       oscillator.stop(this.audioContext.currentTime + duration / 1000);
-    } catch (e) {
-      console.error('Error playing notification sound', e);
+    } catch {
+      // Silently handle tone playback errors
     }
   }
 
@@ -117,8 +117,8 @@ export class NotificationSoundService {
     const audioUrl = this.generateAudioDataUrl(frequency, duration);
     const audio = new Audio(audioUrl);
     audio.volume = this.volume();
-    audio.play().catch((e) => {
-      console.warn('Failed to play notification sound', e);
+    audio.play().catch(() => {
+      // Silently handle audio playback errors
     });
   }
 

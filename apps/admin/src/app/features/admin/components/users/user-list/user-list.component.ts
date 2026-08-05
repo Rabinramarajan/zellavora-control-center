@@ -55,8 +55,8 @@ export class UserListComponent implements OnInit {
         ascending: true,
       };
       await this.store.loadUsers(criteria);
-    } catch (error) {
-      console.error('Failed to load users:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 

@@ -9,10 +9,9 @@ export const retryInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     retry({
       count: retryCount,
-      delay: (error: HttpErrorResponse, count: number) => {
+      delay: (error: HttpErrorResponse) => {
         // Only retry on network errors or 503 Service Unavailable
         if (error.status === 0 || error.status === 503) {
-          console.warn(`[HTTP Retry] Attempt ${count} for ${req.method} "${req.url}" failed. Retrying in ${retryDelay}ms...`);
           return timer(retryDelay);
         }
         return throwError(() => error);

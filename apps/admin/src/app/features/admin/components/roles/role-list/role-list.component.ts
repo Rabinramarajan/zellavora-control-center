@@ -43,8 +43,8 @@ export class RoleListComponent implements OnInit {
         ascending: true,
       };
       await this.store.loadRoles(criteria);
-    } catch (error) {
-      console.error('Failed to load roles:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 

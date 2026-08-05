@@ -6,8 +6,6 @@ import { DdlRepository } from '../modules/ddl/ddl.repository';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting Database Seeding...');
-
   // 1. Create Default Tenant
   const tenant = await prisma.organization.upsert({
     where: { clientCode: 'zellavora-inc' },
@@ -20,7 +18,6 @@ async function main() {
       enforce2fa: false,
     },
   });
-  console.log(`- Tenant created: ${tenant.name} (${tenant.id})`);
 
   // 2. Create HQ Branch
   const branch = await prisma.branch.create({
@@ -30,7 +27,6 @@ async function main() {
       code: 'HQ-001',
     },
   });
-  console.log(`- Branch created: ${branch.name} (${branch.id})`);
 
   // 3. Create Super Admin User
   const passwordHash = await PasswordService.hash('AdminPassword123!');
@@ -47,7 +43,6 @@ async function main() {
       tenantId: tenant.id,
     },
   });
-  console.log(`- Super Admin User created: ${adminUser.email}`);
 
   // Map User to Tenant
   await prisma.userTenant.upsert({
@@ -107,7 +102,6 @@ async function main() {
       },
     });
   }
-  console.log('- Default security roles created');
 
   // 5. Create Permissions
   const permissionsData = [
@@ -143,7 +137,6 @@ async function main() {
     });
     permissionsList.push(createdPerm);
   }
-  console.log('- Default system access permissions created');
 
   // 6. Map Permissions to Roles
   for (const perm of permissionsList) {
@@ -165,7 +158,6 @@ async function main() {
       });
     }
   }
-  console.log('- Mapped permissions to Owner role');
 
   // 7. Assign Owner Role to Admin User
   const existingAssignment = await prisma.userRoleAssignment.findFirst({
@@ -186,7 +178,6 @@ async function main() {
       },
     });
   }
-  console.log(`- Assigned Owner role to User: ${adminUser.email}`);
 
   // 8. Create a default invitation code for registration testing
   await prisma.invitation.upsert({
@@ -199,21 +190,17 @@ async function main() {
       expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     },
   });
-  console.log('- Default invitation code seeded: ZCC-INVITE-2026');
 
   // 9. Seed DDL lists (countries, languages, genders, etc.)
   const ddlRepo = new DdlRepository();
   for (const item of DDL_SEED) {
     await ddlRepo.upsert(item);
   }
-  console.log(`- DDL lists seeded (${DDL_SEED.length} entries)`);
 
-  console.log('✅ Seeding Completed Successfully.');
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Error Seeding Database:', e);
+  .catch(() => {
     process.exit(1);
   })
   .finally(async () => {

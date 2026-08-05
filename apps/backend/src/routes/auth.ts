@@ -1045,11 +1045,11 @@ router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
       .single();
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
 
-    const [tenant, permissions, menu] = await Promise.all([
+    const [tenant, permissions] = await Promise.all([
       TenantService.getById(req.tenantId!),
       PermissionService.loadForUser(req.userId!, req.tenantId!),
-      MenuService.loadForUser(req.userId!, req.tenantId!),
     ]);
+    const menu = await MenuService.loadForUserWithPerms(req.userId!, req.tenantId!, permissions);
     if (!tenant) throw new AppError('Tenant not found', 404, 'TENANT_NOT_FOUND');
 
     res.json({

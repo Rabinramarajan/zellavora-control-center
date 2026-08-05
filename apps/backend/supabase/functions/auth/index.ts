@@ -425,11 +425,11 @@ app.get('/me', async (c) => {
       .single();
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
 
-    const [tenant, permissions, menu] = await Promise.all([
+    const [tenant, permissions] = await Promise.all([
       TenantService.getById(claims.tid),
       PermissionService.loadForUser(claims.sub, claims.tid),
-      MenuService.loadForUser(claims.sub, claims.tid),
     ]);
+    const menu = await MenuService.loadForUserWithPerms(claims.sub, claims.tid, permissions);
     if (!tenant) throw new AppError('Tenant not found', 404, 'TENANT_NOT_FOUND');
 
     return jsonResponse({

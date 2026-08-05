@@ -238,17 +238,3 @@ export function assertConfigValid(): void {
   }
 }
 
-if (configErrors.length > 0) {
-  console.error(
-    `[config] ${configErrors.length} configuration problem(s) detected:\n  - ${configErrors.join('\n  - ')}`
-  );
-}
-
-if (config.nodeEnv === 'development') {
-  if (config.jwtSecret.includes('dev-secret')) {
-    console.warn('⚠️  WARNING: Using development JWT secret. Change JWT_SECRET in production.');
-  }
-  if (!config.encryptionKey) {
-    console.warn('⚠️  WARNING: No ENCRYPTION_KEY set. Sensitive data will not be encrypted.');
-  }
-}

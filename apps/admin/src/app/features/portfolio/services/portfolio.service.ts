@@ -301,7 +301,6 @@ export class PortfolioService {
   private handleError(error: any): Observable<never> {
     const message = error.error?.error?.message || 'An error occurred';
     this.state.update((s) => ({ ...s, error: message, isLoading: false }));
-    console.error('Portfolio error:', error);
     return throwError(() => error);
   }
 }

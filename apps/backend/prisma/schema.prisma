@@ -92,6 +92,8 @@ model Organization {
   workspaces     Workspace[]
   settings       OrganizationSettings[]
   invitedUsers   Invitation[]
+  dailySheets    DailySheet[]
+  monthlySheets  MonthlySheet[]
 
   @@map("organizations")
 }
@@ -191,6 +193,12 @@ model User {
   invitedUsers      Invitation[]   @relation("InvitedBy")
   userGroups        UserGroup[]
   roleAssignments   UserRoleAssignment[]
+
+  // Freelancer Sheets
+  dailySheets       DailySheet[]   @relation("DailySheetUser")
+  dailySheetApprovals DailySheet[] @relation("DailySheetApprover")
+  monthlySheets     MonthlySheet[] @relation("MonthlySheetUser")
+  monthlySheetApprovals MonthlySheet[] @relation("MonthlySheetApprover")
 
   @@map("users")
 }
@@ -1016,4 +1024,125 @@ model LoginAttempt {
   @@index([ipAddress, attemptedAt(sort: Desc)], map: "idx_login_attempts_ip_time")
   @@index([attemptedAt(sort: Desc)], map: "idx_login_attempts_time")
   @@map("login_attempts")
+}
+
+// ============================================================================
+// FREELANCER SHEETS (Daily & Monthly Timesheet Tracking)
+// ============================================================================
+
+model DailySheet {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  projectId       String?   @map("project_id") @db.Uuid
+
+  // Sheet Details
+  sheetDate       DateTime  @map("sheet_date") @db.Date
+  hoursWorked     Decimal   @map("hours_worked") @db.Decimal(5, 2)
+  hourlyRate      Decimal   @map("hourly_rate") @db.Decimal(10, 2)
+  totalAmount     Decimal   @map("total_amount") @db.Decimal(12, 2)
+
+  // Description & Tasks
+  description     String?   @map("description") @db.Text
+  tasksCompleted  String?   @map("tasks_completed") @db.Text
+  notes           String?   @map("notes") @db.Text
+
+  // Status & Approval
+  status          String    @default("draft") @map("status") // draft, submitted, approved, rejected
+  approvedBy      String?   @map("approved_by") @db.Uuid
+  approvedAt      DateTime? @map("approved_at") @db.Timestamptz
+  rejectionReason String?   @map("rejection_reason") @db.Text
+
+  // Line Items (for detailed breakdown)
+  lineItems       DailySheetLineItem[]
+
+  // Audit
+  createdBy       String    @map("created_by") @db.Uuid
+  updatedBy       String?   @map("updated_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Foreign Keys
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User      @relation("DailySheetUser", fields: [userId], references: [id], onDelete: Cascade)
+  approver        User?     @relation("DailySheetApprover", fields: [approvedBy], references: [id])
+
+  @@unique([userId, sheetDate, organizationId])
+  @@index([organizationId])
+  @@index([userId, sheetDate(sort: Desc)])
+  @@index([status])
+  @@map("daily_sheets")
+}
+
+model DailySheetLineItem {
+  id            String    @id @default(uuid()) @db.Uuid
+  dailySheetId  String    @map("daily_sheet_id") @db.Uuid
+
+  // Task Details
+  taskName      String    @map("task_name")
+  description   String?   @db.Text
+  hours         Decimal   @db.Decimal(5, 2)
+  rate          Decimal?  @db.Decimal(10, 2)
+  amount        Decimal   @db.Decimal(12, 2)
+
+  // Status
+  status        String    @default("active") @map("status")
+
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  dailySheet    DailySheet @relation(fields: [dailySheetId], references: [id], onDelete: Cascade)
+
+  @@index([dailySheetId])
+  @@map("daily_sheet_line_items")
+}
+
+model MonthlySheet {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  projectId       String?   @map("project_id") @db.Uuid
+
+  // Month & Year
+  month           Int       @map("month") // 1-12
+  year            Int       @map("year")
+
+  // Summary
+  totalHours      Decimal   @map("total_hours") @db.Decimal(7, 2)
+  totalAmount     Decimal   @map("total_amount") @db.Decimal(12, 2)
+  averageHourlyRate Decimal @map("average_hourly_rate") @db.Decimal(10, 2)
+
+  // Days worked
+  workingDays     Int       @default(0) @map("working_days")
+
+  // Status & Approval
+  status          String    @default("draft") @map("status") // draft, submitted, approved, paid, rejected
+  submittedAt     DateTime? @map("submitted_at") @db.Timestamptz
+  approvedBy      String?   @map("approved_by") @db.Uuid
+  approvedAt      DateTime? @map("approved_at") @db.Timestamptz
+  paidAt          DateTime? @map("paid_at") @db.Timestamptz
+  rejectionReason String?   @map("rejection_reason") @db.Text
+
+  // Daily Sheets Summary
+  dailySheetIds   String[]  @map("daily_sheet_ids")
+
+  // Audit
+  createdBy       String    @map("created_by") @db.Uuid
+  updatedBy       String?   @map("updated_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User      @relation("MonthlySheetUser", fields: [userId], references: [id], onDelete: Cascade)
+  approver        User?     @relation("MonthlySheetApprover", fields: [approvedBy], references: [id])
+
+  @@unique([userId, month, year, organizationId])
+  @@index([organizationId])
+  @@index([userId, year, month(sort: Desc)])
+  @@index([status])
+  @@map("monthly_sheets")
 }

@@ -178,14 +178,13 @@ export class LoginComponent {
         detail: 'Signed in successfully',
         life: 3000,
       });
-    } catch (error) {
+    } catch {
       this.messageService.add({
         severity: 'error',
         summary: 'Sign-in failed',
         detail: this.auth.error() ?? 'Please check your credentials and try again.',
         life: 5000,
       });
-      console.error('Login error:', error);
     }
   }
 }

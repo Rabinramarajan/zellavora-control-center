@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TeamsStore } from './teams.store';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,7 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatListModule } from '@angular/material/list';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -23,6 +23,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
     CommonModule,
     RouterLink,
     FormsModule,
+    ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
     MatInputModule,
@@ -236,6 +237,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 })
 export class TeamsComponent {
   readonly store = inject(TeamsStore);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   searchQuery = signal('');
   selectedSort = signal<'recent' | 'name' | 'members'>('recent');
@@ -245,18 +248,15 @@ export class TeamsComponent {
   }
 
   openCreateTeamDialog(): void {
-    // TODO: Implement dialog
-    console.log('Create team dialog');
+    this.router.navigate(['/teams', 'create']);
   }
 
   editTeam(team: any): void {
-    // TODO: Implement edit
-    console.log('Edit team:', team);
+    this.router.navigate(['/teams', team.id, 'edit']);
   }
 
   viewMembers(team: any): void {
-    // TODO: Navigate to team detail
-    console.log('View members:', team);
+    this.router.navigate(['/teams', team.id]);
   }
 
   deleteTeam(id: string): void {

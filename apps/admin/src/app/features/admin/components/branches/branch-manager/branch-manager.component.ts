@@ -42,8 +42,8 @@ export class BranchManagerComponent implements OnInit {
         ascending: true,
       };
       await this.store.loadBranches(criteria);
-    } catch (error) {
-      console.error('Failed to load branches:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 

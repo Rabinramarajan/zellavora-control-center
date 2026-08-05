@@ -2,7 +2,6 @@ import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core'
 import { provideRouter, withHashLocation } from '@angular/router';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
-import Aura from '@primeuix/themes/aura';
 import { switchMap } from 'rxjs/operators';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
@@ -38,11 +37,7 @@ export const appConfig: ApplicationConfig = {
         orgNameTaken: 'This organization name is already registered.',
       },
     },
-    providePrimeNG({
-      theme: {
-        preset: Aura
-      }
-    }),
+    providePrimeNG(),
     provideAppInitializer(() => {
       const configService = inject(ConfigService);
       const authService = inject(AuthService);

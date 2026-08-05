@@ -14,7 +14,10 @@ export interface MenuNode {
 
 export class MenuService {
   static async loadForUser(userId: string, orgId: string): Promise<MenuNode[]> {
-    const perms = await PermissionService.loadForUser(userId, orgId);
+    return this.loadForUserWithPerms(userId, orgId, await PermissionService.loadForUser(userId, orgId));
+  }
+
+  static async loadForUserWithPerms(userId: string, orgId: string, perms: Set<string>): Promise<MenuNode[]> {
     const admin = getSupabaseAdmin();
 
     const { data, error } = await admin

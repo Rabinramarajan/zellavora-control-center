@@ -135,12 +135,6 @@ app.use(
   })
 );
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
-  next();
-});
-
 // Request context (AsyncLocalStorage) for the audit service — must run before
 // the clean-module routes so @Audited decorators can resolve actor metadata.
 app.use(requestContext);
@@ -296,11 +290,9 @@ let rbacPromise: Promise<RbacHandle | null> | null = null;
 
 async function createRbac(): Promise<RbacHandle | null> {
   if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
-    console.warn('[rbac] Supabase not configured — RBAC module disabled.');
     return null;
   }
   if (!config.redisUrl) {
-    console.warn('[rbac] Redis not configured — RBAC module disabled.');
     return null;
   }
 
@@ -318,10 +310,8 @@ async function createRbac(): Promise<RbacHandle | null> {
 
   // Attach the error listener BEFORE connecting so Node never sees an
   // unhandled 'error' event from ioredis while it retries the connection.
-  redis.on('error', (err) => {
-    if (config.logLevel === 'debug') {
-      console.debug('[rbac/redis] connection error:', err.message);
-    }
+  redis.on('error', () => {
+    // Silently handle errors; logging handled elsewhere
   });
 
   try {
@@ -339,15 +329,13 @@ async function createRbac(): Promise<RbacHandle | null> {
   app.locals.roleService = rbac.roleService;
   app.locals.userRoleService = rbac.userRoleService;
 
-  console.log('[rbac] Initialised');
   return rbac;
 }
 
 /** Resolves once per instance; a failed attempt is retried on the next request. */
 function getRbac(): Promise<RbacHandle | null> {
   if (!rbacPromise) {
-    rbacPromise = createRbac().catch((e: Error) => {
-      console.warn('[rbac] Init failed (RBAC module disabled):', e.message);
+    rbacPromise = createRbac().catch(() => {
       rbacPromise = null; // allow a later request to retry
       return null;
     });

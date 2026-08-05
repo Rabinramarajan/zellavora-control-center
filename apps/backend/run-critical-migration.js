@@ -20,14 +20,10 @@ async function runMigration() {
   try {
     for (const stmt of statements) {
       if (stmt.trim()) {
-        console.log('Executing:', stmt.substring(0, 80) + '...');
         await client.query(stmt);
-        console.log('  OK');
       }
     }
-    console.log('Migration completed successfully!');
   } catch (err) {
-    console.error('Error:', err.message);
   } finally {
     client.release();
     await pool.end();

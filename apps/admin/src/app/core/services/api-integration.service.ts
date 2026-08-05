@@ -22,34 +22,62 @@ export class ApiIntegrationService {
   private http = inject(HttpClient);
   private apiUrl = '/api/v1';
 
-  // ========== USERS ==========
-  getUsers(filters?: Record<string, any>): Observable<ApiListResponse<any>> {
-    return this.http.get<ApiListResponse<any>>(`${this.apiUrl}/users`, {
+  // ========== IAM USERS ==========
+  getIamUsers(filters?: Record<string, any>): Observable<ApiListResponse<any>> {
+    return this.http.get<ApiListResponse<any>>(`${this.apiUrl}/iam/users`, {
       params: filters || {},
     });
   }
 
-  getUserById(id: string): Observable<ApiSingleResponse<any>> {
+  getIamUserById(id: string): Observable<ApiSingleResponse<any>> {
     return this.http.get<ApiSingleResponse<any>>(
-      `${this.apiUrl}/users/${id}`
+      `${this.apiUrl}/iam/users/${id}`
     );
   }
 
-  createUser(user: any): Observable<ApiSingleResponse<any>> {
-    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/users`, user);
+  createIamUser(user: any): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/iam/users`, user);
   }
 
-  updateUser(id: string, user: any): Observable<ApiSingleResponse<any>> {
-    return this.http.put<ApiSingleResponse<any>>(
-      `${this.apiUrl}/users/${id}`,
+  updateIamUser(id: string, user: any): Observable<ApiSingleResponse<any>> {
+    return this.http.patch<ApiSingleResponse<any>>(
+      `${this.apiUrl}/iam/users/${id}`,
       user
     );
   }
 
-  deleteUser(id: string): Observable<{ success: boolean }> {
+  deleteIamUser(id: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(
-      `${this.apiUrl}/users/${id}`
+      `${this.apiUrl}/iam/users/${id}`
     );
+  }
+
+  inviteIamUsers(data: { emails: string[] }): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(
+      `${this.apiUrl}/iam/users/invite`,
+      data
+    );
+  }
+
+  // ========== LEGACY USERS (keep for compatibility) ==========
+  getUsers(filters?: Record<string, any>): Observable<ApiListResponse<any>> {
+    return this.getIamUsers(filters);
+  }
+
+  getUserById(id: string): Observable<ApiSingleResponse<any>> {
+    return this.getIamUserById(id);
+  }
+
+  createUser(user: any): Observable<ApiSingleResponse<any>> {
+    return this.createIamUser(user);
+  }
+
+  updateUser(id: string, user: any): Observable<ApiSingleResponse<any>> {
+    return this.updateIamUser(id, user);
+  }
+
+  deleteUser(id: string): Observable<{ success: boolean }> {
+    return this.deleteIamUser(id);
   }
 
   // ========== BLOG POSTS ==========
@@ -292,5 +320,124 @@ export class ApiIntegrationService {
     return this.http.get<ApiListResponse<any>>(`${this.apiUrl}/audit-logs`, {
       params: filters || {},
     });
+  }
+
+  // ========== TEAMS ==========
+  getTeams(filters?: Record<string, any>): Observable<ApiListResponse<any>> {
+    return this.http.get<ApiListResponse<any>>(`${this.apiUrl}/teams`, {
+      params: filters || {},
+    });
+  }
+
+  getTeamById(id: string): Observable<ApiSingleResponse<any>> {
+    return this.http.get<ApiSingleResponse<any>>(
+      `${this.apiUrl}/teams/${id}`
+    );
+  }
+
+  createTeam(team: any): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/teams`, team);
+  }
+
+  updateTeam(id: string, team: any): Observable<ApiSingleResponse<any>> {
+    return this.http.put<ApiSingleResponse<any>>(
+      `${this.apiUrl}/teams/${id}`,
+      team
+    );
+  }
+
+  deleteTeam(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(
+      `${this.apiUrl}/teams/${id}`
+    );
+  }
+
+  getTeamMembers(id: string, filters?: Record<string, any>): Observable<ApiListResponse<any>> {
+    return this.http.get<ApiListResponse<any>>(
+      `${this.apiUrl}/teams/${id}/members`,
+      {
+        params: filters || {},
+      }
+    );
+  }
+
+  addTeamMember(teamId: string, userId: string, role?: string): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(
+      `${this.apiUrl}/teams/${teamId}/members`,
+      { userId, role: role || 'member' }
+    );
+  }
+
+  removeTeamMember(teamId: string, userId: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(
+      `${this.apiUrl}/teams/${teamId}/members`,
+      { body: { userId } }
+    );
+  }
+
+  // ========== DAILY SHEETS ==========
+  getDailySheets(filters?: Record<string, any>): Observable<ApiListResponse<any>> {
+    return this.http.get<ApiListResponse<any>>(`${this.apiUrl}/daily-sheets`, {
+      params: filters || {},
+    });
+  }
+
+  getDailySheetById(id: string): Observable<ApiSingleResponse<any>> {
+    return this.http.get<ApiSingleResponse<any>>(`${this.apiUrl}/daily-sheets/${id}`);
+  }
+
+  createDailySheet(data: any): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/daily-sheets`, data);
+  }
+
+  updateDailySheet(id: string, data: any): Observable<ApiSingleResponse<any>> {
+    return this.http.put<ApiSingleResponse<any>>(`${this.apiUrl}/daily-sheets/${id}`, data);
+  }
+
+  submitDailySheet(id: string): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/daily-sheets/${id}/submit`, {});
+  }
+
+  approveDailySheet(id: string, data: any): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/daily-sheets/${id}/approve`, data);
+  }
+
+  deleteDailySheet(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/daily-sheets/${id}`);
+  }
+
+  // ========== MONTHLY SHEETS ==========
+  getMonthlySheets(filters?: Record<string, any>): Observable<ApiListResponse<any>> {
+    return this.http.get<ApiListResponse<any>>(`${this.apiUrl}/monthly-sheets`, {
+      params: filters || {},
+    });
+  }
+
+  getMonthlySheetById(id: string): Observable<ApiSingleResponse<any>> {
+    return this.http.get<ApiSingleResponse<any>>(`${this.apiUrl}/monthly-sheets/${id}`);
+  }
+
+  createMonthlySheet(data: any): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/monthly-sheets`, data);
+  }
+
+  updateMonthlySheet(id: string, data: any): Observable<ApiSingleResponse<any>> {
+    return this.http.put<ApiSingleResponse<any>>(`${this.apiUrl}/monthly-sheets/${id}`, data);
+  }
+
+  submitMonthlySheet(id: string): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/monthly-sheets/${id}/submit`, {});
+  }
+
+  approveMonthlySheet(id: string, data: any): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/monthly-sheets/${id}/approve`, data);
+  }
+
+  markMonthlySheetAsPaid(id: string): Observable<ApiSingleResponse<any>> {
+    return this.http.post<ApiSingleResponse<any>>(`${this.apiUrl}/monthly-sheets/${id}/mark-paid`, {});
+  }
+
+  deleteMonthlySheet(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/monthly-sheets/${id}`);
   }
 }

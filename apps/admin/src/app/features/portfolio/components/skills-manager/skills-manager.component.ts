@@ -34,8 +34,8 @@ export class SkillsManagerComponent {
     try {
       await firstValueFrom(this.portfolio.createSkill(this.form.value));
       this.resetForm();
-    } catch (error) {
-      console.error('Error adding skill:', error);
+    } catch {
+      // Error handling is done by the service
     }
   }
 

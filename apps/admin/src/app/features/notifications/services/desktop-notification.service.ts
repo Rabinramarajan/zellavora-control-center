@@ -22,7 +22,6 @@ export class DesktopNotificationService {
 
   private checkPermission(): void {
     if (!this.isSupported()) {
-      console.warn('Notifications API not supported');
       return;
     }
 
@@ -36,7 +35,6 @@ export class DesktopNotificationService {
   requestPermission(): Promise<boolean> {
     return new Promise((resolve) => {
       if (!this.isSupported()) {
-        console.warn('Notifications API not supported');
         resolve(false);
         return;
       }
@@ -102,11 +100,10 @@ export class DesktopNotificationService {
 
       // Handle error
       notification.onerror = () => {
-        console.error('Desktop notification error');
         this.activeNotifications.delete(notificationId);
       };
-    } catch (error) {
-      console.error('Failed to show desktop notification', error);
+    } catch {
+      // Silently handle notification errors
     }
   }
 

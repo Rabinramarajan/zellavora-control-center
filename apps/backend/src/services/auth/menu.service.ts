@@ -24,8 +24,11 @@ export interface MenuNode {
 export class MenuService {
   /** Return the menu tree for a (user, org), filtered by what the user can see. */
   static async loadForUser(userId: string, orgId: string): Promise<MenuNode[]> {
-    const perms = await PermissionService.loadForUser(userId, orgId);
+    return this.loadForUserWithPerms(userId, orgId, await PermissionService.loadForUser(userId, orgId));
+  }
 
+  /** Load menu tree with pre-loaded permissions (optimization for /auth/me). */
+  static async loadForUserWithPerms(userId: string, orgId: string, perms: Set<string>): Promise<MenuNode[]> {
     const { data, error } = await supabaseAdmin
       .from('menus')
       .select('*')

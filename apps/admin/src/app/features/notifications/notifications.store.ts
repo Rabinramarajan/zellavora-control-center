@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { WebSocketService } from '../../core/services/websocket.service';
 
 export interface Notification {
   id: string;
@@ -25,6 +26,8 @@ interface NotificationsState {
   providedIn: 'root',
 })
 export class NotificationsStore {
+  private ws = inject(WebSocketService);
+
   private state = signal<NotificationsState>({
     items: [],
     isLoading: false,
@@ -32,6 +35,28 @@ export class NotificationsStore {
     unreadCount: 0,
     filter: 'all',
   });
+
+  constructor() {
+    this.setupWebSocketListener();
+  }
+
+  private setupWebSocketListener(): void {
+    this.ws.notifications$.subscribe((wsNotification) => {
+      const notification: Notification = {
+        id: wsNotification.data.id,
+        title: wsNotification.data.title,
+        message: wsNotification.data.message,
+        category: wsNotification.data.category,
+        severity: wsNotification.data.severity || 'info',
+        read: wsNotification.data.read,
+        link: wsNotification.data.link,
+        icon: wsNotification.data.icon,
+        createdAt: new Date(wsNotification.data.createdAt),
+        updatedAt: new Date(wsNotification.data.createdAt),
+      };
+      this.addNotification(notification);
+    });
+  }
 
   // Public signals
   items = computed(() => this.state().items);
@@ -59,51 +84,20 @@ export class NotificationsStore {
     team: this.items().filter((n) => n.category === 'team').length,
   }));
 
-  // Methods
   loadNotifications(): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Connect to WebSocket service
-    // Stub data for now
-    setTimeout(() => {
-      this.state.update((s) => ({
-        ...s,
-        items: [
-          {
-            id: '1',
-            title: 'Project Created',
-            message: 'Your project "Website Redesign" has been created',
-            category: 'project',
-            severity: 'success',
-            read: false,
-            icon: 'check_circle',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            id: '2',
-            title: 'Team Invitation',
-            message: 'You were invited to join "Marketing Team"',
-            category: 'team',
-            severity: 'info',
-            read: false,
-            icon: 'people',
-            createdAt: new Date(Date.now() - 3600000),
-            updatedAt: new Date(Date.now() - 3600000),
-          },
-        ],
-        unreadCount: 2,
-        isLoading: false,
-      }));
-    }, 500);
+    this.state.update((s) => ({ ...s, isLoading: false }));
   }
 
-  addNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'updatedAt'>): void {
-    const newNotification: Notification = {
-      ...notification,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  addNotification(notification: Notification | Omit<Notification, 'id' | 'createdAt' | 'updatedAt'>): void {
+    const newNotification: Notification = 'id' in notification
+      ? notification
+      : {
+          ...notification,
+          id: Date.now().toString(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
     this.state.update((s) => ({
       ...s,
       items: [newNotification, ...s.items],

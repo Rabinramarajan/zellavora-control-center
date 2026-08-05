@@ -40,8 +40,8 @@ export class ResourceManagerComponent implements OnInit {
         ascending: true,
       };
       await this.store.loadResources(criteria);
-    } catch (error) {
-      console.error('Failed to load resources:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 
@@ -69,8 +69,8 @@ export class ResourceManagerComponent implements OnInit {
     if (!confirm('Are you sure?')) return;
     try {
       await this.store.deleteResource(resource.resourceId);
-    } catch (error) {
-      console.error('Failed to delete resource:', error);
+    } catch {
+      // Error handling is done by the store
     }
   }
 }

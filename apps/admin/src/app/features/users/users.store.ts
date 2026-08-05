@@ -1,5 +1,6 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { throwError } from 'rxjs';
+import { ApiIntegrationService } from '../../core/services/api-integration.service';
 
 export interface User {
   id: string;
@@ -31,6 +32,8 @@ interface UsersState {
   providedIn: 'root',
 })
 export class UsersStore {
+  private api = inject(ApiIntegrationService);
+
   private state = signal<UsersState>({
     items: [],
     selectedUser: null,
@@ -104,45 +107,108 @@ export class UsersStore {
   // Methods
   loadUsers(): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
-    setTimeout(() => {
-      this.state.update((s) => ({
-        ...s,
-        items: [
-          {
-            id: '1',
-            email: 'admin@zellavora.com',
-            name: 'Admin User',
-            role: 'admin',
-            status: 'active',
-            joinedAt: new Date('2026-01-01'),
-            updatedAt: new Date(),
-          },
-        ],
-        totalCount: 1,
-        isLoading: false,
-      }));
-    }, 500);
+    const params = this.buildQueryParams();
+    this.api.getIamUsers(params).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          items: response.data,
+          totalCount: response.total || 0,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to load users',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   loadUser(id: string): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.getIamUserById(id).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          selectedUser: response.data,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to load user',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   createUser(data: Omit<User, 'id' | 'joinedAt' | 'updatedAt'>): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.createIamUser(data).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          items: [...s.items, response.data],
+          totalCount: s.totalCount + 1,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to create user',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   updateUser(id: string, data: Partial<User>): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.updateIamUser(id, data).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          items: s.items.map((u) => (u.id === id ? response.data : u)),
+          selectedUser: s.selectedUser?.id === id ? response.data : s.selectedUser,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to update user',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   deleteUser(id: string): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.deleteIamUser(id).subscribe({
+      next: () => {
+        this.state.update((s) => ({
+          ...s,
+          items: s.items.filter((u) => u.id !== id),
+          totalCount: s.totalCount - 1,
+          selectedUser: s.selectedUser?.id === id ? null : s.selectedUser,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to delete user',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   updateUserRole(id: string, role: User['role']): void {
@@ -159,7 +225,21 @@ export class UsersStore {
 
   inviteUsers(emails: string[]): void {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
-    // TODO: Call API when ready
+    this.api.inviteIamUsers({ emails }).subscribe({
+      next: (response) => {
+        this.state.update((s) => ({
+          ...s,
+          isLoading: false,
+        }));
+      },
+      error: (err) => {
+        this.state.update((s) => ({
+          ...s,
+          error: err.message || 'Failed to invite users',
+          isLoading: false,
+        }));
+      },
+    });
   }
 
   setSearchQuery(query: string): void {
@@ -201,5 +281,26 @@ export class UsersStore {
             new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()
         );
     }
+  }
+
+  private buildQueryParams(): Record<string, any> {
+    const params: Record<string, any> = {
+      page: this.currentPage(),
+      pageSize: this.pageSize(),
+    };
+
+    if (this.searchQuery()) {
+      params.q = this.searchQuery();
+    }
+
+    if (this.roleFilter() !== 'all') {
+      params.roleId = this.roleFilter();
+    }
+
+    if (this.statusFilter() !== 'all') {
+      params.status = this.statusFilter();
+    }
+
+    return params;
   }
 }

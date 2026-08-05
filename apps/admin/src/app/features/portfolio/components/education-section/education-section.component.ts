@@ -17,7 +17,7 @@ interface RichEducation {
   degree: string;
   field: string;
   startDate: string; // Year e.g. "2018"
-  endDate?: string;   // Year e.g. "2021"
+  endDate: string;   // Year e.g. "2021"
   isCurrent: boolean;
   descriptionText: string;
   location: string;

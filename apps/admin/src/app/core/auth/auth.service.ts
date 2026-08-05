@@ -179,6 +179,10 @@ export class AuthService {
     return this.clients$;
   }
 
+  private me$?: Observable<MeResponse>;
+  private meCacheTime = 0;
+  private readonly MeCache = 5 * 60 * 1000;
+
   // -------------------------------------------------------------------------
   // Login / MFA
   // -------------------------------------------------------------------------
@@ -414,8 +418,16 @@ export class AuthService {
   // -------------------------------------------------------------------------
 
   loadMe(): Observable<boolean> {
+    const now = Date.now();
+    if (this.me$ && now - this.meCacheTime < this.MeCache) {
+      return this.me$.pipe(
+        switchMap(() => of(true)),
+        catchError(() => of(false))
+      );
+    }
     return this.http.get<MeResponse>(`${this.apiUrl}/me`).pipe(
       tap((me) => {
+        this.meCacheTime = now;
         this.store.setSession({
           user: me.user,
           tenant: me.tenant,
@@ -429,7 +441,11 @@ export class AuthService {
         });
       }),
       switchMap(() => of(true)),
-      catchError(() => of(false))
+      catchError((err) => {
+        this.me$ = undefined;
+        return of(false);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
