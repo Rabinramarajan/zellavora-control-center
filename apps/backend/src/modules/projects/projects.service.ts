@@ -7,16 +7,14 @@ export class ProjectsService {
   private repo = new ProjectsRepository();
   private auditService = new AuditService();
 
-  async create(data: CreateProjectDTOType, userId: string) {
+  async create(data: CreateProjectDTOType, userId: string, organizationId: string) {
     try {
       const project = await this.repo.create(data);
 
-      await this.auditService.log({
-        action: 'CREATE',
-        entityType: 'Project',
-        entityId: project.id,
-        userId,
-        details: { title: project.title },
+      await this.auditService.logActivity({
+        actorId: userId,
+        action: `CREATE_PROJECT:${project.name}`,
+        organizationId,
         severity: 'info',
       });
 
@@ -42,24 +40,22 @@ export class ProjectsService {
     return this.repo.getStats(organizationId);
   }
 
-  async update(id: string, data: UpdateProjectDTOType, userId: string) {
+  async update(id: string, data: UpdateProjectDTOType, userId: string, organizationId: string) {
     const project = await this.getById(id);
 
     const updated = await this.repo.update(id, data, userId);
 
-    await this.auditService.log({
-      action: 'UPDATE',
-      entityType: 'Project',
-      entityId: id,
-      userId,
-      details: { title: updated.title, changes: data },
+    await this.auditService.logActivity({
+      actorId: userId,
+      action: `UPDATE_PROJECT:${updated.name}`,
+      organizationId,
       severity: 'info',
     });
 
     return updated;
   }
 
-  async updateStatus(id: string, status: string, userId: string) {
+  async updateStatus(id: string, status: string, userId: string, organizationId: string) {
     const project = await this.getById(id);
 
     if (!['draft', 'published', 'archived'].includes(status)) {
@@ -68,40 +64,36 @@ export class ProjectsService {
 
     const updated = await this.repo.updateStatus(id, status, userId);
 
-    await this.auditService.log({
-      action: 'UPDATE_STATUS',
-      entityType: 'Project',
-      entityId: id,
-      userId,
-      details: { oldStatus: project.status, newStatus: status },
+    await this.auditService.logActivity({
+      actorId: userId,
+      action: `UPDATE_PROJECT_STATUS:${project.name}`,
+      organizationId,
       severity: 'info',
     });
 
     return updated;
   }
 
-  async delete(id: string, userId: string) {
+  async delete(id: string, userId: string, organizationId: string) {
     const project = await this.getById(id);
 
     await this.repo.delete(id);
 
-    await this.auditService.log({
-      action: 'DELETE',
-      entityType: 'Project',
-      entityId: id,
-      userId,
-      details: { title: project.title },
+    await this.auditService.logActivity({
+      actorId: userId,
+      action: `DELETE_PROJECT:${project.name}`,
+      organizationId,
       severity: 'warning',
     });
 
     return { success: true, id };
   }
 
-  async publish(id: string, userId: string) {
-    return this.updateStatus(id, 'published', userId);
+  async publish(id: string, userId: string, organizationId: string) {
+    return this.updateStatus(id, 'published', userId, organizationId);
   }
 
-  async archive(id: string, userId: string) {
-    return this.updateStatus(id, 'archived', userId);
+  async archive(id: string, userId: string, organizationId: string) {
+    return this.updateStatus(id, 'archived', userId, organizationId);
   }
 }

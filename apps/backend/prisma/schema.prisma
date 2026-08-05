@@ -95,6 +95,7 @@ model Organization {
   dailySheets    DailySheet[]
   monthlySheets  MonthlySheet[]
   teams          Team[]
+  projects       Project[]
 
   @@map("organizations")
 }
@@ -1177,4 +1178,37 @@ model Team {
   @@index([organizationId])
   @@index([createdAt(sort: Desc)])
   @@map("teams")
+}
+
+// ============================================================================
+// PROJECTS
+// ============================================================================
+
+model Project {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  name            String
+  description     String?   @db.Text
+  status          String    @default("active") // active, archived, completed
+
+  // Metadata
+  startDate       DateTime? @map("start_date") @db.Timestamptz
+  endDate         DateTime? @map("end_date") @db.Timestamptz
+  budget          Decimal?  @db.Decimal(12, 2)
+
+  // Relations
+  createdBy       String?   @map("created_by") @db.Uuid
+  updatedBy       String?   @map("updated_by") @db.Uuid
+
+  // Audit
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("projects")
 }

@@ -5,12 +5,10 @@ export class ProjectsRepository {
   async create(data: CreateProjectDTOType) {
     return prisma.project.create({
       data: {
-        title: data.title,
+        name: data.title || 'Untitled',
         description: data.description,
         status: data.status,
         organizationId: data.organizationId,
-        tags: data.tags || [],
-        thumbnail: data.thumbnail,
       },
     });
   }
@@ -20,8 +18,6 @@ export class ProjectsRepository {
       where: { id },
       include: {
         organization: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, email: true, name: true } },
-        updatedBy: { select: { id: true, email: true, name: true } },
       },
     });
   }
@@ -41,7 +37,7 @@ export class ProjectsRepository {
 
     if (options?.search) {
       where.OR = [
-        { title: { contains: options.search, mode: 'insensitive' } },
+        { name: { contains: options.search, mode: 'insensitive' } },
         { description: { contains: options.search, mode: 'insensitive' } },
       ];
     }
@@ -49,7 +45,7 @@ export class ProjectsRepository {
     const orderBy: any = {};
     switch (options?.sortBy) {
       case 'name':
-        orderBy.title = 'asc';
+        orderBy.name = 'asc';
         break;
       case 'status':
         orderBy.status = 'asc';
@@ -66,7 +62,6 @@ export class ProjectsRepository {
       orderBy,
       include: {
         organization: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, email: true } },
       },
     });
   }
@@ -82,7 +77,7 @@ export class ProjectsRepository {
       where: { id },
       data: {
         ...data,
-        updatedBy: { connect: { id: userId } },
+        updatedBy: userId,
       },
       include: {
         organization: { select: { id: true, name: true } },
@@ -91,14 +86,11 @@ export class ProjectsRepository {
   }
 
   async updateStatus(id: string, status: string, userId: string) {
-    const publishedAt = status === 'published' ? new Date() : null;
-
     return prisma.project.update({
       where: { id },
       data: {
         status,
-        publishedAt: status === 'published' ? new Date() : null,
-        updatedBy: { connect: { id: userId } },
+        updatedBy: userId,
       },
     });
   }

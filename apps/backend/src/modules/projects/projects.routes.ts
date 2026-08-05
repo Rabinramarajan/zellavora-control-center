@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { ProjectsController } from './projects.controller';
-import { authMiddleware } from '../../middleware/auth';
+import { authGuard } from '../../middleware/auth';
 
 const router = Router();
 const controller = new ProjectsController();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authGuard);
 
 /**
  * @route GET /api/v1/projects
