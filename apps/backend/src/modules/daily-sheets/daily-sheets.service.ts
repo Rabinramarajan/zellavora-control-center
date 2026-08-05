@@ -53,7 +53,7 @@ export class DailySheetsService {
 
     const hoursWorked = dto.hoursWorked ?? existingSheet.hoursWorked;
     const hourlyRate = dto.hourlyRate ?? existingSheet.hourlyRate;
-    const totalAmount = hoursWorked.times(hourlyRate);
+    const totalAmount = new Decimal(hoursWorked).times(new Decimal(hourlyRate));
 
     // Delete existing line items if new ones provided
     if (dto.lineItems) {
