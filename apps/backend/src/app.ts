@@ -16,7 +16,6 @@ import projectRoutes from './routes/projects';
 import portfolioRoutes from './routes/portfolio';
 import galleryRoutes from './routes/gallery';
 import techRoutes from './routes/technologies';
-import swaggerRoutes from './routes/swagger.route';
 import adminUsersRoutes from './routes/admin-users';
 import adminGroupsRoutes from './routes/admin-groups';
 import adminRolesRoutes from './routes/admin-roles';
@@ -29,8 +28,6 @@ import cleanAuthRoutes from './modules/auth/auth.routes';
 import cleanInviteRoutes from './modules/invitation/invitation.routes';
 import cleanOrgRoutes from './modules/organization/organization.routes';
 import cleanBranchRoutes from './modules/branch/branch.routes';
-import cleanUserRoutes from './modules/user/user.routes';
-import cleanRoleRoutes from './modules/role/role.routes';
 import cleanPermRoutes from './modules/permission/permission.routes';
 import cleanSettingsRoutes from './modules/settings/settings.routes';
 import cleanNotifRoutes from './modules/notification/notification.routes';
@@ -91,8 +88,8 @@ app.use(
 );
 
 // Security headers. CSP is deliberately permissive (unsafe-inline) because the
-// Angular SPA and Swagger UI rely on inline styles/scripts when served from
-// this origin — everything else gets strict, sane defaults.
+// Angular SPA relies on inline styles/scripts when served from this origin —
+// everything else gets strict, sane defaults.
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -177,17 +174,16 @@ app.get('/health', (_req, res) => {
  * @swagger
  * /:
  *   get:
- *     summary: redirectToSwaggerUI
+ *     summary: redirectToInfoEndpoint
  *     tags: [health]
  *     security: []
  *     responses:
  *       302:
- *         description: Redirects to the Swagger UI explorer
+ *         description: Redirects to the API info endpoint
  */
-// Root index redirects to the API docs so the bare domain lands somewhere
-// useful instead of a JSON blob (or the 404 handler).
+// Root index redirects to the API info endpoint
 app.get('/', (_req, res) => {
-  res.redirect(302, '/swagger/index.html');
+  res.redirect(302, '/info');
 });
 
 /**
@@ -210,17 +206,11 @@ app.get('/info', (_req, res) => {
     environment: config.nodeEnv,
     endpoints: {
       health: '/health',
-      docs: '/swagger/index.html',
-      openapi: '/api-docs.json',
       api: `/api/${config.apiVersion}`,
     },
   });
 });
 
-// Swagger UI — available unless SWAGGER_ENABLED is explicitly 'false'
-if (process.env.SWAGGER_ENABLED !== 'false') {
-  app.use(swaggerRoutes);
-}
 
 // Compatibility route for PRIMS Member Portal token format
 app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (req, res) => {
@@ -241,8 +231,6 @@ app.use('/api/v1/clean/auth', cleanAuthRoutes);
 app.use('/api/v1/clean/invitations', cleanInviteRoutes);
 app.use('/api/v1/clean/organizations', cleanOrgRoutes);
 app.use('/api/v1/clean/branches', cleanBranchRoutes);
-app.use('/api/v1/clean/users', cleanUserRoutes);
-app.use('/api/v1/clean/roles', cleanRoleRoutes);
 app.use('/api/v1/clean/permissions', cleanPermRoutes);
 app.use('/api/v1/clean/settings', cleanSettingsRoutes);
 app.use('/api/v1/clean/notifications', cleanNotifRoutes);

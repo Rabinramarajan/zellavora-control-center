@@ -123,12 +123,16 @@ export const appRoutes: Routes = [
       ),
   },
   {
+    path: 'freelancer-sheets',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/freelancer-sheets/freelancer-sheets.routes').then(
+        (m) => m.freelancerSheetsRoutes
+      ),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },
 ];
-
-
-
-
 

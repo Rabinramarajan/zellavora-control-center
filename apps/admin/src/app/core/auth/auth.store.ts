@@ -158,11 +158,60 @@ export class AuthStore {
     permissions: string[];
     menu: MenuNode[];
   }): void {
+    const menu = this.ensureDefaultMenuItems(input.menu);
     this.state.update((s) => ({
       ...s,
       permissions: new Set(input.permissions),
-      menu: input.menu,
+      menu,
     }));
+  }
+
+  private ensureDefaultMenuItems(menu: MenuNode[]): MenuNode[] {
+    // Add freelancer sheets if not already present
+    const hasFreelancerSheets = menu.some(item => item.route === '/freelancer-sheets');
+    if (!hasFreelancerSheets) {
+      menu = [
+        ...menu,
+        {
+          id: 'freelancer-sheets',
+          key: 'freelancer-sheets',
+          label: 'Freelancer Sheets',
+          route: '/freelancer-sheets',
+          icon: '📋',
+          orderIndex: 100,
+          children: [
+            {
+              id: 'daily-sheets',
+              key: 'daily-sheets',
+              label: 'Daily Sheets',
+              route: '/freelancer-sheets/daily',
+              icon: '📅',
+              orderIndex: 1,
+              children: [],
+            },
+            {
+              id: 'monthly-sheets',
+              key: 'monthly-sheets',
+              label: 'Monthly Sheets',
+              route: '/freelancer-sheets/monthly',
+              icon: '📊',
+              orderIndex: 2,
+              children: [],
+            },
+            {
+              id: 'approval-queue',
+              key: 'approval-queue',
+              label: 'Approval Queue',
+              route: '/freelancer-sheets/approval',
+              icon: '✓',
+              orderIndex: 3,
+              children: [],
+            },
+          ],
+        },
+      ];
+    }
+    return menu;
   }
 
   setAvailableTenants(tenants: TenantSummary[]): void {

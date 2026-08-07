@@ -1,10 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
 import { SheetsStore } from './sheets.store';
 
 @Component({
@@ -13,10 +9,6 @@ import { SheetsStore } from './sheets.store';
   imports: [
     CommonModule,
     RouterModule,
-    MatTabsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
   ],
   template: `
     <div class="p-6 space-y-6">
@@ -28,59 +20,50 @@ import { SheetsStore } from './sheets.store';
             Track your work with daily and monthly timesheets
           </p>
         </div>
-        <button mat-raised-button color="primary" (click)="createDailySheet()" class="gap-2">
-          <mat-icon>add</mat-icon>
-          New Daily Sheet
+        <button (click)="createDailySheet()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2">
+          ➕ New Daily Sheet
         </button>
       </div>
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <mat-card class="p-4">
+        <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
           <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">Pending Approval</div>
           <div class="text-3xl font-bold mt-2">{{ pendingCount }}</div>
           <p class="text-xs text-gray-500 mt-1">Daily sheets awaiting approval</p>
-        </mat-card>
+        </div>
 
-        <mat-card class="p-4">
+        <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
           <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">This Month</div>
           <div class="text-3xl font-bold mt-2">{{ thisMonthHours }}h</div>
           <p class="text-xs text-gray-500 mt-1">Hours logged this month</p>
-        </mat-card>
+        </div>
 
-        <mat-card class="p-4">
+        <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
           <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">Approved</div>
           <div class="text-3xl font-bold mt-2">{{ approvedCount }}</div>
           <p class="text-xs text-gray-500 mt-1">Approved timesheets</p>
-        </mat-card>
+        </div>
       </div>
 
-      <!-- Tabs -->
-      <mat-tab-group>
-        <mat-tab label="Daily Sheets">
-          <ng-template mat-tab-label>
-            <mat-icon class="mr-2">calendar_today</mat-icon>
-            Daily Sheets
-          </ng-template>
+      <!-- Tabs using Tailwind -->
+      <div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div class="flex border-b border-gray-200 dark:border-gray-800">
+          <button class="px-4 py-3 font-semibold border-b-2 border-purple-600 text-purple-600 dark:text-purple-400">
+            📅 Daily Sheets
+          </button>
+          <button class="px-4 py-3 font-semibold border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300">
+            📊 Monthly Sheets
+          </button>
+          <button class="px-4 py-3 font-semibold border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300">
+            ✓ Approval Queue
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-600 dark:text-gray-400">Tab content will be implemented in child components.</p>
           <router-outlet></router-outlet>
-        </mat-tab>
-
-        <mat-tab label="Monthly Sheets">
-          <ng-template mat-tab-label>
-            <mat-icon class="mr-2">calendar_month</mat-icon>
-            Monthly Sheets
-          </ng-template>
-          <!-- Monthly sheets content -->
-        </mat-tab>
-
-        <mat-tab label="Approval Queue">
-          <ng-template mat-tab-label>
-            <mat-icon class="mr-2">check_circle</mat-icon>
-            Approval Queue
-          </ng-template>
-          <!-- Approval content -->
-        </mat-tab>
-      </mat-tab-group>
+        </div>
+      </div>
     </div>
   `,
   styles: [`

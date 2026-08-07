@@ -200,7 +200,8 @@ async function main() {
 }
 
 main()
-  .catch(() => {
+  .catch((error) => {
+    console.error('Seeding failed:', error);
     process.exit(1);
   })
   .finally(async () => {
