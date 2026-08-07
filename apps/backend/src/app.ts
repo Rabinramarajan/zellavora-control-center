@@ -43,6 +43,8 @@ import resourceRoutes from './modules/resources/resource.routes';
 import roleRoutes from './modules/roles/role.routes';
 import groupRoutes from './modules/groups/group.routes';
 import iamUserRoutes from './modules/users/iam-user.routes';
+import dailySheetsRoutes from './modules/daily-sheets/daily-sheets.routes';
+import monthlySheetsRoutes from './modules/monthly-sheets/monthly-sheets.routes';
 
 const app = express();
 
@@ -252,6 +254,11 @@ app.use('/api/v1', portfolioRoutes);
 app.use('/api/v1', galleryRoutes);
 app.use('/api/v1', techRoutes);
 app.use('/api/v1', settingsRoutes);
+
+// Timesheet management routes
+app.use('/api/v1/daily-sheets', dailySheetsRoutes);
+app.use('/api/v1/monthly-sheets', monthlySheetsRoutes);
+
 app.use('/api/v1/admin', adminUsersRoutes);
 app.use('/api/v1/admin', adminGroupsRoutes);
 app.use('/api/v1/admin', adminRolesRoutes);
