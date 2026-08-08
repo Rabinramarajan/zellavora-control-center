@@ -178,6 +178,74 @@ const consumeMfa = (token: string) => {
 // ----------------------------------------------------------------------------
 
 /**
+ * Debug endpoint to check user in database
+ */
+router.post('/debug/check-user', async (req, res, next) => {
+  try {
+    const { email, clientCode } = req.body;
+    if (!email || !clientCode) {
+      return res.status(400).json({ error: 'email and clientCode required' });
+    }
+
+    const tenant = await prisma.organization.findUnique({
+      where: { clientCode },
+    });
+    if (!tenant) {
+      return res.status(404).json({ error: 'Tenant not found', clientCode });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email.toLowerCase(),
+        tenantId: tenant.id,
+      },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        passwordHash: true,
+        tenantId: true,
+        isDeleted: true,
+        isAccountLocked: true,
+      },
+    });
+
+    if (!user) {
+      return res.json({
+        found: false,
+        message: 'User not found',
+        searchedIn: { email: email.toLowerCase(), tenantId: tenant.id, tenantName: tenant.name },
+      });
+    }
+
+    // Check if password hash exists
+    const hasPasswordHash = !!user.passwordHash;
+
+    res.json({
+      found: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        tenantId: user.tenantId,
+        isDeleted: user.isDeleted,
+        isAccountLocked: user.isAccountLocked,
+        hasPasswordHash,
+      },
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        clientCode: tenant.clientCode,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
  * @swagger
  * /api/v1/auth/validate-client:
  *   post:
@@ -426,6 +494,7 @@ router.post('/login', async (req, res, next) => {
     if (loginData.keyToken && Array.isArray(loginData.keyToken)) {
       try {
         const keyToken = loginData.keyToken;
+        console.log('[LOGIN] Decryption attempt with keyToken array');
         if (keyToken.length === 2) {
           const keyBase64 = keyToken[0];
           const ivBase64 = keyToken[1];
@@ -441,11 +510,21 @@ router.post('/login', async (req, res, next) => {
             return decrypted.toString(CryptoJS.enc.Utf8);
           };
 
-          if (loginData.clientCode) loginData.clientCode = decryptAes(loginData.clientCode);
-          if (loginData.email) loginData.email = decryptAes(loginData.email);
-          if (loginData.password) loginData.password = decryptAes(loginData.password);
+          if (loginData.clientCode) {
+            loginData.clientCode = decryptAes(loginData.clientCode);
+            console.log('[LOGIN] Decrypted clientCode:', loginData.clientCode);
+          }
+          if (loginData.email) {
+            loginData.email = decryptAes(loginData.email);
+            console.log('[LOGIN] Decrypted email:', loginData.email);
+          }
+          if (loginData.password) {
+            loginData.password = decryptAes(loginData.password);
+            console.log('[LOGIN] Password decrypted');
+          }
         }
       } catch (err) {
+        console.error('[LOGIN] Decryption failed:', err);
         throw new AppError('Failed to decrypt login payload', 400, 'AUTHENTICATION_FAILED');
       }
     }
@@ -456,15 +535,19 @@ router.post('/login', async (req, res, next) => {
     await RateLimitService.assertAccountAllowed(body.email);
 
     // 2. Resolve tenant by client code
+    console.log('[LOGIN] Resolving tenant with clientCode:', body.clientCode);
     const tenant = await TenantService.resolveByClientCode(body.clientCode);
+    console.log('[LOGIN] Tenant resolved:', tenant.id, tenant.name);
 
     // 3. Find user in this tenant (using Prisma for reliable direct DB access)
+    console.log('[LOGIN] Looking up user:', body.email.toLowerCase(), 'in tenant:', tenant.id);
     const prismaUser = await prisma.user.findFirst({
       where: {
         email: body.email.toLowerCase(),
         tenantId: tenant.id,
       },
     });
+    console.log('[LOGIN] User found:', !!prismaUser, prismaUser?.email);
     const user = prismaUser
       ? {
           id: prismaUser.id,
@@ -515,7 +598,9 @@ router.post('/login', async (req, res, next) => {
     }
 
     // 4. Verify password
+    console.log('[LOGIN] Verifying password for user:', user.email);
     const ok = await PasswordService.verify(body.password, user.password_hash ?? '');
+    console.log('[LOGIN] Password verification result:', ok);
     if (!ok) return invalid();
 
     // 5. Enforce org-level 2FA policy

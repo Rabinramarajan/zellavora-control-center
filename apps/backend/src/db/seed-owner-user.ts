@@ -21,8 +21,16 @@ async function main() {
 
     // Create/update the owner user
     console.log('👤 Creating owner user...');
-    const password = 'Rabin@123456'; // Meets policy: 12+ chars, uppercase, lowercase, digit, symbol
-    const passwordHash = await PasswordService.hash(password);
+    const password = 'Rabin@123456Password'; // Meets policy: 12+ chars, uppercase, lowercase, digit, symbol
+    console.log('  Hashing password...');
+    let passwordHash: string;
+    try {
+      passwordHash = await PasswordService.hash(password);
+      console.log('  ✅ Password hashed successfully');
+    } catch (hashError) {
+      console.error('  ❌ Password hashing failed:', hashError);
+      throw hashError;
+    }
     const ownerUser = await prisma.user.upsert({
       where: { email: 'rabinr2607@zellavora.com' },
       update: {
@@ -97,7 +105,8 @@ async function main() {
     console.log('✨ Owner user created successfully!\n');
     console.log('📖 Login credentials:');
     console.log('   Email: rabinr2607@zellavora.com');
-    console.log('   Password: Rabin@123456');
+    console.log('   Password: Rabin@123456Password');
+    console.log('   Client Code: zellavora-inc');
     console.log('   Role: Owner (Full Access)\n');
   } catch (error) {
     console.error('❌ Error:', error);

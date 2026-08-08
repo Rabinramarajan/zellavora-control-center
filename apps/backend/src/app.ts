@@ -55,6 +55,12 @@ const app = express();
 // request with ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and req.ip stays the proxy.
 app.set('trust proxy', config.trustProxy);
 
+// Swagger UI setup (BEFORE any body parsing middleware)
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/', (_req, res) => {
+  res.redirect(302, '/swagger/index.html');
+});
+
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -119,12 +125,6 @@ app.use(
     hsts: config.nodeEnv === 'production' ? { maxAge: 15552000, includeSubDomains: true } : false,
   })
 );
-
-// Swagger UI setup (before rate limiting to allow swagger access)
-app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get('/', (_req, res) => {
-  res.redirect(302, '/swagger/index.html');
-});
 
 // Coarse global rate limit on the auth surface (brute-force / credential
 // stuffing protection). Per-account + per-IP enforcement happens inside the
