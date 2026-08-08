@@ -8,7 +8,6 @@
  * Pair with the SQL trigger (fn_audit_trigger) for auto-audit of resource
  * changes — this service is for events that have no specific row.
  */
-import { supabaseAdmin } from '../../config/supabase';
 import { AppError } from '../../middleware/error';
 
 export type AuditSeverity = 'info' | 'warn' | 'critical';
@@ -57,22 +56,28 @@ export interface AuditEvent {
 
 export class AuditService {
   static async log(event: AuditEvent): Promise<void> {
-    const { error } = await supabaseAdmin.from('audit_logs').insert({
-      organization_id: event.organizationId,
-      actor_id: event.actorId,
-      action: event.action,
-      resource_type: event.resourceType ?? null,
-      resource_id: event.resourceId ?? null,
-      description: event.description ?? null,
-      old_values: event.oldValues ?? null,
-      new_values: event.newValues ?? null,
-      ip_address: event.ipAddress ?? null,
-      user_agent: event.userAgent ?? null,
-      request_id: event.requestId ?? null,
-      severity: event.severity ?? 'info',
-      metadata: event.metadata ?? null,
-    });
-    if (error) {
+    try {
+      const { prisma } = await import('../../infrastructure/prisma');
+      await prisma.auditLog.create({
+        data: {
+          organizationId: event.organizationId,
+          actorId: event.actorId,
+          action: event.action,
+          resource: event.resourceType ?? null,
+          resourceId: event.resourceId ?? null,
+          ipAddress: event.ipAddress ?? null,
+          userAgent: event.userAgent ?? null,
+          requestId: event.requestId ?? null,
+          severity: event.severity ?? 'info',
+          metadata: {
+            ...((event.metadata ?? {}) as object),
+            ...(event.oldValues ? { oldValues: event.oldValues } : {}),
+            ...(event.newValues ? { newValues: event.newValues } : {}),
+            ...(event.description ? { description: event.description } : {}),
+          } as never,
+        },
+      });
+    } catch (error) {
       // Audit failures must NEVER break the user-facing flow.
       // Just log to server stderr; ops team can pick it up from logs.
       // eslint-disable-next-line no-console

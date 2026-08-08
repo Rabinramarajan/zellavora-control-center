@@ -241,23 +241,20 @@ router.get('/clients', async (req, res, next) => {
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
 
-    const { data: orgs, error } = await supabaseAdmin
-      .from('organizations')
-      .select('id, name, client_code, logo_url, status')
-      .eq('status', 'active')
-      .is('deleted_at', null);
-
-    if (error) {
-      throw error;
-    }
+    const orgs = await prisma.organization.findMany({
+      where: { isDeleted: false },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, name: true, clientCode: true, logoUrl: true, plan: true },
+    });
 
     res.status(200).json({
-      tenants: (orgs || []).map((o) => ({
+      tenants: orgs.map((o) => ({
         id: o.id,
         name: o.name,
-        clientCode: o.client_code,
-        logoUrl: o.logo_url,
-        status: o.status,
+        clientCode: o.clientCode,
+        logoUrl: o.logoUrl,
+        plan: o.plan,
+        status: 'active',
       })),
     });
   } catch (e) {
@@ -598,27 +595,25 @@ router.post('/login', async (req, res, next) => {
     // 8. Clear rate-limit counters on success
     await RateLimitService.clearForEmail(user.email);
 
-    const currentLogin = new Date().toISOString();
-    const lastLogin = user.current_login_datetime || null;
-    const nextAttempts = (user.successful_login_attempts || 0) + 1;
-    const nextVersion = (user.version || 1) + 1;
+    const currentLogin = new Date();
+    const lastLogin = prismaUser.currentLoginDatetime || null;
 
-    await supabaseAdmin
-      .from('users')
-      .update({
-        last_login_at: currentLogin,
-        current_login_datetime: currentLogin,
-        last_login_datetime: lastLogin,
-        successful_login_attempts: nextAttempts,
-        key_token: tokens.accessToken,
+    await prisma.user.update({
+      where: { id: prismaUser.id },
+      data: {
+        currentLoginDatetime: currentLogin,
+        lastLoginDatetime: lastLogin,
+        successfulLoginAttempts: prismaUser.successfulLoginAttempts + 1,
+        keyToken: tokens.accessToken,
         msg: 'Success',
-        status_value: 'ACTIVE',
-        status_description: 'Logged in successfully',
-        version: nextVersion,
-        failed_login_attempts: 0,
-        locked_until: null,
-      })
-      .eq('id', user.id);
+        statusValue: 'ACTIVE',
+        statusDescription: 'Logged in successfully',
+        version: prismaUser.version + 1,
+        failedLoginAttempts: 0,
+        lastLockedDate: null,
+        isAccountLocked: false,
+      },
+    });
 
     // 9. Audit
     await AuditService.log({
@@ -648,12 +643,12 @@ router.post('/login', async (req, res, next) => {
       defaultLandingPage: prismaUser.defaultLandingPage ?? '/dashboard',
       currentLoginDatetime: currentLogin,
       lastLoginDatetime: lastLogin,
-      successfulLoginAttempts: nextAttempts,
+      successfulLoginAttempts: prismaUser.successfulLoginAttempts + 1,
       keyToken: tokens.accessToken,
       msg: 'Success',
       statusValue: 'ACTIVE',
       statusDescription: 'Logged in successfully',
-      version: nextVersion,
+      version: prismaUser.version + 1,
       userName: user.email,
       ...tokens,
     });
@@ -879,20 +874,15 @@ router.post('/refresh', async (req, res, next) => {
     const session = await SessionService.findByRefreshTokenHash(hash);
 
     if (session.id !== claims.sid) {
-      // Token from a different session than its claims say — kill family.
-      await supabaseAdmin
-        .from('sessions')
-        .update({ revoked_at: new Date().toISOString() })
-        .eq('refresh_token_family', session.refresh_token_family)
-        .is('revoked_at', null);
+      // Token from a different session than its claims say — burn the session.
+      await SessionService.revoke(session.id);
       throw new AppError('Refresh token session mismatch', 401, 'REFRESH_TOKEN_REUSE');
     }
 
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id, email, role')
-      .eq('id', session.user_id)
-      .single();
+    const user = await prisma.user.findUnique({
+      where: { id: session.user_id },
+      select: { id: true, email: true, role: true },
+    });
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
 
     // The session's organization_id is authoritative — it's the tenant the user
@@ -1036,13 +1026,20 @@ router.post('/logout-all', authenticate, async (req: AuthRequest, res, next) => 
   */
 router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select(
-        'id, email, full_name, role, mfa_enabled, mfa_enrolled_at, avatar_url, last_login_at, created_at'
-      )
-      .eq('id', req.userId!)
-      .single();
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        mfaEnabled: true,
+        mfaEnrolledAt: true,
+        avatarUrl: true,
+        lastLoginDatetime: true,
+        createdAt: true,
+      },
+    });
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
 
     const [tenant, permissions] = await Promise.all([
@@ -1056,13 +1053,13 @@ router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
       user: {
         id: user.id,
         email: user.email,
-        fullName: user.full_name,
-        avatarUrl: user.avatar_url,
+        fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
         role: user.role,
-        mfaEnabled: user.mfa_enabled,
-        mfaEnrolledAt: user.mfa_enrolled_at,
-        lastLoginAt: user.last_login_at,
-        createdAt: user.created_at,
+        mfaEnabled: user.mfaEnabled,
+        mfaEnrolledAt: user.mfaEnrolledAt,
+        lastLoginAt: user.lastLoginDatetime,
+        createdAt: user.createdAt,
       },
       tenant: {
         id: tenant.id,
@@ -1271,14 +1268,6 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res, next
     await prisma.passwordHistory.create({
       data: { userId: user.id, passwordHash: newHash },
     });
-    // Keep the Supabase handshake row in sync.
-    await supabaseAdmin
-      .from('users')
-      .update({
-        password_hash: newHash,
-        password_changed_at: new Date().toISOString(),
-      })
-      .eq('id', req.userId!);
 
     await AuditService.log({
       organizationId: req.tenantId!,
@@ -1338,24 +1327,25 @@ router.post('/forgot-password', async (req, res, next) => {
     const body = ForgotPasswordSchema.parse(req.body);
     const tenant = await TenantService.resolveByClientCode(body.clientCode);
 
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id, email')
-      .eq('email', body.email.toLowerCase())
-      .eq('tenant_id', tenant.id)
-      .maybeSingle();
+    const user = await prisma.user.findFirst({
+      where: { email: body.email.toLowerCase(), tenantId: tenant.id },
+      select: { id: true, email: true },
+    });
 
     // Always return 200 to avoid email enumeration
     if (user) {
       const token = crypto.randomUUID();
-      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-      await supabaseAdmin.from('password_reset_tokens').insert({
-        user_id: user.id,
-        token_hash: tokenHash,
-        email: user.email,
-        expires_at: new Date(
-          Date.now() + config.passwordResetTokenExpiryMinutes * 60 * 1000
-        ).toISOString(),
+      await prisma.passwordReset.create({
+        data: {
+          email: user.email,
+          token,
+          userId: user.id,
+          expiresAt: new Date(
+            Date.now() + config.passwordResetTokenExpiryMinutes * 60 * 1000
+          ),
+          ipAddress: ip(req),
+          userAgent: ua(req),
+        },
       });
       // Queue the reset email (falls back to console logging when email/queue is unavailable).
       const baseUrl = req.get('origin') ?? `https://${req.get('host') ?? 'zcc-backend.vercel.app'}`;
@@ -1419,33 +1409,23 @@ router.post('/forgot-password', async (req, res, next) => {
 router.post('/reset-password', async (req, res, next) => {
   try {
     const { token, newPassword } = ResetPasswordSchema.parse(req.body);
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-    const { data: row } = await supabaseAdmin
-      .from('password_reset_tokens')
-      .select('id, user_id, expires_at, used_at')
-      .eq('token_hash', tokenHash)
-      .maybeSingle();
+    const row = await prisma.passwordReset.findUnique({ where: { token } });
 
-    if (!row || row.used_at || new Date(row.expires_at) < new Date()) {
+    if (!row || row.used || row.usedAt || new Date(row.expiresAt) < new Date()) {
       throw new AppError('Invalid or expired token', 400, 'INVALID_RESET_TOKEN');
     }
     const newHash = await PasswordService.hash(newPassword);
-    await supabaseAdmin
-      .from('users')
-      .update({ password_hash: newHash, password_changed_at: new Date().toISOString() })
-      .eq('id', row.user_id);
-    // Login verifies against the Prisma user, so keep both stores in sync.
     await prisma.user.update({
-      where: { id: row.user_id },
+      where: { id: row.userId! },
       data: { passwordHash: newHash, passwordChangedAt: new Date() },
     });
-    await supabaseAdmin
-      .from('password_reset_tokens')
-      .update({ used_at: new Date().toISOString() })
-      .eq('id', row.id);
+    await prisma.passwordReset.update({
+      where: { id: row.id },
+      data: { used: true, usedAt: new Date() },
+    });
     // Invalidate all sessions for the user (force re-login everywhere)
-    await TokenService.revokeAllForUser(row.user_id);
+    await TokenService.revokeAllForUser(row.userId!);
 
     res.json({ ok: true });
   } catch (e) {

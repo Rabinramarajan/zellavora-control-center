@@ -8,7 +8,7 @@
  * We use the `login_attempts` table as the source of truth and derive the
  * counters in SQL (cheap with the indexes we added in 0004).
  */
-import { supabaseAdmin } from '../../config/supabase';
+import { prisma } from '../../infrastructure/prisma';
 import { AppError } from '../../middleware/error';
 
 const WINDOW_MS = 15 * 60 * 1000;
@@ -26,41 +26,25 @@ export class RateLimitService {
     success: boolean;
     failureReason?: string;
   }): Promise<void> {
-    await supabaseAdmin.from('login_attempts').insert({
-      email: input.email.toLowerCase(),
-      client_code: input.clientCode ?? null,
-      ip_address: input.ipAddress,
-      user_agent: input.userAgent,
-      success: input.success,
-      failure_reason: input.failureReason ?? null,
+    await prisma.loginAttempt.create({
+      data: {
+        email: input.email.toLowerCase(),
+        clientCode: input.clientCode ?? null,
+        ipAddress: input.ipAddress || null,
+        userAgent: input.userAgent || null,
+        success: input.success,
+        failureReason: input.failureReason ?? null,
+      },
     });
   }
 
   /** Throws AppError(429) if the IP is over the per-IP cap. */
   static async assertIpAllowed(ipAddress: string): Promise<void> {
-    const since = new Date(Date.now() - WINDOW_MS).toISOString();
-    let result: { count: number | null; error: { message?: string; details?: string } | null };
-    try {
-      result = await supabaseAdmin
-        .from('login_attempts')
-        .select('id', { count: 'exact', head: true })
-        .eq('ip_address', ipAddress)
-        .eq('success', false)
-        .gte('attempted_at', since);
-    } catch (err) {
-      // supabase-js can throw (network, schema-cache miss, invalid cast) without
-      // returning an error object — surface the real cause instead of masking it.
-      throw new AppError('Failed to check IP rate limit', 500, 'RATE_LIMIT_CHECK_FAILED', {
-        details: (err as Error).message ?? String(err),
-      });
-    }
-    const { count, error } = result;
-    if (error) {
-      throw new AppError('Failed to check IP rate limit', 500, 'RATE_LIMIT_CHECK_FAILED', {
-        details: error.message || error.details || 'Unknown supabase error',
-      });
-    }
-    if ((count ?? 0) >= IP_LIMIT) {
+    const since = new Date(Date.now() - WINDOW_MS);
+    const count = await prisma.loginAttempt.count({
+      where: { ipAddress: ipAddress, success: false, attemptedAt: { gte: since } },
+    });
+    if (count >= IP_LIMIT) {
       throw new AppError(
         'Too many failed attempts. Try again in 15 minutes.',
         429,
@@ -73,35 +57,16 @@ export class RateLimitService {
   static async assertAccountAllowed(
     email: string
   ): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
-    const since = new Date(Date.now() - WINDOW_MS).toISOString();
-    let result: { data: { attempted_at: string | Date }[] | null; error: { message?: string; details?: string } | null };
-    try {
-      result = await supabaseAdmin
-        .from('login_attempts')
-        .select('attempted_at')
-        .eq('email', email.toLowerCase())
-        .eq('success', false)
-        .gte('attempted_at', since)
-        .order('attempted_at', { ascending: true });
-    } catch (err) {
-      throw new AppError('Failed to check account status', 500, 'LOCKOUT_CHECK_FAILED', {
-        details: (err as Error).message ?? String(err),
-      });
-    }
-
-    const { data: failures, error } = result;
-    if (error) {
-      throw new AppError('Failed to check account status', 500, 'LOCKOUT_CHECK_FAILED', {
-        details: error.message || error.details || 'Unknown supabase error',
-      });
-    }
+    const since = new Date(Date.now() - WINDOW_MS);
+    const failures = await prisma.loginAttempt.findMany({
+      where: { email: email.toLowerCase(), success: false, attemptedAt: { gte: since } },
+      orderBy: { attemptedAt: 'asc' },
+    });
 
     const failedAttempts = failures?.length ?? 0;
     if (failedAttempts >= ACCOUNT_LIMIT) {
       // Lock expires LOCKOUT_MS after the first failure in the window.
-      const earliest = failures?.[0]?.attempted_at
-        ? new Date(failures[0].attempted_at)
-        : new Date();
+      const earliest = failures?.[0]?.attemptedAt ? new Date(failures[0].attemptedAt) : new Date();
       const lockedUntil = new Date(earliest.getTime() + LOCKOUT_MS);
       const retryAfterSeconds = Math.max(
         Math.ceil((lockedUntil.getTime() - Date.now()) / 1000),
@@ -122,6 +87,6 @@ export class RateLimitService {
 
   /** Clear the failure history for an email on successful login. */
   static async clearForEmail(email: string): Promise<void> {
-    await supabaseAdmin.from('login_attempts').delete().eq('email', email.toLowerCase());
+    await prisma.loginAttempt.deleteMany({ where: { email: email.toLowerCase() } });
   }
 }

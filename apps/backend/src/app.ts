@@ -185,7 +185,7 @@ app.get('/health', (_req, res) => {
  */
 // Root index redirects to the API info endpoint
 app.get('/', (_req, res) => {
-  res.redirect(302, '/info');
+  res.redirect(302, '/swagger/index.html');
 });
 
 /**

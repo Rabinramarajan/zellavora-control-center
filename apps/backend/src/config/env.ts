@@ -166,14 +166,10 @@ export const config = {
 // VALIDATION
 // ============================================================================
 
-// Required environment variables
-const requiredEnvVars = [
-  'VITE_SUPABASE_URL',
-  'VITE_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'JWT_SECRET',
-  'REFRESH_TOKEN_SECRET',
-];
+// Required environment variables.
+// NOTE: Supabase is optional. The auth flows read/write the same Postgres
+// directly via Prisma, so local/dev can run without SUPABASE_* configured.
+const requiredEnvVars = ['JWT_SECRET', 'REFRESH_TOKEN_SECRET'];
 
 // Additional required for production
 const productionEnvVars = [

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { AuthRepository } from './auth.repository';
-import { UserRepository } from '../user/user.repository';
+import { IamUserRepository } from '../users/iam-user.repository';
 import { PasswordService } from '../../services/auth/password.service';
 import { AppError } from '../../middleware/error';
 import { config } from '../../config/env';
@@ -8,7 +8,7 @@ import { authenticator } from 'otplib';
 
 export class AuthService {
   private readonly repo = new AuthRepository();
-  private readonly userRepo = new UserRepository();
+  private readonly userRepo = new IamUserRepository();
 
   async login(identifier: string, passwordPlain: string) {
     const user = await this.repo.findUserByUsernameOrEmail(identifier);

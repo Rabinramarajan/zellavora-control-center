@@ -5,7 +5,6 @@
  * `client_code` (e.g. "ACME"). All RLS policies and JWT `tid` claims refer
  * to the org id, not the client_code.
  */
-import { supabaseAdmin } from '../../config/supabase';
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../infrastructure/prisma';
 
@@ -24,37 +23,24 @@ export interface Tenant {
   createdAt: string;
 }
 
-interface OrgRow {
-  id: string;
-  name: string;
-  slug: string;
-  client_code: string;
-  logo_url: string | null;
-  plan: string;
-  status: string;
-  enforce_2fa: boolean;
-  enforce_sso: boolean;
-  allowed_domains: string[] | null;
-  max_members: number;
-  created_at: string;
-}
-
-const toTenant = (r: OrgRow): Tenant => ({
-  id: r.id,
-  name: r.name,
-  slug: r.slug,
-  clientCode: r.client_code,
-  logoUrl: r.logo_url,
-  plan: r.plan,
-  status: r.status,
-  enforce2fa: r.enforce_2fa,
-  enforceSso: r.enforce_sso,
-  allowedDomains: r.allowed_domains,
-  maxMembers: r.max_members,
-  createdAt: r.created_at,
-});
-
 export class TenantService {
+  private static prismaTenantToTenant(org: any): Tenant {
+    return {
+      id: org.id,
+      name: org.name,
+      slug: org.clientCode,
+      clientCode: org.clientCode,
+      logoUrl: org.logoUrl,
+      plan: org.plan,
+      status: 'active',
+      enforce2fa: org.enforce2fa,
+      enforceSso: false,
+      allowedDomains: org.allowedDomains as string[] | null,
+      maxMembers: 999,
+      createdAt: org.createdAt.toISOString(),
+    };
+  }
+
   /** Resolve a client_code (case-insensitive) to a tenant. Used at the start of login. */
   static async resolveByClientCode(code: string): Promise<Tenant> {
     if (!code || code.length < 2 || code.length > 16) {
@@ -91,32 +77,35 @@ export class TenantService {
 
   /** Get a tenant by id (for the /auth/me payload). */
   static async getById(orgId: string): Promise<Tenant | null> {
-    const { data } = await supabaseAdmin
-      .from('organizations')
-      .select('*')
-      .eq('id', orgId)
-      .maybeSingle();
-    return data ? toTenant(data as OrgRow) : null;
+    const org = await prisma.organization.findUnique({ where: { id: orgId } });
+    if (!org) return null;
+    return {
+      id: org.id,
+      name: org.name,
+      slug: org.clientCode,
+      clientCode: org.clientCode,
+      logoUrl: org.logoUrl,
+      plan: org.plan,
+      status: 'active',
+      enforce2fa: org.enforce2fa,
+      enforceSso: false,
+      allowedDomains: org.allowedDomains as string[] | null,
+      maxMembers: 999,
+      createdAt: org.createdAt.toISOString(),
+    };
   }
 
   /** All tenants a user is a member of (for the tenant-switcher dropdown). */
   static async listForUser(userId: string): Promise<Array<Tenant & { role: string }>> {
-    const { data, error } = await supabaseAdmin
-      .from('organization_members')
-      .select(
-        `
-        role,
-        organization:organizations(*)
-      `
-      )
-      .eq('user_id', userId);
-
-    if (error) throw new AppError('Failed to list tenants', 500, 'TENANT_LIST_FAILED');
-    const rows = (data ?? []).map((row: any) => ({
-      ...toTenant(row.organization),
-      role: row.role,
+    const memberships = await prisma.userTenant.findMany({
+      where: { userId },
+      include: { tenant: true },
+    });
+    const fromMemberships = memberships.map((m) => ({
+      ...TenantService.fromOrganization(m.tenant),
+      role: m.role,
     }));
-    if (rows.length) return rows;
+    if (fromMemberships.length) return fromMemberships;
 
     // Same fallback as assertMembership: users linked only via users.tenant_id.
     const user = await prisma.user.findUnique({
@@ -126,6 +115,33 @@ export class TenantService {
     if (!user?.tenantId) return [];
     const tenant = await TenantService.getById(user.tenantId);
     return tenant ? [{ ...tenant, role: user.role }] : [];
+  }
+
+  /** Map a Prisma Organization row to the Tenant projection. */
+  private static fromOrganization(org: {
+    id: string;
+    name: string;
+    clientCode: string;
+    logoUrl: string | null;
+    plan: string;
+    enforce2fa: boolean;
+    allowedDomains: unknown;
+    createdAt: Date;
+  }): Tenant {
+    return {
+      id: org.id,
+      name: org.name,
+      slug: org.clientCode,
+      clientCode: org.clientCode,
+      logoUrl: org.logoUrl,
+      plan: org.plan,
+      status: 'active',
+      enforce2fa: org.enforce2fa,
+      enforceSso: false,
+      allowedDomains: org.allowedDomains as string[] | null,
+      maxMembers: 999,
+      createdAt: org.createdAt.toISOString(),
+    };
   }
 
   /** Confirm the user is an active member of the org (used during login & switch). */

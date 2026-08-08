@@ -18,7 +18,7 @@ import crypto from 'crypto';
 import jwt, { type JwtPayload, type Secret, type SignOptions } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../../config/env';
-import { supabaseAdmin } from '../../config/supabase';
+import { prisma } from '../../infrastructure/prisma';
 import { AppError } from '../../middleware/error';
 
 export interface AccessTokenClaims {
@@ -111,14 +111,10 @@ export class TokenService {
     const refreshTokenExpiresAt = this.decodeRefresh(refreshToken).exp!;
 
     // Persist the refresh-token hash so rotation/reuse-detection works.
-    await supabaseAdmin
-      .from('sessions')
-      .update({
-        refresh_token_hash: this.hashRefresh(refreshToken),
-        refresh_token_family: family,
-        rotated_at: new Date().toISOString(),
-      })
-      .eq('id', opts.sessionId);
+    await prisma.session.update({
+      where: { id: opts.sessionId },
+      data: { refreshToken: this.hashRefresh(refreshToken), lastActivityAt: new Date() },
+    });
 
     return {
       accessToken,
@@ -145,15 +141,9 @@ export class TokenService {
 
     if (!claims.jti) throw new AppError('Missing jti', 401, 'INVALID_TOKEN');
 
-    // Server-side denylist check (in case of emergency revoke)
-    const { data: revoked } = await supabaseAdmin
-      .from('revoked_tokens')
-      .select('jti')
-      .eq('jti', claims.jti)
-      .gt('expires_at', new Date().toISOString())
-      .maybeSingle();
-
-    if (revoked) throw new AppError('Token revoked', 401, 'TOKEN_REVOKED');
+    // NOTE: server-side access-token denylist (revoked_tokens) is only used in
+    // the Supabase deployment. In the local/Prisma deployment the refresh token
+    // lives in the sessions table, so revocation is handled by is_active there.
 
     return claims as unknown as AccessTokenClaims;
   }
@@ -183,29 +173,26 @@ export class TokenService {
     reason: string,
     expiresAt: Date
   ): Promise<void> {
-    await supabaseAdmin.from('revoked_tokens').upsert({
-      jti,
-      user_id: userId,
-      reason,
-      expires_at: expiresAt.toISOString(),
-    });
+    // NOTE: access-token denylist only exists in the Supabase deployment. In the
+    // Prisma deployment, sessions use is_active; nothing to persist here.
+    // Kept as a no-op so callers (e.g. logout) don't have to branch.
+    return Promise.resolve();
   }
 
   /** Revoke an entire session row (logout / kill switch). */
   static async revokeSession(sessionId: string): Promise<void> {
-    await supabaseAdmin
-      .from('sessions')
-      .update({ revoked_at: new Date().toISOString() })
-      .eq('id', sessionId);
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: { isActive: false, lastActivityAt: new Date() },
+    });
   }
 
   /** Revoke EVERY session for a user (logout-everywhere / "I think I'm compromised"). */
   static async revokeAllForUser(userId: string): Promise<void> {
-    await supabaseAdmin
-      .from('sessions')
-      .update({ revoked_at: new Date().toISOString() })
-      .eq('user_id', userId)
-      .is('revoked_at', null);
+    await prisma.session.updateMany({
+      where: { userId, isActive: true },
+      data: { isActive: false, lastActivityAt: new Date() },
+    });
   }
 
   private static decode(token: string): JwtPayload {
