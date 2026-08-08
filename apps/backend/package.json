@@ -15,6 +15,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "db:seed": "tsx src/db/seed.ts",
+    "db:seed:owner": "tsx src/db/seed-owner-user.ts",
     "lint": "eslint src --ext .ts",
     "test": "jest"
   },
@@ -29,6 +30,7 @@
     "@prisma/client": "^5.10.0",
     "@sendgrid/mail": "^8.1.0",
     "@supabase/supabase-js": "^2.38.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "axios": "^1.6.0",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.8.0",
@@ -46,6 +48,7 @@
     "otplib": "^12.0.1",
     "qrcode": "^1.5.4",
     "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^9.0.0",
     "winston": "^3.12.0",
     "zod": "^3.22.4"

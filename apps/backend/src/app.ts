@@ -6,8 +6,10 @@ import { rateLimit } from 'express-rate-limit';
 import Redis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
 import type { RequestHandler } from 'express';
+import swaggerUi from 'swagger-ui-express';
 import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
+import { swaggerSpec } from './config/swagger';
 import { requestContext } from './middleware/request-context';
 import authRoutes from './routes/auth';
 import registerRoutes from './routes/register';
@@ -183,7 +185,10 @@ app.get('/health', (_req, res) => {
  *       302:
  *         description: Redirects to the API info endpoint
  */
-// Root index redirects to the API info endpoint
+// Swagger UI setup
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { swaggerUrl: '/swagger/index.html' }));
+
+// Root index redirects to the Swagger docs
 app.get('/', (_req, res) => {
   res.redirect(302, '/swagger/index.html');
 });
