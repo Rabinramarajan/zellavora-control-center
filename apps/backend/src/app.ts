@@ -91,9 +91,7 @@ app.use(
   })
 );
 
-// Security headers. CSP is deliberately permissive (unsafe-inline) because the
-// Angular SPA relies on inline styles/scripts when served from this origin —
-// everything else gets strict, sane defaults.
+// Security headers with CSP for both Angular SPA and Swagger UI
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -121,6 +119,12 @@ app.use(
     hsts: config.nodeEnv === 'production' ? { maxAge: 15552000, includeSubDomains: true } : false,
   })
 );
+
+// Swagger UI setup (before rate limiting to allow swagger access)
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/', (_req, res) => {
+  res.redirect(302, '/swagger/index.html');
+});
 
 // Coarse global rate limit on the auth surface (brute-force / credential
 // stuffing protection). Per-account + per-IP enforcement happens inside the
@@ -185,13 +189,6 @@ app.get('/health', (_req, res) => {
  *       302:
  *         description: Redirects to the API info endpoint
  */
-// Swagger UI setup
-app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { swaggerUrl: '/swagger/index.html' }));
-
-// Root index redirects to the Swagger docs
-app.get('/', (_req, res) => {
-  res.redirect(302, '/swagger/index.html');
-});
 
 /**
  * @swagger
