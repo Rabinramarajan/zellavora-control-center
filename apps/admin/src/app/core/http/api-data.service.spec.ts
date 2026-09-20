@@ -7,7 +7,6 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 describe('ApiDataService', () => {
   let service: ApiDataService;
   let httpMock: HttpTestingController;
-  let store: AuthStore;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -16,7 +15,6 @@ describe('ApiDataService', () => {
 });
     service = TestBed.inject(ApiDataService);
     httpMock = TestBed.inject(HttpTestingController);
-    store = TestBed.inject(AuthStore);
   });
 
   afterEach(() => {

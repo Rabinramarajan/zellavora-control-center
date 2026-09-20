@@ -1,7 +1,6 @@
 import { prisma } from '../../infrastructure/prisma';
 import { CreateDailySheetDTO, UpdateDailySheetDTO, ApproveDailySheetDTO, DailySheetQueryDTO } from './daily-sheets.dto';
 import { Decimal } from '@prisma/client/runtime/library';
-import { AppError } from '../../middleware/error';
 import { AuditService } from '../audit/audit.service';
 
 export class DailySheetsService {

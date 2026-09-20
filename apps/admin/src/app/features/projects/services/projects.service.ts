@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { Project, ProjectStatus, PaginatedResponse, PaginationParams } from '@shared/models';
+import { Project, ProjectStatus, PaginationParams } from '@shared/models';
 import { ProjectRepository } from '@core/repositories/project.repository';
 
 interface ProjectsState {

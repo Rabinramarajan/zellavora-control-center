@@ -39,7 +39,6 @@
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.20",
-    "@types/jsonwebtoken": "^9.0.10",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "eslint": "^8.53.0",
@@ -57,7 +56,6 @@
     "@angular/platform-browser": "^22.0.0",
     "@angular/platform-browser-dynamic": "^22.0.0",
     "@angular/router": "^22.0.0",
-    "@primeuix/themes": "^3.0.0",
     "primeng": "^21.0.0",
     "rxjs": "^7.8.0",
     "tslib": "^2.6.0",

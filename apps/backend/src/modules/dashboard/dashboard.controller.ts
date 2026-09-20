@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import Redis from 'ioredis';
 import { config } from '../../config/env';
 import { DashboardService } from './dashboard.service';

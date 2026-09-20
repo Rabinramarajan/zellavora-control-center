@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { wrapResponse } from './admin-helpers';
 
 const router = Router();
 

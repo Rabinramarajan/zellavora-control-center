@@ -7,7 +7,6 @@
  * sensible static menu tree and filter it by the user's permissions via
  * PermissionService.has().
  */
-import { AppError } from '../../middleware/error';
 import { PermissionService } from './permission.service';
 
 export interface MenuNode {

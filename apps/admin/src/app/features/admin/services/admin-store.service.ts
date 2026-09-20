@@ -6,8 +6,7 @@ import {
   inject,
   signal,
   computed,
-  effect,
-} from '@angular/core';
+  } from '@angular/core';
 import { AdminApiService } from './admin-api.service';
 import {
   User,
@@ -23,8 +22,7 @@ import {
   Config,
   ConfigSearchCriteria,
   Group,
-  GroupSearchCriteria,
-} from '../models/admin.models';
+  } from '../models/admin.models';
 
 interface AdminState {
   users: User[];

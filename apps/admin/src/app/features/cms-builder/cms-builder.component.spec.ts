@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 describe('CmsBuilderComponent', () => {
   let component: CmsBuilderComponent;
   let fixture: ComponentFixture<CmsBuilderComponent>;
-  let repoMock: jasmine.SpyObj<CmsBuilderRepository>;
 
   beforeEach(() => {
     const spy = jasmine.createSpyObj('CmsBuilderRepository', ['loadPages', 'savePage']);
@@ -23,7 +22,6 @@ describe('CmsBuilderComponent', () => {
 
     fixture = TestBed.createComponent(CmsBuilderComponent);
     component = fixture.componentInstance;
-    repoMock = TestBed.inject(CmsBuilderRepository) as jasmine.SpyObj<CmsBuilderRepository>;
     fixture.detectChanges();
   });
 

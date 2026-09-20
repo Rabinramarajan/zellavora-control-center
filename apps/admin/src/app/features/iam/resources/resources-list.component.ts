@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IamApiService, unwrap } from '@core/api/iam.api';
-import { ResourceListItem, ResourceTreeNode, ResourceType } from '@shared/models/iam.model';
+import { ResourceListItem } from '@shared/models/iam.model';
 import { createListStore } from '@shared/utils/create-list-store';
 import {
   DataTableComponent,

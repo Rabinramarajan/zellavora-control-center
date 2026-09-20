@@ -17,8 +17,7 @@ import {
   TokenService,
   type AccessTokenClaims,
   SessionService,
-  TenantService,
-} from '../services/auth';
+  } from '../services/auth';
 import { AppError } from './error';
 
 export interface AuthRequest extends Request {

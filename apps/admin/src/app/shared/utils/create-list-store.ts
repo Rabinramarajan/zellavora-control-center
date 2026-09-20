@@ -17,7 +17,7 @@
  * Methods:
  *   setQ, setFilters, setPage, setPageSize, reload, reset
  */
-import { Injectable, computed, signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { PaginatedList } from '@shared/models/iam.model';
 

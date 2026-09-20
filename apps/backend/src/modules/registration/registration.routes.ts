@@ -19,7 +19,6 @@
  */
 
 import { Router, type Router as ExpressRouter } from 'express';
-import crypto from 'crypto';
 import { z } from 'zod';
 import { config } from '../../config/env';
 import { prisma } from '../../infrastructure/prisma';
@@ -37,10 +36,8 @@ import {
   checkEmailAvailability,
   checkOrganizationCodeAvailability,
   checkOrganizationNameAvailability,
-  generateOrganizationCode,
   validatePasswordStrength,
-  checkPasswordHistory,
-} from './registration.service';
+  } from './registration.service';
 
 const router: ExpressRouter = Router();
 

@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NotificationRepository } from '@core/repositories/notification.repository';
-import { NotificationTemplate } from '@shared/models';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

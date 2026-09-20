@@ -117,7 +117,7 @@ export class IamUserService {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
 
-    const updated = await this.repo.update(id, {
+    await this.repo.update(id, {
       ...(dto.fullName !== undefined ? { fullName: dto.fullName } : {}),
       ...(dto.firstName !== undefined ? { firstName: dto.firstName } : {}),
       ...(dto.lastName !== undefined ? { lastName: dto.lastName } : {}),

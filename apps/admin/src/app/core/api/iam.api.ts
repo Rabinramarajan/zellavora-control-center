@@ -20,7 +20,6 @@ import {
   SetRolePermissionsRequest,
   SetUserGroupsRequest,
   SetUserRolesRequest,
-  SetUserStatusRequest,
   UpdateIamUserRequest,
   AddGroupMembersRequest,
   UserStatus,
@@ -28,8 +27,7 @@ import {
   GroupType,
   ResourceType,
   RoleScope,
-  PermissionEffect,
-} from '@shared/models/iam.model';
+  } from '@shared/models/iam.model';
 
 export interface IamListQuery {
   q?: string;

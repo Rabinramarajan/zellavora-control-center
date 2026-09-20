@@ -23,7 +23,7 @@ router.post('/message/send', authenticate, async (req, res, next) => {
 
 router.post('/email/send', authenticate, async (req, res, next) => {
   try {
-    const { toEmail, subject, content } = req.body;
+    const { toEmail, subject } = req.body;
     res.json(
       wrapResponse({
         emailId: 1,

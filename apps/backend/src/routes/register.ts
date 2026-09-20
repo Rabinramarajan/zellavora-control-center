@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../infrastructure/prisma';
-import { logger } from '../infrastructure/logger';
 import { PasswordService } from '../services/auth/password.service';
 import { addQueueJob } from '../infrastructure/queue';
 import { authenticator } from 'otplib';
