@@ -67,6 +67,10 @@ export class ApiDataService {
     return this.request('PUT', path, body, undefined, options);
   }
 
+  patchData<T = any>(path: string, body: any, options?: ApiOptions): Observable<T> {
+    return this.request('PATCH', path, body, undefined, options);
+  }
+
   deleteData<T = any>(path: string, options?: ApiOptions): Observable<T> {
     return this.request('DELETE', path, undefined, undefined, options);
   }

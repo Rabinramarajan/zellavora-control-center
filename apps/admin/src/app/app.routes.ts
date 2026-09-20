@@ -131,6 +131,12 @@ export const appRoutes: Routes = [
       ),
   },
   {
+    path: 'timesheets',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/timesheet/timesheet.routes').then((m) => m.timesheetRoutes),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },
