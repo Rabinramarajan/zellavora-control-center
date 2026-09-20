@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CmsBuilderRepository } from '@core/repositories/cms-builder.repository';
-import { CmsPage, CmsSection } from '@shared/models';
+import { CmsSection } from '@shared/models';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

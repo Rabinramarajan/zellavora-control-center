@@ -8,7 +8,6 @@
  * Pair with the SQL trigger (fn_audit_trigger) for auto-audit of resource
  * changes — this service is for events that have no specific row.
  */
-import { AppError } from '../../middleware/error';
 
 export type AuditSeverity = 'info' | 'warn' | 'critical';
 export type AuditAction =

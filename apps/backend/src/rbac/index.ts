@@ -5,7 +5,7 @@
  * Mount under /api/v1/rbac.
  */
 import { Router } from 'express';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 import Redis from 'ioredis';
 
 import { PermissionEngine } from './engine/permission-engine';

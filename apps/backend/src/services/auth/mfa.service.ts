@@ -16,11 +16,9 @@ import crypto from 'crypto';
 import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
 import bcrypt from 'bcryptjs';
-import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { supabaseAdmin } from '../../config/supabase';
 import { prisma } from '../../infrastructure/prisma';
-import { config } from '../../config/env';
 import { AppError } from '../../middleware/error';
 import { EncryptionService } from './encryption.service';
 

@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { Observable, throwError, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { NotificationApiService } from '@core/api/notification.api';
 import { NotificationMessage, NotificationTemplate } from '@shared/models';

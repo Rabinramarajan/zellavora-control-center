@@ -1,4 +1,4 @@
-import { Router, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import { supabase } from '../config/supabase';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import {

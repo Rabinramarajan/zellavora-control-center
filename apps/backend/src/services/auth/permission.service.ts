@@ -9,7 +9,6 @@
  * still applied.
  */
 import { prisma } from '../../infrastructure/prisma';
-import { AppError } from '../../middleware/error';
 
 export class PermissionService {
   /** Load the user's permission codes within an organization. */

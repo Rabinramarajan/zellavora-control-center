@@ -1,4 +1,3 @@
-import { Response } from 'express';
 
 // Shared User UUID/Serial Mapping
 export const userUuidToSerial = new Map<string, number>();

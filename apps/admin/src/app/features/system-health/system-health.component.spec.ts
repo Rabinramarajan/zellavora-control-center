@@ -7,7 +7,6 @@ import { signal } from '@angular/core';
 describe('SystemHealthComponent', () => {
   let component: SystemHealthComponent;
   let fixture: ComponentFixture<SystemHealthComponent>;
-  let repoMock: jasmine.SpyObj<SystemHealthRepository>;
 
   beforeEach(() => {
     const health = {
@@ -34,7 +33,6 @@ describe('SystemHealthComponent', () => {
 
     fixture = TestBed.createComponent(SystemHealthComponent);
     component = fixture.componentInstance;
-    repoMock = TestBed.inject(SystemHealthRepository) as jasmine.SpyObj<SystemHealthRepository>;
     fixture.detectChanges();
   });
 

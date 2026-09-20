@@ -1,5 +1,4 @@
 import { Resource } from '@prisma/client';
-import { ResourceListQueryDto } from './resource.dto';
 
 const resourceTypeLabels: Record<string, string> = {
   API: 'API',

@@ -23,7 +23,7 @@ import CryptoJS from 'crypto-js';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { config } from '../config/env';
-import { supabase, supabaseAdmin } from '../config/supabase';
+import { supabaseAdmin } from '../config/supabase';
 import { AppError } from '../middleware/error';
 import { prisma } from '../infrastructure/prisma';
 import { addQueueJob } from '../infrastructure/queue';
@@ -2211,7 +2211,7 @@ const VerifyEmailSchema = z.object({
  */
 router.post('/verify-email', async (req, res, next) => {
   try {
-    const { token, otp, email } = VerifyEmailSchema.parse(req.body);
+    const { token, otp } = VerifyEmailSchema.parse(req.body);
 
     if (!token && !otp) {
       throw new AppError('Either a token or OTP is required', 400, 'MISSING_VERIFICATION');

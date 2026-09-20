@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamApiService } from '@core/api/iam.api';
-import { IamUserDetail, UserStatus } from '@shared/models/iam.model';
+import { IamUserDetail } from '@shared/models/iam.model';
 import {
   DetailTabsComponent,
   DetailTab,
@@ -11,14 +11,6 @@ import {
   EmptyStateComponent,
   ConfirmDialogComponent,
 } from '@shared/components/iam';
-
-const STATUS_ACTIONS: Record<UserStatus, string> = {
-  ACTIVE: 'deactivate',
-  INACTIVE: 'activate',
-  LOCKED: 'unlock',
-  PENDING: 'activate',
-  SUSPENDED: 'reactivate',
-};
 
 @Component({
   selector: 'zcc-users-detail',

@@ -94,6 +94,7 @@ model Organization {
   invitedUsers   Invitation[]
   dailySheets    DailySheet[]
   monthlySheets  MonthlySheet[]
+  timesheets     Timesheet[]
   teams          Team[]
   projects       Project[]
 
@@ -201,6 +202,8 @@ model User {
   dailySheetApprovals DailySheet[] @relation("DailySheetApprover")
   monthlySheets     MonthlySheet[] @relation("MonthlySheetUser")
   monthlySheetApprovals MonthlySheet[] @relation("MonthlySheetApprover")
+  timesheets        Timesheet[]    @relation("TimesheetUser")
+  timesheetApprovals Timesheet[]   @relation("ApprovedTimesheets")
 
   // Teams
   teams             Team[]
@@ -1150,6 +1153,87 @@ model MonthlySheet {
   @@index([userId, year, month(sort: Desc)])
   @@index([status])
   @@map("monthly_sheets")
+}
+
+// ============================================================================
+// TIMESHEETS
+// ============================================================================
+
+enum TimesheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum TimesheetEntryStatus {
+  EMPTY
+  WORKING
+  EXTENDED
+  WEEKEND_WORK
+  LEAVE
+  HOLIDAY
+}
+
+model Timesheet {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+
+  // Period the sheet covers, as "YYYY-MM"
+  period          String    @map("period") @db.VarChar(7)
+
+  // Status & Approval
+  status          TimesheetStatus @default(DRAFT) @map("status")
+  totalHours      Decimal   @default(0) @map("total_hours") @db.Decimal(7, 2)
+  submittedAt     DateTime? @map("submitted_at") @db.Timestamptz
+  approvedById    String?   @map("approved_by") @db.Uuid
+  approvedAt      DateTime? @map("approved_at") @db.Timestamptz
+  rejectedAt      DateTime? @map("rejected_at") @db.Timestamptz
+  rejectionReason String?   @map("rejection_reason") @db.Text
+
+  // Audit
+  createdBy       String    @map("created_by") @db.Uuid
+  updatedBy       String?   @map("updated_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User      @relation("TimesheetUser", fields: [userId], references: [id], onDelete: Cascade)
+  approver        User?     @relation("ApprovedTimesheets", fields: [approvedById], references: [id])
+  entries         TimesheetEntry[]
+
+  @@unique([userId, period, organizationId])
+  @@index([organizationId, period])
+  @@index([organizationId, status])
+  @@map("timesheets")
+}
+
+model TimesheetEntry {
+  id           String    @id @default(uuid()) @db.Uuid
+  timesheetId  String    @map("timesheet_id") @db.Uuid
+
+  entryDate    DateTime  @map("entry_date") @db.Date
+  dayOfWeek    String    @map("day_of_week") @db.VarChar(9)
+
+  // Wall-clock strings exactly as entered, e.g. "11:00 AM"
+  startTime    String?   @map("start_time") @db.VarChar(8)
+  endTime      String?   @map("end_time") @db.VarChar(8)
+  hours        Decimal?  @map("hours") @db.Decimal(5, 2)
+
+  status       TimesheetEntryStatus @default(EMPTY) @map("status")
+  notes        String?   @map("notes") @db.Text
+
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  timesheet    Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
+
+  @@unique([timesheetId, entryDate])
+  @@index([timesheetId])
+  @@map("timesheet_entries")
 }
 
 // ============================================================================

@@ -8,7 +8,6 @@ import { signal } from '@angular/core';
 describe('NotificationsComponent', () => {
   let component: NotificationsComponent;
   let fixture: ComponentFixture<NotificationsComponent>;
-  let repoMock: jasmine.SpyObj<NotificationRepository>;
 
   beforeEach(() => {
     const spy = jasmine.createSpyObj('NotificationRepository', ['loadNotifications', 'loadTemplates', 'sendBroadcast'], {
@@ -28,7 +27,6 @@ describe('NotificationsComponent', () => {
 
     fixture = TestBed.createComponent(NotificationsComponent);
     component = fixture.componentInstance;
-    repoMock = TestBed.inject(NotificationRepository) as jasmine.SpyObj<NotificationRepository>;
     fixture.detectChanges();
   });
 

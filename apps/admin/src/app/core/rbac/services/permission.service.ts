@@ -13,7 +13,7 @@ import { Injectable, computed, inject, Signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { PolicyStore } from '../store/policy.store';
-import type { CheckResponse, CheckResult } from '../models/check.model';
+import type { CheckResponse } from '../models/check.model';
 import type { EffectivePolicy } from '../models/policy.model';
 
 @Injectable({ providedIn: 'root' })

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { emailService } from '../services/email.service';
 import { logger } from '../infrastructure/logger';
-import { addQueueJob, sendOtpEmail, sendWelcomeEmail } from '../infrastructure/queue';
+import { addQueueJob } from '../infrastructure/queue';
 
 const router = Router();
 

@@ -6,7 +6,6 @@ import { rateLimit } from 'express-rate-limit';
 import Redis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
 import type { RequestHandler } from 'express';
-import swaggerUi from 'swagger-ui-express';
 import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
 import { swaggerSpec } from './config/swagger';
@@ -47,6 +46,7 @@ import groupRoutes from './modules/groups/group.routes';
 import iamUserRoutes from './modules/users/iam-user.routes';
 import dailySheetsRoutes from './modules/daily-sheets/daily-sheets.routes';
 import monthlySheetsRoutes from './modules/monthly-sheets/monthly-sheets.routes';
+import timesheetsRoutes from './modules/timesheets/timesheets.routes';
 
 const app = express();
 
@@ -55,8 +55,47 @@ const app = express();
 // request with ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and req.ip stays the proxy.
 app.set('trust proxy', config.trustProxy);
 
-// Swagger UI setup (BEFORE any body parsing middleware)
-app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger UI (BEFORE any body parsing middleware).
+//
+// `swaggerUi.serve` cannot be used on Vercel: swagger-ui-dist's assets are
+// read from disk at request time, so the build tracer never bundles them and
+// every /swagger/*.js request falls through to the HTML 404 handler, which the
+// browser reports as "Unexpected token '<'". Serve the spec as JSON and load
+// the UI assets from a CDN instead.
+const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14';
+
+app.get(['/swagger/swagger.json', '/swagger.json'], (_req, res) => {
+  res.json(swaggerSpec);
+});
+
+app.get(['/swagger', '/swagger/', '/swagger/index.html'], (_req, res) => {
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zellavora Control Center API</title>
+    <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css" />
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="${SWAGGER_UI_CDN}/swagger-ui-bundle.js" crossorigin></script>
+    <script src="${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js" crossorigin></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: '/swagger/swagger.json',
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: 'StandaloneLayout',
+        });
+      };
+    </script>
+  </body>
+</html>`);
+});
+
 app.get('/', (_req, res) => {
   res.redirect(302, '/swagger/index.html');
 });
@@ -260,6 +299,7 @@ app.use('/api/v1', settingsRoutes);
 // Timesheet management routes
 app.use('/api/v1/daily-sheets', dailySheetsRoutes);
 app.use('/api/v1/monthly-sheets', monthlySheetsRoutes);
+app.use('/api/v1/timesheets', timesheetsRoutes);
 
 app.use('/api/v1/admin', adminUsersRoutes);
 app.use('/api/v1/admin', adminGroupsRoutes);
