@@ -1,9 +1,10 @@
+/* PrimeIcons for PrimeNG. Must precede the Tailwind imports: Tailwind inlines
+ * its layers here, and a CSS @import after any rule is invalid. */
+@import "primeicons/primeicons.css";
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* PrimeIcons for PrimeNG */
-@import "primeicons/primeicons.css";
 
 :root {
   --p-primary-50: #faf5ff;

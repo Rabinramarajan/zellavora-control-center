@@ -10,8 +10,10 @@ import { DashboardEmptyComponent, DashboardErrorComponent } from './components/s
 import { ApexChartComponent } from '@shared/components/apex-chart/apex-chart.component';
 import { CsvExporter } from '@shared/utils/csv-exporter';
 
-const SEVERITY_OPTIONS: Array<{ label: string; value: AuditSeverity }> = [
-  { label: 'All severities', value: 'info' },
+// '' is the 'no filter' sentinel: it must stay distinct from 'info', otherwise
+// the Info option is unselectable and @for sees duplicate track keys (NG0955).
+const SEVERITY_OPTIONS: Array<{ label: string; value: AuditSeverity | '' }> = [
+  { label: 'All severities', value: '' },
   { label: 'Debug', value: 'debug' },
   { label: 'Info', value: 'info' },
   { label: 'Warning', value: 'warning' },
@@ -112,10 +114,8 @@ export class DashboardComponent implements OnInit {
   readonly hasTrendData = computed(() => (this.store.trends()?.activity.length ?? 0) > 0);
 
   applySeverityFilter(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as AuditSeverity;
-    this.store.setActivityFilters(
-      value === 'info' ? {} : { severity: value }
-    );
+    const value = (event.target as HTMLSelectElement).value as AuditSeverity | '';
+    this.store.setActivityFilters(value === '' ? {} : { severity: value });
   }
 
   exportActivityCsv(): void {
