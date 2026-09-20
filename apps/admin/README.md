@@ -110,8 +110,9 @@ theme: {
 The admin dashboard uses JWT-based authentication with automatic token refresh.
 
 ### Login
+- Organization (client code): `zellavora-inc`
 - Email: `admin@zellavora.com`
-- Password: `password123`
+- Password: `AdminPassword123!`
 
 ### How it Works
 1. User logs in with email/password
