@@ -964,16 +964,23 @@ router.post('/refresh', async (req, res, next) => {
       throw new AppError('Refresh token session mismatch', 401, 'REFRESH_TOKEN_REUSE');
     }
 
-    const user = await prisma.user.findUnique({
+    // Start both independent reads together. Materialize the Prisma promise so
+    // the legacy membership fallback can reuse it without executing it again.
+    const userPromise = prisma.user.findUnique({
       where: { id: session.user_id },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, tenantId: true, isDeleted: true },
+    }).then((user) => {
+      if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+      return user;
     });
-    if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    const [user, role] = await Promise.all([
+      userPromise,
+      TenantService.assertMembership(session.user_id, session.organization_id, userPromise),
+    ]);
 
     // The session's organization_id is authoritative — it's the tenant the user
     // authenticated against at login (resolved from the client code). The users
     // table's tenant_id is NOT reliable (often null/stale), so never use it here.
-    const role = await TenantService.assertMembership(user.id, session.organization_id);
     const tokens = await TokenService.issue({
       userId: user.id,
       tenantId: session.organization_id,

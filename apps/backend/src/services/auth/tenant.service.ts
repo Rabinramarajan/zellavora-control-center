@@ -8,6 +8,8 @@
 import { AppError } from '../../middleware/error';
 import { prisma } from '../../infrastructure/prisma';
 
+type MembershipUser = { role: string; tenantId: string | null; isDeleted: boolean };
+
 export interface Tenant {
   id: string;
   name: string;
@@ -145,7 +147,11 @@ export class TenantService {
   }
 
   /** Confirm the user is an active member of the org (used during login & switch). */
-  static async assertMembership(userId: string, orgId: string): Promise<string> {
+  static async assertMembership(
+    userId: string,
+    orgId: string,
+    loadedUser?: PromiseLike<MembershipUser | null>
+  ): Promise<string> {
     const membership = await prisma.userTenant.findUnique({
       where: { userId_tenantId: { userId, tenantId: orgId } },
       select: { role: true },
@@ -155,7 +161,8 @@ export class TenantService {
     // No explicit membership row: fall back to the user's own tenant, which is
     // what login authorizes against (users.tenant_id + users.role). Many users
     // predate organization_members and only have this link.
-    const user = await prisma.user.findUnique({
+    // Refresh already reads this user in parallel with the membership query.
+    const user = loadedUser !== undefined ? await loadedUser : await prisma.user.findUnique({
       where: { id: userId },
       select: { role: true, tenantId: true, isDeleted: true },
     });
