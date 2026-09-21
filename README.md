@@ -74,14 +74,14 @@ npm run dev:admin
 
 ## 📂 Project Structure
 
+See [application structure and cleanup notes](./docs/CODE_CLEANUP.md) for folder responsibilities, verification results, and remaining technical debt.
+
 ```
 zcc/
 ├── apps/admin/           # Angular admin dashboard
-├── apps/public/          # Public portfolio (future)
-├── services/             # Backend APIs (future)
-├── packages/             # Shared libraries
+├── apps/backend/         # Express API and Prisma database layer
 ├── docs/                 # Complete documentation
-├── .supabase/            # Database migrations
+├── scripts/              # Deployment and operational helpers
 └── docker-compose.yml    # Local development setup
 ```
 

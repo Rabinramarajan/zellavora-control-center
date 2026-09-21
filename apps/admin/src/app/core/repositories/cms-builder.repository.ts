@@ -23,7 +23,7 @@ export class CmsBuilderRepository {
         this._pages.set(data);
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._loading.set(false);
         // Dev fallback
         const mockPages: CmsPage[] = [
@@ -60,7 +60,7 @@ export class CmsBuilderRepository {
         });
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._loading.set(false);
         const mockSaved: CmsPage = {
           id: page.id || crypto.randomUUID(),
@@ -90,7 +90,7 @@ export class CmsBuilderRepository {
         this._pages.update((current) => current.filter((p) => p.id !== id));
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._pages.update((current) => current.filter((p) => p.id !== id));
         this._loading.set(false);
         return of(void 0);

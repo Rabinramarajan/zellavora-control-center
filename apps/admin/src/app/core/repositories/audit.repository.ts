@@ -24,7 +24,7 @@ export class AuditRepository {
         this._logs.set(data);
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._loading.set(false);
         // Dev fallback
         const mockLogs: AuditRecord[] = [

@@ -12,21 +12,18 @@
  *   - 423 ACCOUNT_LOCKED → push a global toast
  *   - 429 RATE_LIMITED → back off
  *
- * Concurrency: only one refresh in flight at a time. All other 401s wait on
- * the same promise via a Subject.
+ * Concurrency: AuthService shares refreshes across 401s and its refresh timer.
  */
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, filter, switchMap, take } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 
 import { AuthStore } from './auth.store';
 import { AuthService } from './auth.service';
 import { ErrorBus } from '@core/error/error-bus';
 
 const AUTH_FREE = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password', '/auth/refresh', '/auth/validate-client', '/auth/login/mfa', '/auth/public-key', '/auth/gettoken', '/MemberPortalLogin/gettoken'];
-
-let inflightRefresh$: BehaviorSubject<string | null> | null = null;
 
 const attachHeaders = (req: HttpRequest<unknown>, store: AuthStore): HttpRequest<unknown> => {
   const headers: Record<string, string> = {};
@@ -61,37 +58,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => err);
       }
 
-      // Coalesce concurrent 401s into a single refresh
-      if (!inflightRefresh$) {
-        inflightRefresh$ = new BehaviorSubject<string | null>(null);
-        const rt = store.refreshToken();
-        if (!rt) {
-          inflightRefresh$ = null;
-          return finalizeLogout(auth, errors);
-        }
-        auth.refresh({ refreshToken: rt }, { silent: true }).subscribe({
-          next: (ok) => {
-            inflightRefresh$!.next(ok ? store.accessToken() : null);
-            inflightRefresh$!.complete();
-            inflightRefresh$ = null;
-            if (!ok) auth.logout(false).subscribe();
-          },
-          error: () => {
-            inflightRefresh$!.next(null);
-            inflightRefresh$!.complete();
-            inflightRefresh$ = null;
-          },
-        });
-      }
-
-      return inflightRefresh$!.pipe(
-        filter((t): t is string => !!t),
-        take(1),
-        switchMap((newToken) => {
-          const retried = req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } });
-          return next(retried);
+      const rt = store.refreshToken();
+      if (!rt) return finalizeLogout(auth, errors);
+      // A late 401 may belong to a token that another request already rotated.
+      const currentToken = store.accessToken();
+      const renewed = currentToken && cloned.headers.get('Authorization') !== `Bearer ${currentToken}`;
+      return (renewed ? of(true) : auth.refresh({ refreshToken: rt }, { silent: true })).pipe(
+        switchMap((ok) => {
+          if (!ok) return throwError(() => err);
+          return next(attachHeaders(req, store));
         }),
-        catchError((e) => finalizeLogout(auth, errors, e))
+        catchError((e) => {
+          if (!store.accessToken() || (e instanceof HttpErrorResponse && e.status === 401)) {
+            return finalizeLogout(auth, errors, e);
+          }
+          return handleNon401(e, errors);
+        })
       );
     })
   );

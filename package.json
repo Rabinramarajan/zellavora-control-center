@@ -22,7 +22,7 @@
     "lint": "npm run lint:admin",
     "lint:admin": "cd apps/admin && npm run lint",
     "format": "prettier --write \"apps/**/*.{ts,tsx,html,css,json,md}\"",
-    "type-check": "tsc --noEmit",
+    "type-check": "npm run type-check:admin && npm run type-check:backend",
     "db:migrate": "cd apps/backend && npm run db:migrate",
     "db:reset": "cd apps/backend && npm run db:reset",
     "db:seed": "cd apps/backend && npm run db:seed",
@@ -31,7 +31,13 @@
     "docker:build": "docker build -t zcc:latest .",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "analyze": "npm run build -- --stats"
+    "analyze": "npm run build -- --stats",
+    "type-check:admin": "npm run type-check --prefix apps/admin",
+    "type-check:backend": "npm run typecheck --prefix apps/backend",
+    "build:all": "npm run build:admin && npm run build:backend",
+    "test:backend": "npm run test --prefix apps/backend -- --runInBand",
+    "test:all": "npm run test:admin && npm run test:backend",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,html,css,json,md}\""
   },
   "workspaces": [
     "apps/admin"

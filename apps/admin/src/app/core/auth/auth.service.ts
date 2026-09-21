@@ -7,13 +7,13 @@
  *   - Triggers the AuthStore updates that drive the UI
  *
  * Storage strategy:
- *   - accessToken: in-memory ONLY (signal). Never localStorage. XSS-resistant.
+ *   - accessToken: signal + sessionStorage, reused across reloads until near expiry.
  *   - refreshToken: httpOnly cookie if backend supports it; otherwise sessionStorage.
  *   - tenantId + sessionId: sessionStorage (so a tab reload doesn't lose them).
  *   - user: sessionStorage (UI personalization).
  *
  * On app boot:
- *   1. Try a silent refresh using the stored refresh token
+ *   1. Reuse the stored access token, or silently refresh if it is near expiry
  *   2. If success, hydrate the store from /auth/me
  *   3. If failure, fall back to login
  */
@@ -21,7 +21,7 @@ import { Injectable, inject, effect, DestroyRef } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError, timer, Subscription, from } from 'rxjs';
-import { catchError, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 import { AuthStore } from './auth.store';
 import {
@@ -48,6 +48,7 @@ import {
 
 const STORAGE = {
   refresh: 'zcc.refresh',
+  tokens: 'zcc.tokens',
   user: 'zcc.user',
   tenantId: 'zcc.tenantId',
   redirect: 'zcc.redirect',
@@ -80,6 +81,7 @@ export class AuthService {
   private readonly destroyRef = inject(DestroyRef);
 
   private refreshTimer: Subscription | null = null;
+  private refreshRequest$?: Observable<boolean>;
   private apiUrl = '/api/v1/auth';
 
   // "Remember me" refreshes survive the browser session (localStorage);
@@ -126,8 +128,9 @@ export class AuthService {
       return of(false);
     }
     // Persist into whichever storage the token came from so refreshes stay put.
-    this.refreshStorage = localStorage.getItem(STORAGE.refresh) ? localStorage : sessionStorage;
-    return this.refresh({ refreshToken }, { silent: true }).pipe(
+    this.refreshStorage = sessionStorage.getItem(STORAGE.refresh) ? sessionStorage : localStorage;
+    const restored = this.restoreAccessToken(refreshToken);
+    return (restored ? of(true) : this.refresh({ refreshToken }, { silent: true })).pipe(
       switchMap((ok) => (ok ? this.loadMe() : of(false))),
       tap((ok) => {
         // Only mark initialized once the restore has settled. Marking it before
@@ -227,7 +230,7 @@ export class AuthService {
       refreshTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7d default
       sessionId: 'oauth-session',
     });
-    this.persistRefreshToken(refreshToken);
+    this.persistTokens();
 
     return this.loadMe().pipe(
       tap((ok) => {
@@ -346,20 +349,27 @@ export class AuthService {
     { refreshToken }: { refreshToken: string },
     opts: { silent?: boolean } = {}
   ): Observable<boolean> {
+    if (this.refreshRequest$) return this.refreshRequest$;
     if (!opts.silent) this.store.setLoading(true);
-    return this.http
+    this.refreshRequest$ = this.http
       .post<RefreshResponse>(`${this.apiUrl}/refresh`, { refreshToken })
       .pipe(
         tap((res) => {
           this.store.updateTokens(res);
-          this.persistRefreshToken(res.refreshToken);
+          this.persistTokens();
         }),
         switchMap(() => of(true)),
         catchError(() => {
           this.clearLocalSession();
           return of(false);
-        })
+        }),
+        finalize(() => {
+          this.refreshRequest$ = undefined;
+          if (!opts.silent) this.store.setLoading(false);
+        }),
+        shareReplay({ bufferSize: 1, refCount: false })
       );
+    return this.refreshRequest$;
   }
 
   // -------------------------------------------------------------------------
@@ -545,7 +555,7 @@ export class AuthService {
       refreshTokenExpiresAt: res.refreshTokenExpiresAt,
       sessionId: res.sessionId,
     });
-    this.persistRefreshToken(res.refreshToken);
+    this.persistTokens();
     this.persistUser(res.user);
     sessionStorage.setItem(STORAGE.tenantId, res.tenant.id);
 
@@ -577,8 +587,38 @@ export class AuthService {
     this.refreshTimer = null;
   }
 
-  private persistRefreshToken(token: string): void {
-    this.refreshStorage.setItem(STORAGE.refresh, token);
+  private persistTokens(): void {
+    const state = this.store.snapshot();
+    if (!state.accessToken || !state.refreshToken) return;
+    const otherStorage = this.refreshStorage === localStorage ? sessionStorage : localStorage;
+    otherStorage.removeItem(STORAGE.refresh);
+    this.refreshStorage.setItem(STORAGE.refresh, state.refreshToken);
+    sessionStorage.setItem(STORAGE.tokens, JSON.stringify({
+      accessToken: state.accessToken,
+      refreshToken: state.refreshToken,
+      accessTokenExpiresAt: state.accessTokenExpiresAt?.toISOString(),
+      refreshTokenExpiresAt: state.refreshTokenExpiresAt?.toISOString(),
+      sessionId: state.sessionId,
+    }));
+  }
+
+  private restoreAccessToken(refreshToken: string): boolean {
+    try {
+      const tokens: RefreshResponse = JSON.parse(sessionStorage.getItem(STORAGE.tokens) ?? 'null');
+      if (!tokens || tokens.refreshToken !== refreshToken ||
+          typeof tokens.accessToken !== 'string' || !tokens.accessToken ||
+          typeof tokens.sessionId !== 'string' || !tokens.sessionId ||
+          !(Date.parse(tokens.accessTokenExpiresAt) > Date.now() + 60_000) ||
+          !(Date.parse(tokens.refreshTokenExpiresAt) > Date.now())) {
+        return false;
+      }
+      // Only a scheduling hint: /me still verifies this token server-side.
+      this.store.updateTokens(tokens);
+      return true;
+    } catch {
+      sessionStorage.removeItem(STORAGE.tokens);
+      return false;
+    }
   }
 
   private persistUser(user: unknown): void {
@@ -586,6 +626,8 @@ export class AuthService {
   }
 
   private clearLocalSession(): void {
+    this.clearRefreshTimer();
+    sessionStorage.removeItem(STORAGE.tokens);
     sessionStorage.removeItem(STORAGE.refresh);
     sessionStorage.removeItem(STORAGE.user);
     sessionStorage.removeItem(STORAGE.tenantId);

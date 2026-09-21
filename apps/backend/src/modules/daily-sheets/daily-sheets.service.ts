@@ -1,11 +1,8 @@
 import { prisma } from '../../infrastructure/prisma';
 import { CreateDailySheetDTO, UpdateDailySheetDTO, ApproveDailySheetDTO, DailySheetQueryDTO } from './daily-sheets.dto';
 import { Decimal } from '@prisma/client/runtime/library';
-import { AuditService } from '../audit/audit.service';
 
 export class DailySheetsService {
-  private auditService = new AuditService();
-
   async create(dto: CreateDailySheetDTO, organizationId: string, userId: string) {
     const totalAmount = new Decimal(dto.hoursWorked).times(new Decimal(dto.hourlyRate));
 

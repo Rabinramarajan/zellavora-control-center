@@ -26,11 +26,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install backend dependencies for type checking
+        run: npm ci --prefix apps/backend
+
       - name: Lint code
         run: npm run lint
 
       - name: Check formatting
-        run: npm run format -- --check
+        run: npm run format:check
 
       - name: TypeScript strict check
         run: npm run type-check

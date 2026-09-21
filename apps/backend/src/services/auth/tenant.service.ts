@@ -26,23 +26,6 @@ export interface Tenant {
 }
 
 export class TenantService {
-  private static prismaTenantToTenant(org: any): Tenant {
-    return {
-      id: org.id,
-      name: org.name,
-      slug: org.clientCode,
-      clientCode: org.clientCode,
-      logoUrl: org.logoUrl,
-      plan: org.plan,
-      status: 'active',
-      enforce2fa: org.enforce2fa,
-      enforceSso: false,
-      allowedDomains: org.allowedDomains as string[] | null,
-      maxMembers: 999,
-      createdAt: org.createdAt.toISOString(),
-    };
-  }
-
   /** Resolve a client_code (case-insensitive) to a tenant. Used at the start of login. */
   static async resolveByClientCode(code: string): Promise<Tenant> {
     if (!code || code.length < 2 || code.length > 16) {
@@ -61,40 +44,14 @@ export class TenantService {
       throw new AppError('Invalid client code or credentials', 401, 'INVALID_CREDENTIALS');
     }
 
-    return {
-      id: org.id,
-      name: org.name,
-      slug: org.clientCode,
-      clientCode: org.clientCode,
-      logoUrl: org.logoUrl,
-      plan: org.plan,
-      status: 'active', // Prisma Tenant model doesn't track status; assume active
-      enforce2fa: org.enforce2fa,
-      enforceSso: false,
-      allowedDomains: org.allowedDomains as string[] | null,
-      maxMembers: 999,
-      createdAt: org.createdAt.toISOString(),
-    };
+    return TenantService.fromOrganization(org);
   }
 
   /** Get a tenant by id (for the /auth/me payload). */
   static async getById(orgId: string): Promise<Tenant | null> {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
     if (!org) return null;
-    return {
-      id: org.id,
-      name: org.name,
-      slug: org.clientCode,
-      clientCode: org.clientCode,
-      logoUrl: org.logoUrl,
-      plan: org.plan,
-      status: 'active',
-      enforce2fa: org.enforce2fa,
-      enforceSso: false,
-      allowedDomains: org.allowedDomains as string[] | null,
-      maxMembers: 999,
-      createdAt: org.createdAt.toISOString(),
-    };
+    return TenantService.fromOrganization(org);
   }
 
   /** All tenants a user is a member of (for the tenant-switcher dropdown). */

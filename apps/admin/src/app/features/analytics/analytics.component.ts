@@ -1,29 +1,19 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ButtonModule,
-    SelectModule,
-    CardModule,
-    ToastModule,
-  ],
+  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, CardModule, ToastModule],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css',
 })
-export class AnalyticsComponent implements OnInit {
-  private messageService = inject(MessageService);
-
+export class AnalyticsComponent {
   selectedDateRange = 'week';
 
   dateRangeOptions = [
@@ -63,8 +53,4 @@ export class AnalyticsComponent implements OnInit {
     { name: 'Safari', icon: '🧭', count: '310' },
     { name: 'Edge', icon: '📘', count: '180' },
   ];
-
-  ngOnInit() {
-    // Initialize analytics
-  }
 }

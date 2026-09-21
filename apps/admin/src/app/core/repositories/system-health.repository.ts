@@ -24,7 +24,7 @@ export class SystemHealthRepository {
         this._metrics.set(data);
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._loading.set(false);
         // Dev mocks showing active system details
         const mockMetrics: SystemMetrics = {

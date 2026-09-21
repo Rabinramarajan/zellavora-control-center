@@ -73,7 +73,7 @@ describe('AdminStoreService', () => {
     ]);
 
     TestBed.configureTestingModule({
-      providers: [AdminStoreService, { provide: AdminApiService, useValue: apiServiceSpy }]
+      providers: [AdminStoreService, { provide: AdminApiService, useValue: apiServiceSpy }],
     });
 
     service = TestBed.inject(AdminStoreService);
@@ -82,6 +82,33 @@ describe('AdminStoreService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('tracks loading until an operation settles and clears the previous error', async () => {
+    let resolveUser!: (user: User) => void;
+    apiService.createNewUser.and.returnValue(
+      new Promise<User>((resolve) => {
+        resolveUser = resolve;
+      })
+    );
+    service['setError']('Previous failure');
+
+    const pending = service.createUser();
+    expect(service.loading()).toBe(true);
+    expect(service.error()).toBeNull();
+
+    resolveUser(mockUser);
+    expect(await pending).toEqual(mockUser);
+    expect(service.loading()).toBe(false);
+  });
+
+  it('rethrows a non-Error failure and uses the operation-specific fallback', async () => {
+    apiService.createNewRole.and.returnValue(Promise.reject('offline'));
+
+    await expectAsync(service.createRole()).toBeRejectedWith('offline');
+
+    expect(service.error()).toBe('Failed to create role');
+    expect(service.loading()).toBe(false);
   });
 
   describe('User Operations', () => {
@@ -131,7 +158,7 @@ describe('AdminStoreService', () => {
     });
 
     it('should delete a role', async () => {
-      service['state'].update(s => ({ ...s, roles: [mockRole] }));
+      service['state'].update((s) => ({ ...s, roles: [mockRole] }));
       apiService.deleteRole.and.returnValue(Promise.resolve() as never);
 
       await service.deleteRole(mockRole.roleId);
@@ -150,7 +177,7 @@ describe('AdminStoreService', () => {
     });
 
     it('should reset state', () => {
-      service['state'].update(s => ({ ...s, users: [mockUser], roles: [mockRole] }));
+      service['state'].update((s) => ({ ...s, users: [mockUser], roles: [mockRole] }));
 
       service.reset();
 

@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/apps/admin",
-    "types": []
+    "types": [],
+    "noUnusedLocals": true
   },
   "files": [
     "src/main.ts"

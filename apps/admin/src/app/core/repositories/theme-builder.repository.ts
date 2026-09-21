@@ -41,7 +41,7 @@ export class ThemeBuilderRepository {
         this._config.set(config);
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         // Fall back to default theme on dev/local errors
         this._config.set(DEFAULT_THEME);
         this._loading.set(false);

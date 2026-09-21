@@ -8,45 +8,12 @@ import { createClient } from '@supabase/supabase-js';
 import type { RequestHandler } from 'express';
 import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
-import { swaggerSpec } from './config/swagger';
+import { registerSwaggerRoutes } from './routes/swagger';
+import { registerApiRoutes } from './routes';
+import { responseEnvelope } from './middleware/response-envelope';
 import { requestContext } from './middleware/request-context';
-import authRoutes from './routes/auth';
-import registerRoutes from './routes/register';
 import crypto from 'crypto';
-import projectRoutes from './routes/projects';
-import portfolioRoutes from './routes/portfolio';
-import galleryRoutes from './routes/gallery';
-import techRoutes from './routes/technologies';
-import adminUsersRoutes from './routes/admin-users';
-import adminGroupsRoutes from './routes/admin-groups';
-import adminRolesRoutes from './routes/admin-roles';
-import adminResourcesRoutes from './routes/admin-resources';
-import adminConfigsRoutes from './routes/admin-configs';
-import adminAuditRoutes from './routes/admin-audit';
-import adminMessagesRoutes from './routes/admin-messages';
-import settingsRoutes from './routes/settings';
-import cleanAuthRoutes from './modules/auth/auth.routes';
-import cleanInviteRoutes from './modules/invitation/invitation.routes';
-import cleanOrgRoutes from './modules/organization/organization.routes';
-import cleanBranchRoutes from './modules/branch/branch.routes';
-import cleanPermRoutes from './modules/permission/permission.routes';
-import cleanSettingsRoutes from './modules/settings/settings.routes';
-import cleanNotifRoutes from './modules/notification/notification.routes';
-import cleanVerifyRoutes from './modules/verification/verification.routes';
-import cleanAuditRoutes from './modules/audit/audit.routes';
-import cleanStorageRoutes from './modules/storage/storage.routes';
-import cleanDdlRoutes from './modules/ddl/ddl.routes';
-import emailRoutes from './routes/email.routes';
-import { registrationRoutes } from './modules/registration';
 import { buildRbac } from './rbac';
-import dashboardRoutes from './modules/dashboard/dashboard.routes';
-import resourceRoutes from './modules/resources/resource.routes';
-import roleRoutes from './modules/roles/role.routes';
-import groupRoutes from './modules/groups/group.routes';
-import iamUserRoutes from './modules/users/iam-user.routes';
-import dailySheetsRoutes from './modules/daily-sheets/daily-sheets.routes';
-import monthlySheetsRoutes from './modules/monthly-sheets/monthly-sheets.routes';
-import timesheetsRoutes from './modules/timesheets/timesheets.routes';
 
 const app = express();
 
@@ -55,79 +22,13 @@ const app = express();
 // request with ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and req.ip stays the proxy.
 app.set('trust proxy', config.trustProxy);
 
-// Swagger UI (BEFORE any body parsing middleware).
-//
-// `swaggerUi.serve` cannot be used on Vercel: swagger-ui-dist's assets are
-// read from disk at request time, so the build tracer never bundles them and
-// every /swagger/*.js request falls through to the HTML 404 handler, which the
-// browser reports as "Unexpected token '<'". Serve the spec as JSON and load
-// the UI assets from a CDN instead.
-const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14';
-
-app.get(['/swagger/swagger.json', '/swagger.json'], (_req, res) => {
-  res.json(swaggerSpec);
-});
-
-app.get(['/swagger', '/swagger/', '/swagger/index.html'], (_req, res) => {
-  res.type('html').send(`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Zellavora Control Center API</title>
-    <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css" />
-  </head>
-  <body>
-    <div id="swagger-ui"></div>
-    <script src="${SWAGGER_UI_CDN}/swagger-ui-bundle.js" crossorigin></script>
-    <script src="${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js" crossorigin></script>
-    <script>
-      window.onload = () => {
-        window.ui = SwaggerUIBundle({
-          url: '/swagger/swagger.json',
-          dom_id: '#swagger-ui',
-          deepLinking: true,
-          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-          layout: 'StandaloneLayout',
-        });
-      };
-    </script>
-  </body>
-</html>`);
-});
-
-app.get('/', (_req, res) => {
-  res.redirect(302, '/swagger/index.html');
-});
+registerSwaggerRoutes(app);
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Middleware to format all JSON responses with the requested "msg" structure
-app.use((req, res, next) => {
-  const originalJson = res.json;
-  res.json = function (body) {
-    if (body && typeof body === 'object' && !Array.isArray(body)) {
-      if (!body.msg) {
-        const errorMsgs: any[] = [];
-        if (body.error && body.error.message) {
-          errorMsgs.push(body.error.message);
-        }
-        body.msg = {
-          errorMessage: errorMsgs,
-          infoMessage: {
-            id: 0,
-            msg: '',
-            msgType: 'Information',
-          },
-        };
-      }
-    }
-    return originalJson.call(this, body);
-  };
-  next();
-});
+app.use(responseEnvelope);
 
 app.use(
   cors({
@@ -254,65 +155,14 @@ app.get('/info', (_req, res) => {
   });
 });
 
-
 // Compatibility route for PRIMS Member Portal token format
-app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (req, res) => {
+app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (_req, res) => {
   const key = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
   res.json([key.toString('binary'), iv.toString('binary')]);
 });
 
-// Core routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/auth/register', registerRoutes);
-
-// New Enterprise Registration routes
-app.use('/api/v1/register', registrationRoutes);
-
-// Modular Clean Architecture routes
-app.use('/api/v1/clean/auth', cleanAuthRoutes);
-app.use('/api/v1/clean/invitations', cleanInviteRoutes);
-app.use('/api/v1/clean/organizations', cleanOrgRoutes);
-app.use('/api/v1/clean/branches', cleanBranchRoutes);
-app.use('/api/v1/clean/permissions', cleanPermRoutes);
-app.use('/api/v1/clean/settings', cleanSettingsRoutes);
-app.use('/api/v1/clean/notifications', cleanNotifRoutes);
-app.use('/api/v1/clean/verifications', cleanVerifyRoutes);
-app.use('/api/v1/clean/audits', cleanAuditRoutes);
-app.use('/api/v1/clean/storage', cleanStorageRoutes);
-app.use('/api/v1/clean/ddls', cleanDdlRoutes);
-
-// Operations Dashboard (tenant-scoped)
-app.use('/api/v1/dashboard', dashboardRoutes);
-
-// IAM Admin Console — RBAC modules (Resources first; Roles, Groups, Users follow)
-app.use('/api/v1/iam/resources', resourceRoutes);
-app.use('/api/v1/iam/roles', roleRoutes);
-app.use('/api/v1/iam/groups', groupRoutes);
-app.use('/api/v1/iam/users', iamUserRoutes);
-// Mounted under /projects: this router declares bare '/' and '/:id' paths, which at
-// the /api/v1 root would swallow every other top-level route (daily-sheets, etc).
-app.use('/api/v1/projects', projectRoutes);
-app.use('/api/v1', portfolioRoutes);
-app.use('/api/v1', galleryRoutes);
-app.use('/api/v1', techRoutes);
-app.use('/api/v1', settingsRoutes);
-
-// Timesheet management routes
-app.use('/api/v1/daily-sheets', dailySheetsRoutes);
-app.use('/api/v1/monthly-sheets', monthlySheetsRoutes);
-app.use('/api/v1/timesheets', timesheetsRoutes);
-
-app.use('/api/v1/admin', adminUsersRoutes);
-app.use('/api/v1/admin', adminGroupsRoutes);
-app.use('/api/v1/admin', adminRolesRoutes);
-app.use('/api/v1/admin', adminResourcesRoutes);
-app.use('/api/v1/admin', adminConfigsRoutes);
-app.use('/api/v1/admin', adminAuditRoutes);
-app.use('/api/v1/admin', adminMessagesRoutes);
-
-// Email service routes
-app.use('/api/v1/email', emailRoutes);
+registerApiRoutes(app);
 
 // ---------- RBAC module ----------
 // The RBAC router is mounted SYNCHRONOUSLY below, before the 404 handler.

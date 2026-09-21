@@ -43,7 +43,7 @@ export class NotificationRepository {
         this._notifications.update((current) => [newMsg, ...current]);
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._loading.set(false);
         // Fallback mock broadcast for local UI testing
         const mockMsg: NotificationMessage = {
@@ -67,7 +67,7 @@ export class NotificationRepository {
         this._templates.set(data);
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._loading.set(false);
         // Local dev template mocks
         const mocks: NotificationTemplate[] = [
@@ -93,7 +93,7 @@ export class NotificationRepository {
         });
         this._loading.set(false);
       }),
-      catchError((err) => {
+      catchError(() => {
         this._loading.set(false);
         const mockSaved: NotificationTemplate = {
           id: template.id || crypto.randomUUID(),
