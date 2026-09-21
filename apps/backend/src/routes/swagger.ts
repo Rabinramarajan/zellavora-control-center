@@ -23,6 +23,12 @@ export function registerSwaggerRoutes(app: Express): void {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Zellavora Control Center API</title>
       <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css" />
+      <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+        }
+      </style>
     </head>
     <body>
       <div id="swagger-ui"></div>
