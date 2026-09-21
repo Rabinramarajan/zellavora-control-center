@@ -17,7 +17,7 @@ router.use(authGuard);
  *   post:
  *     summary: createMonthlySheet
  *     operationId: postMonthlySheets
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -34,7 +34,7 @@ router.post('/', (req, res) => controller.create(req as any, res));
  *   get:
  *     summary: listMonthlySheets
  *     operationId: getMonthlySheets
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -51,7 +51,7 @@ router.get('/', (req, res) => controller.list(req as any, res));
  *   get:
  *     summary: getMonthlySheetById
  *     operationId: getMonthlySheetsById
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -73,7 +73,7 @@ router.get('/:id', (req, res) => controller.getById(req as any, res));
  *   put:
  *     summary: updateMonthlySheet
  *     operationId: putMonthlySheetsById
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -95,7 +95,7 @@ router.put('/:id', (req, res) => controller.update(req as any, res));
  *   post:
  *     summary: submitMonthlySheet
  *     operationId: postMonthlySheetsByIdSubmit
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -117,7 +117,7 @@ router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
  *   post:
  *     summary: approveMonthlySheet
  *     operationId: postMonthlySheetsByIdApprove
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -139,7 +139,7 @@ router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
  *   post:
  *     summary: markMonthlySheetAsPaid
  *     operationId: postMonthlySheetsByIdMarkPaid
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -161,7 +161,7 @@ router.post('/:id/mark-paid', (req, res) => controller.markAsPaid(req as any, re
  *   delete:
  *     summary: deleteMonthlySheet
  *     operationId: deleteMonthlySheetsById
- *     tags: [monthly-sheets]
+ *     tags: [monthlySheets]
  *     parameters:
  *       - in: path
  *         name: id

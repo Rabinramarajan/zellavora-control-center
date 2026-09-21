@@ -22,7 +22,7 @@ let mockGroups = [
  *   get:
  *     summary: getGroupSearchTemplate
  *     operationId: getAdminGroupsSearch
- *     tags: [administration-groups]
+ *     tags: [administrationGroups]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -49,7 +49,7 @@ let mockGroups = [
  *   post:
  *     summary: searchGroups
  *     operationId: postAdminGroupsSearch
- *     tags: [administration-groups]
+ *     tags: [administrationGroups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -104,7 +104,7 @@ let mockGroups = [
  *   post:
  *     summary: loadGroupDetails
  *     operationId: postAdminGroupsDetails
- *     tags: [administration-groups]
+ *     tags: [administrationGroups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -151,7 +151,7 @@ let mockGroups = [
  *   post:
  *     summary: saveGroupDetails
  *     operationId: postAdminGroupsSave
- *     tags: [administration-groups]
+ *     tags: [administrationGroups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -202,7 +202,7 @@ let mockGroups = [
  *   post:
  *     summary: deleteGroup
  *     operationId: postAdminGroupsDelete
- *     tags: [administration-groups]
+ *     tags: [administrationGroups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:

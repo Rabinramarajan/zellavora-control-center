@@ -27,7 +27,7 @@ let currentBranches = [...mockBranches];
  *   get:
  *     summary: getRegionalInitialMetadata
  *     operationId: getAdminRegionsMetadata
- *     tags: [administration-configuration]
+ *     tags: [administrationConfiguration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -60,7 +60,7 @@ let currentBranches = [...mockBranches];
  *   get:
  *     summary: getTemplateForNewBranch
  *     operationId: getAdminBranchesTemplate
- *     tags: [administration-branches]
+ *     tags: [administrationBranches]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -98,7 +98,7 @@ let currentBranches = [...mockBranches];
  *   get:
  *     summary: getBranchSearchTemplate
  *     operationId: getAdminBranchesSearch
- *     tags: [administration-branches]
+ *     tags: [administrationBranches]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -125,7 +125,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: searchBranch
  *     operationId: postAdminBranchesSearch
- *     tags: [administration-branches]
+ *     tags: [administrationBranches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -179,7 +179,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: loadBranchDetails
  *     operationId: postAdminBranchesDetails
- *     tags: [administration-branches]
+ *     tags: [administrationBranches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -228,7 +228,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: saveBranchDetails
  *     operationId: postAdminBranchesSave
- *     tags: [administration-branches]
+ *     tags: [administrationBranches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -283,7 +283,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: deleteBranch
  *     operationId: postAdminBranchesDelete
- *     tags: [administration-branches]
+ *     tags: [administrationBranches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -324,7 +324,7 @@ let currentBranches = [...mockBranches];
  *   get:
  *     summary: getConfigurationSearchTemplate
  *     operationId: getAdminConfigurationsSearch
- *     tags: [administration-configuration]
+ *     tags: [administrationConfiguration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -351,7 +351,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: searchConfigurations
  *     operationId: postAdminConfigurationsSearch
- *     tags: [administration-configuration]
+ *     tags: [administrationConfiguration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -405,7 +405,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: loadConfigurationDetails
  *     operationId: postAdminConfigurationsDetails
- *     tags: [administration-configuration]
+ *     tags: [administrationConfiguration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -449,7 +449,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: saveConfigurationDetails
  *     operationId: postAdminConfigurationsSave
- *     tags: [administration-configuration]
+ *     tags: [administrationConfiguration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -494,7 +494,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: loadAllConfigurations
  *     operationId: postAdminConfigurationsList
- *     tags: [administration-configuration]
+ *     tags: [administrationConfiguration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -529,7 +529,7 @@ let currentBranches = [...mockBranches];
  *   post:
  *     summary: deleteConfiguration
  *     operationId: postAdminConfigurationsDelete
- *     tags: [administration-configuration]
+ *     tags: [administrationConfiguration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:

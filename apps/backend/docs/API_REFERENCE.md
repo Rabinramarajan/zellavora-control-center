@@ -2,7 +2,7 @@
 
 Canonical URLs and operation names. Historical aliases are listed in [API_NAMING.md](API_NAMING.md). The live contract is available at `/swagger/swagger.json`.
 
-## access-control
+## accessControl
 
 | Method | URL                                                | Name                               | Operation ID                                 |
 | ------ | -------------------------------------------------- | ---------------------------------- | -------------------------------------------- |
@@ -23,7 +23,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/rbac/users/{userId}/roles`                | assignRoleToUser | `postRbacUsersByUserIdRoles`                 |
 | DELETE | `/api/v1/rbac/users/{userId}/roles/{assignmentId}` | revokeRoleAssignmentFromUser | `deleteRbacUsersByUserIdRolesByAssignmentId` |
 
-## administration-audit-logs
+## administrationAuditLogs
 
 | Method | URL                                | Name                          | Operation ID                |
 | ------ | ---------------------------------- | ----------------------------- | --------------------------- |
@@ -31,7 +31,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | GET    | `/api/v1/admin/audit-logs/search`  | getAuditLogSearchTemplate | `getAdminAuditLogsSearch`   |
 | POST   | `/api/v1/admin/audit-logs/search`  | searchAuditLogs | `postAdminAuditLogsSearch`  |
 
-## administration-branches
+## administrationBranches
 
 | Method | URL                               | Name                        | Operation ID               |
 | ------ | --------------------------------- | --------------------------- | -------------------------- |
@@ -42,7 +42,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/admin/branches/search`   | searchBranch | `postAdminBranchesSearch`  |
 | GET    | `/api/v1/admin/branches/template` | getTemplateForNewBranch | `getAdminBranchesTemplate` |
 
-## administration-configuration
+## administrationConfiguration
 
 | Method | URL                                    | Name                              | Operation ID                     |
 | ------ | -------------------------------------- | --------------------------------- | -------------------------------- |
@@ -54,7 +54,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/admin/configurations/search`  | searchConfigurations | `postAdminConfigurationsSearch`  |
 | GET    | `/api/v1/admin/regions/metadata`       | getRegionalInitialMetadata | `getAdminRegionsMetadata`        |
 
-## administration-groups
+## administrationGroups
 
 | Method | URL                            | Name                      | Operation ID             |
 | ------ | ------------------------------ | ------------------------- | ------------------------ |
@@ -64,14 +64,14 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | GET    | `/api/v1/admin/groups/search`  | getGroupSearchTemplate | `getAdminGroupsSearch`   |
 | POST   | `/api/v1/admin/groups/search`  | searchGroups | `postAdminGroupsSearch`  |
 
-## administration-messages
+## administrationMessages
 
 | Method | URL                           | Name         | Operation ID            |
 | ------ | ----------------------------- | ------------ | ----------------------- |
 | POST   | `/api/v1/admin/emails/send`   | sendEmail | `postAdminEmailsSend`   |
 | POST   | `/api/v1/admin/messages/send` | sendMessage | `postAdminMessagesSend` |
 
-## administration-resources
+## administrationResources
 
 | Method | URL                                 | Name                          | Operation ID                 |
 | ------ | ----------------------------------- | ----------------------------- | ---------------------------- |
@@ -84,7 +84,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/admin/resources/search`    | searchResources | `postAdminResourcesSearch`   |
 | GET    | `/api/v1/admin/resources/template`  | getTemplateForNewResource | `getAdminResourcesTemplate`  |
 
-## administration-roles
+## administrationRoles
 
 | Method | URL                                             | Name                        | Operation ID                            |
 | ------ | ----------------------------------------------- | --------------------------- | --------------------------------------- |
@@ -98,7 +98,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/admin/roles/search`                    | searchRoles | `postAdminRolesSearch`                  |
 | GET    | `/api/v1/admin/roles/template`                  | getTemplateForNewRole | `getAdminRolesTemplate`                 |
 
-## administration-users
+## administrationUsers
 
 | Method | URL                                       | Name                           | Operation ID                      |
 | ------ | ----------------------------------------- | ------------------------------ | --------------------------------- |
@@ -112,7 +112,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/admin/users/team-members/search` | getTeamUsers | `postAdminUsersTeamMembersSearch` |
 | GET    | `/api/v1/admin/users/template`            | getTemplateForNewUser | `getAdminUsersTemplate`           |
 
-## audit-logs
+## auditLogs
 
 | Method | URL                      | Name               | Operation ID       |
 | ------ | ------------------------ | ------------------ | ------------------ |
@@ -160,7 +160,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | GET    | `/api/v1/branches/{id}` | getBranchById | `getBranchesById` |
 | PUT    | `/api/v1/branches/{id}` | updateBranch | `putBranchesById` |
 
-## daily-sheets
+## dailySheets
 
 | Method | URL                                 | Name                  | Operation ID                 |
 | ------ | ----------------------------------- | --------------------- | ---------------------------- |
@@ -192,7 +192,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/email/send-verification`   | sendEmailVerification | `postEmailSendVerification`  |
 | POST   | `/api/v1/email/send-welcome`        | sendWelcomeEmail | `postEmailSendWelcome`       |
 
-## iam-groups
+## iamGroups
 
 | Method | URL                                        | Name                | Operation ID                         |
 | ------ | ------------------------------------------ | ------------------- | ------------------------------------ |
@@ -206,7 +206,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | PUT    | `/api/v1/iam/groups/{id}/roles`            | setGroupRoles | `putIamGroupsByIdRoles`              |
 | GET    | `/api/v1/iam/groups/tree`                  | getGroupHierarchy | `getIamGroupsTree`                   |
 
-## iam-resources
+## iamResources
 
 | Method | URL                                             | Name                   | Operation ID                              |
 | ------ | ----------------------------------------------- | ---------------------- | ----------------------------------------- |
@@ -220,7 +220,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | GET    | `/api/v1/iam/resources/key/{key}`               | getResourceByKey | `getIamResourcesKeyByKey`                 |
 | GET    | `/api/v1/iam/resources/tree`                    | getResourceHierarchy | `getIamResourcesTree`                     |
 
-## iam-roles
+## iamRoles
 
 | Method | URL                                  | Name                  | Operation ID                 |
 | ------ | ------------------------------------ | --------------------- | ---------------------------- |
@@ -234,7 +234,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | PUT    | `/api/v1/iam/roles/{id}/permissions` | setRolePermissions | `putIamRolesByIdPermissions` |
 | GET    | `/api/v1/iam/roles/all`              | listAllRoles | `getIamRolesAll`             |
 
-## iam-users
+## iamUsers
 
 | Method | URL                             | Name            | Operation ID             |
 | ------ | ------------------------------- | --------------- | ------------------------ |
@@ -249,7 +249,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | PUT    | `/api/v1/iam/users/{id}/status` | setUserStatus | `putIamUsersByIdStatus`  |
 | POST   | `/api/v1/iam/users/{id}/unlock` | unlockUser | `postIamUsersByIdUnlock` |
 
-## identity-authentication
+## identityAuthentication
 
 | Method | URL                               | Name                   | Operation ID               |
 | ------ | --------------------------------- | ---------------------- | -------------------------- |
@@ -272,7 +272,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | GET    | `/api/v1/lookups/{type}` | listLookupDataByType | `getLookupsByType` |
 | GET    | `/api/v1/lookups/types`  | listLookupDataByTypes | `getLookupsTypes`  |
 
-## monthly-sheets
+## monthlySheets
 
 | Method | URL                                     | Name                       | Operation ID                    |
 | ------ | --------------------------------------- | -------------------------- | ------------------------------- |
@@ -292,7 +292,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | GET    | `/api/v1/notifications`      | listNotifications | `getNotifications`      |
 | POST   | `/api/v1/notifications/send` | sendNotification | `postNotificationsSend` |
 
-## organization-settings
+## organizationSettings
 
 | Method | URL                                   | Name                            | Operation ID                   |
 | ------ | ------------------------------------- | ------------------------------- | ------------------------------ |
@@ -343,7 +343,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | DELETE | `/api/v1/testimonials/{id}` | deleteTestimonial | `deleteTestimonialsById` |
 | PUT    | `/api/v1/testimonials/{id}` | updateTestimonial | `putTestimonialsById`    |
 
-## project-gallery
+## projectGallery
 
 | Method | URL                                              | Name                               | Operation ID                                |
 | ------ | ------------------------------------------------ | ---------------------------------- | ------------------------------------------- |

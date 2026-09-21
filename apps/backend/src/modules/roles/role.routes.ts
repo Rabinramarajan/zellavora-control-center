@@ -8,7 +8,7 @@ const controller = new RoleController();
 /**
  * @swagger
  * tags:
- *   name: iam-roles
+ *   name: iamRoles
  *   description: IAM roles and their permission assignments.
  */
 
@@ -19,7 +19,7 @@ const controller = new RoleController();
  *     summary: listRoles
  *     operationId: getIamRoles
  *     description: Paginated, filterable list of IAM roles.
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -45,7 +45,7 @@ router.get('/', authenticate, requirePermission('roles:read'), controller.list);
  *     summary: listAllRoles
  *     operationId: getIamRolesAll
  *     description: Unpaginated role list (for dropdowns and assignment pickers).
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -61,7 +61,7 @@ router.get('/all', authenticate, requirePermission('roles:read'), controller.lis
  *     summary: getRoleById
  *     operationId: getIamRolesById
  *     description: Full role detail including its permission matrix.
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -82,7 +82,7 @@ router.get('/:id', authenticate, requirePermission('roles:read'), controller.get
  *     summary: listRolePermissions
  *     operationId: getIamRolesByIdPermissions
  *     description: Permission matrix currently granted to a role.
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -103,7 +103,7 @@ router.get('/:id/permissions', authenticate, requirePermission('roles:read'), co
  *     summary: createRole
  *     operationId: postIamRoles
  *     description: Create a role. Key is derived from the name.
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -132,7 +132,7 @@ router.post('/', authenticate, requirePermission('roles:manage'), controller.cre
  *     summary: updateRole
  *     operationId: patchIamRolesById
  *     description: Update role metadata.
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -163,7 +163,7 @@ router.patch('/:id', authenticate, requirePermission('roles:manage'), controller
  *     summary: deleteRole
  *     operationId: deleteIamRolesById
  *     description: Soft-delete a role (system roles are protected).
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -184,7 +184,7 @@ router.delete('/:id', authenticate, requirePermission('roles:manage'), controlle
  *     summary: setRolePermissions
  *     operationId: putIamRolesByIdPermissions
  *     description: Set the role's permission matrix (replace or merge).
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -221,7 +221,7 @@ router.put('/:id/permissions', authenticate, requirePermission('roles:manage'), 
  *     summary: copyRole
  *     operationId: postIamRolesByIdCopy
  *     description: Clone a role, optionally copying its permissions.
- *     tags: [iam-roles]
+ *     tags: [iamRoles]
  *     security:
  *       - bearerAuth: []
  *     parameters:

@@ -11,7 +11,7 @@ const router = Router();
  *   get:
  *     summary: getRoleSearchTemplate
  *     operationId: getAdminRolesSearch
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -42,7 +42,7 @@ const router = Router();
  *   post:
  *     summary: searchRoles
  *     operationId: postAdminRolesSearch
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -98,7 +98,7 @@ const router = Router();
  *   get:
  *     summary: initializeRoleMetadata
  *     operationId: getAdminRolesMetadata
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -128,7 +128,7 @@ const router = Router();
  *   get:
  *     summary: getTemplateForNewRole
  *     operationId: getAdminRolesTemplate
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -167,7 +167,7 @@ const router = Router();
  *   post:
  *     summary: loadRoleDetailsById
  *     operationId: postAdminRolesDetails
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -223,7 +223,7 @@ const router = Router();
  *   post:
  *     summary: saveRoleDetails
  *     operationId: postAdminRolesSave
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -264,7 +264,7 @@ const router = Router();
  *   post:
  *     summary: deleteRole
  *     operationId: postAdminRolesDelete
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -305,7 +305,7 @@ const router = Router();
  *   post:
  *     summary: loadRoleResourceMappings
  *     operationId: postAdminRolesResourceMappingsDetails
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -335,7 +335,7 @@ const router = Router();
  *   post:
  *     summary: saveRoleResourceMappings
  *     operationId: postAdminRolesResourceMappingsSave
- *     tags: [administration-roles]
+ *     tags: [administrationRoles]
  *     security:
  *       - BearerAuth: []
  *     responses:

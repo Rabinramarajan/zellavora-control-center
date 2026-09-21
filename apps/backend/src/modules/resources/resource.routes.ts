@@ -8,7 +8,7 @@ const controller = new ResourceController();
 /**
  * @swagger
  * tags:
- *   name: iam-resources
+ *   name: iamResources
  *   description: IAM protected resources and their actions.
  */
 
@@ -19,7 +19,7 @@ const controller = new ResourceController();
  *     summary: listResources
  *     operationId: getIamResources
  *     description: Paginated, filterable list of IAM resources.
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -45,7 +45,7 @@ router.get('/', authenticate, requirePermission('resources:read'), controller.li
  *     summary: getResourceHierarchy
  *     operationId: getIamResourcesTree
  *     description: Hierarchical resource tree (parent/children).
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -61,7 +61,7 @@ router.get('/tree', authenticate, requirePermission('resources:read'), controlle
  *     summary: getResourceByKey
  *     operationId: getIamResourcesKeyByKey
  *     description: Look up a resource by its unique key (cached).
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -82,7 +82,7 @@ router.get('/key/:key', authenticate, requirePermission('resources:read'), contr
  *     summary: getResourceById
  *     operationId: getIamResourcesById
  *     description: Full resource detail including actions and parent chain.
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -103,7 +103,7 @@ router.get('/:id', authenticate, requirePermission('resources:read'), controller
  *     summary: createResource
  *     operationId: postIamResources
  *     description: Create a resource. Provided actions auto-create permission rows.
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -136,7 +136,7 @@ router.post('/', authenticate, requirePermission('resources:manage'), controller
  *     summary: updateResource
  *     operationId: patchIamResourcesById
  *     description: Update resource metadata.
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -169,7 +169,7 @@ router.patch('/:id', authenticate, requirePermission('resources:manage'), contro
  *     summary: addResourceAction
  *     operationId: postIamResourcesByIdActions
  *     description: Add an action to a resource (auto-creates its permission).
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -199,7 +199,7 @@ router.post('/:id/actions', authenticate, requirePermission('resources:manage'),
  *     summary: removeResourceAction
  *     operationId: deleteIamResourcesByIdActionsByActionId
  *     description: Remove an action and its mapped permission.
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -229,7 +229,7 @@ router.delete(
  *     summary: deleteResource
  *     operationId: deleteIamResourcesById
  *     description: Soft-delete a resource (system resources are protected).
- *     tags: [iam-resources]
+ *     tags: [iamResources]
  *     security:
  *       - bearerAuth: []
  *     parameters:

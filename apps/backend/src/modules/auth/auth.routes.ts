@@ -10,7 +10,7 @@ const controller = new AuthController();
  *   post:
  *     summary: signIn
  *     operationId: postIdentityAuthLogin
- *     tags: [identity-authentication]
+ *     tags: [identityAuthentication]
  *     security: []
  *     responses:
  *       default:
@@ -23,7 +23,7 @@ router.post('/login', controller.login);
  *   post:
  *     summary: completeMfaChallenge
  *     operationId: postIdentityAuthLoginMfa
- *     tags: [identity-authentication]
+ *     tags: [identityAuthentication]
  *     security: []
  *     responses:
  *       default:
@@ -36,7 +36,7 @@ router.post('/login/mfa', controller.mfa);
  *   post:
  *     summary: refreshTokens
  *     operationId: postIdentityAuthRefresh
- *     tags: [identity-authentication]
+ *     tags: [identityAuthentication]
  *     security: []
  *     responses:
  *       default:

@@ -10,7 +10,7 @@ const controller = new AuditController();
  *   get:
  *     summary: listAuditLogs
  *     operationId: getAuditLogs
- *     tags: [audit-logs]
+ *     tags: [auditLogs]
  *     security: []
  *     responses:
  *       default:
@@ -23,7 +23,7 @@ router.get('/', controller.list);
  *   post:
  *     summary: createAuditEvent
  *     operationId: postAuditLogsLog
- *     tags: [audit-logs]
+ *     tags: [auditLogs]
  *     security: []
  *     responses:
  *       default:

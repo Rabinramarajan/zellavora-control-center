@@ -35,7 +35,7 @@ const mockAuditLogs = [
  *   get:
  *     summary: getAuditLogSearchTemplate
  *     operationId: getAdminAuditLogsSearch
- *     tags: [administration-audit-logs]
+ *     tags: [administrationAuditLogs]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -62,7 +62,7 @@ const mockAuditLogs = [
  *   post:
  *     summary: searchAuditLogs
  *     operationId: postAdminAuditLogsSearch
- *     tags: [administration-audit-logs]
+ *     tags: [administrationAuditLogs]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -119,7 +119,7 @@ const mockAuditLogs = [
  *   post:
  *     summary: loadAuditLogDetails
  *     operationId: postAdminAuditLogsDetails
- *     tags: [administration-audit-logs]
+ *     tags: [administrationAuditLogs]
  *     security:
  *       - BearerAuth: []
  *     requestBody:

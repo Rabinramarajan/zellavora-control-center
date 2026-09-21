@@ -66,7 +66,7 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Project content and publishing.',
       },
       {
-        name: 'project-gallery',
+        name: 'projectGallery',
         description: 'Project images and media.',
       },
       {
@@ -78,27 +78,27 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Profiles, skills, experience, education, services, and testimonials.',
       },
       {
-        name: 'access-control',
+        name: 'accessControl',
         description: 'Permission policies, role inheritance, and assignments.',
       },
       {
-        name: 'administration-users',
+        name: 'administrationUsers',
         description: 'Administrative user search and maintenance.',
       },
       {
-        name: 'administration-groups',
+        name: 'administrationGroups',
         description: 'Administrative group search and maintenance.',
       },
       {
-        name: 'administration-roles',
+        name: 'administrationRoles',
         description: 'Administrative role search and maintenance.',
       },
       {
-        name: 'administration-resources',
+        name: 'administrationResources',
         description: 'Administrative resource search and maintenance.',
       },
       {
-        name: 'administration-configuration',
+        name: 'administrationConfiguration',
         description: 'Administrative configuration and regional metadata.',
       },
       {
@@ -106,7 +106,7 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Transactional email delivery and service health.',
       },
       {
-        name: 'administration-audit-logs',
+        name: 'administrationAuditLogs',
         description: 'Administrative audit search and details.',
       },
       {
@@ -114,19 +114,19 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Operational overview and activity.',
       },
       {
-        name: 'iam-groups',
+        name: 'iamGroups',
         description: 'Group membership and role assignments.',
       },
       {
-        name: 'iam-roles',
+        name: 'iamRoles',
         description: 'Role definitions and permissions.',
       },
       {
-        name: 'iam-resources',
+        name: 'iamResources',
         description: 'Resource definitions and available actions.',
       },
       {
-        name: 'iam-users',
+        name: 'iamUsers',
         description: 'Identity management and user access.',
       },
       {
@@ -138,7 +138,7 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Timesheet entries, reporting, and approval.',
       },
       {
-        name: 'administration-branches',
+        name: 'administrationBranches',
         description: 'Administrative branch search and maintenance.',
       },
       {
@@ -146,7 +146,7 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Account and organization registration.',
       },
       {
-        name: 'identity-authentication',
+        name: 'identityAuthentication',
         description: 'Authentication for the organization identity service.',
       },
       {
@@ -166,7 +166,7 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Permission definitions and assignments.',
       },
       {
-        name: 'organization-settings',
+        name: 'organizationSettings',
         description: 'Organization-specific settings.',
       },
       {
@@ -178,7 +178,7 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Verification challenges.',
       },
       {
-        name: 'audit-logs',
+        name: 'auditLogs',
         description: 'Organization audit events.',
       },
       {
@@ -190,15 +190,15 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Reference data and selection options.',
       },
       {
-        name: 'daily-sheets',
+        name: 'dailySheets',
         description: 'Daily work records and approval.',
       },
       {
-        name: 'monthly-sheets',
+        name: 'monthlySheets',
         description: 'Monthly work records, approval, and payment.',
       },
       {
-        name: 'administration-messages',
+        name: 'administrationMessages',
         description: 'Administrative message delivery.',
       },
     ],

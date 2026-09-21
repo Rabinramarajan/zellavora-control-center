@@ -60,7 +60,7 @@ describe('API naming contract', () => {
   it('provides unique operation IDs and names without spaces', () => {
     const ids: string[] = [];
     const tags = spec.tags.map((tag) => tag.name);
-    for (const tag of tags) expect(tag).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    for (const tag of tags) expect(tag).toMatch(/^[a-z][A-Za-z0-9]*$/);
     for (const item of Object.values(spec.paths)) {
       for (const method of methods.filter((method) => item[method])) {
         const operation = item[method];

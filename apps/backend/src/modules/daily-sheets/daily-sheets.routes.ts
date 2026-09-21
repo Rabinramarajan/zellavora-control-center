@@ -17,7 +17,7 @@ router.use(authGuard);
  *   post:
  *     summary: createDailySheet
  *     operationId: postDailySheets
- *     tags: [daily-sheets]
+ *     tags: [dailySheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -34,7 +34,7 @@ router.post('/', (req, res) => controller.create(req as any, res));
  *   get:
  *     summary: listDailySheets
  *     operationId: getDailySheets
- *     tags: [daily-sheets]
+ *     tags: [dailySheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -51,7 +51,7 @@ router.get('/', (req, res) => controller.list(req as any, res));
  *   get:
  *     summary: getDailySheetById
  *     operationId: getDailySheetsById
- *     tags: [daily-sheets]
+ *     tags: [dailySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -73,7 +73,7 @@ router.get('/:id', (req, res) => controller.getById(req as any, res));
  *   put:
  *     summary: updateDailySheet
  *     operationId: putDailySheetsById
- *     tags: [daily-sheets]
+ *     tags: [dailySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -95,7 +95,7 @@ router.put('/:id', (req, res) => controller.update(req as any, res));
  *   post:
  *     summary: submitDailySheet
  *     operationId: postDailySheetsByIdSubmit
- *     tags: [daily-sheets]
+ *     tags: [dailySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -117,7 +117,7 @@ router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
  *   post:
  *     summary: approveDailySheet
  *     operationId: postDailySheetsByIdApprove
- *     tags: [daily-sheets]
+ *     tags: [dailySheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -139,7 +139,7 @@ router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
  *   delete:
  *     summary: deleteDailySheet
  *     operationId: deleteDailySheetsById
- *     tags: [daily-sheets]
+ *     tags: [dailySheets]
  *     parameters:
  *       - in: path
  *         name: id

@@ -10,7 +10,7 @@ const controller = new SettingsController();
  *   get:
  *     summary: listOrganizationSettings
  *     operationId: getOrganizationSettings
- *     tags: [organization-settings]
+ *     tags: [organizationSettings]
  *     security: []
  *     responses:
  *       default:
@@ -23,7 +23,7 @@ router.get('/', controller.list);
  *   get:
  *     summary: getOrganizationSettingByKey
  *     operationId: getOrganizationSettingsByKey
- *     tags: [organization-settings]
+ *     tags: [organizationSettings]
  *     security: []
  *     parameters:
  *       - in: path
@@ -41,7 +41,7 @@ router.get('/:key', controller.get);
  *   post:
  *     summary: saveOrganizationSetting
  *     operationId: postOrganizationSettings
- *     tags: [organization-settings]
+ *     tags: [organizationSettings]
  *     security: []
  *     responses:
  *       default:

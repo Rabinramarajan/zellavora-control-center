@@ -8,7 +8,7 @@ const controller = new GroupController();
 /**
  * @swagger
  * tags:
- *   name: iam-groups
+ *   name: iamGroups
  *   description: IAM groups, membership and group-level roles.
  */
 
@@ -19,7 +19,7 @@ const controller = new GroupController();
  *     summary: listGroups
  *     operationId: getIamGroups
  *     description: Paginated, filterable list of IAM groups.
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -45,7 +45,7 @@ router.get('/', authenticate, requirePermission('groups:read'), controller.list)
  *     summary: getGroupHierarchy
  *     operationId: getIamGroupsTree
  *     description: Hierarchical group tree (parent/children).
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -61,7 +61,7 @@ router.get('/tree', authenticate, requirePermission('groups:read'), controller.t
  *     summary: getGroupById
  *     operationId: getIamGroupsById
  *     description: Full group detail including members and roles.
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -82,7 +82,7 @@ router.get('/:id', authenticate, requirePermission('groups:read'), controller.ge
  *     summary: createGroup
  *     operationId: postIamGroups
  *     description: Create a group. Slug is derived from the name.
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -118,7 +118,7 @@ router.post('/', authenticate, requirePermission('groups:manage'), controller.cr
  *     summary: updateGroup
  *     operationId: patchIamGroupsById
  *     description: Update group metadata and hierarchy.
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -151,7 +151,7 @@ router.patch('/:id', authenticate, requirePermission('groups:manage'), controlle
  *     summary: deleteGroup
  *     operationId: deleteIamGroupsById
  *     description: Soft-delete a group (system groups and groups with children are protected).
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -172,7 +172,7 @@ router.delete('/:id', authenticate, requirePermission('groups:manage'), controll
  *     summary: addGroupMembers
  *     operationId: postIamGroupsByIdMembers
  *     description: Add users to a group (idempotent).
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -204,7 +204,7 @@ router.post('/:id/members', authenticate, requirePermission('groups:manage'), co
  *     summary: removeGroupMember
  *     operationId: deleteIamGroupsByIdMembersByUserId
  *     description: Remove a user from a group.
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -229,7 +229,7 @@ router.delete('/:id/members/:userId', authenticate, requirePermission('groups:ma
  *     summary: setGroupRoles
  *     operationId: putIamGroupsByIdRoles
  *     description: Set the roles attached to a group (replace or merge).
- *     tags: [iam-groups]
+ *     tags: [iamGroups]
  *     security:
  *       - bearerAuth: []
  *     parameters:

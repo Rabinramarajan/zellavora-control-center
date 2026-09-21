@@ -10,7 +10,7 @@ const router = Router();
  *   post:
  *     summary: sendMessage
  *     operationId: postAdminMessagesSend
- *     tags: [administration-messages]
+ *     tags: [administrationMessages]
  *     responses:
  *       default:
  *         description: Operation response
@@ -38,7 +38,7 @@ router.post(['/messages/send', '/message/send'], authenticate, async (req, res, 
  *   post:
  *     summary: sendEmail
  *     operationId: postAdminEmailsSend
- *     tags: [administration-messages]
+ *     tags: [administrationMessages]
  *     responses:
  *       default:
  *         description: Operation response

@@ -16,7 +16,7 @@ const router = Router();
  *   get:
  *     summary: getUserSearchTemplate
  *     operationId: getAdminUsersSearch
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -47,7 +47,7 @@ const router = Router();
  *   post:
  *     summary: searchUsers
  *     operationId: postAdminUsersSearch
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -108,7 +108,7 @@ const router = Router();
  *   get:
  *     summary: initializeUserData
  *     operationId: getAdminUsersMetadata
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -138,7 +138,7 @@ const router = Router();
  *   get:
  *     summary: getTemplateForNewUser
  *     operationId: getAdminUsersTemplate
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -194,7 +194,7 @@ const router = Router();
  *   post:
  *     summary: loadUserDetailsBySerialId
  *     operationId: postAdminUsersDetails
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -276,7 +276,7 @@ const router = Router();
  *   post:
  *     summary: saveUserDetails
  *     operationId: postAdminUsersSave
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -351,7 +351,7 @@ const router = Router();
  *   get:
  *     summary: getRolesAssignableToUser
  *     operationId: getAdminUsersAssignableRoles
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -381,7 +381,7 @@ const router = Router();
  *   post:
  *     summary: getTeamUsers
  *     operationId: postAdminUsersTeamMembersSearch
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -411,7 +411,7 @@ const router = Router();
  *   post:
  *     summary: loadBranchDropdownDetails
  *     operationId: postAdminUsersBranchOptions
- *     tags: [administration-users]
+ *     tags: [administrationUsers]
  *     security:
  *       - BearerAuth: []
  *     responses:

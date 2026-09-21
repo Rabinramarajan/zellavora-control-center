@@ -35,7 +35,7 @@ let mockResources = [
  *   get:
  *     summary: getResourceSearchTemplate
  *     operationId: getAdminResourcesSearch
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -62,7 +62,7 @@ let mockResources = [
  *   post:
  *     summary: searchResources
  *     operationId: postAdminResourcesSearch
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -121,7 +121,7 @@ let mockResources = [
  *   get:
  *     summary: initializeResourceMetadata
  *     operationId: getAdminResourcesMetadata
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -151,7 +151,7 @@ let mockResources = [
  *   get:
  *     summary: getTemplateForNewResource
  *     operationId: getAdminResourcesTemplate
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -189,7 +189,7 @@ let mockResources = [
  *   post:
  *     summary: loadResourceDetailsById
  *     operationId: postAdminResourcesDetails
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -238,7 +238,7 @@ let mockResources = [
  *   post:
  *     summary: saveResourceDetails
  *     operationId: postAdminResourcesSave
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -293,7 +293,7 @@ let mockResources = [
  *   post:
  *     summary: deleteResource
  *     operationId: postAdminResourcesDelete
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -334,7 +334,7 @@ let mockResources = [
  *   post:
  *     summary: saveListOfResources
  *     operationId: postAdminResourcesBulkSave
- *     tags: [administration-resources]
+ *     tags: [administrationResources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
