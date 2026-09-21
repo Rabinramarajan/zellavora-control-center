@@ -184,9 +184,9 @@ const consumeMfa = (token: string) => {
  * @swagger
  * /api/v1/auth/debug/check-user:
  *   post:
- *     summary: Check user authentication configuration
+ *     summary: checkUserAuthenticationConfiguration
  *     operationId: postAuthDebugCheckUser
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     responses:
  *       default:
@@ -261,9 +261,9 @@ router.post('/debug/check-user', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/validate-client:
  *   post:
- *     summary: Validate tenant code
+ *     summary: validateTenantCode
  *     operationId: postAuthValidateClient
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -299,9 +299,9 @@ router.post('/debug/check-user', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/clients:
  *   get:
- *     summary: List active tenants
+ *     summary: listActiveTenants
  *     operationId: getAuthClients
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     responses:
  *       200:
@@ -372,9 +372,9 @@ router.post('/validate-client', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/encryption-key:
  *   get:
- *     summary: Get payload encryption key
+ *     summary: getPayloadEncryptionKey
  *     operationId: getAuthEncryptionKey
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     responses:
  *       200:
@@ -404,10 +404,10 @@ router.get(['/encryption-key', '/gettoken'], (req, res, next) => {
  * @swagger
  * /api/v1/auth/login:
  *   post:
- *     summary: Sign in with email and password
+ *     summary: signInWithEmailAndPassword
  *     operationId: postAuthLogin
  *     description: Returns tokens on success, or an MFA challenge token if the user has 2FA enabled.
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -766,10 +766,10 @@ router.post('/login', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/login/mfa:
  *   post:
- *     summary: Complete MFA challenge
+ *     summary: completeMfaChallenge
  *     operationId: postAuthLoginMfa
  *     description: Submit a TOTP code or recovery code to finalize login after an MFA challenge.
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -941,9 +941,9 @@ router.post('/login/mfa', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/refresh:
  *   post:
- *     summary: Refresh access and refresh tokens
+ *     summary: refreshAccessAndRefreshTokens
  *     operationId: postAuthRefresh
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -1022,9 +1022,9 @@ router.post('/refresh', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/logout:
  *   post:
- *     summary: Revoke current session
+ *     summary: revokeCurrentSession
  *     operationId: postAuthLogout
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -1069,9 +1069,9 @@ router.post('/logout', authenticate, async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/auth/logout-all:
  *   post:
- *     summary: Revoke all sessions for the current user
+ *     summary: revokeAllSessionsForTheCurrentUser
  *     operationId: postAuthLogoutAll
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -1109,9 +1109,9 @@ router.post('/logout-all', authenticate, async (req: AuthRequest, res, next) => 
  * @swagger
  * /api/v1/auth/me:
  *   get:
- *     summary: Get current user profile with permissions and menu
+ *     summary: getCurrentUserProfileWithPermissionsAndMenu
  *     operationId: getAuthMe
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -1198,9 +1198,9 @@ router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/auth/tenants:
  *   get:
- *     summary: List tenants the current user belongs to
+ *     summary: listTenantsTheCurrentUserBelongsTo
  *     operationId: getAuthTenants
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -1235,9 +1235,9 @@ router.get('/tenants', authenticate, async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/auth/switch-tenant:
  *   post:
- *     summary: Switch active tenant
+ *     summary: switchActiveTenant
  *     operationId: postAuthSwitchTenant
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -1319,9 +1319,9 @@ router.post('/switch-tenant', authenticate, async (req: AuthRequest, res, next) 
  * @swagger
  * /api/v1/auth/change-password:
  *   post:
- *     summary: Change account password
+ *     summary: changeAccountPassword
  *     operationId: postAuthChangePassword
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -1408,10 +1408,10 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res, next
  * @swagger
  * /api/v1/auth/forgot-password:
  *   post:
- *     summary: Send password reset email
+ *     summary: sendPasswordResetEmail
  *     operationId: postAuthForgotPassword
  *     description: Always returns 200 to avoid email enumeration attacks.
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -1496,9 +1496,9 @@ router.post('/forgot-password', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/reset-password:
  *   post:
- *     summary: Reset account password
+ *     summary: resetAccountPassword
  *     operationId: postAuthResetPassword
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -1559,9 +1559,9 @@ router.post('/reset-password', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/mfa/enroll:
  *   post:
- *     summary: Start TOTP enrollment
+ *     summary: startTotpEnrollment
  *     operationId: postAuthMfaEnroll
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
   *     responses:
@@ -1607,9 +1607,9 @@ const pendingMfaSecrets = new Map<string, string>(); // userId -> secret (5 min 
  * @swagger
  * /api/v1/auth/mfa/confirm:
  *   post:
- *     summary: Confirm TOTP enrollment
+ *     summary: confirmTotpEnrollment
  *     operationId: postAuthMfaConfirm
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -1673,9 +1673,9 @@ router.post('/mfa/confirm', authenticate, async (req: AuthRequest, res, next) =>
  * @swagger
  * /api/v1/auth/mfa/disable:
  *   post:
- *     summary: Disable MFA
+ *     summary: disableMfa
  *     operationId: postAuthMfaDisable
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -1729,9 +1729,9 @@ router.post('/mfa/disable', authenticate, async (req: AuthRequest, res, next) =>
  * @swagger
  * /api/v1/auth/mfa/recovery-codes:
  *   post:
- *     summary: Regenerate MFA recovery codes
+ *     summary: regenerateMfaRecoveryCodes
  *     operationId: postAuthMfaRecoveryCodes
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -1769,9 +1769,9 @@ router.post(
  * @swagger
  * /api/v1/auth/oauth/{provider}:
  *   get:
- *     summary: Start OAuth sign-in
+ *     summary: startOauthSignIn
  *     operationId: getAuthOauthByProvider
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     parameters:
  *       - in: path
@@ -1821,9 +1821,9 @@ router.get('/oauth/:provider', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/oauth/callback:
  *   get:
- *     summary: Handle OAuth callback
+ *     summary: handleOauthCallback
  *     operationId: getAuthOauthCallback
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     parameters:
  *       - in: query
@@ -1916,9 +1916,9 @@ router.get('/oauth/callback', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/sessions:
  *   get:
- *     summary: List all active sessions for the authenticated user
+ *     summary: listAllActiveSessionsForTheAuthenticatedUser
  *     operationId: getAuthSessions
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -1996,9 +1996,9 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/auth/sessions/{sessionId}:
  *   delete:
- *     summary: Revoke session
+ *     summary: revokeSession
  *     operationId: deleteAuthSessionsBySessionId
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -2053,9 +2053,9 @@ router.delete('/sessions/:sessionId', authenticate, async (req: AuthRequest, res
  * @swagger
  * /api/v1/auth/sessions:
  *   delete:
- *     summary: Revoke all sessions except the current one
+ *     summary: revokeAllSessionsExceptTheCurrentOne
  *     operationId: deleteAuthSessions
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -2123,9 +2123,9 @@ const SendVerificationSchema = z.object({
  * @swagger
  * /api/v1/auth/send-verification:
  *   post:
- *     summary: Send or resend email verification code
+ *     summary: sendOrResendEmailVerificationCode
  *     operationId: postAuthSendVerification
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -2220,9 +2220,9 @@ const VerifyEmailSchema = z.object({
  * @swagger
  * /api/v1/auth/verify-email:
  *   post:
- *     summary: Verify email with token or OTP code
+ *     summary: verifyEmailWithTokenOrOtpCode
  *     operationId: postAuthVerifyEmail
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true
@@ -2319,9 +2319,9 @@ router.post('/verify-email', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/resend-otp:
  *   post:
- *     summary: Resend email verification OTP
+ *     summary: resendEmailVerificationOtp
  *     operationId: postAuthResendOtp
- *     tags: [Authentication]
+ *     tags: [authentication]
  *     security: []
  *     requestBody:
  *       required: true

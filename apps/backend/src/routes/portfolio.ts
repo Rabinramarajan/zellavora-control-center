@@ -13,9 +13,9 @@ const router: ExpressRouter = Router();
  * @swagger
  * /api/v1/profile:
  *   get:
- *     summary: Get user profile
+ *     summary: getUserProfile
  *     operationId: getProfile
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security: []
  *     parameters:
  *       - in: query
@@ -62,9 +62,9 @@ router.get('/profile', async (req: AuthRequest, res, next) => {
  * @swagger
  * /api/v1/profile:
  *   put:
- *     summary: Update current user profile
+ *     summary: updateCurrentUserProfile
  *     operationId: putProfile
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -112,9 +112,9 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res, next) =>
  * @swagger
  * /api/v1/skills:
  *   get:
- *     summary: List skills for user
+ *     summary: listSkillsForUser
  *     operationId: getSkills
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security: []
  *     parameters:
  *       - in: query
@@ -155,9 +155,9 @@ router.get('/skills', async (req, res, next) => {
  * @swagger
  * /api/v1/skills:
  *   post:
- *     summary: Create skill
+ *     summary: createSkill
  *     operationId: postSkills
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -203,9 +203,9 @@ router.post('/skills', authenticateToken, async (req: AuthRequest, res, next) =>
  * @swagger
  * /api/v1/skills/{id}:
  *   put:
- *     summary: Update skill
+ *     summary: updateSkill
  *     operationId: putSkillsById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -257,9 +257,9 @@ router.put('/skills/:id', authenticateToken, async (req: AuthRequest, res, next)
  * @swagger
  * /api/v1/skills/{id}:
  *   delete:
- *     summary: Delete skill
+ *     summary: deleteSkill
  *     operationId: deleteSkillsById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -303,9 +303,9 @@ router.delete('/skills/:id', authenticateToken, async (req: AuthRequest, res, ne
  * @swagger
  * /api/v1/experience:
  *   get:
- *     summary: List experience entries for user
+ *     summary: listExperienceEntriesForUser
  *     operationId: getExperience
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security: []
  *     parameters:
  *       - in: query
@@ -346,9 +346,9 @@ router.get('/experience', async (req, res, next) => {
  * @swagger
  * /api/v1/experience:
  *   post:
- *     summary: Create experience entry
+ *     summary: createExperienceEntry
  *     operationId: postExperience
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -394,9 +394,9 @@ router.post('/experience', authenticateToken, async (req: AuthRequest, res, next
  * @swagger
  * /api/v1/experience/{id}:
  *   put:
- *     summary: Update experience entry
+ *     summary: updateExperienceEntry
  *     operationId: putExperienceById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -448,9 +448,9 @@ router.put('/experience/:id', authenticateToken, async (req: AuthRequest, res, n
  * @swagger
  * /api/v1/experience/{id}:
  *   delete:
- *     summary: Delete experience entry
+ *     summary: deleteExperienceEntry
  *     operationId: deleteExperienceById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -494,9 +494,9 @@ router.delete('/experience/:id', authenticateToken, async (req: AuthRequest, res
  * @swagger
  * /api/v1/education:
  *   get:
- *     summary: List education entries for user
+ *     summary: listEducationEntriesForUser
  *     operationId: getEducation
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security: []
  *     parameters:
  *       - in: query
@@ -537,9 +537,9 @@ router.get('/education', async (req, res, next) => {
  * @swagger
  * /api/v1/education:
  *   post:
- *     summary: Create education entry
+ *     summary: createEducationEntry
  *     operationId: postEducation
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -585,9 +585,9 @@ router.post('/education', authenticateToken, async (req: AuthRequest, res, next)
  * @swagger
  * /api/v1/education/{id}:
  *   put:
- *     summary: Update education entry
+ *     summary: updateEducationEntry
  *     operationId: putEducationById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -639,9 +639,9 @@ router.put('/education/:id', authenticateToken, async (req: AuthRequest, res, ne
  * @swagger
  * /api/v1/education/{id}:
  *   delete:
- *     summary: Delete education entry
+ *     summary: deleteEducationEntry
  *     operationId: deleteEducationById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -685,9 +685,9 @@ router.delete('/education/:id', authenticateToken, async (req: AuthRequest, res,
  * @swagger
  * /api/v1/services:
  *   get:
- *     summary: List services for user
+ *     summary: listServicesForUser
  *     operationId: getServices
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security: []
  *     parameters:
  *       - in: query
@@ -728,9 +728,9 @@ router.get('/services', async (req, res, next) => {
  * @swagger
  * /api/v1/services:
  *   post:
- *     summary: Create service
+ *     summary: createService
  *     operationId: postServices
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -776,9 +776,9 @@ router.post('/services', authenticateToken, async (req: AuthRequest, res, next) 
  * @swagger
  * /api/v1/services/{id}:
  *   put:
- *     summary: Update service
+ *     summary: updateService
  *     operationId: putServicesById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -830,9 +830,9 @@ router.put('/services/:id', authenticateToken, async (req: AuthRequest, res, nex
  * @swagger
  * /api/v1/services/{id}:
  *   delete:
- *     summary: Delete service
+ *     summary: deleteService
  *     operationId: deleteServicesById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -876,9 +876,9 @@ router.delete('/services/:id', authenticateToken, async (req: AuthRequest, res, 
  * @swagger
  * /api/v1/testimonials:
  *   get:
- *     summary: List testimonials for user
+ *     summary: listTestimonialsForUser
  *     operationId: getTestimonials
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security: []
  *     parameters:
  *       - in: query
@@ -919,9 +919,9 @@ router.get('/testimonials', async (req, res, next) => {
  * @swagger
  * /api/v1/testimonials:
  *   post:
- *     summary: Create testimonial
+ *     summary: createTestimonial
  *     operationId: postTestimonials
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -967,9 +967,9 @@ router.post('/testimonials', authenticateToken, async (req: AuthRequest, res, ne
  * @swagger
  * /api/v1/testimonials/{id}:
  *   put:
- *     summary: Update testimonial
+ *     summary: updateTestimonial
  *     operationId: putTestimonialsById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -1021,9 +1021,9 @@ router.put('/testimonials/:id', authenticateToken, async (req: AuthRequest, res,
  * @swagger
  * /api/v1/testimonials/{id}:
  *   delete:
- *     summary: Delete testimonial
+ *     summary: deleteTestimonial
  *     operationId: deleteTestimonialsById
- *     tags: [Portfolio]
+ *     tags: [portfolio]
  *     security:
  *       - BearerAuth: []
  *     parameters:

@@ -9,10 +9,10 @@ const controller = new DashboardController();
  * @swagger
  * /api/v1/dashboard/overview:
  *   get:
- *     summary: Get dashboard overview
+ *     summary: getDashboardOverview
  *     operationId: getDashboardOverview
  *     description: Aggregated KPIs, trends, recent activity and plan distribution for the caller's tenant.
- *     tags: [Dashboard]
+ *     tags: [dashboard]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -42,10 +42,10 @@ router.get(
  * @swagger
  * /api/v1/dashboard/activity:
  *   get:
- *     summary: Get dashboard activity
+ *     summary: getDashboardActivity
  *     operationId: getDashboardActivity
  *     description: Paginated, filterable audit activity feed for the caller's tenant.
- *     tags: [Dashboard]
+ *     tags: [dashboard]
  *     security:
  *       - bearerAuth: []
  *     parameters:

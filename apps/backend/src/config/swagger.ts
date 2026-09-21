@@ -54,151 +54,151 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
     ],
     tags: [
       {
-        name: 'System',
+        name: 'system',
         description: 'Service health and metadata.',
       },
       {
-        name: 'Authentication',
+        name: 'authentication',
         description: 'Sign-in, tokens, sessions, and account verification.',
       },
       {
-        name: 'Projects',
+        name: 'projects',
         description: 'Project content and publishing.',
       },
       {
-        name: 'Project Gallery',
+        name: 'project-gallery',
         description: 'Project images and media.',
       },
       {
-        name: 'Technologies',
+        name: 'technologies',
         description: 'Technology catalog and project associations.',
       },
       {
-        name: 'Portfolio',
+        name: 'portfolio',
         description: 'Profiles, skills, experience, education, services, and testimonials.',
       },
       {
-        name: 'Access Control',
+        name: 'access-control',
         description: 'Permission policies, role inheritance, and assignments.',
       },
       {
-        name: 'Administration - Users',
+        name: 'administration-users',
         description: 'Administrative user search and maintenance.',
       },
       {
-        name: 'Administration - Groups',
+        name: 'administration-groups',
         description: 'Administrative group search and maintenance.',
       },
       {
-        name: 'Administration - Roles',
+        name: 'administration-roles',
         description: 'Administrative role search and maintenance.',
       },
       {
-        name: 'Administration - Resources',
+        name: 'administration-resources',
         description: 'Administrative resource search and maintenance.',
       },
       {
-        name: 'Administration - Configuration',
+        name: 'administration-configuration',
         description: 'Administrative configuration and regional metadata.',
       },
       {
-        name: 'Email',
+        name: 'email',
         description: 'Transactional email delivery and service health.',
       },
       {
-        name: 'Administration - Audit Logs',
+        name: 'administration-audit-logs',
         description: 'Administrative audit search and details.',
       },
       {
-        name: 'Dashboard',
+        name: 'dashboard',
         description: 'Operational overview and activity.',
       },
       {
-        name: 'IAM - Groups',
+        name: 'iam-groups',
         description: 'Group membership and role assignments.',
       },
       {
-        name: 'IAM - Roles',
+        name: 'iam-roles',
         description: 'Role definitions and permissions.',
       },
       {
-        name: 'IAM - Resources',
+        name: 'iam-resources',
         description: 'Resource definitions and available actions.',
       },
       {
-        name: 'IAM - Users',
+        name: 'iam-users',
         description: 'Identity management and user access.',
       },
       {
-        name: 'Settings',
+        name: 'settings',
         description: 'Application settings by section.',
       },
       {
-        name: 'Timesheets',
+        name: 'timesheets',
         description: 'Timesheet entries, reporting, and approval.',
       },
       {
-        name: 'Administration - Branches',
+        name: 'administration-branches',
         description: 'Administrative branch search and maintenance.',
       },
       {
-        name: 'Registration',
+        name: 'registration',
         description: 'Account and organization registration.',
       },
       {
-        name: 'Identity Authentication',
+        name: 'identity-authentication',
         description: 'Authentication for the organization identity service.',
       },
       {
-        name: 'Invitations',
+        name: 'invitations',
         description: 'Invitation generation and verification.',
       },
       {
-        name: 'Organizations',
+        name: 'organizations',
         description: 'Organization records.',
       },
       {
-        name: 'Branches',
+        name: 'branches',
         description: 'Organization branch records.',
       },
       {
-        name: 'Permissions',
+        name: 'permissions',
         description: 'Permission definitions and assignments.',
       },
       {
-        name: 'Organization Settings',
+        name: 'organization-settings',
         description: 'Organization-specific settings.',
       },
       {
-        name: 'Notifications',
+        name: 'notifications',
         description: 'Notification records and delivery.',
       },
       {
-        name: 'Verifications',
+        name: 'verifications',
         description: 'Verification challenges.',
       },
       {
-        name: 'Audit Logs',
+        name: 'audit-logs',
         description: 'Organization audit events.',
       },
       {
-        name: 'Storage',
+        name: 'storage',
         description: 'File uploads.',
       },
       {
-        name: 'Lookups',
+        name: 'lookups',
         description: 'Reference data and selection options.',
       },
       {
-        name: 'Daily Sheets',
+        name: 'daily-sheets',
         description: 'Daily work records and approval.',
       },
       {
-        name: 'Monthly Sheets',
+        name: 'monthly-sheets',
         description: 'Monthly work records, approval, and payment.',
       },
       {
-        name: 'Administration - Messages',
+        name: 'administration-messages',
         description: 'Administrative message delivery.',
       },
     ],

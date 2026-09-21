@@ -8,9 +8,9 @@ const controller = new BranchController();
  * @swagger
  * /api/v1/branches:
  *   get:
- *     summary: List branches
+ *     summary: listBranches
  *     operationId: getBranches
- *     tags: [Branches]
+ *     tags: [branches]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.get('/', controller.list);
  * @swagger
  * /api/v1/branches/{id}:
  *   get:
- *     summary: Get branch by ID
+ *     summary: getBranchById
  *     operationId: getBranchesById
- *     tags: [Branches]
+ *     tags: [branches]
  *     security: []
  *     parameters:
  *       - in: path
@@ -39,9 +39,9 @@ router.get('/:id', controller.get);
  * @swagger
  * /api/v1/branches:
  *   post:
- *     summary: Create branch
+ *     summary: createBranch
  *     operationId: postBranches
- *     tags: [Branches]
+ *     tags: [branches]
  *     security: []
  *     responses:
  *       default:
@@ -52,9 +52,9 @@ router.post('/', controller.create);
  * @swagger
  * /api/v1/branches/{id}:
  *   put:
- *     summary: Update branch
+ *     summary: updateBranch
  *     operationId: putBranchesById
- *     tags: [Branches]
+ *     tags: [branches]
  *     security: []
  *     parameters:
  *       - in: path

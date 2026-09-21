@@ -9,9 +9,9 @@ const router = Router();
  * @swagger
  * /api/v1/admin/roles/search:
  *   get:
- *     summary: Get role search template
+ *     summary: getRoleSearchTemplate
  *     operationId: getAdminRolesSearch
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -40,9 +40,9 @@ const router = Router();
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: Search roles
+ *     summary: searchRoles
  *     operationId: postAdminRolesSearch
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -96,9 +96,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/roles/metadata:
  *   get:
- *     summary: Initialize role metadata
+ *     summary: initializeRoleMetadata
  *     operationId: getAdminRolesMetadata
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -126,9 +126,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/roles/template:
  *   get:
- *     summary: Get template for new role
+ *     summary: getTemplateForNewRole
  *     operationId: getAdminRolesTemplate
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -165,9 +165,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/roles/details:
  *   post:
- *     summary: Load role details by ID
+ *     summary: loadRoleDetailsById
  *     operationId: postAdminRolesDetails
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -221,9 +221,9 @@ const router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  * /api/v1/admin/roles/save:
  *   post:
- *     summary: Save role details
+ *     summary: saveRoleDetails
  *     operationId: postAdminRolesSave
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -262,9 +262,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/roles/delete:
  *   post:
- *     summary: Delete role
+ *     summary: deleteRole
  *     operationId: postAdminRolesDelete
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -303,9 +303,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/roles/resource-mappings/details:
  *   post:
- *     summary: Load role resource mappings
+ *     summary: loadRoleResourceMappings
  *     operationId: postAdminRolesResourceMappingsDetails
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -333,9 +333,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/roles/resource-mappings/save:
  *   post:
- *     summary: Save role resource mappings
+ *     summary: saveRoleResourceMappings
  *     operationId: postAdminRolesResourceMappingsSave
- *     tags: [Administration - Roles]
+ *     tags: [administration-roles]
  *     security:
  *       - BearerAuth: []
  *     responses:

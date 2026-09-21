@@ -8,9 +8,9 @@ const controller = new SettingsController();
  * @swagger
  * /api/v1/organization-settings:
  *   get:
- *     summary: List organization settings
+ *     summary: listOrganizationSettings
  *     operationId: getOrganizationSettings
- *     tags: [Organization Settings]
+ *     tags: [organization-settings]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.get('/', controller.list);
  * @swagger
  * /api/v1/organization-settings/{key}:
  *   get:
- *     summary: Get organization setting by key
+ *     summary: getOrganizationSettingByKey
  *     operationId: getOrganizationSettingsByKey
- *     tags: [Organization Settings]
+ *     tags: [organization-settings]
  *     security: []
  *     parameters:
  *       - in: path
@@ -39,9 +39,9 @@ router.get('/:key', controller.get);
  * @swagger
  * /api/v1/organization-settings:
  *   post:
- *     summary: Save organization setting
+ *     summary: saveOrganizationSetting
  *     operationId: postOrganizationSettings
- *     tags: [Organization Settings]
+ *     tags: [organization-settings]
  *     security: []
  *     responses:
  *       default:

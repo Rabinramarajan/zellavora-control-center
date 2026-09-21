@@ -8,9 +8,9 @@ const controller = new PermissionController();
  * @swagger
  * /api/v1/permissions:
  *   get:
- *     summary: List permissions
+ *     summary: listPermissions
  *     operationId: getPermissions
- *     tags: [Permissions]
+ *     tags: [permissions]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.get('/', controller.list);
  * @swagger
  * /api/v1/permissions:
  *   post:
- *     summary: Create permission
+ *     summary: createPermission
  *     operationId: postPermissions
- *     tags: [Permissions]
+ *     tags: [permissions]
  *     security: []
  *     responses:
  *       default:
@@ -34,9 +34,9 @@ router.post('/', controller.create);
  * @swagger
  * /api/v1/permissions/assign:
  *   post:
- *     summary: Assign permission
+ *     summary: assignPermission
  *     operationId: postPermissionsAssign
- *     tags: [Permissions]
+ *     tags: [permissions]
  *     security: []
  *     responses:
  *       default:

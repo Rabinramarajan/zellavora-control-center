@@ -8,9 +8,9 @@ const controller = new VerificationController();
  * @swagger
  * /api/v1/verifications/send:
  *   post:
- *     summary: Send verification challenge
+ *     summary: sendVerificationChallenge
  *     operationId: postVerificationsSend
- *     tags: [Verifications]
+ *     tags: [verifications]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.post('/send', controller.send);
  * @swagger
  * /api/v1/verifications/verify:
  *   post:
- *     summary: Verify challenge
+ *     summary: verifyChallenge
  *     operationId: postVerificationsVerify
- *     tags: [Verifications]
+ *     tags: [verifications]
  *     security: []
  *     responses:
  *       default:

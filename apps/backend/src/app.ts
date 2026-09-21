@@ -88,9 +88,9 @@ app.use(requestContext);
  * @swagger
  * /health:
  *   get:
- *     summary: Check service health
+ *     summary: checkServiceHealth
  *     operationId: getHealth
- *     tags: [System]
+ *     tags: [system]
  *     security: []
  *     responses:
  *       200:
@@ -123,9 +123,9 @@ app.get('/health', (_req, res) => {
  * @swagger
  * /:
  *   get:
- *     summary: Open API documentation
+ *     summary: openApiDocumentation
  *     operationId: getApiDocumentation
- *     tags: [System]
+ *     tags: [system]
  *     security: []
  *     responses:
  *       302:
@@ -136,9 +136,9 @@ app.get('/health', (_req, res) => {
  * @swagger
  * /info:
  *   get:
- *     summary: Get service information
+ *     summary: getServiceInformation
  *     operationId: getInfo
- *     tags: [System]
+ *     tags: [system]
  *     security: []
  *     responses:
  *       200:

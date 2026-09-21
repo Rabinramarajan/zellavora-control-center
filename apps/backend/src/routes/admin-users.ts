@@ -14,9 +14,9 @@ const router = Router();
  * @swagger
  * /api/v1/admin/users/search:
  *   get:
- *     summary: Get user search template
+ *     summary: getUserSearchTemplate
  *     operationId: getAdminUsersSearch
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -45,9 +45,9 @@ const router = Router();
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: Search users
+ *     summary: searchUsers
  *     operationId: postAdminUsersSearch
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -106,9 +106,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/users/metadata:
  *   get:
- *     summary: Initialize user data
+ *     summary: initializeUserData
  *     operationId: getAdminUsersMetadata
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -136,9 +136,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/users/template:
  *   get:
- *     summary: Get template for new user
+ *     summary: getTemplateForNewUser
  *     operationId: getAdminUsersTemplate
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -192,9 +192,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/users/details:
  *   post:
- *     summary: Load user details by serial ID
+ *     summary: loadUserDetailsBySerialId
  *     operationId: postAdminUsersDetails
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -274,9 +274,9 @@ const router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  * /api/v1/admin/users/save:
  *   post:
- *     summary: Save user details
+ *     summary: saveUserDetails
  *     operationId: postAdminUsersSave
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -349,9 +349,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/users/assignable-roles:
  *   get:
- *     summary: Get roles assignable to user
+ *     summary: getRolesAssignableToUser
  *     operationId: getAdminUsersAssignableRoles
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -379,9 +379,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/users/team-members/search:
  *   post:
- *     summary: Get team users
+ *     summary: getTeamUsers
  *     operationId: postAdminUsersTeamMembersSearch
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -409,9 +409,9 @@ const router = Router();
  *                   type: boolean
  * /api/v1/admin/users/branch-options:
  *   post:
- *     summary: Load branch dropdown details
+ *     summary: loadBranchDropdownDetails
  *     operationId: postAdminUsersBranchOptions
- *     tags: [Administration - Users]
+ *     tags: [administration-users]
  *     security:
  *       - BearerAuth: []
  *     responses:

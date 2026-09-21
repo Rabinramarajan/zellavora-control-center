@@ -8,7 +8,7 @@ const controller = new RoleController();
 /**
  * @swagger
  * tags:
- *   name: IAM - Roles
+ *   name: iam-roles
  *   description: IAM roles and their permission assignments.
  */
 
@@ -16,10 +16,10 @@ const controller = new RoleController();
  * @swagger
  * /api/v1/iam/roles:
  *   get:
- *     summary: List roles
+ *     summary: listRoles
  *     operationId: getIamRoles
  *     description: Paginated, filterable list of IAM roles.
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -42,10 +42,10 @@ router.get('/', authenticate, requirePermission('roles:read'), controller.list);
  * @swagger
  * /api/v1/iam/roles/all:
  *   get:
- *     summary: List all roles
+ *     summary: listAllRoles
  *     operationId: getIamRolesAll
  *     description: Unpaginated role list (for dropdowns and assignment pickers).
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -58,10 +58,10 @@ router.get('/all', authenticate, requirePermission('roles:read'), controller.lis
  * @swagger
  * /api/v1/iam/roles/{id}:
  *   get:
- *     summary: Get role by ID
+ *     summary: getRoleById
  *     operationId: getIamRolesById
  *     description: Full role detail including its permission matrix.
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -79,10 +79,10 @@ router.get('/:id', authenticate, requirePermission('roles:read'), controller.get
  * @swagger
  * /api/v1/iam/roles/{id}/permissions:
  *   get:
- *     summary: List role permissions
+ *     summary: listRolePermissions
  *     operationId: getIamRolesByIdPermissions
  *     description: Permission matrix currently granted to a role.
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -100,10 +100,10 @@ router.get('/:id/permissions', authenticate, requirePermission('roles:read'), co
  * @swagger
  * /api/v1/iam/roles:
  *   post:
- *     summary: Create role
+ *     summary: createRole
  *     operationId: postIamRoles
  *     description: Create a role. Key is derived from the name.
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -129,10 +129,10 @@ router.post('/', authenticate, requirePermission('roles:manage'), controller.cre
  * @swagger
  * /api/v1/iam/roles/{id}:
  *   patch:
- *     summary: Update role
+ *     summary: updateRole
  *     operationId: patchIamRolesById
  *     description: Update role metadata.
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -160,10 +160,10 @@ router.patch('/:id', authenticate, requirePermission('roles:manage'), controller
  * @swagger
  * /api/v1/iam/roles/{id}:
  *   delete:
- *     summary: Delete role
+ *     summary: deleteRole
  *     operationId: deleteIamRolesById
  *     description: Soft-delete a role (system roles are protected).
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -181,10 +181,10 @@ router.delete('/:id', authenticate, requirePermission('roles:manage'), controlle
  * @swagger
  * /api/v1/iam/roles/{id}/permissions:
  *   put:
- *     summary: Set role permissions
+ *     summary: setRolePermissions
  *     operationId: putIamRolesByIdPermissions
  *     description: Set the role's permission matrix (replace or merge).
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -218,10 +218,10 @@ router.put('/:id/permissions', authenticate, requirePermission('roles:manage'), 
  * @swagger
  * /api/v1/iam/roles/{id}/copy:
  *   post:
- *     summary: Copy role
+ *     summary: copyRole
  *     operationId: postIamRolesByIdCopy
  *     description: Clone a role, optionally copying its permissions.
- *     tags: [IAM - Roles]
+ *     tags: [iam-roles]
  *     security:
  *       - bearerAuth: []
  *     parameters:

@@ -258,9 +258,9 @@ const REGISTRATION_SESSION_EXPIRY_HOURS = 24;
  * @swagger
  * /api/v1/registrations/status:
  *   get:
- *     summary: Get registration availability
+ *     summary: getRegistrationAvailability
  *     operationId: getRegistrationsStatus
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -295,9 +295,9 @@ router.get('/status', async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/email-availability:
  *   post:
- *     summary: Check email availability
+ *     summary: checkEmailAvailability
  *     operationId: postRegistrationsEmailAvailability
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -321,9 +321,9 @@ router.post(['/email-availability', '/check-email'], async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/organization-code-availability:
  *   post:
- *     summary: Check organization code availability
+ *     summary: checkOrganizationCodeAvailability
  *     operationId: postRegistrationsOrganizationCodeAvailability
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -348,9 +348,9 @@ router.post(['/organization-code-availability', '/check-org'], async (req, res, 
  * @swagger
  * /api/v1/registrations/organization-name-availability:
  *   post:
- *     summary: Check organization name availability
+ *     summary: checkOrganizationNameAvailability
  *     operationId: postRegistrationsOrganizationNameAvailability
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -374,9 +374,9 @@ router.post(['/organization-name-availability', '/check-org-name'], async (req, 
  * @swagger
  * /api/v1/registrations/sessions:
  *   post:
- *     summary: Start registration session
+ *     summary: startRegistrationSession
  *     operationId: postRegistrationsSessions
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -434,9 +434,9 @@ router.post(['/sessions', '/init'], async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/send-email-otp:
  *   post:
- *     summary: Send registration email OTP
+ *     summary: sendRegistrationEmailOtp
  *     operationId: postRegistrationsSendEmailOtp
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -532,9 +532,9 @@ router.post('/send-email-otp', async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/verify-email:
  *   post:
- *     summary: Verify registration email
+ *     summary: verifyRegistrationEmail
  *     operationId: postRegistrationsVerifyEmail
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -608,9 +608,9 @@ router.post('/verify-email', async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/send-mobile-otp:
  *   post:
- *     summary: Send registration mobile OTP
+ *     summary: sendRegistrationMobileOtp
  *     operationId: postRegistrationsSendMobileOtp
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -665,9 +665,9 @@ router.post('/send-mobile-otp', async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/verify-mobile:
  *   post:
- *     summary: Verify registration mobile
+ *     summary: verifyRegistrationMobile
  *     operationId: postRegistrationsVerifyMobile
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -729,9 +729,9 @@ router.post('/verify-mobile', async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/resend-otp:
  *   post:
- *     summary: Resend registration OTP
+ *     summary: resendRegistrationOtp
  *     operationId: postRegistrationsResendOtp
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -830,9 +830,9 @@ router.post('/resend-otp', async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/mfa/setup:
  *   post:
- *     summary: Set up registration MFA
+ *     summary: setUpRegistrationMfa
  *     operationId: postRegistrationsMfaSetup
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -887,9 +887,9 @@ router.post(['/mfa/setup', '/mfa-setup'], async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/mfa/verify:
  *   post:
- *     summary: Verify registration MFA
+ *     summary: verifyRegistrationMfa
  *     operationId: postRegistrationsMfaVerify
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -945,9 +945,9 @@ router.post(['/mfa/verify', '/verify-mfa'], async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/sessions/{id}:
  *   get:
- *     summary: Get registration session
+ *     summary: getRegistrationSession
  *     operationId: getRegistrationsSessionsById
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     parameters:
  *       - in: path
@@ -1014,9 +1014,9 @@ router.get(['/sessions/:id', '/session/:id'], async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/complete:
  *   post:
- *     summary: Complete registration
+ *     summary: completeRegistration
  *     operationId: postRegistrationsComplete
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:
@@ -1457,9 +1457,9 @@ router.post('/complete', async (req, res, next) => {
  * @swagger
  * /api/v1/registrations/progress:
  *   put:
- *     summary: Save registration progress
+ *     summary: saveRegistrationProgress
  *     operationId: putRegistrationsProgress
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     responses:
  *       default:

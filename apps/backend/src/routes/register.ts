@@ -53,10 +53,10 @@ const RegisterSubmitSchema = z.object({
  * @swagger
  * /api/v1/auth/registrations/verify-invitation:
  *   post:
- *     summary: Verify invitation code
+ *     summary: verifyInvitationCode
  *     operationId: postAuthRegistrationsVerifyInvitation
  *     description: Validates a registration invitation code.
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     requestBody:
  *       required: true
@@ -110,10 +110,10 @@ router.post('/verify-invitation', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/registrations/send-email-otp:
  *   post:
- *     summary: Send registration email OTP
+ *     summary: sendRegistrationEmailOtp
  *     operationId: postAuthRegistrationsSendEmailOtp
  *     description: Generates a 6-digit OTP for the given email and queues it for delivery.
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     requestBody:
  *       required: true
@@ -174,10 +174,10 @@ router.post('/send-email-otp', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/registrations/verify-email-otp:
  *   post:
- *     summary: Verify registration email OTP
+ *     summary: verifyRegistrationEmailOtp
  *     operationId: postAuthRegistrationsVerifyEmailOtp
  *     description: Verifies a 6-digit OTP previously sent to the given email.
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     requestBody:
  *       required: true
@@ -245,10 +245,10 @@ router.post('/verify-email-otp', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/registrations/mfa-setup:
  *   get:
- *     summary: Generate MFA setup
+ *     summary: generateMfaSetup
  *     operationId: getAuthRegistrationsMfaSetup
  *     description: Generates a TOTP secret and QR code for MFA enrollment.
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     parameters:
  *       - in: query
@@ -289,10 +289,10 @@ router.get('/mfa-setup', async (req, res, next) => {
  * @swagger
  * /api/v1/auth/registrations/submit:
  *   post:
- *     summary: Submit registration
+ *     summary: submitRegistration
  *     operationId: postAuthRegistrationsSubmit
  *     description: Completes tenant, branch, and super-admin registration. Verifies invitation, duplicates, and MFA code before provisioning.
- *     tags: [Registration]
+ *     tags: [registration]
  *     security: []
  *     requestBody:
  *       required: true

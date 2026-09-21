@@ -8,9 +8,9 @@ const controller = new NotificationController();
  * @swagger
  * /api/v1/notifications:
  *   get:
- *     summary: List notifications
+ *     summary: listNotifications
  *     operationId: getNotifications
- *     tags: [Notifications]
+ *     tags: [notifications]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.get('/', controller.list);
  * @swagger
  * /api/v1/notifications/send:
  *   post:
- *     summary: Send notification
+ *     summary: sendNotification
  *     operationId: postNotificationsSend
- *     tags: [Notifications]
+ *     tags: [notifications]
  *     security: []
  *     responses:
  *       default:

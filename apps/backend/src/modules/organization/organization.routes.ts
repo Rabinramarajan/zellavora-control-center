@@ -8,9 +8,9 @@ const controller = new OrganizationController();
  * @swagger
  * /api/v1/organizations/{id}:
  *   get:
- *     summary: Get organization by ID
+ *     summary: getOrganizationById
  *     operationId: getOrganizationsById
- *     tags: [Organizations]
+ *     tags: [organizations]
  *     security: []
  *     parameters:
  *       - in: path
@@ -26,9 +26,9 @@ router.get('/:id', controller.get);
  * @swagger
  * /api/v1/organizations:
  *   post:
- *     summary: Create organization
+ *     summary: createOrganization
  *     operationId: postOrganizations
- *     tags: [Organizations]
+ *     tags: [organizations]
  *     security: []
  *     responses:
  *       default:
@@ -39,9 +39,9 @@ router.post('/', controller.create);
  * @swagger
  * /api/v1/organizations/{id}:
  *   put:
- *     summary: Update organization
+ *     summary: updateOrganization
  *     operationId: putOrganizationsById
- *     tags: [Organizations]
+ *     tags: [organizations]
  *     security: []
  *     parameters:
  *       - in: path

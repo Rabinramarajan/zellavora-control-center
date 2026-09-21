@@ -8,7 +8,7 @@ const controller = new ResourceController();
 /**
  * @swagger
  * tags:
- *   name: IAM - Resources
+ *   name: iam-resources
  *   description: IAM protected resources and their actions.
  */
 
@@ -16,10 +16,10 @@ const controller = new ResourceController();
  * @swagger
  * /api/v1/iam/resources:
  *   get:
- *     summary: List resources
+ *     summary: listResources
  *     operationId: getIamResources
  *     description: Paginated, filterable list of IAM resources.
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -42,10 +42,10 @@ router.get('/', authenticate, requirePermission('resources:read'), controller.li
  * @swagger
  * /api/v1/iam/resources/tree:
  *   get:
- *     summary: Get resource hierarchy
+ *     summary: getResourceHierarchy
  *     operationId: getIamResourcesTree
  *     description: Hierarchical resource tree (parent/children).
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -58,10 +58,10 @@ router.get('/tree', authenticate, requirePermission('resources:read'), controlle
  * @swagger
  * /api/v1/iam/resources/key/{key}:
  *   get:
- *     summary: Get resource by key
+ *     summary: getResourceByKey
  *     operationId: getIamResourcesKeyByKey
  *     description: Look up a resource by its unique key (cached).
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -79,10 +79,10 @@ router.get('/key/:key', authenticate, requirePermission('resources:read'), contr
  * @swagger
  * /api/v1/iam/resources/{id}:
  *   get:
- *     summary: Get resource by ID
+ *     summary: getResourceById
  *     operationId: getIamResourcesById
  *     description: Full resource detail including actions and parent chain.
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -100,10 +100,10 @@ router.get('/:id', authenticate, requirePermission('resources:read'), controller
  * @swagger
  * /api/v1/iam/resources:
  *   post:
- *     summary: Create resource
+ *     summary: createResource
  *     operationId: postIamResources
  *     description: Create a resource. Provided actions auto-create permission rows.
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -133,10 +133,10 @@ router.post('/', authenticate, requirePermission('resources:manage'), controller
  * @swagger
  * /api/v1/iam/resources/{id}:
  *   patch:
- *     summary: Update resource
+ *     summary: updateResource
  *     operationId: patchIamResourcesById
  *     description: Update resource metadata.
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -166,10 +166,10 @@ router.patch('/:id', authenticate, requirePermission('resources:manage'), contro
  * @swagger
  * /api/v1/iam/resources/{id}/actions:
  *   post:
- *     summary: Add resource action
+ *     summary: addResourceAction
  *     operationId: postIamResourcesByIdActions
  *     description: Add an action to a resource (auto-creates its permission).
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -196,10 +196,10 @@ router.post('/:id/actions', authenticate, requirePermission('resources:manage'),
  * @swagger
  * /api/v1/iam/resources/{id}/actions/{actionId}:
  *   delete:
- *     summary: Remove resource action
+ *     summary: removeResourceAction
  *     operationId: deleteIamResourcesByIdActionsByActionId
  *     description: Remove an action and its mapped permission.
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -226,10 +226,10 @@ router.delete(
  * @swagger
  * /api/v1/iam/resources/{id}:
  *   delete:
- *     summary: Delete resource
+ *     summary: deleteResource
  *     operationId: deleteIamResourcesById
  *     description: Soft-delete a resource (system resources are protected).
- *     tags: [IAM - Resources]
+ *     tags: [iam-resources]
  *     security:
  *       - bearerAuth: []
  *     parameters:

@@ -65,14 +65,14 @@ router.use(authGuard);
  * @swagger
  * /api/v1/timesheets:
  *   get:
- *     summary: Get or list timesheets
+ *     summary: getOrListTimesheets
  *     operationId: getTimesheets
  *     description: >
  *       With `period`, returns that period's timesheet, creating a draft
  *       pre-filled with one entry per calendar day if none exists. Without
  *       `period`, lists timesheets. `employeeId` defaults to the caller, and
  *       results are always scoped to the organization on the access token.
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: query
  *         name: period
@@ -104,10 +104,10 @@ router.get(
  * @swagger
  * /api/v1/timesheets/summary:
  *   get:
- *     summary: Get timesheet year summary
+ *     summary: getTimesheetYearSummary
  *     operationId: getTimesheetsSummary
  *     description: Yearly rollup of hours, leave days and approvals.
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: query
  *         name: year
@@ -127,9 +127,9 @@ router.get('/summary', handle((req, res) => controller.summary(req, res)));
  * @swagger
  * /api/v1/timesheets/{id}:
  *   get:
- *     summary: Get timesheet by ID
+ *     summary: getTimesheetById
  *     operationId: getTimesheetsById
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -150,12 +150,12 @@ router.get('/:id', handle((req, res) => controller.getById(req, res)));
  * @swagger
  * /api/v1/timesheets/{id}/export:
  *   get:
- *     summary: Export timesheet
+ *     summary: exportTimesheet
  *     operationId: getTimesheetsByIdExport
  *     description: >
  *       `json` for backup and integrations, `csv` for spreadsheets, `html`
  *       for a print-ready document the browser can save as PDF.
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -174,10 +174,10 @@ router.get('/:id/export', handle((req, res) => controller.export(req, res)));
  * @swagger
  * /api/v1/timesheets/{id}/entries/bulk:
  *   post:
- *     summary: Bulk upsert timesheet entries
+ *     summary: bulkUpsertTimesheetEntries
  *     operationId: postTimesheetsByIdEntriesBulk
  *     description: Upsert several entries at once, then recalculate the total.
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -221,9 +221,9 @@ router.post('/:id/entries/bulk', handle((req, res) => controller.bulkUpsertEntri
  * @swagger
  * /api/v1/timesheets/{id}/entries/{entryId}:
  *   patch:
- *     summary: Update timesheet entry
+ *     summary: updateTimesheetEntry
  *     operationId: patchTimesheetsByIdEntriesByEntryId
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -262,10 +262,10 @@ router.patch('/:id/entries/:entryId', handle((req, res) => controller.updateEntr
  * @swagger
  * /api/v1/timesheets/{id}/submit:
  *   post:
- *     summary: Submit timesheet
+ *     summary: submitTimesheet
  *     operationId: postTimesheetsByIdSubmit
  *     description: Employee submits the sheet for approval.
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -286,10 +286,10 @@ router.post('/:id/submit', handle((req, res) => controller.submit(req, res)));
  * @swagger
  * /api/v1/timesheets/{id}/approve:
  *   post:
- *     summary: Approve timesheet
+ *     summary: approveTimesheet
  *     operationId: postTimesheetsByIdApprove
  *     description: Requires the `timesheet:approve` permission.
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -314,12 +314,12 @@ router.post(
  * @swagger
  * /api/v1/timesheets/{id}/reject:
  *   post:
- *     summary: Reject timesheet
+ *     summary: rejectTimesheet
  *     operationId: postTimesheetsByIdReject
  *     description: >
  *       Rejects with a reason and reopens the sheet for editing. Requires the
  *       `timesheet:approve` permission.
- *     tags: [Timesheets]
+ *     tags: [timesheets]
  *     parameters:
  *       - in: path
  *         name: id

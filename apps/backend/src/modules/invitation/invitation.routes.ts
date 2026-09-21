@@ -8,9 +8,9 @@ const controller = new InvitationController();
  * @swagger
  * /api/v1/invitations/verify:
  *   post:
- *     summary: Verify invitation
+ *     summary: verifyInvitation
  *     operationId: postInvitationsVerify
- *     tags: [Invitations]
+ *     tags: [invitations]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.post('/verify', controller.verify);
  * @swagger
  * /api/v1/invitations/generate:
  *   post:
- *     summary: Generate invitation
+ *     summary: generateInvitation
  *     operationId: postInvitationsGenerate
- *     tags: [Invitations]
+ *     tags: [invitations]
  *     security: []
  *     responses:
  *       default:

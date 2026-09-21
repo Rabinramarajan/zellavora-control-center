@@ -20,9 +20,9 @@ let mockGroups = [
  * @swagger
  * /api/v1/admin/groups/search:
  *   get:
- *     summary: Get group search template
+ *     summary: getGroupSearchTemplate
  *     operationId: getAdminGroupsSearch
- *     tags: [Administration - Groups]
+ *     tags: [administration-groups]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -47,9 +47,9 @@ let mockGroups = [
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: Search groups
+ *     summary: searchGroups
  *     operationId: postAdminGroupsSearch
- *     tags: [Administration - Groups]
+ *     tags: [administration-groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -102,9 +102,9 @@ let mockGroups = [
  *                   type: boolean
  * /api/v1/admin/groups/details:
  *   post:
- *     summary: Load group details
+ *     summary: loadGroupDetails
  *     operationId: postAdminGroupsDetails
- *     tags: [Administration - Groups]
+ *     tags: [administration-groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -149,9 +149,9 @@ let mockGroups = [
  *                   type: boolean
  * /api/v1/admin/groups/save:
  *   post:
- *     summary: Save group details
+ *     summary: saveGroupDetails
  *     operationId: postAdminGroupsSave
- *     tags: [Administration - Groups]
+ *     tags: [administration-groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -200,9 +200,9 @@ let mockGroups = [
  *                   type: boolean
  * /api/v1/admin/groups/delete:
  *   post:
- *     summary: Delete group
+ *     summary: deleteGroup
  *     operationId: postAdminGroupsDelete
- *     tags: [Administration - Groups]
+ *     tags: [administration-groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:

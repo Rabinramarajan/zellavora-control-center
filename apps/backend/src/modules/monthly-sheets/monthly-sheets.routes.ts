@@ -15,9 +15,9 @@ router.use(authGuard);
  * @swagger
  * /api/v1/monthly-sheets:
  *   post:
- *     summary: Create monthly sheet
+ *     summary: createMonthlySheet
  *     operationId: postMonthlySheets
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -32,9 +32,9 @@ router.post('/', (req, res) => controller.create(req as any, res));
  * @swagger
  * /api/v1/monthly-sheets:
  *   get:
- *     summary: List monthly sheets
+ *     summary: listMonthlySheets
  *     operationId: getMonthlySheets
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -49,9 +49,9 @@ router.get('/', (req, res) => controller.list(req as any, res));
  * @swagger
  * /api/v1/monthly-sheets/{id}:
  *   get:
- *     summary: Get monthly sheet by ID
+ *     summary: getMonthlySheetById
  *     operationId: getMonthlySheetsById
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -71,9 +71,9 @@ router.get('/:id', (req, res) => controller.getById(req as any, res));
  * @swagger
  * /api/v1/monthly-sheets/{id}:
  *   put:
- *     summary: Update monthly sheet
+ *     summary: updateMonthlySheet
  *     operationId: putMonthlySheetsById
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -93,9 +93,9 @@ router.put('/:id', (req, res) => controller.update(req as any, res));
  * @swagger
  * /api/v1/monthly-sheets/{id}/submit:
  *   post:
- *     summary: Submit monthly sheet
+ *     summary: submitMonthlySheet
  *     operationId: postMonthlySheetsByIdSubmit
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -115,9 +115,9 @@ router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
  * @swagger
  * /api/v1/monthly-sheets/{id}/approve:
  *   post:
- *     summary: Approve monthly sheet
+ *     summary: approveMonthlySheet
  *     operationId: postMonthlySheetsByIdApprove
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -137,9 +137,9 @@ router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
  * @swagger
  * /api/v1/monthly-sheets/{id}/mark-paid:
  *   post:
- *     summary: Mark monthly sheet as paid
+ *     summary: markMonthlySheetAsPaid
  *     operationId: postMonthlySheetsByIdMarkPaid
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -159,9 +159,9 @@ router.post('/:id/mark-paid', (req, res) => controller.markAsPaid(req as any, re
  * @swagger
  * /api/v1/monthly-sheets/{id}:
  *   delete:
- *     summary: Delete monthly sheet
+ *     summary: deleteMonthlySheet
  *     operationId: deleteMonthlySheetsById
- *     tags: [Monthly Sheets]
+ *     tags: [monthly-sheets]
  *     parameters:
  *       - in: path
  *         name: id

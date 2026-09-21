@@ -33,9 +33,9 @@ let mockResources = [
  * @swagger
  * /api/v1/admin/resources/search:
  *   get:
- *     summary: Get resource search template
+ *     summary: getResourceSearchTemplate
  *     operationId: getAdminResourcesSearch
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -60,9 +60,9 @@ let mockResources = [
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: Search resources
+ *     summary: searchResources
  *     operationId: postAdminResourcesSearch
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -119,9 +119,9 @@ let mockResources = [
  *                   type: boolean
  * /api/v1/admin/resources/metadata:
  *   get:
- *     summary: Initialize resource metadata
+ *     summary: initializeResourceMetadata
  *     operationId: getAdminResourcesMetadata
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -149,9 +149,9 @@ let mockResources = [
  *                   type: boolean
  * /api/v1/admin/resources/template:
  *   get:
- *     summary: Get template for new resource
+ *     summary: getTemplateForNewResource
  *     operationId: getAdminResourcesTemplate
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -187,9 +187,9 @@ let mockResources = [
  *                   type: boolean
  * /api/v1/admin/resources/details:
  *   post:
- *     summary: Load resource details by ID
+ *     summary: loadResourceDetailsById
  *     operationId: postAdminResourcesDetails
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -236,9 +236,9 @@ let mockResources = [
  *                   type: boolean
  * /api/v1/admin/resources/save:
  *   post:
- *     summary: Save resource details
+ *     summary: saveResourceDetails
  *     operationId: postAdminResourcesSave
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -291,9 +291,9 @@ let mockResources = [
  *                   type: boolean
  * /api/v1/admin/resources/delete:
  *   post:
- *     summary: Delete resource
+ *     summary: deleteResource
  *     operationId: postAdminResourcesDelete
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -332,9 +332,9 @@ let mockResources = [
  *                   type: boolean
  * /api/v1/admin/resources/bulk-save:
  *   post:
- *     summary: Save list of resources
+ *     summary: saveListOfResources
  *     operationId: postAdminResourcesBulkSave
- *     tags: [Administration - Resources]
+ *     tags: [administration-resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:

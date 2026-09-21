@@ -8,9 +8,9 @@ const controller = new StorageController();
  * @swagger
  * /api/v1/storage/upload:
  *   post:
- *     summary: Upload file
+ *     summary: uploadFile
  *     operationId: postStorageUpload
- *     tags: [Storage]
+ *     tags: [storage]
  *     security: []
  *     responses:
  *       default:

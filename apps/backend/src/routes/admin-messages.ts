@@ -8,9 +8,9 @@ const router = Router();
  * @swagger
  * /api/v1/admin/messages/send:
  *   post:
- *     summary: Send message
+ *     summary: sendMessage
  *     operationId: postAdminMessagesSend
- *     tags: [Administration - Messages]
+ *     tags: [administration-messages]
  *     responses:
  *       default:
  *         description: Operation response
@@ -36,9 +36,9 @@ router.post(['/messages/send', '/message/send'], authenticate, async (req, res, 
  * @swagger
  * /api/v1/admin/emails/send:
  *   post:
- *     summary: Send email
+ *     summary: sendEmail
  *     operationId: postAdminEmailsSend
- *     tags: [Administration - Messages]
+ *     tags: [administration-messages]
  *     responses:
  *       default:
  *         description: Operation response

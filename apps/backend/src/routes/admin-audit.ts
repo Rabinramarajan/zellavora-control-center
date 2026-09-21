@@ -33,9 +33,9 @@ const mockAuditLogs = [
  * @swagger
  * /api/v1/admin/audit-logs/search:
  *   get:
- *     summary: Get audit log search template
+ *     summary: getAuditLogSearchTemplate
  *     operationId: getAdminAuditLogsSearch
- *     tags: [Administration - Audit Logs]
+ *     tags: [administration-audit-logs]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -60,9 +60,9 @@ const mockAuditLogs = [
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: Search audit logs
+ *     summary: searchAuditLogs
  *     operationId: postAdminAuditLogsSearch
- *     tags: [Administration - Audit Logs]
+ *     tags: [administration-audit-logs]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -117,9 +117,9 @@ const mockAuditLogs = [
  *                   type: boolean
  * /api/v1/admin/audit-logs/details:
  *   post:
- *     summary: Load audit log details
+ *     summary: loadAuditLogDetails
  *     operationId: postAdminAuditLogsDetails
- *     tags: [Administration - Audit Logs]
+ *     tags: [administration-audit-logs]
  *     security:
  *       - BearerAuth: []
  *     requestBody:

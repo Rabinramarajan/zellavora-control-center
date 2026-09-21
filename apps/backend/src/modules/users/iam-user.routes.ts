@@ -8,7 +8,7 @@ const controller = new IamUserController();
 /**
  * @swagger
  * tags:
- *   name: IAM - Users
+ *   name: iam-users
  *   description: IAM user directory, status and RBAC assignments.
  */
 
@@ -16,10 +16,10 @@ const controller = new IamUserController();
  * @swagger
  * /api/v1/iam/users:
  *   get:
- *     summary: List users
+ *     summary: listUsers
  *     operationId: getIamUsers
  *     description: Paginated, filterable list of users in the directory.
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -51,10 +51,10 @@ router.get('/', authenticate, requirePermission('users:read'), controller.list);
  * @swagger
  * /api/v1/iam/users/{id}:
  *   get:
- *     summary: Get user by ID
+ *     summary: getUserById
  *     operationId: getIamUsersById
  *     description: Full user detail including role and group assignments.
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -72,10 +72,10 @@ router.get('/:id', authenticate, requirePermission('users:read'), controller.get
  * @swagger
  * /api/v1/iam/users:
  *   post:
- *     summary: Create user
+ *     summary: createUser
  *     operationId: postIamUsers
  *     description: Create a user (optionally as an invitation pending onboarding).
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -111,10 +111,10 @@ router.post('/', authenticate, requirePermission('users:manage'), controller.cre
  * @swagger
  * /api/v1/iam/users/{id}:
  *   patch:
- *     summary: Update user
+ *     summary: updateUser
  *     operationId: patchIamUsersById
  *     description: Update user profile metadata and status.
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -148,10 +148,10 @@ router.patch('/:id', authenticate, requirePermission('users:manage'), controller
  * @swagger
  * /api/v1/iam/users/{id}/status:
  *   put:
- *     summary: Set user status
+ *     summary: setUserStatus
  *     operationId: putIamUsersByIdStatus
  *     description: Transition a user's lifecycle status.
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -179,10 +179,10 @@ router.put('/:id/status', authenticate, requirePermission('users:manage'), contr
  * @swagger
  * /api/v1/iam/users/{id}/lock:
  *   post:
- *     summary: Lock user
+ *     summary: lockUser
  *     operationId: postIamUsersByIdLock
  *     description: Lock a user account.
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -207,10 +207,10 @@ router.post('/:id/lock', authenticate, requirePermission('users:manage'), contro
  * @swagger
  * /api/v1/iam/users/{id}/unlock:
  *   post:
- *     summary: Unlock user
+ *     summary: unlockUser
  *     operationId: postIamUsersByIdUnlock
  *     description: Unlock a user account.
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -228,10 +228,10 @@ router.post('/:id/unlock', authenticate, requirePermission('users:manage'), cont
  * @swagger
  * /api/v1/iam/users/{id}/roles:
  *   put:
- *     summary: Set user roles
+ *     summary: setUserRoles
  *     operationId: putIamUsersByIdRoles
  *     description: Set a user's role assignments (replace or merge).
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -261,10 +261,10 @@ router.put('/:id/roles', authenticate, requirePermission('users:manage'), contro
  * @swagger
  * /api/v1/iam/users/{id}/groups:
  *   put:
- *     summary: Set user groups
+ *     summary: setUserGroups
  *     operationId: putIamUsersByIdGroups
  *     description: Set a user's group memberships (replace or merge).
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -293,10 +293,10 @@ router.put('/:id/groups', authenticate, requirePermission('users:manage'), contr
  * @swagger
  * /api/v1/iam/users/{id}:
  *   delete:
- *     summary: Delete user
+ *     summary: deleteUser
  *     operationId: deleteIamUsersById
  *     description: Soft-delete a user (the platform owner is protected).
- *     tags: [IAM - Users]
+ *     tags: [iam-users]
  *     security:
  *       - bearerAuth: []
  *     parameters:

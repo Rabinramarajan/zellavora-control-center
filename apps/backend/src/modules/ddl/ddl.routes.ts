@@ -8,9 +8,9 @@ const controller = new DdlController();
  * @swagger
  * /api/v1/lookups:
  *   get:
- *     summary: List lookup data
+ *     summary: listLookupData
  *     operationId: getLookups
- *     tags: [Lookups]
+ *     tags: [lookups]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.get('/', controller.getAll);
  * @swagger
  * /api/v1/lookups/types:
  *   get:
- *     summary: List lookup data by types
+ *     summary: listLookupDataByTypes
  *     operationId: getLookupsTypes
- *     tags: [Lookups]
+ *     tags: [lookups]
  *     security: []
  *     responses:
  *       default:
@@ -34,9 +34,9 @@ router.get('/types', controller.getByTypes);
  * @swagger
  * /api/v1/lookups/{type}:
  *   get:
- *     summary: List lookup data by type
+ *     summary: listLookupDataByType
  *     operationId: getLookupsByType
- *     tags: [Lookups]
+ *     tags: [lookups]
  *     security: []
  *     parameters:
  *       - in: path

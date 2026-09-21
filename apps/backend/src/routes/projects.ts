@@ -20,9 +20,9 @@ const CreateProjectSchema = z.object({
  * @swagger
  * /api/v1/projects:
  *   get:
- *     summary: List projects
+ *     summary: listProjects
  *     operationId: getProjects
- *     tags: [Projects]
+ *     tags: [projects]
  *     security: []
  *     parameters:
  *       - in: query
@@ -91,9 +91,9 @@ router.get('/', async (req, res, next) => {
  * @swagger
  * /api/v1/projects/slug/{slug}:
  *   get:
- *     summary: Get project by slug
+ *     summary: getProjectBySlug
  *     operationId: getProjectsSlugBySlug
- *     tags: [Projects]
+ *     tags: [projects]
  *     security: []
  *     parameters:
  *       - in: path
@@ -133,9 +133,9 @@ router.get('/slug/:slug', async (req, res, next) => {
  * @swagger
  * /api/v1/projects/{id}:
  *   get:
- *     summary: Get project by ID
+ *     summary: getProjectById
  *     operationId: getProjectsById
- *     tags: [Projects]
+ *     tags: [projects]
  *     security: []
  *     parameters:
  *       - in: path
@@ -180,9 +180,9 @@ router.get('/:id', async (req, res, next) => {
  * @swagger
  * /api/v1/projects:
  *   post:
- *     summary: Create project
+ *     summary: createProject
  *     operationId: postProjects
- *     tags: [Projects]
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -230,9 +230,9 @@ router.post(
  * @swagger
  * /api/v1/projects/{id}:
  *   put:
- *     summary: Update project
+ *     summary: updateProject
  *     operationId: putProjectsById
- *     tags: [Projects]
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -300,9 +300,9 @@ router.put(
  * @swagger
  * /api/v1/projects/{id}:
  *   delete:
- *     summary: Delete project
+ *     summary: deleteProject
  *     operationId: deleteProjectsById
- *     tags: [Projects]
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -355,9 +355,9 @@ router.delete(
  * @swagger
  * /api/v1/projects/{id}/publish:
  *   post:
- *     summary: Publish project
+ *     summary: publishProject
  *     operationId: postProjectsByIdPublish
- *     tags: [Projects]
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -405,9 +405,9 @@ router.post(
  * @swagger
  * /api/v1/projects/{id}/archive:
  *   post:
- *     summary: Archive project
+ *     summary: archiveProject
  *     operationId: postProjectsByIdArchive
- *     tags: [Projects]
+ *     tags: [projects]
  *     security:
  *       - BearerAuth: []
  *     parameters:

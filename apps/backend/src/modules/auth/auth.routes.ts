@@ -8,9 +8,9 @@ const controller = new AuthController();
  * @swagger
  * /api/v1/identity/auth/login:
  *   post:
- *     summary: Sign in
+ *     summary: signIn
  *     operationId: postIdentityAuthLogin
- *     tags: [Identity Authentication]
+ *     tags: [identity-authentication]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.post('/login', controller.login);
  * @swagger
  * /api/v1/identity/auth/login/mfa:
  *   post:
- *     summary: Complete MFA challenge
+ *     summary: completeMfaChallenge
  *     operationId: postIdentityAuthLoginMfa
- *     tags: [Identity Authentication]
+ *     tags: [identity-authentication]
  *     security: []
  *     responses:
  *       default:
@@ -34,9 +34,9 @@ router.post('/login/mfa', controller.mfa);
  * @swagger
  * /api/v1/identity/auth/refresh:
  *   post:
- *     summary: Refresh tokens
+ *     summary: refreshTokens
  *     operationId: postIdentityAuthRefresh
- *     tags: [Identity Authentication]
+ *     tags: [identity-authentication]
  *     security: []
  *     responses:
  *       default:

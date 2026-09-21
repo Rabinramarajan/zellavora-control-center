@@ -15,9 +15,9 @@ router.use(authGuard);
  * @swagger
  * /api/v1/daily-sheets:
  *   post:
- *     summary: Create daily sheet
+ *     summary: createDailySheet
  *     operationId: postDailySheets
- *     tags: [Daily Sheets]
+ *     tags: [daily-sheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -32,9 +32,9 @@ router.post('/', (req, res) => controller.create(req as any, res));
  * @swagger
  * /api/v1/daily-sheets:
  *   get:
- *     summary: List daily sheets
+ *     summary: listDailySheets
  *     operationId: getDailySheets
- *     tags: [Daily Sheets]
+ *     tags: [daily-sheets]
  *     responses:
  *       default:
  *         description: Operation response
@@ -49,9 +49,9 @@ router.get('/', (req, res) => controller.list(req as any, res));
  * @swagger
  * /api/v1/daily-sheets/{id}:
  *   get:
- *     summary: Get daily sheet by ID
+ *     summary: getDailySheetById
  *     operationId: getDailySheetsById
- *     tags: [Daily Sheets]
+ *     tags: [daily-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -71,9 +71,9 @@ router.get('/:id', (req, res) => controller.getById(req as any, res));
  * @swagger
  * /api/v1/daily-sheets/{id}:
  *   put:
- *     summary: Update daily sheet
+ *     summary: updateDailySheet
  *     operationId: putDailySheetsById
- *     tags: [Daily Sheets]
+ *     tags: [daily-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -93,9 +93,9 @@ router.put('/:id', (req, res) => controller.update(req as any, res));
  * @swagger
  * /api/v1/daily-sheets/{id}/submit:
  *   post:
- *     summary: Submit daily sheet
+ *     summary: submitDailySheet
  *     operationId: postDailySheetsByIdSubmit
- *     tags: [Daily Sheets]
+ *     tags: [daily-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -115,9 +115,9 @@ router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
  * @swagger
  * /api/v1/daily-sheets/{id}/approve:
  *   post:
- *     summary: Approve daily sheet
+ *     summary: approveDailySheet
  *     operationId: postDailySheetsByIdApprove
- *     tags: [Daily Sheets]
+ *     tags: [daily-sheets]
  *     parameters:
  *       - in: path
  *         name: id
@@ -137,9 +137,9 @@ router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
  * @swagger
  * /api/v1/daily-sheets/{id}:
  *   delete:
- *     summary: Delete daily sheet
+ *     summary: deleteDailySheet
  *     operationId: deleteDailySheetsById
- *     tags: [Daily Sheets]
+ *     tags: [daily-sheets]
  *     parameters:
  *       - in: path
  *         name: id

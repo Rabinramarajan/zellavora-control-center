@@ -8,9 +8,9 @@ const controller = new AuditController();
  * @swagger
  * /api/v1/audit-logs:
  *   get:
- *     summary: List audit logs
+ *     summary: listAuditLogs
  *     operationId: getAuditLogs
- *     tags: [Audit Logs]
+ *     tags: [audit-logs]
  *     security: []
  *     responses:
  *       default:
@@ -21,9 +21,9 @@ router.get('/', controller.list);
  * @swagger
  * /api/v1/audit-logs/log:
  *   post:
- *     summary: Create audit event
+ *     summary: createAuditEvent
  *     operationId: postAuditLogsLog
- *     tags: [Audit Logs]
+ *     tags: [audit-logs]
  *     security: []
  *     responses:
  *       default:

@@ -9,7 +9,7 @@ Use the canonical URLs below for new integrations. Existing URLs remain aliases 
 - Use domain names, not implementation labels such as `clean`, or UI abbreviations such as `DDL`.
 - Use nested resource paths for relationships. Existing command endpoints retain explicit action names and HTTP methods where their payload contracts require them.
 - Use camelCase path parameter names, such as `{userId}`.
-- Group Swagger operations by business domain, with readable sentence-case summaries.
+- Group Swagger operations by business domain using lowercase kebab-case tags and camelCase summaries without spaces (for example, `getAllTechnologies`).
 - Assign a unique camelCase operation ID to every method/path pair. Preserve these IDs unless deliberately changing the API contract.
 - Document canonical paths only. Maintain historical aliases during migration; removing them requires a separate compatibility decision.
 

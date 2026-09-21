@@ -25,9 +25,9 @@ let currentBranches = [...mockBranches];
  * @swagger
  * /api/v1/admin/regions/metadata:
  *   get:
- *     summary: Get regional initial metadata
+ *     summary: getRegionalInitialMetadata
  *     operationId: getAdminRegionsMetadata
- *     tags: [Administration - Configuration]
+ *     tags: [administration-configuration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -58,9 +58,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/branches/template:
  *   get:
- *     summary: Get template for new branch
+ *     summary: getTemplateForNewBranch
  *     operationId: getAdminBranchesTemplate
- *     tags: [Administration - Branches]
+ *     tags: [administration-branches]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -96,9 +96,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/branches/search:
  *   get:
- *     summary: Get branch search template
+ *     summary: getBranchSearchTemplate
  *     operationId: getAdminBranchesSearch
- *     tags: [Administration - Branches]
+ *     tags: [administration-branches]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -123,9 +123,9 @@ let currentBranches = [...mockBranches];
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: Search branch
+ *     summary: searchBranch
  *     operationId: postAdminBranchesSearch
- *     tags: [Administration - Branches]
+ *     tags: [administration-branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -177,9 +177,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/branches/details:
  *   post:
- *     summary: Load branch details
+ *     summary: loadBranchDetails
  *     operationId: postAdminBranchesDetails
- *     tags: [Administration - Branches]
+ *     tags: [administration-branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -226,9 +226,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/branches/save:
  *   post:
- *     summary: Save branch details
+ *     summary: saveBranchDetails
  *     operationId: postAdminBranchesSave
- *     tags: [Administration - Branches]
+ *     tags: [administration-branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -281,9 +281,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/branches/delete:
  *   post:
- *     summary: Delete branch
+ *     summary: deleteBranch
  *     operationId: postAdminBranchesDelete
- *     tags: [Administration - Branches]
+ *     tags: [administration-branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -322,9 +322,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/configurations/search:
  *   get:
- *     summary: Get configuration search template
+ *     summary: getConfigurationSearchTemplate
  *     operationId: getAdminConfigurationsSearch
- *     tags: [Administration - Configuration]
+ *     tags: [administration-configuration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -349,9 +349,9 @@ let currentBranches = [...mockBranches];
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: Search configurations
+ *     summary: searchConfigurations
  *     operationId: postAdminConfigurationsSearch
- *     tags: [Administration - Configuration]
+ *     tags: [administration-configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -403,9 +403,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/configurations/details:
  *   post:
- *     summary: Load configuration details
+ *     summary: loadConfigurationDetails
  *     operationId: postAdminConfigurationsDetails
- *     tags: [Administration - Configuration]
+ *     tags: [administration-configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -447,9 +447,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/configurations/save:
  *   post:
- *     summary: Save configuration details
+ *     summary: saveConfigurationDetails
  *     operationId: postAdminConfigurationsSave
- *     tags: [Administration - Configuration]
+ *     tags: [administration-configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -492,9 +492,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/configurations/list:
  *   post:
- *     summary: Load all configurations
+ *     summary: loadAllConfigurations
  *     operationId: postAdminConfigurationsList
- *     tags: [Administration - Configuration]
+ *     tags: [administration-configuration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -527,9 +527,9 @@ let currentBranches = [...mockBranches];
  *                   type: boolean
  * /api/v1/admin/configurations/delete:
  *   post:
- *     summary: Delete configuration
+ *     summary: deleteConfiguration
  *     operationId: postAdminConfigurationsDelete
- *     tags: [Administration - Configuration]
+ *     tags: [administration-configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
