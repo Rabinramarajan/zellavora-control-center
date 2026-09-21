@@ -290,7 +290,9 @@ app.use('/api/v1/iam/resources', resourceRoutes);
 app.use('/api/v1/iam/roles', roleRoutes);
 app.use('/api/v1/iam/groups', groupRoutes);
 app.use('/api/v1/iam/users', iamUserRoutes);
-app.use('/api/v1', projectRoutes);
+// Mounted under /projects: this router declares bare '/' and '/:id' paths, which at
+// the /api/v1 root would swallow every other top-level route (daily-sheets, etc).
+app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1', portfolioRoutes);
 app.use('/api/v1', galleryRoutes);
 app.use('/api/v1', techRoutes);
