@@ -128,6 +128,16 @@ async function main() {
   console.log('🔐 Creating permissions...');
   const permissionsData = [
     {
+      // Superuser grant. PermissionService.has() short-circuits on this, so the
+      // Owner role sees every menu entry and passes every requirePermission()
+      // check without the catalog having to enumerate each code.
+      name: 'all:all',
+      key: '*:*',
+      resource: '*',
+      action: '*',
+      description: 'Full access to every resource and action',
+    },
+    {
       name: 'read:dashboard',
       key: 'dashboard:read',
       resource: 'dashboard',

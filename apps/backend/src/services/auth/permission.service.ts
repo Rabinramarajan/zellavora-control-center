@@ -54,11 +54,29 @@ export class PermissionService {
     return codes;
   }
 
-  /** Pure check: does a permission set include a code (or any code with the action wildcard)? */
+  /**
+   * Pure check: does a permission set grant a code?
+   *
+   * Codes are `resource:action`, with a few three-segment ones
+   * (`system:audit:read`). Three wildcard forms are honoured:
+   *   `*:*`            — full access (the Owner grant)
+   *   `resource:*`     — every action on a resource, at any depth
+   *   `*:action`       — one action across every resource
+   */
   static has(set: Set<string>, code: string): boolean {
     if (set.has(code)) return true;
-    // Wildcard: 'projects:*' matches 'projects:read'
-    const action = code.split(':')[1];
-    return !!action && set.has(`*:${action}`);
+    if (set.has("*:*")) return true;
+
+    const segments = code.split(":");
+    const action = segments[segments.length - 1];
+    if (action && set.has(`*:${action}`)) return true;
+
+    // Prefix wildcards, so `system:*` covers `system:audit:read` and
+    // `users:*` covers both `users:read` and `users:role:assign`.
+    for (let i = 1; i < segments.length; i++) {
+      if (set.has(`${segments.slice(0, i).join(":")}:*`)) return true;
+    }
+
+    return false;
   }
 }

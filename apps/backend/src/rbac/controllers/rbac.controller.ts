@@ -746,7 +746,20 @@ export function buildRbacRouter(deps: {
   router.get(
     '/me/policy',
     wrap(async (req, res) => {
-      const policy = await engine.resolve(req.auth!.userId, req.auth!.tenantId);
+      const { userId, tenantId } = req.auth!;
+      const policy = await engine.resolve(userId, tenantId);
+
+      // The engine reads the Supabase-era `user_roles` table, which the Prisma
+      // deployment does not have, so it resolves to an empty policy there and
+      // every client-side permission check fails closed. Fall back to the
+      // Prisma assignments (the same source requirePermission() uses) so both
+      // deployments agree on what the caller may do.
+      if (!policy.allowed.length) {
+        const { PermissionService } = await import('../../services/auth');
+        const codes = await PermissionService.loadForUser(userId, tenantId);
+        if (codes.size) policy.allowed = [...codes];
+      }
+
       res.setHeader('X-Policy-Version', String(policy.version));
       res.json({ data: policy });
     })

@@ -13,6 +13,7 @@ import { Injectable, computed, inject, Signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { PolicyStore } from '../store/policy.store';
+import { AuthStore } from '@core/auth/auth.store';
 import type { CheckResponse } from '../models/check.model';
 import type { EffectivePolicy } from '../models/policy.model';
 
@@ -20,6 +21,7 @@ import type { EffectivePolicy } from '../models/policy.model';
 export class PermissionService {
   private http = inject(HttpClient);
   private store = inject(PolicyStore);
+  private auth = inject(AuthStore);
 
   // ---------- Reactive (Signal) ----------
 
@@ -85,9 +87,31 @@ export class PermissionService {
       );
       this.store.setPolicy(res.data);
       return res.data;
+    } catch {
+      // The RBAC engine needs Redis and answers 503 where it is not
+      // configured. Falling through with a null policy would fail every
+      // check closed and hide the whole IAM section from an owner, so fall
+      // back to the permission set /auth/me already returned.
+      const fallback = this.policyFromSession();
+      this.store.setPolicy(fallback);
+      return fallback;
     } finally {
       this.store.setLoading(false);
     }
+  }
+
+  /** Policy built from the permissions the login response carried. */
+  private policyFromSession(): EffectivePolicy {
+    const session = this.auth.snapshot();
+    return {
+      userId: session.user?.id ?? '',
+      orgId: session.tenant?.id ?? '',
+      version: 0,
+      allowed: [...session.permissions],
+      denied: [],
+      roles: [],
+      resolvedAt: Date.now(),
+    };
   }
 
   /**
@@ -106,14 +130,24 @@ export class PermissionService {
 
   private globReCache = new Map<string, RegExp>();
 
+  /**
+   * Glob match of a granted key against a requested one.
+   *
+   * An interior `*` covers one segment (`users:*:create`), but a trailing `*`
+   * covers everything after it, so `users:*` grants `users:role:assign` and
+   * `*:*` grants `system:audit:read`. This mirrors the server-side
+   * PermissionService.has() that the menu and route guards rely on.
+   */
   private matchGlob(pattern: string, key: string): boolean {
     if (!pattern.includes('*')) return false;
     let re = this.globReCache.get(pattern);
     if (!re) {
-      const escaped = pattern
+      const trailingWildcard = pattern.endsWith(':*');
+      const body = trailingWildcard ? pattern.slice(0, -2) : pattern;
+      const escaped = body
         .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
         .replace(/\*/g, '[^:]*');
-      re = new RegExp('^' + escaped + '$');
+      re = new RegExp('^' + escaped + (trailingWildcard ? '(?::.*)?' : '') + '$');
       this.globReCache.set(pattern, re);
     }
     return re.test(key);
