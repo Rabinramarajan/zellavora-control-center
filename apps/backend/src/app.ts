@@ -24,6 +24,9 @@ app.set('trust proxy', config.trustProxy);
 
 registerSwaggerRoutes(app);
 
+// Serve static files (favicon, etc.) from public directory
+app.use('/favicon.png', express.static('public'));
+
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));

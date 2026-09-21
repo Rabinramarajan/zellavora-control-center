@@ -22,11 +22,15 @@ export function registerSwaggerRoutes(app: Express): void {
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Zellavora Control Center API</title>
+      <link rel="icon" href="/favicon.png" />
       <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css" />
       <style>
         html, body {
           margin: 0;
           padding: 0;
+        }
+        .swagger-ui .topbar-wrapper .logo {
+          filter: invert(1);
         }
       </style>
     </head>
