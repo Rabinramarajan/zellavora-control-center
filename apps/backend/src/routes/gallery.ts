@@ -9,8 +9,9 @@ const router: ExpressRouter = Router();
  * @swagger
  * /api/v1/projects/{projectId}/gallery:
  *   get:
- *     summary: getAllGalleryImagesForAProject
- *     tags: [gallery]
+ *     summary: Get all gallery images for project
+ *     operationId: getProjectsByProjectIdGallery
+ *     tags: [Project Gallery]
  *     security: []
  *     parameters:
  *       - in: path
@@ -49,8 +50,9 @@ router.get('/projects/:projectId/gallery', async (req, res, next) => {
  * @swagger
  * /api/v1/projects/{projectId}/gallery:
  *   post:
- *     summary: uploadAGalleryImageToAProject
- *     tags: [gallery]
+ *     summary: Upload gallery image to project
+ *     operationId: postProjectsByProjectIdGallery
+ *     tags: [Project Gallery]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -163,8 +165,9 @@ router.post(
  * @swagger
  * /api/v1/projects/{projectId}/gallery/{imageId}:
  *   put:
- *     summary: updateAGalleryItem
- *     tags: [gallery]
+ *     summary: Update gallery item
+ *     operationId: putProjectsByProjectIdGalleryByImageId
+ *     tags: [Project Gallery]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -258,8 +261,9 @@ router.put(
  * @swagger
  * /api/v1/projects/{projectId}/gallery/{imageId}:
  *   delete:
- *     summary: deleteAGalleryItem
- *     tags: [gallery]
+ *     summary: Delete gallery item
+ *     operationId: deleteProjectsByProjectIdGalleryByImageId
+ *     tags: [Project Gallery]
  *     security:
  *       - BearerAuth: []
  *     parameters:

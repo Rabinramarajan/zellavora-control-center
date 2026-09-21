@@ -34,6 +34,9 @@ export function registerSwaggerRoutes(app: Express): void {
             url: '/swagger/swagger.json',
             dom_id: '#swagger-ui',
             deepLinking: true,
+            tagsSorter: 'alpha',
+            operationsSorter: 'alpha',
+            displayOperationId: true,
             presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
             layout: 'StandaloneLayout',
           });

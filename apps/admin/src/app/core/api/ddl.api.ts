@@ -22,6 +22,6 @@ export class DdlApiService {
   private readonly apiData = inject(ApiDataService);
 
   getAll(): Observable<DdlResponse> {
-    return this.apiData.getData<DdlResponse>('/clean/ddls');
+    return this.apiData.getData<DdlResponse>('/lookups');
   }
 }

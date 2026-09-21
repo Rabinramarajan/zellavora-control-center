@@ -31,10 +31,11 @@ let mockResources = [
 
 /**
  * @swagger
- * /api/v1/admin/resource/search:
+ * /api/v1/admin/resources/search:
  *   get:
- *     summary: searchResources
- *     tags: [resource]
+ *     summary: Get resource search template
+ *     operationId: getAdminResourcesSearch
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -59,8 +60,9 @@ let mockResources = [
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: searchResources
- *     tags: [resource]
+ *     summary: Search resources
+ *     operationId: postAdminResourcesSearch
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -115,10 +117,11 @@ let mockResources = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/resource/initialize:
+ * /api/v1/admin/resources/metadata:
  *   get:
- *     summary: initializeResourceMetadata
- *     tags: [resource]
+ *     summary: Initialize resource metadata
+ *     operationId: getAdminResourcesMetadata
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -144,10 +147,11 @@ let mockResources = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/resource/new:
+ * /api/v1/admin/resources/template:
  *   get:
- *     summary: getTemplateForNewResource
- *     tags: [resource]
+ *     summary: Get template for new resource
+ *     operationId: getAdminResourcesTemplate
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -181,10 +185,11 @@ let mockResources = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/resource/open:
+ * /api/v1/admin/resources/details:
  *   post:
- *     summary: loadResourceDetailsById
- *     tags: [resource]
+ *     summary: Load resource details by ID
+ *     operationId: postAdminResourcesDetails
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -229,10 +234,11 @@ let mockResources = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/resource/save:
+ * /api/v1/admin/resources/save:
  *   post:
- *     summary: saveResourceDetails
- *     tags: [resource]
+ *     summary: Save resource details
+ *     operationId: postAdminResourcesSave
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -283,10 +289,11 @@ let mockResources = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/resource/delete:
+ * /api/v1/admin/resources/delete:
  *   post:
- *     summary: deleteResource
- *     tags: [resource]
+ *     summary: Delete resource
+ *     operationId: postAdminResourcesDelete
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -323,10 +330,11 @@ let mockResources = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/resource/SaveListResource:
+ * /api/v1/admin/resources/bulk-save:
  *   post:
- *     summary: saveAListOfResources
- *     tags: [resource]
+ *     summary: Save list of resources
+ *     operationId: postAdminResourcesBulkSave
+ *     tags: [Administration - Resources]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -385,7 +393,7 @@ let mockResources = [
  *                   type: boolean
  */
 
-router.get('/resource/initialize', authenticate, async (req, res, next) => {
+router.get(['/resources/metadata', '/resource/initialize'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({ status: 'initialized' }));
   } catch (error) {
@@ -393,7 +401,7 @@ router.get('/resource/initialize', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/resource/search', authenticate, async (req, res, next) => {
+router.get(['/resources/search', '/resource/search'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({}));
   } catch (error) {
@@ -401,7 +409,7 @@ router.get('/resource/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/resource/search', authenticate, async (req, res, next) => {
+router.post(['/resources/search', '/resource/search'], authenticate, async (req, res, next) => {
   try {
     res.json(
       wrapResponse({
@@ -416,7 +424,7 @@ router.post('/resource/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/resource/new', authenticate, async (req, res, next) => {
+router.get(['/resources/template', '/resource/new'], authenticate, async (req, res, next) => {
   try {
     res.json(
       wrapResponse({
@@ -436,7 +444,7 @@ router.get('/resource/new', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/resource/open', authenticate, async (req, res, next) => {
+router.post(['/resources/details', '/resource/open'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     const resrc = mockResources.find((r) => r.resourceId === id);
@@ -446,7 +454,7 @@ router.post('/resource/open', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/resource/save', authenticate, async (req, res, next) => {
+router.post(['/resources/save', '/resource/save'], authenticate, async (req, res, next) => {
   try {
     const resrc = req.body;
     if (resrc.resourceId > 0) {
@@ -461,7 +469,7 @@ router.post('/resource/save', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/resource/delete', authenticate, async (req, res, next) => {
+router.post(['/resources/delete', '/resource/delete'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     mockResources = mockResources.filter((r) => r.resourceId !== id);
@@ -471,7 +479,7 @@ router.post('/resource/delete', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/resource/SaveListResource', authenticate, async (req, res, next) => {
+router.post(['/resources/bulk-save', '/resource/SaveListResource'], authenticate, async (req, res, next) => {
   try {
     const list = req.body.lstentResource || [];
     list.forEach((resrc: any) => {

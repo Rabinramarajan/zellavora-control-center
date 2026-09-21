@@ -50,14 +50,14 @@ export class AdminApiService {
 
   async getUserInitialData(): Promise<any> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<any>>(`${this.baseUrl}/user/initialize`)
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/users/metadata`)
     );
     return this.unwrap(res);
   }
 
   async getUserSearchTemplate(): Promise<UserSearchCriteria> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<UserSearchCriteria>>(`${this.baseUrl}/user/search`)
+      this.http.get<ApiResponse<UserSearchCriteria>>(`${this.baseUrl}/users/search`)
     );
     return this.unwrap(res);
   }
@@ -65,7 +65,7 @@ export class AdminApiService {
   async searchUsers(criteria: UserSearchCriteria): Promise<UserSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<UserSearchResult>>(
-        `${this.baseUrl}/user/search`,
+        `${this.baseUrl}/users/search`,
         criteria
       )
     );
@@ -74,14 +74,14 @@ export class AdminApiService {
 
   async createNewUser(): Promise<User> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<User>>(`${this.baseUrl}/user/new`)
+      this.http.get<ApiResponse<User>>(`${this.baseUrl}/users/template`)
     );
     return this.unwrap(res);
   }
 
   async openUser(userSerialId: number): Promise<User> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<User>>(`${this.baseUrl}/user/open`, {
+      this.http.post<ApiResponse<User>>(`${this.baseUrl}/users/details`, {
         data: userSerialId,
       })
     );
@@ -90,21 +90,21 @@ export class AdminApiService {
 
   async saveUser(user: User): Promise<User> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<User>>(`${this.baseUrl}/user/save`, user)
+      this.http.post<ApiResponse<User>>(`${this.baseUrl}/users/save`, user)
     );
     return this.unwrap(res);
   }
 
   async getUserRoles(): Promise<any> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<any>>(`${this.baseUrl}/user/role/get`)
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/users/assignable-roles`)
     );
     return this.unwrap(res);
   }
 
   async getUsersByTeam(teamId: string): Promise<any> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<any>>(`${this.baseUrl}/user/team/user/get`, {
+      this.http.post<ApiResponse<any>>(`${this.baseUrl}/users/team-members/search`, {
         data: teamId,
       })
     );
@@ -114,7 +114,7 @@ export class AdminApiService {
   async getUsersByBranch(branchId: number): Promise<any> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<any>>(
-        `${this.baseUrl}/user/LoadBranchDDLByUserLoginId`,
+        `${this.baseUrl}/users/branch-options`,
         {
           longData1: branchId,
         }
@@ -127,7 +127,7 @@ export class AdminApiService {
 
   async getRoleInitialData(): Promise<any> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<any>>(`${this.baseUrl}/role/initialize`)
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/roles/metadata`)
     );
     return this.unwrap(res);
   }
@@ -135,7 +135,7 @@ export class AdminApiService {
   async getRoleSearchTemplate(): Promise<RoleSearchCriteria> {
     const res = await lastValueFrom(
       this.http.get<ApiResponse<RoleSearchCriteria>>(
-        `${this.baseUrl}/role/search`
+        `${this.baseUrl}/roles/search`
       )
     );
     return this.unwrap(res);
@@ -144,7 +144,7 @@ export class AdminApiService {
   async searchRoles(criteria: RoleSearchCriteria): Promise<RoleSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<RoleSearchResult>>(
-        `${this.baseUrl}/role/search`,
+        `${this.baseUrl}/roles/search`,
         criteria
       )
     );
@@ -153,14 +153,14 @@ export class AdminApiService {
 
   async createNewRole(): Promise<Role> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<Role>>(`${this.baseUrl}/role/new`)
+      this.http.get<ApiResponse<Role>>(`${this.baseUrl}/roles/template`)
     );
     return this.unwrap(res);
   }
 
   async openRole(roleId: number): Promise<Role> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/role/open`, {
+      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/roles/details`, {
         data: roleId,
       })
     );
@@ -169,14 +169,14 @@ export class AdminApiService {
 
   async saveRole(role: Role): Promise<Role> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/role/save`, role)
+      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/roles/save`, role)
     );
     return this.unwrap(res);
   }
 
   async deleteRole(roleId: number): Promise<Role> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/role/delete`, {
+      this.http.post<ApiResponse<Role>>(`${this.baseUrl}/roles/delete`, {
         data: roleId,
       })
     );
@@ -186,7 +186,7 @@ export class AdminApiService {
   async loadRoleResources(roleId: number): Promise<any> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<any>>(
-        `${this.baseUrl}/role/role-resource/load`,
+        `${this.baseUrl}/roles/resource-mappings/details`,
         {
           stringparam: '',
           longparam: roleId,
@@ -199,7 +199,7 @@ export class AdminApiService {
   async saveRoleResources(roleData: any): Promise<any> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<any>>(
-        `${this.baseUrl}/role/role-resource/save`,
+        `${this.baseUrl}/roles/resource-mappings/save`,
         roleData
       )
     );
@@ -210,7 +210,7 @@ export class AdminApiService {
 
   async getResourceInitialData(): Promise<any> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<any>>(`${this.baseUrl}/resource/initialize`)
+      this.http.get<ApiResponse<any>>(`${this.baseUrl}/resources/metadata`)
     );
     return this.unwrap(res);
   }
@@ -218,7 +218,7 @@ export class AdminApiService {
   async getResourceSearchTemplate(): Promise<ResourceSearchCriteria> {
     const res = await lastValueFrom(
       this.http.get<ApiResponse<ResourceSearchCriteria>>(
-        `${this.baseUrl}/resource/search`
+        `${this.baseUrl}/resources/search`
       )
     );
     return this.unwrap(res);
@@ -229,7 +229,7 @@ export class AdminApiService {
   ): Promise<ResourceSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<ResourceSearchResult>>(
-        `${this.baseUrl}/resource/search`,
+        `${this.baseUrl}/resources/search`,
         criteria
       )
     );
@@ -238,14 +238,14 @@ export class AdminApiService {
 
   async createNewResource(): Promise<Resource> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<Resource>>(`${this.baseUrl}/resource/new`)
+      this.http.get<ApiResponse<Resource>>(`${this.baseUrl}/resources/template`)
     );
     return this.unwrap(res);
   }
 
   async openResource(resourceId: number): Promise<Resource> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Resource>>(`${this.baseUrl}/resource/open`, {
+      this.http.post<ApiResponse<Resource>>(`${this.baseUrl}/resources/details`, {
         data: resourceId,
       })
     );
@@ -255,7 +255,7 @@ export class AdminApiService {
   async saveResource(resource: Resource): Promise<Resource> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<Resource>>(
-        `${this.baseUrl}/resource/save`,
+        `${this.baseUrl}/resources/save`,
         resource
       )
     );
@@ -265,7 +265,7 @@ export class AdminApiService {
   async deleteResource(resourceId: number): Promise<Resource> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<Resource>>(
-        `${this.baseUrl}/resource/delete`,
+        `${this.baseUrl}/resources/delete`,
         {
           data: resourceId,
         }
@@ -277,7 +277,7 @@ export class AdminApiService {
   async saveResourceList(resources: Resource[]): Promise<any> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<any>>(
-        `${this.baseUrl}/resource/SaveListResource`,
+        `${this.baseUrl}/resources/bulk-save`,
         {
           lstentResource: resources,
         }
@@ -291,7 +291,7 @@ export class AdminApiService {
   async getBranchInitialData(): Promise<any> {
     const res = await lastValueFrom(
       this.http.get<ApiResponse<any>>(
-        `${this.baseUrl}/MAsterConfig/Region/GetMaasterConfigInitialData`
+        `${this.baseUrl}/regions/metadata`
       )
     );
     return this.unwrap(res);
@@ -300,7 +300,7 @@ export class AdminApiService {
   async getBranchSearchTemplate(): Promise<BranchSearchCriteria> {
     const res = await lastValueFrom(
       this.http.get<ApiResponse<BranchSearchCriteria>>(
-        `${this.baseUrl}/Branch/Branch/search`
+        `${this.baseUrl}/branches/search`
       )
     );
     return this.unwrap(res);
@@ -309,7 +309,7 @@ export class AdminApiService {
   async searchBranches(criteria: BranchSearchCriteria): Promise<BranchSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<BranchSearchResult>>(
-        `${this.baseUrl}/Branch/Branch/Search`,
+        `${this.baseUrl}/branches/search`,
         criteria
       )
     );
@@ -318,14 +318,14 @@ export class AdminApiService {
 
   async createNewBranch(): Promise<Branch> {
     const res = await lastValueFrom(
-      this.http.get<ApiResponse<Branch>>(`${this.baseUrl}/Branch/Branch/new`)
+      this.http.get<ApiResponse<Branch>>(`${this.baseUrl}/branches/template`)
     );
     return this.unwrap(res);
   }
 
   async openBranch(branchId: number): Promise<Branch> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Branch>>(`${this.baseUrl}/Branch/Branch/open`, {
+      this.http.post<ApiResponse<Branch>>(`${this.baseUrl}/branches/details`, {
         data: branchId,
       })
     );
@@ -335,7 +335,7 @@ export class AdminApiService {
   async saveBranch(branch: Branch): Promise<Branch> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<Branch>>(
-        `${this.baseUrl}/Branch/Branch/save`,
+        `${this.baseUrl}/branches/save`,
         branch
       )
     );
@@ -345,7 +345,7 @@ export class AdminApiService {
   async deleteBranch(branchId: number): Promise<Branch> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<Branch>>(
-        `${this.baseUrl}/Branch/Branch/delete`,
+        `${this.baseUrl}/branches/delete`,
         {
           admBranchId: branchId,
         }
@@ -359,7 +359,7 @@ export class AdminApiService {
   async getAuditLogSearchTemplate(): Promise<AuditLogSearchCriteria> {
     const res = await lastValueFrom(
       this.http.get<ApiResponse<AuditLogSearchCriteria>>(
-        `${this.baseUrl}/auditlog/search`
+        `${this.baseUrl}/audit-logs/search`
       )
     );
     return this.unwrap(res);
@@ -368,7 +368,7 @@ export class AdminApiService {
   async searchAuditLogs(criteria: AuditLogSearchCriteria): Promise<AuditLogSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<AuditLogSearchResult>>(
-        `${this.baseUrl}/auditlog/search`,
+        `${this.baseUrl}/audit-logs/search`,
         criteria
       )
     );
@@ -378,7 +378,7 @@ export class AdminApiService {
   async loadAuditLogDetails(auditLogId: number): Promise<AuditLog> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<AuditLog>>(
-        `${this.baseUrl}/auditlog/LoadAuditLogDetails`,
+        `${this.baseUrl}/audit-logs/details`,
         {
           data: auditLogId,
         }
@@ -392,7 +392,7 @@ export class AdminApiService {
   async getConfigSearchTemplate(): Promise<ConfigSearchCriteria> {
     const res = await lastValueFrom(
       this.http.get<ApiResponse<ConfigSearchCriteria>>(
-        `${this.baseUrl}/config/search`
+        `${this.baseUrl}/configurations/search`
       )
     );
     return this.unwrap(res);
@@ -401,7 +401,7 @@ export class AdminApiService {
   async searchConfigs(criteria: ConfigSearchCriteria): Promise<ConfigSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<ConfigSearchResult>>(
-        `${this.baseUrl}/config/search`,
+        `${this.baseUrl}/configurations/search`,
         criteria
       )
     );
@@ -410,7 +410,7 @@ export class AdminApiService {
 
   async openConfig(configId: number): Promise<Config> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/config/open`, {
+      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/configurations/details`, {
         data: configId,
       })
     );
@@ -419,14 +419,14 @@ export class AdminApiService {
 
   async saveConfig(config: Config): Promise<Config> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/config/save`, config)
+      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/configurations/save`, config)
     );
     return this.unwrap(res);
   }
 
   async loadConfigValuesByIds(configIds: string): Promise<any> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<any>>(`${this.baseUrl}/config/Load`, {
+      this.http.post<ApiResponse<any>>(`${this.baseUrl}/configurations/list`, {
         data: configIds,
       })
     );
@@ -435,7 +435,7 @@ export class AdminApiService {
 
   async deleteConfig(configId: number): Promise<Config> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/config/delete`, {
+      this.http.post<ApiResponse<Config>>(`${this.baseUrl}/configurations/delete`, {
         data: configId,
       })
     );
@@ -447,7 +447,7 @@ export class AdminApiService {
   async getGroupSearchTemplate(): Promise<GroupSearchCriteria> {
     const res = await lastValueFrom(
       this.http.get<ApiResponse<GroupSearchCriteria>>(
-        `${this.baseUrl}/group/search`
+        `${this.baseUrl}/groups/search`
       )
     );
     return this.unwrap(res);
@@ -456,7 +456,7 @@ export class AdminApiService {
   async searchGroups(criteria: GroupSearchCriteria): Promise<GroupSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<GroupSearchResult>>(
-        `${this.baseUrl}/group/search`,
+        `${this.baseUrl}/groups/search`,
         criteria
       )
     );
@@ -465,7 +465,7 @@ export class AdminApiService {
 
   async openGroup(groupId: number): Promise<Group> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/group/open`, {
+      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/groups/details`, {
         data: groupId,
       })
     );
@@ -474,14 +474,14 @@ export class AdminApiService {
 
   async saveGroup(group: Group): Promise<Group> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/group/save`, group)
+      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/groups/save`, group)
     );
     return this.unwrap(res);
   }
 
   async deleteGroup(groupId: number): Promise<Group> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/group/delete`, {
+      this.http.post<ApiResponse<Group>>(`${this.baseUrl}/groups/delete`, {
         data: groupId,
       })
     );

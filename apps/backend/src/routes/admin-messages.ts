@@ -4,7 +4,18 @@ import { wrapResponse } from './admin-helpers';
 
 const router = Router();
 
-router.post('/message/send', authenticate, async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/admin/messages/send:
+ *   post:
+ *     summary: Send message
+ *     operationId: postAdminMessagesSend
+ *     tags: [Administration - Messages]
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/messages/send', '/message/send'], authenticate, async (req, res, next) => {
   try {
     const { recipientId, body } = req.body;
     res.json(
@@ -21,7 +32,18 @@ router.post('/message/send', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/email/send', authenticate, async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/admin/emails/send:
+ *   post:
+ *     summary: Send email
+ *     operationId: postAdminEmailsSend
+ *     tags: [Administration - Messages]
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/emails/send', '/email/send'], authenticate, async (req, res, next) => {
   try {
     const { toEmail, subject } = req.body;
     res.json(

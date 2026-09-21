@@ -10,9 +10,10 @@ const router = Router();
  * @swagger
  * /api/v1/email/health:
  *   get:
- *     summary: emailServiceHealthCheck
+ *     summary: Check email service health
+ *     operationId: getEmailHealth
  *     description: Verifies the email service connection.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     responses:
  *       200:
@@ -73,9 +74,10 @@ router.get('/health', async (req, res) => {
  * @swagger
  * /api/v1/email/send-otp:
  *   post:
- *     summary: sendOtpEmail
+ *     summary: Send OTP email
+ *     operationId: postEmailSendOtp
  *     description: Queues an OTP email for delivery.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     requestBody:
  *       required: true
@@ -144,9 +146,10 @@ router.post('/send-otp', async (req, res) => {
  * @swagger
  * /api/v1/email/send-welcome:
  *   post:
- *     summary: sendWelcomeEmail
+ *     summary: Send welcome email
+ *     operationId: postEmailSendWelcome
  *     description: Queues a welcome email for delivery.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     requestBody:
  *       required: true
@@ -211,9 +214,10 @@ router.post('/send-welcome', async (req, res) => {
  * @swagger
  * /api/v1/email/send-verification:
  *   post:
- *     summary: sendEmailVerification
+ *     summary: Send email verification
+ *     operationId: postEmailSendVerification
  *     description: Queues an email verification message for delivery.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     requestBody:
  *       required: true
@@ -279,9 +283,10 @@ router.post('/send-verification', async (req, res) => {
  * @swagger
  * /api/v1/email/send-password-reset:
  *   post:
- *     summary: sendPasswordResetEmail
+ *     summary: Send password reset email
+ *     operationId: postEmailSendPasswordReset
  *     description: Queues a password reset email for delivery.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     requestBody:
  *       required: true
@@ -351,9 +356,10 @@ router.post('/send-password-reset', async (req, res) => {
  * @swagger
  * /api/v1/email/send-invitation:
  *   post:
- *     summary: sendUserInvitationEmail
+ *     summary: Send user invitation email
+ *     operationId: postEmailSendInvitation
  *     description: Queues a user invitation email for delivery.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     requestBody:
  *       required: true
@@ -427,9 +433,10 @@ router.post('/send-invitation', async (req, res) => {
  * @swagger
  * /api/v1/email/send-2fa-code:
  *   post:
- *     summary: send2FaCodeEmail
+ *     summary: Send two-factor authentication code
+ *     operationId: postEmailSend2faCode
  *     description: Queues a 2FA code email for delivery.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     requestBody:
  *       required: true
@@ -498,9 +505,10 @@ router.post('/send-2fa-code', async (req, res) => {
  * @swagger
  * /api/v1/email/send-security-alert:
  *   post:
- *     summary: sendSecurityAlertEmail
+ *     summary: Send security alert email
+ *     operationId: postEmailSendSecurityAlert
  *     description: Queues a security alert email for delivery.
- *     tags: [emailCommunication]
+ *     tags: [Email]
  *     security: []
  *     requestBody:
  *       required: true

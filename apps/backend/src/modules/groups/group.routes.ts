@@ -8,7 +8,7 @@ const controller = new GroupController();
 /**
  * @swagger
  * tags:
- *   name: groups
+ *   name: IAM - Groups
  *   description: IAM groups, membership and group-level roles.
  */
 
@@ -16,9 +16,10 @@ const controller = new GroupController();
  * @swagger
  * /api/v1/iam/groups:
  *   get:
- *     summary: listGroups
+ *     summary: List groups
+ *     operationId: getIamGroups
  *     description: Paginated, filterable list of IAM groups.
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -41,9 +42,10 @@ router.get('/', authenticate, requirePermission('groups:read'), controller.list)
  * @swagger
  * /api/v1/iam/groups/tree:
  *   get:
- *     summary: listGroupsTree
+ *     summary: Get group hierarchy
+ *     operationId: getIamGroupsTree
  *     description: Hierarchical group tree (parent/children).
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -56,9 +58,10 @@ router.get('/tree', authenticate, requirePermission('groups:read'), controller.t
  * @swagger
  * /api/v1/iam/groups/{id}:
  *   get:
- *     summary: getGroupById
+ *     summary: Get group by ID
+ *     operationId: getIamGroupsById
  *     description: Full group detail including members and roles.
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -76,9 +79,10 @@ router.get('/:id', authenticate, requirePermission('groups:read'), controller.ge
  * @swagger
  * /api/v1/iam/groups:
  *   post:
- *     summary: createGroup
+ *     summary: Create group
+ *     operationId: postIamGroups
  *     description: Create a group. Slug is derived from the name.
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -111,9 +115,10 @@ router.post('/', authenticate, requirePermission('groups:manage'), controller.cr
  * @swagger
  * /api/v1/iam/groups/{id}:
  *   patch:
- *     summary: updateGroup
+ *     summary: Update group
+ *     operationId: patchIamGroupsById
  *     description: Update group metadata and hierarchy.
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -143,9 +148,10 @@ router.patch('/:id', authenticate, requirePermission('groups:manage'), controlle
  * @swagger
  * /api/v1/iam/groups/{id}:
  *   delete:
- *     summary: deleteGroup
+ *     summary: Delete group
+ *     operationId: deleteIamGroupsById
  *     description: Soft-delete a group (system groups and groups with children are protected).
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -163,9 +169,10 @@ router.delete('/:id', authenticate, requirePermission('groups:manage'), controll
  * @swagger
  * /api/v1/iam/groups/{id}/members:
  *   post:
- *     summary: addGroupMembers
+ *     summary: Add group members
+ *     operationId: postIamGroupsByIdMembers
  *     description: Add users to a group (idempotent).
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -194,9 +201,10 @@ router.post('/:id/members', authenticate, requirePermission('groups:manage'), co
  * @swagger
  * /api/v1/iam/groups/{id}/members/{userId}:
  *   delete:
- *     summary: removeGroupMember
+ *     summary: Remove group member
+ *     operationId: deleteIamGroupsByIdMembersByUserId
  *     description: Remove a user from a group.
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -218,9 +226,10 @@ router.delete('/:id/members/:userId', authenticate, requirePermission('groups:ma
  * @swagger
  * /api/v1/iam/groups/{id}/roles:
  *   put:
- *     summary: setGroupRoles
+ *     summary: Set group roles
+ *     operationId: putIamGroupsByIdRoles
  *     description: Set the roles attached to a group (replace or merge).
- *     tags: [groups]
+ *     tags: [IAM - Groups]
  *     security:
  *       - bearerAuth: []
  *     parameters:

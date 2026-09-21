@@ -21,7 +21,10 @@ Pass it as: \`Authorization: Bearer <token>\`
 Login endpoints are rate-limited per IP and per email to protect against brute-force attacks.
 
 ### Versioning
-All endpoints are prefixed with \`/api/v1\`.
+Application endpoints are prefixed with \`/api/v1\`. Service health, metadata, and documentation are available outside this prefix.
+
+### Naming
+URLs use lowercase, kebab-case resource names. Swagger groups operations by business domain and assigns each operation a unique camelCase identifier. Historical URLs remain compatibility aliases; this specification lists canonical URLs only.
       `,
       contact: {
         name: 'Zellavora Engineering',
@@ -50,27 +53,154 @@ All endpoints are prefixed with \`/api/v1\`.
       },
     ],
     tags: [
-      { name: 'health', description: 'serverHealthCheck' },
-      { name: 'auth', description: 'authenticationAndSessionManagement' },
-      { name: 'projects', description: 'portfolioProjectCRUD' },
-      { name: 'gallery', description: 'projectGalleryImages' },
-      { name: 'technologies', description: 'technologyCatalogAndProjectAssociations' },
-      { name: 'portfolio', description: 'profileSkillsExperienceEducationServicesTestimonials' },
-      { name: 'rbac', description: 'roleBasedAccessControlRolesPermissionsUserAssignments' },
-      { name: 'userSearch', description: 'userSearchOperations' },
-      { name: 'userDetail', description: 'userDetailOperations' },
-      { name: 'userRequest', description: 'userRequestOperations' },
-      { name: 'groupSearch', description: 'groupSearchOperations' },
-      { name: 'groupDetail', description: 'groupDetailOperations' },
-      { name: 'roleSearch', description: 'roleSearchOperations' },
-      { name: 'roleDetail', description: 'roleDetailOperations' },
-      { name: 'resource', description: 'resourceOperations' },
-      { name: 'commonConfigurationSearch', description: 'commonConfigurationSearch' },
-      { name: 'commonConfigurationDetail', description: 'commonConfigurationDetail' },
-      { name: 'emailCommunication', description: 'emailCommunication' },
-      { name: 'audit', description: 'auditLogSearchAndDetails' },
-      { name: 'login', description: 'login' },
-      { name: 'resetPassword', description: 'resetPassword' },
+      {
+        name: 'System',
+        description: 'Service health and metadata.',
+      },
+      {
+        name: 'Authentication',
+        description: 'Sign-in, tokens, sessions, and account verification.',
+      },
+      {
+        name: 'Projects',
+        description: 'Project content and publishing.',
+      },
+      {
+        name: 'Project Gallery',
+        description: 'Project images and media.',
+      },
+      {
+        name: 'Technologies',
+        description: 'Technology catalog and project associations.',
+      },
+      {
+        name: 'Portfolio',
+        description: 'Profiles, skills, experience, education, services, and testimonials.',
+      },
+      {
+        name: 'Access Control',
+        description: 'Permission policies, role inheritance, and assignments.',
+      },
+      {
+        name: 'Administration - Users',
+        description: 'Administrative user search and maintenance.',
+      },
+      {
+        name: 'Administration - Groups',
+        description: 'Administrative group search and maintenance.',
+      },
+      {
+        name: 'Administration - Roles',
+        description: 'Administrative role search and maintenance.',
+      },
+      {
+        name: 'Administration - Resources',
+        description: 'Administrative resource search and maintenance.',
+      },
+      {
+        name: 'Administration - Configuration',
+        description: 'Administrative configuration and regional metadata.',
+      },
+      {
+        name: 'Email',
+        description: 'Transactional email delivery and service health.',
+      },
+      {
+        name: 'Administration - Audit Logs',
+        description: 'Administrative audit search and details.',
+      },
+      {
+        name: 'Dashboard',
+        description: 'Operational overview and activity.',
+      },
+      {
+        name: 'IAM - Groups',
+        description: 'Group membership and role assignments.',
+      },
+      {
+        name: 'IAM - Roles',
+        description: 'Role definitions and permissions.',
+      },
+      {
+        name: 'IAM - Resources',
+        description: 'Resource definitions and available actions.',
+      },
+      {
+        name: 'IAM - Users',
+        description: 'Identity management and user access.',
+      },
+      {
+        name: 'Settings',
+        description: 'Application settings by section.',
+      },
+      {
+        name: 'Timesheets',
+        description: 'Timesheet entries, reporting, and approval.',
+      },
+      {
+        name: 'Administration - Branches',
+        description: 'Administrative branch search and maintenance.',
+      },
+      {
+        name: 'Registration',
+        description: 'Account and organization registration.',
+      },
+      {
+        name: 'Identity Authentication',
+        description: 'Authentication for the organization identity service.',
+      },
+      {
+        name: 'Invitations',
+        description: 'Invitation generation and verification.',
+      },
+      {
+        name: 'Organizations',
+        description: 'Organization records.',
+      },
+      {
+        name: 'Branches',
+        description: 'Organization branch records.',
+      },
+      {
+        name: 'Permissions',
+        description: 'Permission definitions and assignments.',
+      },
+      {
+        name: 'Organization Settings',
+        description: 'Organization-specific settings.',
+      },
+      {
+        name: 'Notifications',
+        description: 'Notification records and delivery.',
+      },
+      {
+        name: 'Verifications',
+        description: 'Verification challenges.',
+      },
+      {
+        name: 'Audit Logs',
+        description: 'Organization audit events.',
+      },
+      {
+        name: 'Storage',
+        description: 'File uploads.',
+      },
+      {
+        name: 'Lookups',
+        description: 'Reference data and selection options.',
+      },
+      {
+        name: 'Daily Sheets',
+        description: 'Daily work records and approval.',
+      },
+      {
+        name: 'Monthly Sheets',
+        description: 'Monthly work records, approval, and payment.',
+      },
+      {
+        name: 'Administration - Messages',
+        description: 'Administrative message delivery.',
+      },
     ],
     components: {
       securitySchemes: {
@@ -494,13 +624,17 @@ function scanRoots(): string[] {
   roots.add(path.resolve(here, 'src'));
   roots.add(path.resolve(here, 'dist', 'src'));
 
-  return [...roots].filter((r) => {
+  const available = [...roots].filter((r) => {
     try {
       return existsSync(r) && statSync(r).isDirectory();
     } catch {
       return false;
     }
   });
+  // Never merge source annotations with a stale build: removed paths and old
+  // summaries would otherwise reappear in the published contract.
+  const sourceRoot = available.find((root) => existsSync(path.join(root, 'app.ts')));
+  return sourceRoot ? [sourceRoot] : available.slice(0, 1);
 }
 
 /**

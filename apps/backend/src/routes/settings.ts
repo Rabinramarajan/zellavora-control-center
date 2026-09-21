@@ -34,9 +34,10 @@ const store: Record<string, any> = {
  * @swagger
  * /api/v1/settings:
  *   get:
- *     summary: getSettings
+ *     summary: Get settings
+ *     operationId: getSettings
  *     description: Returns all settings sections (general, profile, preferences).
- *     tags: [settings]
+ *     tags: [Settings]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -107,9 +108,10 @@ router.get('/settings', authenticate, (req, res) => {
  * @swagger
  * /api/v1/settings/{section}:
  *   get:
- *     summary: getSettingsSection
+ *     summary: Get settings section
+ *     operationId: getSettingsBySection
  *     description: Returns a single settings section by name.
- *     tags: [settings]
+ *     tags: [Settings]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -147,9 +149,10 @@ router.get('/settings/:section', authenticate, (req, res) => {
  * @swagger
  * /api/v1/settings/{section}:
  *   put:
- *     summary: updateSettingsSection
+ *     summary: Update settings section
+ *     operationId: putSettingsBySection
  *     description: Merges the request body into the named settings section.
- *     tags: [settings]
+ *     tags: [Settings]
  *     security:
  *       - BearerAuth: []
  *     parameters:

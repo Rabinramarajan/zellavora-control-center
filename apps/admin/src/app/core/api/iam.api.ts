@@ -168,7 +168,7 @@ export class IamApiService {
 
   /** Every permission key in the system (for the role permission matrix). */
   listAllPermissions(): Observable<ApiEnvelope<PermissionListItem[]>> {
-    return this.apiData.getData<ApiEnvelope<PermissionListItem[]>>('/clean/permissions');
+    return this.apiData.getData<ApiEnvelope<PermissionListItem[]>>('/permissions');
   }
 
   getRole(id: string): Observable<ApiEnvelope<RoleDetail>> {

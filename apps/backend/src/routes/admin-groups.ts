@@ -18,10 +18,11 @@ let mockGroups = [
 
 /**
  * @swagger
- * /api/v1/admin/group/search:
+ * /api/v1/admin/groups/search:
  *   get:
- *     summary: searchGroups
- *     tags: [groupSearch]
+ *     summary: Get group search template
+ *     operationId: getAdminGroupsSearch
+ *     tags: [Administration - Groups]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -46,8 +47,9 @@ let mockGroups = [
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: searchGroups
- *     tags: [groupSearch]
+ *     summary: Search groups
+ *     operationId: postAdminGroupsSearch
+ *     tags: [Administration - Groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -98,10 +100,11 @@ let mockGroups = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/group/open:
+ * /api/v1/admin/groups/details:
  *   post:
- *     summary: loadGroupDetails
- *     tags: [groupDetail]
+ *     summary: Load group details
+ *     operationId: postAdminGroupsDetails
+ *     tags: [Administration - Groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -144,10 +147,11 @@ let mockGroups = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/group/save:
+ * /api/v1/admin/groups/save:
  *   post:
- *     summary: saveGroupDetails
- *     tags: [groupDetail]
+ *     summary: Save group details
+ *     operationId: postAdminGroupsSave
+ *     tags: [Administration - Groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -194,10 +198,11 @@ let mockGroups = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/group/delete:
+ * /api/v1/admin/groups/delete:
  *   post:
- *     summary: deleteGroup
- *     tags: [groupDetail]
+ *     summary: Delete group
+ *     operationId: postAdminGroupsDelete
+ *     tags: [Administration - Groups]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -236,7 +241,7 @@ let mockGroups = [
  *                   type: boolean
  */
 
-router.get('/group/search', authenticate, async (req, res, next) => {
+router.get(['/groups/search', '/group/search'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({}));
   } catch (error) {
@@ -244,7 +249,7 @@ router.get('/group/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/group/search', authenticate, async (req, res, next) => {
+router.post(['/groups/search', '/group/search'], authenticate, async (req, res, next) => {
   try {
     const searchResult = mockGroups.map((g) => ({
       groupId: g.groupId,
@@ -266,7 +271,7 @@ router.post('/group/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/group/open', authenticate, async (req, res, next) => {
+router.post(['/groups/details', '/group/open'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     const grp = mockGroups.find((g) => g.groupId === id);
@@ -276,7 +281,7 @@ router.post('/group/open', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/group/save', authenticate, async (req, res, next) => {
+router.post(['/groups/save', '/group/save'], authenticate, async (req, res, next) => {
   try {
     const grp = req.body;
     if (grp.groupId > 0) {
@@ -291,7 +296,7 @@ router.post('/group/save', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/group/delete', authenticate, async (req, res, next) => {
+router.post(['/groups/delete', '/group/delete'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     mockGroups = mockGroups.filter((g) => g.groupId !== id);

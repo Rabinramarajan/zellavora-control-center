@@ -31,10 +31,11 @@ const mockAuditLogs = [
 
 /**
  * @swagger
- * /api/v1/admin/auditlog/search:
+ * /api/v1/admin/audit-logs/search:
  *   get:
- *     summary: searchAuditLogs
- *     tags: [audit]
+ *     summary: Get audit log search template
+ *     operationId: getAdminAuditLogsSearch
+ *     tags: [Administration - Audit Logs]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -59,8 +60,9 @@ const mockAuditLogs = [
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: searchAuditLogs
- *     tags: [audit]
+ *     summary: Search audit logs
+ *     operationId: postAdminAuditLogsSearch
+ *     tags: [Administration - Audit Logs]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -113,10 +115,11 @@ const mockAuditLogs = [
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/auditlog/LoadAuditLogDetails:
+ * /api/v1/admin/audit-logs/details:
  *   post:
- *     summary: loadAuditLogDetails
- *     tags: [audit]
+ *     summary: Load audit log details
+ *     operationId: postAdminAuditLogsDetails
+ *     tags: [Administration - Audit Logs]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -175,7 +178,7 @@ const mockAuditLogs = [
  *                   type: boolean
  */
 
-router.get('/auditlog/search', authenticate, async (req, res, next) => {
+router.get(['/audit-logs/search', '/auditlog/search'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({}));
   } catch (error) {
@@ -183,7 +186,7 @@ router.get('/auditlog/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/auditlog/search', authenticate, async (req, res, next) => {
+router.post(['/audit-logs/search', '/auditlog/search'], authenticate, async (req, res, next) => {
   try {
     const plstAuditLogDetail = mockAuditLogs.map((log) => ({
       tableName: log.tableName,
@@ -207,7 +210,7 @@ router.post('/auditlog/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/auditlog/LoadAuditLogDetails', authenticate, async (req, res, next) => {
+router.post(['/audit-logs/details', '/auditlog/LoadAuditLogDetails'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     const log = mockAuditLogs.find((l) => l.auditLogId === id);

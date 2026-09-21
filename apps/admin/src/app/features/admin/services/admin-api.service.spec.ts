@@ -80,7 +80,7 @@ describe('AdminApiService', () => {
 
       const promise = service.searchUsers(mockCriteria);
 
-      const req = httpMock.expectOne('/api/v1/admin/user/search');
+      const req = httpMock.expectOne('/api/v1/admin/users/search');
       expect(req.request.method).toBe('POST');
       req.flush(mockResponse);
 
@@ -94,7 +94,7 @@ describe('AdminApiService', () => {
 
       const promise = service.createNewUser();
 
-      const req = httpMock.expectOne('/api/v1/admin/user/new');
+      const req = httpMock.expectOne('/api/v1/admin/users/template');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
 
@@ -108,7 +108,7 @@ describe('AdminApiService', () => {
 
       const promise = service.saveUser(mockUser);
 
-      const req = httpMock.expectOne('/api/v1/admin/user/save');
+      const req = httpMock.expectOne('/api/v1/admin/users/save');
       expect(req.request.method).toBe('POST');
       req.flush(mockResponse);
 
@@ -128,7 +128,7 @@ describe('AdminApiService', () => {
 
       const promise = service.searchRoles(mockCriteria);
 
-      const req = httpMock.expectOne('/api/v1/admin/role/search');
+      const req = httpMock.expectOne('/api/v1/admin/roles/search');
       expect(req.request.method).toBe('POST');
       req.flush(mockResponse);
 
@@ -143,7 +143,7 @@ describe('AdminApiService', () => {
 
       const promise = service.deleteRole(roleId);
 
-      const req = httpMock.expectOne('/api/v1/admin/role/delete');
+      const req = httpMock.expectOne('/api/v1/admin/roles/delete');
       expect(req.request.method).toBe('POST');
       req.flush(mockResponse);
 

@@ -92,8 +92,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/permissions:
    *   get:
-   *     summary: listAllPermissions
-   *     tags: [rbac]
+   *     summary: List all permissions
+   *     operationId: getRbacPermissions
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -139,8 +140,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/permissions/groups:
    *   get:
-   *     summary: listPermissionGroups
-   *     tags: [rbac]
+   *     summary: List permission groups
+   *     operationId: getRbacPermissionsGroups
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     responses:
@@ -172,8 +174,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles:
    *   get:
-   *     summary: listAllRolesInTheTenant
-   *     tags: [rbac]
+   *     summary: List all roles in the tenant
+   *     operationId: getRbacRoles
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     responses:
@@ -207,8 +210,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles/{id}:
    *   get:
-   *     summary: getRoleDetail
-   *     tags: [rbac]
+   *     summary: Get role detail
+   *     operationId: getRbacRolesById
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -249,8 +253,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles:
    *   post:
-   *     summary: createANewRole
-   *     tags: [rbac]
+   *     summary: Create role
+   *     operationId: postRbacRoles
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     requestBody:
@@ -290,8 +295,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles/{id}:
    *   patch:
-   *     summary: updateARolePartial
-   *     tags: [rbac]
+   *     summary: Update role
+   *     operationId: patchRbacRolesById
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -341,8 +347,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles/{id}:
    *   delete:
-   *     summary: deleteARole
-   *     tags: [rbac]
+   *     summary: Delete role
+   *     operationId: deleteRbacRolesById
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -384,8 +391,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles/{id}/permissions:
    *   put:
-   *     summary: setPermissionsOnARoleReplacesExistingSet
-   *     tags: [rbac]
+   *     summary: Replace role permissions
+   *     operationId: putRbacRolesByIdPermissions
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -448,8 +456,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles/{id}/inheritance:
    *   put:
-   *     summary: setParentRolesInheritanceForARole
-   *     tags: [rbac]
+   *     summary: Set role inheritance
+   *     operationId: putRbacRolesByIdInheritance
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -502,8 +511,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/roles/{id}/clone:
    *   post:
-   *     summary: cloneAnExistingRoleIntoANewRole
-   *     tags: [rbac]
+   *     summary: Clone role
+   *     operationId: postRbacRolesByIdClone
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -574,8 +584,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/users/{userId}/roles:
    *   get:
-   *     summary: listRoleAssignmentsForAUser
-   *     tags: [rbac]
+   *     summary: List role assignments for user
+   *     operationId: getRbacUsersByUserIdRoles
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -617,8 +628,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/users/{userId}/roles:
    *   post:
-   *     summary: assignARoleToAUser
-   *     tags: [rbac]
+   *     summary: Assign role to user
+   *     operationId: postRbacUsersByUserIdRoles
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -669,8 +681,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/users/{userId}/roles/{assignmentId}:
    *   delete:
-   *     summary: revokeARoleAssignmentFromAUser
-   *     tags: [rbac]
+   *     summary: Revoke role assignment from user
+   *     operationId: deleteRbacUsersByUserIdRolesByAssignmentId
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:
@@ -721,8 +734,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/me/policy:
    *   get:
-   *     summary: getTheResolvedPermissionPolicyForTheAuthenticatedCaller
-   *     tags: [rbac]
+   *     summary: Get current user permission policy
+   *     operationId: getRbacMePolicy
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     responses:
@@ -771,8 +785,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/check:
    *   post:
-   *     summary: bulkcheckMultiplePermissionsForTheAuthenticatedCaller
-   *     tags: [rbac]
+   *     summary: Check multiple permissions
+   *     operationId: postRbacCheck
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     requestBody:
@@ -836,8 +851,9 @@ export function buildRbacRouter(deps: {
    * @swagger
    * /api/v1/rbac/audit-logs:
    *   get:
-   *     summary: searchTheRBACAuditLog
-   *     tags: [rbac]
+   *     summary: Search the RBAC audit log
+   *     operationId: getRbacAuditLogs
+   *     tags: [Access Control]
    *     security:
    *       - BearerAuth: []
    *     parameters:

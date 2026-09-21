@@ -13,17 +13,17 @@ import adminConfigsRoutes from './admin-configs';
 import adminAuditRoutes from './admin-audit';
 import adminMessagesRoutes from './admin-messages';
 import settingsRoutes from './settings';
-import cleanAuthRoutes from '../modules/auth/auth.routes';
-import cleanInviteRoutes from '../modules/invitation/invitation.routes';
-import cleanOrgRoutes from '../modules/organization/organization.routes';
-import cleanBranchRoutes from '../modules/branch/branch.routes';
-import cleanPermRoutes from '../modules/permission/permission.routes';
-import cleanSettingsRoutes from '../modules/settings/settings.routes';
-import cleanNotifRoutes from '../modules/notification/notification.routes';
-import cleanVerifyRoutes from '../modules/verification/verification.routes';
-import cleanAuditRoutes from '../modules/audit/audit.routes';
-import cleanStorageRoutes from '../modules/storage/storage.routes';
-import cleanDdlRoutes from '../modules/ddl/ddl.routes';
+import identityAuthRoutes from '../modules/auth/auth.routes';
+import invitationRoutes from '../modules/invitation/invitation.routes';
+import organizationRoutes from '../modules/organization/organization.routes';
+import branchRoutes from '../modules/branch/branch.routes';
+import permissionRoutes from '../modules/permission/permission.routes';
+import organizationSettingsRoutes from '../modules/settings/settings.routes';
+import notificationRoutes from '../modules/notification/notification.routes';
+import verificationRoutes from '../modules/verification/verification.routes';
+import auditLogRoutes from '../modules/audit/audit.routes';
+import storageRoutes from '../modules/storage/storage.routes';
+import lookupRoutes from '../modules/ddl/ddl.routes';
 import emailRoutes from './email.routes';
 import { registrationRoutes } from '../modules/registration';
 import dashboardRoutes from '../modules/dashboard/dashboard.routes';
@@ -35,27 +35,27 @@ import dailySheetsRoutes from '../modules/daily-sheets/daily-sheets.routes';
 import monthlySheetsRoutes from '../modules/monthly-sheets/monthly-sheets.routes';
 import timesheetsRoutes from '../modules/timesheets/timesheets.routes';
 
-/** Keep route order and public paths stable while modules migrate from legacy routes. */
+/** Register canonical API namespaces first, retaining historical paths as compatibility aliases. */
 export function registerApiRoutes(app: Express): void {
   // Core routes
   app.use('/api/v1/auth', authRoutes);
-  app.use('/api/v1/auth/register', registerRoutes);
+  app.use(['/api/v1/auth/registrations', '/api/v1/auth/register'], registerRoutes);
 
   // New Enterprise Registration routes
-  app.use('/api/v1/register', registrationRoutes);
+  app.use(['/api/v1/registrations', '/api/v1/register'], registrationRoutes);
 
-  // Modular Clean Architecture routes
-  app.use('/api/v1/clean/auth', cleanAuthRoutes);
-  app.use('/api/v1/clean/invitations', cleanInviteRoutes);
-  app.use('/api/v1/clean/organizations', cleanOrgRoutes);
-  app.use('/api/v1/clean/branches', cleanBranchRoutes);
-  app.use('/api/v1/clean/permissions', cleanPermRoutes);
-  app.use('/api/v1/clean/settings', cleanSettingsRoutes);
-  app.use('/api/v1/clean/notifications', cleanNotifRoutes);
-  app.use('/api/v1/clean/verifications', cleanVerifyRoutes);
-  app.use('/api/v1/clean/audits', cleanAuditRoutes);
-  app.use('/api/v1/clean/storage', cleanStorageRoutes);
-  app.use('/api/v1/clean/ddls', cleanDdlRoutes);
+  // Organization and identity services
+  app.use(['/api/v1/identity/auth', '/api/v1/clean/auth'], identityAuthRoutes);
+  app.use(['/api/v1/invitations', '/api/v1/clean/invitations'], invitationRoutes);
+  app.use(['/api/v1/organizations', '/api/v1/clean/organizations'], organizationRoutes);
+  app.use(['/api/v1/branches', '/api/v1/clean/branches'], branchRoutes);
+  app.use(['/api/v1/permissions', '/api/v1/clean/permissions'], permissionRoutes);
+  app.use(['/api/v1/organization-settings', '/api/v1/clean/settings'], organizationSettingsRoutes);
+  app.use(['/api/v1/notifications', '/api/v1/clean/notifications'], notificationRoutes);
+  app.use(['/api/v1/verifications', '/api/v1/clean/verifications'], verificationRoutes);
+  app.use(['/api/v1/audit-logs', '/api/v1/clean/audits'], auditLogRoutes);
+  app.use(['/api/v1/storage', '/api/v1/clean/storage'], storageRoutes);
+  app.use(['/api/v1/lookups', '/api/v1/clean/ddls'], lookupRoutes);
 
   // Operations Dashboard (tenant-scoped)
   app.use('/api/v1/dashboard', dashboardRoutes);

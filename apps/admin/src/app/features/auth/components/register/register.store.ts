@@ -385,7 +385,7 @@ export class RegisterStore {
     try {
       const payload = this.getDraftPayload();
       await firstValueFrom(
-        this.http.put('/api/v1/register/save-progress', {
+        this.http.put('/api/v1/registrations/progress', {
           ...payload,
           sessionId,
         })
@@ -410,7 +410,7 @@ export class RegisterStore {
       const email = s.email || '';
       if (!email) return null;
       const res = await firstValueFrom(
-        this.http.post<{ sessionId: string }>('/api/v1/register/init', {
+        this.http.post<{ sessionId: string }>('/api/v1/registrations/sessions', {
           email,
           firstName: s.firstName || 'New',
           lastName: s.lastName || 'User',
@@ -450,7 +450,7 @@ export class RegisterStore {
     this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
       const res = await firstValueFrom(
-        this.http.post<{ success: boolean; email: string }>('/api/v1/clean/invitations/verify', {
+        this.http.post<{ success: boolean; email: string }>('/api/v1/invitations/verify', {
           code,
         })
       );
@@ -475,7 +475,7 @@ export class RegisterStore {
     try {
       const sessionId = this.getSessionId() ?? undefined;
       await firstValueFrom(
-        this.http.post('/api/v1/register/send-email-otp', { email, sessionId })
+        this.http.post('/api/v1/registrations/send-email-otp', { email, sessionId })
       );
       this.state.update((s) => ({ ...s, loading: false }));
       return true;
@@ -490,7 +490,7 @@ export class RegisterStore {
     try {
       const sessionId = this.getSessionId() ?? undefined;
       await firstValueFrom(
-        this.http.post('/api/v1/register/verify-email', { email, code, sessionId })
+        this.http.post('/api/v1/registrations/verify-email', { email, code, sessionId })
       );
       this.state.update((s) => ({
         ...s,
@@ -510,7 +510,7 @@ export class RegisterStore {
     this.state.update((s) => ({ ...s, loading: true, error: null }));
     try {
       const res = await firstValueFrom(
-        this.http.post<{ secret: string; qrCode: string }>('/api/v1/register/mfa-setup', {
+        this.http.post<{ secret: string; qrCode: string }>('/api/v1/registrations/mfa/setup', {
           email,
           method,
         })
@@ -533,7 +533,7 @@ export class RegisterStore {
   async checkEmailAvailability(email: string): Promise<boolean> {
     try {
       const res = await firstValueFrom(
-        this.http.post<{ available: boolean }>('/api/v1/register/check-email', { email })
+        this.http.post<{ available: boolean }>('/api/v1/registrations/email-availability', { email })
       );
       return res.available;
     } catch {
@@ -544,7 +544,7 @@ export class RegisterStore {
   async checkOrgCodeAvailability(code: string): Promise<boolean> {
     try {
       const res = await firstValueFrom(
-        this.http.post<{ available: boolean }>('/api/v1/register/check-org', {
+        this.http.post<{ available: boolean }>('/api/v1/registrations/organization-code-availability', {
           organizationCode: code,
         })
       );
@@ -559,7 +559,7 @@ export class RegisterStore {
     try {
       const sessionId = this.getSessionId() ?? undefined;
       await firstValueFrom(
-        this.http.post('/api/v1/register/resend-otp', { email, type: 'email', sessionId })
+        this.http.post('/api/v1/registrations/resend-otp', { email, type: 'email', sessionId })
       );
       this.state.update((s) => ({ ...s, loading: false }));
       return true;
@@ -588,7 +588,7 @@ export class RegisterStore {
       const countryCode = this.getPhoneCode(this.state().country);
       const sessionId = this.getSessionId() ?? undefined;
       await firstValueFrom(
-        this.http.post('/api/v1/register/send-mobile-otp', { mobile, countryCode, sessionId })
+        this.http.post('/api/v1/registrations/send-mobile-otp', { mobile, countryCode, sessionId })
       );
       this.state.update((s) => ({ ...s, loading: false }));
       return true;
@@ -605,7 +605,7 @@ export class RegisterStore {
       const full = this.getPhoneCode(this.state().country) + mobile;
       const sessionId = this.getSessionId() ?? undefined;
       await firstValueFrom(
-        this.http.post('/api/v1/register/verify-mobile', { mobile: full, code, sessionId })
+        this.http.post('/api/v1/registrations/verify-mobile', { mobile: full, code, sessionId })
       );
       this.state.update((s) => ({ ...s, mobileOtpCode: code, mobileVerified: true, loading: false }));
       this.saveDraft();
@@ -622,7 +622,7 @@ export class RegisterStore {
     try {
       const full = this.getPhoneCode(this.state().country) + mobile;
       await firstValueFrom(
-        this.http.post('/api/v1/register/resend-otp', { email: full, type: 'mobile' })
+        this.http.post('/api/v1/registrations/resend-otp', { email: full, type: 'mobile' })
       );
       this.state.update((s) => ({ ...s, loading: false }));
       return true;
@@ -638,7 +638,7 @@ export class RegisterStore {
     try {
       const sessionId = this.getSessionId() ?? undefined;
       await firstValueFrom(
-        this.http.post('/api/v1/register/verify-mfa', {
+        this.http.post('/api/v1/registrations/mfa/verify', {
           email: this.state().email,
           code,
           sessionId,
@@ -657,7 +657,7 @@ export class RegisterStore {
   async checkOrgNameAvailability(name: string): Promise<boolean> {
     try {
       const res = await firstValueFrom(
-        this.http.post<{ available: boolean }>('/api/v1/register/check-org-name', {
+        this.http.post<{ available: boolean }>('/api/v1/registrations/organization-name-availability', {
           organizationName: name,
         })
       );
@@ -751,7 +751,7 @@ export class RegisterStore {
     };
 
     try {
-      const res = await firstValueFrom(this.http.post<any>('/api/v1/register/complete', payload));
+      const res = await firstValueFrom(this.http.post<any>('/api/v1/registrations/complete', payload));
       this.state.update((s) => ({ ...s, successData: res.data, currentStep: 13, loading: false }));
       this.clearDraft();
       try {

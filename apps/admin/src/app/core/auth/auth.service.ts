@@ -253,7 +253,7 @@ export class AuthService {
     this.store.setLoading(true);
     this.store.setError(null);
     this.refreshStorage = request.rememberMe ? localStorage : sessionStorage;
-    return this.http.get<string[]>(`${this.apiUrl}/gettoken`).pipe(
+    return this.http.get<string[]>(`${this.apiUrl}/encryption-key`).pipe(
       switchMap((keyToken) => {
         const [keyStr, ivStr] = keyToken;
         return from(

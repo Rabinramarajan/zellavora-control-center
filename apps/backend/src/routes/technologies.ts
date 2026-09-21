@@ -9,8 +9,9 @@ const router: ExpressRouter = Router();
  * @swagger
  * /api/v1/technologies:
  *   get:
- *     summary: getAllTechnologies
- *     tags: [technologies]
+ *     summary: Get all technologies
+ *     operationId: getTechnologies
+ *     tags: [Technologies]
  *     security: []
  *     responses:
  *       200:
@@ -38,8 +39,9 @@ router.get('/technologies', async (req, res, next) => {
  * @swagger
  * /api/v1/technologies:
  *   post:
- *     summary: createANewTechnology
- *     tags: [technologies]
+ *     summary: Create technology
+ *     operationId: postTechnologies
+ *     tags: [Technologies]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -78,8 +80,9 @@ router.post('/technologies', authenticateToken, async (req: AuthRequest, res, ne
  * @swagger
  * /api/v1/projects/{projectId}/technologies:
  *   get:
- *     summary: getTechnologiesForAProject
- *     tags: [technologies]
+ *     summary: Get technologies for project
+ *     operationId: getProjectsByProjectIdTechnologies
+ *     tags: [Technologies]
  *     security: []
  *     parameters:
  *       - in: path
@@ -119,8 +122,9 @@ router.get('/projects/:projectId/technologies', async (req, res, next) => {
  * @swagger
  * /api/v1/projects/{projectId}/technologies:
  *   post:
- *     summary: addATechnologyToAProject
- *     tags: [technologies]
+ *     summary: Add technology to project
+ *     operationId: postProjectsByProjectIdTechnologies
+ *     tags: [Technologies]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -214,8 +218,9 @@ router.post(
  * @swagger
  * /api/v1/projects/{projectId}/technologies:
  *   put:
- *     summary: bulkReplaceTechnologiesForAProject
- *     tags: [technologies]
+ *     summary: Bulk replace technologies for project
+ *     operationId: putProjectsByProjectIdTechnologies
+ *     tags: [Technologies]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -319,8 +324,9 @@ router.put(
  * @swagger
  * /api/v1/projects/{projectId}/technologies/{technologyId}:
  *   delete:
- *     summary: removeATechnologyFromAProject
- *     tags: [technologies]
+ *     summary: Remove technology from project
+ *     operationId: deleteProjectsByProjectIdTechnologiesByTechnologyId
+ *     tags: [Technologies]
  *     security:
  *       - BearerAuth: []
  *     parameters:

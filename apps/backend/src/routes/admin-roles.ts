@@ -7,10 +7,11 @@ const router = Router();
 
 /**
  * @swagger
- * /api/v1/admin/role/search:
+ * /api/v1/admin/roles/search:
  *   get:
- *     summary: searchRoles
- *     tags: [roleSearch]
+ *     summary: Get role search template
+ *     operationId: getAdminRolesSearch
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -39,8 +40,9 @@ const router = Router();
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: searchRoles
- *     tags: [roleSearch]
+ *     summary: Search roles
+ *     operationId: postAdminRolesSearch
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -92,10 +94,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/role/initialize:
+ * /api/v1/admin/roles/metadata:
  *   get:
- *     summary: initializeRoleMetadata
- *     tags: [roleDetail]
+ *     summary: Initialize role metadata
+ *     operationId: getAdminRolesMetadata
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -121,10 +124,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/role/new:
+ * /api/v1/admin/roles/template:
  *   get:
- *     summary: getTemplateForNewRole
- *     tags: [roleDetail]
+ *     summary: Get template for new role
+ *     operationId: getAdminRolesTemplate
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -159,10 +163,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/role/open:
+ * /api/v1/admin/roles/details:
  *   post:
- *     summary: loadRoleDetailsById
- *     tags: [roleDetail]
+ *     summary: Load role details by ID
+ *     operationId: postAdminRolesDetails
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -214,10 +219,11 @@ const router = Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- * /api/v1/admin/role/save:
+ * /api/v1/admin/roles/save:
  *   post:
- *     summary: saveRoleDetails
- *     tags: [roleDetail]
+ *     summary: Save role details
+ *     operationId: postAdminRolesSave
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -254,10 +260,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/role/delete:
+ * /api/v1/admin/roles/delete:
  *   post:
- *     summary: deleteRole
- *     tags: [roleDetail]
+ *     summary: Delete role
+ *     operationId: postAdminRolesDelete
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -294,10 +301,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/role/role-resource/load:
+ * /api/v1/admin/roles/resource-mappings/details:
  *   post:
- *     summary: loadRoleResourceMappings
- *     tags: [roleDetail]
+ *     summary: Load role resource mappings
+ *     operationId: postAdminRolesResourceMappingsDetails
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -323,10 +331,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/role/role-resource/save:
+ * /api/v1/admin/roles/resource-mappings/save:
  *   post:
- *     summary: saveRoleResourceMappings
- *     tags: [roleDetail]
+ *     summary: Save role resource mappings
+ *     operationId: postAdminRolesResourceMappingsSave
+ *     tags: [Administration - Roles]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -354,7 +363,7 @@ const router = Router();
  *                   type: boolean
  */
 
-router.get('/role/initialize', authenticate, async (req, res, next) => {
+router.get(['/roles/metadata', '/role/initialize'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({ status: 'initialized' }));
   } catch (error) {
@@ -362,7 +371,7 @@ router.get('/role/initialize', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/role/search', authenticate, async (req, res, next) => {
+router.get(['/roles/search', '/role/search'], authenticate, async (req, res, next) => {
   try {
     res.json(
       wrapResponse({
@@ -376,7 +385,7 @@ router.get('/role/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/role/search', authenticate, async (req, res, next) => {
+router.post(['/roles/search', '/role/search'], authenticate, async (req, res, next) => {
   try {
     const { data: dbRoles, error } = await supabase.from('roles').select('*');
     if (error) throw error;
@@ -406,7 +415,7 @@ router.post('/role/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/role/new', authenticate, async (req, res, next) => {
+router.get(['/roles/template', '/role/new'], authenticate, async (req, res, next) => {
   try {
     res.json(
       wrapResponse({
@@ -427,7 +436,7 @@ router.get('/role/new', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/role/open', authenticate, async (req, res, next) => {
+router.post(['/roles/details', '/role/open'], authenticate, async (req, res, next) => {
   try {
     const serial = req.body.data;
     const uuid = getRoleUuidFromSerial(serial);
@@ -457,7 +466,7 @@ router.post('/role/open', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/role/save', authenticate, async (req: AuthRequest, res, next) => {
+router.post(['/roles/save', '/role/save'], authenticate, async (req: AuthRequest, res, next) => {
   try {
     const rData = req.body;
     let role;
@@ -502,7 +511,7 @@ router.post('/role/save', authenticate, async (req: AuthRequest, res, next) => {
   }
 });
 
-router.post('/role/delete', authenticate, async (req, res, next) => {
+router.post(['/roles/delete', '/role/delete'], authenticate, async (req, res, next) => {
   try {
     const serial = req.body.data;
     const uuid = getRoleUuidFromSerial(serial);
@@ -516,7 +525,7 @@ router.post('/role/delete', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/role/role-resource/load', authenticate, async (req, res, next) => {
+router.post(['/roles/resource-mappings/details', '/role/role-resource/load'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse([]));
   } catch (error) {
@@ -524,7 +533,7 @@ router.post('/role/role-resource/load', authenticate, async (req, res, next) => 
   }
 });
 
-router.post('/role/role-resource/save', authenticate, async (req, res, next) => {
+router.post(['/roles/resource-mappings/save', '/role/role-resource/save'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({ ok: true }));
   } catch (error) {

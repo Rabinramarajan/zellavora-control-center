@@ -88,8 +88,9 @@ app.use(requestContext);
  * @swagger
  * /health:
  *   get:
- *     summary: healthCheck
- *     tags: [health]
+ *     summary: Check service health
+ *     operationId: getHealth
+ *     tags: [System]
  *     security: []
  *     responses:
  *       200:
@@ -122,20 +123,22 @@ app.get('/health', (_req, res) => {
  * @swagger
  * /:
  *   get:
- *     summary: redirectToInfoEndpoint
- *     tags: [health]
+ *     summary: Open API documentation
+ *     operationId: getApiDocumentation
+ *     tags: [System]
  *     security: []
  *     responses:
  *       302:
- *         description: Redirects to the API info endpoint
+ *         description: Redirects to the API documentation
  */
 
 /**
  * @swagger
  * /info:
  *   get:
- *     summary: aPIIndexServiceMetadataAndEntrypoints
- *     tags: [health]
+ *     summary: Get service information
+ *     operationId: getInfo
+ *     tags: [System]
  *     security: []
  *     responses:
  *       200:

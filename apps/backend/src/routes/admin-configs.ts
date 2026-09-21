@@ -23,10 +23,11 @@ let currentBranches = [...mockBranches];
 
 /**
  * @swagger
- * /api/v1/admin/MAsterConfig/Region/GetMaasterConfigInitialData:
+ * /api/v1/admin/regions/metadata:
  *   get:
- *     summary: getRegionalInitialMetadata
- *     tags: [commonConfigurationDetail]
+ *     summary: Get regional initial metadata
+ *     operationId: getAdminRegionsMetadata
+ *     tags: [Administration - Configuration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -55,10 +56,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/Branch/Branch/new:
+ * /api/v1/admin/branches/template:
  *   get:
- *     summary: getTemplateForNewBranch
- *     tags: [commonConfigurationDetail]
+ *     summary: Get template for new branch
+ *     operationId: getAdminBranchesTemplate
+ *     tags: [Administration - Branches]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -92,10 +94,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/Branch/Branch/search:
+ * /api/v1/admin/branches/search:
  *   get:
- *     summary: searchBranches
- *     tags: [commonConfigurationDetail]
+ *     summary: Get branch search template
+ *     operationId: getAdminBranchesSearch
+ *     tags: [Administration - Branches]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -119,10 +122,10 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/Branch/Branch/Search:
  *   post:
- *     summary: searchBranches
- *     tags: [commonConfigurationDetail]
+ *     summary: Search branch
+ *     operationId: postAdminBranchesSearch
+ *     tags: [Administration - Branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -172,10 +175,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/Branch/Branch/open:
+ * /api/v1/admin/branches/details:
  *   post:
- *     summary: loadBranchDetails
- *     tags: [commonConfigurationDetail]
+ *     summary: Load branch details
+ *     operationId: postAdminBranchesDetails
+ *     tags: [Administration - Branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -220,10 +224,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/Branch/Branch/save:
+ * /api/v1/admin/branches/save:
  *   post:
- *     summary: saveBranchDetails
- *     tags: [commonConfigurationDetail]
+ *     summary: Save branch details
+ *     operationId: postAdminBranchesSave
+ *     tags: [Administration - Branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -274,10 +279,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/Branch/Branch/delete:
+ * /api/v1/admin/branches/delete:
  *   post:
- *     summary: deleteBranch
- *     tags: [commonConfigurationDetail]
+ *     summary: Delete branch
+ *     operationId: postAdminBranchesDelete
+ *     tags: [Administration - Branches]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -314,10 +320,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/config/search:
+ * /api/v1/admin/configurations/search:
  *   get:
- *     summary: searchConfigs
- *     tags: [commonConfigurationSearch]
+ *     summary: Get configuration search template
+ *     operationId: getAdminConfigurationsSearch
+ *     tags: [Administration - Configuration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -342,8 +349,9 @@ let currentBranches = [...mockBranches];
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: searchConfigs
- *     tags: [commonConfigurationSearch]
+ *     summary: Search configurations
+ *     operationId: postAdminConfigurationsSearch
+ *     tags: [Administration - Configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -393,10 +401,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/config/open:
+ * /api/v1/admin/configurations/details:
  *   post:
- *     summary: loadConfigurationDetails
- *     tags: [commonConfigurationDetail]
+ *     summary: Load configuration details
+ *     operationId: postAdminConfigurationsDetails
+ *     tags: [Administration - Configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -436,10 +445,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/config/save:
+ * /api/v1/admin/configurations/save:
  *   post:
- *     summary: saveConfigurationDetails
- *     tags: [commonConfigurationDetail]
+ *     summary: Save configuration details
+ *     operationId: postAdminConfigurationsSave
+ *     tags: [Administration - Configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -480,10 +490,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/config/Load:
+ * /api/v1/admin/configurations/list:
  *   post:
- *     summary: loadAllConfigurations
- *     tags: [commonConfigurationDetail]
+ *     summary: Load all configurations
+ *     operationId: postAdminConfigurationsList
+ *     tags: [Administration - Configuration]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -514,10 +525,11 @@ let currentBranches = [...mockBranches];
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/config/delete:
+ * /api/v1/admin/configurations/delete:
  *   post:
- *     summary: deleteConfiguration
- *     tags: [commonConfigurationDetail]
+ *     summary: Delete configuration
+ *     operationId: postAdminConfigurationsDelete
+ *     tags: [Administration - Configuration]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -559,7 +571,7 @@ let currentBranches = [...mockBranches];
 // ==================== BRANCH / REGION ENDPOINTS ====================
 
 router.get(
-  '/MAsterConfig/Region/GetMaasterConfigInitialData',
+  ['/regions/metadata', '/MAsterConfig/Region/GetMaasterConfigInitialData'],
   authenticate,
   async (req, res, next) => {
     try {
@@ -570,7 +582,7 @@ router.get(
   }
 );
 
-router.get('/Branch/Branch/new', authenticate, async (req, res, next) => {
+router.get(['/branches/template', '/Branch/Branch/new'], authenticate, async (req, res, next) => {
   try {
     res.json(
       wrapResponse({
@@ -590,7 +602,7 @@ router.get('/Branch/Branch/new', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/Branch/Branch/search', authenticate, async (req, res, next) => {
+router.get(['/branches/search', '/Branch/Branch/search'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({}));
   } catch (error) {
@@ -598,7 +610,7 @@ router.get('/Branch/Branch/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/Branch/Branch/Search', authenticate, async (req, res, next) => {
+router.post(['/branches/search', '/Branch/Branch/Search'], authenticate, async (req, res, next) => {
   try {
     const searchResultSet = currentBranches.map((b) => ({
       admBranchId: String(b.admBranchId),
@@ -619,7 +631,7 @@ router.post('/Branch/Branch/Search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/Branch/Branch/open', authenticate, async (req, res, next) => {
+router.post(['/branches/details', '/Branch/Branch/open'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     const branch = currentBranches.find((b) => b.admBranchId === id);
@@ -629,7 +641,7 @@ router.post('/Branch/Branch/open', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/Branch/Branch/save', authenticate, async (req, res, next) => {
+router.post(['/branches/save', '/Branch/Branch/save'], authenticate, async (req, res, next) => {
   try {
     const branch = req.body;
     if (branch.admBranchId > 0) {
@@ -646,7 +658,7 @@ router.post('/Branch/Branch/save', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/Branch/Branch/delete', authenticate, async (req, res, next) => {
+router.post(['/branches/delete', '/Branch/Branch/delete'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.admBranchId;
     currentBranches = currentBranches.filter((b) => b.admBranchId !== id);
@@ -658,7 +670,7 @@ router.post('/Branch/Branch/delete', authenticate, async (req, res, next) => {
 
 // ==================== CONFIG ENDPOINTS ====================
 
-router.get('/config/search', authenticate, async (req, res, next) => {
+router.get(['/configurations/search', '/config/search'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({}));
   } catch (error) {
@@ -666,7 +678,7 @@ router.get('/config/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/config/search', authenticate, async (req, res, next) => {
+router.post(['/configurations/search', '/config/search'], authenticate, async (req, res, next) => {
   try {
     const searchResult = mockConfigs.map((c) => ({
       configSerialId: c.configSerialId,
@@ -687,7 +699,7 @@ router.post('/config/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/config/open', authenticate, async (req, res, next) => {
+router.post(['/configurations/details', '/config/open'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     const conf = mockConfigs.find((c) => c.configSerialId === id);
@@ -697,7 +709,7 @@ router.post('/config/open', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/config/save', authenticate, async (req, res, next) => {
+router.post(['/configurations/save', '/config/save'], authenticate, async (req, res, next) => {
   try {
     const conf = req.body;
     if (conf.configSerialId > 0) {
@@ -712,7 +724,7 @@ router.post('/config/save', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/config/Load', authenticate, async (req, res, next) => {
+router.post(['/configurations/list', '/config/Load'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse(mockConfigs));
   } catch (error) {
@@ -720,7 +732,7 @@ router.post('/config/Load', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/config/delete', authenticate, async (req, res, next) => {
+router.post(['/configurations/delete', '/config/delete'], authenticate, async (req, res, next) => {
   try {
     const id = req.body.data;
     mockConfigs = mockConfigs.filter((c) => c.configSerialId !== id);

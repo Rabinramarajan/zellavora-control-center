@@ -12,10 +12,11 @@ const router = Router();
 
 /**
  * @swagger
- * /api/v1/admin/user/search:
+ * /api/v1/admin/users/search:
  *   get:
- *     summary: searchUsers
- *     tags: [userSearch]
+ *     summary: Get user search template
+ *     operationId: getAdminUsersSearch
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -44,8 +45,9 @@ const router = Router();
  *                 hasError:
  *                   type: boolean
  *   post:
- *     summary: searchUsers
- *     tags: [userSearch]
+ *     summary: Search users
+ *     operationId: postAdminUsersSearch
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -102,10 +104,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/user/initialize:
+ * /api/v1/admin/users/metadata:
  *   get:
- *     summary: initializeUserData
- *     tags: [userDetail]
+ *     summary: Initialize user data
+ *     operationId: getAdminUsersMetadata
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -131,10 +134,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/user/new:
+ * /api/v1/admin/users/template:
  *   get:
- *     summary: getTemplateForNewUser
- *     tags: [userDetail]
+ *     summary: Get template for new user
+ *     operationId: getAdminUsersTemplate
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -186,10 +190,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/user/open:
+ * /api/v1/admin/users/details:
  *   post:
- *     summary: loadUserDetailsBySerialId
- *     tags: [userDetail]
+ *     summary: Load user details by serial ID
+ *     operationId: postAdminUsersDetails
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -267,10 +272,11 @@ const router = Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- * /api/v1/admin/user/save:
+ * /api/v1/admin/users/save:
  *   post:
- *     summary: saveUserDetails
- *     tags: [userDetail]
+ *     summary: Save user details
+ *     operationId: postAdminUsersSave
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -341,10 +347,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/user/role/get:
+ * /api/v1/admin/users/assignable-roles:
  *   get:
- *     summary: getRolesAssignableToUser
- *     tags: [userRequest]
+ *     summary: Get roles assignable to user
+ *     operationId: getAdminUsersAssignableRoles
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -370,10 +377,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/user/team/user/get:
+ * /api/v1/admin/users/team-members/search:
  *   post:
- *     summary: getTeamUsers
- *     tags: [userRequest]
+ *     summary: Get team users
+ *     operationId: postAdminUsersTeamMembersSearch
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -399,10 +407,11 @@ const router = Router();
  *                   items: { type: string }
  *                 hasError:
  *                   type: boolean
- * /api/v1/admin/user/LoadBranchDDLByUserLoginId:
+ * /api/v1/admin/users/branch-options:
  *   post:
- *     summary: loadBranchDropdownDetails
- *     tags: [userRequest]
+ *     summary: Load branch dropdown details
+ *     operationId: postAdminUsersBranchOptions
+ *     tags: [Administration - Users]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -440,7 +449,7 @@ const router = Router();
  *                   type: boolean
  */
 
-router.get('/user/initialize', authenticate, async (req, res, next) => {
+router.get(['/users/metadata', '/user/initialize'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse({ status: 'initialized' }));
   } catch (error) {
@@ -448,7 +457,7 @@ router.get('/user/initialize', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/user/search', authenticate, async (req, res, next) => {
+router.get(['/users/search', '/user/search'], authenticate, async (req, res, next) => {
   try {
     res.json(
       wrapResponse({
@@ -462,7 +471,7 @@ router.get('/user/search', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/user/search', authenticate, async (req: AuthRequest, res, next) => {
+router.post(['/users/search', '/user/search'], authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { data: dbUsers, error } = await supabase.from('users').select('*');
     if (error) throw error;
@@ -497,7 +506,7 @@ router.post('/user/search', authenticate, async (req: AuthRequest, res, next) =>
   }
 });
 
-router.get('/user/new', authenticate, async (req, res, next) => {
+router.get(['/users/template', '/user/new'], authenticate, async (req, res, next) => {
   try {
     res.json(
       wrapResponse({
@@ -535,7 +544,7 @@ router.get('/user/new', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/user/open', authenticate, async (req, res, next) => {
+router.post(['/users/details', '/user/open'], authenticate, async (req, res, next) => {
   try {
     const serial = req.body.data;
     const uuid = getUserUuidFromSerial(serial);
@@ -593,7 +602,7 @@ router.post('/user/open', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/user/save', authenticate, async (req, res, next) => {
+router.post(['/users/save', '/user/save'], authenticate, async (req, res, next) => {
   try {
     const uData = req.body;
     const fullName = `${uData.firstName} ${uData.lastName}`.trim();
@@ -659,7 +668,7 @@ router.post('/user/save', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/user/role/get', authenticate, async (req, res, next) => {
+router.get(['/users/assignable-roles', '/user/role/get'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse([]));
   } catch (error) {
@@ -667,7 +676,7 @@ router.get('/user/role/get', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/user/team/user/get', authenticate, async (req, res, next) => {
+router.post(['/users/team-members/search', '/user/team/user/get'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse([]));
   } catch (error) {
@@ -675,7 +684,7 @@ router.post('/user/team/user/get', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/user/LoadBranchDDLByUserLoginId', authenticate, async (req, res, next) => {
+router.post(['/users/branch-options', '/user/LoadBranchDDLByUserLoginId'], authenticate, async (req, res, next) => {
   try {
     res.json(wrapResponse(mockBranches));
   } catch (error) {

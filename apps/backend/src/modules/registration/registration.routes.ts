@@ -4,18 +4,18 @@
  * Complete registration flow endpoints:
  *
  * Public (no auth required):
- *   GET  /api/v1/register/status          → Check if registration is enabled
- *   POST /api/v1/register/check-email    → Check if email is available
- *   POST /api/v1/register/check-org      → Check if organization code is available
- *   POST /api/v1/register/init           → Initialize registration session
- *   POST /api/v1/register/send-email-otp → Send email OTP
- *   POST /api/v1/register/verify-email  → Verify email OTP
- *   POST /api/v1/register/send-mobile-otp → Send mobile OTP (optional)
- *   POST /api/v1/register/verify-mobile → Verify mobile OTP
- *   POST /api/v1/register/mfa-setup     → Get MFA setup (TOTP secret + QR)
- *   POST /api/v1/register/complete       → Complete registration
- *   GET  /api/v1/register/session/:id   → Get registration session status
- *   POST /api/v1/register/resend-otp    → Resend OTP with cooldown
+ *   GET  /api/v1/registrations/status          → Check if registration is enabled
+ *   POST /api/v1/registrations/email-availability    → Check if email is available
+ *   POST /api/v1/registrations/organization-code-availability      → Check if organization code is available
+ *   POST /api/v1/registrations/sessions           → Initialize registration session
+ *   POST /api/v1/registrations/send-email-otp → Send email OTP
+ *   POST /api/v1/registrations/verify-email  → Verify email OTP
+ *   POST /api/v1/registrations/send-mobile-otp → Send mobile OTP (optional)
+ *   POST /api/v1/registrations/verify-mobile → Verify mobile OTP
+ *   POST /api/v1/registrations/mfa/setup     → Get MFA setup (TOTP secret + QR)
+ *   POST /api/v1/registrations/complete       → Complete registration
+ *   GET  /api/v1/registrations/sessions/:id   → Get registration session status
+ *   POST /api/v1/registrations/resend-otp    → Resend OTP with cooldown
  */
 
 import { Router, type Router as ExpressRouter } from 'express';
@@ -251,8 +251,20 @@ const REGISTRATION_SESSION_EXPIRY_HOURS = 24;
 // =============================================================================
 
 /**
- * GET /api/v1/register/status
+ * GET /api/v1/registrations/status
  * Check if self-registration is enabled
+ */
+/**
+ * @swagger
+ * /api/v1/registrations/status:
+ *   get:
+ *     summary: Get registration availability
+ *     operationId: getRegistrationsStatus
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
  */
 router.get('/status', async (req, res, next) => {
   try {
@@ -276,10 +288,22 @@ router.get('/status', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/check-email
+ * POST /api/v1/registrations/email-availability
  * Check if email is available
  */
-router.post('/check-email', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/email-availability:
+ *   post:
+ *     summary: Check email availability
+ *     operationId: postRegistrationsEmailAvailability
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/email-availability', '/check-email'], async (req, res, next) => {
   try {
     const { email } = CheckEmailSchema.parse(req.body);
     const result = await checkEmailAvailability(email);
@@ -290,10 +314,22 @@ router.post('/check-email', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/check-org
+ * POST /api/v1/registrations/organization-code-availability
  * Check if organization code is available
  */
-router.post('/check-org', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/organization-code-availability:
+ *   post:
+ *     summary: Check organization code availability
+ *     operationId: postRegistrationsOrganizationCodeAvailability
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/organization-code-availability', '/check-org'], async (req, res, next) => {
   try {
     const { organizationCode } = CheckOrgSchema.parse(req.body);
     const normalizedCode = organizationCode.toLowerCase().replace(/\s+/g, '-');
@@ -305,10 +341,22 @@ router.post('/check-org', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/check-org-name
+ * POST /api/v1/registrations/organization-name-availability
  * Check if an organization name is available
  */
-router.post('/check-org-name', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/organization-name-availability:
+ *   post:
+ *     summary: Check organization name availability
+ *     operationId: postRegistrationsOrganizationNameAvailability
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/organization-name-availability', '/check-org-name'], async (req, res, next) => {
   try {
     const { organizationName } = CheckOrgNameSchema.parse(req.body);
     const result = await checkOrganizationNameAvailability(organizationName);
@@ -319,10 +367,22 @@ router.post('/check-org-name', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/init
+ * POST /api/v1/registrations/sessions
  * Initialize a new registration session
  */
-router.post('/init', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/sessions:
+ *   post:
+ *     summary: Start registration session
+ *     operationId: postRegistrationsSessions
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/sessions', '/init'], async (req, res, next) => {
   try {
     const data = InitRegistrationSchema.parse(req.body);
 
@@ -367,8 +427,20 @@ router.post('/init', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/send-email-otp
+ * POST /api/v1/registrations/send-email-otp
  * Send OTP to email for verification
+ */
+/**
+ * @swagger
+ * /api/v1/registrations/send-email-otp:
+ *   post:
+ *     summary: Send registration email OTP
+ *     operationId: postRegistrationsSendEmailOtp
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
  */
 router.post('/send-email-otp', async (req, res, next) => {
   try {
@@ -453,8 +525,20 @@ router.post('/send-email-otp', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/verify-email
+ * POST /api/v1/registrations/verify-email
  * Verify email OTP
+ */
+/**
+ * @swagger
+ * /api/v1/registrations/verify-email:
+ *   post:
+ *     summary: Verify registration email
+ *     operationId: postRegistrationsVerifyEmail
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
  */
 router.post('/verify-email', async (req, res, next) => {
   try {
@@ -517,8 +601,20 @@ router.post('/verify-email', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/send-mobile-otp
+ * POST /api/v1/registrations/send-mobile-otp
  * Send OTP to mobile (optional step)
+ */
+/**
+ * @swagger
+ * /api/v1/registrations/send-mobile-otp:
+ *   post:
+ *     summary: Send registration mobile OTP
+ *     operationId: postRegistrationsSendMobileOtp
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
  */
 router.post('/send-mobile-otp', async (req, res, next) => {
   try {
@@ -562,8 +658,20 @@ router.post('/send-mobile-otp', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/verify-mobile
+ * POST /api/v1/registrations/verify-mobile
  * Verify mobile OTP
+ */
+/**
+ * @swagger
+ * /api/v1/registrations/verify-mobile:
+ *   post:
+ *     summary: Verify registration mobile
+ *     operationId: postRegistrationsVerifyMobile
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
  */
 router.post('/verify-mobile', async (req, res, next) => {
   try {
@@ -614,8 +722,20 @@ router.post('/verify-mobile', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/resend-otp
+ * POST /api/v1/registrations/resend-otp
  * Resend OTP with cooldown
+ */
+/**
+ * @swagger
+ * /api/v1/registrations/resend-otp:
+ *   post:
+ *     summary: Resend registration OTP
+ *     operationId: postRegistrationsResendOtp
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
  */
 router.post('/resend-otp', async (req, res, next) => {
   try {
@@ -703,10 +823,22 @@ router.post('/resend-otp', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/mfa-setup
+ * POST /api/v1/registrations/mfa/setup
  * Get MFA setup (TOTP secret + QR code)
  */
-router.post('/mfa-setup', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/mfa/setup:
+ *   post:
+ *     summary: Set up registration MFA
+ *     operationId: postRegistrationsMfaSetup
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/mfa/setup', '/mfa-setup'], async (req, res, next) => {
   try {
     const { sessionId, email, method } = MfaSetupSchema.parse(req.body);
 
@@ -748,10 +880,22 @@ router.post('/mfa-setup', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/verify-mfa
+ * POST /api/v1/registrations/mfa/verify
  * Verify the 6-digit TOTP code against the registration session's MFA secret
  */
-router.post('/verify-mfa', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/mfa/verify:
+ *   post:
+ *     summary: Verify registration MFA
+ *     operationId: postRegistrationsMfaVerify
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(['/mfa/verify', '/verify-mfa'], async (req, res, next) => {
   try {
     const { sessionId, email, code } = VerifyMfaSchema.parse(req.body);
 
@@ -794,10 +938,27 @@ router.post('/verify-mfa', async (req, res, next) => {
 });
 
 /**
- * GET /api/v1/register/session/:id
+ * GET /api/v1/registrations/sessions/:id
  * Get registration session status
  */
-router.get('/session/:id', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/sessions/{id}:
+ *   get:
+ *     summary: Get registration session
+ *     operationId: getRegistrationsSessionsById
+ *     tags: [Registration]
+ *     security: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.get(['/sessions/:id', '/session/:id'], async (req, res, next) => {
   try {
     const session = await prisma.registrationSession.findUnique({
       where: { id: req.params.id },
@@ -846,8 +1007,20 @@ router.get('/session/:id', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/register/complete
+ * POST /api/v1/registrations/complete
  * Complete registration - creates organization, branch, and user
+ */
+/**
+ * @swagger
+ * /api/v1/registrations/complete:
+ *   post:
+ *     summary: Complete registration
+ *     operationId: postRegistrationsComplete
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
  */
 router.post('/complete', async (req, res, next) => {
   try {
@@ -1277,10 +1450,22 @@ router.post('/complete', async (req, res, next) => {
 });
 
 /**
- * PUT /api/v1/register/save-progress
+ * PUT /api/v1/registrations/progress
  * Save partial registration progress to backend session
  */
-router.put('/save-progress', async (req, res, next) => {
+/**
+ * @swagger
+ * /api/v1/registrations/progress:
+ *   put:
+ *     summary: Save registration progress
+ *     operationId: putRegistrationsProgress
+ *     tags: [Registration]
+ *     security: []
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.put(['/progress', '/save-progress'], async (req, res, next) => {
   try {
     const data = SaveProgressSchema.parse(req.body);
 

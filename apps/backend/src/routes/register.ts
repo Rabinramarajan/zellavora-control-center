@@ -51,11 +51,12 @@ const RegisterSubmitSchema = z.object({
 // Endpoints
 /**
  * @swagger
- * /api/v1/auth/register/verify-invitation:
+ * /api/v1/auth/registrations/verify-invitation:
  *   post:
- *     summary: verifyInvitationCode
+ *     summary: Verify invitation code
+ *     operationId: postAuthRegistrationsVerifyInvitation
  *     description: Validates a registration invitation code.
- *     tags: [auth]
+ *     tags: [Registration]
  *     security: []
  *     requestBody:
  *       required: true
@@ -107,11 +108,12 @@ router.post('/verify-invitation', async (req, res, next) => {
 
 /**
  * @swagger
- * /api/v1/auth/register/send-email-otp:
+ * /api/v1/auth/registrations/send-email-otp:
  *   post:
- *     summary: sendRegistrationEmailOtp
+ *     summary: Send registration email OTP
+ *     operationId: postAuthRegistrationsSendEmailOtp
  *     description: Generates a 6-digit OTP for the given email and queues it for delivery.
- *     tags: [auth]
+ *     tags: [Registration]
  *     security: []
  *     requestBody:
  *       required: true
@@ -170,11 +172,12 @@ router.post('/send-email-otp', async (req, res, next) => {
 
 /**
  * @swagger
- * /api/v1/auth/register/verify-email-otp:
+ * /api/v1/auth/registrations/verify-email-otp:
  *   post:
- *     summary: verifyRegistrationEmailOtp
+ *     summary: Verify registration email OTP
+ *     operationId: postAuthRegistrationsVerifyEmailOtp
  *     description: Verifies a 6-digit OTP previously sent to the given email.
- *     tags: [auth]
+ *     tags: [Registration]
  *     security: []
  *     requestBody:
  *       required: true
@@ -240,11 +243,12 @@ router.post('/verify-email-otp', async (req, res, next) => {
 
 /**
  * @swagger
- * /api/v1/auth/register/mfa-setup:
+ * /api/v1/auth/registrations/mfa-setup:
  *   get:
- *     summary: generateMfaSetup
+ *     summary: Generate MFA setup
+ *     operationId: getAuthRegistrationsMfaSetup
  *     description: Generates a TOTP secret and QR code for MFA enrollment.
- *     tags: [auth]
+ *     tags: [Registration]
  *     security: []
  *     parameters:
  *       - in: query
@@ -283,11 +287,12 @@ router.get('/mfa-setup', async (req, res, next) => {
 
 /**
  * @swagger
- * /api/v1/auth/register/submit:
+ * /api/v1/auth/registrations/submit:
  *   post:
- *     summary: submitRegistration
+ *     summary: Submit registration
+ *     operationId: postAuthRegistrationsSubmit
  *     description: Completes tenant, branch, and super-admin registration. Verifies invitation, duplicates, and MFA code before provisioning.
- *     tags: [auth]
+ *     tags: [Registration]
  *     security: []
  *     requestBody:
  *       required: true
