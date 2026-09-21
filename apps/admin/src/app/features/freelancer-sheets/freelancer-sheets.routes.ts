@@ -1,39 +1,36 @@
 import { Routes } from '@angular/router';
-import { FreelancerSheetsComponent } from './freelancer-sheets.component';
 
 export const freelancerSheetsRoutes: Routes = [
   {
-    path: '',
-    component: FreelancerSheetsComponent,
+    path: 'daily',
+    loadComponent: () =>
+      import('./pages/daily-sheets/daily-sheets.component').then((m) => m.DailySheetsComponent),
     children: [
-      {
-        path: 'daily',
-        children: [
-          { path: '', redirectTo: 'list', pathMatch: 'full' },
-          { path: 'list', component: FreelancerSheetsComponent },
-          { path: 'new', component: FreelancerSheetsComponent },
-          { path: ':id/edit', component: FreelancerSheetsComponent },
-          { path: ':id/view', component: FreelancerSheetsComponent },
-        ],
-      },
-      {
-        path: 'monthly',
-        children: [
-          { path: '', redirectTo: 'list', pathMatch: 'full' },
-          { path: 'list', component: FreelancerSheetsComponent },
-          { path: 'new', component: FreelancerSheetsComponent },
-          { path: ':id/view', component: FreelancerSheetsComponent },
-        ],
-      },
-      {
-        path: 'approval',
-        component: FreelancerSheetsComponent,
-      },
-      {
-        path: '',
-        redirectTo: 'daily/list',
-        pathMatch: 'full',
-      },
+      { path: '', redirectTo: 'list', pathMatch: 'full' },
+      { path: 'list', children: [] },
+      { path: 'new', children: [] },
+      { path: ':id/edit', children: [] },
+      { path: ':id/view', children: [] },
     ],
   },
+  {
+    path: 'monthly',
+    loadComponent: () =>
+      import('./pages/monthly-sheets/monthly-sheets.component').then(
+        (m) => m.MonthlySheetsComponent
+      ),
+    children: [
+      { path: '', redirectTo: 'list', pathMatch: 'full' },
+      { path: 'list', children: [] },
+      { path: ':id/view', children: [] },
+    ],
+  },
+  {
+    path: 'approval',
+    loadComponent: () =>
+      import('./pages/approval-queue/approval-queue.component').then(
+        (m) => m.ApprovalQueueComponent
+      ),
+  },
+  { path: '', redirectTo: 'daily/list', pathMatch: 'full' },
 ];

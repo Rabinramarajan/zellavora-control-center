@@ -16,6 +16,14 @@ export interface DailySheet {
   createdAt: string;
   updatedAt: string;
   lineItems?: DailySheetLineItem[];
+  /** Presentation fields the API sends alongside the sheet, when known. */
+  projectName?: string;
+  projectType?: string;
+  taskName?: string;
+  startTime?: string;
+  endTime?: string;
+  breakMinutes?: number;
+  billableHours?: number;
 }
 
 export interface DailySheetLineItem {
@@ -40,7 +48,24 @@ export interface MonthlySheet {
   status: 'draft' | 'submitted' | 'approved' | 'paid' | 'rejected';
   createdAt: string;
   updatedAt: string;
+  billableHours?: number;
+  approvedSheets?: number;
+  totalSheets?: number;
 }
+
+/**
+ * List endpoints answer with { success, data: { data, total, page, pageSize } }, so
+ * the rows sit one level deeper than the envelope. A bare array in `data` is still
+ * accepted for endpoints that return one.
+ */
+const unwrapList = <T>(response: any): T[] => {
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.data?.data)) return response.data.data;
+  return [];
+};
+
+const unwrapTotal = (response: any): number =>
+  response?.data?.total ?? response?.total ?? unwrapList(response).length;
 
 interface SheetsState {
   dailySheets: DailySheet[];
@@ -83,8 +108,8 @@ export class SheetsStore {
       next: (response: any) => {
         this.state.update(s => ({
           ...s,
-          dailySheets: response.data || [],
-          totalDailySheets: response.total || 0,
+          dailySheets: unwrapList<DailySheet>(response),
+          totalDailySheets: unwrapTotal(response),
           isLoading: false,
         }));
       },
@@ -210,8 +235,8 @@ export class SheetsStore {
       next: (response: any) => {
         this.state.update(s => ({
           ...s,
-          monthlySheets: response.data || [],
-          totalMonthlySheets: response.total || 0,
+          monthlySheets: unwrapList<MonthlySheet>(response),
+          totalMonthlySheets: unwrapTotal(response),
           isLoading: false,
         }));
       },

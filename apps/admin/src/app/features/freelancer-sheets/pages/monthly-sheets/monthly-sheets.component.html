@@ -1,0 +1,257 @@
+<div class="sheet-page">
+  <!-- Header -->
+  <header class="sheet-header">
+    <div class="flex items-center gap-4">
+      <div class="sheet-header__icon" aria-hidden="true">📆</div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Monthly Sheets</h1>
+        <p class="text-sm text-slate-400 mt-0.5">
+          View your monthly timesheet overview and track your progress.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="date-nav">
+        <button type="button" class="date-nav__arrow" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+        <span class="date-nav__label">
+          <span aria-hidden="true">📅</span>
+          {{ monthLabel() }}
+        </span>
+        <button type="button" class="date-nav__arrow" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+      </div>
+
+      <button type="button" class="primary-btn" (click)="export()">
+        <span aria-hidden="true">⭳</span> Export
+      </button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+      {{ error() }}
+    </div>
+  }
+
+  <!-- KPI row -->
+  <section class="kpi-grid" aria-label="Monthly summary">
+    <article class="kpi">
+      <div class="flex items-center gap-3">
+        <span class="kpi__icon bg-violet-500/25 text-violet-200" aria-hidden="true">⏱️</span>
+        <span class="text-sm font-semibold text-slate-200">Total Hours</span>
+      </div>
+      <div>
+        <div class="kpi__value text-white">{{ totalHours() }}h</div>
+        @if (previousMonthChange() !== null) {
+          <p class="text-xs mt-1" [class.text-emerald-400]="previousMonthChange()! >= 0" [class.text-rose-400]="previousMonthChange()! < 0">
+            {{ previousMonthChange()! >= 0 ? '↑' : '↓' }} {{ previousMonthChange() }}% from last month
+          </p>
+        } @else {
+          <p class="text-xs text-slate-400 mt-1">No prior month to compare</p>
+        }
+      </div>
+    </article>
+
+    <article class="kpi">
+      <div class="flex items-center gap-3">
+        <span class="kpi__icon bg-amber-500/20 text-amber-200" aria-hidden="true">⚡</span>
+        <span class="text-sm font-semibold text-slate-200">Billable Hours</span>
+      </div>
+      <div>
+        <div class="kpi__value text-white">{{ billableHours() }}h</div>
+        <p class="text-xs text-slate-400 mt-1 mb-2">{{ billablePercent() }}% of total hours</p>
+        <div class="bar">
+          <div class="bar__fill bg-gradient-to-r from-amber-400 to-amber-300" [style.width.%]="billablePercent()"></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="kpi">
+      <div class="flex items-center gap-3">
+        <span class="kpi__icon bg-sky-500/20 text-sky-200" aria-hidden="true">🗓️</span>
+        <span class="text-sm font-semibold text-slate-200">Working Days</span>
+      </div>
+      <div>
+        <div class="kpi__value text-white">{{ workingDays() }}</div>
+        <p class="text-xs text-slate-400 mt-1">out of {{ daysInMonth() }} days</p>
+      </div>
+    </article>
+
+    <article class="kpi flex-row items-center justify-between">
+      <div>
+        <span class="text-sm font-semibold text-slate-200 block">Approval Progress</span>
+        <div class="kpi__value text-white mt-2">{{ approvalPercent() }}%</div>
+        <p class="text-xs text-slate-400 mt-1">{{ approvedSheets() }}/{{ totalSheets() }} sheets approved</p>
+      </div>
+      <svg class="ring" viewBox="0 0 64 64" role="img" [attr.aria-label]="approvalPercent() + '% approved'">
+        <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" />
+        <circle
+          class="ring__value"
+          cx="32"
+          cy="32"
+          r="26"
+          fill="none"
+          stroke="url(#approvalGradient)"
+          stroke-width="7"
+          stroke-linecap="round"
+          [attr.stroke-dasharray]="ringDash()" />
+        <defs>
+          <linearGradient id="approvalGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#8b5cf6" />
+            <stop offset="100%" stop-color="#22d3ee" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </article>
+  </section>
+
+  <!-- Calendar + overview -->
+  <div class="monthly-grid">
+    <section class="sheet-card">
+      <div class="sheet-card__head">
+        <h2 class="text-base font-semibold text-white">Monthly Calendar</h2>
+        <ul class="flex flex-wrap items-center gap-3">
+          @for (item of legend; track item.status) {
+            <li class="flex items-center gap-1.5 text-[0.68rem] text-slate-400">
+              <span class="legend-dot" [class]="'legend-dot legend-dot--' + item.status"></span>
+              {{ item.label }}
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="sheet-card__body">
+        <div class="cal-grid cal-grid--head" aria-hidden="true">
+          @for (day of weekdays; track day) {
+            <span class="cal-weekday">{{ day }}</span>
+          }
+        </div>
+
+        <div class="cal-grid" role="grid" [attr.aria-label]="monthLabel() + ' calendar'">
+          @for (cell of calendar(); track cell.key) {
+            <div
+              role="gridcell"
+              [class]="cellClass(cell)"
+              [attr.aria-label]="cell.label + ': ' + cell.hours + ' hours, ' + statusText(cell.status)">
+              <span class="cal-cell__day">{{ cell.day }}</span>
+              @if (cell.hours > 0) {
+                <span class="cal-cell__hours">{{ cell.hours }}h</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <aside class="flex flex-col gap-5">
+      <section class="sheet-card sheet-card--glow">
+        <div class="sheet-card__head">
+          <h2 class="text-base font-semibold text-white">Monthly Overview</h2>
+        </div>
+
+        <div class="sheet-card__body">
+          <div class="chart" role="img" [attr.aria-label]="'Weekly hours for ' + monthLabel()">
+            @for (week of weekBars(); track week.label) {
+              <div class="chart__col">
+                <span class="chart__value">{{ week.total }}h</span>
+                <div class="chart__stack">
+                  <div class="chart__seg chart__seg--nonbillable" [style.height.%]="week.nonBillableHeight"></div>
+                  <div class="chart__seg chart__seg--billable" [style.height.%]="week.billableHeight"></div>
+                </div>
+                <span class="chart__label">{{ week.label }}</span>
+              </div>
+            } @empty {
+              <p class="text-xs text-slate-500 w-full text-center py-6">
+                {{ isLoading() ? 'Loading…' : 'No hours logged this month.' }}
+              </p>
+            }
+          </div>
+
+          <div class="flex items-center justify-center gap-4 mt-4 text-[0.68rem] text-slate-400">
+            <span class="flex items-center gap-1.5"><span class="legend-dot bg-violet-500"></span> Billable</span>
+            <span class="flex items-center gap-1.5"><span class="legend-dot bg-sky-400"></span> Non-billable</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="sheet-card">
+        <div class="sheet-card__head">
+          <h2 class="text-base font-semibold text-white">Progress</h2>
+        </div>
+        <div class="sheet-card__body">
+          <p class="text-xs text-slate-400 mb-2">
+            {{ approvedSheets() }} of {{ totalSheets() }} sheets approved
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="bar flex-1">
+              <div class="bar__fill bg-gradient-to-r from-violet-500 to-cyan-400" [style.width.%]="approvalPercent()"></div>
+            </div>
+            <span class="text-xs font-semibold text-slate-200 tabular-nums">{{ approvalPercent() }}%</span>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Project summary -->
+  <section class="sheet-card">
+    <div class="sheet-card__head">
+      <h2 class="text-base font-semibold text-white">Project Summary ({{ monthLabel() }})</h2>
+    </div>
+
+    <div class="sheet-table-wrap">
+      <table class="sheet-table">
+        <thead>
+          <tr>
+            <th scope="col">Project</th>
+            <th scope="col">Total Hours</th>
+            <th scope="col">Billable Hours</th>
+            <th scope="col">Non-billable</th>
+            <th scope="col" class="w-56">Approval</th>
+            <th scope="col" class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of projectRows(); track row.name) {
+            <tr>
+              <td>
+                <div class="flex items-center gap-2">
+                  <span class="avatar-chip" [style.background]="row.color">{{ row.initials }}</span>
+                  <div class="leading-tight">
+                    <div class="text-slate-100 font-medium">{{ row.name }}</div>
+                    <div class="text-[0.68rem] text-slate-500">{{ row.type }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-white font-semibold tabular-nums">{{ row.totalHours }}h</td>
+              <td class="text-slate-300 tabular-nums">{{ row.billableHours }}h</td>
+              <td class="text-slate-400 tabular-nums">{{ row.nonBillableHours }}h</td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-slate-300 tabular-nums w-9">{{ row.approvalPercent }}%</span>
+                  <div class="bar flex-1 min-w-[5rem]">
+                    <div class="bar__fill" [style.width.%]="row.approvalPercent" [style.background]="row.color"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-right">
+                <button type="button" class="row-action" (click)="openProject(row.name)" [attr.aria-label]="'View entries for ' + row.name">⋯</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <span class="text-2xl" aria-hidden="true">📊</span>
+                  <p class="text-sm font-medium text-slate-300">
+                    {{ isLoading() ? 'Loading projects…' : 'No project activity this month' }}
+                  </p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

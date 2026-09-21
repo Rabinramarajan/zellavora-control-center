@@ -1,0 +1,244 @@
+.monthly-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 1280px) {
+  .monthly-grid {
+    grid-template-columns: minmax(0, 2.15fr) minmax(19rem, 1fr);
+    align-items: start;
+  }
+}
+
+/* Month stepper */
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--sheet-line);
+  background: var(--sheet-surface);
+}
+
+.date-nav__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.date-nav__arrow {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.date-nav__arrow:hover {
+  background: rgba(139, 92, 246, 0.16);
+  color: #fff;
+}
+
+/* Approval ring */
+
+.ring {
+  width: 4.5rem;
+  height: 4.5rem;
+  transform: rotate(-90deg);
+  flex: none;
+}
+
+.ring__value {
+  transition: stroke-dasharray 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Calendar */
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.cal-grid--head {
+  margin-bottom: 0.5rem;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.cal-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-height: 3.1rem;
+  padding: 0.35rem 0.2rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.025);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.cal-cell:hover {
+  transform: translateY(-2px);
+  border-color: var(--sheet-line-strong);
+}
+
+.cal-cell__day {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1;
+}
+
+.cal-cell__hours {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.cal-cell--outside {
+  opacity: 0.3;
+}
+
+.cal-cell--approved {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.cal-cell--approved .cal-cell__hours {
+  color: #4ade80;
+}
+
+.cal-cell--submitted {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.cal-cell--submitted .cal-cell__hours {
+  color: #fbbf24;
+}
+
+.cal-cell--draft {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.cal-cell--rejected {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.cal-cell--rejected .cal-cell__hours {
+  color: #f87171;
+}
+
+.cal-cell--today {
+  background: linear-gradient(140deg, #8b5cf6, #6366f1);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 26px -14px rgba(139, 92, 246, 1);
+}
+
+.cal-cell--today .cal-cell__day,
+.cal-cell--today .cal-cell__hours {
+  color: #fff;
+}
+
+/* Legend dots */
+
+.legend-dot--approved { background: #22c55e; }
+.legend-dot--submitted { background: #f59e0b; }
+.legend-dot--draft { background: #94a3b8; }
+.legend-dot--none { background: rgba(255, 255, 255, 0.18); }
+
+/* Weekly bar chart */
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 10rem;
+}
+
+.chart__col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.chart__value {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.chart__stack {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 1.75rem;
+  height: 100%;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chart__seg {
+  width: 100%;
+  transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.chart__seg--billable {
+  background: linear-gradient(180deg, #a78bfa, #7c3aed);
+}
+
+.chart__seg--nonbillable {
+  background: linear-gradient(180deg, #7dd3fc, #38bdf8);
+}
+
+.chart__label {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+/* Table actions */
+
+.row-action {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.5rem;
+  color: #94a3b8;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.row-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
