@@ -1,4 +1,4 @@
-import { Router, type Router as ExpressRouter } from 'express';
+import { Router, type Router as ExpressRouter, type NextFunction, type Response } from 'express';
 import { Prisma, type PortfolioProject } from '@prisma/client';
 import { prisma } from '../infrastructure/prisma';
 import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth';
@@ -36,6 +36,15 @@ const requireTenant = (req: AuthRequest): string => {
   return req.tenantId;
 };
 
+/**
+ * The list is public, but a signed-in admin needs drafts from their own
+ * organization — so authenticate only when the caller sent a token.
+ */
+const authenticateIfPresent = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  if (!req.headers['authorization']) return next();
+  void authenticateToken(req, res, next);
+};
+
 /** Load a live project belonging to the caller's organization, or 404. */
 const findTenantProject = async (id: string, tenantId: string): Promise<PortfolioProject> => {
   if (!isUuid(id)) throw notFound();
@@ -52,8 +61,14 @@ const findTenantProject = async (id: string, tenantId: string): Promise<Portfoli
  *   get:
  *     summary: listProjects
  *     operationId: getProjects
+ *     description: >
+ *       Anonymous callers get published projects only. With a bearer token the
+ *       caller's organization is listed across all statuses, optionally filtered
+ *       by `status`.
  *     tags: [projects]
- *     security: []
+ *     security:
+ *       - {}
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -70,7 +85,6 @@ const findTenantProject = async (id: string, tenantId: string): Promise<Portfoli
  *         schema:
  *           type: string
  *           enum: [draft, published, archived]
- *           default: published
  *     responses:
  *       200:
  *         description: Paginated project list
@@ -86,16 +100,19 @@ const findTenantProject = async (id: string, tenantId: string): Promise<Portfoli
  *                 pagination:
  *                   $ref: '#/components/schemas/PaginationMeta'
  */
-router.get('/', async (req, res, next) => {
+router.get('/', authenticateIfPresent, async (req: AuthRequest, res, next) => {
   try {
     const { page = 1, pageSize = 20, status } = req.query;
 
     const pageNum = parseInt(page as string) || 1;
     const pageSizeNum = parseInt(pageSize as string) || 20;
-    const where: Prisma.PortfolioProjectWhereInput = {
-      status: (status as string) || 'published',
-      deletedAt: null,
-    };
+    const where: Prisma.PortfolioProjectWhereInput = req.tenantId
+      ? {
+          organizationId: req.tenantId,
+          deletedAt: null,
+          ...(status ? { status: status as string } : {}),
+        }
+      : { status: 'published', deletedAt: null };
 
     const [data, total] = await Promise.all([
       prisma.portfolioProject.findMany({
