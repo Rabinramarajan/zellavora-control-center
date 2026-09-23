@@ -1,6 +1,6 @@
 import { Router, type Router as ExpressRouter } from 'express';
 import { supabase } from '../config/supabase';
-import { authenticateToken, authorize, AuthRequest } from '../middleware/auth';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { z } from 'zod';
 
@@ -201,12 +201,12 @@ router.get('/:id', async (req, res, next) => {
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Insufficient role
+ *         description: Insufficient permission
  */
 router.post(
   '/',
   authenticateToken,
-  authorize('admin', 'editor'),
+  requirePermission('projects:create'),
   async (req: AuthRequest, res, next) => {
     try {
       const data = CreateProjectSchema.parse(req.body);
@@ -263,7 +263,7 @@ router.post(
 router.put(
   '/:id',
   authenticateToken,
-  authorize('admin', 'editor'),
+  requirePermission('projects:write'),
   async (req: AuthRequest, res, next) => {
     try {
       const { data: project, error: fetchError } = await supabase
@@ -323,7 +323,7 @@ router.put(
 router.delete(
   '/:id',
   authenticateToken,
-  authorize('admin', 'editor'),
+  requirePermission('projects:delete'),
   async (req: AuthRequest, res, next) => {
     try {
       const { data: project, error: fetchError } = await supabase
@@ -378,7 +378,7 @@ router.delete(
 router.post(
   '/:id/publish',
   authenticateToken,
-  authorize('admin', 'editor'),
+  requirePermission('projects:write'),
   async (req: AuthRequest, res, next) => {
     try {
       const { error } = await supabase
@@ -428,7 +428,7 @@ router.post(
 router.post(
   '/:id/archive',
   authenticateToken,
-  authorize('admin', 'editor'),
+  requirePermission('projects:write'),
   async (req: AuthRequest, res, next) => {
     try {
       const { error } = await supabase
