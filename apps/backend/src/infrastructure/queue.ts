@@ -11,11 +11,6 @@ export const emailQueue =
     ? new Queue('email-queue', { connection: { host: '127.0.0.1', port: 6379 } })
     : null;
 
-export interface EmailJob {
-  name: string;
-  data: Record<string, any>;
-}
-
 // Helper to queue a job
 export const addQueueJob = async (name: string, data: any): Promise<void> => {
   if (emailQueue && config.redisEnabled) {
@@ -261,20 +256,6 @@ export const sendSecurityAlertEmail = async (
   } catch (err: any) {
     logger.error(`[Email] Error sending security alert: ${err.message}`);
     return false;
-  }
-};
-
-// Batch Email Sending
-export const sendBatchEmails = async (emailList: Array<any>): Promise<any[]> => {
-  try {
-    logger.info(`[Queue] Processing batch of ${emailList.length} emails`);
-    const results = await emailService.sendBatch(emailList);
-    const successful = results.filter((r) => r.success).length;
-    logger.info(`[Queue] Batch email send completed: ${successful}/${emailList.length} successful`);
-    return results;
-  } catch (err: any) {
-    logger.error(`[Queue] Error sending batch emails: ${err.message}`);
-    throw err;
   }
 };
 

@@ -20,7 +20,3 @@ export function matchesGlob(pattern: string, key: string): boolean {
   if (!pattern.includes('*')) return pattern === key;
   return compile(pattern).test(key);
 }
-
-export function isWildcard(pattern: string): boolean {
-  return pattern.includes('*');
-}

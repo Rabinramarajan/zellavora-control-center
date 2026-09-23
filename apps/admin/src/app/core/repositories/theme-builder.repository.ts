@@ -64,23 +64,6 @@ export class ThemeBuilderRepository {
     );
   }
 
-  uploadAsset(file: File, type: 'logo' | 'favicon'): Observable<{ url: string }> {
-    this._loading.set(true);
-    return this.api.uploadBrandingAsset(file, type).pipe(
-      tap((res) => {
-        this._config.update((current) => ({
-          ...current,
-          [type === 'logo' ? 'logoUrl' : 'faviconUrl']: res.url,
-        }));
-        this._loading.set(false);
-      }),
-      catchError((err) => {
-        this._loading.set(false);
-        return throwError(() => err);
-      })
-    );
-  }
-
   private updateStyles(config: ThemeConfig) {
     if (typeof document === 'undefined') return; // Safe for SSR
 

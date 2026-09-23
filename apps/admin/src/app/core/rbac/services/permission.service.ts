@@ -65,10 +65,6 @@ export class PermissionService {
     return roleKeys.some(k => assigned.has(k));
   }
 
-  hasFeature(feature: string): boolean {
-    return this.canSync(`feature:${feature}`);
-  }
-
   maxRoleLevel(): number {
     return this.store.roles().reduce((m, r) => Math.max(m, r.level), 0);
   }

@@ -375,27 +375,6 @@ export interface ConfigMetaData {
   metaDataDescription?: string;
 }
 
-export interface ConfigSearchCriteria extends PaginationParams {
-  configSerialId?: string;
-  configId?: string;
-  configValue?: string;
-  configDescription?: string;
-  moduleValue?: string;
-  configIdFrom?: string;
-  configIdTo?: string;
-}
-
-export interface ConfigSearchResult extends PaginatedResult<ConfigSearchSet> {
-  searchResult: ConfigSearchSet[];
-}
-
-export interface ConfigSearchSet {
-  configSerialId: number;
-  configId: number;
-  configValue: string;
-  configDescription: string;
-}
-
 // ==================== Group Models ====================
 export interface Group {
   groupId: number;
@@ -412,58 +391,4 @@ export interface Group {
   catetoryId?: number;
   categoryValue?: string;
   currentGroupRoleId?: number;
-}
-
-export interface GroupSearchCriteria extends PaginationParams {
-  istrgroupId?: number;
-  istrgroupName?: string;
-  istrgroupBeginDateFrom?: string;
-  istrgroupBeginDateTo?: string;
-  istrgroupEndDateFrom?: string;
-  istrgroupEndDateTo?: string;
-  istrgroupStatusid?: number;
-  istrgroupStatusvalue?: string;
-  istrRoleId?: number;
-  moduleValue?: string;
-}
-
-export interface GroupSearchResult extends PaginatedResult<GroupSearchSet> {
-  searchResult: GroupSearchSet[];
-}
-
-export interface GroupSearchSet {
-  groupId: number;
-  groupName: string;
-  beginDate: string;
-  endDate: string;
-  statusDescription: string;
-}
-
-// ==================== Message Models ====================
-export interface MessageSendRequest {
-  recipientId: string;
-  body: string;
-}
-
-export interface MessageSendResult {
-  messageId: number;
-  status: string;
-  recipientId: string;
-  body: string;
-  timestamp: string;
-}
-
-export interface EmailSendRequest {
-  toEmail: string;
-  subject: string;
-  content: string;
-}
-
-export interface EmailSendResult {
-  emailId: number;
-  status: string;
-  toEmail: string;
-  subject: string;
-  timestamp: string;
-  moduleName?: string;
 }

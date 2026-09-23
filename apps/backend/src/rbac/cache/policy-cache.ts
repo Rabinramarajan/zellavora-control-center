@@ -12,7 +12,6 @@ import type { EffectivePolicy } from '../engine/permission-engine';
 
 const L1_TTL_MS = 60_000; // 1 min in-process
 const L2_TTL_SEC = 300; // 5 min Redis
-const NEG_TTL_SEC = 60; // 1 min negative cache
 const LOCK_TTL_SEC = 5; // single-flight lock
 
 export class PolicyCache {
@@ -105,18 +104,6 @@ export class PolicyCache {
     } finally {
       await this.redis.del(lockKey);
     }
-  }
-
-  /**
-   * Cache deny result for hot path. Optional.
-   */
-  async setDeny(orgId: string, userId: string, permKey: string): Promise<void> {
-    await this.redis.set(`rbac:deny:${orgId}:${userId}:${permKey}`, '1', 'EX', NEG_TTL_SEC);
-  }
-
-  async isDenied(orgId: string, userId: string, permKey: string): Promise<boolean> {
-    const v = await this.redis.get(`rbac:deny:${orgId}:${userId}:${permKey}`);
-    return v === '1';
   }
 
   /**

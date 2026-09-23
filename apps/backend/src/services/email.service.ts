@@ -165,20 +165,6 @@ class EmailService {
     };
   }
 
-  async sendBatch(emailsList: EmailOptions[]): Promise<SendEmailResponse[]> {
-    const results = await Promise.allSettled(emailsList.map((email) => this.sendEmail(email)));
-
-    return results.map((result) => {
-      if (result.status === 'fulfilled') {
-        return result.value;
-      }
-      return {
-        success: false,
-        error: result.reason?.message || 'Unknown error',
-      };
-    });
-  }
-
   async verifyConnection(): Promise<boolean> {
     try {
       if (this.provider === 'smtp' && this.smtpTransporter) {

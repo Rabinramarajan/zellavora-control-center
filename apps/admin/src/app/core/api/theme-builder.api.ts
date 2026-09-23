@@ -15,10 +15,4 @@ export class ThemeBuilderApiService {
     return this.apiData.putData<ThemeConfig>('/theme/config', config);
   }
 
-  uploadBrandingAsset(file: File, type: 'logo' | 'favicon'): Observable<{ url: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
-    return this.apiData.postData<{ url: string }>('/theme/upload', formData);
-  }
 }

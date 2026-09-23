@@ -20,8 +20,4 @@ export class SettingsService {
     return this.repo.set(orgId, key, value, category);
   }
 
-  async deleteSetting(orgId: string, key: string) {
-    await this.getSetting(orgId, key);
-    return this.repo.delete(orgId, key);
-  }
 }

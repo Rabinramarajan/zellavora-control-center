@@ -35,14 +35,11 @@ import {
   ChangePasswordRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
-  SwitchTenantRequest,
-  ValidateClientResponse,
   MfaEnrollStartResponse,
   MfaEnrollConfirmRequest,
   MfaEnrollConfirmResponse,
   MfaDisableRequest,
   MfaRecoveryCodesResponse,
-  TenantSummary,
   ApiError,
 } from '@shared/models';
 
@@ -153,10 +150,6 @@ export class AuthService {
   // -------------------------------------------------------------------------
   // Client code
   // -------------------------------------------------------------------------
-
-  validateClientCode(clientCode: string): Observable<ValidateClientResponse> {
-    return this.http.post<ValidateClientResponse>(`${this.apiUrl}/validate-client`, { clientCode });
-  }
 
   /**
    * The tenant list is public and static for the lifetime of the app, so the
@@ -401,28 +394,6 @@ export class AuthService {
   // Tenant
   // -------------------------------------------------------------------------
 
-  /** GET /auth/tenants — list tenants the user can switch into. */
-  loadAvailableTenants(): Observable<{ tenants: TenantSummary[] }> {
-    return this.http.get<{ tenants: TenantSummary[] }>(`${this.apiUrl}/tenants`).pipe(
-      tap((res) => this.store.setAvailableTenants(res.tenants))
-    );
-  }
-
-  /** Switch to a different tenant — rotates tokens, updates store. */
-  switchTenant(req: SwitchTenantRequest): Observable<LoginSuccessResponse> {
-    this.store.setLoading(true);
-    return this.http
-      .post<LoginSuccessResponse>(`${this.apiUrl}/switch-tenant`, req)
-      .pipe(
-        tap((res) => this.handleSuccess(res)),
-        catchError((err) => {
-          this.store.setError(this.extractErrorMessage(err), this.extractErrorCode(err));
-          this.store.setLoading(false);
-          return throwError(() => err);
-        })
-      );
-  }
-
   // -------------------------------------------------------------------------
   // /auth/me — load the full user context
   // -------------------------------------------------------------------------
@@ -517,12 +488,6 @@ export class AuthService {
   // -------------------------------------------------------------------------
   // Email Verification
   // -------------------------------------------------------------------------
-
-  /** POST /auth/send-verification — send or resend email verification OTP/link. */
-  sendVerificationEmail(email: string): Observable<void> {
-    sessionStorage.setItem('zcc.pendingEmail', email);
-    return this.http.post<void>(`${this.apiUrl}/send-verification`, { email });
-  }
 
   /** POST /auth/verify-email — verify email via deep-link token or OTP code. */
   verifyEmail(token: string, otp: string): Observable<void> {

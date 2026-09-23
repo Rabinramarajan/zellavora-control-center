@@ -60,9 +60,4 @@ export class PasswordService {
     }
   }
 
-  /** Used by login flow: lockout decision based on recent failure count. */
-  static shouldLockout(failedAttempts: number, lockedUntil: Date | null): boolean {
-    if (lockedUntil && lockedUntil > new Date()) return true;
-    return failedAttempts >= 5;
-  }
 }

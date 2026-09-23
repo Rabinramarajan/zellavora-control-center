@@ -19,11 +19,4 @@ export class LayoutService {
     this.isSidebarOpen.set(false);
   }
 
-  openSidebar(): void {
-    this.isSidebarOpen.set(true);
-  }
-
-  toggleDesktopCollapse(): void {
-    this.isSidebarCollapsed.update((v) => !v);
-  }
 }

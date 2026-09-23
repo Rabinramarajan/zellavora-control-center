@@ -7,13 +7,6 @@ export class InvitationRepository extends BaseRepository {
     });
   }
 
-  async markAsUsed(id: string, tx?: TxClient) {
-    return this.getDb(tx).invitation.update({
-      where: { id },
-      data: { used: true },
-    });
-  }
-
   async create(email: string, code: string, tx?: TxClient) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     return this.getDb(tx).invitation.create({

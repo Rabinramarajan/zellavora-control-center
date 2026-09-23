@@ -26,12 +26,10 @@
     "db:migrate": "cd apps/backend && npm run db:migrate",
     "db:reset": "cd apps/backend && npm run db:reset",
     "db:seed": "cd apps/backend && npm run db:seed",
-    "deploy:staging": "echo 'Deploy to staging'",
-    "deploy:production": "echo 'Deploy to production'",
     "docker:build": "docker build -t zcc:latest .",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "analyze": "npm run build -- --stats",
+    "analyze": "npm run build --prefix apps/admin -- --stats-json",
     "type-check:admin": "npm run type-check --prefix apps/admin",
     "type-check:backend": "npm run typecheck --prefix apps/backend",
     "build:all": "npm run build:admin && npm run build:backend",
@@ -43,8 +41,6 @@
     "apps/admin"
   ],
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.11",
-    "@tailwindcss/typography": "^0.5.20",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "eslint": "^8.53.0",
@@ -52,19 +48,5 @@
     "eslint-plugin-prettier": "^5.5.6",
     "prettier": "^3.0.3",
     "typescript": "~6.0.2"
-  },
-  "dependencies": {
-    "@angular/animations": "^22.0.0",
-    "@angular/common": "^22.0.0",
-    "@angular/compiler": "^22.1.0",
-    "@angular/core": "^22.0.0",
-    "@angular/forms": "^22.0.0",
-    "@angular/platform-browser": "^22.0.0",
-    "@angular/platform-browser-dynamic": "^22.0.0",
-    "@angular/router": "^22.0.0",
-    "primeng": "^21.0.0",
-    "rxjs": "^7.8.0",
-    "tslib": "^2.6.0",
-    "zone.js": "^0.15.0"
   }
 }

@@ -537,7 +537,6 @@ export type WrappedResponse<T> = T & {
   msg?: MsgWrapper;
 };
 
-export * from './error.model';
 export * from './theme-builder.model';
 export * from './notification.model';
 export * from './audit.model';

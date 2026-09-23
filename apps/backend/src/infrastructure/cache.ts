@@ -15,7 +15,6 @@ interface CacheClient {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, ttlSeconds: number): Promise<void>;
   delPattern(pattern: string): Promise<void>;
-  del(...keys: string[]): Promise<void>;
 }
 
 class RedisCacheClient implements CacheClient {
@@ -82,17 +81,6 @@ class RedisCacheClient implements CacheClient {
       /* best-effort */
     }
   }
-
-  async del(...keys: string[]): Promise<void> {
-    for (const key of keys) this.l1.delete(key);
-    const redis = this.ensure();
-    if (!redis || keys.length === 0) return;
-    try {
-      await redis.del(...keys);
-    } catch {
-      /* best-effort */
-    }
-  }
 }
 
 /** Singleton — reusing one Redis connection across the process. */
@@ -129,8 +117,4 @@ export async function cacheSet<T>(
 /** Delete every key matching `prefix*` (e.g. 'zcc:cache:user:42:*'). */
 export async function cacheDelPattern(pattern: string): Promise<void> {
   await cache.delPattern(pattern);
-}
-
-export async function cacheDel(...keys: string[]): Promise<void> {
-  await cache.del(...keys);
 }

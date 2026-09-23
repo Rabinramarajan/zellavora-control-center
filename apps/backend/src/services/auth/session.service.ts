@@ -62,31 +62,6 @@ export class SessionService {
     return { sessionId };
   }
 
-  /** Look up a session by id; verifies it is active and not expired. */
-  static async getActive(sessionId: string): Promise<SessionRow> {
-    const session = await prisma.session.findFirst({
-      where: { id: sessionId, isActive: true, expiresAt: { gt: new Date() } },
-    });
-    if (!session) {
-      throw new AppError('Session not found or expired', 401, 'SESSION_INVALID');
-    }
-    return {
-      id: session.id,
-      user_id: session.userId,
-      organization_id: session.organizationId,
-      session_token: '',
-      refresh_token_hash: session.refreshToken,
-      refresh_token_family: null,
-      ip_address: session.ipAddress ?? '',
-      user_agent: session.userAgent ?? '',
-      device_fingerprint: null,
-      created_at: session.createdAt.toISOString(),
-      last_activity_at: session.lastActivityAt.toISOString(),
-      expires_at: session.expiresAt.toISOString(),
-      revoked_at: null,
-    };
-  }
-
   /**
    * Look up by refresh-token hash. Used during refresh-token rotation.
    * Throws on token-reuse (theft detection): if the token is found but the

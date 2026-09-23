@@ -44,11 +44,4 @@ export class PermissionRepository extends BaseRepository {
     });
   }
 
-  async revokeFromRole(roleId: string, permissionId: string, tx?: TxClient) {
-    return this.getDb(tx).rolePermission.delete({
-      where: {
-        roleId_permissionId: { roleId, permissionId },
-      },
-    });
-  }
 }

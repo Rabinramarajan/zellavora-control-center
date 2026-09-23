@@ -51,14 +51,6 @@ export interface SortState { key: string | null; dir: SortDir; }
 export interface TableQuery { search: string; sort: SortState; page: number; pageSize: number; }
 export interface CellEdit<T> { row: T; key: string; value: unknown; previous: unknown; }
 
-/** #4 Export options. */
-export interface ExportOptions {
-  filename?: string;
-  fields?: string[];
-  headers?: Record<string, string>;
-  selectedOnly?: boolean;
-}
-
 /* ------- projected templates ------- */
 
 @Directive({ selector: '[appCell]', standalone: true })
@@ -308,36 +300,6 @@ export class Table<T extends object>  {
     const text = this.sorted().map(r => this.display(col, r)).join('\n');
     try { await navigator.clipboard.writeText(text); } catch { /* noop */ }
     this.closeMenu();
-  }
-
-  /* ================= #4 Export API (call via @ViewChild) ================= */
-  exportCsv(opts: ExportOptions = {}) {
-    const { rows, cols, headers } = this.buildExport(opts);
-    const esc = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-    const csv = [headers.map(esc).join(','), ...rows.map(r => cols.map(c => esc(this.display(c, r))).join(','))].join('\n');
-    this.download(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }), (opts.filename ?? 'export') + '.csv');
-  }
-  /** Dependency-free Excel: HTML-table .xls. For true .xlsx, pipe buildExport() through SheetJS. */
-  exportExcel(opts: ExportOptions = {}) {
-    const { rows, cols, headers } = this.buildExport(opts);
-    const esc = (v: unknown) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-    const thead = '<tr>' + headers.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr>';
-    const tbody = rows.map(r => '<tr>' + cols.map(c => '<td>' + esc(this.display(c, r)) + '</td>').join('') + '</tr>').join('');
-    const html = '<html><head><meta charset="utf-8"></head><body><table border="1">' + thead + tbody + '</table></body></html>';
-    this.download(new Blob([html], { type: 'application/vnd.ms-excel' }), (opts.filename ?? 'export') + '.xls');
-  }
-  protected buildExport(opts: ExportOptions) {
-    const keys = opts.fields ?? this.visibleColumns().map(c => c.key);
-    const cols = keys.map(k => this.columns().find(c => c.key === k)).filter(Boolean) as ColumnDef<T>[];
-    const headers = cols.map(c => opts.headers?.[c.key] ?? c.header);
-    const rows = opts.selectedOnly && this.selectable() ? this.selection() : this.sorted();
-    return { rows, cols, headers };
-  }
-  protected download(blob: Blob, name: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = name; a.click();
-    URL.revokeObjectURL(url);
   }
 }
 

@@ -101,18 +101,6 @@ export class PortfolioService {
     );
   }
 
-  updateSkill(id: string, data: Partial<Skill>): Observable<Skill> {
-    return this.http.put<Skill>(`/api/v1/portfolio/skills/${id}`, data).pipe(
-      tap((updated) => {
-        this.state.update((s) => ({
-          ...s,
-          skills: s.skills.map((skill) => (skill.id === id ? updated : skill)),
-        }));
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
   deleteSkill(id: string): Observable<void> {
     return this.http.delete<void>(`/api/v1/portfolio/skills/${id}`).pipe(
       tap(() => {
@@ -131,44 +119,6 @@ export class PortfolioService {
     return this.http.get<Experience[]>('/api/v1/portfolio/experience').pipe(
       tap((experience) => {
         this.state.update((s) => ({ ...s, experience }));
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  createExperience(
-    exp: Omit<Experience, 'id' | 'createdAt' | 'updatedAt'>
-  ): Observable<Experience> {
-    return this.http.post<Experience>('/api/v1/portfolio/experience', exp).pipe(
-      tap((newExp) => {
-        this.state.update((s) => ({
-          ...s,
-          experience: [...s.experience, newExp],
-        }));
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  updateExperience(id: string, data: Partial<Experience>): Observable<Experience> {
-    return this.http.put<Experience>(`/api/v1/portfolio/experience/${id}`, data).pipe(
-      tap((updated) => {
-        this.state.update((s) => ({
-          ...s,
-          experience: s.experience.map((exp) => (exp.id === id ? updated : exp)),
-        }));
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  deleteExperience(id: string): Observable<void> {
-    return this.http.delete<void>(`/api/v1/portfolio/experience/${id}`).pipe(
-      tap(() => {
-        this.state.update((s) => ({
-          ...s,
-          experience: s.experience.filter((exp) => exp.id !== id),
-        }));
       }),
       catchError((error) => this.handleError(error))
     );
@@ -229,44 +179,6 @@ export class PortfolioService {
     return this.http.get<Service[]>('/api/v1/portfolio/services').pipe(
       tap((services) => {
         this.state.update((s) => ({ ...s, services }));
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  createService(
-    service: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>
-  ): Observable<Service> {
-    return this.http.post<Service>('/api/v1/portfolio/services', service).pipe(
-      tap((newService) => {
-        this.state.update((s) => ({
-          ...s,
-          services: [...s.services, newService],
-        }));
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  updateService(id: string, data: Partial<Service>): Observable<Service> {
-    return this.http.put<Service>(`/api/v1/portfolio/services/${id}`, data).pipe(
-      tap((updated) => {
-        this.state.update((s) => ({
-          ...s,
-          services: s.services.map((service) => (service.id === id ? updated : service)),
-        }));
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  deleteService(id: string): Observable<void> {
-    return this.http.delete<void>(`/api/v1/portfolio/services/${id}`).pipe(
-      tap(() => {
-        this.state.update((s) => ({
-          ...s,
-          services: s.services.filter((service) => service.id !== id),
-        }));
       }),
       catchError((error) => this.handleError(error))
     );

@@ -124,36 +124,4 @@ export class UserRoleService {
 
     await this.engine.invalidate(before.user_id, before.organization_id);
   }
-
-  /**
-   * Bulk assign a role to many users. Useful when creating departments
-   * or onboarding cohorts.
-   */
-  async bulkAssign(
-    userIds: string[],
-    roleId: string,
-    orgId: string,
-    actorId: string
-  ): Promise<{ inserted: number; skipped: number; errors: number }> {
-    let inserted = 0,
-      skipped = 0,
-      errors = 0;
-    for (const userId of userIds) {
-      try {
-        await this.assign(userId, { roleId }, orgId, actorId);
-        inserted++;
-      } catch (e: any) {
-        if (e.status === 409) skipped++;
-        else errors++;
-      }
-    }
-    await this.audit.log({
-      organizationId: orgId,
-      actorId,
-      action: 'user_role.bulk_assign',
-      description: `Bulk-assigned role ${roleId} to ${userIds.length} users`,
-      newValues: { roleId, requested: userIds.length, inserted, skipped, errors },
-    });
-    return { inserted, skipped, errors };
-  }
 }

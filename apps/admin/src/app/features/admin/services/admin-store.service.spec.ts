@@ -61,13 +61,10 @@ describe('AdminStoreService', () => {
       'saveResource',
       'deleteResource',
       'searchBranches',
-      'createNewBranch',
       'openBranch',
       'saveBranch',
       'deleteBranch',
       'searchAuditLogs',
-      'loadAuditLogDetails',
-      'searchConfigs',
       'openConfig',
       'saveConfig',
     ]);

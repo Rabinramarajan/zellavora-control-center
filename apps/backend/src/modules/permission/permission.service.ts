@@ -1,16 +1,7 @@
 import { PermissionRepository } from './permission.repository';
-import { AppError } from '../../middleware/error';
 
 export class PermissionService {
   private readonly repo = new PermissionRepository();
-
-  async getPermission(id: string) {
-    const perm = await this.repo.findById(id);
-    if (!perm) {
-      throw new AppError('Permission not found', 404, 'PERMISSION_NOT_FOUND');
-    }
-    return perm;
-  }
 
   async getAllPermissions() {
     return this.repo.listAll();
@@ -33,7 +24,4 @@ export class PermissionService {
     return this.repo.assignToRole(roleId, permissionId, effect, organizationId);
   }
 
-  async revokePermissionFromRole(roleId: string, permissionId: string) {
-    return this.repo.revokeFromRole(roleId, permissionId);
-  }
 }

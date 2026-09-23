@@ -4,27 +4,20 @@ import { ApiDataService } from '@core/http/api-data.service';
 import {
   ApiEnvelope,
   CopyRoleRequest,
-  CreateIamUserRequest,
   GroupDetail,
   GroupListItem,
-  GroupTreeNode,
   IamUserDetail,
   IamUserListItem,
   PaginatedList,
   ResourceDetail,
   ResourceListItem,
-  ResourceTreeNode,
   RoleDetail,
   RoleListItem,
   SetGroupRolesRequest,
   SetRolePermissionsRequest,
   SetUserGroupsRequest,
   SetUserRolesRequest,
-  UpdateIamUserRequest,
-  AddGroupMembersRequest,
-  UserStatus,
   EntityStatus,
-  GroupType,
   ResourceType,
   RoleScope,
   } from '@shared/models/iam.model';
@@ -54,15 +47,6 @@ export interface CreateResourceRequest {
   actions?: Array<{ action: string }>;
 }
 
-export interface UpdateResourceRequest {
-  name?: string;
-  category?: string | null;
-  description?: string | null;
-  parentId?: string | null;
-  ownerId?: string | null;
-  metadata?: Record<string, unknown> | null;
-}
-
 export interface CreateRoleRequest {
   name: string;
   description?: string | null;
@@ -70,36 +54,6 @@ export interface CreateRoleRequest {
   status?: EntityStatus;
   isSystem?: boolean;
   organizationId?: string;
-}
-
-export interface UpdateRoleRequest {
-  name?: string;
-  description?: string | null;
-  status?: EntityStatus;
-}
-
-export interface CreateGroupRequest {
-  name: string;
-  description?: string | null;
-  type?: GroupType;
-  status?: EntityStatus;
-  parentId?: string | null;
-  ownerId?: string | null;
-  memberIds?: string[];
-  roleIds?: string[];
-}
-
-export interface UpdateGroupRequest {
-  name?: string;
-  description?: string | null;
-  status?: EntityStatus;
-  parentId?: string | null;
-  ownerId?: string | null;
-}
-
-export interface SetStatusRequest {
-  status: UserStatus;
-  reason?: string | null;
 }
 
 export interface PermissionListItem {
@@ -126,20 +80,12 @@ export class IamApiService {
     return this.apiData.getData<ApiEnvelope<PaginatedList<ResourceListItem>>>('/iam/resources', this.toParams(query));
   }
 
-  getResourceTree(): Observable<ApiEnvelope<ResourceTreeNode[]>> {
-    return this.apiData.getData<ApiEnvelope<ResourceTreeNode[]>>('/iam/resources/tree');
-  }
-
   getResource(id: string): Observable<ApiEnvelope<ResourceDetail>> {
     return this.apiData.getData<ApiEnvelope<ResourceDetail>>(`/iam/resources/${id}`);
   }
 
   createResource(body: CreateResourceRequest): Observable<ApiEnvelope<ResourceDetail>> {
     return this.apiData.postData<ApiEnvelope<ResourceDetail>>('/iam/resources', body);
-  }
-
-  updateResource(id: string, body: UpdateResourceRequest): Observable<ApiEnvelope<ResourceDetail>> {
-    return this.apiData.putData<ApiEnvelope<ResourceDetail>>(`/iam/resources/${id}`, body);
   }
 
   addResourceAction(id: string, body: { action: string }): Observable<ApiEnvelope<unknown>> {
@@ -162,10 +108,6 @@ export class IamApiService {
     return this.apiData.getData<ApiEnvelope<PaginatedList<RoleListItem>>>('/iam/roles', this.toParams(query));
   }
 
-  listAllRoles(): Observable<ApiEnvelope<RoleListItem[]>> {
-    return this.apiData.getData<ApiEnvelope<RoleListItem[]>>('/iam/roles/all');
-  }
-
   /** Every permission key in the system (for the role permission matrix). */
   listAllPermissions(): Observable<ApiEnvelope<PermissionListItem[]>> {
     return this.apiData.getData<ApiEnvelope<PermissionListItem[]>>('/permissions');
@@ -177,10 +119,6 @@ export class IamApiService {
 
   createRole(body: CreateRoleRequest): Observable<ApiEnvelope<RoleDetail>> {
     return this.apiData.postData<ApiEnvelope<RoleDetail>>('/iam/roles', body);
-  }
-
-  updateRole(id: string, body: UpdateRoleRequest): Observable<ApiEnvelope<RoleDetail>> {
-    return this.apiData.putData<ApiEnvelope<RoleDetail>>(`/iam/roles/${id}`, body);
   }
 
   setRolePermissions(id: string, body: SetRolePermissionsRequest): Observable<ApiEnvelope<unknown>> {
@@ -203,24 +141,8 @@ export class IamApiService {
     return this.apiData.getData<ApiEnvelope<PaginatedList<GroupListItem>>>('/iam/groups', this.toParams(query));
   }
 
-  getGroupTree(): Observable<ApiEnvelope<GroupTreeNode[]>> {
-    return this.apiData.getData<ApiEnvelope<GroupTreeNode[]>>('/iam/groups/tree');
-  }
-
   getGroup(id: string): Observable<ApiEnvelope<GroupDetail>> {
     return this.apiData.getData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}`);
-  }
-
-  createGroup(body: CreateGroupRequest): Observable<ApiEnvelope<GroupDetail>> {
-    return this.apiData.postData<ApiEnvelope<GroupDetail>>('/iam/groups', body);
-  }
-
-  updateGroup(id: string, body: UpdateGroupRequest): Observable<ApiEnvelope<GroupDetail>> {
-    return this.apiData.putData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}`, body);
-  }
-
-  addGroupMembers(id: string, body: AddGroupMembersRequest): Observable<ApiEnvelope<GroupDetail>> {
-    return this.apiData.postData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}/members`, body);
   }
 
   removeGroupMember(id: string, userId: string): Observable<ApiEnvelope<GroupDetail>> {
@@ -245,18 +167,6 @@ export class IamApiService {
 
   getIamUser(id: string): Observable<ApiEnvelope<IamUserDetail>> {
     return this.apiData.getData<ApiEnvelope<IamUserDetail>>(`/iam/users/${id}`);
-  }
-
-  createIamUser(body: CreateIamUserRequest): Observable<ApiEnvelope<IamUserDetail>> {
-    return this.apiData.postData<ApiEnvelope<IamUserDetail>>('/iam/users', body);
-  }
-
-  updateIamUser(id: string, body: UpdateIamUserRequest): Observable<ApiEnvelope<IamUserDetail>> {
-    return this.apiData.putData<ApiEnvelope<IamUserDetail>>(`/iam/users/${id}`, body);
-  }
-
-  setIamUserStatus(id: string, body: SetStatusRequest): Observable<ApiEnvelope<IamUserDetail>> {
-    return this.apiData.putData<ApiEnvelope<IamUserDetail>>(`/iam/users/${id}/status`, body);
   }
 
   lockIamUser(id: string, reason?: string | null): Observable<ApiEnvelope<IamUserDetail>> {

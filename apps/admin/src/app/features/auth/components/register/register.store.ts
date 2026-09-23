@@ -309,15 +309,6 @@ export class RegisterStore {
     this.saveDraft();
   }
 
-  setSessionId(sessionId: string) {
-    this.state.update((s) => ({ ...s, sessionId }));
-    try {
-      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
-    } catch {
-      // localStorage unavailable
-    }
-  }
-
   getSessionId(): string | null {
     return this.state().sessionId;
   }
@@ -368,14 +359,6 @@ export class RegisterStore {
       localStorage.removeItem(SESSION_STORAGE_KEY);
     } catch {
       // localStorage unavailable
-    }
-  }
-
-  hasDraft(): boolean {
-    try {
-      return localStorage.getItem(DRAFT_STORAGE_KEY) !== null;
-    } catch {
-      return false;
     }
   }
 

@@ -91,15 +91,4 @@ export class AuditService {
     };
   }
 
-  /**
-   * Verify the hash chain for an org.
-   * Returns the first index where the chain breaks, or null if intact.
-   */
-  async verifyChain(orgId: string): Promise<number | null> {
-    const { data, error } = await this.db.rpc('verify_audit_chain', {
-      p_org_id: orgId,
-    });
-    if (error) throw new Error(`Chain verify failed: ${error.message}`);
-    return data as number | null;
-  }
 }

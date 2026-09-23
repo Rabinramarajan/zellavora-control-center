@@ -185,25 +185,6 @@ export class SettingsComponent {
     }
   }
 
-  async savePreferences() {
-    try {
-      await firstValueFrom(this.apiService.updateSettings('preferences', this.preferenceSettings));
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Saved',
-        detail: 'Preferences saved successfully',
-        life: 3000,
-      });
-    } catch {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to save preferences',
-        life: 3000,
-      });
-    }
-  }
-
   // -------------------------------------------------------------------------
   // SECURITY TAB — change password + MFA management
   // -------------------------------------------------------------------------

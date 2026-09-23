@@ -15,7 +15,6 @@ import {
   AuditLog,
   AuditLogSearchCriteria,
   Config,
-  ConfigSearchCriteria,
   Group,
 } from '../models/admin.models';
 
@@ -237,12 +236,6 @@ export class AdminStoreService {
     }, 'Failed to load branches');
   }
 
-  async createBranch(): Promise<Branch> {
-    return this.runOperation(async () => {
-      return await this.api.createNewBranch();
-    }, 'Failed to create branch');
-  }
-
   async openBranch(branchId: number): Promise<Branch> {
     return this.runOperation(async () => {
       return await this.api.openBranch(branchId);
@@ -292,26 +285,7 @@ export class AdminStoreService {
     }, 'Failed to load audit logs');
   }
 
-  async openAuditLog(auditLogId: number): Promise<AuditLog> {
-    return this.runOperation(async () => {
-      return await this.api.loadAuditLogDetails(auditLogId);
-    }, 'Failed to open audit log');
-  }
-
   // ==================== CONFIG OPERATIONS ====================
-
-  async loadConfigs(criteria: ConfigSearchCriteria): Promise<Config[]> {
-    return this.runOperation(async () => {
-      const result = await this.api.searchConfigs(criteria);
-      const configs = (result.searchResult || []) as any[];
-      this.state.update((s) => ({
-        ...s,
-        configs: configs as Config[],
-        lastUpdated: new Date(),
-      }));
-      return configs as Config[];
-    }, 'Failed to load configs');
-  }
 
   async openConfig(configId: number): Promise<Config> {
     return this.runOperation(async () => {

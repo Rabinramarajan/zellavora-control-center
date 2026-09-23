@@ -11,10 +11,6 @@ export class CmsBuilderApiService {
     return this.apiData.getData<CmsPage[]>('/cms/pages');
   }
 
-  getPageBySlug(slug: string): Observable<CmsPage> {
-    return this.apiData.getData<CmsPage>(`/cms/pages/slug/${slug}`);
-  }
-
   savePage(page: Partial<CmsPage>): Observable<CmsPage> {
     return this.apiData.postData<CmsPage>('/cms/pages', page);
   }

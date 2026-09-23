@@ -167,10 +167,6 @@ export interface GroupDetail extends GroupListItem {
   roles: GroupRole[];
 }
 
-export interface AddGroupMembersRequest {
-  userIds: string[];
-}
-
 export interface SetGroupRolesRequest {
   roleIds: string[];
   mode?: 'replace' | 'merge';
@@ -227,34 +223,6 @@ export interface IamUserDetail extends IamUserListItem {
   groups: IamUserGroup[];
 }
 
-export interface CreateIamUserRequest {
-  email: string;
-  username?: string;
-  fullName: string;
-  firstName?: string;
-  lastName?: string;
-  mobile?: string;
-  department?: string | null;
-  jobTitle?: string | null;
-  timezone?: string;
-  language?: string;
-  sendInvite?: boolean;
-  roleIds?: string[];
-  groupIds?: string[];
-}
-
-export interface UpdateIamUserRequest {
-  fullName?: string;
-  firstName?: string;
-  lastName?: string;
-  mobile?: string | null;
-  department?: string | null;
-  jobTitle?: string | null;
-  timezone?: string | null;
-  language?: string;
-  status?: UserStatus;
-}
-
 export interface SetUserRolesRequest {
   roleIds: string[];
   mode?: 'replace' | 'merge';
@@ -264,9 +232,4 @@ export interface SetUserRolesRequest {
 export interface SetUserGroupsRequest {
   groupIds: string[];
   mode?: 'replace' | 'merge';
-}
-
-export interface SetUserStatusRequest {
-  status: UserStatus;
-  reason?: string | null;
 }

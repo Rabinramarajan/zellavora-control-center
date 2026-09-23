@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { Project, ProjectStatus, PaginationParams } from '@shared/models';
+import { Project, PaginationParams } from '@shared/models';
 import { ProjectRepository } from '@core/repositories/project.repository';
 
 interface ProjectsState {
@@ -122,25 +122,6 @@ export class ProjectsService {
       }),
       catchError((error) => this.handleError(error))
     );
-  }
-
-  publishProject(id: string): Observable<Project> {
-    return this.updateProject(id, {
-      status: 'published' as ProjectStatus,
-      publishedAt: new Date(),
-    });
-  }
-
-  archiveProject(id: string): Observable<Project> {
-    return this.updateProject(id, {
-      status: 'archived' as ProjectStatus,
-    });
-  }
-
-  unarchiveProject(id: string): Observable<Project> {
-    return this.updateProject(id, {
-      status: 'draft' as ProjectStatus,
-    });
   }
 
   private loadProjects(): void {
