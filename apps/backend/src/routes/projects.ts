@@ -1,5 +1,6 @@
 import { Router, type Router as ExpressRouter } from 'express';
-import { supabase } from '../config/supabase';
+import { Prisma, type PortfolioProject } from '@prisma/client';
+import { prisma } from '../infrastructure/prisma';
 import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { z } from 'zod';
@@ -10,11 +11,40 @@ const CreateProjectSchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1),
   description: z.string().min(1),
+  content: z.string().optional(),
   category: z.string().optional(),
+  coverImageUrl: z.string().optional(),
+  thumbnailUrl: z.string().optional(),
   githubUrl: z.string().optional(),
   liveDemoUrl: z.string().optional(),
   websiteUrl: z.string().optional(),
 });
+
+const UpdateProjectSchema = CreateProjectSchema.partial();
+
+const isUuid = (value: string): boolean => z.string().uuid().safeParse(value).success;
+
+const notFound = (): AppError => new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+
+const toSlugConflict = (error: unknown): unknown =>
+  error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002'
+    ? new AppError('Slug already in use', 409, 'SLUG_TAKEN')
+    : error;
+
+const requireTenant = (req: AuthRequest): string => {
+  if (!req.tenantId) throw new AppError('Unauthorized', 401, 'UNAUTHORIZED');
+  return req.tenantId;
+};
+
+/** Load a live project belonging to the caller's organization, or 404. */
+const findTenantProject = async (id: string, tenantId: string): Promise<PortfolioProject> => {
+  if (!isUuid(id)) throw notFound();
+  const project = await prisma.portfolioProject.findFirst({
+    where: { id, organizationId: tenantId, deletedAt: null },
+  });
+  if (!project) throw notFound();
+  return project;
+};
 
 /**
  * @swagger
@@ -60,26 +90,29 @@ router.get('/', async (req, res, next) => {
   try {
     const { page = 1, pageSize = 20, status } = req.query;
 
-    const query = supabase
-      .from('projects')
-      .select('*', { count: 'exact' })
-      .eq('status', status || 'published');
-
     const pageNum = parseInt(page as string) || 1;
     const pageSizeNum = parseInt(pageSize as string) || 20;
+    const where: Prisma.PortfolioProjectWhereInput = {
+      status: (status as string) || 'published',
+      deletedAt: null,
+    };
 
-    const { data, count, error } = await query
-      .order('created_at', { ascending: false })
-      .range((pageNum - 1) * pageSizeNum, pageNum * pageSizeNum - 1);
-
-    if (error) throw error;
+    const [data, total] = await Promise.all([
+      prisma.portfolioProject.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * pageSizeNum,
+        take: pageSizeNum,
+      }),
+      prisma.portfolioProject.count({ where }),
+    ]);
 
     res.json({
       data,
       pagination: {
         page: pageNum,
         pageSize: pageSizeNum,
-        total: count || 0,
+        total,
       },
     });
   } catch (error) {
@@ -113,17 +146,12 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/slug/:slug', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('slug', req.params.slug)
-      .single();
+    const project = await prisma.portfolioProject.findFirst({
+      where: { slug: req.params.slug, deletedAt: null },
+    });
+    if (!project) throw notFound();
 
-    if (error || !data) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
-    }
-
-    res.json(data);
+    res.json(project);
   } catch (error) {
     next(error);
   }
@@ -160,17 +188,13 @@ router.get('/slug/:slug', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', req.params.id)
-      .single();
+    if (!isUuid(req.params.id)) throw notFound();
+    const project = await prisma.portfolioProject.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+    });
+    if (!project) throw notFound();
 
-    if (error || !data) {
-      throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
-    }
-
-    res.json(data);
+    res.json(project);
   } catch (error) {
     next(error);
   }
@@ -202,6 +226,8 @@ router.get('/:id', async (req, res, next) => {
  *         description: Unauthorized
  *       403:
  *         description: Insufficient permission
+ *       409:
+ *         description: Slug already in use
  */
 router.post(
   '/',
@@ -209,19 +235,25 @@ router.post(
   requirePermission('projects:create'),
   async (req: AuthRequest, res, next) => {
     try {
-      const data = CreateProjectSchema.parse(req.body);
+      const tenantId = requireTenant(req);
+      const { title, slug, description, ...optional } = CreateProjectSchema.parse(req.body);
 
-      const { data: project, error } = await supabase
-        .from('projects')
-        .insert({ user_id: req.userId, ...data, status: 'draft' })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const project = await prisma.portfolioProject.create({
+        data: {
+          ...optional,
+          title,
+          slug,
+          description,
+          organizationId: tenantId,
+          status: 'draft',
+          createdBy: req.userId,
+          updatedBy: req.userId,
+        },
+      });
 
       res.status(201).json(project);
     } catch (error) {
-      next(error);
+      next(toSlugConflict(error));
     }
   }
 );
@@ -256,9 +288,11 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/Project'
  *       403:
- *         description: Not the project owner
+ *         description: Insufficient permission
  *       404:
  *         description: Project not found
+ *       409:
+ *         description: Slug already in use
  */
 router.put(
   '/:id',
@@ -266,32 +300,17 @@ router.put(
   requirePermission('projects:write'),
   async (req: AuthRequest, res, next) => {
     try {
-      const { data: project, error: fetchError } = await supabase
-        .from('projects')
-        .select('user_id')
-        .eq('id', req.params.id)
-        .single();
+      const project = await findTenantProject(req.params.id, requireTenant(req));
+      const data = UpdateProjectSchema.parse(req.body);
 
-      if (fetchError || !project) {
-        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
-      }
-
-      if (project.user_id !== req.userId) {
-        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-      }
-
-      const { data: updated, error } = await supabase
-        .from('projects')
-        .update(req.body)
-        .eq('id', req.params.id)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const updated = await prisma.portfolioProject.update({
+        where: { id: project.id },
+        data: { ...data, updatedBy: req.userId },
+      });
 
       res.json(updated);
     } catch (error) {
-      next(error);
+      next(toSlugConflict(error));
     }
   }
 );
@@ -316,7 +335,7 @@ router.put(
  *       204:
  *         description: Project deleted
  *       403:
- *         description: Not the project owner
+ *         description: Insufficient permission
  *       404:
  *         description: Project not found
  */
@@ -326,23 +345,12 @@ router.delete(
   requirePermission('projects:delete'),
   async (req: AuthRequest, res, next) => {
     try {
-      const { data: project, error: fetchError } = await supabase
-        .from('projects')
-        .select('user_id')
-        .eq('id', req.params.id)
-        .single();
+      const project = await findTenantProject(req.params.id, requireTenant(req));
 
-      if (fetchError || !project) {
-        throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
-      }
-
-      if (project.user_id !== req.userId) {
-        throw new AppError('Unauthorized', 403, 'FORBIDDEN');
-      }
-
-      const { error } = await supabase.from('projects').delete().eq('id', req.params.id);
-
-      if (error) throw error;
+      await prisma.portfolioProject.update({
+        where: { id: project.id },
+        data: { deletedAt: new Date(), updatedBy: req.userId },
+      });
 
       res.status(204).send();
     } catch (error) {
@@ -381,20 +389,14 @@ router.post(
   requirePermission('projects:write'),
   async (req: AuthRequest, res, next) => {
     try {
-      const { error } = await supabase
-        .from('projects')
-        .update({ status: 'published', published_at: new Date().toISOString() })
-        .eq('id', req.params.id);
+      const project = await findTenantProject(req.params.id, requireTenant(req));
 
-      if (error) throw error;
+      const published = await prisma.portfolioProject.update({
+        where: { id: project.id },
+        data: { status: 'published', publishedAt: new Date(), updatedBy: req.userId },
+      });
 
-      const { data: project } = await supabase
-        .from('projects')
-        .select()
-        .eq('id', req.params.id)
-        .single();
-
-      res.json(project);
+      res.json(published);
     } catch (error) {
       next(error);
     }
@@ -431,20 +433,14 @@ router.post(
   requirePermission('projects:write'),
   async (req: AuthRequest, res, next) => {
     try {
-      const { error } = await supabase
-        .from('projects')
-        .update({ status: 'archived' })
-        .eq('id', req.params.id);
+      const project = await findTenantProject(req.params.id, requireTenant(req));
 
-      if (error) throw error;
+      const archived = await prisma.portfolioProject.update({
+        where: { id: project.id },
+        data: { status: 'archived', updatedBy: req.userId },
+      });
 
-      const { data: project } = await supabase
-        .from('projects')
-        .select()
-        .eq('id', req.params.id)
-        .single();
-
-      res.json(project);
+      res.json(archived);
     } catch (error) {
       next(error);
     }

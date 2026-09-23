@@ -97,6 +97,7 @@ model Organization {
   timesheets     Timesheet[]
   teams          Team[]
   projects       Project[]
+  portfolioProjects PortfolioProject[]
 
   @@map("organizations")
 }
@@ -1295,4 +1296,44 @@ model Project {
   @@index([status])
   @@index([createdAt(sort: Desc)])
   @@map("projects")
+}
+
+// Public portfolio showcase entries, kept apart from operational projects.
+model PortfolioProject {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  title           String    @db.VarChar(255)
+  slug            String    @db.VarChar(255)
+  description     String    @db.Text
+  content         String?   @db.Text
+  category        String?   @db.VarChar(100)
+  status          String    @default("draft") // draft, published, archived
+
+  // Links & media
+  coverImageUrl   String?   @map("cover_image_url")
+  thumbnailUrl    String?   @map("thumbnail_url")
+  githubUrl       String?   @map("github_url")
+  liveDemoUrl     String?   @map("live_demo_url")
+  websiteUrl      String?   @map("website_url")
+
+  // Metrics
+  viewCount       Int       @default(0) @map("view_count")
+  downloadCount   Int       @default(0) @map("download_count")
+  publishedAt     DateTime? @map("published_at") @db.Timestamptz
+
+  // Relations
+  createdBy       String?   @map("created_by") @db.Uuid
+  updatedBy       String?   @map("updated_by") @db.Uuid
+
+  // Audit
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("portfolio_projects")
 }
