@@ -1,505 +1,199 @@
-<!-- ============ Toolbar ============ -->
-<div class="dt-toolbar">
-  <div class="dt-toolbar__left">
-    @if (selectionMode() === 'multiple' && selectedCount() > 0) {
-      <span class="dt-chip">{{ selectedCount() }} selected</span>
-    }
-
+<div class="st-toolbar">
+  <div class="st-toolbar__start">
     <ng-content select="[toolbar-start]" />
   </div>
 
-  <div class="dt-toolbar__right">
+  <div class="st-toolbar__end">
     @if (searchable()) {
-    <div class="dt-search-wrapper">
-      <input
-        type="search"
-        [placeholder]="searchPlaceholder()"
-        [value]="globalSearch()"
-        (input)="globalSearch.set($any($event.target).value)"
-        aria-label="Search table"
-        class="dt-search-input" />
-      <button
-        class="dt-search-clear"
-        *ngIf="globalSearch().trim().length > 0"
-        (click)="globalSearch.set('')"
-        aria-label="Clear search">×</button>
-    </div>
-    }
-
-    @if (columnToggle()) {
-    <div class="dt-menuwrap">
-      <button class="dt-btn" (click)="toggleColPanel()" aria-haspopup="true">Columns &#9662;</button>
-      @if (colPanelOpen()) {
-      <div class="dt-menu dt-menu--right">
-        @for (col of allColumns(); track col.key) {
-        <label class="dt-menu__item">
-          <input
-            type="checkbox"
-            [checked]="!hidden().has(col.key)"
-            (change)="toggleColumn(col.key)" />
-          {{ col.header }}
-        </label>
-        }
+      <div class="st-search">
+        <label class="st-sr-only" [for]="searchId">{{ searchPlaceholder() }}</label>
+        <span class="st-search__icon" aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          class="st-search__input"
+          [id]="searchId"
+          [placeholder]="searchPlaceholder()"
+          [value]="search()"
+          (input)="onSearch($event)" />
       </div>
-      }
-    </div>
     }
-
     <ng-content select="[toolbar-end]" />
   </div>
 </div>
 
-<!-- ============ Table Container ============ -->
-<div class="dt-scroll" [class.dt-table--fixed]="hasFrozenColumns()">
-  <!-- ============ Fixed (Pinned) Columns Container ============ -->
-  @if (hasFrozenColumns()) {
-  <div class="dt-fixed-columns__wrapper">
-    <div class="dt-fixed-columns__scroll-pane">
-      <table class="dt-fixed-columns__table">
-        <colgroup>
-          @for (col of pinnedColumnsLeft(); track col.key) {
-          <col [style.width]="col.width ?? '150'" /> }
-        </colgroup>
-        <thead>
-          <tr>
-            @if (selectable()) {
-            <th class="dt-th--check dt-th--frozen">
+@if (store.selectedCount() > 0) {
+  <div class="st-bulkbar" role="status">
+    <span class="st-bulkbar__count">{{ store.selectedCount() }} selected</span>
+    <button type="button" class="st-link" (click)="clearSelection()">Clear</button>
+    <div class="st-bulkbar__actions">
+      <ng-content select="[bulk-actions]" />
+    </div>
+  </div>
+}
+
+<div class="st-scroll">
+  <table class="st-table" [attr.aria-busy]="loading()">
+    @if (caption()) {
+      <caption class="st-sr-only">{{ caption() }}</caption>
+    }
+
+    <colgroup>
+      @if (selectable()) {
+        <col class="st-col--check" />
+      }
+      @for (column of store.visibleColumns(); track column.key) {
+        <col [style.width]="column.width ?? null" />
+      }
+    </colgroup>
+
+    <thead>
+      <tr>
+        @if (selectable()) {
+          <th scope="col" class="st-th st-th--check">
+            @if (selectionMode() === 'multiple') {
               <input
                 type="checkbox"
-                [checked]="selectAll === 'all'"
-                [indeterminate]="selectAll === 'partial'"
-                (change)="toggleAll()" aria-label="Select all" />
-            </th>
+                class="st-check"
+                aria-label="Select all rows on this page"
+                [checked]="store.allPageSelected()"
+                [indeterminate]="store.somePageSelected()"
+                [disabled]="store.pageRows().length === 0"
+                (change)="store.togglePage()" />
+            } @else {
+              <span class="st-sr-only">Select</span>
             }
-            @for (col of pinnedColumnsLeft(); track col.key) {
-            <th
-              class="dt-th"
-              [class.dt-th--frozen]="isFrozen(col.key)"
-              [style.left.px]="frozenColumnLeftOffset(col.key)"
-              [style.text-align]="col.align ?? 'left'"
-              [class.dt-th--sortable]="col.sortable"
-              [attr.aria-sort]="ariaSort(col)">
-              <span class="dt-th__label"
-                (click="col.sortable && toggleSort(col.key)">
-                {{ col.header }}
-                @if (col.sortable) {
-                <span class="dt-sort">{{ sortIndicator(col) === 'asc' ? '▲' : sortIndicator(col) === 'desc' ? '▼' : '≀' }}</span>
+          </th>
+        }
+
+        @for (column of store.visibleColumns(); track column.key) {
+          <th
+            scope="col"
+            class="st-th"
+            [class.st-align-center]="column.align === 'center'"
+            [class.st-align-right]="column.align === 'right'"
+            [attr.aria-sort]="column.sortable ? ariaSort(column) : null">
+            @if (column.sortable) {
+              <button
+                type="button"
+                class="st-sort"
+                [class.st-sort--active]="sort().key === column.key"
+                (click)="store.toggleSort(column.key)">
+                {{ column.header }}
+                <span class="st-sort__icon" aria-hidden="true">{{ sortIcon(column) }}</span>
+              </button>
+            } @else {
+              {{ column.header }}
+            }
+          </th>
+        }
+      </tr>
+    </thead>
+
+    <tbody>
+      @if (showSkeleton()) {
+        @for (line of skeleton(); track line) {
+          <tr class="st-row st-row--skeleton" aria-hidden="true">
+            <td class="st-td" [attr.colspan]="columnSpan()"><span class="st-skeleton"></span></td>
+          </tr>
+        }
+      } @else {
+        @for (row of store.pageRows(); track rowKey(row); let index = $index) {
+          <tr class="st-row" [class.st-row--selected]="store.isSelected(row)">
+            @if (selectable()) {
+              <td class="st-td st-td--check">
+                <input
+                  type="checkbox"
+                  class="st-check"
+                  aria-label="Select row"
+                  [checked]="store.isSelected(row)"
+                  (change)="store.toggleRow(row)" />
+              </td>
+            }
+
+            @for (column of store.visibleColumns(); track column.key) {
+              <td
+                class="st-td"
+                [class]="column.cellClass ?? ''"
+                [class.st-align-center]="column.align === 'center'"
+                [class.st-align-right]="column.align === 'right'">
+                @if (cellTemplate(column); as template) {
+                  <ng-container
+                    [ngTemplateOutlet]="template"
+                    [ngTemplateOutletContext]="cellContext(column, row, index)" />
+                } @else {
+                  {{ store.display(column, row) }}
                 }
-              </span>
-              @if (col.editable) {
-              <button class="dt-colmenu-btn" (click)="openMenu(col.key, $event)" aria-label="Column menu">&#8942;</button>
-              }
-            </th>
+              </td>
             }
           </tr>
-        </thead>
-        <tbody>
-          @for (row of pagedRows; track idFn(row); let i = $index) {
-          <tr [class.dt-row--selected]="isSelected(row)"
-              [class.dt-row--freeze-first]="freezeFirstRow() && i === 0"
-              [class.dt-row--freeze-last]="freezeLastRow() && i === pagedRows.length - 1"
-              (click)="rowClick.emit(row)">
-            <ng-container [ngTemplateOutlet]="rowTpl"
-              [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-  }
-
-  <!-- ============ Main Content Area (with Virtual Scroll or Regular) ============ -->
-  @if (virtualScroll()) {
-  <!-- CDK Virtual Scroll Viewport -->
-  <cdk-virtual-scroll-viewport
-    [itemSize]="itemSize()"
-    class="dt-scroll__virtual"
-    [style.height]="virtualHeight()"
-    (scrolled)="onScroll($event)">
-    <table class="dt-table__virtual" [class.dt-table--fixed]="hasFrozenColumns()">
-      <colgroup>
-        @if (selectable()) {
-        <col style="width:44px" /> }
-        @if (reorderable()) {
-        <col style="width:36px" />
-        @for (col of orderedColumns; track col.key) {
-        <col [style.width]="col.width ?? '150'" /> }
-        }
-      </colgroup>
-
-      <thead>
-        <tr>
-          @if (selectable() && $first) {
-          <th class="dt-th--check">
-            <input
-              type="checkbox"
-              [checked]="selectAll !== 'none'"
-              [indeterminate]="selectAll === 'partial'"
-              (change)="toggleAll()"
-              aria-label="Select all" />
-          </th>
-          }
-          @if (reorderable() && $first) {
-          <th></th>
-          }
-          @for (col of orderedColumns; track col.key) {
-          <th
-            class="dt-th"
-            [class.dt-th--frozen]="isFrozen(col.key)"
-            [style.left.px]="frozenColumnOffset(col.key)"
-            [style.text-align]="col.align ?? 'left'"
-            [class.dt-th--sortable]="col.sortable"
-            [attr.aria-sort]="ariaSort(col)">
-            <span class="dt-th__label"
-              (click="col.sortable && toggleSort(col.key)">
-              {{ col.header }}
-              @if (col.sortable) {
-              <span class="dt-sort">{{ sortIndicator(col) === 'asc' ? '▲' : sortIndicator(col) === 'desc' ? '▼' : '≀' }}</span>
-              }
-            </span>
-            @if (col.editable) {
-            <button class="dt-colmenu-btn" (click)="openMenu(col.key, $event)" aria-label="Column menu">&#8942;</button>
-            }
-          </th>
-          }
-        </tr>
-      </thead>
-
-      <tbody>
-        @for (row of pagedRows; track idFn(row); let i = $index) {
-        <tr
-          *cdkVirtualFor="let row of pagedRows; let i = index"
-          [class.dt-row--selected]="isSelected(row)"
-          [class.dt-row--freeze-first]="freezeFirstRow() && i === 0"
-          [class.dt-row--freeze-last]="freezeLastRow() && i === pagedRows.length - 1"
-          (click)="rowClick.emit(row)"
-          [cdkDragDisabled]="getRowDragDisabled(i)"
-          [cdkDragData]="row"
-          (cdkDragEnded)="onRowDragEnd($event)">
-          <ng-container [ngTemplateOutlet]="rowTpl"
-            [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
-        </tr>
-        }
-      </tbody>
-    </table>
-  </cdk-virtual-scroll-viewport>
-  } @else {
-  <!-- Regular (non-virtual) table -->
-  <div class="dt-scroll__content">
-    <table class="dt-table" [class.dt-table--fixed]="hasFrozenColumns()">
-      <colgroup>
-        @if (selectable()) {
-        <col style="width:44px" />
-        }
-        @if (reorderable()) {
-        <col style="width:36px" />
-        }
-        @for (col of orderedColumns; track col.key) {
-        <col [style.width]="col.width ?? '150'" />
-        }
-      </colgroup>
-
-      <thead cdkDropList
-        [cdkDropListDisabled]="!reorderable()"
-        (cdkDropListDropped)="onColumnDrop($event)"
-        class="dt-table__thead">
-
-        <tr>
-          @if (selectable() && $first) {
-          <th class="dt-th--check">
-            <input
-              type="checkbox"
-              [checked]="selectAll !== 'none'"
-              [indeterminate]="selectAll === 'partial'"
-              (change)="toggleAll()"
-              aria-label="Select all" />
-          </th>
-          }
-          @if (reorderable() && $first) {
-          <th></th>
-          }
-          @for (col of orderedColumns; track col.key) {
-          <th
-            class="dt-th"
-            [class.dt-th--frozen]="isFrozen(col.key)"
-            [style.left.px]="frozenColumnOffset(col.key)"
-            [style.text-align]="col.align ?? 'left'"
-            [class.dt-th--sortable]="col.sortable"
-            [attr.aria-sort]="ariaSort(col)">
-            <span class="dt-th__label"
-              (click="col.sortable && toggleSort(col.key)">
-              {{ col.header }}
-              @if (col.sortable) {
-              <span class="dt-sort">{{ sortIndicator(col) === 'asc' ? '▲' : sortIndicator(col) === 'desc' ? '▼' : '≀' }}</span>
-              }
-            </span>
-            @if (col.editable) {
-            <button class="dt-colmenu-btn" (click)="openMenu(col.key, $event)" aria-label="Column menu">&#8942;</button>
-            }
-          </th>
-          }
-        </tr>
-        </thead>
-
-      <tbody>
-        @for (row of pagedRows; track idFn(row); let i = $index) {
-        <tr
-          [class.dt-row--selected]="isSelected(row)"
-          [class.dt-row--freeze-first]="freezeFirstRow() && i === 0"
-          [class.dt-row--freeze-last]="freezeLastRow() && i === pagedRows.length - 1"
-          (click)="rowClick.emit(row)"
-          [cdkDrag]="reorderable() && !virtualScroll()"
-          [cdkDragDisabled]="getRowDragDisabled(i)"
-          [cdkDragData]="row"
-          (cdkDragEnd)="onRowDrop($event)">
-          <ng-container [ngTemplateOutlet]="rowTpl"
-            [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-  }
-
-  <!-- ============ Frozen (Pinned) Rows ============ -->
-  @if (freezeFirstRow() || freezeLastRow()) {
-  <div class="dt-fixed-rows__wrapper">
-    <div class="dt-fixed-rows__scroll-pane">
-      <table class="dt-fixed-rows__table">
-        <colgroup>
-          @if (selectable()) {
-          <col style="width:44px" />
-          }
-        </colgroup>
-        <thead>
-          @if (freezeFirstRow()) {
+        } @empty {
           <tr>
-            @for (col of visibleColumns(); track col.key) {
-            <th [style.text-align]="col.align ?? 'left'">{{ col.header }}</th>
-            }
-          </tr>
-          }
-        </thead>
-        <tbody>
-          @if (freezeFirstRow()) {
-          @for (row of pinnedFirstRows(); track idFn(row); let i = $index) {
-          <tr [class.dt-row--freeze-first]="i === 0"
-              [class.dt-row--freeze-last]="freezeLastRow() && i === pinnedFirstRows().length - 1"
-              (click)="rowClick.emit(row)">
-            <ng-container [ngTemplateOutlet]="rowTpl"
-              [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
-          </tr>
-          }
-          } @else {
-          <tr>
-            <td [attr.colspan]="visibleColumns().length + (selectable() ? 1 : 0)" class="dt-state">
-              {{ emptyMessage() }}
+            <td class="st-td st-td--empty" [attr.colspan]="columnSpan()">
+              @if (emptyTemplate(); as empty) {
+                <ng-container [ngTemplateOutlet]="empty.template" />
+              } @else {
+                <p class="st-empty">{{ emptyMessage() }}</p>
+              }
             </td>
           </tr>
-          }
-          }
-          @if (freezeLastRow()) {
-          <tr>
-            @for (row of pinnedLastRows(); track idFn(row); let i = $index) {
-            <tr [class.dt-row--freeze-first]="i === 0"
-                [class.dt-row--freeze-last]="freezeLastRow() && i === pinnedLastRows().length - 1"
-                (click)="rowClick.emit(row)">
-              <ng-container [ngTemplateOutlet]="rowTpl"
-                [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
-            </tr>
-            }
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-  }
+        }
+      }
+    </tbody>
+  </table>
+</div>
 
-  <!-- ============ Footer / Pagination ============ -->
-  <div class="dt-footer">
-    <span class="dt-count">
-      @if (totalCount === 0) { No results }
-      @else { Showing {{ rangeStart() }}&ndash;{{ rangeEnd() }} of {{ totalCount }} }
+@if (paginated()) {
+  <div class="st-footer">
+    <span class="st-range" aria-live="polite">
+      @if (store.total()) {
+        Showing {{ store.rangeStart() }} to {{ store.rangeEnd() }} of {{ store.total() }} {{ entityLabel() }}
+      } @else {
+        No {{ entityLabel() }} to show
+      }
     </span>
 
-    <div class="dt-pager">
-      @if (pageSizeOptions().length) {
-      <label class="dt-pagesize">
-        <span class="dt-pagesize__label">Rows</span>
-        <select
-          [value]="pageSize()"
-          (change)="pageSize.set(+$any($event.target).value)"
-          aria-label="Rows per page">
-          @for (n of pageSizeOptions(); track n) { <option [value]="n">{{ n }}</option> }
-        </select>
-      </label>
-      }
+    <div class="st-footer__controls">
+      <nav class="st-pager" aria-label="Pagination">
+        <button
+          type="button"
+          class="st-page"
+          aria-label="Previous page"
+          [disabled]="store.currentPage() === 1"
+          (click)="store.goToPage(store.currentPage() - 1)">‹</button>
 
-      @if (totalCount > 0 && pageCount() > 1) {
-      <div class="dt-pager__btns">
-        <button
-          class="dt-btn dt-btn--icon"
-          [disabled]="safePage() <= 0"
-          (click)="setPage(0)"
-          aria-label="First page">&laquo;</button>
-        <button
-          class="dt-btn dt-btn--icon"
-          [disabled]="safePage() <= 0"
-          (click)="setPage(safePage() - 1)"
-          aria-label="Previous page">&lsaquo;</button>
-
-        @for (p of pageNumbers(); track $index) {
-        @if (p === null) {
-        <span class="dt-page-gap">&hellip;</span>
-        } @else {
-        <button
-          class="dt-page"
-          [class.dt-page--active]="p === safePage()"
-          (click)="setPage(p)"
-          [attr.aria-current]="p === safePage() ? 'page' : null">
-          {{ p }}
-        </button>
-        }
+        @for (item of store.pageItems(); track $index) {
+          @if (item === null) {
+            <span class="st-page st-page--gap" aria-hidden="true">…</span>
+          } @else {
+            <button
+              type="button"
+              class="st-page"
+              [class.st-page--current]="item === store.currentPage()"
+              [attr.aria-current]="item === store.currentPage() ? 'page' : null"
+              (click)="store.goToPage(item)">
+              {{ item }}
+            </button>
+          }
         }
 
         <button
-          class="dt-btn dt-btn--icon"
-          [disabled]="safePage() >= pageCount() - 1"
-          (click)="setPage(safePage() + 1)"
-          aria-label="Next page">&rsaquo;</button>
-        <button
-          class="dt-btn dt-btn--icon"
-          [disabled]="safePage() >= pageCount() - 1"
-          (click)="setPage(pageCount() - 1)"
-          aria-label="Last page">&raquo;</button>
-      </div>
+          type="button"
+          class="st-page"
+          aria-label="Next page"
+          [disabled]="store.currentPage() === store.pageCount()"
+          (click)="store.goToPage(store.currentPage() + 1)">›</button>
+      </nav>
+
+      @if (pageSizeOptions().length > 1) {
+        <label class="st-pagesize">
+          Rows per page
+          <select class="st-select" [value]="pageSize()" (change)="onPageSize($event)">
+            @for (size of pageSizeOptions(); track size) {
+              <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
+            }
+          </select>
+        </label>
       }
     </div>
   </div>
-}
-
-<!-- ============ Column Persistence Toast (optional) ============ -->
-@if (showColumnPersistenceToast()) {
-<div class="dt-toast dt-toast--success">
-  Column order persisted to localStorage.
-</div>
-}
-
-/* ---------- Reusable templates ---------- */
-
-<!-- colgroup template (shared) -->
-<ng-template #colgroupTpl>
-  <colgroup>
-    @if (selectable()) {
-    <col style="width:44px" /> }
-    @if (reorderable()) {
-    <col style="width:36px" />
-    }
-    @for (col of orderedColumns; track col.key) {
-    <col [style.width]="col.width ?? '150'" />
-    }
-  </colgroup>
-</ng-template>
-
-<!-- thead template with drag-drop support -->
-<ng-template #theadTpl>
-  <tr>
-    @if (selectable() && $first) {
-    <th class="dt-th--check">
-      <input
-        type="checkbox"
-        [checked]="selectAll !== 'none'"
-        [indeterminate]="selectAll === 'partial'"
-        (change)="toggleAll()"
-        aria-label="Select all" />
-    </th>
-    }
-    @if (reorderable() && $first) {
-    <th></th>
-    }
-    @for (col of orderedColumns; track col.key) {
-    <th
-      class="dt-th"
-      [class.dt-th--frozen]="isFrozen(col.key)"
-      [style.left.px]="frozenColumnOffset(col.key)"
-      [style.text-align]="col.align ?? 'left'"
-      [class.dt-th--sortable]="col.sortable"
-      [attr.aria-sort]="ariaSort(col)">
-      <span class="dt-th__label"
-        (click="col.sortable && toggleSort(col.key)">
-        {{ col.header }}
-        @if (col.sortable) {
-        <span class="dt-sort">{{ sortIndicator(col) === 'asc' ? '▲' : sortIndicator(col) === 'desc' ? '▼' : '≀' }}</span>
-        }
-      </span>
-      @if (col.editable) {
-      <button class="dt-colmenu-btn" (click)="openMenu(col.key, $event)" aria-label="Column menu">&#8942;</button>
-      }
-    </th>
-    }
-  </tr>
-</ng-template>
-
-<!-- row template with editing support -->
-<ng-template #rowTpl let-row let-i="index">
-  @if (selectable()) {
-  <td class="dt-td--check"
-      (click)="$event.stopPropagation()">
-    <input
-      type="checkbox"
-      [checked]="isSelected(row)"
-      (change)="toggleRow(row)" />
-  </td>
-  }
-
-  @if (reorderable() && !virtualScroll()) {
-  <td class="dt-td--handle"
-      cdkDragHandle
-      (click)="$event.stopPropagation()">&#8942;&#8942;</td>
-  }
-
-  @for (col of orderedColumns(); track col.key) {
-  <td
-    [style.text-align]="col.align ?? 'left'"
-    [class.dt-td--frozen]="isFrozen(col.key)"
-    [style.left.px]="frozenColumnOffset(col.key)">
-
-    @if (isEditing(row, col)) {
-    <!-- Inline input editor -->
-    <input
-      class="dt-editor"
-      [value]="draftValue(col, row) ?? ''"
-      #editor
-      (blur)="onEditorBlur(col, row, editor)"
-      (keydown.enter)="onEditorKeydown($event)"
-      (keydown.escape)="onEditorKeydown($event)" />
-    } @else if (col.cellTemplate) {
-    <!-- Projected cell template -->
-    <ng-container *ngTemplateOutlet="col.cellTemplate"
-      [ngTemplateOutletContext]="{ $implicit: row, value: cellValue(col, row), index: i }" />
-    } @else {
-    {{ cellValue(col, row) }}
-    }
-  </td>
-  }
-</ng-template>
-
-<!-- per-column menu -->
-@if (menuKey(); as mk) {
-<div class="dt-menu dt-colmenu" [style.left.px]="menuPos().x" [style.top.px]="menuPos().y">
-  <button class="dt-menu__item" (click)="menuSort(mk, 'asc')">Sort ascending</button>
-  <button class="dt-menu__item" (click)="menuSort(mk, 'desc')">Sort descending</button>
-  <button class="dt-menu__item" (click)="copyColumn(mk)">Copy column</button>
-  <button class="dt-menu__item" (click)="toggleColumn(mk); closeMenu()">Hide column</button>
-</div>
-<div class="dt-menu-backdrop" (click)="closeMenu()"></div>
-}
-
-<!-- editing error state -->
-@if (editingError) {
-<div class="dt-editor-error">
-  {{ editingError }}
-</div>
 }

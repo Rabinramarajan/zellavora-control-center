@@ -7,11 +7,19 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ColumnDef,
+  SmartCellDirective,
+  SmartEmptyDirective,
+  SmartTableComponent,
+  SortState,
+} from '../../../../shared/components/smart-table';
 import { DailySheet, SheetsStore } from '../../sheets.store';
-import { initialsOf, isoDay, paletteFor, statusPill } from '../../sheets.presentation';
+import { initialsOf, isoDay, paletteFor } from '../../sheets.presentation';
 
 interface QueueRow {
   id: string;
+  date: string;
   dateLabel: string;
   project: string;
   projectColor: string;
@@ -21,10 +29,50 @@ interface QueueRow {
   amount: number;
 }
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50];
+
+const currency = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
+const QUEUE_COLUMNS: ColumnDef<QueueRow>[] = [
+  {
+    key: 'date',
+    header: 'Date',
+    sortable: true,
+    format: (_, row) => row.dateLabel,
+    cellClass: 'text-slate-300',
+  },
+  { key: 'project', header: 'Project', sortable: true },
+  {
+    key: 'task',
+    header: 'Task',
+    sortable: true,
+    cellClass: 'text-slate-300 max-w-[18rem] whitespace-normal',
+  },
+  {
+    key: 'hours',
+    header: 'Hours',
+    sortable: true,
+    format: (value) => `${value}h`,
+    cellClass: 'text-white font-semibold tabular-nums',
+  },
+  {
+    key: 'amount',
+    header: 'Amount',
+    sortable: true,
+    format: (value) => currency.format(Number(value)),
+    cellClass: 'text-slate-300 tabular-nums',
+  },
+  { key: 'actions', header: 'Decision', align: 'right', exportable: false },
+];
+
 @Component({
   selector: 'app-approval-queue',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
   templateUrl: './approval-queue.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './approval-queue.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,20 +82,25 @@ export class ApprovalQueueComponent implements OnInit {
 
   public readonly isLoading = this.store.isLoading;
   public readonly error = this.store.error;
-  public readonly statusPill = statusPill;
+
+  public readonly columns = QUEUE_COLUMNS;
+  public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  public readonly sort = signal<SortState>({ key: 'date', direction: 'asc' });
+  public readonly pageSize = signal(PAGE_SIZE_OPTIONS[0]);
+  public readonly selected = signal<readonly QueueRow[]>([]);
 
   /** Ids currently being acted on, so their buttons stay disabled. */
   public readonly busy = signal<ReadonlySet<string>>(new Set());
+
+  public readonly selectionBusy = computed(() =>
+    this.selected().some((row) => this.busy().has(row.id))
+  );
 
   private readonly pending = computed(() =>
     this.store.dailySheets().filter((sheet) => sheet.status === 'submitted')
   );
 
-  public readonly rows = computed<QueueRow[]>(() =>
-    [...this.pending()]
-      .sort((a, b) => a.sheetDate.localeCompare(b.sheetDate))
-      .map((sheet) => this.toRow(sheet))
-  );
+  public readonly rows = computed<QueueRow[]>(() => this.pending().map((sheet) => this.toRow(sheet)));
 
   public readonly totalHours = computed(
     () =>
@@ -73,6 +126,12 @@ export class ApprovalQueueComponent implements OnInit {
     );
   }
 
+  public decideSelected(approved: boolean): void {
+    for (const row of this.selected()) {
+      if (!this.isBusy(row.id)) this.decide(row.id, approved);
+    }
+  }
+
   public isBusy(id: string): boolean {
     return this.busy().has(id);
   }
@@ -81,6 +140,7 @@ export class ApprovalQueueComponent implements OnInit {
     const project = sheet.projectName ?? 'Unassigned';
     return {
       id: sheet.id,
+      date: sheet.sheetDate,
       dateLabel: new Date(sheet.sheetDate).toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',

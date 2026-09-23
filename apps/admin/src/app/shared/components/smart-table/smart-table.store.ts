@@ -1,486 +1,236 @@
-import { inject, signal, computed, effect, Input, Output, untracked, RunState } from '@angular/core';
-import { take } from 'rxjs/operators';
-import { ColumnDef, SortState, FilterState, PaginationState, RowState, RowStateMap, SelectionChange, CellEditEvent, ExportEvent, SmartTableInputOptions, SmartTableOutputs } from './smart-table.types';
-import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { Signal, WritableSignal, computed, linkedSignal, signal } from '@angular/core';
+import { ColumnDef, FilterState, SelectionMode, SortState, TrackByFn } from './smart-table.types';
+
+export interface SmartTableStoreOptions<T> {
+  rows: Signal<readonly T[]>;
+  columns: Signal<readonly ColumnDef<T>[]>;
+  trackBy?: Signal<TrackByFn<T>>;
+  selectionMode?: Signal<SelectionMode>;
+  /** Pass writable signals (e.g. component models) to share state with the caller. */
+  search?: WritableSignal<string>;
+  filters?: WritableSignal<FilterState>;
+  sort?: WritableSignal<SortState>;
+  pageSize?: WritableSignal<number>;
+}
+
+/** `null` marks an ellipsis in the page list. */
+export type PageItem = number | null;
+
+const defaultTrackBy = <T>(row: T): unknown => (row as { id?: unknown }).id ?? row;
 
 /**
- * Signal-based store for SmartTable that provides:
- * - rows: the source data input
- * - sortedRows: derived from rows + sortState
- * - filteredRows: derived from sortedRows + filterState (per-column matching)
- * - pagedRows: derived from filteredRows + pageState
- * - totalCount: count of filteredRows
- * - selection state: selectedRows set with toggleAll/toggleRow/clearSelection
- * - column persistence: columnOrder, pinnedColumns, visibleColumns
- *
- * All state is derived via computed() chains - no manual recomputation needed.
- * Mutations are immutable (signal.update/pattern).
+ * Signal-based state for SmartTable: rows → filtered → sorted → paged, plus selection.
+ * Every derived value is a computed() so nothing is recomputed by hand.
  */
-export class SmartTableStore<T extends object> {
-  /** The source rows input. */
-  readonly rows = signal<T[]>([]);
+export class SmartTableStore<T> {
+  readonly search: WritableSignal<string>;
+  readonly filters: WritableSignal<FilterState>;
+  readonly sort: WritableSignal<SortState>;
+  readonly pageSize: WritableSignal<number>;
 
-  /** Sort state: { key, direction } */
-  private readonly _sortState = signal<SortState>({ key: null, direction: 'asc' });
+  private readonly rows: Signal<readonly T[]>;
+  private readonly columns: Signal<readonly ColumnDef<T>[]>;
+  private readonly trackBy: Signal<TrackByFn<T>>;
+  private readonly selectionMode: Signal<SelectionMode>;
+  private readonly selectedKeys = signal<ReadonlySet<unknown>>(new Set());
 
-  /** Filter state: { [key]: value } per column */
-  private readonly _filterState = signal<FilterState>({});
+  /** 1-based page; any change to the query sends the user back to page 1. */
+  readonly page: WritableSignal<number>;
 
-  /** Pagination state: { pageIndex, pageSize } */
-  private readonly _paginationState = signal<PaginationState>({ pageIndex: 0, pageSize: 10, pageCount: 1 });
+  constructor(options: SmartTableStoreOptions<T>) {
+    this.rows = options.rows;
+    this.columns = options.columns;
+    this.trackBy = options.trackBy ?? signal<TrackByFn<T>>(defaultTrackBy);
+    this.selectionMode = options.selectionMode ?? signal<SelectionMode>('none');
+    this.search = options.search ?? signal('');
+    this.filters = options.filters ?? signal<FilterState>({});
+    this.sort = options.sort ?? signal<SortState>({ key: null, direction: 'asc' });
+    this.pageSize = options.pageSize ?? signal(10);
 
-  /** Selected row IDs/references. Uses Set<T> or Map<id, T> based on idFn. */
-  private readonly _selectedRows = signal<Set<T>>(new Set());
-
-  /** Row state map: WeakMap<T, Signal<RowState>> pattern - stored as Map<T, RowState> */
-  private readonly _rowStateMap = new WeakMap<T, RowState>();
-
-  /** Column order signal, driven by input or localStorage persistence. */
-  private readonly _columnOrder = signal<string[]>([]);
-
-  /** Pinned columns (left/right) from ColumnDef.pinned. */
-  private readonly _pinnedColumns = signal<string[]>([]);
-
-  /** Constructor accepts optional initial inputs. */
-  constructor(initial?: {
-    rows?: T[];
-    columns?: ColumnDef<T>[];
-    columnOrder?: string[];
-    pinnedColumns?: string[];
-    selection?: T[];
-    pageIndex?: number;
-    pageSize?: number;
-  }) {
-    if (initial?.rows?.length) this.rows.set(initial.rows);
-    if (initial?.columnOrder?.length) this._columnOrder.set(initial.columnOrder);
-    if (initial?.pinnedColumns?.length) this._pinnedColumns.set(initial.pinnedColumns);
-    if (initial?.selection?.length) this._selectedRows.set(new Set(initial.selection));
-    if (initial?.pageIndex !== undefined) this._paginationState.update(s => ({ ...s, pageIndex: initial.pageIndex }));
-    if (initial?.pageSize !== undefined) this._paginationState.update(s => ({ ...s, pageSize: initial.pageSize }));
-
-    // Initialize row state map for all rows
-    this.rows().forEach(row => this._rowStateMap.set(row, {}));
-  }
-
-  /** ---------- Sorting ---------- */
-
-  /** Get the current sort state as a signal. */
-  get sortState(): Signal<SortState> {
-    return this._sortState;
-  }
-
-  /** Set sort key and direction immutably. */
-  setSort(key: string | null, direction?: 'asc' | 'desc'): void {
-    const current = this._sortState();
-    const dir: 'asc' | 'desc' | 'null' = direction !== undefined
-      ? direction
-      : (current.key === key && current.direction === 'asc') ? 'desc'
-        : (current.key === key && current.direction === 'desc') ? 'asc'
-          : 'asc';
-    this._sortState.set({ key, direction: dir });
-  }
-
-  /** Toggle sort on a column key. */
-  toggleSort(key: string): void {
-    const current = this._sortState();
-    let dir: 'asc' | 'desc' | 'null';
-    if (current.key !== key) {
-      dir = 'asc';
-    } else if (current.direction === 'asc') {
-      dir = 'desc';
-    } else if (current.direction === 'desc') {
-      dir = 'null';
-    } else {
-      dir = 'asc';
-    }
-    this._sortState.set({ key, direction: dir });
-  }
-
-  /** ---------- Filtering ---------- */
-
-  /** Get filter state signal. */
-  get filterState(): Signal<FilterState> {
-    return this._filterState;
-  }
-
-  /** Set a filter value for a specific column key. */
-  setFilter(key: string, value: string | number | Date | null): void {
-    this._filterState.update(state => ({
-      ...state,
-      [key]: value !== null && value !== undefined ? String(value) : null,
-    }));
-  }
-
-  /** Clear filter for a specific column. */
-  clearFilter(key: string): void {
-    this._filterState.update(state => {
-      const { [key]: _, ...rest } = state;
-      return rest;
+    this.page = linkedSignal({
+      source: () => [this.search(), this.filters(), this.sort(), this.pageSize()],
+      computation: () => 1,
     });
   }
 
-  /** Clear all filters. */
-  clearAllFilters(): void {
-    this._filterState.set({});
-  }
+  // ---- derived rows ------------------------------------------------------
 
-  /** ---------- Pagination ---------- */
+  readonly visibleColumns = computed(() => this.columns().filter((column) => !column.hidden));
 
-  /** Get pagination state signal. */
-  get paginationState(): Signal<PaginationState> {
-    return this._paginationState;
-  }
+  readonly filteredRows = computed<readonly T[]>(() => {
+    const columns = this.columns();
+    const activeFilters = Object.entries(this.filters()).filter(([, value]) => value !== '');
+    const term = this.search().trim().toLowerCase();
 
-  /** Set page index (zero-based internally, but UI uses 1-based). */
-  setPage(index: number): void {
-    const pageCount = Math.max(1, this.filteredRows().length / this.pageSize());
-    const clamped = Math.max(0, Math.min(index, pageCount - 1));
-    this._paginationState.update(s => ({ ...s, pageIndex: clamped }));
-  }
+    const filterColumns = activeFilters
+      .map(([key, value]) => ({ column: columns.find((c) => c.key === key), value }))
+      .filter((entry): entry is { column: ColumnDef<T>; value: string } => !!entry.column);
 
-  /** Set page size and reset to first page. */
-  setPageSize(size: number): void {
-    this._paginationState.update(s => ({
-      ...s,
-      pageSize: size,
-      pageIndex: 0,
-    }));
-  }
+    if (!filterColumns.length && !term) return this.rows();
 
-  /** ---------- Selection ---------- */
-
-  /** Get selected rows as a signal Set<T>. */
-  get selectedRows(): Signal<Set<T>> {
-    return this._selectedRows;
-  }
-
-  /** Get selection mode. */
-  get selectionMode(): 'single' | 'multiple' | 'none' {
-    // Could be stored as input; for now default to 'multiple'
-    return 'multiple';
-  }
-
-  /** Toggle a single row selection. */
-  toggleRow(row: T): void {
-    this._selectedRows.update(set => {
-      if (set.has(row)) {
-        set.delete(row);
-      } else {
-        set.add(row);
-      }
-      return new Set(set);
+    return this.rows().filter((row) => {
+      const matchesFilters = filterColumns.every(
+        ({ column, value }) => String(this.valueOf(column, row) ?? '') === value
+      );
+      if (!matchesFilters) return false;
+      if (!term) return true;
+      return columns.some((column) => this.searchTextOf(column, row).includes(term));
     });
+  });
 
-    // Persist selection after mutation
-    effect(() => this.persistSelection(), { allowSignalWrites: true });
-  }
+  readonly sortedRows = computed<readonly T[]>(() => {
+    const { key, direction } = this.sort();
+    const column = key ? this.columns().find((c) => c.key === key) : undefined;
+    if (!column) return this.filteredRows();
 
-  /** Toggle all rows in the current page. */
-  toggleAll(): void {
-    const paged = this.pagedRows();
-    const allSelected = paged.every(r => this._selectedRows().has(r));
+    const factor = direction === 'asc' ? 1 : -1;
+    return [...this.filteredRows()].sort(
+      (a, b) => compareValues(this.valueOf(column, a), this.valueOf(column, b)) * factor
+    );
+  });
 
-    if (allSelected) {
-      this._selectedRows.set(new Set());
-    } else {
-      this._selectedRows.set(new Set(paged));
-    }
-  }
+  readonly total = computed(() => this.sortedRows().length);
 
-  /** Clear all selection. */
-  clearSelection(): void {
-    this._selectedRows.set(new Set());
-  }
+  readonly pageCount = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
 
-  /** Get the count of selected rows. */
-  getSelectedCount(): number {
-    return this._selectedRows().size;
-  }
+  readonly currentPage = computed(() => Math.min(Math.max(1, this.page()), this.pageCount()));
 
-  /** Check if a specific row is selected. */
+  readonly pageRows = computed<readonly T[]>(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.sortedRows().slice(start, start + this.pageSize());
+  });
+
+  readonly rangeStart = computed(() =>
+    this.total() ? (this.currentPage() - 1) * this.pageSize() + 1 : 0
+  );
+
+  readonly rangeEnd = computed(() => Math.min(this.currentPage() * this.pageSize(), this.total()));
+
+  /** First, last and the neighbours of the current page, with gaps collapsed. */
+  readonly pageItems = computed<PageItem[]>(() => {
+    const total = this.pageCount();
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+
+    const current = this.currentPage();
+    const pages = [...new Set([1, total, current - 1, current, current + 1])]
+      .filter((n) => n >= 1 && n <= total)
+      .sort((a, b) => a - b);
+
+    return pages.flatMap((n, i) => (i > 0 && n - pages[i - 1] > 1 ? [null, n] : [n]));
+  });
+
+  // ---- selection ---------------------------------------------------------
+
+  /** Selected rows that still exist in the current data set. */
+  readonly selectedRows = computed<readonly T[]>(() => {
+    const keys = this.selectedKeys();
+    if (!keys.size) return [];
+    const trackBy = this.trackBy();
+    return this.rows().filter((row) => keys.has(trackBy(row)));
+  });
+
+  readonly selectedCount = computed(() => this.selectedRows().length);
+
+  readonly allPageSelected = computed(() => {
+    const rows = this.pageRows();
+    return rows.length > 0 && rows.every((row) => this.isSelected(row));
+  });
+
+  readonly somePageSelected = computed(
+    () => !this.allPageSelected() && this.pageRows().some((row) => this.isSelected(row))
+  );
+
   isSelected(row: T): boolean {
-    return this._selectedRows().has(row);
+    return this.selectedKeys().has(this.trackBy()(row));
   }
 
-  /** ---------- Column Order & Persistence ---------- */
+  toggleRow(row: T): void {
+    const mode = this.selectionMode();
+    if (mode === 'none') return;
 
-  /** Get column order signal. */
-  get columnOrder(): Signal<string[]> {
-    return this._columnOrder;
-  }
-
-  /** Set column order (used by drag-drop). */
-  setColumnOrder(order: string[]): void {
-    this._columnOrder.set(order);
-  }
-
-  /** Get pinned columns. */
-  get pinnedColumns(): Signal<string[]> {
-    return this._pinnedColumns;
-  }
-
-  /** Add a column to pinned list. */
-  addPinnedColumn(key: string): void {
-    this._pinnedColumns.update(current => {
-      if (!current.includes(key)) {
-        current = [...current, key];
+    const key = this.trackBy()(row);
+    this.selectedKeys.update((keys) => {
+      if (keys.has(key)) {
+        const next = new Set(keys);
+        next.delete(key);
+        return next;
       }
-      return current;
+      return mode === 'single' ? new Set([key]) : new Set(keys).add(key);
     });
   }
 
-  /** Remove a column from pinned list. */
-  removePinnedColumn(key: string): void {
-    this._pinnedColumns.update(current => current.filter(k => k !== key));
-  }
+  togglePage(): void {
+    if (this.selectionMode() !== 'multiple') return;
 
-  /** Get visible columns (excluding pinned). */
-  getVisibleColumns(columns: ColumnDef<T>[]): string[] {
-    const pinned = this._pinnedColumns();
-    return columns
-      .filter(c => !pinned.includes(c.key))
-      .map(c => c.key);
-  }
+    const trackBy = this.trackBy();
+    const pageKeys = this.pageRows().map(trackBy);
+    const selectAll = !this.allPageSelected();
 
-  /** ---------- Row State ---------- */
-
-  /** Get row state for a specific row. */
-  getRowState(row: T): RowState {
-    return this._rowStateMap.get(row) ?? {};
-  }
-
-  /** Set row state for a specific row. */
-  setRowState(row: T, state: Partial<RowState>): void {
-    const existing = this._rowStateMap.get(row) ?? {};
-    this._rowStateMap.set(row, { ...existing, ...state });
-  }
-
-  /** Toggle expanded state for a row. */
-  toggleRowExpanded(row: T): void {
-    this.setRowState(row, {
-      expanded: !this.getRowState(row).expanded,
-    });
-  }
-
-  /** Check if a row is disabled. */
-  isRowDisabled(row: T): boolean {
-    return !!this.getRowState(row).disabled;
-  }
-
-  /** ---------- Computed Derivations (readonly, expose as getters) ---------- */
-
-  /** Sorted rows: rows sorted by sortState. */
-  get sortedRows(): T[] {
-    const rows = this.rows();
-    const { key, direction } = this._sortState();
-
-    if (!key) return [...rows];
-
-    const colDef = this._getColumnDef(key);
-    if (!colDef) return [...rows];
-
-    const isNumber = typeof colDef.valueFn?.(rows[0]) === 'number' || colDef.valueFn === undefined;
-
-    return [...rows].sort((a, b) => {
-      const av = colDef.valueFn ? colDef.valueFn(a) : (a as any)[key];
-      const bv = colDef.valueFn ? colDef.valueFn(b) : (b as any)[key];
-
-      if (av == null && bv == null) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
-
-      const numericA = typeof av === 'number' ? av : null;
-      const numericB = typeof bv === 'number' ? bv : null;
-
-      if (numericA !== null && numericB !== null) {
-        return direction === 'asc' ? numericA - numericB : numericB - numericA;
+    this.selectedKeys.update((keys) => {
+      const next = new Set(keys);
+      for (const key of pageKeys) {
+        if (selectAll) next.add(key);
+        else next.delete(key);
       }
-
-      const strA = String(av ?? '').toLowerCase();
-      const strB = String(bv ?? '').toLowerCase();
-      return direction === 'asc'
-        ? strA.localeCompare(strB)
-        : strB.localeCompare(strA);
+      return next;
     });
   }
 
-  /** Filtered rows: sorted rows filtered by filterState per column. */
-  get filteredRows(): T[] {
-    const sorted = this.sortedRows;
-    const filters = this._filterState();
-
-    if (Object.keys(filters).length === 0) return sorted;
-
-    return sorted.filter(row => {
-      const columnKeys = Object.keys(filters).filter(k => filters[k] !== null && filters[k] !== '');
-
-      return columnKeys.every(key => {
-        const colDef = this._getColumnDef(key);
-        if (!colDef) return true;
-
-        const value = colDef.valueFn ? colDef.valueFn(row) : (row as any)[key];
-        const filterValue = filters[key];
-
-        if (filterValue == null || filterValue === '') return true;
-
-        // String/number matching
-        if (typeof filterValue === 'string' || typeof filterValue === 'number') {
-          const rowValue = colDef.valueFn ? colDef.valueFn(row) : (row as any)[key];
-          const strRow = String(rowValue ?? '').toLowerCase();
-          const strFilter = String(filterValue).toLowerCase();
-          return strRow.includes(strFilter);
-        }
-
-        // Date matching
-        if (filterValue instanceof Date) {
-          const rowValue = colDef.valueFn ? colDef.valueFn(row) : (row as any)[key];
-          if (!(rowValue instanceof Date)) return false;
-          return rowValue.getTime() === filterValue.getTime();
-        }
-
-        return true;
-      });
-    });
+  clearSelection(): void {
+    this.selectedKeys.set(new Set());
   }
 
-  /** Paged rows: filtered rows sliced by pagination state. */
-  get pagedRows(): T[] {
-    const pageIndex = this._paginationState().pageIndex;
-    const pageSize = this._paginationState().pageSize;
-    const start = pageIndex * pageSize;
-    return this.filteredRows.slice(start, start + pageSize);
+  // ---- commands ----------------------------------------------------------
+
+  toggleSort(key: string): void {
+    const current = this.sort();
+    if (current.key !== key) this.sort.set({ key, direction: 'asc' });
+    else if (current.direction === 'asc') this.sort.set({ key, direction: 'desc' });
+    else this.sort.set({ key: null, direction: 'asc' });
   }
 
-  /** Total count of filtered rows. */
-  get totalCount(): number {
-    return this.filteredRows.length;
+  setFilter(key: string, value: string): void {
+    this.filters.update((filters) => ({ ...filters, [key]: value }));
   }
 
-  /** Page count calculation. */
-  get pageCount(): number {
-    const total = this.totalCount;
-    const size = this._paginationState().pageSize;
-    return total > 0 ? Math.ceil(total / size) : 1;
+  goToPage(page: number): void {
+    this.page.set(Math.min(Math.max(1, page), this.pageCount()));
   }
 
-  /** Current page index (0-based). */
-  get pageIndex(): number {
-    return this._paginationState().pageIndex;
+  // ---- values ------------------------------------------------------------
+
+  valueOf(column: ColumnDef<T>, row: T): unknown {
+    return column.value ? column.value(row) : (row as Record<string, unknown>)[column.key];
   }
 
-  /** Current page size. */
-  get pageSize(): number {
-    return this._paginationState().pageSize;
+  display(column: ColumnDef<T>, row: T): string {
+    const value = this.valueOf(column, row);
+    return column.format ? column.format(value, row) : String(value ?? '');
   }
 
-  /** Linked signal for safe page (clamped to total pages). */
-  get safePage(): number {
-    return Math.max(0, Math.min(this._paginationState().pageIndex, Math.max(1, this.pageCount) - 1));
+  /** CSV of every filtered + sorted row (not just the current page). */
+  toCsv(): string {
+    const columns = this.columns().filter((column) => column.exportable !== false);
+    const header = columns.map((column) => csvCell(column.header));
+    const body = this.sortedRows().map((row) =>
+      columns.map((column) => csvCell(this.display(column, row)))
+    );
+    return [header, ...body].map((cells) => cells.join(',')).join('\r\n');
   }
 
-  /** Global search model - ORs across all filterable columns. */
-  private _globalSearch = signal<string>('');
-
-  get globalSearch(): Signal<string> {
-    return this._globalSearch;
-  }
-
-  setGlobalSearch(value: string): void {
-    this._globalSearch.set(value);
-    this.applyGlobalFilter(value);
-  }
-
-  private applyGlobalFilter(query: string): void {
-    const columnsWithDef = this._getAllColumnDefs();
-    if (!query.trim()) {
-      this._filterState.set({});
-      return;
-    }
-
-    // Apply OR filter across all filterable columns
-    this._filterState.set({
-      [columnsWithDef[0]?.key ?? '']: query,
-      // We store the global search in the first filterable column key
-      // and clear others to avoid conflict
-      ...Object.fromEntries(
-        columnsWithDef
-          .filter(c => c.filterable)
-          .slice(1)
-          .map(k => [k.key, ''])
-      ),
-    });
-  }
-
-  /** Get all column definitions from the columns input. */
-  private _getAllColumnDefs(): ColumnDef<T>[] {
-    // This would typically come from the component's columns input
-    // For the store, we expose it as a method parameter
-    return [];
-  }
-
-  /** Get column definition by key. */
-  private _getColumnDef(key: string): ColumnDef<T> | undefined {
-    // This would be resolved from the component's columns input
-    // Exposed as a method for the component to use
-    return undefined;
-  }
-
-  /** ---------- Effect: Persist Selection to LocalStorage ---------- */
-
-  /** Persist selected rows to localStorage. */
-  private persistSelection(): void {
-    const key = `smart-table-selection-${this.tableId()}`;
-    const selected = Array.from(this._selectedRows());
-    try {
-      localStorage.setItem(key, JSON.stringify(selected));
-    } catch {
-      // Ignore storage errors in production
-    }
-  }
-
-  /** ---------- Effect: Persist Column Order to LocalStorage ---------- */
-
-  /** Persist column order to localStorage. */
-  private persistColumnOrder(): void {
-    const key = `smart-table-columns-${this.tableId()}`;
-    try {
-      const payload = {
-        columnOrder: this._columnOrder(),
-        pinnedColumns: this._pinnedColumns(),
-        visibleColumns: this.getVisibleColumns([]).filter(k => true),
-      };
-      localStorage.setItem(key, JSON.stringify(payload));
-    } catch {
-      // Ignore storage errors
-    }
-  }
-
-  /** ---------- Utility: tableId ---------- */
-
-  /** Generate a unique table ID (can be overridden by component input). */
-  protected tableId(): string {
-    // Default: generate from store instance or use a hash
-    return 'smart-table-default';
-  }
-
-  /** ---------- Effect: Sync pagination with URL/query params ---------- */
-
-  /** Subscribe to external changes (e.g., from router/query params). */
-  syncWithQueryParams(queryParams: { page?: number; pageSize?: number; sortKey?: string; sortDir?: string; filter?: Record<string, unknown> }): void {
-    if (queryParams.page !== undefined) {
-      this.setPage(queryParams.page);
-    }
-    if (queryParams.pageSize !== undefined) {
-      this.setPageSize(queryParams.pageSize);
-    }
-    if (queryParams.sortKey !== undefined) {
-      const dir: 'asc' | 'desc' | 'null' = queryParams.sortDir === 'desc' ? 'desc' : 'asc';
-      this.setSort(queryParams.sortKey, dir);
-    }
-    if (queryParams.filter !== undefined) {
-      Object.entries(queryParams.filter).forEach(([key, value]) => {
-        this.setFilter(key, value as string | number | Date | null);
-      });
-    }
+  private searchTextOf(column: ColumnDef<T>, row: T): string {
+    return (column.searchText ? column.searchText(row) : this.display(column, row)).toLowerCase();
   }
 }
+
+const compareValues = (a: unknown, b: unknown): number => {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+};
+
+const csvCell = (value: string): string =>
+  /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;

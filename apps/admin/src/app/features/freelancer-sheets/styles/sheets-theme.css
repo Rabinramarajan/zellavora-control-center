@@ -180,44 +180,7 @@
   border-color: rgba(56, 189, 248, 0.35);
 }
 
-/* ---------- data table ---------- */
-
-.sheet-table-wrap {
-  overflow-x: auto;
-}
-
-.sheet-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.sheet-table thead th {
-  padding: 0.65rem 0.9rem;
-  text-align: left;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #94a3b8;
-  border-bottom: 1px solid var(--sheet-line);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.sheet-table tbody td {
-  padding: 0.7rem 0.9rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  vertical-align: middle;
-}
-
-.sheet-table tbody tr {
-  transition: background 0.18s ease;
-}
-
-.sheet-table tbody tr:hover {
-  background: rgba(139, 92, 246, 0.07);
-}
+/* ---------- table cells ---------- */
 
 .avatar-chip {
   display: grid;
@@ -276,27 +239,6 @@
   filter: brightness(1.08);
 }
 
-.sheet-input {
-  width: 100%;
-  padding: 0.45rem 0.7rem 0.45rem 2rem;
-  border-radius: 0.6rem;
-  border: 1px solid var(--sheet-line);
-  background: rgba(255, 255, 255, 0.03);
-  color: #e2e8f0;
-  font-size: 0.78rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.sheet-input::placeholder {
-  color: #64748b;
-}
-
-.sheet-input:focus {
-  outline: none;
-  border-color: rgba(139, 92, 246, 0.55);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
-}
-
 .sheet-select {
   padding: 0.45rem 0.7rem;
   border-radius: 0.6rem;
@@ -309,30 +251,6 @@
 .sheet-select:focus {
   outline: none;
   border-color: rgba(139, 92, 246, 0.55);
-}
-
-/* ---------- pagination ---------- */
-
-.page-btn {
-  min-width: 1.85rem;
-  height: 1.85rem;
-  padding: 0 0.4rem;
-  border-radius: 0.5rem;
-  border: 1px solid transparent;
-  color: #94a3b8;
-  font-size: 0.75rem;
-  font-weight: 600;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e2e8f0;
-}
-
-.page-btn--current {
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
-  color: #fff;
 }
 
 /* ---------- misc ---------- */

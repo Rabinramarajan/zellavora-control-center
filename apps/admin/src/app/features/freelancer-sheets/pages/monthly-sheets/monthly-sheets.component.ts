@@ -5,9 +5,17 @@ import {
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import {
+  ColumnDef,
+  SmartCellDirective,
+  SmartEmptyDirective,
+  SmartTableComponent,
+  SortState,
+} from '../../../../shared/components/smart-table';
 import { DailySheet, SheetsStore } from '../../sheets.store';
 import {
   SheetStatus,
@@ -50,6 +58,40 @@ interface ProjectRow {
   approvalPercent: number;
 }
 
+const PROJECT_COLUMNS: ColumnDef<ProjectRow>[] = [
+  { key: 'name', header: 'Project', sortable: true },
+  { key: 'type', header: 'Type', hidden: true },
+  {
+    key: 'totalHours',
+    header: 'Total Hours',
+    sortable: true,
+    format: (value) => `${value}h`,
+    cellClass: 'text-white font-semibold tabular-nums',
+  },
+  {
+    key: 'billableHours',
+    header: 'Billable Hours',
+    sortable: true,
+    format: (value) => `${value}h`,
+    cellClass: 'text-slate-300 tabular-nums',
+  },
+  {
+    key: 'nonBillableHours',
+    header: 'Non-billable',
+    sortable: true,
+    format: (value) => `${value}h`,
+    cellClass: 'text-slate-400 tabular-nums',
+  },
+  {
+    key: 'approvalPercent',
+    header: 'Approval',
+    sortable: true,
+    width: '14rem',
+    format: (value) => `${value}%`,
+  },
+  { key: 'actions', header: 'Actions', align: 'right', exportable: false },
+];
+
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const CALENDAR_LEGEND: { label: string; status: SheetStatus | 'none' }[] = [
@@ -62,7 +104,7 @@ const CALENDAR_LEGEND: { label: string; status: SheetStatus | 'none' }[] = [
 @Component({
   selector: 'app-monthly-sheets',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
   templateUrl: './monthly-sheets.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './monthly-sheets.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,6 +118,11 @@ export class MonthlySheetsComponent implements OnInit {
 
   public readonly weekdays = WEEKDAYS;
   public readonly legend = CALENDAR_LEGEND;
+  public readonly projectColumns = PROJECT_COLUMNS;
+  public readonly projectSort = signal<SortState>({ key: 'totalHours', direction: 'desc' });
+  public readonly trackProject = (row: ProjectRow): string => row.name;
+
+  private readonly projectTable = viewChild.required<SmartTableComponent<ProjectRow>>('projectTable');
 
   /** Always the first of the displayed month. */
   public readonly month = signal(startOfMonth(new Date()));
@@ -255,8 +302,7 @@ export class MonthlySheetsComponent implements OnInit {
             sheets.length
           ),
         };
-      })
-      .sort((a, b) => b.totalHours - a.totalHours);
+      });
   });
 
   public ngOnInit(): void {
@@ -271,23 +317,7 @@ export class MonthlySheetsComponent implements OnInit {
   }
 
   public export(): void {
-    const header = ['Project', 'Type', 'Total Hours', 'Billable', 'Non-billable', 'Approval %'];
-    const body = this.projectRows().map((row) => [
-      row.name,
-      row.type,
-      row.totalHours,
-      row.billableHours,
-      row.nonBillableHours,
-      row.approvalPercent,
-    ]);
-
-    const csv = [header, ...body].map((cells) => cells.join(',')).join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `monthly-sheet-${isoMonth(this.month())}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    this.projectTable().exportCsv(`monthly-sheet-${isoMonth(this.month())}`);
   }
 
   public openProject(name: string): void {

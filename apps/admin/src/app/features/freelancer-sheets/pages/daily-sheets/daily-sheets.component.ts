@@ -7,8 +7,15 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import {
+  ColumnDef,
+  FilterState,
+  SmartCellDirective,
+  SmartEmptyDirective,
+  SmartTableComponent,
+  SortState,
+} from '../../../../shared/components/smart-table';
 import { DailySheet, SheetsStore } from '../../sheets.store';
 import {
   SheetStatus,
@@ -47,7 +54,40 @@ interface Slice {
   offset: string;
 }
 
-const ROWS_PER_PAGE_OPTIONS = [6, 12, 24, 50];
+const PAGE_SIZE_OPTIONS = [6, 12, 24, 50];
+
+const STATUS_OPTIONS: { value: SheetStatus; label: string }[] = (
+  ['draft', 'submitted', 'approved', 'rejected'] as const
+).map((status) => ({ value: status, label: statusLabel(status) }));
+
+const ENTRY_COLUMNS: ColumnDef<EntryRow>[] = [
+  {
+    key: 'date',
+    header: 'Date',
+    sortable: true,
+    format: (_, row) => row.dateLabel,
+    cellClass: 'text-slate-300',
+  },
+  { key: 'project', header: 'Project', sortable: true },
+  {
+    key: 'task',
+    header: 'Task / Description',
+    sortable: true,
+    searchText: (row) => `${row.task} ${row.description}`,
+  },
+  { key: 'start', header: 'Start', cellClass: 'text-slate-300 tabular-nums' },
+  { key: 'end', header: 'End', cellClass: 'text-slate-300 tabular-nums' },
+  { key: 'breakLabel', header: 'Break', cellClass: 'text-slate-400 tabular-nums' },
+  {
+    key: 'hours',
+    header: 'Total',
+    sortable: true,
+    format: (value) => `${value}h`,
+    cellClass: 'text-white font-semibold tabular-nums',
+  },
+  { key: 'status', header: 'Status', sortable: true, format: (_, row) => row.statusLabel },
+  { key: 'actions', header: 'Actions', align: 'right', exportable: false },
+];
 
 /** Circumference of the r=54 donut ring used in Today's Summary. */
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
@@ -55,7 +95,7 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
 @Component({
   selector: 'app-daily-sheets',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
   templateUrl: './daily-sheets.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './daily-sheets.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,12 +108,6 @@ export class DailySheetsComponent implements OnInit {
   public readonly error = this.store.error;
 
   public readonly selectedDate = signal(new Date());
-  public readonly search = signal('');
-  public readonly projectFilter = signal('all');
-  public readonly statusFilter = signal('all');
-  public readonly page = signal(1);
-  public readonly rowsPerPage = signal(6);
-  public readonly rowsPerPageOptions = ROWS_PER_PAGE_OPTIONS;
 
   public readonly selectedDateLabel = computed(() =>
     this.selectedDate().toLocaleDateString('en-US', {
@@ -84,64 +118,23 @@ export class DailySheetsComponent implements OnInit {
     })
   );
 
-  /** Every sheet mapped to a table row, newest day first. */
-  private readonly rows = computed<EntryRow[]>(() =>
-    [...this.store.dailySheets()]
-      .sort((a, b) => b.sheetDate.localeCompare(a.sheetDate))
-      .map((sheet) => this.toRow(sheet))
+  // ---- entries table ----------------------------------------------------
+
+  public readonly columns = ENTRY_COLUMNS;
+  public readonly statusOptions = STATUS_OPTIONS;
+  public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+
+  public readonly filters = signal<FilterState>({ project: '', status: '' });
+  public readonly sort = signal<SortState>({ key: 'date', direction: 'desc' });
+  public readonly pageSize = signal(PAGE_SIZE_OPTIONS[0]);
+
+  public readonly rows = computed<EntryRow[]>(() =>
+    this.store.dailySheets().map((sheet) => this.toRow(sheet))
   );
 
   public readonly projectOptions = computed(() => {
     const names = new Set(this.rows().map((row) => row.project));
     return [...names].sort((a, b) => a.localeCompare(b));
-  });
-
-  public readonly filteredRows = computed(() => {
-    const term = this.search().trim().toLowerCase();
-    const project = this.projectFilter();
-    const status = this.statusFilter();
-
-    return this.rows().filter((row) => {
-      if (project !== 'all' && row.project !== project) return false;
-      if (status !== 'all' && row.status !== status) return false;
-      if (!term) return true;
-      return (
-        row.task.toLowerCase().includes(term) ||
-        row.description.toLowerCase().includes(term) ||
-        row.project.toLowerCase().includes(term)
-      );
-    });
-  });
-
-  public readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filteredRows().length / this.rowsPerPage()))
-  );
-
-  public readonly currentPage = computed(() => Math.min(this.page(), this.totalPages()));
-
-  public readonly pagedRows = computed(() => {
-    const start = (this.currentPage() - 1) * this.rowsPerPage();
-    return this.filteredRows().slice(start, start + this.rowsPerPage());
-  });
-
-  /** Page numbers around the current one, with `-1` standing in for an ellipsis. */
-  public readonly pageNumbers = computed<number[]>(() => {
-    const total = this.totalPages();
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-
-    const current = this.currentPage();
-    const window = new Set([1, total, current, current - 1, current + 1]);
-    const pages = [...window].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
-
-    return pages.flatMap((n, i) => (i > 0 && n - pages[i - 1] > 1 ? [-1, n] : [n]));
-  });
-
-  public readonly rangeLabel = computed(() => {
-    const total = this.filteredRows().length;
-    if (!total) return 'No entries to show';
-    const first = (this.currentPage() - 1) * this.rowsPerPage() + 1;
-    const last = Math.min(first + this.rowsPerPage() - 1, total);
-    return `Showing ${first} to ${last} of ${total} entries`;
   });
 
   // ---- KPIs -------------------------------------------------------------
@@ -239,18 +232,8 @@ export class DailySheetsComponent implements OnInit {
     this.load();
   }
 
-  public onFilterChange(): void {
-    this.page.set(1);
-  }
-
-  public goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.page.set(page);
-  }
-
-  public setRowsPerPage(rows: number): void {
-    this.rowsPerPage.set(Number(rows));
-    this.page.set(1);
+  public setFilter(key: 'project' | 'status', value: string): void {
+    this.filters.update((filters) => ({ ...filters, [key]: value }));
   }
 
   public createSheet(): void {

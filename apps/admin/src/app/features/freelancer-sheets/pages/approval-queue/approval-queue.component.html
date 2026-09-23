@@ -42,63 +42,56 @@
   </section>
 
   <section class="sheet-card">
-    <div class="sheet-card__head">
-      <div>
+    <app-smart-table
+      caption="Submitted sheets"
+      entityLabel="sheets"
+      searchPlaceholder="Search submissions..."
+      selectionMode="multiple"
+      [rows]="rows()"
+      [columns]="columns"
+      [loading]="isLoading()"
+      [pageSizeOptions]="pageSizeOptions"
+      [(sort)]="sort"
+      [(pageSize)]="pageSize"
+      (selectionChange)="selected.set($event)">
+      <div toolbar-start>
         <h2 class="text-base font-semibold text-white">Submitted Sheets</h2>
         <p class="text-xs text-slate-400 mt-0.5">Oldest submissions first</p>
       </div>
-    </div>
 
-    <div class="sheet-table-wrap">
-      <table class="sheet-table">
-        <thead>
-          <tr>
-            <th scope="col">Date</th>
-            <th scope="col">Project</th>
-            <th scope="col">Task</th>
-            <th scope="col">Hours</th>
-            <th scope="col">Amount</th>
-            <th scope="col" class="text-right">Decision</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of rows(); track row.id) {
-            <tr>
-              <td class="text-slate-300">{{ row.dateLabel }}</td>
-              <td>
-                <div class="flex items-center gap-2">
-                  <span class="avatar-chip" [style.background]="row.projectColor">{{ row.projectInitials }}</span>
-                  <span class="text-slate-100 font-medium">{{ row.project }}</span>
-                </div>
-              </td>
-              <td class="text-slate-300 max-w-[18rem] whitespace-normal">{{ row.task }}</td>
-              <td class="text-white font-semibold tabular-nums">{{ row.hours }}h</td>
-              <td class="text-slate-300 tabular-nums">{{ row.amount | currency: 'USD' : 'symbol' : '1.0-0' }}</td>
-              <td>
-                <div class="flex items-center justify-end gap-2">
-                  <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="decide(row.id, false)">
-                    Reject
-                  </button>
-                  <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="decide(row.id, true)">
-                    Approve
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6">
-                <div class="empty-state">
-                  <span class="text-2xl" aria-hidden="true">🎉</span>
-                  <p class="text-sm font-medium text-slate-300">
-                    {{ isLoading() ? 'Loading queue…' : 'Nothing waiting for approval' }}
-                  </p>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+      <ng-container bulk-actions>
+        <button type="button" class="ghost-btn decide-btn--reject" [disabled]="selectionBusy()" (click)="decideSelected(false)">
+          Reject selected
+        </button>
+        <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="selectionBusy()" (click)="decideSelected(true)">
+          Approve selected
+        </button>
+      </ng-container>
+
+      <ng-template smartCell="project" let-row>
+        <div class="flex items-center gap-2">
+          <span class="avatar-chip" [style.background]="row.projectColor">{{ row.projectInitials }}</span>
+          <span class="text-slate-100 font-medium">{{ row.project }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template smartCell="actions" let-row>
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="decide(row.id, false)">
+            Reject
+          </button>
+          <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="decide(row.id, true)">
+            Approve
+          </button>
+        </div>
+      </ng-template>
+
+      <ng-template smartEmpty>
+        <div class="empty-state">
+          <span class="text-2xl" aria-hidden="true">🎉</span>
+          <p class="text-sm font-medium text-slate-300">Nothing waiting for approval</p>
+        </div>
+      </ng-template>
+    </app-smart-table>
   </section>
 </div>

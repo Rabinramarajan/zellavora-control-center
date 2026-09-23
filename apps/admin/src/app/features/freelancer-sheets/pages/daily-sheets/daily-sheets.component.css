@@ -49,18 +49,6 @@
   color: #fff;
 }
 
-/* Table footer */
-
-.sheet-card__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.85rem 1.25rem;
-  border-top: 1px solid var(--sheet-line);
-}
-
 .row-action {
   width: 1.9rem;
   height: 1.9rem;
