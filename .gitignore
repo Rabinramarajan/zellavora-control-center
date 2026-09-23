@@ -36,7 +36,6 @@ temp/
 *.tmp
 
 # OS
-.DS_Store
 Thumbs.db
 
 # Supabase
@@ -50,7 +49,7 @@ Thumbs.db
 .history/
 .env.prod
 .env.staging
-.claude/worktrees/agent-ae6b19130678a6621
+.claude/worktrees/
 
 .vercel
 .env*
