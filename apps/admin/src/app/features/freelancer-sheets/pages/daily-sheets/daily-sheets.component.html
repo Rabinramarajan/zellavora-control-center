@@ -33,6 +33,24 @@
       </div>
       <button type="button" class="ghost-btn" (click)="goToday()">Today</button>
 
+      <input
+        #pdfInput
+        type="file"
+        accept="application/pdf,.pdf"
+        class="sr-only"
+        tabindex="-1"
+        aria-hidden="true"
+        (change)="onPdfChosen(pdfInput)"
+      />
+      <button
+        type="button"
+        class="ghost-btn"
+        (click)="pdfInput.click()"
+        title="Create daily sheets from a timesheet PDF"
+      >
+        <i class="pi pi-file-import" aria-hidden="true"></i> Import PDF
+      </button>
+
       <button type="button" class="primary-btn" (click)="createSheet()">
         <span aria-hidden="true">＋</span> New Entry
       </button>
@@ -338,3 +356,11 @@
     </aside>
   </div>
 </div>
+
+@if (importFile(); as file) {
+  <app-timesheet-import-dialog
+    [file]="file"
+    (closed)="onImportClosed($event)"
+    (chooseAnother)="importFile.set(null); pdfInput.click()"
+  />
+}

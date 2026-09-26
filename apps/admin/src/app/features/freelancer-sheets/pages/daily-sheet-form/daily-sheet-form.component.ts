@@ -28,8 +28,7 @@ import { SheetsStore } from '../../sheets.store';
 import { DailySheet, DailySheetInput, EntryType, SheetRequestError } from '../../sheets.models';
 import { isDayKey, isWeekendDayKey, parseDayKey, previewSheet, todayKey } from '../../sheets.time';
 import { statusLabel, statusPill } from '../../sheets.presentation';
-
-const LAST_RATE_KEY = 'zcc.sheets.lastHourlyRate';
+import { rememberRate, rememberedRate } from '../../sheets.preferences';
 
 /** Work-only rules are skipped for leave and holiday days, which carry no hours. */
 const isWorkDay = (group: AbstractControl): boolean =>
@@ -130,7 +129,7 @@ export class DailySheetFormComponent implements OnInit {
       endTime: [''],
       breakMinutes: [0, [Validators.min(0), Validators.max(720)]],
       hoursWorked: this.fb.control<number | null>(null, [Validators.min(0.25), Validators.max(24)]),
-      hourlyRate: this.fb.control<number | null>(this.rememberedRate(), [
+      hourlyRate: this.fb.control<number | null>(rememberedRate(), [
         Validators.min(0),
         Validators.max(100000),
       ]),
@@ -291,7 +290,7 @@ export class DailySheetFormComponent implements OnInit {
         : await this.store.createDailySheet(input);
       if (submitAfter) sheet = await this.store.submitDailySheet(sheet.id);
 
-      this.rememberRate(input.hourlyRate);
+      rememberRate(input.hourlyRate);
       this.saved = true;
       await this.router.navigate(['/freelancer-sheets/daily'], {
         queryParams: { date: sheet.sheetDate },
@@ -445,23 +444,6 @@ export class DailySheetFormComponent implements OnInit {
     } catch {
       // The picker is optional: without it a sheet is simply unassigned.
       this.projectSuggestions.set([]);
-    }
-  }
-
-  private rememberedRate(): number | null {
-    try {
-      const stored = Number(localStorage.getItem(LAST_RATE_KEY));
-      return Number.isFinite(stored) && stored > 0 ? stored : null;
-    } catch {
-      return null;
-    }
-  }
-
-  private rememberRate(rate: number): void {
-    try {
-      localStorage.setItem(LAST_RATE_KEY, String(rate));
-    } catch {
-      // Storage can be unavailable (private mode); the default is a convenience only.
     }
   }
 }

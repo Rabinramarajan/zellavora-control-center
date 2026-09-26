@@ -14,6 +14,7 @@ import { responseEnvelope } from './middleware/response-envelope';
 import { requestContext } from './middleware/request-context';
 import crypto from 'crypto';
 import { buildRbac } from './rbac';
+import { logger } from './infrastructure/logger';
 
 const app = express();
 
@@ -119,6 +120,7 @@ app.get('/health', (_req, res) => {
     environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
     ...(healthy ? {} : { configErrors }),
+    ...(rbacFailure ? { rbac: { status: 'unavailable', reason: rbacFailure } } : {}),
   });
 });
 
@@ -183,12 +185,28 @@ type RbacHandle = Awaited<ReturnType<typeof buildRbac>>;
 
 let rbacPromise: Promise<RbacHandle | null> | null = null;
 
-async function createRbac(): Promise<RbacHandle | null> {
+type RbacFailureReason =
+  'SUPABASE_NOT_CONFIGURED' | 'REDIS_URL_MISSING' | 'REDIS_CONNECT_FAILED' | 'RBAC_INIT_FAILED';
+
+// Kept so the 503 and /health can say WHY RBAC is down; without it every
+// failure mode collapses into the same opaque response.
+let rbacFailure: RbacFailureReason | null = null;
+
+class RbacInitError extends Error {
+  public constructor(
+    public readonly reason: RbacFailureReason,
+    cause?: unknown
+  ) {
+    super(cause instanceof Error ? cause.message : reason);
+  }
+}
+
+async function createRbac(): Promise<RbacHandle> {
   if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
-    return null;
+    throw new RbacInitError('SUPABASE_NOT_CONFIGURED');
   }
   if (!config.redisUrl) {
-    return null;
+    throw new RbacInitError('REDIS_URL_MISSING');
   }
 
   const db = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
@@ -205,18 +223,24 @@ async function createRbac(): Promise<RbacHandle | null> {
 
   // Attach the error listener BEFORE connecting so Node never sees an
   // unhandled 'error' event from ioredis while it retries the connection.
-  redis.on('error', () => {
-    // Silently handle errors; logging handled elsewhere
+  redis.on('error', (err: Error) => {
+    logger.warn(`RBAC redis error: ${err.message}`);
   });
 
   try {
     await redis.connect();
   } catch (connectErr) {
     redis.disconnect(); // stop background retries
-    throw connectErr;
+    throw new RbacInitError('REDIS_CONNECT_FAILED', connectErr);
   }
 
-  const rbac = await buildRbac({ db, redis });
+  let rbac: RbacHandle;
+  try {
+    rbac = await buildRbac({ db, redis });
+  } catch (initErr) {
+    redis.disconnect();
+    throw new RbacInitError('RBAC_INIT_FAILED', initErr);
+  }
 
   // Make services reachable from request middleware (req.app.locals.*)
   app.locals.engine = rbac.engine;
@@ -230,10 +254,19 @@ async function createRbac(): Promise<RbacHandle | null> {
 /** Resolves once per instance; a failed attempt is retried on the next request. */
 function getRbac(): Promise<RbacHandle | null> {
   if (!rbacPromise) {
-    rbacPromise = createRbac().catch(() => {
-      rbacPromise = null; // allow a later request to retry
-      return null;
-    });
+    rbacPromise = createRbac()
+      .then((rbac) => {
+        rbacFailure = null;
+        return rbac;
+      })
+      .catch((err: unknown) => {
+        rbacPromise = null; // allow a later request to retry
+        rbacFailure = err instanceof RbacInitError ? err.reason : 'RBAC_INIT_FAILED';
+        logger.error(
+          `RBAC initialisation failed (${rbacFailure}): ${err instanceof Error ? err.message : String(err)}`
+        );
+        return null;
+      });
   }
   return rbacPromise;
 }
@@ -245,6 +278,7 @@ const rbacGateway: RequestHandler = (req, res, next) => {
         res.status(503).json({
           error: 'RBAC module unavailable',
           code: 'RBAC_UNAVAILABLE',
+          reason: rbacFailure,
         });
         return;
       }

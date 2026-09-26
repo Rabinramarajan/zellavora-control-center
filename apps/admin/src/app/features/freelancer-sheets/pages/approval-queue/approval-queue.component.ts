@@ -15,6 +15,7 @@ import {
   SmartTableComponent,
   SortState,
 } from '../../../../shared/components/smart-table';
+import { DateRangePickerComponent } from '../../../../shared/components/date-range-picker/date-range-picker.component';
 import { SheetsStore } from '../../sheets.store';
 import { DailySheet, MonthlySheet } from '../../sheets.models';
 import { initialsOf, paletteFor, statusLabel, statusPill } from '../../sheets.presentation';
@@ -22,6 +23,7 @@ import { parseDayKey } from '../../sheets.time';
 import { AuthStore } from '../../../../core/auth/auth.store';
 
 interface DailyRow {
+  status: DailySheet['status'];
   userId: string;
   id: string;
   employee: string;
@@ -118,12 +120,19 @@ const MONTHLY_COLUMNS: ColumnDef<MonthlyRow>[] = [
 /**
  * Reviewer queue for the whole team: submitted daily sheets, and monthly
  * sheets waiting for approval or payment. Guarded by `timesheet:approve`;
- * the API enforces the same permission and refuses self-review.
+ * the API enforces the same permission, with an owner self-review exception.
  */
 @Component({
   selector: 'app-approval-queue',
   standalone: true,
-  imports: [CommonModule, RouterLink, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
+  imports: [
+    CommonModule,
+    RouterLink,
+    SmartTableComponent,
+    SmartCellDirective,
+    SmartEmptyDirective,
+    DateRangePickerComponent,
+  ],
   providers: [SheetsStore],
   templateUrl: './approval-queue.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './approval-queue.component.css'],
@@ -142,6 +151,72 @@ export class ApprovalQueueComponent implements OnInit {
   public readonly error = this.store.error;
 
   public readonly tab = signal<QueueTab>('daily');
+  public readonly search = signal('');
+  public readonly projectFilter = signal('');
+  public readonly memberFilter = signal('');
+  public readonly statusFilter = signal('submitted');
+  public readonly dateFrom = signal('');
+  public readonly dateTo = signal('');
+  public readonly page = signal(1);
+  public readonly newestFirst = signal(false);
+  public readonly collapsed = signal<ReadonlySet<string>>(new Set());
+  public readonly initials = initialsOf;
+  public readonly loadedMonthly = signal(false);
+  public readonly projects = computed(() => [...new Set(this.dailyRows().map(row => row.project))].sort());
+  public readonly members = computed(() => {
+    const rows = this.tab() === 'daily' ? this.dailyRows() : this.monthlyRows();
+    return [...new Map(rows.map(row => [row.userId, row.employee])).entries()];
+  });
+  public readonly pendingDaily = computed(() => this.dailyRows().filter(row => row.status === 'submitted'));
+  public readonly filteredDaily = computed(() => this.dailyRows().filter(row =>
+    (!this.search() || `${row.employee} ${row.project} ${row.task}`.toLowerCase().includes(this.search().toLowerCase())) &&
+    (!this.projectFilter() || row.project === this.projectFilter()) &&
+    (!this.memberFilter() || row.userId === this.memberFilter()) &&
+    (!this.statusFilter() || row.status === this.statusFilter()) &&
+    (!this.dateFrom() || row.date >= this.dateFrom()) &&
+    (!this.dateTo() || row.date <= this.dateTo())
+  ).sort((a, b) => this.newestFirst() ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
+  public readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredDaily().length / this.pageSize())));
+  public readonly currentPage = computed(() => Math.min(this.page(), this.totalPages()));
+  public readonly visibleDaily = computed(() => this.filteredDaily().slice((this.currentPage() - 1) * this.pageSize(), this.currentPage() * this.pageSize()));
+  public readonly groups = computed(() => {
+    const groups = new Map<string, DailyRow[]>();
+    for (const row of this.visibleDaily()) groups.set(row.date, [...(groups.get(row.date) ?? []), row]);
+    return [...groups.entries()].map(([date, rows]) => ({ date, label: rows[0].dateLabel, rows }));
+  });
+  public readonly filteredMonthly = computed(() => this.monthlyRows().filter(row =>
+    (!this.search() || `${row.employee} ${row.period}`.toLowerCase().includes(this.search().toLowerCase())) &&
+    (!this.memberFilter() || row.userId === this.memberFilter()) &&
+    (!this.statusFilter() || row.status === this.statusFilter()) &&
+    (!this.dateFrom() || row.period >= this.dateFrom().slice(0, 7)) &&
+    (!this.dateTo() || row.period <= this.dateTo().slice(0, 7))
+  ));
+  public isSelected(id: string): boolean { return this.selectedDaily().some(row => row.id === id); }
+  public readonly allSelected = computed(() => {
+    const rows = this.visibleDaily().filter(row => row.status === 'submitted' && this.canReviewOwner(row.userId));
+    return rows.length > 0 && rows.every(row => this.isSelected(row.id));
+  });
+  public toggleRow(row: DailyRow): void {
+    this.selectedDaily.update(rows => this.isSelected(row.id) ? rows.filter(item => item.id !== row.id) : [...rows, row]);
+  }
+  public toggleAll(): void {
+    const rows = this.visibleDaily().filter(row => row.status === 'submitted' && this.canReviewOwner(row.userId));
+    this.selectedDaily.set(this.allSelected() ? [] : rows);
+  }
+  public toggleGroup(date: string): void {
+    this.collapsed.update(value => { const next = new Set(value); next.has(date) ? next.delete(date) : next.add(date); return next; });
+  }
+  public readonly activeFilterCount = computed(() =>
+    [this.search(), this.projectFilter(), this.memberFilter(), this.statusFilter(), this.dateFrom() || this.dateTo()]
+      .filter(Boolean).length
+  );
+  public readonly selectableCount = computed(() =>
+    this.visibleDaily().filter(row => row.status === 'submitted' && this.canReviewOwner(row.userId)).length
+  );
+  public clearFilters(): void {
+    this.search.set(''); this.projectFilter.set(''); this.memberFilter.set(''); this.statusFilter.set('');
+    this.dateFrom.set(''); this.dateTo.set(''); this.page.set(1); this.selectedDaily.set([]);
+  }
   public readonly dailyColumns = DAILY_COLUMNS;
   public readonly monthlyColumns = MONTHLY_COLUMNS;
   public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
@@ -159,7 +234,6 @@ export class ApprovalQueueComponent implements OnInit {
   public readonly dailyRows = computed<DailyRow[]>(() =>
     this.store
       .dailySheets()
-      .filter((sheet) => sheet.status === 'submitted')
       .map((sheet) => this.toDailyRow(sheet))
   );
 
@@ -181,11 +255,11 @@ export class ApprovalQueueComponent implements OnInit {
   );
 
   public readonly dailyHours = computed(
-    () => Math.round(this.dailyRows().reduce((total, row) => total + row.hours, 0) * 10) / 10
+    () => Math.round(this.pendingDaily().reduce((total, row) => total + row.hours, 0) * 10) / 10
   );
 
   public readonly dailyAmount = computed(() =>
-    this.dailyRows().reduce((total, row) => total + row.amount, 0)
+    this.pendingDaily().reduce((total, row) => total + row.amount, 0)
   );
 
   public readonly selectionBusy = computed(() =>
@@ -201,7 +275,10 @@ export class ApprovalQueueComponent implements OnInit {
   }
 
   public selectTab(tab: QueueTab): void {
+    if (this.tab() === tab) return;
     this.tab.set(tab);
+    this.clearFilters();
+    this.statusFilter.set('submitted');
     this.selectedDaily.set([]);
     this.cancelRejection();
     this.reload();
@@ -209,9 +286,9 @@ export class ApprovalQueueComponent implements OnInit {
 
   public reload(): void {
     if (this.tab() === 'monthly') {
-      void this.store.loadMonthlySheets({ scope: 'team', pageSize: 200 });
+      void this.store.loadMonthlySheets({ scope: 'team', pageSize: 200 }).then(() => this.loadedMonthly.set(true));
     } else {
-      void this.store.loadDailySheets({ scope: 'team', status: 'submitted' });
+      void this.store.loadDailySheets({ scope: 'team' });
     }
   }
 
@@ -220,9 +297,21 @@ export class ApprovalQueueComponent implements OnInit {
   }
 
   public approveDaily(ids: readonly string[]): void {
-    for (const id of ids) {
-      if (!this.dailyRows().some((row) => row.id === id && this.canReviewOwner(row.userId))) continue;
-      void this.decide(id, () => this.store.reviewDailySheet(id, true));
+    void this.reviewDailyBatch(ids, true);
+  }
+
+  private async reviewDailyBatch(ids: readonly string[], approved: boolean, reason?: string): Promise<void> {
+    const eligible = [...new Set(ids)].filter((id) => !this.isBusy(id) &&
+      this.dailyRows().some((row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)));
+    if (!eligible.length) return;
+    this.busyIds.update((busy) => new Set([...busy, ...eligible]));
+    try {
+      await this.store.reviewDailyBulk(eligible, approved, reason);
+      this.selectedDaily.set([]);
+    } catch {
+      // HTTP errors are displayed by the global error interceptor.
+    } finally {
+      this.busyIds.update((busy) => new Set([...busy].filter((id) => !eligible.includes(id))));
     }
   }
 
@@ -249,7 +338,7 @@ export class ApprovalQueueComponent implements OnInit {
   /** Rejecting always asks why: the freelancer needs to know what to fix. */
   public startRejection(kind: QueueTab, ids: readonly string[]): void {
     const rows = kind === 'daily' ? this.dailyRows() : this.monthlyRows();
-    ids = ids.filter((id) => rows.some((row) => row.id === id && this.canReviewOwner(row.userId)));
+    ids = ids.filter((id) => rows.some((row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)));
     if (!ids.length) return;
     this.rejectionReason.set('');
     this.rejection.set({ kind, ids: [...ids] });
@@ -265,14 +354,15 @@ export class ApprovalQueueComponent implements OnInit {
     if (!pending || !reason) return;
     this.rejection.set(null);
 
+    if (pending.kind === 'daily') {
+      void this.reviewDailyBatch(pending.ids, false, reason);
+      return;
+    }
+
     for (const id of pending.ids) {
-      const rows = pending.kind === 'daily' ? this.dailyRows() : this.monthlyRows();
+      const rows = this.monthlyRows();
       if (!rows.some((row) => row.id === id && this.canReviewOwner(row.userId))) continue;
-      void this.decide(id, () =>
-        pending.kind === 'daily'
-          ? this.store.reviewDailySheet(id, false, reason)
-          : this.store.reviewMonthlySheet(id, false, reason)
-      );
+      void this.decide(id, () => this.store.reviewMonthlySheet(id, false, reason));
     }
   }
 
@@ -298,6 +388,7 @@ export class ApprovalQueueComponent implements OnInit {
       sheet.entryType === 'leave' ? 'Leave' : sheet.entryType === 'holiday' ? 'Holiday' : null;
     return {
       id: sheet.id,
+      status: sheet.status,
       userId: sheet.userId,
       employee: sheet.user?.fullName ?? 'Unknown',
       date: sheet.sheetDate,

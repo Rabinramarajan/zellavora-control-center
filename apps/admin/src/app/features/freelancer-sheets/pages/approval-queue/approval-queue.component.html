@@ -1,195 +1,260 @@
-<div class="sheet-page">
-  <header class="sheet-header">
-    <div class="flex items-center gap-4">
-      <div class="sheet-header__icon" aria-hidden="true"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Approval Queue</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Review your team's daily and monthly sheets. Workspace owners can also review their own sheets.</p>
-      </div>
+<div class="queue">
+  <header class="queue-header">
+    <div>
+      <p class="eyebrow">Freelancer sheets</p>
+      <h1>Approval Queue</h1>
+      <p class="lede">Review your team's daily and monthly sheets. Approve or send back for changes.</p>
     </div>
-    <button type="button" class="ghost-btn" (click)="reload()" [disabled]="isLoading()">↻ Refresh</button>
+    <button class="ghost-btn" (click)="reload()" [disabled]="isLoading()">
+      <i class="pi pi-refresh" [class.pi-spin]="isLoading()" aria-hidden="true"></i>
+      Refresh
+    </button>
   </header>
 
-  @if (error()) {
-    <div class="notice notice--danger flex flex-wrap items-center justify-between gap-3" role="alert">
-      <span>{{ error() }}</span>
-      <button type="button" class="ghost-btn" (click)="reload()">Retry</button>
-    </div>
-  }
-
-  <section class="kpi-grid" aria-label="Queue summary">
-    <article class="kpi kpi--active">
-      <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-amber-500/20 text-amber-200" aria-hidden="true"><i class="pi pi-hourglass" aria-hidden="true"></i></span>
-        <span class="text-sm font-semibold text-slate-200">Daily Sheets Pending</span>
-      </div>
-      <div class="kpi__value text-white">{{ dailyRows().length }}</div>
+  <section class="metrics" aria-label="Approval overview">
+    <article class="metric metric--violet">
+      <div class="metric-head"><span class="metric-icon"><i class="pi pi-file" aria-hidden="true"></i></span>Daily sheets pending</div>
+      <strong>{{ pendingDaily().length }}</strong>
+      <p>submitted work logs</p>
     </article>
-    <article class="kpi">
-      <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-violet-500/25 text-violet-200" aria-hidden="true"><i class="pi pi-clock" aria-hidden="true"></i></span>
-        <span class="text-sm font-semibold text-slate-200">Hours Pending</span>
-      </div>
-      <div class="kpi__value text-white">{{ dailyHours() }}h</div>
-      <p class="text-xs text-slate-400">{{ dailyAmount() | currency: 'USD' : 'symbol' : '1.0-0' }} in value</p>
+    <article class="metric metric--amber">
+      <div class="metric-head"><span class="metric-icon"><i class="pi pi-clock" aria-hidden="true"></i></span>Hours pending</div>
+      <strong>{{ dailyHours() }}<span class="unit">h</span></strong>
+      <p>{{ dailyAmount() | currency:'USD' }} in value</p>
     </article>
-    <article class="kpi">
-      <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-sky-500/20 text-sky-200" aria-hidden="true"><i class="pi pi-calendar" aria-hidden="true"></i></span>
-        <span class="text-sm font-semibold text-slate-200">Monthly Sheets</span>
+    <article class="metric metric--green">
+      <div class="metric-head"><span class="metric-icon"><i class="pi pi-calendar" aria-hidden="true"></i></span>Monthly sheets pending</div>
+      @if (loadedMonthly()) {
+        <strong>{{ pendingMonthly() }}</strong>
+        <p>{{ awaitingPayment() }} approved, awaiting payment</p>
+      } @else {
+        <strong class="muted">—</strong>
+        <button class="link-btn" (click)="selectTab('monthly')">Load monthly sheets <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+      }
+    </article>
+    <article class="metric metric--blue">
+      <div class="metric-head"><span class="metric-icon"><i class="pi pi-users" aria-hidden="true"></i></span>Team members</div>
+      <div class="metric-row">
+        <strong>{{ members().length }}</strong>
+        <div class="avatar-stack" aria-hidden="true">
+          @for (member of members().slice(0, 4); track member[0]) {<span>{{ initials(member[1]) }}</span>}
+        </div>
       </div>
-      <div class="kpi__value text-white">{{ pendingMonthly() }}</div>
-      <p class="text-xs text-slate-400">{{ awaitingPayment() }} approved, awaiting payment</p>
+      <p>in the current queue</p>
     </article>
   </section>
 
+  @if (error()) {
+    <div class="notice notice--danger" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <span>{{ error() }}</span>
+      <button class="ghost-btn" (click)="reload()">Retry</button>
+    </div>
+  }
+
   @if (rejection(); as pending) {
-    <section class="sheet-card" role="dialog" aria-labelledby="reject-title" aria-modal="false">
-      <div class="sheet-card__body flex flex-col gap-3">
-        <h2 id="reject-title" class="text-base font-semibold text-white">
-          Reject {{ pending.ids.length }} {{ pending.kind }} {{ pending.ids.length === 1 ? 'sheet' : 'sheets' }}
-        </h2>
-        <label class="field">
-          <span class="field__label">Reason (sent to the freelancer) *</span>
-          <textarea
-            class="field__input"
-            rows="3"
-            maxlength="2000"
-            [value]="rejectionReason()"
-            (input)="rejectionReason.set($any($event.target).value)"
-            placeholder="What needs to change before this can be approved?"></textarea>
-        </label>
-        <div class="flex gap-2">
-          <button type="button" class="danger-btn" [disabled]="!rejectionReason().trim()" (click)="confirmRejection()">
-            Reject
-          </button>
-          <button type="button" class="ghost-btn" (click)="cancelRejection()">Cancel</button>
-        </div>
+    <section class="rejection" aria-labelledby="reject-title">
+      <div>
+        <h2 id="reject-title">Send {{ pending.ids.length }} sheet{{ pending.ids.length === 1 ? '' : 's' }} back</h2>
+        <p>Explain what needs to change before approval.</p>
+      </div>
+      <label class="field">
+        <span class="field__label">Reason for rejection</span>
+        <textarea class="field__input" maxlength="2000" rows="3" [value]="rejectionReason()" (input)="rejectionReason.set($any($event.target).value)"></textarea>
+      </label>
+      <div class="actions">
+        <button class="ghost-btn" (click)="cancelRejection()">Cancel</button>
+        <button class="danger-btn" [disabled]="!rejectionReason().trim()" (click)="confirmRejection()">Send back</button>
       </div>
     </section>
   }
 
-  <div class="segmented self-start" role="radiogroup" aria-label="Queue">
-    <label class="segmented__option">
-      <input type="radio" name="queue-tab" [checked]="tab() === 'daily'" (change)="selectTab('daily')" />
-      <span>Daily ({{ dailyRows().length }})</span>
-    </label>
-    <label class="segmented__option">
-      <input type="radio" name="queue-tab" [checked]="tab() === 'monthly'" (change)="selectTab('monthly')" />
-      <span>Monthly ({{ monthlyRows().length }})</span>
-    </label>
-  </div>
+  <section class="panel" [attr.aria-busy]="isLoading()">
+    <header class="panel-head">
+      <nav class="segmented" aria-label="Approval type">
+        <button [class.active]="tab() === 'daily'" [attr.aria-pressed]="tab() === 'daily'" (click)="selectTab('daily')">
+          Daily sheets <span class="count">{{ pendingDaily().length }}</span>
+        </button>
+        <button [class.active]="tab() === 'monthly'" [attr.aria-pressed]="tab() === 'monthly'" (click)="selectTab('monthly')">
+          Monthly sheets <span class="count">{{ loadedMonthly() ? pendingMonthly() : '—' }}</span>
+        </button>
+      </nav>
+      @if (tab() === 'daily') {
+        <select class="control" aria-label="Sort by date" [value]="newestFirst() ? 'newest' : 'oldest'" (change)="newestFirst.set($any($event.target).value === 'newest')">
+          <option value="oldest">Oldest first</option>
+          <option value="newest">Newest first</option>
+        </select>
+      }
+    </header>
 
-  @if (tab() === 'daily') {
-    <section class="sheet-card sheet-table-card">
-      <app-smart-table
-        caption="Submitted daily sheets"
-        entityLabel="sheets"
-        searchPlaceholder="Search submissions..."
-        selectionMode="multiple"
-        [rows]="dailyRows()"
-        [columns]="dailyColumns"
-        [loading]="isLoading()"
-        [pageSizeOptions]="pageSizeOptions"
-        [(sort)]="dailySort"
-        [(pageSize)]="pageSize"
-        (selectionChange)="selectedDaily.set($event)">
-        <div toolbar-start>
-          <h2 class="text-base font-semibold text-white">Submitted Daily Sheets</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Oldest first</p>
-        </div>
+    <div class="toolbar" role="search" aria-label="Filter sheets">
+      <label class="search">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input aria-label="Search sheets" placeholder="Search project, task or employee" [value]="search()" (input)="search.set($any($event.target).value); page.set(1); selectedDaily.set([])" />
+      </label>
+      @if (tab() === 'daily') {
+        <select class="control" aria-label="Project" [class.set]="projectFilter()" [value]="projectFilter()" (change)="projectFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])">
+          <option value="">All projects</option>
+          @for (project of projects(); track project) {<option [value]="project">{{ project }}</option>}
+        </select>
+      }
+      <select class="control" aria-label="Team member" [class.set]="memberFilter()" [value]="memberFilter()" (change)="memberFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])">
+        <option value="">All members</option>
+        @for (member of members(); track member[0]) {<option [value]="member[0]">{{ member[1] }}</option>}
+      </select>
+      <select class="control" aria-label="Status" [class.set]="statusFilter()" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])">
+        <option value="">All statuses</option>
+        <option value="submitted">Pending</option>
+        <option value="approved">Approved</option>
+        @if (tab() === 'daily') {<option value="rejected">Rejected</option><option value="draft">Draft</option>}
+      </select>
+      <app-date-range-picker [(from)]="dateFrom" [(to)]="dateTo" (rangeChange)="page.set(1); selectedDaily.set([])" />
+      @if (activeFilterCount()) {
+        <button class="clear" (click)="clearFilters()">
+          <i class="pi pi-filter-slash" aria-hidden="true"></i> Clear {{ activeFilterCount() }}
+        </button>
+      }
+    </div>
 
-        <ng-container bulk-actions>
-          <button type="button" class="ghost-btn decide-btn--reject" [disabled]="selectionBusy()"
-                  (click)="rejectSelected()">
-            Reject selected
-          </button>
-          <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="selectionBusy()"
-                  (click)="approveSelected()">
-            Approve selected
-          </button>
-        </ng-container>
-
-        <ng-template smartCell="project" let-row>
-          <div class="flex items-center gap-2">
-            <span class="avatar-chip" [style.background]="row.projectColor">{{ row.projectInitials }}</span>
-            <span class="text-slate-100 font-medium">{{ row.project }}</span>
+    @if (tab() === 'daily') {
+      @if (selectedDaily().length) {
+        <div class="bulk-bar" role="region" aria-label="Bulk actions">
+          <span><strong>{{ selectedDaily().length }}</strong> selected</span>
+          <button class="link-btn" (click)="selectedDaily.set([])">Deselect</button>
+          <div class="actions">
+            <button class="ghost-btn" [disabled]="selectionBusy()" (click)="rejectSelected()">Reject</button>
+            <button class="primary-btn" [disabled]="selectionBusy()" (click)="approveSelected()"><i class="pi pi-check" aria-hidden="true"></i> Approve {{ selectedDaily().length }}</button>
           </div>
-        </ng-template>
+        </div>
+      }
 
-        <ng-template smartCell="actions" let-row>
-          <div class="flex items-center justify-end gap-2">
-            <a class="ghost-btn" [routerLink]="['/freelancer-sheets/daily', row.id]">View</a>
-            @if (canReviewOwner(row.userId)) {
-            <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="startRejection('daily', [row.id])">
-              Reject
-            </button>
-            <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="approveDaily([row.id])">
-              Approve
-            </button>
+      <div class="table-scroll">
+        <table>
+          <caption class="sr-only">Daily sheets grouped by date</caption>
+          <thead>
+            <tr>
+              <th class="check"><input type="checkbox" aria-label="Select eligible sheets on this page" [checked]="allSelected()" [disabled]="isLoading() || !selectableCount()" (change)="toggleAll()" /></th>
+              <th>Employee</th>
+              <th>Project</th>
+              <th>Task / description</th>
+              <th class="num">Hours</th>
+              <th class="num">Amount</th>
+              <th>Status</th>
+              <th class="right"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              @for (skeleton of [1, 2, 3, 4]; track skeleton) {
+                <tr class="skeleton" aria-hidden="true"><td colspan="8"><span></span></td></tr>
+              }
             } @else {
-              <span class="text-xs text-amber-200">Your sheet · Awaiting another reviewer</span>
+              @for (group of groups(); track group.date) {
+                <tr class="group">
+                  <td colspan="8">
+                    <button (click)="toggleGroup(group.date)" [attr.aria-expanded]="!collapsed().has(group.date)">
+                      <i class="pi pi-chevron-down" [class.rotated]="collapsed().has(group.date)" aria-hidden="true"></i>
+                      {{ group.label }}
+                      <span class="count">{{ group.rows.length }}</span>
+                    </button>
+                  </td>
+                </tr>
+                @if (!collapsed().has(group.date)) {
+                  @for (row of group.rows; track row.id) {
+                    <tr [class.selected]="isSelected(row.id)">
+                      <td class="check"><input type="checkbox" [attr.aria-label]="'Select ' + row.employee + ', ' + row.project" [checked]="isSelected(row.id)" [disabled]="row.status !== 'submitted' || !canReviewOwner(row.userId) || isBusy(row.id)" (change)="toggleRow(row)" /></td>
+                      <td>
+                        <div class="person">
+                          <span class="avatar">{{ initials(row.employee) }}</span>
+                          <div>{{ row.employee }}<small>{{ row.date | date:'EEE, MMM d' }}</small></div>
+                        </div>
+                      </td>
+                      <td><div class="project"><span [style.background]="row.projectColor">{{ row.projectInitials }}</span>{{ row.project }}</div></td>
+                      <td class="task" [title]="row.task">{{ row.task }}</td>
+                      <td class="num">{{ row.hours }}h</td>
+                      <td class="num">{{ row.amount | currency:'USD' }}</td>
+                      <td>
+                        <span [class]="statusPill(row.status)">
+                          <i [class]="row.status === 'submitted' ? 'pi pi-clock' : row.status === 'approved' ? 'pi pi-check-circle' : 'pi pi-file'" aria-hidden="true"></i>
+                          {{ statusLabel(row.status) }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="actions">
+                          <a class="icon-btn" [routerLink]="['/freelancer-sheets/daily', row.id]" [attr.aria-label]="'View sheet from ' + row.employee" title="View"><i class="pi pi-eye" aria-hidden="true"></i></a>
+                          @if (row.status === 'submitted') {
+                            @if (canReviewOwner(row.userId)) {
+                              <button class="icon-btn icon-btn--danger" [disabled]="isBusy(row.id)" (click)="startRejection('daily', [row.id])" [attr.aria-label]="'Reject sheet from ' + row.employee" title="Reject"><i class="pi pi-times" aria-hidden="true"></i></button>
+                              <button class="primary-btn" [disabled]="isBusy(row.id)" (click)="approveDaily([row.id])">{{ isBusy(row.id) ? 'Saving…' : 'Approve' }}</button>
+                            } @else {
+                              <span class="own-note">Awaiting another reviewer</span>
+                            }
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              } @empty {
+                <tr>
+                  <td colspan="8" class="empty">
+                    <span class="empty-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
+                    @if (activeFilterCount() === 0 || (activeFilterCount() === 1 && statusFilter() === 'submitted')) {
+                      <h3>You're all caught up</h3>
+                      <p>No daily sheets are waiting for review right now.</p>
+                    } @else {
+                      <h3>No sheets match these filters</h3>
+                      <p>Try widening the date range or clearing filters.</p>
+                      <button class="ghost-btn" (click)="clearFilters()">Clear filters</button>
+                    }
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="pagination">
+        <span>{{ filteredDaily().length }} sheet{{ filteredDaily().length === 1 ? '' : 's' }}</span>
+        <div class="actions">
+          <label>Rows
+            <select class="control control--sm" [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value); page.set(1); selectedDaily.set([])">
+              @for (size of pageSizeOptions; track size) {<option [value]="size">{{ size }}</option>}
+            </select>
+          </label>
+          <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+          <button class="icon-btn" aria-label="Previous page" [disabled]="currentPage() === 1" (click)="page.set(currentPage() - 1); selectedDaily.set([])"><i class="pi pi-angle-left" aria-hidden="true"></i></button>
+          <button class="icon-btn" aria-label="Next page" [disabled]="currentPage() === totalPages()" (click)="page.set(currentPage() + 1); selectedDaily.set([])"><i class="pi pi-angle-right" aria-hidden="true"></i></button>
+        </div>
+      </footer>
+    } @else {
+      <app-smart-table [rows]="filteredMonthly()" [columns]="monthlyColumns" [loading]="isLoading()" [searchable]="false" [(pageSize)]="pageSize" [(sort)]="monthlySort" [pageSizeOptions]="pageSizeOptions" entityLabel="sheets">
+        <ng-template smartCell="employee" let-row><div class="person"><span class="avatar">{{ initials(row.employee) }}</span>{{ row.employee }}</div></ng-template>
+        <ng-template smartCell="status" let-row><span [class]="statusPill(row.status)">{{ statusLabel(row.status) }}</span></ng-template>
+        <ng-template smartCell="actions" let-row>
+          <div class="actions">
+            <a class="icon-btn" routerLink="/freelancer-sheets/monthly/timesheet" [queryParams]="{ month: row.month, year: row.year, userId: row.userId }" [attr.aria-label]="'View timesheet for ' + row.employee" title="View"><i class="pi pi-eye" aria-hidden="true"></i></a>
+            @if (row.status === 'submitted') {
+              @if (canReviewOwner(row.userId)) {
+                <button class="icon-btn icon-btn--danger" [disabled]="isBusy(row.id)" (click)="startRejection('monthly', [row.id])" [attr.aria-label]="'Reject timesheet for ' + row.employee" title="Reject"><i class="pi pi-times" aria-hidden="true"></i></button>
+                <button class="primary-btn" [disabled]="isBusy(row.id)" (click)="approveMonthly(row.id)">Approve</button>
+              } @else {
+                <span class="own-note">Awaiting another reviewer</span>
+              }
+            } @else {
+              <button class="primary-btn" [disabled]="isBusy(row.id)" (click)="markPaid(row.id)">Mark paid</button>
             }
           </div>
         </ng-template>
-
         <ng-template smartEmpty>
-          <div class="empty-state">
-            <span class="text-2xl" aria-hidden="true">🎉</span>
-            <p class="text-sm font-medium text-slate-300">No daily sheets waiting for approval</p>
+          <div class="empty">
+            <span class="empty-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
+            <h3>No matching monthly sheets</h3>
+            <p>Try another status or team member.</p>
           </div>
         </ng-template>
       </app-smart-table>
-    </section>
-  } @else {
-    <section class="sheet-card sheet-table-card">
-      <app-smart-table
-        caption="Monthly sheets"
-        entityLabel="sheets"
-        searchPlaceholder="Search monthly sheets..."
-        [rows]="monthlyRows()"
-        [columns]="monthlyColumns"
-        [loading]="isLoading()"
-        [pageSizeOptions]="pageSizeOptions"
-        [(sort)]="monthlySort"
-        [(pageSize)]="pageSize">
-        <div toolbar-start>
-          <h2 class="text-base font-semibold text-white">Monthly Sheets</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Submitted for approval, or approved and awaiting payment</p>
-        </div>
-
-        <ng-template smartCell="status" let-row>
-          <span [class]="statusPill(row.status)">{{ statusLabel(row.status) }}</span>
-        </ng-template>
-
-        <ng-template smartCell="actions" let-row>
-          <div class="flex items-center justify-end gap-2">
-            <a class="ghost-btn" routerLink="/freelancer-sheets/monthly/timesheet"
-               [queryParams]="{ month: row.month, year: row.year, userId: row.userId }">Timesheet</a>
-            @if (row.status === 'submitted' && !canReviewOwner(row.userId)) {
-              <span class="text-xs text-amber-200">Your sheet · Awaiting another reviewer</span>
-            } @else if (row.status === 'submitted') {
-              <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="startRejection('monthly', [row.id])">
-                Reject
-              </button>
-              <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="approveMonthly(row.id)">
-                Approve
-              </button>
-            } @else {
-              <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="markPaid(row.id)">
-                Mark paid
-              </button>
-            }
-          </div>
-        </ng-template>
-
-        <ng-template smartEmpty>
-          <div class="empty-state">
-            <span class="text-2xl" aria-hidden="true">📭</span>
-            <p class="text-sm font-medium text-slate-300">No monthly sheets need attention</p>
-          </div>
-        </ng-template>
-      </app-smart-table>
-    </section>
-  }
+    }
+  </section>
 </div>

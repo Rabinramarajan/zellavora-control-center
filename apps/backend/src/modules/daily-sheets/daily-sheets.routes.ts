@@ -9,6 +9,9 @@ const controller = new DailySheetsController();
 
 router.use(authGuard);
 
+router.post('/bulk-approve', requirePermission(REVIEW_PERMISSION),
+  asyncRoute((req, res) => controller.approveBulk(req, res)));
+
 /**
  * @route POST /api/v1/daily-sheets
  * @description Create a new daily sheet

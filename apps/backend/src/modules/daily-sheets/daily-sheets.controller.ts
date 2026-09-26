@@ -1,4 +1,6 @@
 import { Response } from 'express';
+import { z } from 'zod';
+import { AppError } from '../../middleware/error';
 import { AuthRequest } from '../../middleware/auth';
 import { DailySheetsService } from './daily-sheets.service';
 import {
@@ -11,6 +13,23 @@ import { requestContext, resolveViewer } from './sheets.shared';
 
 export class DailySheetsController {
   private readonly service = new DailySheetsService();
+
+  public async approveBulk(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const ids = [...new Set(z.array(z.string().uuid()).min(1).max(500).parse(req.body.ids))];
+    const dto = ApproveDailySheetSchema.parse(req.body);
+    const viewer = await resolveViewer(req);
+    const sheets = [];
+    const errors = [];
+    for (const id of ids) {
+      try {
+        sheets.push(await this.service.approve(id, dto, organizationId, viewer));
+      } catch (error) {
+        errors.push({ id, message: error instanceof AppError ? error.message : 'Could not review sheet' });
+      }
+    }
+    res.json({ success: true, data: { sheets, errors } });
+  }
 
   public async create(req: AuthRequest, res: Response): Promise<void> {
     const { organizationId } = requestContext(req);

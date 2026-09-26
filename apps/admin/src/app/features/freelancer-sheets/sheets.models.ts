@@ -197,3 +197,8 @@ export interface MonthlyDocument {
   };
   pendingDailyCount: number;
 }
+
+/** Outcome of one day in a bulk import. */
+export type DailyImportResult =
+  | { date: string; ok: true }
+  | { date: string; ok: false; message: string };

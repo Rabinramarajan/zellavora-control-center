@@ -18,6 +18,7 @@ import {
   SortState,
 } from '../../../../shared/components/smart-table';
 import { SheetsStore } from '../../sheets.store';
+import { TimesheetImportDialogComponent } from '../../components/timesheet-import-dialog/timesheet-import-dialog.component';
 import { DailySheet } from '../../sheets.models';
 import { isDayKey, parseDayKey } from '../../sheets.time';
 import {
@@ -108,6 +109,7 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
     SmartTableComponent,
     SmartCellDirective,
     SmartEmptyDirective,
+    TimesheetImportDialogComponent,
   ],
   providers: [SheetsStore],
   templateUrl: './daily-sheets.component.html',
@@ -329,6 +331,21 @@ export class DailySheetsComponent implements OnInit {
 
   public reload(): void {
     void this.load();
+  }
+
+  /** The PDF awaiting review in the import dialog. */
+  public readonly importFile = signal<File | null>(null);
+
+  public onPdfChosen(picker: HTMLInputElement): void {
+    const file = picker.files?.[0] ?? null;
+    // Reset so choosing the same file again still fires `change`.
+    picker.value = '';
+    if (file) this.importFile.set(file);
+  }
+
+  public onImportClosed(imported: boolean): void {
+    this.importFile.set(null);
+    if (imported) this.reload();
   }
 
   public readonly statusPill = statusPill;

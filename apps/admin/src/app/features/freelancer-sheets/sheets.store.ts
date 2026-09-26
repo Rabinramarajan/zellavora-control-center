@@ -3,6 +3,7 @@ import { ErrorBus } from '../../core/error/error-bus';
 import { SheetsApi } from './sheets.api';
 import {
   DailySheet,
+  DailyImportResult,
   DailySheetInput,
   DailySheetQuery,
   MonthlySheet,
@@ -93,6 +94,43 @@ export class SheetsStore {
     );
   }
 
+  /**
+   * Creates sheets one at a time — the API checks each day against the ones
+   * already logged, so parallel writes for the same day could race. Failures
+   * are collected instead of toasted, and one summary is shown at the end.
+   */
+  public async importDailySheets(
+    inputs: readonly DailySheetInput[],
+    onProgress?: (done: number) => void
+  ): Promise<DailyImportResult[]> {
+    const results: DailyImportResult[] = [];
+    for (const input of inputs) {
+      try {
+        this.upsertDaily(await this.api.createDaily(input));
+        results.push({ date: input.sheetDate, ok: true });
+      } catch (error) {
+        const message = (error as Partial<SheetRequestError>).message || 'Could not be saved';
+        results.push({ date: input.sheetDate, ok: false, message });
+      }
+      onProgress?.(results.length);
+    }
+    const saved = results.filter((result) => result.ok).length;
+    this.bus.push({
+      kind: saved === inputs.length ? 'info' : 'error',
+      message: `Imported ${saved} of ${inputs.length} day${inputs.length === 1 ? '' : 's'}`,
+      ttl: 4000,
+    });
+    return results;
+  }
+
+  /** Days in the range that already hold a live (non-rejected) sheet of the caller's. */
+  public async loggedDates(startDate: string, endDate: string): Promise<Set<string>> {
+    const page = await this.api.listDaily({ scope: 'mine', startDate, endDate, pageSize: 500 });
+    return new Set(
+      page.data.filter((sheet) => sheet.status !== 'rejected').map((sheet) => sheet.sheetDate)
+    );
+  }
+
   public updateDailySheet(id: string, input: Partial<DailySheetInput>): Promise<DailySheet> {
     return this.mutate(
       () => this.api.updateDaily(id, input),
@@ -127,6 +165,18 @@ export class SheetsStore {
       () => this.daily.update((list) => list.filter((sheet) => sheet.id !== id)),
       'Daily sheet deleted'
     );
+  }
+
+  public async reviewDailyBulk(ids: readonly string[], approved: boolean, reason?: string) {
+    const result = await this.api.reviewDailyBulk(ids, approved, reason);
+    result.sheets.forEach((sheet) => this.upsertDaily(sheet));
+    this.bus.push({
+      kind: result.errors.length ? 'error' : 'info',
+      message: result.errors.length
+        ? `${result.sheets.length} reviewed; ${result.errors.length} failed. ${result.errors[0].message}`
+        : `${result.sheets.length} sheets ${approved ? 'approved' : 'rejected'}`,
+    });
+    return result;
   }
 
   // ---- monthly ----------------------------------------------------------
