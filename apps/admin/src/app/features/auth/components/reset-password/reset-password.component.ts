@@ -1,110 +1,77 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { FormField, FormRoot, apply, form, required, validate } from '@angular/forms/signals';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { FormInputControl, passwordFieldSchema } from '@zellavoras/ui';
 import { AuthService } from '@core/auth/auth.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, FormField, FormRoot, FormInputControl, RouterLink],
   templateUrl: './reset-password.component.html',
   styleUrls: ['../../auth-shell.css', './reset-password.component.css'],
 })
-export class ResetPasswordComponent implements OnInit {
+export class ResetPasswordComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly fb = inject(FormBuilder);
 
-  step = signal<'form' | 'success' | 'invalid'>('form');
-  isLoading = signal<boolean>(false);
-  errorMsg = signal<string>('');
-  showPassword = signal<boolean>(false);
-  showConfirmPassword = signal<boolean>(false);
-  token = signal<string>('');
+  readonly token = signal(this.route.snapshot.queryParamMap.get('token') || '');
+  readonly step = signal<'form' | 'success' | 'invalid'>(this.token() ? 'form' : 'invalid');
+  readonly isLoading = signal(false);
+  readonly errorMsg = signal('');
+  readonly showPassword = signal(false);
+  readonly showConfirmPassword = signal(false);
 
-  form!: FormGroup;
+  private readonly model = signal({ newPassword: '', confirmPassword: '' });
 
-  ngOnInit() {
-    const token = this.route.snapshot.queryParamMap.get('token') || '';
-    if (!token) {
-      this.step.set('invalid');
-      return;
-    }
-    this.token.set(token);
-    this.form = this.fb.group(
-      {
-        newPassword: ['', [Validators.required, Validators.minLength(12), this.passwordStrengthValidator]],
-        confirmPassword: ['', [Validators.required]],
-      },
-      { validators: this.passwordMatchValidator }
-    );
-  }
+  readonly form = form(
+    this.model,
+    (path) => {
+      apply(path.newPassword, passwordFieldSchema({ minLength: 12 }));
+      required(path.confirmPassword, { message: 'Confirm your new password.' });
+      validate(path.confirmPassword, ({ value, valueOf }) =>
+        value() && value() !== valueOf(path.newPassword)
+          ? { kind: 'mismatch', message: 'Passwords do not match.' }
+          : undefined
+      );
+    },
+    { submission: { action: async () => this.submit() } }
+  );
 
-  passwordStrengthValidator(c: AbstractControl) {
-    const v = c.value || '';
-    const ok =
-      /[A-Z]/.test(v) &&
-      /[a-z]/.test(v) &&
-      /[0-9]/.test(v) &&
-      /[^a-zA-Z0-9]/.test(v) &&
-      v.length >= 12;
-    return ok ? null : { weakPassword: true };
-  }
+  private readonly password = computed(() => this.form.newPassword().value());
 
-  passwordMatchValidator(g: AbstractControl) {
-    return g.get('newPassword')?.value === g.get('confirmPassword')?.value
-      ? null
-      : { mismatch: true };
-  }
+  readonly hasMinLength = computed(() => this.password().length >= 12);
+  readonly hasUppercase = computed(() => /[A-Z]/.test(this.password()));
+  readonly hasLowercase = computed(() => /[a-z]/.test(this.password()));
+  readonly hasNumber = computed(() => /[0-9]/.test(this.password()));
+  readonly hasSpecial = computed(() => /[^a-zA-Z0-9]/.test(this.password()));
 
-  get passwordStrength(): number {
-    const v = this.form?.get('newPassword')?.value || '';
+  readonly passwordStrength = computed(() => {
+    const v = this.password();
     let score = 0;
     if (v.length >= 8) score++;
     if (v.length >= 12) score++;
-    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
-    if (/[0-9]/.test(v) && /[^a-zA-Z0-9]/.test(v)) score++;
+    if (this.hasUppercase() && this.hasLowercase()) score++;
+    if (this.hasNumber() && this.hasSpecial()) score++;
     return score;
-  }
+  });
 
-  get strengthLabel(): string {
-    return ['', 'Weak', 'Fair', 'Good', 'Strong'][this.passwordStrength] || '';
-  }
+  readonly strengthLabel = computed(
+    () => ['', 'Weak', 'Fair', 'Good', 'Strong'][this.passwordStrength()] || ''
+  );
+  readonly strengthColor = computed(
+    () => ['', '#ef4444', '#f59e0b', '#22c55e', '#10b981'][this.passwordStrength()] || ''
+  );
 
-  get strengthColor(): string {
-    return ['', '#ef4444', '#f59e0b', '#22c55e', '#10b981'][this.passwordStrength] || '';
-  }
-
-  /** Policy checklist helpers */
-  get hasMinLength(): boolean {
-    return (this.form?.get('newPassword')?.value || '').length >= 12;
-  }
-  get hasUppercase(): boolean {
-    return /[A-Z]/.test(this.form?.get('newPassword')?.value || '');
-  }
-  get hasLowercase(): boolean {
-    return /[a-z]/.test(this.form?.get('newPassword')?.value || '');
-  }
-  get hasNumber(): boolean {
-    return /[0-9]/.test(this.form?.get('newPassword')?.value || '');
-  }
-  get hasSpecial(): boolean {
-    return /[^a-zA-Z0-9]/.test(this.form?.get('newPassword')?.value || '');
-  }
-
-  async submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+  private async submit(): Promise<undefined> {
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
       await firstValueFrom(
-        this.auth.resetPassword({ token: this.token(), newPassword: this.form.value.newPassword })
+        this.auth.resetPassword({ token: this.token(), newPassword: this.model().newPassword })
       );
       this.step.set('success');
     } catch (e: any) {
@@ -114,6 +81,7 @@ export class ResetPasswordComponent implements OnInit {
     } finally {
       this.isLoading.set(false);
     }
+    return undefined;
   }
 
   goToLogin() {

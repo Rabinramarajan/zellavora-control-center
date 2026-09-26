@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { SelectModule } from 'primeng/select';
+import { SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ToastModule } from 'primeng/toast';
 import { TimesheetService } from '../../data/timesheet.service';
 import {
@@ -27,7 +26,7 @@ const STATUS_BADGES: Record<TimesheetStatus, string> = {
 @Component({
   selector: 'app-timesheet-list',
   standalone: true,
-  imports: [FormsModule, ButtonModule, SelectModule, ToastModule],
+  imports: [ButtonModule, SelectControl, ToastModule],
   template: `
     <p-toast />
 
@@ -41,29 +40,20 @@ const STATUS_BADGES: Record<TimesheetStatus, string> = {
         </div>
 
         <div class="flex flex-wrap items-end gap-2">
-          <div>
-            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400" for="year">
-              Year
-            </label>
-            <p-select
-              inputId="year"
-              [options]="yearOptions"
-              [ngModel]="year()"
-              (ngModelChange)="selectYear($event)"
-            />
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400" for="month">
-              Month
-            </label>
-            <p-select
-              inputId="month"
-              optionLabel="label"
-              optionValue="value"
-              [options]="monthOptions"
-              [(ngModel)]="month"
-            />
-          </div>
+          <app-select-control
+            class="w-32"
+            label="Year"
+            [options]="yearOptions"
+            [value]="'' + year()"
+            (valueChange)="selectYear(+$event)"
+          />
+          <app-select-control
+            class="w-44"
+            label="Month"
+            [options]="monthOptions"
+            [value]="'' + month()"
+            (valueChange)="month.set(+$event)"
+          />
           <p-button label="Open" (onClick)="openSelected()" />
         </div>
       </header>
@@ -74,9 +64,7 @@ const STATUS_BADGES: Record<TimesheetStatus, string> = {
         <div
           class="rounded-lg border border-dashed border-gray-300 p-12 text-center dark:border-gray-700"
         >
-          <p class="text-gray-600 dark:text-gray-400">
-            No timesheets filed for {{ year() }} yet.
-          </p>
+          <p class="text-gray-600 dark:text-gray-400">No timesheets filed for {{ year() }} yet.</p>
           <p-button class="mt-4 inline-block" label="Start this month" (onClick)="openCurrent()" />
         </div>
       } @else {
@@ -116,14 +104,17 @@ export class TimesheetListComponent {
 
   private readonly currentYear = new Date().getFullYear();
 
-  protected readonly yearOptions = Array.from({ length: 5 }, (_, i) => this.currentYear - i);
+  protected readonly yearOptions: SelectControlOption[] = Array.from({ length: 5 }, (_, i) => {
+    const year = String(this.currentYear - i);
+    return { value: year, label: year };
+  });
 
-  protected readonly monthOptions = Array.from({ length: 12 }, (_, i) => ({
+  protected readonly monthOptions: SelectControlOption[] = Array.from({ length: 12 }, (_, i) => ({
     label: new Date(Date.UTC(2000, i, 1)).toLocaleDateString('en-US', {
       month: 'long',
       timeZone: 'UTC',
     }),
-    value: i + 1,
+    value: String(i + 1),
   }));
 
   protected readonly year = signal(this.currentYear);

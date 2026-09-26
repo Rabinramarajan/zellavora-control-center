@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormInputControl } from '@zellavoras/ui';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -17,14 +17,7 @@ interface Service {
 @Component({
   selector: 'app-services-section',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ButtonModule,
-    InputTextModule,
-    TextareaModule,
-    ToastModule,
-  ],
+  imports: [CommonModule, FormsModule, ButtonModule, TextareaModule, ToastModule, FormInputControl],
   templateUrl: './services-section.component.html',
   styleUrl: './services-section.component.css',
 })
@@ -37,8 +30,22 @@ export class ServicesSectionComponent implements OnInit {
   selectedServiceIndex = -1;
 
   iconOptions = [
-    '💻', '🎨', '📱', '🔧', '⚡', '🚀', '📊', '🔒',
-    '🌐', '📈', '🎯', '💡', '🛠️', '🎭', '📚', '✨',
+    '💻',
+    '🎨',
+    '📱',
+    '🔧',
+    '⚡',
+    '🚀',
+    '📊',
+    '🔒',
+    '🌐',
+    '📈',
+    '🎯',
+    '💡',
+    '🛠️',
+    '🎭',
+    '📚',
+    '✨',
   ];
 
   services: Service[] = [

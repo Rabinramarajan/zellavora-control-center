@@ -1,6 +1,6 @@
-import { Component, computed, inject, input, model, output } from '@angular/core';
+import { Component, computed, inject, input, model, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormInputControl } from '@zellavoras/ui';
 import { firstValueFrom } from 'rxjs';
 import { IamApiService } from '@core/api/iam.api';
 import { PermissionEffect, RolePermission } from '@shared/models/iam.model';
@@ -22,21 +22,10 @@ export interface PermissionRow {
 @Component({
   selector: 'zcc-permission-matrix',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormInputControl],
   template: `
     <div class="space-y-4">
-      <div class="relative">
-        <i
-          class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400"
-          aria-hidden="true"
-        ></i>
-        <input
-          type="text"
-          [(ngModel)]="query"
-          placeholder="Filter permissions…"
-          class="w-full rounded-lg border border-gray-300 dark:border-white/10 bg-white/10 dark:bg-black/20 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-        />
-      </div>
+      <app-form-input-control icon="search" placeholder="Filter permissions…" [(value)]="query" />
 
       @if (loading()) {
         <div class="space-y-2">
@@ -47,10 +36,10 @@ export interface PermissionRow {
       } @else {
         @for (group of groups(); track group.resource) {
           <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
-            <div
-              class="flex items-center justify-between bg-gray-50/80 dark:bg-white/5 px-4 py-2"
-            >
-              <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <div class="flex items-center justify-between bg-gray-50/80 dark:bg-white/5 px-4 py-2">
+              <p
+                class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              >
                 {{ group.resource || 'ungrouped' }}
               </p>
               <span class="text-[11px] text-gray-400 tabular-nums">{{ group.rows.length }}</span>
@@ -108,7 +97,7 @@ export class PermissionMatrixComponent {
 
   readonly loading = computed(() => this.matrix().length === 0 && !this._loaded);
   private _loaded = false;
-  query = '';
+  readonly query = signal('');
 
   private allRows: PermissionRow[] = [];
 
@@ -141,15 +130,17 @@ export class PermissionMatrixComponent {
   }
 
   readonly groups = computed(() => {
-    const term = this.query.trim().toLowerCase();
+    const term = this.query().trim().toLowerCase();
+    // `matrix` is reset to the full row list on load and on every toggle.
+    const all = this.matrix();
     const rows = term
-      ? this.allRows.filter(
+      ? all.filter(
           (r) =>
             r.key.toLowerCase().includes(term) ||
             r.name.toLowerCase().includes(term) ||
             r.resource.toLowerCase().includes(term)
         )
-      : this.allRows;
+      : all;
 
     const byResource = new Map<string, PermissionRow[]>();
     for (const row of rows) {

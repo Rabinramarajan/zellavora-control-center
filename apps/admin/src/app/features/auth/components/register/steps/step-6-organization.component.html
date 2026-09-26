@@ -24,97 +24,86 @@
     <p class="step__sub">Tell us about your organization.</p>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <form [formRoot]="form">
     <div class="reg-form__body">
-      <app-input-control
-        formControlName="organizationName"
+      <app-form-input-control
+        [formField]="form.organizationName"
         label="Organization Name"
         placeholder="e.g. Acme Corp"
-        prefixIcon="pi-building"
-        autocomplete="organization"
-        [clearable]="true"
-        [trim]="true"
-        [hint]="orgNamePending() ? 'Checking availability…' : ''"
+        [hint]="form.organizationName().pending() ? 'Checking availability…' : ''"
       />
 
-      <app-input-control
-        formControlName="organizationCode"
+      <app-form-input-control
+        [formField]="form.organizationCode"
         label="Organization Code"
         placeholder="e.g. acme-corp"
-        prefixIcon="pi-hashtag"
-        autocomplete="off"
-        hint="2–16 characters: letters, numbers, hyphens only."
-        (blurred)="checkOrgCode()"
+        [hint]="
+          form.organizationCode().pending()
+            ? 'Checking availability…'
+            : '2–16 characters: letters, numbers, hyphens only.'
+        "
       />
       <button
         type="button"
         class="text-link"
-        [disabled]="!form.get('organizationName')?.value"
+        [disabled]="!form.organizationName().value()"
         (click)="generateCodeFromName()"
       >
         Generate from organization name
       </button>
 
       <div class="field-grid">
-        <zc-select-control
-          formControlName="industry"
+        <app-select-control
+          [formField]="form.industry"
           label="Industry"
           placeholder="Select Industry"
-          prefixIcon="pi-th-large"
+          icon="building"
           [options]="industryOptions"
-          optionLabel=""
         />
 
-        <zc-select-control
-          formControlName="organizationSize"
+        <app-select-control
+          [formField]="form.organizationSize"
           label="Company Size"
           placeholder="Select Size"
-          prefixIcon="pi-users"
+          icon="user"
           [options]="organizationSizeOptions"
-          optionValue="key"
-          optionLabel="label"
         />
       </div>
 
       <div class="field-grid">
-        <zc-select-control
-          formControlName="currency"
+        <app-select-control
+          [formField]="form.currency"
           label="Base Currency"
           placeholder="Select Currency"
-          prefixIcon="pi-dollar"
+          icon="list"
+          [searchable]="true"
+          searchPlaceholder="Search currency..."
           [options]="currencyOptions"
-          optionValue="key"
-          optionLabel="value"
         />
 
-        <zc-select-control
-          formControlName="fiscalYear"
+        <app-select-control
+          [formField]="form.fiscalYear"
           label="Fiscal Year"
           placeholder="Select Fiscal Year"
-          prefixIcon="pi-calendar"
+          icon="list"
           [options]="fiscalYearOptions"
-          optionValue="key"
-          optionLabel="value"
         />
       </div>
 
-      <zc-select-control
-        formControlName="timezone"
+      <app-select-control
+        [formField]="form.timezone"
         label="Timezone"
         placeholder="Select Timezone"
-        prefixIcon="pi-clock"
+        icon="globe"
+        [searchable]="true"
+        searchPlaceholder="Search timezone..."
         [options]="timezoneOptions"
-        optionLabel=""
       />
 
-      <app-input-control
-        formControlName="website"
-        type="url"
+      <app-form-input-control
+        [formField]="form.website"
         label="Website (optional)"
         placeholder="https://example.com"
-        prefixIcon="pi-globe"
-        [clearable]="true"
-        [trim]="true"
       />
 
       <div class="field">
@@ -180,11 +169,7 @@
         </svg>
         Back
       </button>
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="store.loading() || form.invalid || form.pending"
-      >
+      <button type="submit" class="btn-primary" [disabled]="store.loading() || form().submitting()">
         Continue
         <svg
           class="btn-primary__arrow"

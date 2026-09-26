@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DateControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   ColumnDef,
@@ -100,7 +101,14 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
 @Component({
   selector: 'app-daily-sheets',
   standalone: true,
-  imports: [CommonModule, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
+  imports: [
+    CommonModule,
+    DateControl,
+    SelectControl,
+    SmartTableComponent,
+    SmartCellDirective,
+    SmartEmptyDirective,
+  ],
   providers: [SheetsStore],
   templateUrl: './daily-sheets.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './daily-sheets.component.css'],
@@ -138,7 +146,10 @@ export class DailySheetsComponent implements OnInit {
   // ---- entries table ----------------------------------------------------
 
   public readonly columns = ENTRY_COLUMNS;
-  public readonly statusOptions = STATUS_OPTIONS;
+  public readonly statusOptions: SelectControlOption[] = [
+    { value: '', label: 'All Status' },
+    ...STATUS_OPTIONS,
+  ];
   public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   public readonly filters = signal<FilterState>({ project: '', status: '' });
@@ -158,9 +169,14 @@ export class DailySheetsComponent implements OnInit {
     () => this.rows().filter((row) => row.status === 'draft').length
   );
 
-  public readonly projectOptions = computed(() => {
-    const names = new Set(this.rows().map((row) => row.project));
-    return [...names].sort((a, b) => a.localeCompare(b));
+  public readonly projectOptions = computed<SelectControlOption[]>(() => {
+    const names = [...new Set(this.rows().map((row) => row.project))].sort((a, b) =>
+      a.localeCompare(b)
+    );
+    return [
+      { value: '', label: 'All Projects' },
+      ...names.map((name) => ({ value: name, label: name })),
+    ];
   });
 
   // ---- KPIs -------------------------------------------------------------

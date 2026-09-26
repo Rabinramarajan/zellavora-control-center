@@ -1,6 +1,7 @@
-﻿import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormField, FormRoot, apply, form, maxLength } from '@angular/forms/signals';
+import { FormInputControl, emailFieldSchema } from '@zellavoras/ui';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { firstValueFrom } from 'rxjs';
@@ -8,14 +9,13 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, FormField, FormRoot, FormInputControl, RouterLink],
   templateUrl: './forgot-password.component.html',
   styleUrls: ['../../auth-shell.css', './forgot-password.component.css'],
 })
-export class ForgotPasswordComponent implements OnInit, OnDestroy {
+export class ForgotPasswordComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly fb = inject(FormBuilder);
 
   step = signal<1 | 2>(1);
   isLoading = signal<boolean>(false);
@@ -23,13 +23,16 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   resendTimer = signal<number>(0);
   private timerInterval: any;
 
-  emailForm!: FormGroup;
+  private readonly model = signal({ email: '' });
 
-  ngOnInit() {
-    this.emailForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]]
-    });
-  }
+  readonly emailForm = form(
+    this.model,
+    (path) => {
+      apply(path.email, emailFieldSchema());
+      maxLength(path.email, 150);
+    },
+    { submission: { action: async () => this.sendResetEmail() } }
+  );
 
   ngOnDestroy() {
     clearInterval(this.timerInterval);
@@ -40,30 +43,34 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
       if (this.resendTimer() > 0) {
-        this.resendTimer.update(t => t - 1);
+        this.resendTimer.update((t) => t - 1);
       } else {
         clearInterval(this.timerInterval);
       }
     }, 1000);
   }
 
-  async sendResetEmail() {
-    if (this.emailForm.invalid) return;
+  private async sendResetEmail(): Promise<undefined> {
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
       const clientCode = sessionStorage.getItem('zcc.clientCode') || '';
-      await firstValueFrom(this.auth.forgotPassword({
-        clientCode,
-        email: this.emailForm.value.email
-      }));
+      await firstValueFrom(
+        this.auth.forgotPassword({
+          clientCode,
+          email: this.model().email,
+        })
+      );
       this.step.set(2);
       this.startResendTimer();
     } catch (e: any) {
-      this.errorMsg.set(e?.error?.error?.message || 'Failed to send reset email. Please try again.');
+      this.errorMsg.set(
+        e?.error?.error?.message || 'Failed to send reset email. Please try again.'
+      );
     } finally {
       this.isLoading.set(false);
     }
+    return undefined;
   }
 
   async resendEmail() {
@@ -71,10 +78,12 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     try {
       const clientCode = sessionStorage.getItem('zcc.clientCode') || '';
-      await firstValueFrom(this.auth.forgotPassword({
-        clientCode,
-        email: this.emailForm.value.email
-      }));
+      await firstValueFrom(
+        this.auth.forgotPassword({
+          clientCode,
+          email: this.model().email,
+        })
+      );
       this.startResendTimer();
     } finally {
       this.isLoading.set(false);

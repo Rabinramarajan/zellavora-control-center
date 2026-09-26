@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormInputControl } from '@zellavoras/ui';
 import { HasPermissionDirective } from '@core/rbac';
 import { AdminStoreService } from '../../../services';
 import { Resource, ResourceSearchCriteria } from '../../../models';
@@ -8,9 +8,9 @@ import { Resource, ResourceSearchCriteria } from '../../../models';
 @Component({
   selector: 'zcc-resource-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, HasPermissionDirective],
+  imports: [CommonModule, FormInputControl, HasPermissionDirective],
   templateUrl: './resource-manager.component.html',
-  styleUrl: './resource-manager.component.css'
+  styleUrl: './resource-manager.component.css',
 })
 export class ResourceManagerComponent implements OnInit {
   private store = inject(AdminStoreService);
@@ -22,9 +22,11 @@ export class ResourceManagerComponent implements OnInit {
 
   readonly filteredResources = computed(() => {
     const term = this.searchTerm().toLowerCase();
-    return this.resources().filter(resource =>
-      resource.resourceName.toLowerCase().includes(term) ||
-      (resource.resourceDescription?.toLowerCase().includes(term) || false)
+    return this.resources().filter(
+      (resource) =>
+        resource.resourceName.toLowerCase().includes(term) ||
+        resource.resourceDescription?.toLowerCase().includes(term) ||
+        false
     );
   });
 

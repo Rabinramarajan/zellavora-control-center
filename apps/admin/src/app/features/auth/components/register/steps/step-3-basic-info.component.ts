@@ -1,62 +1,72 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormField, FormRoot, apply, form, maxLength } from '@angular/forms/signals';
 import {
-  AsyncValidatorFn,
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+  FormInputControl,
+  SelectControl,
+  emailFieldSchema,
+  formInputControlSchema,
+  selectFieldSchema,
+  textFieldSchema,
+} from '@zellavoras/ui';
 import { RegisterStore } from '../register.store';
-import { InputControlComponent } from '@shared/components/input-control';
-import { SelectControlComponent } from '@shared/components/select-control';
+import { ddlToOptions, stringsToOptions } from '@shared/utils/select-options';
+import { FORM_PATTERNS } from '@shared/utils/form-patterns';
+import { validateAvailability } from '@shared/utils/validate-availability';
 
 @Component({
   selector: 'app-step-3-basic-info',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputControlComponent, SelectControlComponent],
+  imports: [CommonModule, FormField, FormRoot, FormInputControl, SelectControl],
   templateUrl: './step-3-basic-info.component.html',
   styleUrls: ['../step-styles.css'],
 })
-export class Step3BasicInfoComponent implements OnInit {
+export class Step3BasicInfoComponent {
   readonly store = inject(RegisterStore);
-  private readonly fb = inject(FormBuilder);
 
-  readonly form = this.fb.nonNullable.group({
-    firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-    lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-    displayName: ['', [Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email], [this.emailAvailableValidator()]],
-    mobile: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-()]{7,20}$/)]],
-    country: ['', [Validators.required]],
-    timezone: ['UTC', [Validators.required]],
-    language: ['en', [Validators.required]],
-    gender: ['', [Validators.required]],
+  readonly countryOptions = computed(() => stringsToOptions(this.store.countryOptions()));
+  readonly languageOptions = computed(() => ddlToOptions(this.store.languageOptions()));
+  readonly genderOptions = computed(() => ddlToOptions(this.store.genderOptions()));
+
+  private readonly model = signal({
+    firstName: this.store.firstName(),
+    lastName: this.store.lastName(),
+    displayName: this.store.displayName(),
+    email: this.store.email(),
+    mobile: this.store.mobile(),
+    country: this.store.country(),
+    timezone: this.detectTimezone(this.store.timezone()),
+    language: this.store.language() || 'en',
+    gender: this.store.gender(),
   });
 
-  private emailAvailableValidator(): AsyncValidatorFn {
-    return async (control) => {
-      const value = String(control.value ?? '').trim().toLowerCase();
-      if (!value || control.errors?.['email'] || control.errors?.['required']) return null;
-      if (this.store.emailVerified() && value === this.store.email()?.toLowerCase()) return null;
-      const available = await this.store.checkEmailAvailability(value);
-      return available ? null : { emailTaken: true };
-    };
-  }
-
-  ngOnInit() {
-    const s = this.store;
-    this.form.patchValue({
-      firstName: s.firstName(),
-      lastName: s.lastName(),
-      displayName: s.displayName(),
-      email: s.email(),
-      mobile: s.mobile(),
-      country: s.country(),
-      timezone: this.detectTimezone(s.timezone()),
-      language: s.language(),
-      gender: s.gender(),
-    });
-  }
+  readonly form = form(
+    this.model,
+    (path) => {
+      apply(path.firstName, textFieldSchema({ minLength: 2, maxLength: 50 }));
+      apply(path.lastName, textFieldSchema({ minLength: 2, maxLength: 50 }));
+      maxLength(path.displayName, 100);
+      apply(path.email, emailFieldSchema());
+      validateAvailability(path.email, {
+        check: (email) => this.store.checkEmailAvailability(email.toLowerCase()),
+        // A verified address belongs to this registration already.
+        skip: (email) =>
+          this.store.emailVerified() && email.toLowerCase() === this.store.email()?.toLowerCase(),
+        message: 'This email is already registered.',
+      });
+      apply(
+        path.mobile,
+        formInputControlSchema({
+          required: { message: 'Mobile number is required.' },
+          pattern: { value: FORM_PATTERNS.phone, message: 'Enter a valid phone number.' },
+        })
+      );
+      apply(path.country, selectFieldSchema({ message: 'Select your country.' }));
+      apply(path.language, selectFieldSchema({ message: 'Select a language.' }));
+      apply(path.gender, selectFieldSchema({ message: 'Select a gender.' }));
+    },
+    { submission: { action: async () => this.save() } }
+  );
 
   private detectTimezone(current: string): string {
     if (current && current !== 'UTC') return current;
@@ -68,26 +78,10 @@ export class Step3BasicInfoComponent implements OnInit {
     }
   }
 
-  emailPending(): boolean {
-    return this.form.get('email')?.status === 'PENDING';
-  }
-
-  onSubmit() {
-    this.form.markAllAsTouched();
-    if (this.form.invalid || this.form.pending) return;
-    const v = this.form.getRawValue();
-    this.store.updatePersonalInfo({
-      firstName: v.firstName,
-      lastName: v.lastName,
-      displayName: v.displayName,
-      email: v.email,
-      mobile: v.mobile,
-      country: v.country,
-      timezone: v.timezone,
-      language: v.language,
-      gender: v.gender,
-    });
+  private save(): undefined {
+    this.store.updatePersonalInfo(this.model());
     this.store.nextStep();
     this.store.syncProgressToBackend();
+    return undefined;
   }
 }

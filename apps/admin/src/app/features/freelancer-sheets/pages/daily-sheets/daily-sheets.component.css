@@ -17,21 +17,20 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.35rem;
-  border-radius: 0.7rem;
-  border: 1px solid var(--sheet-line);
-  background: var(--sheet-surface);
 }
 
-.date-nav__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #e2e8f0;
-  white-space: nowrap;
+/* Toolbar controls sit on one row with the buttons, so they run shorter than form fields. */
+.date-nav__picker,
+.sheet-filter {
+  --zv-control-height: 38px;
+}
+
+.date-nav__picker {
+  width: 11.5rem;
+}
+
+.sheet-filter {
+  width: 12rem;
 }
 
 .date-nav__arrow {
@@ -41,15 +40,15 @@
   color: #94a3b8;
   font-size: 1.1rem;
   line-height: 1;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .date-nav__arrow:hover {
   background: rgba(139, 92, 246, 0.16);
   color: #fff;
 }
-
-
 
 /* Donut */
 
@@ -92,17 +91,4 @@
 
 .split-stat > div + div {
   border-left: 1px solid var(--sheet-line);
-}
-
-.date-nav__input {
-  background: transparent;
-  border: 0;
-  color: inherit;
-  font: inherit;
-  color-scheme: dark;
-}
-
-.date-nav__input:focus-visible {
-  outline: 2px solid rgba(139, 92, 246, 0.55);
-  border-radius: 0.35rem;
 }

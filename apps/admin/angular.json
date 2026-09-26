@@ -30,7 +30,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles/global.css"
+              "src/styles/global.css",
+              "src/styles/zellavora-ui.scss"
             ],
             "scripts": [],
             "sourceMap": true,
@@ -94,7 +95,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles/global.css"
+              "src/styles/global.css",
+              "src/styles/zellavora-ui.scss"
             ],
             "scripts": [],
             "karmaConfig": "karma.conf.js"

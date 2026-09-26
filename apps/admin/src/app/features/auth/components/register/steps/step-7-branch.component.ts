@@ -1,89 +1,80 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormField, FormRoot, apply, email, form, pattern } from '@angular/forms/signals';
+import {
+  FormInputControl,
+  SelectControl,
+  selectFieldSchema,
+  textFieldSchema,
+} from '@zellavoras/ui';
 import { RegisterStore } from '../register.store';
-import { InputControlComponent } from '@shared/components/input-control';
-import { SelectControlComponent } from '@shared/components/select-control';
+import { FORM_PATTERNS } from '@shared/utils/form-patterns';
+import { stringsToOptions } from '@shared/utils/select-options';
+
+const COORDINATE = /^-?\d{1,3}(\.\d+)?$/;
 
 @Component({
   selector: 'app-step-7-branch',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputControlComponent, SelectControlComponent],
+  imports: [CommonModule, FormField, FormRoot, FormInputControl, SelectControl],
   templateUrl: './step-7-branch.component.html',
   styleUrls: ['../step-styles.css'],
 })
-export class Step7BranchComponent implements OnInit {
+export class Step7BranchComponent {
   readonly store = inject(RegisterStore);
-  private readonly fb = inject(FormBuilder);
 
-  readonly locating = { value: false };
+  readonly locating = signal(false);
+  readonly countryOptions = computed(() => stringsToOptions(this.store.countryOptions()));
 
-  readonly form = this.fb.nonNullable.group({
-    branchName: ['Head Office', [Validators.required, Validators.minLength(2)]],
-    branchAddress: [''],
-    branchCity: [''],
-    branchState: [''],
-    branchCountry: ['', [Validators.required]],
-    branchPincode: ['', [Validators.pattern(/^[0-9a-zA-Z\s-]{3,10}$/)]],
-    branchPhone: ['', [Validators.pattern(/^\+?[0-9\s\-()]{7,20}$/)]],
-    branchEmail: ['', [Validators.email]],
-    branchLatitude: ['', [Validators.pattern(/^-?\d{1,3}(\.\d+)?$/)]],
-    branchLongitude: ['', [Validators.pattern(/^-?\d{1,3}(\.\d+)?$/)]],
+  private readonly model = signal({
+    branchName: this.store.branchName() || 'Head Office',
+    branchAddress: this.store.branchAddress(),
+    branchCity: this.store.branchCity(),
+    branchState: this.store.branchState(),
+    branchCountry: this.store.branchCountry(),
+    branchPincode: this.store.branchPincode(),
+    branchPhone: this.store.branchPhone(),
+    branchEmail: this.store.branchEmail(),
+    branchLatitude: this.store.branchLatitude() || '',
+    branchLongitude: this.store.branchLongitude() || '',
   });
 
-  ngOnInit() {
-    const s = this.store;
-    this.form.patchValue({
-      branchName: s.branchName(),
-      branchAddress: s.branchAddress(),
-      branchCity: s.branchCity(),
-      branchState: s.branchState(),
-      branchCountry: s.branchCountry(),
-      branchPincode: s.branchPincode(),
-      branchPhone: s.branchPhone(),
-      branchEmail: s.branchEmail(),
-      branchLatitude: s.branchLatitude() || '',
-      branchLongitude: s.branchLongitude() || '',
-    });
-  }
+  readonly form = form(
+    this.model,
+    (path) => {
+      apply(path.branchName, textFieldSchema({ minLength: 2 }));
+      apply(path.branchCountry, selectFieldSchema({ message: 'Select the branch country.' }));
+      pattern(path.branchPincode, /^[0-9a-zA-Z\s-]{3,10}$/, {
+        message: 'Enter a valid postal code.',
+      });
+      pattern(path.branchPhone, FORM_PATTERNS.phone, { message: 'Enter a valid phone number.' });
+      email(path.branchEmail, { message: 'Enter a valid email address.' });
+      pattern(path.branchLatitude, COORDINATE, { message: 'Enter a decimal latitude.' });
+      pattern(path.branchLongitude, COORDINATE, { message: 'Enter a decimal longitude.' });
+    },
+    { submission: { action: async () => this.save() } }
+  );
 
   useCurrentLocation() {
-    if (this.locating.value) return;
-    this.locating.value = true;
-    navigator.geolocation?.getCurrentPosition(
+    if (this.locating() || !navigator.geolocation) return;
+    this.locating.set(true);
+    navigator.geolocation.getCurrentPosition(
       (pos) => {
-        this.locating.value = false;
-        this.form.patchValue({
-          branchLatitude: pos.coords.latitude.toFixed(6),
-          branchLongitude: pos.coords.longitude.toFixed(6),
-        });
-        this.form.get('branchLatitude')?.markAsDirty();
-        this.form.get('branchLongitude')?.markAsDirty();
+        this.locating.set(false);
+        this.form.branchLatitude().value.set(pos.coords.latitude.toFixed(6));
+        this.form.branchLongitude().value.set(pos.coords.longitude.toFixed(6));
+        this.form.branchLatitude().markAsDirty();
+        this.form.branchLongitude().markAsDirty();
       },
-      () => {
-        this.locating.value = false;
-      },
+      () => this.locating.set(false),
       { timeout: 10000 }
     );
   }
 
-  onSubmit() {
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
-    const v = this.form.getRawValue();
-    this.store.updateBranchInfo({
-      branchName: v.branchName,
-      branchAddress: v.branchAddress,
-      branchCity: v.branchCity,
-      branchState: v.branchState,
-      branchCountry: v.branchCountry,
-      branchPincode: v.branchPincode,
-      branchPhone: v.branchPhone,
-      branchEmail: v.branchEmail,
-      branchLatitude: v.branchLatitude,
-      branchLongitude: v.branchLongitude,
-    });
+  private save(): undefined {
+    this.store.updateBranchInfo(this.model());
     this.store.nextStep();
     this.store.syncProgressToBackend();
+    return undefined;
   }
 }

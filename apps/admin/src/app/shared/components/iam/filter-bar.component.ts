@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 
 export interface FilterOption {
   label: string;
@@ -21,40 +21,27 @@ export interface FilterDescriptor {
 @Component({
   selector: 'zcc-filter-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormInputControl, SelectControl],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-wrap items-center gap-3">
-      <div class="relative min-w-56 flex-1">
-        <i
-          class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400"
-          aria-hidden="true"
-        ></i>
-        <input
-          type="text"
-          [value]="query()"
-          [placeholder]="searchPlaceholder()"
-          class="w-full rounded-lg border border-gray-300 dark:border-white/10 bg-white/10 dark:bg-black/20 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-          (input)="onSearchInput($event)"
-        />
-      </div>
+      <app-form-input-control
+        class="min-w-56 flex-1"
+        icon="search"
+        [placeholder]="searchPlaceholder()"
+        [value]="query()"
+        (valueChange)="onSearchInput($event)"
+      />
 
-      @for (filter of filters(); track filter.key) {
-        <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {{ filter.label }}
-          </label>
-          <select
-            [value]="selected()[filter.key]"
-            (change)="onFilterChange(filter.key, $event)"
-            class="rounded-lg border border-gray-300 dark:border-white/10 bg-white/10 dark:bg-black/20 px-2.5 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-          >
-            <option value="">{{ filter.allLabel ?? 'All' }}</option>
-            @for (option of filter.options; track option.value) {
-              <option [value]="option.value">{{ option.label }}</option>
-            }
-          </select>
-        </div>
+      @for (filter of selectFilters(); track filter.key) {
+        <app-select-control
+          class="w-48"
+          [label]="filter.label"
+          [placeholder]="filter.allLabel"
+          [options]="filter.options"
+          [value]="selected()[filter.key] || ''"
+          (valueChange)="onFilterChange(filter.key, $event)"
+        />
       }
 
       @if (canReset()) {
@@ -82,18 +69,25 @@ export class FilterBarComponent {
 
   private debounceHandle: ReturnType<typeof setTimeout> | null = null;
 
+  /** Each filter leads with an "All" entry that clears it. */
+  readonly selectFilters = computed(() =>
+    this.filters().map((filter) => {
+      const allLabel = filter.allLabel ?? 'All';
+      const options: SelectControlOption[] = [{ value: '', label: allLabel }, ...filter.options];
+      return { key: filter.key, label: filter.label, allLabel, options };
+    })
+  );
+
   readonly canReset = computed(
     () => this.query() !== '' || Object.keys(this.selected()).length > 0
   );
 
-  onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+  onSearchInput(value: string): void {
     if (this.debounceHandle) clearTimeout(this.debounceHandle);
     this.debounceHandle = setTimeout(() => this.search.emit(value), 300);
   }
 
-  onFilterChange(key: string, event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
+  onFilterChange(key: string, value: string): void {
     this.filtersChange.emit({ ...this.selected(), [key]: value });
   }
 

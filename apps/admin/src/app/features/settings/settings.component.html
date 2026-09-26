@@ -2,15 +2,33 @@
 <div class="space-y-6">
   <!-- Header -->
   <div class="flex items-center gap-4 mb-8">
-    <div class="w-12 h-12 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl shrink-0">
-      <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+    <div
+      class="w-12 h-12 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl shrink-0"
+    >
+      <svg
+        class="w-6 h-6 text-purple-400"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+        ></path>
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+        ></path>
       </svg>
     </div>
     <div>
       <h1 class="text-2xl font-black text-white tracking-tight leading-none">Settings</h1>
-      <p class="text-xs text-slate-400 mt-2 leading-none">Manage your application preferences and account settings.</p>
+      <p class="text-xs text-slate-400 mt-2 leading-none">
+        Manage your application preferences and account settings.
+      </p>
     </div>
   </div>
 
@@ -29,20 +47,36 @@
           <span class="text-base shrink-0">{{ tab.icon }}</span>
           <div>
             <div class="font-bold leading-none">{{ tab.label }}</div>
-            <div class="text-[9px] text-slate-500 font-medium mt-1 leading-none" *ngIf="activeTab() !== tab.id">{{ tab.desc }}</div>
-            <div class="text-[9px] text-purple-300 font-medium mt-1 leading-none" *ngIf="activeTab() === tab.id">{{ tab.desc }}</div>
+            <div
+              class="text-[9px] text-slate-500 font-medium mt-1 leading-none"
+              *ngIf="activeTab() !== tab.id"
+            >
+              {{ tab.desc }}
+            </div>
+            <div
+              class="text-[9px] text-purple-300 font-medium mt-1 leading-none"
+              *ngIf="activeTab() === tab.id"
+            >
+              {{ tab.desc }}
+            </div>
           </div>
         </button>
       </div>
 
       <!-- Need Help Card -->
-      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden bg-gradient-to-br from-purple-950/30 to-slate-950/20 border border-purple-900/30">
+      <div
+        class="glass-panel p-4 rounded-2xl relative overflow-hidden bg-gradient-to-br from-purple-950/30 to-slate-950/20 border border-purple-900/30"
+      >
         <div class="flex justify-between items-start">
           <span class="text-xs font-bold text-white">Need Help?</span>
           <span class="text-slate-500 text-xs cursor-pointer hover:text-white transition">✕</span>
         </div>
-        <p class="text-[10px] text-slate-400 mt-2 leading-normal">Check our documentation or contact support.</p>
-        <button class="mt-4 px-3 py-1.5 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-white font-bold text-[9px] rounded-lg transition-colors flex items-center gap-1">
+        <p class="text-[10px] text-slate-400 mt-2 leading-normal">
+          Check our documentation or contact support.
+        </p>
+        <button
+          class="mt-4 px-3 py-1.5 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-white font-bold text-[9px] rounded-lg transition-colors flex items-center gap-1"
+        >
           View Docs <span class="text-xs">&rarr;</span>
         </button>
       </div>
@@ -51,29 +85,58 @@
     <!-- Center Column: Active Tab Content -->
     <div class="lg:col-span-6 space-y-6">
       <!-- General Tab Content -->
-      <div *ngIf="activeTab() === 'general'" class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+      <div
+        *ngIf="activeTab() === 'general'"
+        class="glass-panel p-6 rounded-3xl relative overflow-hidden"
+      >
         <!-- Tilted Gear 3D Graphic background decoration -->
-        <div class="absolute top-6 right-6 hidden md:block select-none opacity-80 pointer-events-none">
+        <div
+          class="absolute top-6 right-6 hidden md:block select-none opacity-80 pointer-events-none"
+        >
           <div class="relative w-24 h-24 flex items-center justify-center">
             <!-- Glow background -->
             <div class="absolute w-20 h-20 bg-purple-600/15 rounded-full blur-xl"></div>
             <!-- Outer grid circle -->
-            <div class="absolute w-24 h-24 border border-purple-500/10 rounded-full border-dashed animate-spin-slow"></div>
+            <div
+              class="absolute w-24 h-24 border border-purple-500/10 rounded-full border-dashed animate-spin-slow"
+            ></div>
             <!-- Gear SVG -->
-            <svg class="w-16 h-16 text-purple-500/30 filter drop-shadow-[0_0_8px_rgba(168,85,247,0.3)]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <svg
+              class="w-16 h-16 text-purple-500/30 filter drop-shadow-[0_0_8px_rgba(168,85,247,0.3)]"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
             </svg>
             <!-- Tiny floating element -->
-            <div class="absolute top-2 right-2 w-1.5 h-1.5 bg-purple-400 rounded-full animate-ping"></div>
+            <div
+              class="absolute top-2 right-2 w-1.5 h-1.5 bg-purple-400 rounded-full animate-ping"
+            ></div>
           </div>
         </div>
 
-        <button class="absolute top-6 right-6 md:right-32 text-slate-500 hover:text-white transition">✕</button>
+        <button
+          class="absolute top-6 right-6 md:right-32 text-slate-500 hover:text-white transition"
+        >
+          ✕
+        </button>
 
         <div class="mb-6">
           <h2 class="text-base font-bold text-white leading-none">General Settings</h2>
-          <p class="text-xs text-slate-400 mt-1.5 leading-none">Configure basic application settings and preferences.</p>
+          <p class="text-xs text-slate-400 mt-1.5 leading-none">
+            Configure basic application settings and preferences.
+          </p>
         </div>
 
         <div class="space-y-6 border-t border-white/5 pt-6">
@@ -81,30 +144,65 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="max-w-xs space-y-1">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                <svg
+                  class="w-4 h-4 text-purple-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                  ></path>
                 </svg>
                 <span class="text-xs font-bold text-white">Site Title</span>
               </div>
               <span class="text-[10px] text-slate-500 block">The name of your application</span>
             </div>
-            <input pInputText type="text" [(ngModel)]="generalSettings.siteTitle" class="w-full md:w-64 bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5" />
+            <app-form-input-control
+              class="w-full md:w-64"
+              type="text"
+              aria-label="Site title"
+              [value]="generalSettings.siteTitle"
+              (valueChange)="generalSettings.siteTitle = $event"
+            />
           </div>
 
           <!-- Site Description -->
           <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div class="max-w-xs space-y-1">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                <svg
+                  class="w-4 h-4 text-purple-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  ></path>
                 </svg>
                 <span class="text-xs font-bold text-white">Site Description</span>
               </div>
-              <span class="text-[10px] text-slate-500 block">A short description about your application</span>
+              <span class="text-[10px] text-slate-500 block"
+                >A short description about your application</span
+              >
             </div>
             <div class="w-full md:w-64 relative">
-              <textarea pTextarea rows="3" [(ngModel)]="generalSettings.siteDescription" class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 pr-12 focus:outline-none"></textarea>
-              <span class="absolute right-3 bottom-3 text-[9px] text-slate-500">{{ generalSettings.siteDescription.length }}/160</span>
+              <textarea
+                pTextarea
+                rows="3"
+                [(ngModel)]="generalSettings.siteDescription"
+                class="w-full bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 pr-12 focus:outline-none"
+              ></textarea>
+              <span class="absolute right-3 bottom-3 text-[9px] text-slate-500"
+                >{{ generalSettings.siteDescription.length }}/160</span
+              >
             </div>
           </div>
 
@@ -112,8 +210,18 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="max-w-xs space-y-1">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <svg
+                  class="w-4 h-4 text-purple-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  ></path>
                 </svg>
                 <span class="text-xs font-bold text-white">Favicon</span>
               </div>
@@ -121,11 +229,15 @@
             </div>
             <div class="w-full md:w-64 flex items-center gap-4">
               <!-- Glow logo hex -->
-              <div class="w-10 h-10 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg relative overflow-hidden">
+              <div
+                class="w-10 h-10 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg relative overflow-hidden"
+              >
                 <div class="absolute inset-0 bg-purple-500/5 blur-sm"></div>
                 <span class="relative">🔮</span>
               </div>
-              <button class="px-3 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors flex items-center gap-1.5">
+              <button
+                class="px-3 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors flex items-center gap-1.5"
+              >
                 <span>📤</span> Change Favicon
               </button>
             </div>
@@ -135,15 +247,32 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="max-w-xs space-y-1">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <svg
+                  class="w-4 h-4 text-purple-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
                 </svg>
                 <span class="text-xs font-bold text-white">Default Timezone</span>
               </div>
-              <span class="text-[10px] text-slate-500 block">Set the default timezone for your application</span>
+              <span class="text-[10px] text-slate-500 block"
+                >Set the default timezone for your application</span
+              >
             </div>
             <div class="w-full md:w-64">
-              <p-select [options]="timezoneOptions" [(ngModel)]="generalSettings.timezone" optionLabel="label" optionValue="value" class="w-full text-xs"></p-select>
+              <app-select-control
+                aria-label="Default timezone"
+                [options]="timezoneOptions"
+                [value]="generalSettings.timezone"
+                (valueChange)="generalSettings.timezone = $event"
+              />
             </div>
           </div>
 
@@ -151,15 +280,32 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="max-w-xs space-y-1">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path>
+                <svg
+                  class="w-4 h-4 text-purple-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"
+                  ></path>
                 </svg>
                 <span class="text-xs font-bold text-white">Date Format</span>
               </div>
-              <span class="text-[10px] text-slate-500 block">Choose your preferred date format</span>
+              <span class="text-[10px] text-slate-500 block"
+                >Choose your preferred date format</span
+              >
             </div>
             <div class="w-full md:w-64">
-              <p-select [options]="dateFormatOptions" [(ngModel)]="generalSettings.dateFormat" optionLabel="label" optionValue="value" class="w-full text-xs"></p-select>
+              <app-select-control
+                aria-label="Date format"
+                [options]="dateFormatOptions"
+                [value]="generalSettings.dateFormat"
+                (valueChange)="generalSettings.dateFormat = $event"
+              />
             </div>
           </div>
 
@@ -167,15 +313,32 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="max-w-xs space-y-1">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                <svg
+                  class="w-4 h-4 text-purple-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  ></path>
                 </svg>
                 <span class="text-xs font-bold text-white">Items Per Page</span>
               </div>
-              <span class="text-[10px] text-slate-500 block">Set default number of items per page</span>
+              <span class="text-[10px] text-slate-500 block"
+                >Set default number of items per page</span
+              >
             </div>
             <div class="w-full md:w-64">
-              <p-select [options]="itemsPerPageOptions" [(ngModel)]="generalSettings.itemsPerPage" optionLabel="label" optionValue="value" class="w-full text-xs"></p-select>
+              <app-select-control
+                aria-label="Items per page"
+                [options]="itemsPerPageOptions"
+                [value]="'' + generalSettings.itemsPerPage"
+                (valueChange)="generalSettings.itemsPerPage = +$event"
+              />
             </div>
           </div>
 
@@ -183,26 +346,49 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="max-w-xs space-y-1">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                <svg
+                  class="w-4 h-4 text-purple-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  ></path>
                 </svg>
                 <span class="text-xs font-bold text-white">Maintenance Mode</span>
               </div>
-              <span class="text-[10px] text-slate-500 block">Temporarily disable access to the application</span>
+              <span class="text-[10px] text-slate-500 block"
+                >Temporarily disable access to the application</span
+              >
             </div>
             <div class="w-full md:w-64 flex items-center gap-3">
               <!-- Toggle switch -->
               <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" [(ngModel)]="generalSettings.maintenanceMode" class="sr-only peer" />
-                <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                <input
+                  type="checkbox"
+                  [(ngModel)]="generalSettings.maintenanceMode"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"
+                ></div>
               </label>
-              <span class="text-[10px] font-bold text-slate-400">{{ generalSettings.maintenanceMode ? 'Application is offline' : 'Application is live' }}</span>
+              <span class="text-[10px] font-bold text-slate-400">{{
+                generalSettings.maintenanceMode ? 'Application is offline' : 'Application is live'
+              }}</span>
             </div>
           </div>
 
           <!-- Save Button -->
           <div class="flex justify-end pt-4 border-t border-white/5">
-            <button (click)="saveGeneralSettings()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-1.5">
+            <button
+              (click)="saveGeneralSettings()"
+              class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-1.5"
+            >
               <span>✓</span> Save Changes
             </button>
           </div>
@@ -213,23 +399,47 @@
       <div *ngIf="activeTab() === 'profile'" class="glass-panel p-6 rounded-3xl space-y-6">
         <div>
           <h2 class="text-base font-bold text-white leading-none">Profile Settings</h2>
-          <p class="text-xs text-slate-400 mt-1.5 leading-none">Configure your personal information and biography.</p>
+          <p class="text-xs text-slate-400 mt-1.5 leading-none">
+            Configure your personal information and biography.
+          </p>
         </div>
         <div class="space-y-5 border-t border-white/5 pt-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <span class="text-xs font-bold text-white block">Full Name</span>
-            <input pInputText type="text" [(ngModel)]="profileSettings.fullName" class="w-full md:w-64 bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5" />
+            <app-form-input-control
+              class="w-full md:w-64"
+              type="text"
+              icon="user"
+              aria-label="Full name"
+              [value]="profileSettings.fullName"
+              (valueChange)="profileSettings.fullName = $event"
+            />
           </div>
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <span class="text-xs font-bold text-white block">Email Address</span>
-            <input pInputText type="email" [(ngModel)]="profileSettings.email" class="w-full md:w-64 bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5" />
+            <app-form-input-control
+              class="w-full md:w-64"
+              type="email"
+              icon="email"
+              aria-label="Email address"
+              [value]="profileSettings.email"
+              (valueChange)="profileSettings.email = $event"
+            />
           </div>
           <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <span class="text-xs font-bold text-white block">Biography</span>
-            <textarea pTextarea rows="3" [(ngModel)]="profileSettings.bio" class="w-full md:w-64 bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"></textarea>
+            <textarea
+              pTextarea
+              rows="3"
+              [(ngModel)]="profileSettings.bio"
+              class="w-full md:w-64 bg-slate-900/50 border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+            ></textarea>
           </div>
           <div class="flex justify-end pt-4 border-t border-white/5">
-            <button (click)="saveProfileSettings()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-1.5">
+            <button
+              (click)="saveProfileSettings()"
+              class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-1.5"
+            >
               <span>✓</span> Save Changes
             </button>
           </div>
@@ -238,42 +448,44 @@
 
       <!-- SECURITY TAB -->
       <div *ngIf="activeTab() === 'security'" class="glass-panel p-6 rounded-3xl space-y-8">
-
         <!-- Change Password -->
         <section class="space-y-4">
           <div>
             <h2 class="text-base font-bold text-white leading-none">Change Password</h2>
-            <p class="text-xs text-slate-400 mt-1.5 leading-none">Update the password used to sign in to your account.</p>
+            <p class="text-xs text-slate-400 mt-1.5 leading-none">
+              Update the password used to sign in to your account.
+            </p>
           </div>
           <div class="space-y-3 max-w-md">
-            <div>
-              <label class="text-xs font-bold text-white block mb-1.5">Current Password</label>
-              <input
-                type="password"
-                autocomplete="current-password"
-                [(ngModel)]="passwordModel.currentPassword"
-                class="w-full bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label class="text-xs font-bold text-white block mb-1.5">New Password</label>
-              <input
-                type="password"
-                autocomplete="new-password"
-                [(ngModel)]="passwordModel.newPassword"
-                class="w-full bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label class="text-xs font-bold text-white block mb-1.5">Confirm New Password</label>
-              <input
-                type="password"
-                autocomplete="new-password"
-                [(ngModel)]="passwordModel.confirmPassword"
-                class="w-full bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
-              />
-            </div>
-            <div *ngIf="passwordMessage" [class]="passwordMessage.severity === 'success' ? 'text-emerald-400 text-xs' : 'text-red-400 text-xs'">
+            <app-form-input-control
+              type="password"
+              icon="lock"
+              label="Current Password"
+              [value]="passwordModel.currentPassword"
+              (valueChange)="passwordModel.currentPassword = $event"
+            />
+            <app-form-input-control
+              type="password"
+              icon="lock"
+              label="New Password"
+              [value]="passwordModel.newPassword"
+              (valueChange)="passwordModel.newPassword = $event"
+            />
+            <app-form-input-control
+              type="password"
+              icon="lock"
+              label="Confirm New Password"
+              [value]="passwordModel.confirmPassword"
+              (valueChange)="passwordModel.confirmPassword = $event"
+            />
+            <div
+              *ngIf="passwordMessage"
+              [class]="
+                passwordMessage.severity === 'success'
+                  ? 'text-emerald-400 text-xs'
+                  : 'text-red-400 text-xs'
+              "
+            >
               {{ passwordMessage.text }}
             </div>
             <button
@@ -294,11 +506,21 @@
             <div>
               <h2 class="text-base font-bold text-white leading-none">Two-Factor Authentication</h2>
               <p class="text-xs text-slate-400 mt-1.5 leading-none">
-                {{ mfaEnabled() ? 'MFA is enabled on your account.' : 'MFA is disabled on your account.' }}
+                {{
+                  mfaEnabled()
+                    ? 'MFA is enabled on your account.'
+                    : 'MFA is disabled on your account.'
+                }}
               </p>
             </div>
-            <span class="px-2.5 py-1 rounded-lg text-[9px] font-bold shrink-0"
-              [class]="mfaEnabled() ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-white/10'">
+            <span
+              class="px-2.5 py-1 rounded-lg text-[9px] font-bold shrink-0"
+              [class]="
+                mfaEnabled()
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : 'bg-slate-500/10 text-slate-400 border border-white/10'
+              "
+            >
               {{ mfaEnabled() ? 'ENABLED' : 'DISABLED' }}
             </span>
           </div>
@@ -319,17 +541,18 @@
           <!-- QR scan step -->
           <div *ngIf="mfaStep() === 'qr'" class="space-y-4">
             <p class="text-xs text-slate-400">
-              Scan this QR code with Google Authenticator, Authy or a compatible app, then enter the 6-digit code to confirm.
+              Scan this QR code with Google Authenticator, Authy or a compatible app, then enter the
+              6-digit code to confirm.
             </p>
             <img [src]="mfaQrCode" alt="MFA QR code" class="w-44 h-44 rounded-xl bg-white p-2" />
             <div class="flex items-center gap-3">
-              <input
-                type="text"
-                maxlength="6"
-                inputmode="numeric"
-                [(ngModel)]="mfaCodeInput"
+              <app-form-input-control
+                class="w-40"
+                aria-label="Authenticator code"
                 placeholder="6-digit code"
-                class="w-40 bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+                [maxLength]="6"
+                [value]="mfaCodeInput"
+                (valueChange)="mfaCodeInput = $event"
               />
               <button
                 (click)="confirmMfa()"
@@ -344,27 +567,48 @@
           <!-- Recovery codes -->
           <div *ngIf="mfaStep() === 'codes'" class="space-y-4">
             <p class="text-xs text-amber-400">
-              Store these backup codes somewhere safe. Each code can only be used once to recover your account.
+              Store these backup codes somewhere safe. Each code can only be used once to recover
+              your account.
             </p>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-md">
-              <div *ngFor="let code of recoveryCodes" class="bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-center text-[11px] font-mono text-slate-300">{{ code }}</div>
+              <div
+                *ngFor="let code of recoveryCodes"
+                class="bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-center text-[11px] font-mono text-slate-300"
+              >
+                {{ code }}
+              </div>
             </div>
             <div class="flex items-center gap-3">
-              <button (click)="regenerateCodes()" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-white font-bold text-[10px] rounded-lg transition-all">Regenerate</button>
-              <button (click)="closeCodes()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] rounded-lg transition-all">Done</button>
+              <button
+                (click)="regenerateCodes()"
+                class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-white font-bold text-[10px] rounded-lg transition-all"
+              >
+                Regenerate
+              </button>
+              <button
+                (click)="closeCodes()"
+                class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] rounded-lg transition-all"
+              >
+                Done
+              </button>
             </div>
           </div>
 
           <!-- Enabled: offer to disable -->
-          <div *ngIf="mfaEnabled() && mfaStep() === 'idle'" class="flex flex-col items-start gap-3 max-w-md">
+          <div
+            *ngIf="mfaEnabled() && mfaStep() === 'idle'"
+            class="flex flex-col items-start gap-3 max-w-md"
+          >
             <p class="text-xs text-slate-400">Disabling MFA requires your current password.</p>
             <div class="flex items-center gap-3 w-full">
-              <input
+              <app-form-input-control
+                class="flex-1"
                 type="password"
-                autocomplete="current-password"
-                [(ngModel)]="disablePassword"
+                icon="lock"
+                aria-label="Current password"
                 placeholder="Current password"
-                class="flex-1 bg-slate-900/50 border border-white/10 text-slate-200 text-xs rounded-xl px-4 py-2.5 focus:outline-none"
+                [value]="disablePassword"
+                (valueChange)="disablePassword = $event"
               />
               <button
                 (click)="disableMfa()"
@@ -379,13 +623,21 @@
       </div>
 
       <!-- Other tabs dynamic forms placeholder -->
-      <div *ngIf="activeTab() !== 'general' && activeTab() !== 'profile' && activeTab() !== 'security'" class="glass-panel p-6 rounded-3xl space-y-6">
+      <div
+        *ngIf="activeTab() !== 'general' && activeTab() !== 'profile' && activeTab() !== 'security'"
+        class="glass-panel p-6 rounded-3xl space-y-6"
+      >
         <div>
-          <h2 class="text-base font-bold text-white leading-none">{{ activeTab() | titlecase }} Settings</h2>
-          <p class="text-xs text-slate-400 mt-1.5 leading-none">Configure your {{ activeTab() }} settings and credentials.</p>
+          <h2 class="text-base font-bold text-white leading-none">
+            {{ activeTab() | titlecase }} Settings
+          </h2>
+          <p class="text-xs text-slate-400 mt-1.5 leading-none">
+            Configure your {{ activeTab() }} settings and credentials.
+          </p>
         </div>
         <div class="border-t border-white/5 pt-6 text-center text-slate-500 text-xs py-12">
-          ⚙️ Content for the {{ activeTab() }} tab is loaded dynamically. Click Save Changes when ready.
+          ⚙️ Content for the {{ activeTab() }} tab is loaded dynamically. Click Save Changes when
+          ready.
         </div>
       </div>
     </div>
@@ -393,32 +645,65 @@
     <!-- Right Column: Account summary & details -->
     <div class="lg:col-span-3 space-y-6">
       <!-- Account Summary Card -->
-      <div class="glass-panel p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden bg-gradient-to-tr from-purple-950/20 to-transparent border border-purple-500/10">
-        <div class="w-12 h-12 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg shrink-0 relative">
+      <div
+        class="glass-panel p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden bg-gradient-to-tr from-purple-950/20 to-transparent border border-purple-500/10"
+      >
+        <div
+          class="w-12 h-12 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg shrink-0 relative"
+        >
           <div class="absolute inset-0 bg-purple-500/5 blur-sm"></div>
-          <svg class="w-6 h-6 text-purple-400 relative" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          <svg
+            class="w-6 h-6 text-purple-400 relative"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            ></path>
           </svg>
         </div>
         <div>
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-white">Super Admin</span>
-            <span class="px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-bold text-emerald-400">Active</span>
+            <span
+              class="px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-bold text-emerald-400"
+              >Active</span
+            >
           </div>
-          <p class="text-[9px] text-slate-400 mt-1.5 leading-normal">Full access to all features and settings.</p>
+          <p class="text-[9px] text-slate-400 mt-1.5 leading-normal">
+            Full access to all features and settings.
+          </p>
         </div>
       </div>
 
       <!-- Quick Preferences -->
       <div class="glass-panel p-5 rounded-2xl space-y-4">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400">Quick Preferences</h4>
-        
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400">
+          Quick Preferences
+        </h4>
+
         <!-- 2FA -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs shrink-0">
-              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            <div
+              class="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs shrink-0"
+            >
+              <svg
+                class="w-4 h-4 text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                ></path>
               </svg>
             </div>
             <div>
@@ -426,7 +711,10 @@
               <span class="text-[8px] text-slate-500 block">Secure your account</span>
             </div>
           </div>
-          <button (click)="selectTab('security')" class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors">
+          <button
+            (click)="selectTab('security')"
+            class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors"
+          >
             {{ mfaEnabled() ? 'Manage' : 'Enable' }}
           </button>
         </div>
@@ -434,9 +722,21 @@
         <!-- Session Timeout -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-400 text-xs shrink-0">
-              <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <div
+              class="w-8 h-8 rounded-lg bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-400 text-xs shrink-0"
+            >
+              <svg
+                class="w-4 h-4 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
               </svg>
             </div>
             <div>
@@ -444,7 +744,9 @@
               <span class="text-[8px] text-slate-500 block">Auto logout after inactivity</span>
             </div>
           </div>
-          <select class="bg-slate-900 border border-white/10 rounded-lg text-slate-300 text-[9px] px-2 py-1 focus:outline-none focus:border-purple-500/50">
+          <select
+            class="bg-slate-900 border border-white/10 rounded-lg text-slate-300 text-[9px] px-2 py-1 focus:outline-none focus:border-purple-500/50"
+          >
             <option>30 min</option>
             <option>60 min</option>
             <option>120 min</option>
@@ -454,9 +756,21 @@
         <!-- Activity Logs -->
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs shrink-0">
-              <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            <div
+              class="w-8 h-8 rounded-lg bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs shrink-0"
+            >
+              <svg
+                class="w-4 h-4 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
               </svg>
             </div>
             <div>
@@ -464,7 +778,9 @@
               <span class="text-[8px] text-slate-500 block">Track system activity</span>
             </div>
           </div>
-          <button class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors">
+          <button
+            class="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-lg transition-colors"
+          >
             View Logs
           </button>
         </div>
@@ -472,16 +788,32 @@
 
       <!-- Storage Usage Card -->
       <div class="glass-panel p-5 rounded-2xl space-y-4">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400">Storage Usage</h4>
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400">
+          Storage Usage
+        </h4>
         <div class="flex items-center gap-4">
           <div class="relative w-16 h-16 flex items-center justify-center">
             <!-- Glow underlay -->
             <div class="absolute w-12 h-12 bg-blue-500/10 rounded-full blur-md"></div>
             <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <!-- Base Circle -->
-              <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path
+                class="text-slate-800"
+                stroke-width="3"
+                stroke="currentColor"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
               <!-- Highlighted Progress Circle -->
-              <path class="text-blue-500 filter drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]" stroke-dasharray="48, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path
+                class="text-blue-500 filter drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                stroke-dasharray="48, 100"
+                stroke-width="3.5"
+                stroke-linecap="round"
+                stroke="currentColor"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
             </svg>
             <div class="absolute text-center leading-none">
               <span class="text-[11px] font-black text-white">48%</span>
@@ -489,13 +821,27 @@
             </div>
           </div>
           <div>
-            <span class="text-xs font-bold text-white block">24.3 GB <span class="text-[10px] text-slate-500 font-medium">/ 50 GB</span></span>
+            <span class="text-xs font-bold text-white block"
+              >24.3 GB <span class="text-[10px] text-slate-500 font-medium">/ 50 GB</span></span
+            >
             <span class="text-[8px] text-slate-500 mt-1 block">Total Storage</span>
           </div>
         </div>
-        <button class="w-full py-2 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-xl flex items-center justify-center gap-1.5 transition-all">
-          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+        <button
+          class="w-full py-2 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold text-[9px] rounded-xl flex items-center justify-center gap-1.5 transition-all"
+        >
+          <svg
+            class="w-3.5 h-3.5 text-slate-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+            ></path>
           </svg>
           Manage Storage
         </button>
@@ -503,7 +849,9 @@
 
       <!-- System Information -->
       <div class="glass-panel p-5 rounded-2xl space-y-4">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400">System Information</h4>
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400">
+          System Information
+        </h4>
         <div class="space-y-2.5">
           <div class="flex items-center justify-between text-[10px] font-bold">
             <span class="text-slate-500">Version</span>

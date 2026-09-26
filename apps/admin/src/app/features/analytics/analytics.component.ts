@@ -1,22 +1,21 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { SelectModule } from 'primeng/select';
+import { SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, CardModule, ToastModule],
+  imports: [CommonModule, ButtonModule, SelectControl, CardModule, ToastModule],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css',
 })
 export class AnalyticsComponent {
   selectedDateRange = 'week';
 
-  dateRangeOptions = [
+  dateRangeOptions: SelectControlOption[] = [
     { label: 'Last 7 days', value: 'week' },
     { label: 'Last 30 days', value: 'month' },
     { label: 'Last 3 months', value: 'quarter' },

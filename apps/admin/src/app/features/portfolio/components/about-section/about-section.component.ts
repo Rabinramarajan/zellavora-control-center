@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormInputControl } from '@zellavoras/ui';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -15,10 +15,10 @@ import { FileUploadModule } from 'primeng/fileupload';
     CommonModule,
     FormsModule,
     ButtonModule,
-    InputTextModule,
     TextareaModule,
     ToastModule,
     FileUploadModule,
+    FormInputControl,
   ],
   templateUrl: './about-section.component.html',
   styleUrl: './about-section.component.css',
@@ -38,14 +38,11 @@ export class AboutSectionComponent implements OnInit {
   aboutData = {
     sectionTitle: 'About Me',
     subtitle: 'Get to know more about me',
-    description: 'I\'m a passionate frontend developer who loves building modern, responsive and user-friendly web applications. I specialize in Angular, TypeScript and creating exceptional digital experiences.',
+    description:
+      "I'm a passionate frontend developer who loves building modern, responsive and user-friendly web applications. I specialize in Angular, TypeScript and creating exceptional digital experiences.",
     imageUrl: '',
     layoutStyle: 'classic',
-    highlights: [
-      'Clean Code & Best Practices',
-      'Performance Focused',
-      'User Experience Driven',
-    ],
+    highlights: ['Clean Code & Best Practices', 'Performance Focused', 'User Experience Driven'],
   };
 
   ngOnInit() {
@@ -56,7 +53,7 @@ export class AboutSectionComponent implements OnInit {
     this.aboutData.highlights.push('');
   }
 
-  updateHighlight(index: number, value: any) {
+  updateHighlight(index: number, value: string) {
     this.aboutData.highlights[index] = value;
   }
 

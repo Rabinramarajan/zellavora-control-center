@@ -4,7 +4,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { HasPermissionDirective } from '@core/rbac';
 import { Table, ColumnDef, CellDirective } from '@shared/components/table/table';
 import { AdminStoreService } from '../../../services';
@@ -13,33 +13,53 @@ import { User, UserSearchCriteria } from '../../../models';
 @Component({
   selector: 'zcc-user-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, HasPermissionDirective, Table, CellDirective],
+  imports: [CommonModule, RouterLink, SelectControl, HasPermissionDirective, Table, CellDirective],
   templateUrl: './user-list.component.html',
-  styleUrl: './user-list.component.css'
+  styleUrl: './user-list.component.css',
 })
 export class UserListComponent implements OnInit {
   private store = inject(AdminStoreService);
   private router = inject(Router);
 
   readonly statusFilter = signal<string>('');
+  readonly statusFilterOptions: SelectControlOption[] = [
+    { value: '', label: 'All Statuses' },
+    { value: 'Active', label: 'Active', color: '#22c55e' },
+    { value: 'Inactive', label: 'Inactive', color: '#94a3b8' },
+    { value: 'Suspended', label: 'Suspended', color: '#f43f5e' },
+  ];
   readonly users = this.store.users;
   readonly loading = this.store.loading;
   readonly error = this.store.error;
 
   readonly filteredUsers = computed(() => {
     const status = this.statusFilter();
-    return this.users().filter(user => !status || user.statusValue === status);
+    return this.users().filter((user) => !status || user.statusValue === status);
   });
 
   readonly trackBy = (user: User) => user.userSerialId;
 
   readonly columns: ColumnDef<User>[] = [
     { key: 'userLoginId', header: 'Login ID', sortable: true },
-    { key: 'fullName', header: 'Full Name', sortable: true, value: (u) => [u.firstName, u.middleName, u.lastName].filter(Boolean).join(' ') },
+    {
+      key: 'fullName',
+      header: 'Full Name',
+      sortable: true,
+      value: (u) => [u.firstName, u.middleName, u.lastName].filter(Boolean).join(' '),
+    },
     { key: 'emailId', header: 'Email', sortable: true },
     { key: 'employeeCode', header: 'Employee Code', sortable: true },
-    { key: 'department', header: 'Department', value: (u) => u.departmentDescription ?? u.departmentValue ?? '' },
-    { key: 'status', header: 'Status', sortable: true, value: (u) => u.statusDescription ?? u.statusValue ?? '' },
+    {
+      key: 'department',
+      header: 'Department',
+      value: (u) => u.departmentDescription ?? u.departmentValue ?? '',
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      sortable: true,
+      value: (u) => u.statusDescription ?? u.statusValue ?? '',
+    },
     { key: 'actions', header: 'Actions', align: 'right' },
   ];
 

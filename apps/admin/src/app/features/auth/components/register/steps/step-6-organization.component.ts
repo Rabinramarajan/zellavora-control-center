@@ -1,15 +1,19 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormField, FormRoot, apply, form, pattern } from '@angular/forms/signals';
 import {
-  AsyncValidatorFn,
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+  FormInputControl,
+  SelectControl,
+  SelectControlOption,
+  formInputControlSchema,
+  selectFieldSchema,
+  textFieldSchema,
+} from '@zellavoras/ui';
 import { RegisterStore } from '../register.store';
 import { DragDropUploadComponent } from '../../../../../shared/components/drag-drop-upload.component';
-import { InputControlComponent } from '@shared/components/input-control';
-import { SelectControlComponent } from '@shared/components/select-control';
+import { stringsToOptions } from '@shared/utils/select-options';
+import { FORM_PATTERNS } from '@shared/utils/form-patterns';
+import { validateAvailability } from '@shared/utils/validate-availability';
 
 interface UseCaseOption {
   value: string;
@@ -22,36 +26,18 @@ interface UseCaseOption {
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    FormField,
+    FormRoot,
     DragDropUploadComponent,
-    InputControlComponent,
-    SelectControlComponent,
+    FormInputControl,
+    SelectControl,
   ],
   templateUrl: './step-6-organization.component.html',
   styleUrls: ['../step-styles.css'],
 })
-export class Step6OrganizationComponent implements OnInit {
+export class Step6OrganizationComponent {
   readonly store = inject(RegisterStore);
-  private readonly fb = inject(FormBuilder);
-
-  readonly form = this.fb.nonNullable.group({
-    organizationName: [
-      '',
-      [Validators.required, Validators.minLength(3), Validators.maxLength(100)],
-      [this.orgNameAvailableValidator()],
-    ],
-    organizationCode: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-]{2,16}$/)]],
-    industry: ['', [Validators.required]],
-    organizationSize: ['10-50', [Validators.required]],
-    website: [''],
-    gstNumber: [''],
-    taxNumber: [''],
-    currency: ['USD', [Validators.required]],
-    fiscalYear: ['january-december', [Validators.required]],
-    timezone: ['UTC', [Validators.required]],
-  });
-
-  readonly selectedUseCases = signal<string[]>([]);
+  readonly selectedUseCases = signal<string[]>(this.store.useCases());
 
   readonly useCaseOptions: UseCaseOption[] = [
     { value: 'project-management', label: 'Project Management', icon: 'kanban' },
@@ -61,7 +47,7 @@ export class Step6OrganizationComponent implements OnInit {
     { value: 'other', label: 'Other', icon: 'grid' },
   ];
 
-  readonly industryOptions = [
+  readonly industryOptions: SelectControlOption[] = stringsToOptions([
     'Healthcare',
     'Banking',
     'Technology',
@@ -72,37 +58,37 @@ export class Step6OrganizationComponent implements OnInit {
     'Real Estate',
     'Logistics',
     'Other',
+  ]);
+
+  readonly organizationSizeOptions: SelectControlOption[] = [
+    { value: '1-10', label: '1–10' },
+    { value: '10-50', label: '10–50' },
+    { value: '50-100', label: '50–100' },
+    { value: '100-500', label: '100–500' },
+    { value: '500+', label: '500+' },
   ];
 
-  readonly organizationSizeOptions: { key: string; label: string }[] = [
-    { key: '1-10', label: '1–10' },
-    { key: '10-50', label: '10–50' },
-    { key: '50-100', label: '50–100' },
-    { key: '100-500', label: '100–500' },
-    { key: '500+', label: '500+' },
+  readonly currencyOptions: SelectControlOption[] = [
+    { value: 'USD', label: 'USD – US Dollar ($)' },
+    { value: 'EUR', label: 'EUR – Euro (€)' },
+    { value: 'GBP', label: 'GBP – British Pound (£)' },
+    { value: 'INR', label: 'INR – Indian Rupee (₹)' },
+    { value: 'JPY', label: 'JPY – Japanese Yen (¥)' },
+    { value: 'AUD', label: 'AUD – Australian Dollar (A$)' },
+    { value: 'CAD', label: 'CAD – Canadian Dollar (C$)' },
+    { value: 'SGD', label: 'SGD – Singapore Dollar (S$)' },
+    { value: 'AED', label: 'AED – UAE Dirham (د.إ)' },
+    { value: 'Other', label: 'Other' },
   ];
 
-  readonly currencyOptions: { key: string; value: string }[] = [
-    { key: 'USD', value: 'USD – US Dollar ($)' },
-    { key: 'EUR', value: 'EUR – Euro (€)' },
-    { key: 'GBP', value: 'GBP – British Pound (£)' },
-    { key: 'INR', value: 'INR – Indian Rupee (₹)' },
-    { key: 'JPY', value: 'JPY – Japanese Yen (¥)' },
-    { key: 'AUD', value: 'AUD – Australian Dollar (A$)' },
-    { key: 'CAD', value: 'CAD – Canadian Dollar (C$)' },
-    { key: 'SGD', value: 'SGD – Singapore Dollar (S$)' },
-    { key: 'AED', value: 'AED – UAE Dirham (د.إ)' },
-    { key: 'Other', value: 'Other' },
+  readonly fiscalYearOptions: SelectControlOption[] = [
+    { value: 'january-december', label: 'January – December' },
+    { value: 'april-march', label: 'April – March' },
+    { value: 'july-june', label: 'July – June' },
+    { value: 'october-september', label: 'October – September' },
   ];
 
-  readonly fiscalYearOptions: { key: string; value: string }[] = [
-    { key: 'january-december', value: 'January – December' },
-    { key: 'april-march', value: 'April – March' },
-    { key: 'july-june', value: 'July – June' },
-    { key: 'october-september', value: 'October – September' },
-  ];
-
-  readonly timezoneOptions: string[] = [
+  readonly timezoneOptions: SelectControlOption[] = stringsToOptions([
     'UTC',
     'Etc/GMT+12',
     'Pacific/Auckland',
@@ -118,7 +104,7 @@ export class Step6OrganizationComponent implements OnInit {
     'America/Denver',
     'America/Los_Angeles',
     'America/Sao_Paulo',
-  ];
+  ]);
 
   readonly icons: Record<string, string> = {
     kanban: 'M12 3v12 M5 3v18 M19 3v8 M3 21h18',
@@ -129,32 +115,55 @@ export class Step6OrganizationComponent implements OnInit {
     grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
   };
 
-  private orgNameAvailableValidator(): AsyncValidatorFn {
-    return async (control) => {
-      const value = String(control.value ?? '').trim();
-      if (!value || value.length < 3) return null;
-      if (value.toLowerCase() === this.store.organizationName()?.toLowerCase()) return null;
-      const available = await this.store.checkOrgNameAvailability(value);
-      return available ? null : { orgNameTaken: true };
-    };
-  }
+  private readonly model = signal({
+    organizationName: this.store.organizationName(),
+    organizationCode: this.store.organizationCode(),
+    industry: this.store.industry(),
+    organizationSize: this.store.organizationSize() || '10-50',
+    website: this.store.website(),
+    gstNumber: this.store.gstNumber(),
+    taxNumber: this.store.taxNumber(),
+    currency: this.store.currency() || 'USD',
+    fiscalYear: this.store.fiscalYear() || 'january-december',
+    timezone: this.detectTimezone(this.store.timezone()),
+  });
 
-  ngOnInit() {
-    const s = this.store;
-    this.form.patchValue({
-      organizationName: s.organizationName(),
-      organizationCode: s.organizationCode(),
-      industry: s.industry(),
-      organizationSize: s.organizationSize(),
-      website: s.website(),
-      gstNumber: s.gstNumber(),
-      taxNumber: s.taxNumber(),
-      currency: s.currency(),
-      fiscalYear: s.fiscalYear(),
-      timezone: this.detectTimezone(s.timezone()),
-    });
-    this.selectedUseCases.set(s.useCases());
-  }
+  readonly form = form(
+    this.model,
+    (path) => {
+      apply(path.organizationName, textFieldSchema({ minLength: 3, maxLength: 100 }));
+      validateAvailability(path.organizationName, {
+        check: (name) => this.store.checkOrgNameAvailability(name),
+        skip: (name) =>
+          name.length < 3 || name.toLowerCase() === this.store.organizationName()?.toLowerCase(),
+        message: 'This organization name is already registered.',
+      });
+      apply(
+        path.organizationCode,
+        formInputControlSchema({
+          required: { message: 'Organization code is required.' },
+          pattern: {
+            value: /^[a-zA-Z0-9-]{2,16}$/,
+            message: '2–16 characters: letters, numbers, hyphens only.',
+          },
+        })
+      );
+      validateAvailability(path.organizationCode, {
+        check: (code) => this.store.checkOrgCodeAvailability(code),
+        skip: (code) => code.toLowerCase() === this.store.organizationCode()?.toLowerCase(),
+        message: 'This organization code is taken.',
+      });
+      apply(path.industry, selectFieldSchema({ message: 'Select an industry.' }));
+      apply(path.organizationSize, selectFieldSchema({ message: 'Select a company size.' }));
+      apply(path.currency, selectFieldSchema({ message: 'Select a base currency.' }));
+      apply(path.fiscalYear, selectFieldSchema({ message: 'Select a fiscal year.' }));
+      apply(path.timezone, selectFieldSchema({ message: 'Select a timezone.' }));
+      pattern(path.website, FORM_PATTERNS.url, {
+        message: 'Enter a full URL, e.g. https://example.com',
+      });
+    },
+    { submission: { action: async () => this.save() } }
+  );
 
   private detectTimezone(current: string): string {
     if (current && current !== 'UTC') return current;
@@ -167,16 +176,17 @@ export class Step6OrganizationComponent implements OnInit {
   }
 
   generateCodeFromName() {
-    const name = String(this.form.get('organizationName')?.value ?? '');
-    const slug = name
+    const slug = this.form
+      .organizationName()
+      .value()
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 16);
     if (slug) {
-      this.form.get('organizationCode')?.setValue(slug);
-      this.form.get('organizationCode')?.markAsDirty();
+      this.form.organizationCode().value.set(slug);
+      this.form.organizationCode().markAsDirty();
     }
   }
 
@@ -190,39 +200,14 @@ export class Step6OrganizationComponent implements OnInit {
     );
   }
 
-  orgNamePending(): boolean {
-    return this.form.get('organizationName')?.status === 'PENDING';
-  }
-
-  async checkOrgCode() {
-    const code = this.form?.value?.organizationCode;
-    if (code) {
-      await this.store.checkOrgCodeAvailability(code);
-    }
-  }
-
   onLogoUploaded(logoBase64: string) {
     this.store.updateOrganizationInfo({ logoUrl: logoBase64 });
   }
 
-  onSubmit() {
-    this.form.markAllAsTouched();
-    if (this.form.invalid || this.form.pending) return;
-    const v = this.form.getRawValue();
-    this.store.updateOrganizationInfo({
-      organizationName: v.organizationName,
-      organizationCode: v.organizationCode,
-      industry: v.industry,
-      organizationSize: v.organizationSize,
-      website: v.website,
-      gstNumber: v.gstNumber,
-      taxNumber: v.taxNumber,
-      useCases: this.selectedUseCases(),
-      currency: v.currency,
-      fiscalYear: v.fiscalYear,
-      timezone: v.timezone,
-    });
+  private save(): undefined {
+    this.store.updateOrganizationInfo({ ...this.model(), useCases: this.selectedUseCases() });
     this.store.nextStep();
     this.store.syncProgressToBackend();
+    return undefined;
   }
 }

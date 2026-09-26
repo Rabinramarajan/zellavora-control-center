@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormInputControl } from '@zellavoras/ui';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -20,14 +20,7 @@ interface Testimonial {
 @Component({
   selector: 'app-testimonials-section',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ButtonModule,
-    InputTextModule,
-    TextareaModule,
-    ToastModule,
-  ],
+  imports: [CommonModule, FormsModule, ButtonModule, TextareaModule, ToastModule, FormInputControl],
   templateUrl: './testimonials-section.component.html',
   styleUrl: './testimonials-section.component.css',
 })
@@ -43,7 +36,8 @@ export class TestimonialsSectionComponent implements OnInit {
       clientName: 'Alex Morgan',
       position: 'CEO',
       company: 'TechNova Solutions',
-      message: 'Rabin is an exceptional developer! He delivered a high-quality web application that exceeded our expectations. His attention to detail, problem-solving skills, and commitment to deadlines are truly impressive.',
+      message:
+        'Rabin is an exceptional developer! He delivered a high-quality web application that exceeded our expectations. His attention to detail, problem-solving skills, and commitment to deadlines are truly impressive.',
       rating: 5,
     },
     {
@@ -51,7 +45,8 @@ export class TestimonialsSectionComponent implements OnInit {
       clientName: 'Priya Sharma',
       position: 'Product Manager',
       company: 'InnovateLabs',
-      message: 'Working with Rabin was a great experience. He understood our requirements perfectly and delivered solutions that were both functional and visually appealing.',
+      message:
+        'Working with Rabin was a great experience. He understood our requirements perfectly and delivered solutions that were both functional and visually appealing.',
       rating: 5,
     },
     {
@@ -59,7 +54,8 @@ export class TestimonialsSectionComponent implements OnInit {
       clientName: 'James Carter',
       position: 'Founder',
       company: 'DevCraft Studio',
-      message: 'Rabin brought our vision to life with clean code and modern technologies. A true professional who goes above and beyond.',
+      message:
+        'Rabin brought our vision to life with clean code and modern technologies. A true professional who goes above and beyond.',
       rating: 4,
     },
     {
@@ -67,7 +63,8 @@ export class TestimonialsSectionComponent implements OnInit {
       clientName: 'Neha Verma',
       position: 'Marketing Head',
       company: 'BrandifyMe',
-      message: 'Excellent work! Rabin created a stunning portfolio website that perfectly showcases our brand and services.',
+      message:
+        'Excellent work! Rabin created a stunning portfolio website that perfectly showcases our brand and services.',
       rating: 5,
     },
   ];

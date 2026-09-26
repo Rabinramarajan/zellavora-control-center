@@ -24,3 +24,9 @@
     animation: none;
   }
 }
+
+/* Sits beside the export button, so it matches the toolbar height. */
+.severity-filter {
+  --zv-control-height: 36px;
+  width: 11rem;
+}

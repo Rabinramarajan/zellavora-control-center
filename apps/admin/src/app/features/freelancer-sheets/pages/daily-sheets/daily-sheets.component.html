@@ -5,23 +5,32 @@
       <div class="sheet-header__icon" aria-hidden="true">🗓️</div>
       <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Daily Sheets</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Log and track your work hours, one day at a time.</p>
+        <p class="text-sm text-slate-400 mt-0.5">
+          Log and track your work hours, one day at a time.
+        </p>
       </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
       <div class="date-nav">
-        <button type="button" class="date-nav__arrow" (click)="shiftDay(-1)" aria-label="Previous day">‹</button>
-        <label class="date-nav__label">
-          <span aria-hidden="true">📅</span>
-          <span class="sr-only">Selected day</span>
-          <input
-            type="date"
-            class="date-nav__input"
-            [value]="selectedDayKey()"
-            (change)="pickDate($any($event.target).value)" />
-        </label>
-        <button type="button" class="date-nav__arrow" (click)="shiftDay(1)" aria-label="Next day">›</button>
+        <button
+          type="button"
+          class="date-nav__arrow"
+          (click)="shiftDay(-1)"
+          aria-label="Previous day"
+        >
+          ‹
+        </button>
+        <app-date-control
+          class="date-nav__picker"
+          aria-label="Selected day"
+          [value]="selectedDayKey()"
+          (valueChange)="pickDate($event)"
+          [showFooter]="true"
+        />
+        <button type="button" class="date-nav__arrow" (click)="shiftDay(1)" aria-label="Next day">
+          ›
+        </button>
       </div>
       <button type="button" class="ghost-btn" (click)="goToday()">Today</button>
 
@@ -32,7 +41,10 @@
   </header>
 
   @if (error()) {
-    <div class="notice notice--danger flex flex-wrap items-center justify-between gap-3" role="alert">
+    <div
+      class="notice notice--danger flex flex-wrap items-center justify-between gap-3"
+      role="alert"
+    >
       <span>{{ error() }}</span>
       <button type="button" class="ghost-btn" (click)="reload()">Retry</button>
     </div>
@@ -40,8 +52,8 @@
 
   @if (draftCount() > 0) {
     <div class="notice notice--info" role="status">
-      {{ draftCount() }} draft {{ draftCount() === 1 ? 'sheet has' : 'sheets have' }} not been submitted yet this month.
-      Only approved sheets count towards your monthly sheet.
+      {{ draftCount() }} draft {{ draftCount() === 1 ? 'sheet has' : 'sheets have' }} not been
+      submitted yet this month. Only approved sheets count towards your monthly sheet.
     </div>
   }
 
@@ -54,8 +66,13 @@
       </div>
       <div>
         <div class="kpi__value text-white">{{ todayHours() }}h</div>
-        <p class="text-xs mt-1" [class.text-emerald-400]="previousDayDelta() >= 0" [class.text-rose-400]="previousDayDelta() < 0">
-          {{ previousDayDelta() >= 0 ? '↑' : '↓' }} {{ previousDayDelta() | number: '1.0-1' }}h from yesterday
+        <p
+          class="text-xs mt-1"
+          [class.text-emerald-400]="previousDayDelta() >= 0"
+          [class.text-rose-400]="previousDayDelta() < 0"
+        >
+          {{ previousDayDelta() >= 0 ? '↑' : '↓' }} {{ previousDayDelta() | number: '1.0-1' }}h from
+          yesterday
         </p>
       </div>
     </article>
@@ -82,7 +99,10 @@
           out of {{ monthHours() }}h ({{ approvedMonthPercent() }}%)
         </p>
         <div class="bar">
-          <div class="bar__fill bg-gradient-to-r from-emerald-500 to-emerald-400" [style.width.%]="approvedMonthPercent()"></div>
+          <div
+            class="bar__fill bg-gradient-to-r from-emerald-500 to-emerald-400"
+            [style.width.%]="approvedMonthPercent()"
+          ></div>
         </div>
       </div>
     </article>
@@ -96,7 +116,10 @@
         <div class="kpi__value text-white">{{ billableToday() }}h</div>
         <p class="text-xs text-slate-400 mt-1 mb-2">{{ billablePercent() }}% of today's hours</p>
         <div class="bar">
-          <div class="bar__fill bg-gradient-to-r from-violet-500 to-indigo-400" [style.width.%]="billablePercent()"></div>
+          <div
+            class="bar__fill bg-gradient-to-r from-violet-500 to-indigo-400"
+            [style.width.%]="billablePercent()"
+          ></div>
         </div>
       </div>
     </article>
@@ -116,37 +139,40 @@
         [pageSizeOptions]="pageSizeOptions"
         [(filters)]="filters"
         [(sort)]="sort"
-        [(pageSize)]="pageSize">
+        [(pageSize)]="pageSize"
+      >
         <div toolbar-start>
           <h2 class="text-base font-semibold text-white">Timesheet Entries</h2>
           <p class="text-xs text-slate-400 mt-0.5">Your daily work log</p>
         </div>
 
         <ng-container toolbar-end>
-          <select
-            class="sheet-select"
+          <app-select-control
+            class="sheet-filter"
             aria-label="Filter by project"
-            (change)="setFilter('project', $any($event.target).value)">
-            <option value="">All Projects</option>
-            @for (project of projectOptions(); track project) {
-              <option [value]="project" [selected]="filters()['project'] === project">{{ project }}</option>
-            }
-          </select>
+            placeholder="All Projects"
+            icon="list"
+            [searchable]="projectOptions().length > 8"
+            [options]="projectOptions()"
+            [value]="filters()['project']"
+            (valueChange)="setFilter('project', $event)"
+          />
 
-          <select
-            class="sheet-select"
+          <app-select-control
+            class="sheet-filter"
             aria-label="Filter by status"
-            (change)="setFilter('status', $any($event.target).value)">
-            <option value="">All Status</option>
-            @for (option of statusOptions; track option.value) {
-              <option [value]="option.value" [selected]="filters()['status'] === option.value">{{ option.label }}</option>
-            }
-          </select>
+            placeholder="All Status"
+            [options]="statusOptions"
+            [value]="filters()['status']"
+            (valueChange)="setFilter('status', $event)"
+          />
         </ng-container>
 
         <ng-template smartCell="project" let-row>
           <div class="flex items-center gap-2">
-            <span class="avatar-chip" [style.background]="row.projectColor">{{ row.projectInitials }}</span>
+            <span class="avatar-chip" [style.background]="row.projectColor">{{
+              row.projectInitials
+            }}</span>
             <div class="leading-tight">
               <div class="text-slate-100 font-medium">{{ row.project }}</div>
               <div class="text-[0.68rem] text-slate-500">{{ row.projectType }}</div>
@@ -164,7 +190,9 @@
         </ng-template>
 
         <ng-template smartCell="status" let-row>
-          <span [class]="statusPill(row.status)" [attr.title]="row.rejectionReason ?? null">{{ row.statusLabel }}</span>
+          <span [class]="statusPill(row.status)" [attr.title]="row.rejectionReason ?? null">{{
+            row.statusLabel
+          }}</span>
         </ng-template>
 
         <ng-template smartCell="actions" let-row>
@@ -175,7 +203,8 @@
                 class="ghost-btn"
                 [disabled]="isBusy(row.id)"
                 (click)="submitSheet(row)"
-                [attr.aria-label]="'Submit entry for ' + row.dateLabel">
+                [attr.aria-label]="'Submit entry for ' + row.dateLabel"
+              >
                 Submit
               </button>
             }
@@ -183,7 +212,8 @@
               type="button"
               class="ghost-btn"
               (click)="openSheet(row)"
-              [attr.aria-label]="(row.editable ? 'Edit' : 'View') + ' entry for ' + row.dateLabel">
+              [attr.aria-label]="(row.editable ? 'Edit' : 'View') + ' entry for ' + row.dateLabel"
+            >
               {{ row.editable ? 'Edit' : 'View' }}
             </button>
           </div>
@@ -193,7 +223,9 @@
           <div class="empty-state">
             <span class="text-2xl" aria-hidden="true">🗒️</span>
             <p class="text-sm font-medium text-slate-300">No timesheet entries found</p>
-            <p class="text-xs">Adjust the filters or create a daily sheet to start tracking your hours.</p>
+            <p class="text-xs">
+              Adjust the filters or create a daily sheet to start tracking your hours.
+            </p>
           </div>
         </ng-template>
       </app-smart-table>
@@ -211,8 +243,19 @@
 
         <div class="sheet-card__body flex flex-col items-center gap-5">
           <div class="donut">
-            <svg viewBox="0 0 120 120" role="img" [attr.aria-label]="todayHours() + ' hours logged'">
-              <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12" />
+            <svg
+              viewBox="0 0 120 120"
+              role="img"
+              [attr.aria-label]="todayHours() + ' hours logged'"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
+                fill="none"
+                stroke="rgba(255,255,255,0.06)"
+                stroke-width="12"
+              />
               @for (slice of todaySlices(); track slice.name) {
                 <circle
                   class="donut__slice"
@@ -224,7 +267,8 @@
                   stroke-linecap="butt"
                   [attr.stroke]="slice.color"
                   [attr.stroke-dasharray]="slice.dash"
-                  [attr.stroke-dashoffset]="slice.offset" />
+                  [attr.stroke-dashoffset]="slice.offset"
+                />
               }
             </svg>
             <div class="donut__center">
@@ -244,7 +288,11 @@
               </li>
             } @empty {
               <li class="text-center text-xs text-slate-500">
-                {{ isWeekend() ? "Weekend, day off. Add a sheet only if you worked." : "No hours logged for this day." }}
+                {{
+                  isWeekend()
+                    ? 'Weekend, day off. Add a sheet only if you worked.'
+                    : 'No hours logged for this day.'
+                }}
               </li>
             }
           </ul>
@@ -274,7 +322,11 @@
                 <span class="text-slate-200 font-semibold tabular-nums">{{ slice.percent }}%</span>
               </div>
               <div class="bar">
-                <div class="bar__fill" [style.width.%]="slice.percent" [style.background]="slice.color"></div>
+                <div
+                  class="bar__fill"
+                  [style.width.%]="slice.percent"
+                  [style.background]="slice.color"
+                ></div>
               </div>
             </div>
           } @empty {

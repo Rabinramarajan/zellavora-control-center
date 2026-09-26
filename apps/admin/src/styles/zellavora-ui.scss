@@ -1,0 +1,31 @@
+// Tokens and CDK overlay styles for @zellavoras/ui form controls.
+// The admin shell is dark-only, so the library's light defaults are replaced
+// with the same slate surfaces and indigo accent the rest of the app uses.
+@use '@zellavoras/ui/styles' as zv;
+
+@include zv.core(
+  (
+    surface: #0b1120,
+    surface-muted: #111827,
+    text: #f1f5f9,
+    text-muted: #94a3b8,
+    text-placeholder: #64748b,
+    text-disabled: #475569,
+    border: #1e293b,
+    border-strong: #475569,
+    border-disabled: #1e293b,
+    accent: #6366f1,
+    danger: #f43f5e,
+    radius-control: 10px,
+    control-height: 44px,
+    font: #{"'Outfit', 'Inter', system-ui, -apple-system, sans-serif"},
+  )
+);
+
+// Library controls size to their content by default; in forms they fill the grid cell.
+app-form-input-control,
+app-select-control,
+app-date-control {
+  display: block;
+  width: 100%;
+}

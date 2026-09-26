@@ -1,3 +1,4 @@
+import { FormInputControl } from '@zellavoras/ui';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -13,20 +14,12 @@ import {
 } from '@angular/core';
 import { SmartCellContext, SmartCellDirective, SmartEmptyDirective } from './cells/cell.directive';
 import { SmartTableStore } from './smart-table.store';
-import {
-  ColumnDef,
-  FilterState,
-  SelectionMode,
-  SortState,
-  TrackByFn,
-} from './smart-table.types';
-
-let nextTableId = 0;
+import { ColumnDef, FilterState, SelectionMode, SortState, TrackByFn } from './smart-table.types';
 
 @Component({
   selector: 'app-smart-table',
   standalone: true,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, FormInputControl],
   templateUrl: './smart-table.component.html',
   styleUrl: './smart-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,8 +49,6 @@ export class SmartTableComponent<T> {
 
   private readonly cellTemplates = contentChildren(SmartCellDirective);
   protected readonly emptyTemplate = contentChild(SmartEmptyDirective);
-
-  protected readonly searchId = `smart-table-search-${nextTableId++}`;
 
   readonly store = new SmartTableStore<T>({
     rows: this.rows,
@@ -133,10 +124,6 @@ export class SmartTableComponent<T> {
 
   protected rowKey(row: T): unknown {
     return this.trackBy()(row);
-  }
-
-  protected onSearch(event: Event): void {
-    this.search.set((event.target as HTMLInputElement).value);
   }
 
   protected onPageSize(event: Event): void {

@@ -37,16 +37,11 @@
 
   <div class="reg-form__body">
     @if (store.registrationType() === 'invite') {
-      <app-input-control
-        [value]="inviteCode()"
-        (valueChange)="inviteCode.set($event)"
+      <app-form-input-control
+        [(value)]="inviteCode"
         label="Invitation Code"
         placeholder="e.g. ZCC-XXXX-XXXX"
-        prefixIcon="pi-hashtag"
-        autocomplete="off"
         hint="Paste the invitation code you received by email."
-        [clearable]="true"
-        [trim]="true"
       />
       <button
         type="button"
@@ -93,8 +88,8 @@
           <path d="M12 8h.01"></path>
         </svg>
         <p>
-          You&apos;ll create your company profile, head-office branch, owner account and
-          security settings.
+          You&apos;ll create your company profile, head-office branch, owner account and security
+          settings.
         </p>
       </div>
       <button type="button" class="btn-primary btn-primary--block" (click)="store.nextStep()">

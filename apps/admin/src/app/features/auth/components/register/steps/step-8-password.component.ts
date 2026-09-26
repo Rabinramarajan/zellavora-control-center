@@ -1,78 +1,56 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators, ValidatorFn } from '@angular/forms';
+import { FormField, FormRoot, apply, form, required, validate } from '@angular/forms/signals';
+import { FormInputControl, passwordFieldSchema } from '@zellavoras/ui';
 import { RegisterStore } from '../register.store';
 import { PasswordStrengthComponent } from '../../../../../shared/components/password-strength.component';
-import { InputControlComponent } from '@shared/components/input-control';
 
 @Component({
   selector: 'app-step-8-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PasswordStrengthComponent, InputControlComponent],
+  imports: [CommonModule, FormField, FormRoot, PasswordStrengthComponent, FormInputControl],
   templateUrl: './step-8-password.component.html',
   styleUrls: ['../step-styles.css'],
 })
-export class Step8PasswordComponent implements OnInit {
+export class Step8PasswordComponent {
   readonly store = inject(RegisterStore);
-  private readonly fb = inject(FormBuilder);
 
-  readonly form = this.fb.nonNullable.group(
-    {
-      password: ['', [Validators.required, Validators.minLength(12)]],
-      confirmPassword: ['', [Validators.required]],
+  private readonly model = signal({
+    password: this.store.password(),
+    confirmPassword: this.store.confirmPassword(),
+  });
+
+  readonly form = form(
+    this.model,
+    (path) => {
+      apply(path.password, passwordFieldSchema({ minLength: 12 }));
+      validate(path.password, ({ value }) =>
+        this.containsPersonalInfo(value())
+          ? { kind: 'personalInfo', message: 'Password cannot contain your name or email.' }
+          : undefined
+      );
+      required(path.confirmPassword, { message: 'Confirm your password.' });
+      validate(path.confirmPassword, ({ value, valueOf }) =>
+        value() && value() !== valueOf(path.password)
+          ? { kind: 'mismatch', message: 'Passwords do not match.' }
+          : undefined
+      );
     },
-    { validators: [this.confirmMatchValidator(), this.noPersonalInfoValidator()] }
+    { submission: { action: async () => this.save() } }
   );
 
-  private confirmMatchValidator(): ValidatorFn {
-    return (control) =>
-      control.value && control.value.password === control.value.confirmPassword
-        ? null
-        : { passwordMismatch: true };
+  private containsPersonalInfo(password: string): boolean {
+    if (!password) return false;
+    const lower = password.toLowerCase();
+    return [this.store.email()?.split('@')[0], this.store.firstName(), this.store.lastName()]
+      .map((part) => part?.trim().toLowerCase())
+      .some((part) => !!part && part.length >= 3 && lower.includes(part));
   }
 
-  private noPersonalInfoValidator(): ValidatorFn {
-    return (control) => {
-      const pw = control.value?.password;
-      if (!pw) return null;
-      const parts = [
-        this.store.email()?.split('@')[0],
-        this.store.firstName(),
-        this.store.lastName(),
-      ]
-        .map((p) => p?.trim())
-        .filter((p) => !!p && p.length >= 3);
-      const lower = String(pw).toLowerCase();
-      const hit = parts.some((p) => lower.includes(String(p).toLowerCase()));
-      return hit ? { containsPersonalInfo: true } : null;
-    };
-  }
-
-  ngOnInit() {
-    const s = this.store;
-    this.form.patchValue({
-      password: s.password(),
-      confirmPassword: s.confirmPassword(),
-    });
-  }
-
-  passwordMismatch(): boolean {
-    return !!this.form.errors?.['passwordMismatch'] && this.form.touched;
-  }
-
-  containsPersonalInfo(): boolean {
-    return !!this.form.errors?.['containsPersonalInfo'] && this.form.touched;
-  }
-
-  onSubmit() {
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
-    const v = this.form.getRawValue();
-    this.store.updatePassword({
-      password: v.password,
-      confirmPassword: v.confirmPassword,
-    });
+  private save(): undefined {
+    this.store.updatePassword(this.model());
     this.store.nextStep();
     this.store.syncProgressToBackend();
+    return undefined;
   }
 }

@@ -1,305 +1,465 @@
 <div class="auth-shell">
-      <!-- Background overlay gradients -->
-      <div class="glow-bg-1"></div>
-      <div class="glow-bg-2"></div>
+  <!-- Background overlay gradients -->
+  <div class="glow-bg-1"></div>
+  <div class="glow-bg-2"></div>
 
-      <!-- LEFT PANEL: Brand Story, 3D City & Trust -->
-      <aside class="brand-panel">
-        <div class="brand-lockup">
-          <div class="brand-mark">Z</div>
-          <div>
-            <h1 class="brand-name">ZELLAVORA</h1>
-            <p class="brand-sub">Control Center</p>
-          </div>
-        </div>
+  <!-- LEFT PANEL: Brand Story, 3D City & Trust -->
+  <aside class="brand-panel">
+    <div class="brand-lockup">
+      <div class="brand-mark">Z</div>
+      <div>
+        <h1 class="brand-name">ZELLAVORA</h1>
+        <p class="brand-sub">Control Center</p>
+      </div>
+    </div>
 
-        <h2 class="brand-headline">
-          One Platform.<br />
-          <span class="headline-accent">Infinite Possibilities.</span>
-        </h2>
-        <p class="brand-copy">
-          Zellavora Control Center is the unified platform to manage, monitor and scale
-          your organization, teams and operations — securely and effortlessly.
-        </p>
+    <h2 class="brand-headline">
+      One Platform.<br />
+      <span class="headline-accent">Infinite Possibilities.</span>
+    </h2>
+    <p class="brand-copy">
+      Zellavora Control Center is the unified platform to manage, monitor and scale your
+      organization, teams and operations — securely and effortlessly.
+    </p>
 
-        <!-- 3D Holographic City -->
-        <div class="city-stage">
-          <span class="float-badge float-badge--gear">⚙️</span>
-          <span class="float-badge float-badge--chart">📊</span>
-          <span class="float-badge float-badge--user">👤</span>
-          <span class="float-badge float-badge--spark">✦</span>
+    <!-- 3D Holographic City -->
+    <div class="city-stage">
+      <span class="float-badge float-badge--gear">⚙️</span>
+      <span class="float-badge float-badge--chart">📊</span>
+      <span class="float-badge float-badge--user">👤</span>
+      <span class="float-badge float-badge--spark">✦</span>
 
-          <div class="city-scene">
-            <div class="city-platform"></div>
-            <div class="city-platform city-platform--inner"></div>
-            <div class="city-skyline">
-              <span class="tower tower--1"></span>
-              <span class="tower tower--2"></span>
-              <span class="tower tower--3"><i class="tower-glyph">Z</i></span>
-              <span class="tower tower--4"></span>
-              <span class="tower tower--5"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Feature Trio -->
-        <div class="feature-grid">
-          <div>
-            <div class="feature-icon feature-icon--cyan"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z"/></svg></div>
-            <h4 class="feature-title">Enterprise Grade</h4>
-            <p class="feature-copy">Secure, compliant and audit ready</p>
-          </div>
-          <div>
-            <div class="feature-icon feature-icon--violet"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 3L5 13.5h5.5L11 21l8-10.5h-5.5L13 3z"/></svg></div>
-            <h4 class="feature-title">Built for Scale</h4>
-            <p class="feature-copy">Grow your business without limits</p>
-          </div>
-          <div>
-            <div class="feature-icon feature-icon--emerald"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></div>
-            <h4 class="feature-title">Unified Control</h4>
-            <p class="feature-copy">Everything you need in one place</p>
-          </div>
-        </div>
-
-        <!-- Trust strip -->
-        <div class="trust-card">
-          <div class="trust-shield"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.2 12l2 2 3.6-3.8"/></svg></div>
-          <div class="flex-1">
-            <p class="trust-title">Trusted &amp; secured by design</p>
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11.5px] text-slate-400">
-              <span><span class="text-indigo-400 font-bold">✓</span> SSL</span>
-              <span><span class="text-indigo-400 font-bold">✓</span> JWT</span>
-              <span><span class="text-indigo-400 font-bold">✓</span> SOC 2</span>
-              <span><span class="text-indigo-400 font-bold">✓</span> GDPR</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Right Side (Form Container) -->
-      <div class="glass-panel auth-card items-center">
-        <div class="auth-scroll w-full flex flex-col justify-center items-center py-2">
-        <div class="auth-form-col">
-          <!-- Sign-in form -->
-          <div class="login-card">
-            <p-toast></p-toast>
-            <h2 class="text-2xl font-bold text-white mb-1.5">Welcome back</h2>
-            <p class="text-sm text-slate-400 mb-7">Sign in to continue to your dashboard</p>
-
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-              <!-- Client Selector Dropdown -->
-              <zc-select-control
-                formControlName="clientCode"
-                label="Organization"
-                placeholder="Select Organization"
-                searchPlaceholder="Search organization..."
-                emptyText="No organizations found"
-                loadingText="Loading organizations..."
-                prefixIcon="pi-building"
-                [options]="allOrgs()"
-                [loading]="loadingOrgs()"
-                [optionValue]="orgValue"
-                optionLabel="name"
-                optionSublabel="clientCode"
-                [searchable]="true"
-                (selectionChange)="selectedOrg.set($event)"
-              >
-                <ng-template #option let-org>
-                  <span
-                    class="w-2 h-2 rounded-full shrink-0"
-                    [class]="org.clientCode.toUpperCase() === 'DEMO' ? 'bg-purple-500' : 'bg-blue-500'"
-                  ></span>
-                  <span class="font-medium truncate">{{ org.name }}</span>
-                  <span class="text-[11px] text-slate-500 font-semibold uppercase">({{ org.clientCode }})</span>
-                </ng-template>
-              </zc-select-control>
-
-              <!-- Email Field -->
-              <app-input-control
-                formControlName="email"
-                type="email"
-                label="Email address"
-                placeholder="you@company.com"
-                prefixIcon="pi-envelope"
-                autocomplete="email"
-                inputmode="email"
-                [clearable]="true"
-                [trim]="true"
-              />
-
-              <!-- Password Field -->
-              <div class="relative">
-                <a
-                  routerLink="/auth/forgot-password"
-                  class="field-label text-indigo-400 hover:text-indigo-300 no-underline absolute right-0 top-0 z-10"
-                  >Forgot password?</a
-                >
-                <app-input-control
-                  formControlName="password"
-                  type="password"
-                  label="Password"
-                  placeholder="Enter your password"
-                  prefixIcon="pi-lock"
-                  autocomplete="current-password"
-                  [clearable]="true"
-                  (keyup)="onPasswordKeyup($event)"
-                />
-                @if (capsLock()) {
-                  <p class="text-[11px] text-amber-400 mt-1.5 flex items-center gap-1.5">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    </svg>
-                    Caps Lock is on — your password will be typed in uppercase.
-                  </p>
-                }
-              </div>
-
-              <!-- Remember -->
-              <div class="flex items-center text-[13px] pt-0.5">
-                <label class="flex items-center gap-2 cursor-pointer text-slate-300">
-                  <input
-                    type="checkbox"
-                    formControlName="rememberMe"
-                    class="w-4 h-4 rounded border-white/10 bg-white/5 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-offset-transparent"
-                  />
-                  <span>Keep me signed in</span>
-                </label>
-              </div>
-
-              <!-- Sign In Button -->
-              <button
-                type="submit"
-                [disabled]="!formState().valid || auth.isLoading()"
-                class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:brightness-110 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-              >
-                @if (auth.isLoading()) {
-                  <span class="flex items-center gap-2">
-                    <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Signing in...
-                  </span>
-                } @else {
-                  <span class="flex items-center gap-2">
-                    Sign In
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                    </svg>
-                  </span>
-                }
-              </button>
-            </form>
-
-            <!-- Social Logins -->
-            <div class="relative my-6 text-center">
-              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div>
-              <span class="relative px-3 bg-[#05070f] text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Or continue with</span>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2.5">
-              <button (click)="redirectToOAuth('google')" class="social-btn">
-                <svg class="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.64 5.64 0 0 1 8.35 12.96a5.64 5.64 0 0 1 5.64-5.64c2.4 0 4.4 1.5 5.2 3.6l3.96-3.07C20.8 4.2 16.8 1.8 12.24 1.8a10.2 10.2 0 0 0-10.2 10.2 10.2 10.2 0 0 0 10.2 10.2c5.64 0 9.84-3.96 9.84-9.96 0-.6-.05-1.08-.16-1.56H12.24z"/>
-                </svg>
-                Google
-              </button>
-              <button (click)="redirectToOAuth('microsoft')" class="social-btn">
-                <svg class="w-4 h-4" viewBox="0 0 23 23">
-                  <path fill="#f35325" d="M0 0h11v11H0z"/>
-                  <path fill="#81bc06" d="M12 0h11v11H12z"/>
-                  <path fill="#05a6f0" d="M0 12h11v11H0z"/>
-                  <path fill="#ffba08" d="M12 12h11v11H12z"/>
-                </svg>
-                Microsoft
-              </button>
-              <button (click)="redirectToOAuth('github')" class="social-btn">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
-                </svg>
-                GitHub
-              </button>
-            </div>
-
-            <!-- Trust / Protected Indicator -->
-            <div class="mt-6 flex items-center justify-between gap-3 p-3.5 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 shrink-0 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                  </svg>
-                </div>
-                <span class="text-[12px] font-medium text-slate-400">Your data is protected with enterprise-grade security</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Footer Navigation -->
-          <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-[12px] text-slate-500">
-            <a routerLink="/auth/register" class="text-indigo-400 hover:text-indigo-300 font-semibold">Create account</a>
-            <div class="flex gap-3">
-              <button type="button" (click)="visiblePrivacy.set(true)" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Privacy Policy</button>
-              <span>|</span>
-              <button type="button" (click)="visibleTerms.set(true)" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Terms of Service</button>
-              <span>|</span>
-              <button type="button" (click)="visibleHelp.set(true)" class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500">Help Center</button>
-            </div>
-          </div>
-        </div>
+      <div class="city-scene">
+        <div class="city-platform"></div>
+        <div class="city-platform city-platform--inner"></div>
+        <div class="city-skyline">
+          <span class="tower tower--1"></span>
+          <span class="tower tower--2"></span>
+          <span class="tower tower--3"><i class="tower-glyph">Z</i></span>
+          <span class="tower tower--4"></span>
+          <span class="tower tower--5"></span>
         </div>
       </div>
     </div>
 
-    <!-- Dialogs -->
-    <p-dialog header="Privacy Policy" [(visible)]="visiblePrivacy" [modal]="true" [style]="{ width: '40rem' }" [breakpoints]="{ '640px': '90vw' }" [draggable]="false" [resizable]="false">
-      <div class="text-sm text-slate-300 space-y-4 pt-2">
-        <p class="text-xs text-slate-500 mb-4">Last Updated: July 29, 2026</p>
-        <section>
-          <h4 class="text-white font-semibold mb-1">1. Information We Collect</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">We collect information you provide directly when using Zellavora Control Center, including name, email address, password, and organizational affiliation.</p>
-        </section>
-        <section>
-          <h4 class="text-white font-semibold mb-1">2. How We Use Your Information</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">We use your information to process login requests, authenticate your identity, and provide access to secure control hub features.</p>
-        </section>
-        <section>
-          <h4 class="text-white font-semibold mb-1">3. Security</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">We implement industry-standard technical measures (SSL encryption, JWT tokens) to safeguard your data from unauthorized access.</p>
-        </section>
+    <!-- Feature Trio -->
+    <div class="feature-grid">
+      <div>
+        <div class="feature-icon feature-icon--cyan">
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z"
+            />
+          </svg>
+        </div>
+        <h4 class="feature-title">Enterprise Grade</h4>
+        <p class="feature-copy">Secure, compliant and audit ready</p>
       </div>
-    </p-dialog>
+      <div>
+        <div class="feature-icon feature-icon--violet">
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13 3L5 13.5h5.5L11 21l8-10.5h-5.5L13 3z"
+            />
+          </svg>
+        </div>
+        <h4 class="feature-title">Built for Scale</h4>
+        <p class="feature-copy">Grow your business without limits</p>
+      </div>
+      <div>
+        <div class="feature-icon feature-icon--emerald">
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"
+            />
+          </svg>
+        </div>
+        <h4 class="feature-title">Unified Control</h4>
+        <p class="feature-copy">Everything you need in one place</p>
+      </div>
+    </div>
 
-    <p-dialog header="Terms of Service" [(visible)]="visibleTerms" [modal]="true" [style]="{ width: '40rem' }" [breakpoints]="{ '640px': '90vw' }" [draggable]="false" [resizable]="false">
-      <div class="text-sm text-slate-300 space-y-4 pt-2">
-        <p class="text-xs text-slate-500 mb-4">Last Updated: July 29, 2026</p>
-        <section>
-          <h4 class="text-white font-semibold mb-1">1. Acceptance of Terms</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">By accessing or using Zellavora Control Center, you agree to comply with and be bound by these Terms of Service.</p>
-        </section>
-        <section>
-          <h4 class="text-white font-semibold mb-1">2. Account Responsibility</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">You are responsible for keeping your login credentials confidential and for all activity occurring under your account.</p>
-        </section>
-        <section>
-          <h4 class="text-white font-semibold mb-1">3. Prohibited Activity</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">Unauthorized access to other tenant environments, reverse engineering, or scraping platform data is strictly prohibited.</p>
-        </section>
+    <!-- Trust strip -->
+    <div class="trust-card">
+      <div class="trust-shield">
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z"
+          />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.2 12l2 2 3.6-3.8" />
+        </svg>
       </div>
-    </p-dialog>
+      <div class="flex-1">
+        <p class="trust-title">Trusted &amp; secured by design</p>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11.5px] text-slate-400">
+          <span><span class="text-indigo-400 font-bold">✓</span> SSL</span>
+          <span><span class="text-indigo-400 font-bold">✓</span> JWT</span>
+          <span><span class="text-indigo-400 font-bold">✓</span> SOC 2</span>
+          <span><span class="text-indigo-400 font-bold">✓</span> GDPR</span>
+        </div>
+      </div>
+    </div>
+  </aside>
 
-    <p-dialog header="Help Center" [(visible)]="visibleHelp" [modal]="true" [style]="{ width: '40rem' }" [breakpoints]="{ '640px': '90vw' }" [draggable]="false" [resizable]="false">
-      <div class="text-sm text-slate-300 space-y-4 pt-2">
-        <section>
-          <h4 class="text-white font-semibold mb-1">How do I log in?</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">Select your organization from the Client Dropdown selector, input your corporate email, and your secure password.</p>
-        </section>
-        <section>
-          <h4 class="text-white font-semibold mb-1">How do I reset my password?</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">Click the "Forgot password?" link below the password input field to receive reset instructions via email.</p>
-        </section>
-        <section>
-          <h4 class="text-white font-semibold mb-1">Contact Support</h4>
-          <p class="text-slate-400 text-xs leading-relaxed">Send an email directly to <a href="mailto:support@zellavora.com" class="text-purple-400 hover:text-purple-300">support@zellavora.com</a> for technical issues.</p>
-        </section>
+  <!-- Right Side (Form Container) -->
+  <div class="glass-panel auth-card items-center">
+    <div class="auth-scroll w-full flex flex-col justify-center items-center py-2">
+      <div class="auth-form-col">
+        <!-- Sign-in form -->
+        <div class="login-card">
+          <p-toast></p-toast>
+          <h2 class="text-2xl font-bold text-white mb-1.5">Welcome back</h2>
+          <p class="text-sm text-slate-400 mb-7">Sign in to continue to your dashboard</p>
+
+          <form [formRoot]="form" class="space-y-4">
+            <!-- Client Selector Dropdown -->
+            <app-select-control
+              [formField]="form.clientCode"
+              label="Organization"
+              icon="building"
+              [placeholder]="loadingOrgs() ? 'Loading organizations...' : 'Select Organization'"
+              searchPlaceholder="Search organization..."
+              [options]="orgOptions()"
+              [searchable]="true"
+            />
+
+            <!-- Email Field -->
+            <app-form-input-control
+              [formField]="form.email"
+              type="email"
+              icon="email"
+              label="Email address"
+              placeholder="you@company.com"
+            />
+
+            <!-- Password Field -->
+            <div class="relative">
+              <a
+                routerLink="/auth/forgot-password"
+                class="field-label text-indigo-400 hover:text-indigo-300 no-underline absolute right-0 top-0 z-10"
+                >Forgot password?</a
+              >
+              <app-form-input-control
+                [formField]="form.password"
+                type="password"
+                icon="lock"
+                label="Password"
+                placeholder="Enter your password"
+                (keyup)="onPasswordKeyup($event)"
+              />
+              @if (capsLock()) {
+                <p class="text-[11px] text-amber-400 mt-1.5 flex items-center gap-1.5">
+                  <svg
+                    class="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                    />
+                  </svg>
+                  Caps Lock is on — your password will be typed in uppercase.
+                </p>
+              }
+            </div>
+
+            <!-- Remember -->
+            <div class="flex items-center text-[13px] pt-0.5">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                <input
+                  type="checkbox"
+                  [formField]="form.rememberMe"
+                  class="w-4 h-4 rounded border-white/10 bg-white/5 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-offset-transparent"
+                />
+                <span>Keep me signed in</span>
+              </label>
+            </div>
+
+            <!-- Sign In Button -->
+            <button
+              type="submit"
+              [disabled]="auth.isLoading() || form().submitting()"
+              class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 hover:brightness-110 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+            >
+              @if (auth.isLoading()) {
+                <span class="flex items-center gap-2">
+                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Signing in...
+                </span>
+              } @else {
+                <span class="flex items-center gap-2">
+                  Sign In
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                </span>
+              }
+            </button>
+          </form>
+
+          <!-- Social Logins -->
+          <div class="relative my-6 text-center">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-white/10"></div>
+            </div>
+            <span
+              class="relative px-3 bg-[#05070f] text-[11px] text-slate-500 font-semibold uppercase tracking-wider"
+              >Or continue with</span
+            >
+          </div>
+
+          <div class="grid grid-cols-3 gap-2.5">
+            <button (click)="redirectToOAuth('google')" class="social-btn">
+              <svg class="w-4 h-4" viewBox="0 0 24 24">
+                <path
+                  fill="#EA4335"
+                  d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.64 5.64 0 0 1 8.35 12.96a5.64 5.64 0 0 1 5.64-5.64c2.4 0 4.4 1.5 5.2 3.6l3.96-3.07C20.8 4.2 16.8 1.8 12.24 1.8a10.2 10.2 0 0 0-10.2 10.2 10.2 10.2 0 0 0 10.2 10.2c5.64 0 9.84-3.96 9.84-9.96 0-.6-.05-1.08-.16-1.56H12.24z"
+                />
+              </svg>
+              Google
+            </button>
+            <button (click)="redirectToOAuth('microsoft')" class="social-btn">
+              <svg class="w-4 h-4" viewBox="0 0 23 23">
+                <path fill="#f35325" d="M0 0h11v11H0z" />
+                <path fill="#81bc06" d="M12 0h11v11H12z" />
+                <path fill="#05a6f0" d="M0 12h11v11H0z" />
+                <path fill="#ffba08" d="M12 12h11v11H12z" />
+              </svg>
+              Microsoft
+            </button>
+            <button (click)="redirectToOAuth('github')" class="social-btn">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z"
+                />
+              </svg>
+              GitHub
+            </button>
+          </div>
+
+          <!-- Trust / Protected Indicator -->
+          <div
+            class="mt-6 flex items-center justify-between gap-3 p-3.5 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl"
+          >
+            <div class="flex items-center gap-2.5">
+              <div
+                class="w-7 h-7 shrink-0 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
+              </div>
+              <span class="text-[12px] font-medium text-slate-400"
+                >Your data is protected with enterprise-grade security</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Footer Navigation -->
+        <div
+          class="mt-6 flex flex-wrap items-center justify-between gap-3 text-[12px] text-slate-500"
+        >
+          <a routerLink="/auth/register" class="text-indigo-400 hover:text-indigo-300 font-semibold"
+            >Create account</a
+          >
+          <div class="flex gap-3">
+            <button
+              type="button"
+              (click)="visiblePrivacy.set(true)"
+              class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500"
+            >
+              Privacy Policy
+            </button>
+            <span>|</span>
+            <button
+              type="button"
+              (click)="visibleTerms.set(true)"
+              class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500"
+            >
+              Terms of Service
+            </button>
+            <span>|</span>
+            <button
+              type="button"
+              (click)="visibleHelp.set(true)"
+              class="hover:text-slate-300 transition bg-transparent border-none p-0 cursor-pointer text-slate-500"
+            >
+              Help Center
+            </button>
+          </div>
+        </div>
       </div>
-    </p-dialog>
+    </div>
+  </div>
+</div>
+
+<!-- Dialogs -->
+<p-dialog
+  header="Privacy Policy"
+  [(visible)]="visiblePrivacy"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [breakpoints]="{ '640px': '90vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="text-sm text-slate-300 space-y-4 pt-2">
+    <p class="text-xs text-slate-500 mb-4">Last Updated: July 29, 2026</p>
+    <section>
+      <h4 class="text-white font-semibold mb-1">1. Information We Collect</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        We collect information you provide directly when using Zellavora Control Center, including
+        name, email address, password, and organizational affiliation.
+      </p>
+    </section>
+    <section>
+      <h4 class="text-white font-semibold mb-1">2. How We Use Your Information</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        We use your information to process login requests, authenticate your identity, and provide
+        access to secure control hub features.
+      </p>
+    </section>
+    <section>
+      <h4 class="text-white font-semibold mb-1">3. Security</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        We implement industry-standard technical measures (SSL encryption, JWT tokens) to safeguard
+        your data from unauthorized access.
+      </p>
+    </section>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Terms of Service"
+  [(visible)]="visibleTerms"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [breakpoints]="{ '640px': '90vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="text-sm text-slate-300 space-y-4 pt-2">
+    <p class="text-xs text-slate-500 mb-4">Last Updated: July 29, 2026</p>
+    <section>
+      <h4 class="text-white font-semibold mb-1">1. Acceptance of Terms</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        By accessing or using Zellavora Control Center, you agree to comply with and be bound by
+        these Terms of Service.
+      </p>
+    </section>
+    <section>
+      <h4 class="text-white font-semibold mb-1">2. Account Responsibility</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        You are responsible for keeping your login credentials confidential and for all activity
+        occurring under your account.
+      </p>
+    </section>
+    <section>
+      <h4 class="text-white font-semibold mb-1">3. Prohibited Activity</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        Unauthorized access to other tenant environments, reverse engineering, or scraping platform
+        data is strictly prohibited.
+      </p>
+    </section>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Help Center"
+  [(visible)]="visibleHelp"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [breakpoints]="{ '640px': '90vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="text-sm text-slate-300 space-y-4 pt-2">
+    <section>
+      <h4 class="text-white font-semibold mb-1">How do I log in?</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        Select your organization from the Client Dropdown selector, input your corporate email, and
+        your secure password.
+      </p>
+    </section>
+    <section>
+      <h4 class="text-white font-semibold mb-1">How do I reset my password?</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        Click the "Forgot password?" link below the password input field to receive reset
+        instructions via email.
+      </p>
+    </section>
+    <section>
+      <h4 class="text-white font-semibold mb-1">Contact Support</h4>
+      <p class="text-slate-400 text-xs leading-relaxed">
+        Send an email directly to
+        <a href="mailto:support@zellavora.com" class="text-purple-400 hover:text-purple-300"
+          >support@zellavora.com</a
+        >
+        for technical issues.
+      </p>
+    </section>
+  </div>
+</p-dialog>

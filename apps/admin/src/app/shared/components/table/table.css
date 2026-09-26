@@ -16,7 +16,12 @@
   border: 1px solid var(--dt-border);
   border-radius: 0.75rem;
   padding: 0.75rem;
-  font: 14px/1.5 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  font:
+    14px/1.5 'Outfit',
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   position: relative;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
@@ -47,23 +52,8 @@
 }
 
 .dt-search {
-  padding: 0.45rem 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
+  --zv-control-height: 38px;
   min-width: 220px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--dt-fg);
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.dt-search::placeholder {
-  color: var(--dt-muted);
-}
-
-.dt-search:focus {
-  border-color: var(--dt-accent);
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
 }
 
 .dt-scroll {
@@ -312,7 +302,9 @@
   cursor: pointer;
   font: inherit;
   font-size: 0.85rem;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .dt-btn:hover:not(:disabled) {
@@ -348,7 +340,10 @@
   cursor: pointer;
   font: inherit;
   font-size: 0.85rem;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .dt-page:hover:not(:disabled) {

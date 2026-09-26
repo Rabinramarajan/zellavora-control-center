@@ -18,81 +18,65 @@
     <p class="step__sub">This is the account owner&apos;s profile for your organization.</p>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <form [formRoot]="form">
     <div class="reg-form__body">
       <div class="field-grid">
-        <app-input-control
-          formControlName="firstName"
+        <app-form-input-control
+          [formField]="form.firstName"
           label="First Name"
           placeholder="Alex"
-          prefixIcon="pi-user"
-          autocomplete="given-name"
-          [clearable]="true"
-          [trim]="true"
+          icon="user"
         />
-        <app-input-control
-          formControlName="lastName"
+        <app-form-input-control
+          [formField]="form.lastName"
           label="Last Name"
           placeholder="Morgan"
-          prefixIcon="pi-user"
-          autocomplete="family-name"
-          [clearable]="true"
-          [trim]="true"
+          icon="user"
         />
       </div>
 
-      <app-input-control
-        formControlName="email"
+      <app-form-input-control
+        [formField]="form.email"
         type="email"
         label="Work Email"
         placeholder="you@company.com"
-        prefixIcon="pi-envelope"
-        autocomplete="email"
-        inputmode="email"
-        [clearable]="true"
-        [trim]="true"
-        [hint]="emailPending() ? 'Checking availability…' : ''"
+        icon="email"
+        [hint]="form.email().pending() ? 'Checking availability…' : ''"
       />
 
-      <app-input-control
-        formControlName="mobile"
+      <app-form-input-control
+        [formField]="form.mobile"
         type="tel"
         label="Mobile Number"
         placeholder="+1 (555) 000-0000"
-        prefixIcon="pi-phone"
-        autocomplete="tel"
-        inputmode="tel"
-        [clearable]="true"
+        icon="phone"
       />
 
       <div class="field-grid">
-        <zc-select-control
-          formControlName="country"
+        <app-select-control
+          [formField]="form.country"
           label="Country"
           placeholder="Select Country"
-          prefixIcon="pi-globe"
-          [options]="store.countryOptions()"
-          optionLabel=""
+          icon="globe"
+          [searchable]="true"
+          searchPlaceholder="Search country..."
+          [options]="countryOptions()"
         />
 
-        <zc-select-control
-          formControlName="language"
+        <app-select-control
+          [formField]="form.language"
           label="Language"
           placeholder="Select Language"
-          prefixIcon="pi-language"
-          [options]="store.languageOptions()"
-          optionValue="key"
-          optionLabel="value"
+          icon="globe"
+          [options]="languageOptions()"
         />
 
-        <zc-select-control
-          formControlName="gender"
+        <app-select-control
+          [formField]="form.gender"
           label="Gender"
           placeholder="Select Gender"
-          prefixIcon="pi-user"
-          [options]="store.genderOptions()"
-          optionValue="key"
-          optionLabel="value"
+          icon="user"
+          [options]="genderOptions()"
         />
       </div>
     </div>
@@ -112,11 +96,7 @@
         </svg>
         Back
       </button>
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="store.loading() || form.invalid || form.pending"
-      >
+      <button type="submit" class="btn-primary" [disabled]="store.loading() || form().submitting()">
         @if (store.loading()) {
           Saving…
         } @else {

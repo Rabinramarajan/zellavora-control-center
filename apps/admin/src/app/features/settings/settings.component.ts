@@ -2,9 +2,8 @@ import { Component, inject, signal, computed, effect, untracked } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
-import { SelectModule } from 'primeng/select';
+import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ToastModule } from 'primeng/toast';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
@@ -21,9 +20,9 @@ import { firstValueFrom } from 'rxjs';
     CommonModule,
     FormsModule,
     ButtonModule,
-    InputTextModule,
     TextareaModule,
-    SelectModule,
+    FormInputControl,
+    SelectControl,
     ToastModule,
     CheckboxModule,
   ],
@@ -41,7 +40,9 @@ export class SettingsComponent {
   activeTab = signal('general');
 
   /** Active tab driven by the route param (e.g. /settings/security). */
-  private readonly tabParam = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+  private readonly tabParam = toSignal(this.route.paramMap, {
+    initialValue: this.route.snapshot.paramMap,
+  });
 
   constructor() {
     effect(() => {
@@ -91,26 +92,26 @@ export class SettingsComponent {
     language: 'en',
   };
 
-  timezoneOptions = [
+  timezoneOptions: SelectControlOption[] = [
     { label: '(GMT+05:30) Asia/Kolkata', value: 'GMT+5:30' },
     { label: '(GMT+00:00) UTC', value: 'GMT+0' },
     { label: '(GMT-05:00) EST', value: 'GMT-5' },
     { label: '(GMT+01:00) CET', value: 'GMT+1' },
   ];
 
-  dateFormatOptions = [
+  dateFormatOptions: SelectControlOption[] = [
     { label: 'May 24, 2025 (MMM DD, YYYY)', value: 'MMM DD, YYYY' },
     { label: '24/05/2025 (DD/MM/YYYY)', value: 'DD/MM/YYYY' },
     { label: '2025-05-24 (YYYY-MM-DD)', value: 'YYYY-MM-DD' },
   ];
 
-  itemsPerPageOptions = [
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-    { label: '50', value: 50 },
+  itemsPerPageOptions: SelectControlOption[] = [
+    { label: '10', value: '10' },
+    { label: '25', value: '25' },
+    { label: '50', value: '50' },
   ];
 
-  languageOptions = [
+  languageOptions: SelectControlOption[] = [
     { label: 'English', value: 'en' },
     { label: 'Hindi', value: 'hi' },
     { label: 'Tamil', value: 'ta' },
@@ -142,7 +143,7 @@ export class SettingsComponent {
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to load settings',
-        life: 3000
+        life: 3000,
       });
     }
   }
@@ -210,7 +211,10 @@ export class SettingsComponent {
       return;
     }
     if (newPassword.length < 12) {
-      this.passwordMessage = { severity: 'error', text: 'New password must be at least 12 characters.' };
+      this.passwordMessage = {
+        severity: 'error',
+        text: 'New password must be at least 12 characters.',
+      };
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -254,7 +258,9 @@ export class SettingsComponent {
     this.mfaBusy = true;
     this.mfaError = null;
     try {
-      const res = await firstValueFrom(this.auth.confirmMfaEnrollment({ secret: this.mfaSecret, code: this.mfaCodeInput }));
+      const res = await firstValueFrom(
+        this.auth.confirmMfaEnrollment({ secret: this.mfaSecret, code: this.mfaCodeInput })
+      );
       this.recoveryCodes = res.recoveryCodes ?? [];
       this.mfaSecret = '';
       this.mfaCodeInput = '';

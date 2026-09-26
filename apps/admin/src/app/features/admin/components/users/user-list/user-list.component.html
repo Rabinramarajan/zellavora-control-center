@@ -1,11 +1,7 @@
 <div class="user-list">
   <header class="page-header">
     <h1>Users</h1>
-    <button
-      *hasPermission="'admin:users:create'"
-      class="btn btn-primary"
-      (click)="onCreate()"
-    >
+    <button *hasPermission="'admin:users:create'" class="btn btn-primary" (click)="onCreate()">
       + New User
     </button>
   </header>
@@ -21,17 +17,14 @@
     [columnToggle]="true"
   >
     <div toolbar-start>
-      <select
-        [ngModel]="statusFilter()"
-        (ngModelChange)="onStatusFilterChange($event)"
+      <app-select-control
         class="status-filter"
         aria-label="Filter by status"
-      >
-        <option value="">All Statuses</option>
-        <option value="Active">Active</option>
-        <option value="Inactive">Inactive</option>
-        <option value="Suspended">Suspended</option>
-      </select>
+        placeholder="All Statuses"
+        [options]="statusFilterOptions"
+        [value]="statusFilter()"
+        (valueChange)="onStatusFilterChange($event)"
+      />
     </div>
 
     <ng-template [appCell]="'fullName'" let-user>

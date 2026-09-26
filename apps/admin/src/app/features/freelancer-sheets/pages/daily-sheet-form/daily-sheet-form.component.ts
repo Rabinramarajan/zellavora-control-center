@@ -21,6 +21,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { startWith } from 'rxjs';
+import { DateControl } from '@zellavoras/ui';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { SheetsApi } from '../../sheets.api';
 import { SheetsStore } from '../../sheets.store';
@@ -85,7 +86,7 @@ type LineItemGroup = FormGroup<{
 @Component({
   selector: 'app-daily-sheet-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, DateControl],
   providers: [SheetsStore],
   templateUrl: './daily-sheet-form.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './daily-sheet-form.component.css'],
@@ -254,6 +255,16 @@ export class DailySheetFormComponent implements OnInit {
   protected clearTimes(): void {
     this.form.patchValue({ startTime: '', endTime: '', breakMinutes: 0 });
     this.form.markAsDirty();
+  }
+
+  /**
+   * The date picker is a Signal Forms control, so it is wired to its reactive
+   * control by hand instead of through `formControlName`.
+   */
+  protected setSheetDate(value: string): void {
+    const control = this.form.controls.sheetDate;
+    control.setValue(value);
+    control.markAsDirty();
   }
 
   protected fieldInvalid(path: string): boolean {

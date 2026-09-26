@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FormInputControl } from '@zellavoras/ui';
 import { NotificationRepository } from '@core/repositories/notification.repository';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FormInputControl],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.css',
 })
@@ -38,11 +39,13 @@ export class NotificationsComponent {
     if (this.channels.email) selectedChannels.push('email');
     if (this.channels.push) selectedChannels.push('push');
 
-    await firstValueFrom(this.repository.sendBroadcast({
-      title: this.broadcastTitle || 'Global Announcement',
-      body: this.broadcastBody,
-      channels: selectedChannels,
-    }));
+    await firstValueFrom(
+      this.repository.sendBroadcast({
+        title: this.broadcastTitle || 'Global Announcement',
+        body: this.broadcastBody,
+        channels: selectedChannels,
+      })
+    );
     this.broadcastTitle = '';
     this.broadcastBody = '';
     alert('Broadcast dispatched successfully!');

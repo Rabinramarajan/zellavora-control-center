@@ -6,13 +6,17 @@ import { DashboardRange, AuditSeverity } from './dashboard.models';
 import { KpiCardComponent } from './components/kpi-card/kpi-card.component';
 import { ActivityFeedComponent } from './components/activity-feed/activity-feed.component';
 import { SkeletonCardComponent } from './components/skeletons/skeleton-block.component';
-import { DashboardEmptyComponent, DashboardErrorComponent } from './components/states/dashboard-states.component';
+import {
+  DashboardEmptyComponent,
+  DashboardErrorComponent,
+} from './components/states/dashboard-states.component';
 import { ApexChartComponent } from '@shared/components/apex-chart/apex-chart.component';
 import { CsvExporter } from '@shared/utils/csv-exporter';
+import { SelectControl } from '@zellavoras/ui';
 
 // '' is the 'no filter' sentinel: it must stay distinct from 'info', otherwise
 // the Info option is unselectable and @for sees duplicate track keys (NG0955).
-const SEVERITY_OPTIONS: Array<{ label: string; value: AuditSeverity | '' }> = [
+const SEVERITY_OPTIONS: Array<{ label: string; value: AuditSeverity | ''; color?: string }> = [
   { label: 'All severities', value: '' },
   { label: 'Debug', value: 'debug' },
   { label: 'Info', value: 'info' },
@@ -33,6 +37,7 @@ const SEVERITY_OPTIONS: Array<{ label: string; value: AuditSeverity | '' }> = [
     DashboardEmptyComponent,
     DashboardErrorComponent,
     ApexChartComponent,
+    SelectControl,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
@@ -113,9 +118,8 @@ export class DashboardComponent implements OnInit {
 
   readonly hasTrendData = computed(() => (this.store.trends()?.activity.length ?? 0) > 0);
 
-  applySeverityFilter(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as AuditSeverity | '';
-    this.store.setActivityFilters(value === '' ? {} : { severity: value });
+  applySeverityFilter(value: string): void {
+    this.store.setActivityFilters(value === '' ? {} : { severity: value as AuditSeverity });
   }
 
   exportActivityCsv(): void {
@@ -123,7 +127,13 @@ export class DashboardComponent implements OnInit {
     CsvExporter.export(
       `zcc-activity-${new Date().toISOString().slice(0, 10)}`,
       ['Timestamp', 'Actor', 'Action', 'Resource', 'Severity'],
-      rows.map((e) => [e.createdAt, e.actorEmail ?? 'system', e.action, e.resource ?? '', e.severity])
+      rows.map((e) => [
+        e.createdAt,
+        e.actorEmail ?? 'system',
+        e.action,
+        e.resource ?? '',
+        e.severity,
+      ])
     );
   }
 

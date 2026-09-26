@@ -7,7 +7,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { FormField, FormRoot, apply, form, minLength, required } from '@angular/forms/signals';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { RouterLink, ActivatedRoute } from '@angular/router';
@@ -17,8 +17,12 @@ import { ConfigService } from '@core/config/config.service';
 import { Dialog } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { InputControlComponent } from '@shared/components/input-control';
-import { SelectControlComponent } from '@shared/components/select-control';
+import {
+  FormInputControl,
+  SelectControl,
+  SelectControlOption,
+  emailFieldSchema,
+} from '@zellavoras/ui';
 
 interface Org {
   name: string;
@@ -36,14 +40,13 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, Dialog, ToastModule, InputControlComponent, SelectControlComponent],
+  imports: [FormField, FormRoot, RouterLink, Dialog, ToastModule, FormInputControl, SelectControl],
   providers: [MessageService],
   templateUrl: './login.component.html',
   styleUrls: ['../../auth-shell.css', './login.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
-  private readonly fb = inject(FormBuilder);
   private readonly authStore = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly configService = inject(ConfigService);
@@ -59,39 +62,46 @@ export class LoginComponent {
   // --- Organization state --------------------------------------------------
   readonly allOrgs = signal<Org[]>([]);
   readonly loadingOrgs = signal(false);
-  readonly selectedOrg = signal<Org | null>(null);
 
-  /** The form stores the code lower-cased; the API returns it upper-cased. */
-  readonly orgValue = (org: Org): string => org.clientCode.toLowerCase();
+  readonly orgOptions = computed<SelectControlOption[]>(() =>
+    this.allOrgs().map((org) => ({
+      // The form stores the code lower-cased; the API returns it upper-cased.
+      value: org.clientCode.toLowerCase(),
+      label: org.name,
+      description: org.clientCode,
+      color: org.clientCode.toUpperCase() === 'DEMO' ? '#a855f7' : '#3b82f6',
+    }))
+  );
 
   // --- Form ----------------------------------------------------------------
-  readonly form = this.fb.nonNullable.group({
-    clientCode: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
-    rememberMe: [false],
+  private readonly model = signal({
+    clientCode: sessionStorage.getItem('zcc.clientCode') ?? '',
+    email: '',
+    password: '',
+    rememberMe: false,
   });
 
-  /** Ticks on every value/status/touched/pristine change of the form. */
-  private readonly formEvents = toSignal(this.form.events, { initialValue: null });
+  readonly form = form(
+    this.model,
+    (path) => {
+      required(path.clientCode, { message: 'Select your organization.' });
+      apply(path.email, emailFieldSchema());
+      // Sign-in checks presence only; the strength policy applies when a password is set.
+      required(path.password, { message: 'Password is required.' });
+      minLength(path.password, 6, { message: 'Password must be at least 6 characters.' });
+    },
+    { submission: { action: () => this.signIn() } }
+  );
 
-  /** Snapshot of everything the template needs from the form. */
-  readonly formState = computed(() => {
-    this.formEvents(); // dependency: recompute on any form event
-    return {
-      // Every field renders its own errors via the shared form controls.
-      valid: this.form.valid,
-    };
+  readonly selectedOrg = computed<Org | null>(() => {
+    const code = this.form.clientCode().value().toLowerCase();
+    if (!code) return null;
+    return this.allOrgs().find((o) => o.clientCode.toLowerCase() === code) ?? null;
   });
 
   private readonly queryParams = toSignal(this.route.queryParams, { initialValue: {} as any });
 
   constructor() {
-    const stored = sessionStorage.getItem('zcc.clientCode');
-    if (stored) {
-      this.form.controls.clientCode.setValue(stored);
-    }
-
     // Handle OAuth redirect params.
     effect(() => {
       const params = this.queryParams();
@@ -107,23 +117,13 @@ export class LoginComponent {
         if (error) {
           const message = OAUTH_ERROR_MESSAGES[error] ?? 'Social sign-in failed.';
           this.authStore.setError(message);
-          this.messageService.add({ severity: 'error', summary: 'Sign-in failed', detail: message, life: 5000 });
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Sign-in failed',
+            detail: message,
+            life: 5000,
+          });
         }
-      });
-    });
-
-    // Match the pre-filled client code once organizations arrive.
-    effect(() => {
-      const orgs = this.allOrgs();
-      if (!orgs.length) return;
-      untracked(() => {
-        if (this.selectedOrg()) return;
-        const code = this.form.controls.clientCode.value;
-        if (!code) return;
-        // The select resolves its own display value from the control; this only
-        // needs to feed the tenant-theme effect below.
-        const matched = orgs.find((o) => o.clientCode.toLowerCase() === code.toLowerCase());
-        if (matched) this.selectedOrg.set(matched);
       });
     });
 
@@ -163,15 +163,16 @@ export class LoginComponent {
     this.capsLock.set(event.getModifierState?.('CapsLock') ?? false);
   }
 
-  async onSubmit(): Promise<void> {
-    if (this.form.invalid || this.auth.isLoading()) return;
+  /** Runs only once every field is valid; `submit()` marks the fields touched first. */
+  private async signIn(): Promise<undefined> {
+    if (this.auth.isLoading()) return undefined;
 
-    const request = this.form.getRawValue();
+    const request = this.model();
 
     try {
       const res = await firstValueFrom(this.auth.login(request));
       sessionStorage.setItem('zcc.clientCode', request.clientCode);
-      if (res.mfaRequired) return;
+      if (res.mfaRequired) return undefined;
       this.messageService.add({
         severity: 'success',
         summary: 'Welcome back',
@@ -186,5 +187,6 @@ export class LoginComponent {
         life: 5000,
       });
     }
+    return undefined;
   }
 }

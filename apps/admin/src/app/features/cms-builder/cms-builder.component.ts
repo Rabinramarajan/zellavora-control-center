@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormInputControl } from '@zellavoras/ui';
 import { CmsBuilderRepository } from '@core/repositories/cms-builder.repository';
 import { CmsSection } from '@shared/models';
 import { firstValueFrom } from 'rxjs';
@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-cms-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormInputControl],
   templateUrl: './cms-builder.component.html',
   styleUrl: './cms-builder.component.css',
 })
@@ -62,11 +62,13 @@ export class CmsBuilderComponent {
   }
 
   async saveActivePage() {
-    await firstValueFrom(this.repository.savePage({
-      title: this.pageTitle,
-      slug: this.pageSlug,
-      sections: this.activeSections,
-    }));
+    await firstValueFrom(
+      this.repository.savePage({
+        title: this.pageTitle,
+        slug: this.pageSlug,
+        sections: this.activeSections,
+      })
+    );
     alert('CMS Dynamic Page saved and published successfully!');
   }
 }

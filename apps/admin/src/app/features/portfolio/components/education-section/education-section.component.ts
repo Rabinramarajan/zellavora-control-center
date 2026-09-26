@@ -1,12 +1,11 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { SelectModule } from 'primeng/select';
 import { PortfolioService } from '../../services/portfolio.service';
 import { Education } from '@shared/models';
 import { firstValueFrom } from 'rxjs';
@@ -17,7 +16,7 @@ interface RichEducation {
   degree: string;
   field: string;
   startDate: string; // Year e.g. "2018"
-  endDate: string;   // Year e.g. "2021"
+  endDate: string; // Year e.g. "2021"
   isCurrent: boolean;
   descriptionText: string;
   location: string;
@@ -33,10 +32,10 @@ interface RichEducation {
     CommonModule,
     FormsModule,
     ButtonModule,
-    InputTextModule,
     TextareaModule,
     ToastModule,
-    SelectModule,
+    FormInputControl,
+    SelectControl,
   ],
   providers: [MessageService],
   templateUrl: './education-section.component.html',
@@ -82,15 +81,26 @@ export class EducationSectionComponent implements OnInit {
   deviceMode = signal<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   // Dropdown options
-  yearsOptions: { label: string; value: string }[] = [];
+  yearsOptions: SelectControlOption[] = [];
+  readonly maxItemsOptions: SelectControlOption[] = [
+    { label: '3 items', value: '3' },
+    { label: '6 items', value: '6' },
+    { label: '10 items', value: '10' },
+  ];
+  readonly animationOptions: SelectControlOption[] = [
+    { label: 'Fade In Up', value: 'fade-in-up' },
+    { label: 'Slide Right', value: 'slide-right' },
+  ];
 
   // computed metrics
   totalItems = computed(() => this.parsedEntries().length);
-  activeItemsCount = computed(() => this.parsedEntries().filter(e => e.status === 'Active').length);
+  activeItemsCount = computed(
+    () => this.parsedEntries().filter((e) => e.status === 'Active').length
+  );
   completionPercentage = computed(() => {
     const list = this.parsedEntries();
     if (list.length === 0) return 0;
-    const completed = list.filter(e => e.institution && e.degree && e.field && e.descriptionText);
+    const completed = list.filter((e) => e.institution && e.degree && e.field && e.descriptionText);
     return Math.round((completed.length / list.length) * 100);
   });
 
@@ -128,7 +138,9 @@ export class EducationSectionComponent implements OnInit {
       }
 
       // Convert date to year string
-      const startYear = edu.startDate ? new Date(edu.startDate).getFullYear().toString() : new Date().getFullYear().toString();
+      const startYear = edu.startDate
+        ? new Date(edu.startDate).getFullYear().toString()
+        : new Date().getFullYear().toString();
       const endYear = edu.endDate ? new Date(edu.endDate).getFullYear().toString() : '';
 
       return {

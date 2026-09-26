@@ -2,12 +2,12 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MessageService } from 'primeng/api';
 import { RegisterStore } from '../register.store';
-import { InputControlComponent } from '@shared/components/input-control';
+import { FormInputControl } from '@zellavoras/ui';
 
 @Component({
   selector: 'app-step-2-registration-type',
   standalone: true,
-  imports: [CommonModule, InputControlComponent],
+  imports: [CommonModule, FormInputControl],
   templateUrl: './step-2-registration-type.component.html',
   styleUrls: ['../step-styles.css'],
 })

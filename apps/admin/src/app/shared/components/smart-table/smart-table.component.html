@@ -5,17 +5,13 @@
 
   <div class="st-toolbar__end">
     @if (searchable()) {
-      <div class="st-search">
-        <label class="st-sr-only" [for]="searchId">{{ searchPlaceholder() }}</label>
-        <span class="st-search__icon" aria-hidden="true">⌕</span>
-        <input
-          type="search"
-          class="st-search__input"
-          [id]="searchId"
-          [placeholder]="searchPlaceholder()"
-          [value]="search()"
-          (input)="onSearch($event)" />
-      </div>
+      <app-form-input-control
+        class="st-search"
+        icon="search"
+        [attr.aria-label]="searchPlaceholder()"
+        [placeholder]="searchPlaceholder()"
+        [(value)]="search"
+      />
     }
     <ng-content select="[toolbar-end]" />
   </div>
@@ -34,7 +30,11 @@
 <div class="st-scroll">
   <table class="st-table" [attr.aria-busy]="loading()">
     @if (caption()) {
-      <caption class="st-sr-only">{{ caption() }}</caption>
+      <caption class="st-sr-only">
+        {{
+          caption()
+        }}
+      </caption>
     }
 
     <colgroup>
@@ -58,7 +58,8 @@
                 [checked]="store.allPageSelected()"
                 [indeterminate]="store.somePageSelected()"
                 [disabled]="store.pageRows().length === 0"
-                (change)="store.togglePage()" />
+                (change)="store.togglePage()"
+              />
             } @else {
               <span class="st-sr-only">Select</span>
             }
@@ -71,13 +72,15 @@
             class="st-th"
             [class.st-align-center]="column.align === 'center'"
             [class.st-align-right]="column.align === 'right'"
-            [attr.aria-sort]="column.sortable ? ariaSort(column) : null">
+            [attr.aria-sort]="column.sortable ? ariaSort(column) : null"
+          >
             @if (column.sortable) {
               <button
                 type="button"
                 class="st-sort"
                 [class.st-sort--active]="sort().key === column.key"
-                (click)="store.toggleSort(column.key)">
+                (click)="store.toggleSort(column.key)"
+              >
                 {{ column.header }}
                 <span class="st-sort__icon" aria-hidden="true">{{ sortIcon(column) }}</span>
               </button>
@@ -106,7 +109,8 @@
                   class="st-check"
                   aria-label="Select row"
                   [checked]="store.isSelected(row)"
-                  (change)="store.toggleRow(row)" />
+                  (change)="store.toggleRow(row)"
+                />
               </td>
             }
 
@@ -115,11 +119,13 @@
                 class="st-td"
                 [class]="column.cellClass ?? ''"
                 [class.st-align-center]="column.align === 'center'"
-                [class.st-align-right]="column.align === 'right'">
+                [class.st-align-right]="column.align === 'right'"
+              >
                 @if (cellTemplate(column); as template) {
                   <ng-container
                     [ngTemplateOutlet]="template"
-                    [ngTemplateOutletContext]="cellContext(column, row, index)" />
+                    [ngTemplateOutletContext]="cellContext(column, row, index)"
+                  />
                 } @else {
                   {{ store.display(column, row) }}
                 }
@@ -146,7 +152,8 @@
   <div class="st-footer">
     <span class="st-range" aria-live="polite">
       @if (store.total()) {
-        Showing {{ store.rangeStart() }} to {{ store.rangeEnd() }} of {{ store.total() }} {{ entityLabel() }}
+        Showing {{ store.rangeStart() }} to {{ store.rangeEnd() }} of {{ store.total() }}
+        {{ entityLabel() }}
       } @else {
         No {{ entityLabel() }} to show
       }
@@ -159,7 +166,10 @@
           class="st-page"
           aria-label="Previous page"
           [disabled]="store.currentPage() === 1"
-          (click)="store.goToPage(store.currentPage() - 1)">‹</button>
+          (click)="store.goToPage(store.currentPage() - 1)"
+        >
+          ‹
+        </button>
 
         @for (item of store.pageItems(); track $index) {
           @if (item === null) {
@@ -170,7 +180,8 @@
               class="st-page"
               [class.st-page--current]="item === store.currentPage()"
               [attr.aria-current]="item === store.currentPage() ? 'page' : null"
-              (click)="store.goToPage(item)">
+              (click)="store.goToPage(item)"
+            >
               {{ item }}
             </button>
           }
@@ -181,7 +192,10 @@
           class="st-page"
           aria-label="Next page"
           [disabled]="store.currentPage() === store.pageCount()"
-          (click)="store.goToPage(store.currentPage() + 1)">›</button>
+          (click)="store.goToPage(store.currentPage() + 1)"
+        >
+          ›
+        </button>
       </nav>
 
       @if (pageSizeOptions().length > 1) {
