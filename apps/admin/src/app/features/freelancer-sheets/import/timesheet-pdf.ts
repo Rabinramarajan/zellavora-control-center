@@ -161,11 +161,50 @@ const groupIntoLines = (items: readonly PositionedText[]): string[] => {
 };
 
 /**
+ * zone.js replaces the global Promise with ZoneAwarePromise, which lacks the
+ * ES2025 `Promise.try` that pdf.js calls inside its message handler. There the
+ * TypeError is swallowed, nothing settles, and loading hangs forever.
+ */
+const ensurePromiseTry = (): void => {
+  const ctor = Promise as PromiseConstructor & { try?: unknown };
+  if (typeof ctor.try === 'function') return;
+  Object.defineProperty(ctor, 'try', {
+    configurable: true,
+    writable: true,
+    value<T>(
+      this: PromiseConstructor,
+      fn: (...args: unknown[]) => T | PromiseLike<T>,
+      ...args: unknown[]
+    ): Promise<T> {
+      // A synchronous throw inside the executor rejects the promise, as the spec requires.
+      return new this<T>((resolve) => resolve(fn(...args)));
+    },
+  });
+};
+
+/** Rejects with `message` if `work` has not settled within `ms`. */
+export const withTimeout = <T>(work: Promise<T>, ms: number, message: string): Promise<T> =>
+  new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+
+/**
  * Extracts the text of a PDF as visual lines. pdf.js is loaded on demand so it
  * stays out of the main bundle; its worker runs in-thread, which is fine for a
  * one- or two-page timesheet and avoids serving a separate worker asset.
  */
 export const readPdfLines = async (file: File): Promise<string[]> => {
+  ensurePromiseTry();
   // Importing the worker module registers `globalThis.pdfjsWorker`, which
   // pdf.js picks up instead of spawning a Worker from `workerSrc`.
   const [pdfjs] = await Promise.all([

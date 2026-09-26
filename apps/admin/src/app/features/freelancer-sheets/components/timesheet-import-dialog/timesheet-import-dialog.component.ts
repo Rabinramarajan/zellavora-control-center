@@ -20,9 +20,15 @@ import {
   ParsedTimesheet,
   parseTimesheetLines,
   readPdfLines,
+  withTimeout,
 } from '../../import/timesheet-pdf';
 
 type Phase = 'reading' | 'error' | 'review' | 'importing' | 'done';
+
+/** A one-page timesheet parses in well under a second; anything past this is stuck. */
+const READ_TIMEOUT_MS = 15_000;
+/** The duplicate check is a convenience — never hold the preview hostage to a slow API. */
+const LOGGED_CHECK_TIMEOUT_MS = 8_000;
 
 /** "21:00" → "9:00 PM" */
 const formatClock = (clock: string): string => {
@@ -47,14 +53,15 @@ export class TimesheetImportDialogComponent implements OnInit {
   private readonly store = inject(SheetsStore);
 
   public readonly file = input.required<File>();
-  /** Emits whether anything was imported, so the page knows to refresh. */
-  public readonly closed = output<boolean>();
+  /** Emits the earliest imported day (or null) so the page can show and refresh that month. */
+  public readonly closed = output<string | null>();
   public readonly chooseAnother = output<void>();
 
   public readonly phase = signal<Phase>('reading');
   public readonly errorMessage = signal('');
   public readonly sheet = signal<ParsedTimesheet | null>(null);
   public readonly logged = signal<ReadonlySet<string>>(new Set());
+  public readonly loggedCheckFailed = signal(false);
   public readonly selected = signal<ReadonlySet<string>>(new Set());
   public readonly rate = signal<number | null>(rememberedRate());
   public readonly projectName = signal('');
@@ -101,6 +108,14 @@ export class TimesheetImportDialogComponent implements OnInit {
   public readonly canImport = computed(() => this.chosen().length > 0 && !this.rateInvalid());
 
   public readonly succeeded = computed(() => this.results().filter((result) => result.ok).length);
+  /** Earliest saved day, so the page can open the month the sheets landed in. */
+  public readonly firstImported = computed(
+    () =>
+      this.results()
+        .filter((result) => result.ok)
+        .map((result) => result.date)
+        .sort()[0] ?? null
+  );
   public readonly failures = computed(() =>
     this.results().filter(
       (result): result is Extract<DailyImportResult, { ok: false }> => !result.ok
@@ -110,9 +125,14 @@ export class TimesheetImportDialogComponent implements OnInit {
   public async ngOnInit(): Promise<void> {
     let sheet: ParsedTimesheet;
     try {
-      sheet = parseTimesheetLines(await readPdfLines(this.file()));
-    } catch {
-      this.fail('This file could not be read as a PDF. It may be scanned, encrypted or damaged.');
+      const lines = await withTimeout(readPdfLines(this.file()), READ_TIMEOUT_MS, 'timeout');
+      sheet = parseTimesheetLines(lines);
+    } catch (error) {
+      this.fail(
+        (error as Error).message === 'timeout'
+          ? 'Reading this PDF took too long. Try again, or export the timesheet as a smaller PDF.'
+          : 'This file could not be read as a PDF. It may be scanned, encrypted or damaged.'
+      );
       return;
     }
     if (!sheet.days.length) {
@@ -124,9 +144,14 @@ export class TimesheetImportDialogComponent implements OnInit {
 
     let logged: Set<string> = new Set();
     try {
-      logged = await this.store.loggedDates(sheet.days[0].date, sheet.days.at(-1)!.date);
+      logged = await withTimeout(
+        this.store.loggedDates(sheet.days[0].date, sheet.days.at(-1)!.date),
+        LOGGED_CHECK_TIMEOUT_MS,
+        'timeout'
+      );
     } catch {
       // Without the check every day starts selected; the API still refuses clashing absences.
+      this.loggedCheckFailed.set(true);
     }
     this.sheet.set(sheet);
     this.logged.set(logged);
@@ -186,7 +211,7 @@ export class TimesheetImportDialogComponent implements OnInit {
 
   public close(): void {
     if (this.phase() === 'importing') return;
-    this.closed.emit(this.succeeded() > 0);
+    this.closed.emit(this.firstImported());
   }
 
   @HostListener('document:keydown.escape')

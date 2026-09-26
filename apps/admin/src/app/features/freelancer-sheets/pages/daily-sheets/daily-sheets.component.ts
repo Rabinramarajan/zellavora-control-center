@@ -343,9 +343,14 @@ export class DailySheetsComponent implements OnInit {
     if (file) this.importFile.set(file);
   }
 
-  public onImportClosed(imported: boolean): void {
+  /** Jumps to the imported month — the table only lists the selected month, so staying put would hide them. */
+  public onImportClosed(firstImported: string | null): void {
     this.importFile.set(null);
-    if (imported) this.reload();
+    if (!firstImported) return;
+    const date = parseDayKey(firstImported);
+    const sameMonth = isoMonth(date) === isoMonth(this.selectedDate());
+    this.selectDate(date); // loads the month itself when it changes
+    if (sameMonth) this.reload();
   }
 
   public readonly statusPill = statusPill;

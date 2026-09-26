@@ -82,6 +82,13 @@
               {{ totalHours() }}h. Check the rows below before importing.
             </p>
           }
+          @if (loggedCheckFailed()) {
+            <p class="callout callout--warn">
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+              Couldn't check which days you've already logged. Untick any day you have entered
+              before, or it will be logged twice.
+            </p>
+          }
           @if (alreadyLogged()) {
             <p class="callout">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
@@ -250,7 +257,9 @@
       </div>
       <footer class="dialog-foot">
         <span></span>
-        <button type="button" class="primary-btn" (click)="close()">Done</button>
+        <button type="button" class="primary-btn" (click)="close()">
+          {{ firstImported() ? 'View ' + (firstImported() | date: 'MMMM') + ' sheets' : 'Done' }}
+        </button>
       </footer>
     }
   }
