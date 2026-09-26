@@ -95,6 +95,7 @@
 /* ---------- table ---------- */
 
 .st-scroll {
+  flex: var(--st-body-flex, 0 1 auto);
   overflow-x: auto;
 }
 

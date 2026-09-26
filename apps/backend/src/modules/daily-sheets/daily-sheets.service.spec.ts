@@ -1,7 +1,21 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../infrastructure/prisma';
 import { DailySheetsService, computeAmounts, resolveHours } from './daily-sheets.service';
-import { hoursBetween } from './sheets.shared';
+import { assertCanDecide, hoursBetween } from './sheets.shared';
+
+describe('owner self-review exception', () => {
+  it('allows an authorized owner to review their own sheet', () => {
+    expect(() => assertCanDecide({ userId: 'owner' }, {
+      userId: 'owner', canReview: true, canReviewOwn: true,
+    })).not.toThrow();
+  });
+
+  it('still requires review permission', () => {
+    expect(() => assertCanDecide({ userId: 'owner' }, {
+      userId: 'owner', canReview: false, canReviewOwn: true,
+    })).toThrow('Insufficient permission');
+  });
+});
 
 jest.mock('../../infrastructure/prisma', () => ({
   prisma: {

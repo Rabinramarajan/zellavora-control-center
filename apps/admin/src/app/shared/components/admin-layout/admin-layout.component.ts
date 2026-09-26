@@ -25,7 +25,7 @@ import { LayoutService } from '@core/services/layout.service';
 
         <!-- Main Content (Scrolls vertically) -->
         <main class="flex-1 overflow-y-auto bg-[#03020c]">
-          <div class="p-6">
+          <div class="p-6 min-h-full flex flex-col">
             <router-outlet></router-outlet>
           </div>
         </main>

@@ -1,10 +1,10 @@
 <div class="sheet-page">
   <header class="sheet-header">
     <div class="flex items-center gap-4">
-      <div class="sheet-header__icon" aria-hidden="true">✅</div>
+      <div class="sheet-header__icon" aria-hidden="true"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
       <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Approval Queue</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Review your team's daily and monthly sheets.</p>
+        <p class="text-sm text-slate-400 mt-0.5">Review your team's daily and monthly sheets. Workspace owners can also review their own sheets.</p>
       </div>
     </div>
     <button type="button" class="ghost-btn" (click)="reload()" [disabled]="isLoading()">↻ Refresh</button>
@@ -20,14 +20,14 @@
   <section class="kpi-grid" aria-label="Queue summary">
     <article class="kpi kpi--active">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-amber-500/20 text-amber-200" aria-hidden="true">⏳</span>
+        <span class="kpi__icon bg-amber-500/20 text-amber-200" aria-hidden="true"><i class="pi pi-hourglass" aria-hidden="true"></i></span>
         <span class="text-sm font-semibold text-slate-200">Daily Sheets Pending</span>
       </div>
       <div class="kpi__value text-white">{{ dailyRows().length }}</div>
     </article>
     <article class="kpi">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-violet-500/25 text-violet-200" aria-hidden="true">⏱️</span>
+        <span class="kpi__icon bg-violet-500/25 text-violet-200" aria-hidden="true"><i class="pi pi-clock" aria-hidden="true"></i></span>
         <span class="text-sm font-semibold text-slate-200">Hours Pending</span>
       </div>
       <div class="kpi__value text-white">{{ dailyHours() }}h</div>
@@ -35,7 +35,7 @@
     </article>
     <article class="kpi">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-sky-500/20 text-sky-200" aria-hidden="true">📆</span>
+        <span class="kpi__icon bg-sky-500/20 text-sky-200" aria-hidden="true"><i class="pi pi-calendar" aria-hidden="true"></i></span>
         <span class="text-sm font-semibold text-slate-200">Monthly Sheets</span>
       </div>
       <div class="kpi__value text-white">{{ pendingMonthly() }}</div>
@@ -71,17 +71,17 @@
 
   <div class="segmented self-start" role="radiogroup" aria-label="Queue">
     <label class="segmented__option">
-      <input type="radio" name="queue-tab" [checked]="tab() === 'daily'" (change)="tab.set('daily')" />
+      <input type="radio" name="queue-tab" [checked]="tab() === 'daily'" (change)="selectTab('daily')" />
       <span>Daily ({{ dailyRows().length }})</span>
     </label>
     <label class="segmented__option">
-      <input type="radio" name="queue-tab" [checked]="tab() === 'monthly'" (change)="tab.set('monthly')" />
+      <input type="radio" name="queue-tab" [checked]="tab() === 'monthly'" (change)="selectTab('monthly')" />
       <span>Monthly ({{ monthlyRows().length }})</span>
     </label>
   </div>
 
   @if (tab() === 'daily') {
-    <section class="sheet-card">
+    <section class="sheet-card sheet-table-card">
       <app-smart-table
         caption="Submitted daily sheets"
         entityLabel="sheets"
@@ -120,12 +120,16 @@
         <ng-template smartCell="actions" let-row>
           <div class="flex items-center justify-end gap-2">
             <a class="ghost-btn" [routerLink]="['/freelancer-sheets/daily', row.id]">View</a>
+            @if (canReviewOwner(row.userId)) {
             <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="startRejection('daily', [row.id])">
               Reject
             </button>
             <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="approveDaily([row.id])">
               Approve
             </button>
+            } @else {
+              <span class="text-xs text-amber-200">Your sheet · Awaiting another reviewer</span>
+            }
           </div>
         </ng-template>
 
@@ -138,7 +142,7 @@
       </app-smart-table>
     </section>
   } @else {
-    <section class="sheet-card">
+    <section class="sheet-card sheet-table-card">
       <app-smart-table
         caption="Monthly sheets"
         entityLabel="sheets"
@@ -162,7 +166,9 @@
           <div class="flex items-center justify-end gap-2">
             <a class="ghost-btn" routerLink="/freelancer-sheets/monthly/timesheet"
                [queryParams]="{ month: row.month, year: row.year, userId: row.userId }">Timesheet</a>
-            @if (row.status === 'submitted') {
+            @if (row.status === 'submitted' && !canReviewOwner(row.userId)) {
+              <span class="text-xs text-amber-200">Your sheet · Awaiting another reviewer</span>
+            } @else if (row.status === 'submitted') {
               <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="startRejection('monthly', [row.id])">
                 Reject
               </button>

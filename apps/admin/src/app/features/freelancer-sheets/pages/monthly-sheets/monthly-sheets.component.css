@@ -1,7 +1,7 @@
 .monthly-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 @media (min-width: 1280px) {
@@ -35,8 +35,8 @@
 }
 
 .date-nav__arrow {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 0.5rem;
   color: #94a3b8;
   font-size: 1.1rem;
@@ -98,7 +98,6 @@
 }
 
 .cal-cell:hover {
-  transform: translateY(-2px);
   border-color: var(--sheet-line-strong);
 }
 
@@ -230,8 +229,8 @@
 /* Table actions */
 
 .row-action {
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 0.5rem;
   color: #94a3b8;
   font-size: 1rem;

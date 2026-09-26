@@ -2,7 +2,6 @@
   <!-- Header -->
   <header class="sheet-header">
     <div class="flex items-center gap-4">
-      <div class="sheet-header__icon" aria-hidden="true">🗓️</div>
       <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Daily Sheets</h1>
         <p class="text-sm text-slate-400 mt-0.5">
@@ -35,7 +34,7 @@
       <button type="button" class="ghost-btn" (click)="goToday()">Today</button>
 
       <button type="button" class="primary-btn" (click)="createSheet()">
-        <span aria-hidden="true">＋</span> New Daily Sheet
+        <span aria-hidden="true">＋</span> New Entry
       </button>
     </div>
   </header>
@@ -61,8 +60,8 @@
   <section class="kpi-grid" aria-label="Daily summary">
     <article class="kpi kpi--active">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-violet-500/25 text-violet-200" aria-hidden="true">⏱️</span>
-        <span class="text-sm font-semibold text-slate-200">Today's Hours</span>
+        <span class="kpi__icon bg-violet-500/25 text-violet-200" aria-hidden="true"><i class="pi pi-clock"></i></span>
+        <span class="text-sm font-semibold text-slate-200">Total Hours</span>
       </div>
       <div>
         <div class="kpi__value text-white">{{ todayHours() }}h</div>
@@ -79,7 +78,7 @@
 
     <article class="kpi">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-amber-500/20 text-amber-200" aria-hidden="true">⏳</span>
+        <span class="kpi__icon bg-amber-500/20 text-amber-200" aria-hidden="true"><i class="pi pi-hourglass"></i></span>
         <span class="text-sm font-semibold text-slate-200">Pending Approval</span>
       </div>
       <div>
@@ -90,18 +89,18 @@
 
     <article class="kpi">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-emerald-500/20 text-emerald-200" aria-hidden="true">✓</span>
-        <span class="text-sm font-semibold text-slate-200">Approved This Month</span>
+        <span class="kpi__icon bg-slate-500/20 text-slate-200" aria-hidden="true"><i class="pi pi-clock"></i></span>
+        <span class="text-sm font-semibold text-slate-200">Non-billable Hours</span>
       </div>
       <div>
-        <div class="kpi__value text-white">{{ approvedMonthHours() }}h</div>
+        <div class="kpi__value text-white">{{ nonBillableToday() }}h</div>
         <p class="text-xs text-slate-400 mt-1 mb-2">
-          out of {{ monthHours() }}h ({{ approvedMonthPercent() }}%)
+          {{ todayHours() > 0 ? 100 - billablePercent() : 0 }}% of today's hours
         </p>
         <div class="bar">
           <div
             class="bar__fill bg-gradient-to-r from-emerald-500 to-emerald-400"
-            [style.width.%]="approvedMonthPercent()"
+            [style.width.%]="todayHours() > 0 ? 100 - billablePercent() : 0"
           ></div>
         </div>
       </div>
@@ -109,7 +108,7 @@
 
     <article class="kpi">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-indigo-500/20 text-indigo-200" aria-hidden="true">⚡</span>
+        <span class="kpi__icon bg-indigo-500/20 text-indigo-200" aria-hidden="true"><i class="pi pi-bolt"></i></span>
         <span class="text-sm font-semibold text-slate-200">Billable Hours</span>
       </div>
       <div>
@@ -128,8 +127,9 @@
   <!-- Entries + summary -->
   <div class="daily-grid">
     <!-- Entries table -->
-    <section class="sheet-card">
+    <section class="sheet-card sheet-table-card entries-card">
       <app-smart-table
+        class="entries-table"
         caption="Timesheet entries"
         entityLabel="entries"
         searchPlaceholder="Search entries..."
@@ -142,7 +142,7 @@
         [(pageSize)]="pageSize"
       >
         <div toolbar-start>
-          <h2 class="text-base font-semibold text-white">Timesheet Entries</h2>
+          <h2 class="text-base font-semibold text-white">Timesheet Entries <span class="entry-count">{{ rows().length }}</span></h2>
           <p class="text-xs text-slate-400 mt-0.5">Your daily work log</p>
         </div>
 
@@ -166,6 +166,7 @@
             [value]="filters()['status']"
             (valueChange)="setFilter('status', $event)"
           />
+          <button type="button" class="primary-btn" (click)="createSheet()"><span aria-hidden="true">＋</span> Add Entry</button>
         </ng-container>
 
         <ng-template smartCell="project" let-row>
@@ -221,7 +222,7 @@
 
         <ng-template smartEmpty>
           <div class="empty-state">
-            <span class="text-2xl" aria-hidden="true">🗒️</span>
+            <span class="text-2xl" aria-hidden="true"><i class="pi pi-file" aria-hidden="true"></i></span>
             <p class="text-sm font-medium text-slate-300">No timesheet entries found</p>
             <p class="text-xs">
               Adjust the filters or create a daily sheet to start tracking your hours.
@@ -232,8 +233,8 @@
     </section>
 
     <!-- Side column -->
-    <aside class="flex flex-col gap-5">
-      <section class="sheet-card sheet-card--glow">
+    <aside class="summary-column">
+      <section class="sheet-card summary-card">
         <div class="sheet-card__head">
           <div>
             <h2 class="text-base font-semibold text-white">Today's Summary</h2>
@@ -241,7 +242,7 @@
           </div>
         </div>
 
-        <div class="sheet-card__body flex flex-col items-center gap-5">
+        <div class="sheet-card__body summary-body">
           <div class="donut">
             <svg
               viewBox="0 0 120 120"
@@ -299,11 +300,11 @@
 
           <div class="split-stat">
             <div>
-              <div class="text-sm font-semibold text-white">⚡ {{ billableToday() }}h</div>
+              <div class="text-sm font-semibold text-white"><i class="pi pi-bolt" aria-hidden="true"></i> {{ billableToday() }}h</div>
               <div class="text-[0.68rem] text-slate-400">Billable</div>
             </div>
             <div>
-              <div class="text-sm font-semibold text-white">◷ {{ nonBillableToday() }}h</div>
+              <div class="text-sm font-semibold text-white"><i class="pi pi-clock" aria-hidden="true"></i> {{ nonBillableToday() }}h</div>
               <div class="text-[0.68rem] text-slate-400">Non-billable</div>
             </div>
           </div>

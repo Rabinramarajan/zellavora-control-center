@@ -19,8 +19,10 @@ import { SheetsStore } from '../../sheets.store';
 import { DailySheet, MonthlySheet } from '../../sheets.models';
 import { initialsOf, paletteFor, statusLabel, statusPill } from '../../sheets.presentation';
 import { parseDayKey } from '../../sheets.time';
+import { AuthStore } from '../../../../core/auth/auth.store';
 
 interface DailyRow {
+  userId: string;
   id: string;
   employee: string;
   date: string;
@@ -129,6 +131,12 @@ const MONTHLY_COLUMNS: ColumnDef<MonthlyRow>[] = [
 })
 export class ApprovalQueueComponent implements OnInit {
   private readonly store = inject(SheetsStore);
+  private readonly auth = inject(AuthStore);
+
+  public canReviewOwner(userId: string): boolean {
+    const currentUserId = this.auth.user()?.id;
+    return !!currentUserId && (userId !== currentUserId || this.auth.role() === 'owner');
+  }
 
   public readonly isLoading = this.store.isLoading;
   public readonly error = this.store.error;
@@ -158,7 +166,9 @@ export class ApprovalQueueComponent implements OnInit {
   public readonly monthlyRows = computed<MonthlyRow[]>(() =>
     this.store
       .monthlySheets()
-      .filter((sheet) => sheet.status === 'submitted' || sheet.status === 'approved')
+      .filter((sheet) =>
+        sheet.status === 'submitted' || sheet.status === 'approved'
+      )
       .map((sheet) => this.toMonthlyRow(sheet))
   );
 
@@ -179,7 +189,8 @@ export class ApprovalQueueComponent implements OnInit {
   );
 
   public readonly selectionBusy = computed(() =>
-    this.selectedDaily().some((row) => this.busyIds().has(row.id))
+    this.selectedDaily().some((row) => this.busyIds().has(row.id)) ||
+    !this.selectedDaily().some((row) => this.canReviewOwner(row.userId))
   );
 
   public readonly statusLabel = statusLabel;
@@ -189,9 +200,19 @@ export class ApprovalQueueComponent implements OnInit {
     this.reload();
   }
 
+  public selectTab(tab: QueueTab): void {
+    this.tab.set(tab);
+    this.selectedDaily.set([]);
+    this.cancelRejection();
+    this.reload();
+  }
+
   public reload(): void {
-    void this.store.loadDailySheets({ scope: 'team', status: 'submitted' });
-    void this.store.loadMonthlySheets({ scope: 'team', pageSize: 200 });
+    if (this.tab() === 'monthly') {
+      void this.store.loadMonthlySheets({ scope: 'team', pageSize: 200 });
+    } else {
+      void this.store.loadDailySheets({ scope: 'team', status: 'submitted' });
+    }
   }
 
   public isBusy(id: string): boolean {
@@ -200,6 +221,7 @@ export class ApprovalQueueComponent implements OnInit {
 
   public approveDaily(ids: readonly string[]): void {
     for (const id of ids) {
+      if (!this.dailyRows().some((row) => row.id === id && this.canReviewOwner(row.userId))) continue;
       void this.decide(id, () => this.store.reviewDailySheet(id, true));
     }
   }
@@ -216,6 +238,7 @@ export class ApprovalQueueComponent implements OnInit {
   }
 
   public approveMonthly(id: string): void {
+    if (!this.monthlyRows().some((row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId))) return;
     void this.decide(id, () => this.store.reviewMonthlySheet(id, true));
   }
 
@@ -225,6 +248,8 @@ export class ApprovalQueueComponent implements OnInit {
 
   /** Rejecting always asks why: the freelancer needs to know what to fix. */
   public startRejection(kind: QueueTab, ids: readonly string[]): void {
+    const rows = kind === 'daily' ? this.dailyRows() : this.monthlyRows();
+    ids = ids.filter((id) => rows.some((row) => row.id === id && this.canReviewOwner(row.userId)));
     if (!ids.length) return;
     this.rejectionReason.set('');
     this.rejection.set({ kind, ids: [...ids] });
@@ -241,6 +266,8 @@ export class ApprovalQueueComponent implements OnInit {
     this.rejection.set(null);
 
     for (const id of pending.ids) {
+      const rows = pending.kind === 'daily' ? this.dailyRows() : this.monthlyRows();
+      if (!rows.some((row) => row.id === id && this.canReviewOwner(row.userId))) continue;
       void this.decide(id, () =>
         pending.kind === 'daily'
           ? this.store.reviewDailySheet(id, false, reason)
@@ -271,6 +298,7 @@ export class ApprovalQueueComponent implements OnInit {
       sheet.entryType === 'leave' ? 'Leave' : sheet.entryType === 'holiday' ? 'Holiday' : null;
     return {
       id: sheet.id,
+      userId: sheet.userId,
       employee: sheet.user?.fullName ?? 'Unknown',
       date: sheet.sheetDate,
       dateLabel: parseDayKey(sheet.sheetDate).toLocaleDateString('en-US', {

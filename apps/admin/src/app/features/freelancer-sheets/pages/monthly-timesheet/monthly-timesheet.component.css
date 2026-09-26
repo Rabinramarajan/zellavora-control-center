@@ -13,6 +13,10 @@
 /* ---------- screen toolbar ---------- */
 
 .ts-toolbar {
+  padding: 1rem;
+  background: #0d1420;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 0.75rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -32,6 +36,11 @@
   color: #a5b4fc;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.ts-page button:focus-visible, .ts-page a:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 3px;
 }
 
 .ts-nav {

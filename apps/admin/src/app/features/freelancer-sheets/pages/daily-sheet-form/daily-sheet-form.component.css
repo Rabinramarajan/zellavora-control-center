@@ -1,6 +1,6 @@
 .form-grid {
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -31,10 +31,10 @@
   display: grid;
   gap: 0.75rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  padding: 0.85rem;
+  padding: 1rem;
   border: 1px solid var(--sheet-line);
   border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: #101a28;
 }
 
 .task-row__name,

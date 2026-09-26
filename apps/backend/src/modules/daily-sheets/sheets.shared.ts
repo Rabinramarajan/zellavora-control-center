@@ -7,7 +7,7 @@ import { REVIEW_PERMISSION, TimesheetViewer } from '../timesheets/timesheets.rul
 
 /** Rules shared by daily and monthly freelancer sheets. */
 
-export type SheetViewer = TimesheetViewer;
+export type SheetViewer = TimesheetViewer & { canReviewOwn?: boolean };
 
 /** Statuses in which the owner may still change or delete a sheet. */
 export const EDITABLE_SHEET_STATUSES = ['draft', 'rejected'] as const;
@@ -58,7 +58,12 @@ export const resolveViewer = async (req: AuthRequest): Promise<SheetViewer> => {
   if (!req.permissions) {
     req.permissions = await PermissionService.loadForUser(userId, organizationId);
   }
-  return { userId, canReview: PermissionService.has(req.permissions, REVIEW_PERMISSION) };
+  return {
+    userId,
+    canReview: PermissionService.has(req.permissions, REVIEW_PERMISSION),
+    // Role is attached by authenticate from the verified access token.
+    canReviewOwn: req.role === 'owner',
+  };
 };
 
 export const isEditableSheetStatus = (status: string): boolean =>
@@ -87,12 +92,12 @@ export const assertOwnerCanChange = (
   }
 };
 
-/** Separation of duties: a reviewer never signs off their own hours. */
+/** Only the workspace owner may review their own sheets. */
 export const assertCanDecide = (sheet: { userId: string }, viewer: SheetViewer): void => {
   if (!viewer.canReview) {
     throw new AppError('Insufficient permission', 403, 'FORBIDDEN_PERMISSION');
   }
-  if (sheet.userId === viewer.userId) {
+  if (sheet.userId === viewer.userId && !viewer.canReviewOwn) {
     throw new AppError('You cannot review your own sheet', 403, 'SELF_REVIEW_FORBIDDEN');
   }
 };
