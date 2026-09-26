@@ -58,6 +58,7 @@ export class LoginComponent {
   readonly visibleTerms = signal(false);
   readonly visibleHelp = signal(false);
   readonly capsLock = signal(false);
+  readonly passwordVisible = signal(false);
 
   // --- Organization state --------------------------------------------------
   readonly allOrgs = signal<Org[]>([]);

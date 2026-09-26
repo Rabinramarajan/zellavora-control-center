@@ -29,3 +29,59 @@ app-date-control {
   display: block;
   width: 100%;
 }
+
+// Tailwind Forms targets native inputs, but these inputs already live inside
+// a styled library field. Keep focus on that outer field, not a second box.
+app-form-input-control input.fic-input,
+app-form-input-control input.fic-input:focus {
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  --tw-ring-shadow: 0 0 #0000;
+}
+
+// Auth forms use a quiet resting state. The library otherwise gives every
+// valid value the same thick ring as focus. These scoped overrides deliberately
+// win over the library's encapsulated state styles without affecting admin forms.
+.auth-shell {
+  --zv-text-placeholder: #94a3b8;
+  --zv-text-muted: #b5c0d0;
+  --zv-control-height: 48px;
+  --zv-border: #293244;
+
+  .fic-field,
+  .sc-field {
+    border: 1px solid var(--zv-border) !important;
+    padding: 0 14px !important;
+    box-shadow: none !important;
+  }
+
+  .fic-field:focus-within,
+  .sc-field:focus-within {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px rgb(129 140 248 / 14%) !important;
+  }
+
+  .fic-invalid .fic-field,
+  .sc-invalid .sc-field {
+    border-color: #fb7185 !important;
+  }
+
+  .fic-invalid .fic-field:focus-within,
+  .sc-invalid .sc-field:focus-within {
+    box-shadow: 0 0 0 3px rgb(251 113 133 / 12%) !important;
+  }
+
+  .fic-wrapper .fic-input,
+  .sc-wrapper .sc-trigger {
+    font-size: 16px;
+  }
+
+  // Reserve room for the login password visibility button, including when
+  // the library renders its own validation icon beside the input.
+  .login-password-control .fic-field {
+    padding-right: 48px !important;
+  }
+}

@@ -1,5 +1,5 @@
 import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core';
-import { provideRouter, withHashLocation } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import {
   HTTP_INTERCEPTORS,
   provideHttpClient,
@@ -21,7 +21,7 @@ import { ConfigService } from './core/config/config.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(appRoutes, withHashLocation()),
+    provideRouter(appRoutes),
     provideHttpClient(
       withInterceptors([
         correlationIdInterceptor,

@@ -6,6 +6,28 @@
   padding: 0;
 }
 
+.password-toggle {
+  position: absolute;
+  top: 26px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.password-toggle:hover { color: #f1f5f9; }
+.password-toggle:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: -4px;
+}
+
 /* Inputs: 14px text and a 44px+ hit target — the old 12px/py-2.5 controls read
    as disabled and were awkward to tap. */
 .auth-field {

@@ -369,12 +369,9 @@ export class AuthService {
   // Logout
   // -------------------------------------------------------------------------
 
-  logout(callApi: boolean = true): Observable<void> {
+  logout(): Observable<void> {
     this.clearRefreshTimer();
-    const obs = callApi
-      ? this.http.post<void>(`${this.apiUrl}/logout`, {}).pipe(catchError(() => of(void 0)))
-      : of(void 0);
-    return obs.pipe(
+    return of(void 0).pipe(
       tap(() => {
         this.clearLocalSession();
         this.router.navigate(['/auth/login'], { replaceUrl: true });

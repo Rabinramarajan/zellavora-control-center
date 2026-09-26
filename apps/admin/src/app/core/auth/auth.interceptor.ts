@@ -105,7 +105,7 @@ const handleNon401 = (err: unknown, errors: ErrorBus): Observable<never> => {
 
 const finalizeLogout = (auth: AuthService, errors: ErrorBus, original?: unknown): Observable<never> => {
   errors.push({ kind: 'auth', message: 'Session expired. Please log in again.' });
-  auth.logout(false).subscribe();
+  auth.logout().subscribe();
   return throwError(() => original ?? new Error('logged out'));
 };
 

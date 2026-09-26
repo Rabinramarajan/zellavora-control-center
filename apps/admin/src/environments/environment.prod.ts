@@ -11,7 +11,6 @@ export const environment = {
     tokenEndpoint: '/api/v1/auth/login',
     refreshEndpoint: '/api/v1/auth/refresh',
     meEndpoint: '/api/v1/auth/me',
-    logoutEndpoint: '/api/v1/auth/logout',
     mfaEndpoint: '/api/v1/auth/mfa',
   },
 
