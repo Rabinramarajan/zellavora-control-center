@@ -4,14 +4,16 @@
       <div class="sheet-header__icon" aria-hidden="true">✅</div>
       <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Approval Queue</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Review and sign off on submitted daily sheets.</p>
+        <p class="text-sm text-slate-400 mt-0.5">Review your team's daily and monthly sheets.</p>
       </div>
     </div>
+    <button type="button" class="ghost-btn" (click)="reload()" [disabled]="isLoading()">↻ Refresh</button>
   </header>
 
   @if (error()) {
-    <div class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-      {{ error() }}
+    <div class="notice notice--danger flex flex-wrap items-center justify-between gap-3" role="alert">
+      <span>{{ error() }}</span>
+      <button type="button" class="ghost-btn" (click)="reload()">Retry</button>
     </div>
   }
 
@@ -19,79 +21,169 @@
     <article class="kpi kpi--active">
       <div class="flex items-center gap-3">
         <span class="kpi__icon bg-amber-500/20 text-amber-200" aria-hidden="true">⏳</span>
-        <span class="text-sm font-semibold text-slate-200">Awaiting Review</span>
+        <span class="text-sm font-semibold text-slate-200">Daily Sheets Pending</span>
       </div>
-      <div class="kpi__value text-white">{{ rows().length }}</div>
+      <div class="kpi__value text-white">{{ dailyRows().length }}</div>
     </article>
-
     <article class="kpi">
       <div class="flex items-center gap-3">
         <span class="kpi__icon bg-violet-500/25 text-violet-200" aria-hidden="true">⏱️</span>
         <span class="text-sm font-semibold text-slate-200">Hours Pending</span>
       </div>
-      <div class="kpi__value text-white">{{ totalHours() }}h</div>
+      <div class="kpi__value text-white">{{ dailyHours() }}h</div>
+      <p class="text-xs text-slate-400">{{ dailyAmount() | currency: 'USD' : 'symbol' : '1.0-0' }} in value</p>
     </article>
-
     <article class="kpi">
       <div class="flex items-center gap-3">
-        <span class="kpi__icon bg-emerald-500/20 text-emerald-200" aria-hidden="true">💰</span>
-        <span class="text-sm font-semibold text-slate-200">Value Pending</span>
+        <span class="kpi__icon bg-sky-500/20 text-sky-200" aria-hidden="true">📆</span>
+        <span class="text-sm font-semibold text-slate-200">Monthly Sheets</span>
       </div>
-      <div class="kpi__value text-white">{{ totalAmount() | currency: 'USD' : 'symbol' : '1.0-0' }}</div>
+      <div class="kpi__value text-white">{{ pendingMonthly() }}</div>
+      <p class="text-xs text-slate-400">{{ awaitingPayment() }} approved, awaiting payment</p>
     </article>
   </section>
 
-  <section class="sheet-card">
-    <app-smart-table
-      caption="Submitted sheets"
-      entityLabel="sheets"
-      searchPlaceholder="Search submissions..."
-      selectionMode="multiple"
-      [rows]="rows()"
-      [columns]="columns"
-      [loading]="isLoading()"
-      [pageSizeOptions]="pageSizeOptions"
-      [(sort)]="sort"
-      [(pageSize)]="pageSize"
-      (selectionChange)="selected.set($event)">
-      <div toolbar-start>
-        <h2 class="text-base font-semibold text-white">Submitted Sheets</h2>
-        <p class="text-xs text-slate-400 mt-0.5">Oldest submissions first</p>
-      </div>
-
-      <ng-container bulk-actions>
-        <button type="button" class="ghost-btn decide-btn--reject" [disabled]="selectionBusy()" (click)="decideSelected(false)">
-          Reject selected
-        </button>
-        <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="selectionBusy()" (click)="decideSelected(true)">
-          Approve selected
-        </button>
-      </ng-container>
-
-      <ng-template smartCell="project" let-row>
-        <div class="flex items-center gap-2">
-          <span class="avatar-chip" [style.background]="row.projectColor">{{ row.projectInitials }}</span>
-          <span class="text-slate-100 font-medium">{{ row.project }}</span>
-        </div>
-      </ng-template>
-
-      <ng-template smartCell="actions" let-row>
-        <div class="flex items-center justify-end gap-2">
-          <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="decide(row.id, false)">
+  @if (rejection(); as pending) {
+    <section class="sheet-card" role="dialog" aria-labelledby="reject-title" aria-modal="false">
+      <div class="sheet-card__body flex flex-col gap-3">
+        <h2 id="reject-title" class="text-base font-semibold text-white">
+          Reject {{ pending.ids.length }} {{ pending.kind }} {{ pending.ids.length === 1 ? 'sheet' : 'sheets' }}
+        </h2>
+        <label class="field">
+          <span class="field__label">Reason (sent to the freelancer) *</span>
+          <textarea
+            class="field__input"
+            rows="3"
+            maxlength="2000"
+            [value]="rejectionReason()"
+            (input)="rejectionReason.set($any($event.target).value)"
+            placeholder="What needs to change before this can be approved?"></textarea>
+        </label>
+        <div class="flex gap-2">
+          <button type="button" class="danger-btn" [disabled]="!rejectionReason().trim()" (click)="confirmRejection()">
             Reject
           </button>
-          <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="decide(row.id, true)">
-            Approve
-          </button>
+          <button type="button" class="ghost-btn" (click)="cancelRejection()">Cancel</button>
         </div>
-      </ng-template>
+      </div>
+    </section>
+  }
 
-      <ng-template smartEmpty>
-        <div class="empty-state">
-          <span class="text-2xl" aria-hidden="true">🎉</span>
-          <p class="text-sm font-medium text-slate-300">Nothing waiting for approval</p>
+  <div class="segmented self-start" role="radiogroup" aria-label="Queue">
+    <label class="segmented__option">
+      <input type="radio" name="queue-tab" [checked]="tab() === 'daily'" (change)="tab.set('daily')" />
+      <span>Daily ({{ dailyRows().length }})</span>
+    </label>
+    <label class="segmented__option">
+      <input type="radio" name="queue-tab" [checked]="tab() === 'monthly'" (change)="tab.set('monthly')" />
+      <span>Monthly ({{ monthlyRows().length }})</span>
+    </label>
+  </div>
+
+  @if (tab() === 'daily') {
+    <section class="sheet-card">
+      <app-smart-table
+        caption="Submitted daily sheets"
+        entityLabel="sheets"
+        searchPlaceholder="Search submissions..."
+        selectionMode="multiple"
+        [rows]="dailyRows()"
+        [columns]="dailyColumns"
+        [loading]="isLoading()"
+        [pageSizeOptions]="pageSizeOptions"
+        [(sort)]="dailySort"
+        [(pageSize)]="pageSize"
+        (selectionChange)="selectedDaily.set($event)">
+        <div toolbar-start>
+          <h2 class="text-base font-semibold text-white">Submitted Daily Sheets</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Oldest first</p>
         </div>
-      </ng-template>
-    </app-smart-table>
-  </section>
+
+        <ng-container bulk-actions>
+          <button type="button" class="ghost-btn decide-btn--reject" [disabled]="selectionBusy()"
+                  (click)="rejectSelected()">
+            Reject selected
+          </button>
+          <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="selectionBusy()"
+                  (click)="approveSelected()">
+            Approve selected
+          </button>
+        </ng-container>
+
+        <ng-template smartCell="project" let-row>
+          <div class="flex items-center gap-2">
+            <span class="avatar-chip" [style.background]="row.projectColor">{{ row.projectInitials }}</span>
+            <span class="text-slate-100 font-medium">{{ row.project }}</span>
+          </div>
+        </ng-template>
+
+        <ng-template smartCell="actions" let-row>
+          <div class="flex items-center justify-end gap-2">
+            <a class="ghost-btn" [routerLink]="['/freelancer-sheets/daily', row.id]">View</a>
+            <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="startRejection('daily', [row.id])">
+              Reject
+            </button>
+            <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="approveDaily([row.id])">
+              Approve
+            </button>
+          </div>
+        </ng-template>
+
+        <ng-template smartEmpty>
+          <div class="empty-state">
+            <span class="text-2xl" aria-hidden="true">🎉</span>
+            <p class="text-sm font-medium text-slate-300">No daily sheets waiting for approval</p>
+          </div>
+        </ng-template>
+      </app-smart-table>
+    </section>
+  } @else {
+    <section class="sheet-card">
+      <app-smart-table
+        caption="Monthly sheets"
+        entityLabel="sheets"
+        searchPlaceholder="Search monthly sheets..."
+        [rows]="monthlyRows()"
+        [columns]="monthlyColumns"
+        [loading]="isLoading()"
+        [pageSizeOptions]="pageSizeOptions"
+        [(sort)]="monthlySort"
+        [(pageSize)]="pageSize">
+        <div toolbar-start>
+          <h2 class="text-base font-semibold text-white">Monthly Sheets</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Submitted for approval, or approved and awaiting payment</p>
+        </div>
+
+        <ng-template smartCell="status" let-row>
+          <span [class]="statusPill(row.status)">{{ statusLabel(row.status) }}</span>
+        </ng-template>
+
+        <ng-template smartCell="actions" let-row>
+          <div class="flex items-center justify-end gap-2">
+            <a class="ghost-btn" routerLink="/freelancer-sheets/monthly/timesheet"
+               [queryParams]="{ month: row.month, year: row.year, userId: row.userId }">Timesheet</a>
+            @if (row.status === 'submitted') {
+              <button type="button" class="ghost-btn decide-btn--reject" [disabled]="isBusy(row.id)" (click)="startRejection('monthly', [row.id])">
+                Reject
+              </button>
+              <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="approveMonthly(row.id)">
+                Approve
+              </button>
+            } @else {
+              <button type="button" class="primary-btn py-1.5 px-3 text-xs" [disabled]="isBusy(row.id)" (click)="markPaid(row.id)">
+                Mark paid
+              </button>
+            }
+          </div>
+        </ng-template>
+
+        <ng-template smartEmpty>
+          <div class="empty-state">
+            <span class="text-2xl" aria-hidden="true">📭</span>
+            <p class="text-sm font-medium text-slate-300">No monthly sheets need attention</p>
+          </div>
+        </ng-template>
+      </app-smart-table>
+    </section>
+  }
 </div>

@@ -49,20 +49,7 @@
   color: #fff;
 }
 
-.row-action {
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: 0.5rem;
-  color: #94a3b8;
-  font-size: 1rem;
-  line-height: 1;
-  transition: background 0.18s ease, color 0.18s ease;
-}
 
-.row-action:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-}
 
 /* Donut */
 
@@ -105,4 +92,17 @@
 
 .split-stat > div + div {
   border-left: 1px solid var(--sheet-line);
+}
+
+.date-nav__input {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  color-scheme: dark;
+}
+
+.date-nav__input:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.55);
+  border-radius: 0.35rem;
 }

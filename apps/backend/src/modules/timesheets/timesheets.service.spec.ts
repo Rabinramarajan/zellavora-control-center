@@ -13,6 +13,8 @@ const ORG_A = 'org-a';
 const ORG_B = 'org-b';
 const EMPLOYEE = 'employee-1';
 const MANAGER = 'manager-1';
+const SELF = { userId: EMPLOYEE, canReview: false };
+const REVIEWER = { userId: MANAGER, canReview: true };
 
 const entry = (overrides: Partial<Record<string, unknown>> = {}) => ({
   id: 'entry-1',
@@ -48,7 +50,12 @@ const sheet = (overrides: Partial<Record<string, unknown>> = {}) =>
     updatedAt: new Date(),
     deletedAt: null,
     entries: [entry()],
-    user: { id: EMPLOYEE, fullName: 'Ada Lovelace', email: 'ada@example.com', jobTitle: 'Engineer' },
+    user: {
+      id: EMPLOYEE,
+      fullName: 'Ada Lovelace',
+      email: 'ada@example.com',
+      jobTitle: 'Engineer',
+    },
     approver: null,
     ...overrides,
   }) as any;
@@ -106,7 +113,7 @@ describe('TimesheetsService', () => {
     it('returns the existing sheet without creating another', async () => {
       repo.findByPeriod.mockResolvedValue(sheet());
 
-      await service.getOrCreateForPeriod(EMPLOYEE, '2026-08', ORG_A, EMPLOYEE);
+      await service.getOrCreateForPeriod(EMPLOYEE, '2026-08', ORG_A, SELF);
 
       expect(repo.create).not.toHaveBeenCalled();
     });
@@ -116,11 +123,14 @@ describe('TimesheetsService', () => {
       repo.create.mockResolvedValue({ id: 'sheet-1' });
       repo.findById.mockResolvedValue(sheet());
 
-      await service.getOrCreateForPeriod(EMPLOYEE, '2026-08', ORG_A, EMPLOYEE);
+      await service.getOrCreateForPeriod(EMPLOYEE, '2026-08', ORG_A, SELF);
 
       const created = repo.createEntries.mock.calls[0][0];
       expect(created).toHaveLength(31);
-      expect(created[0]).toMatchObject({ dayOfWeek: 'Saturday', status: TimesheetEntryStatus.EMPTY });
+      expect(created[0]).toMatchObject({
+        dayOfWeek: 'Saturday',
+        status: TimesheetEntryStatus.EMPTY,
+      });
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({ organizationId: ORG_A, userId: EMPLOYEE, period: '2026-08' }),
         expect.anything()
@@ -148,7 +158,7 @@ describe('TimesheetsService', () => {
     it('passes the caller organization through to list queries', async () => {
       repo.list.mockResolvedValue([]);
 
-      await service.list(ORG_A, { employeeId: EMPLOYEE, year: 2026 });
+      await service.list(ORG_A, { employeeId: EMPLOYEE, year: 2026 }, SELF);
 
       expect(repo.list).toHaveBeenCalledWith(ORG_A, {
         userId: EMPLOYEE,
@@ -316,13 +326,78 @@ describe('TimesheetsService', () => {
         }),
       ]);
 
-      const summary = await service.summary(ORG_A, { year: 2026 }, EMPLOYEE);
+      const summary = await service.summary(ORG_A, { year: 2026 }, SELF);
 
       expect(summary.totalHours).toBe(14);
       expect(summary.workingDays).toBe(2);
       expect(summary.leaveDays).toBe(1);
       expect(summary.approvedPeriods).toBe(1);
       expect(summary.periods.map((p) => p.period)).toEqual(['2026-07', '2026-08']);
+    });
+
+    it("refuses a non-reviewer asking for a colleague's year", async () => {
+      await expect(
+        service.summary(ORG_A, { year: 2026, employeeId: MANAGER }, SELF)
+      ).rejects.toThrow(/permission/);
+      expect(repo.list).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('access control', () => {
+    it("lets a reviewer read a colleague's month without creating a draft for them", async () => {
+      repo.findByPeriod.mockResolvedValue(null);
+
+      await expect(
+        service.getOrCreateForPeriod(EMPLOYEE, '2026-08', ORG_A, REVIEWER)
+      ).rejects.toThrow(/No timesheet/);
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it("refuses a non-reviewer opening a colleague's month", async () => {
+      await expect(service.getOrCreateForPeriod(MANAGER, '2026-08', ORG_A, SELF)).rejects.toThrow(
+        /permission/
+      );
+      expect(repo.findByPeriod).not.toHaveBeenCalled();
+    });
+
+    it('hides a colleague sheet fetched by id', async () => {
+      repo.findById.mockResolvedValue(sheet({ userId: MANAGER }));
+
+      await expect(service.getVisible('sheet-1', ORG_A, SELF)).rejects.toThrow(
+        'Timesheet not found'
+      );
+    });
+
+    it('pins a non-reviewer list to their own rows whatever they ask for', async () => {
+      repo.list.mockResolvedValue([]);
+
+      await service.list(ORG_A, { status: TimesheetStatus.SUBMITTED }, SELF);
+
+      expect(repo.list).toHaveBeenCalledWith(ORG_A, expect.objectContaining({ userId: EMPLOYEE }));
+    });
+
+    it('lets a reviewer list the whole organization', async () => {
+      repo.list.mockResolvedValue([sheet({ totalHours: new Prisma.Decimal(8) })]);
+
+      const rows = await service.list(ORG_A, { status: TimesheetStatus.SUBMITTED }, REVIEWER);
+
+      expect(repo.list).toHaveBeenCalledWith(ORG_A, expect.objectContaining({ userId: undefined }));
+      expect(rows[0]).toMatchObject({ totalHours: 8, user: expect.any(Object) });
+      expect(rows[0]).not.toHaveProperty('entries');
+    });
+
+    it.each(['approve', 'reject'] as const)('refuses to %s your own sheet', async (action) => {
+      repo.findById.mockResolvedValue(
+        sheet({ userId: MANAGER, status: TimesheetStatus.SUBMITTED })
+      );
+
+      const attempt =
+        action === 'approve'
+          ? service.approve('sheet-1', ORG_A, MANAGER)
+          : service.reject('sheet-1', { rejectionReason: 'x' }, ORG_A, MANAGER);
+
+      await expect(attempt).rejects.toThrow(/your own timesheet/);
+      expect(repo.update).not.toHaveBeenCalled();
     });
   });
 });

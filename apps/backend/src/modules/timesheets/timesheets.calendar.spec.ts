@@ -1,4 +1,11 @@
-import { buildMonthDays, dateKey, isDateInPeriod, parseDateKey, parsePeriod, periodOf } from './timesheets.calendar';
+import {
+  buildMonthDays,
+  dateKey,
+  isDateInPeriod,
+  parseDateKey,
+  parsePeriod,
+  periodOf,
+} from './timesheets.calendar';
 
 describe('timesheets calendar', () => {
   describe('parsePeriod', () => {
@@ -6,12 +13,9 @@ describe('timesheets calendar', () => {
       expect(parsePeriod('2026-08')).toEqual({ year: 2026, month: 8 });
     });
 
-    it.each(['2026-13', '2026-00', '26-08', '2026-8', 'nonsense'])(
-      'rejects %s',
-      (period) => {
-        expect(() => parsePeriod(period)).toThrow(/Invalid period/);
-      }
-    );
+    it.each(['2026-13', '2026-00', '26-08', '2026-8', 'nonsense'])('rejects %s', (period) => {
+      expect(() => parsePeriod(period)).toThrow(/Invalid period/);
+    });
   });
 
   describe('buildMonthDays', () => {

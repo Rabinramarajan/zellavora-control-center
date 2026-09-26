@@ -8,8 +8,23 @@ import {
   TimesheetWithEntries,
   timesheetInclude,
 } from './timesheets.repository';
-import { buildMonthDays, dateKey, isDateInPeriod, parseDateKey, periodOf } from './timesheets.calendar';
-import { assertEntriesEditable, assertTransition, normalizeEntry, EntryValues } from './timesheets.rules';
+import {
+  buildMonthDays,
+  dateKey,
+  isDateInPeriod,
+  parseDateKey,
+  periodOf,
+} from './timesheets.calendar';
+import {
+  assertCanQueryEmployee,
+  assertCanView,
+  assertEntriesEditable,
+  assertNotOwnSheet,
+  assertTransition,
+  normalizeEntry,
+  EntryValues,
+  TimesheetViewer,
+} from './timesheets.rules';
 import {
   BulkUpsertEntriesDTO,
   ListTimesheetsQueryDTO,
@@ -40,6 +55,23 @@ export interface YearlySummary {
     workingDays: number;
     leaveDays: number;
   }>;
+}
+
+/** One row of the list endpoint: the sheet without its entries, plus totals. */
+export interface TimesheetListItem {
+  id: string;
+  userId: string;
+  period: string;
+  status: TimesheetStatus;
+  totalHours: number;
+  submittedAt: Date | null;
+  approvedAt: Date | null;
+  rejectedAt: Date | null;
+  rejectionReason: string | null;
+  updatedAt: Date;
+  user: TimesheetWithEntries['user'];
+  approver: TimesheetWithEntries['approver'];
+  totals: TimesheetTotals;
 }
 
 const toNumber = (value: Prisma.Decimal | number | null | undefined): number =>
@@ -90,19 +122,28 @@ export class TimesheetsService {
   private readonly notifications = new NotificationService();
 
   /**
-   * Fetch the sheet for a period, creating an empty draft the first time it
-   * is asked for. The draft is pre-filled with one entry per calendar day so
-   * the client never has to work out how long the month is or which days
-   * fall on a weekend.
+   * Fetch the sheet for a period, creating an empty draft the first time the
+   * owner asks for it. The draft is pre-filled with one entry per calendar
+   * day so the client never has to work out how long the month is or which
+   * days fall on a weekend.
+   *
+   * A reviewer looking at someone else's month only ever reads: opening a
+   * colleague's page must not create a draft in their account.
    */
   async getOrCreateForPeriod(
     userId: string,
     period: string,
     organizationId: string,
-    actorUserId: string
+    viewer: TimesheetViewer
   ): Promise<TimesheetWithEntries> {
+    assertCanQueryEmployee(userId, viewer);
+
     const existing = await this.repo.findByPeriod(userId, period, organizationId);
     if (existing) return existing;
+
+    if (userId !== viewer.userId) {
+      throw new AppError('No timesheet for this period', 404, 'TIMESHEET_NOT_FOUND');
+    }
 
     const days = buildMonthDays(period);
 
@@ -114,7 +155,7 @@ export class TimesheetsService {
           period,
           status: TimesheetStatus.DRAFT,
           totalHours: new Prisma.Decimal(0),
-          createdBy: actorUserId,
+          createdBy: viewer.userId,
         },
         tx
       );
@@ -137,17 +178,54 @@ export class TimesheetsService {
     return sheet;
   }
 
-  async list(organizationId: string, dto: ListTimesheetsQueryDTO) {
-    return this.repo.list(organizationId, {
-      userId: dto.employeeId,
+  /**
+   * Reviewers see the whole organization; everyone else only ever sees their
+   * own rows, whatever filter they sent.
+   */
+  async list(
+    organizationId: string,
+    dto: ListTimesheetsQueryDTO,
+    viewer: TimesheetViewer
+  ): Promise<TimesheetListItem[]> {
+    assertCanQueryEmployee(dto.employeeId, viewer);
+
+    const sheets = await this.repo.list(organizationId, {
+      userId: viewer.canReview ? dto.employeeId : viewer.userId,
       year: dto.year,
       status: dto.status,
     });
+
+    return sheets.map((sheet) => ({
+      id: sheet.id,
+      userId: sheet.userId,
+      period: sheet.period,
+      status: sheet.status,
+      totalHours: toNumber(sheet.totalHours),
+      submittedAt: sheet.submittedAt,
+      approvedAt: sheet.approvedAt,
+      rejectedAt: sheet.rejectedAt,
+      rejectionReason: sheet.rejectionReason,
+      updatedAt: sheet.updatedAt,
+      user: sheet.user,
+      approver: sheet.approver,
+      totals: computeTotals(sheet.entries),
+    }));
   }
 
   async getById(id: string, organizationId: string): Promise<TimesheetWithEntries> {
     const sheet = await this.repo.findById(id, organizationId);
     if (!sheet) throw new AppError('Timesheet not found', 404, 'TIMESHEET_NOT_FOUND');
+    return sheet;
+  }
+
+  /** `getById` for request handlers: also checks the caller may see the sheet. */
+  async getVisible(
+    id: string,
+    organizationId: string,
+    viewer: TimesheetViewer
+  ): Promise<TimesheetWithEntries> {
+    const sheet = await this.getById(id, organizationId);
+    assertCanView(sheet, viewer);
     return sheet;
   }
 
@@ -267,6 +345,7 @@ export class TimesheetsService {
     approverUserId: string
   ): Promise<TimesheetWithEntries> {
     const sheet = await this.getById(timesheetId, organizationId);
+    assertNotOwnSheet(sheet, approverUserId);
     assertTransition(sheet.status, TimesheetStatus.APPROVED);
 
     await this.repo.update(timesheetId, {
@@ -288,6 +367,7 @@ export class TimesheetsService {
     approverUserId: string
   ): Promise<TimesheetWithEntries> {
     const sheet = await this.getById(timesheetId, organizationId);
+    assertNotOwnSheet(sheet, approverUserId);
     assertTransition(sheet.status, TimesheetStatus.REJECTED);
 
     await this.repo.update(timesheetId, {
@@ -309,9 +389,10 @@ export class TimesheetsService {
   async summary(
     organizationId: string,
     dto: SummaryQueryDTO,
-    fallbackUserId: string
+    viewer: TimesheetViewer
   ): Promise<YearlySummary> {
-    const userId = dto.employeeId ?? fallbackUserId;
+    assertCanQueryEmployee(dto.employeeId, viewer);
+    const userId = dto.employeeId ?? viewer.userId;
     const sheets = await this.repo.list(organizationId, { userId, year: dto.year });
 
     const periods = sheets
@@ -347,7 +428,10 @@ export class TimesheetsService {
     }
     if (values.status !== undefined) data['status'] = values.status;
     if (values.notes !== undefined) data['notes'] = values.notes;
-    return data as Omit<Prisma.TimesheetEntryUncheckedCreateInput, 'timesheetId' | 'entryDate' | 'dayOfWeek'>;
+    return data as Omit<
+      Prisma.TimesheetEntryUncheckedCreateInput,
+      'timesheetId' | 'entryDate' | 'dayOfWeek'
+    >;
   }
 
   private dayNameOf(date: Date): string {

@@ -242,3 +242,38 @@
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
+
+.cal-cell:not(.cal-cell--outside) {
+  cursor: pointer;
+}
+
+.cal-cell:not(.cal-cell--outside):focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.7);
+  outline-offset: 2px;
+}
+
+.month-stats {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+}
+
+.month-stats > div {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--sheet-line);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.month-stats dt {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.month-stats dd {
+  margin-top: 0.2rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}

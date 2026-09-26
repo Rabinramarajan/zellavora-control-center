@@ -1,0 +1,280 @@
+<div class="sheet-page">
+  <header class="sheet-header">
+    <div class="flex items-center gap-4">
+      <div class="sheet-header__icon" aria-hidden="true">📝</div>
+      <div>
+        <a routerLink="/freelancer-sheets/daily" class="back-link">‹ Daily Sheets</a>
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">{{ title() }}</h1>
+        @if (sheet(); as current) {
+          <p class="text-sm text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
+            <span [class]="statusPill(current.status)">{{ statusLabel(current.status) }}</span>
+            @if (current.user && readOnly()) {
+              <span>{{ current.user.fullName }}</span>
+            }
+            @if (current.approver && current.status === 'approved') {
+              <span>Approved by {{ current.approver.fullName }}</span>
+            }
+          </p>
+        } @else {
+          <p class="text-sm text-slate-400 mt-0.5">Record the hours you worked on one day.</p>
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <section class="sheet-card"><div class="sheet-card__body text-sm text-slate-400">Loading sheet…</div></section>
+  } @else if (loadError()) {
+    <section class="sheet-card">
+      <div class="empty-state">
+        <span class="text-2xl" aria-hidden="true">🔎</span>
+        <p class="text-sm font-medium text-slate-300">{{ loadError() }}</p>
+        <a routerLink="/freelancer-sheets/daily" class="ghost-btn mt-2">Back to daily sheets</a>
+      </div>
+    </section>
+  } @else {
+    @if (sheet()?.status === 'rejected' && sheet()?.rejectionReason) {
+      <div class="notice notice--danger" role="status">
+        <strong>Sent back for changes:</strong> {{ sheet()?.rejectionReason }}
+        <span class="block text-xs opacity-80 mt-1">Edit the sheet and submit it again.</span>
+      </div>
+    }
+
+    @if (formError()) {
+      <div class="notice notice--danger" role="alert">{{ formError() }}</div>
+    }
+
+    <form class="form-grid" [formGroup]="form" (ngSubmit)="save(false)" novalidate>
+      <!-- Main column -->
+      <div class="flex flex-col gap-5">
+        <section class="sheet-card">
+          <div class="sheet-card__head"><h2 class="text-base font-semibold text-white">When</h2></div>
+          <div class="sheet-card__body field-grid">
+            <fieldset class="field field-grid__full">
+              <legend class="field__label">Day type</legend>
+              <div class="segmented" role="radiogroup">
+                @for (option of entryTypeOptions; track option.value) {
+                  <label class="segmented__option" [title]="option.hint">
+                    <input type="radio" formControlName="entryType" [value]="option.value" />
+                    <span>{{ option.label }}</span>
+                  </label>
+                }
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label class="field__label" for="sheetDate">Date <span aria-hidden="true">*</span></label>
+              <input id="sheetDate" type="date" class="field__input" formControlName="sheetDate"
+                     [attr.aria-invalid]="fieldInvalid('sheetDate')" required />
+              @if (fieldInvalid('sheetDate')) {
+                <p class="field__error">Choose the day.</p>
+              }
+            </div>
+
+            @if (!isWork()) {
+              <p class="notice notice--info field-grid__full">
+                This day will show as <strong>{{ value().entryType === 'leave' ? 'LEAVE' : 'HOLIDAY' }}</strong>
+                on the monthly timesheet, with no hours. Add a note below if needed.
+              </p>
+            } @else {
+            <div class="field">
+              <label class="field__label" for="projectId">Project</label>
+              <select id="projectId" class="field__input" formControlName="projectId">
+                <option value="">Unassigned</option>
+                @for (project of projects(); track project.id) {
+                  <option [value]="project.id">{{ project.name }}</option>
+                }
+              </select>
+              @if (fieldInvalid('projectId')) {
+                <p class="field__error">{{ form.get('projectId')?.errors?.['server'] }}</p>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="startTime">Start</label>
+              <input id="startTime" type="time" class="field__input" formControlName="startTime" />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="endTime">End</label>
+              <input id="endTime" type="time" class="field__input" formControlName="endTime" />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="breakMinutes">Break (minutes)</label>
+              <input id="breakMinutes" type="number" min="0" max="720" step="5" class="field__input"
+                     formControlName="breakMinutes" [attr.aria-invalid]="fieldInvalid('breakMinutes')" />
+              @if (fieldInvalid('breakMinutes')) {
+                <p class="field__error">Between 0 and 720 minutes.</p>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="hoursWorked">Hours worked</label>
+              @if (preview().fromSpan) {
+                <div class="field__input field__input--static" id="hoursWorked" aria-live="polite">
+                  {{ preview().hours }}h
+                  <span class="text-[0.68rem] text-slate-500">from start/end</span>
+                </div>
+                @if (!readOnly()) {
+                  <button type="button" class="link-btn" (click)="clearTimes()">Enter hours instead</button>
+                }
+              } @else {
+                <input id="hoursWorked" type="number" min="0.25" max="24" step="0.25" class="field__input"
+                       formControlName="hoursWorked" placeholder="e.g. 7.5"
+                       [attr.aria-invalid]="fieldInvalid('hoursWorked')" />
+                @if (fieldInvalid('hoursWorked')) {
+                  <p class="field__error">Between 0.25 and 24 hours.</p>
+                }
+              }
+            </div>
+
+            @if (form.hasError('unpairedTimes') && (form.touched || form.dirty)) {
+              <p class="field__error field-grid__full">Enter both a start and an end time, or neither.</p>
+            }
+            }
+          </div>
+        </section>
+
+        <section class="sheet-card">
+          <div class="sheet-card__head"><h2 class="text-base font-semibold text-white">{{ isWork() ? 'What' : 'Details' }}</h2></div>
+          <div class="sheet-card__body flex flex-col gap-4">
+            <div class="field">
+              <label class="field__label" for="description">{{ isWork() ? 'Summary' : 'Reason (optional)' }}</label>
+              <input id="description" type="text" class="field__input" formControlName="description"
+                     maxlength="2000" [placeholder]="isWork() ? 'What did you work on?' : 'e.g. Personal leave'" />
+            </div>
+
+            @if (isWork()) {
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-semibold text-slate-200">Tasks</h3>
+                @if (!readOnly()) {
+                  <button type="button" class="ghost-btn" (click)="addLineItem()">＋ Add task</button>
+                }
+              </div>
+
+              <div formArrayName="lineItems" class="flex flex-col gap-3">
+                @for (item of lineItems.controls; track item; let i = $index) {
+                  <fieldset class="task-row" [formGroupName]="i">
+                    <legend class="sr-only">Task {{ i + 1 }}</legend>
+                    <div class="field task-row__name">
+                      <label class="field__label" [for]="'task-name-' + i">Task</label>
+                      <input [id]="'task-name-' + i" type="text" class="field__input" formControlName="taskName"
+                             maxlength="200" [attr.aria-invalid]="fieldInvalid('lineItems.' + i + '.taskName')" />
+                      @if (fieldInvalid('lineItems.' + i + '.taskName')) {
+                        <p class="field__error">Name the task.</p>
+                      }
+                    </div>
+                    <div class="field">
+                      <label class="field__label" [for]="'task-hours-' + i">Hours</label>
+                      <input [id]="'task-hours-' + i" type="number" min="0.25" max="24" step="0.25" class="field__input"
+                             formControlName="hours" [attr.aria-invalid]="fieldInvalid('lineItems.' + i + '.hours')" />
+                      @if (fieldInvalid('lineItems.' + i + '.hours')) {
+                        <p class="field__error">0.25–24h.</p>
+                      }
+                    </div>
+                    <div class="field">
+                      <label class="field__label" [for]="'task-rate-' + i">Rate (optional)</label>
+                      <input [id]="'task-rate-' + i" type="number" min="0" step="0.01" class="field__input"
+                             formControlName="rate" placeholder="Sheet rate" />
+                    </div>
+                    @if (!readOnly()) {
+                      <button type="button" class="icon-btn" (click)="removeLineItem(i)" [attr.aria-label]="'Remove task ' + (i + 1)">✕</button>
+                    }
+                    <div class="field task-row__desc">
+                      <label class="field__label" [for]="'task-desc-' + i">Notes</label>
+                      <input [id]="'task-desc-' + i" type="text" class="field__input" formControlName="description" maxlength="2000" />
+                    </div>
+                  </fieldset>
+                } @empty {
+                  <p class="text-xs text-slate-500">
+                    Optional. Break the day into tasks; any hours not assigned to a task bill at the sheet rate.
+                  </p>
+                }
+              </div>
+              @if (preview().taskHours > preview().hours && preview().hours > 0) {
+                <p class="field__error mt-2">Tasks add up to {{ preview().taskHours }}h, more than the {{ preview().hours }}h worked.</p>
+              }
+            </div>
+            }
+
+            <div class="field">
+              <label class="field__label" for="notes">Notes</label>
+              <textarea id="notes" rows="3" class="field__input" formControlName="notes" maxlength="5000"></textarea>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Side column -->
+      <aside class="flex flex-col gap-5">
+        @if (isWork()) {
+        <section class="sheet-card sheet-card--glow">
+          <div class="sheet-card__head"><h2 class="text-base font-semibold text-white">Billing</h2></div>
+          <div class="sheet-card__body flex flex-col gap-4">
+            <div class="field">
+              <label class="field__label" for="hourlyRate">Hourly rate (USD) <span aria-hidden="true">*</span></label>
+              <input id="hourlyRate" type="number" min="0" step="0.01" class="field__input" formControlName="hourlyRate"
+                     [attr.aria-invalid]="fieldInvalid('hourlyRate')" required />
+              @if (fieldInvalid('hourlyRate')) {
+                <p class="field__error">Enter a rate of 0 or more.</p>
+              }
+            </div>
+
+            <label class="check">
+              <input type="checkbox" formControlName="isBillable" />
+              <span>Billable to the client</span>
+            </label>
+
+            <dl class="summary" aria-live="polite">
+              <div><dt>Hours</dt><dd>{{ preview().hours }}h</dd></div>
+              <div><dt>Amount</dt><dd>{{ preview().amount | currency: 'USD' }}</dd></div>
+            </dl>
+            @if (form.hasError('rateRequired') && (form.touched || form.dirty)) {
+              <p class="field__error">Enter the hourly rate for this work day.</p>
+            }
+          </div>
+        </section>
+        }
+
+        @if (!readOnly()) {
+          <section class="sheet-card">
+            <div class="sheet-card__body flex flex-col gap-2">
+              <button type="submit" class="primary-btn justify-center" [disabled]="saving()">
+                {{ saving() ? 'Saving…' : 'Save draft' }}
+              </button>
+              <button type="button" class="ghost-btn justify-center" [disabled]="saving()" (click)="save(true)">
+                Save &amp; submit for approval
+              </button>
+              <a routerLink="/freelancer-sheets/daily" class="ghost-btn justify-center">Cancel</a>
+
+              @if (sheet() && canEditExisting()) {
+                <div class="mt-3 pt-3 border-t border-white/10">
+                  @if (confirmingDelete()) {
+                    <p class="text-xs text-slate-300 mb-2">Delete this sheet? This cannot be undone.</p>
+                    <div class="flex gap-2">
+                      <button type="button" class="danger-btn" [disabled]="saving()" (click)="remove()">Delete</button>
+                      <button type="button" class="ghost-btn" (click)="confirmingDelete.set(false)">Keep</button>
+                    </div>
+                  } @else {
+                    <button type="button" class="link-btn link-btn--danger" (click)="confirmingDelete.set(true)">Delete sheet</button>
+                  }
+                </div>
+              }
+            </div>
+          </section>
+        } @else if (canEditExisting()) {
+          <section class="sheet-card">
+            <div class="sheet-card__body flex flex-col gap-2">
+              <a [routerLink]="['/freelancer-sheets/daily', sheet()?.id, 'edit']" class="primary-btn justify-center">Edit</a>
+              <button type="button" class="ghost-btn justify-center" [disabled]="saving()" (click)="submitExisting()">
+                Submit for approval
+              </button>
+            </div>
+          </section>
+        }
+      </aside>
+    </form>
+  }
+</div>

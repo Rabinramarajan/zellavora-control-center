@@ -24,6 +24,8 @@
     "format": "prettier --write \"apps/**/*.{ts,tsx,html,css,json,md}\"",
     "type-check": "npm run type-check:admin && npm run type-check:backend",
     "db:migrate": "cd apps/backend && npm run db:migrate",
+    "db:migrate:deploy": "cd apps/backend && npm run db:migrate:deploy",
+    "db:migrate:status": "cd apps/backend && npm run db:migrate:status",
     "db:reset": "cd apps/backend && npm run db:reset",
     "db:seed": "cd apps/backend && npm run db:seed",
     "docker:build": "docker build -t zcc:latest .",

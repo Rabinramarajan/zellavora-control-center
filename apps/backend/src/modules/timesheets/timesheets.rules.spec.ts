@@ -1,6 +1,9 @@
 import { TimesheetStatus, TimesheetEntryStatus } from '@prisma/client';
 import {
+  assertCanQueryEmployee,
+  assertCanView,
   assertEntriesEditable,
+  assertNotOwnSheet,
   assertTransition,
   canTransition,
   isEditableStatus,
@@ -10,6 +13,56 @@ import {
 const OWNER = 'user-1';
 
 describe('timesheet rules', () => {
+  describe('assertCanView', () => {
+    it('lets the owner see their own sheet', () => {
+      expect(() =>
+        assertCanView({ userId: OWNER }, { userId: OWNER, canReview: false })
+      ).not.toThrow();
+    });
+
+    it('lets a reviewer see anyone', () => {
+      expect(() =>
+        assertCanView({ userId: OWNER }, { userId: 'manager', canReview: true })
+      ).not.toThrow();
+    });
+
+    it('hides a colleague sheet behind a 404', () => {
+      expect(() => assertCanView({ userId: OWNER }, { userId: 'peer', canReview: false })).toThrow(
+        expect.objectContaining({ status: 404 })
+      );
+    });
+  });
+
+  describe('assertCanQueryEmployee', () => {
+    it('allows an unfiltered or self query', () => {
+      const viewer = { userId: OWNER, canReview: false };
+      expect(() => assertCanQueryEmployee(undefined, viewer)).not.toThrow();
+      expect(() => assertCanQueryEmployee(OWNER, viewer)).not.toThrow();
+    });
+
+    it('refuses a non-reviewer asking about someone else', () => {
+      expect(() => assertCanQueryEmployee('peer', { userId: OWNER, canReview: false })).toThrow(
+        /permission/
+      );
+    });
+
+    it('allows a reviewer to ask about anyone', () => {
+      expect(() =>
+        assertCanQueryEmployee('peer', { userId: OWNER, canReview: true })
+      ).not.toThrow();
+    });
+  });
+
+  describe('assertNotOwnSheet', () => {
+    it('refuses a self review', () => {
+      expect(() => assertNotOwnSheet({ userId: OWNER }, OWNER)).toThrow(/your own timesheet/);
+    });
+
+    it('allows reviewing someone else', () => {
+      expect(() => assertNotOwnSheet({ userId: OWNER }, 'manager')).not.toThrow();
+    });
+  });
+
   describe('assertEntriesEditable', () => {
     it.each([TimesheetStatus.DRAFT, TimesheetStatus.REJECTED])(
       'lets the owner edit a %s sheet',
@@ -58,9 +111,9 @@ describe('timesheet rules', () => {
     it('treats approval as final', () => {
       expect(canTransition(TimesheetStatus.APPROVED, TimesheetStatus.REJECTED)).toBe(false);
       expect(canTransition(TimesheetStatus.APPROVED, TimesheetStatus.SUBMITTED)).toBe(false);
-      expect(() =>
-        assertTransition(TimesheetStatus.APPROVED, TimesheetStatus.SUBMITTED)
-      ).toThrow(/Cannot move a timesheet from approved/);
+      expect(() => assertTransition(TimesheetStatus.APPROVED, TimesheetStatus.SUBMITTED)).toThrow(
+        /Cannot move a timesheet from approved/
+      );
     });
 
     it('will not approve a sheet that was never submitted', () => {

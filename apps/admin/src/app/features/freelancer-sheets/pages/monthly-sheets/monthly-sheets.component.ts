@@ -8,7 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   ColumnDef,
   SmartCellDirective,
@@ -16,7 +16,8 @@ import {
   SmartTableComponent,
   SortState,
 } from '../../../../shared/components/smart-table';
-import { DailySheet, SheetsStore } from '../../sheets.store';
+import { SheetsStore } from '../../sheets.store';
+import { DailySheet, MonthlySheet } from '../../sheets.models';
 import {
   SheetStatus,
   initialsOf,
@@ -24,6 +25,7 @@ import {
   isoMonth,
   paletteFor,
   statusLabel,
+  statusPill,
 } from '../../sheets.presentation';
 
 /** One cell of the month calendar; `day` is 0 for the leading/trailing filler. */
@@ -35,6 +37,8 @@ interface CalendarCell {
   outside: boolean;
   isToday: boolean;
   label: string;
+  /** Set when the day is recorded as leave or a holiday rather than worked. */
+  absence: 'leave' | 'holiday' | null;
 }
 
 interface WeekBar {
@@ -104,7 +108,8 @@ const CALENDAR_LEGEND: { label: string; status: SheetStatus | 'none' }[] = [
 @Component({
   selector: 'app-monthly-sheets',
   standalone: true,
-  imports: [CommonModule, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
+  imports: [CommonModule, RouterLink, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
+  providers: [SheetsStore],
   templateUrl: './monthly-sheets.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './monthly-sheets.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -116,13 +121,58 @@ export class MonthlySheetsComponent implements OnInit {
   public readonly isLoading = this.store.isLoading;
   public readonly error = this.store.error;
 
+  /** True while a generate / submit / delete on the monthly sheet is in flight. */
+  public readonly busy = signal(false);
+  public readonly confirmingDelete = signal(false);
+
+  /** The caller's monthly sheet for the displayed month, if one exists. */
+  public readonly monthlySheet = computed<MonthlySheet | null>(() => {
+    const month = this.month();
+    return (
+      this.store
+        .monthlySheets()
+        .find(
+          (sheet) => sheet.month === month.getMonth() + 1 && sheet.year === month.getFullYear()
+        ) ?? null
+    );
+  });
+
+  public readonly approvedDailyCount = computed(
+    () => this.monthSheets().filter((sheet) => sheet.status === 'approved').length
+  );
+
+  public readonly unsettledDailyCount = computed(
+    () =>
+      this.monthSheets().filter((sheet) => sheet.status === 'draft' || sheet.status === 'submitted')
+        .length
+  );
+
+  /** A draft whose totals no longer match the approved dailies should be refreshed. */
+  public readonly isStale = computed(() => {
+    const sheet = this.monthlySheet();
+    if (!sheet || !(sheet.status === 'draft' || sheet.status === 'rejected')) return false;
+    const approvedIds = new Set(
+      this.monthSheets()
+        .filter((daily) => daily.status === 'approved')
+        .map((daily) => daily.id)
+    );
+    return (
+      approvedIds.size !== sheet.dailySheetIds.length ||
+      sheet.dailySheetIds.some((id) => !approvedIds.has(id))
+    );
+  });
+
+  public readonly monthlyStatusLabel = statusLabel;
+  public readonly monthlyStatusPill = statusPill;
+
   public readonly weekdays = WEEKDAYS;
   public readonly legend = CALENDAR_LEGEND;
   public readonly projectColumns = PROJECT_COLUMNS;
   public readonly projectSort = signal<SortState>({ key: 'totalHours', direction: 'desc' });
   public readonly trackProject = (row: ProjectRow): string => row.name;
 
-  private readonly projectTable = viewChild.required<SmartTableComponent<ProjectRow>>('projectTable');
+  private readonly projectTable =
+    viewChild.required<SmartTableComponent<ProjectRow>>('projectTable');
 
   /** Always the first of the displayed month. */
   public readonly month = signal(startOfMonth(new Date()));
@@ -165,7 +215,12 @@ export class MonthlySheetsComponent implements OnInit {
   });
 
   public readonly workingDays = computed(
-    () => new Set(this.monthSheets().map((sheet) => sheet.sheetDate.slice(0, 10))).size
+    () =>
+      new Set(
+        this.monthSheets()
+          .filter((sheet) => sheet.entryType === 'work' && sheet.hoursWorked > 0)
+          .map((sheet) => sheet.sheetDate.slice(0, 10))
+      ).size
   );
 
   public readonly daysInMonth = computed(() =>
@@ -199,7 +254,10 @@ export class MonthlySheetsComponent implements OnInit {
     const days = this.daysInMonth();
     const today = isoDay(new Date());
 
-    const byDay = new Map<string, { hours: number; status: SheetStatus }>();
+    const byDay = new Map<
+      string,
+      { hours: number; status: SheetStatus; absence: 'leave' | 'holiday' | null }
+    >();
     for (const sheet of this.monthSheets()) {
       const key = sheet.sheetDate.slice(0, 10);
       const existing = byDay.get(key);
@@ -207,6 +265,7 @@ export class MonthlySheetsComponent implements OnInit {
         hours: (existing?.hours ?? 0) + sheet.hoursWorked,
         // A day is only as settled as its least-settled sheet.
         status: existing ? leastSettled(existing.status, sheet.status) : sheet.status,
+        absence: sheet.entryType === 'work' ? (existing?.absence ?? null) : sheet.entryType,
       });
     }
 
@@ -229,6 +288,7 @@ export class MonthlySheetsComponent implements OnInit {
         outside: false,
         isToday: key === today,
         label: date.toLocaleDateString('en-US', { dateStyle: 'medium' }),
+        absence: entry?.absence ?? null,
       });
     }
 
@@ -279,30 +339,30 @@ export class MonthlySheetsComponent implements OnInit {
   public readonly projectRows = computed<ProjectRow[]>(() => {
     const grouped = new Map<string, DailySheet[]>();
     for (const sheet of this.monthSheets()) {
+      if (sheet.entryType !== 'work') continue;
       const name = sheet.projectName ?? 'Unassigned';
       grouped.set(name, [...(grouped.get(name) ?? []), sheet]);
     }
 
-    return [...grouped.entries()]
-      .map(([name, sheets]) => {
-        const totalHours = sumHours(sheets);
-        const billable = round(
-          sheets.reduce((total, sheet) => total + (sheet.billableHours ?? sheet.hoursWorked), 0)
-        );
-        return {
-          name,
-          initials: initialsOf(name),
-          color: paletteFor(name),
-          type: sheets[0].projectType ?? 'General',
-          totalHours,
-          billableHours: billable,
-          nonBillableHours: round(totalHours - billable),
-          approvalPercent: percent(
-            sheets.filter((sheet) => sheet.status === 'approved').length,
-            sheets.length
-          ),
-        };
-      });
+    return [...grouped.entries()].map(([name, sheets]) => {
+      const totalHours = sumHours(sheets);
+      const billable = round(
+        sheets.reduce((total, sheet) => total + (sheet.billableHours ?? sheet.hoursWorked), 0)
+      );
+      return {
+        name,
+        initials: initialsOf(name),
+        color: paletteFor(name),
+        type: sheets.every((sheet) => sheet.isBillable) ? 'Billable' : 'Mixed billing',
+        totalHours,
+        billableHours: billable,
+        nonBillableHours: round(totalHours - billable),
+        approvalPercent: percent(
+          sheets.filter((sheet) => sheet.status === 'approved').length,
+          sheets.length
+        ),
+      };
+    });
   });
 
   public ngOnInit(): void {
@@ -321,9 +381,50 @@ export class MonthlySheetsComponent implements OnInit {
   }
 
   public openProject(name: string): void {
-    void this.router.navigate(['/freelancer-sheets/daily/list'], {
-      queryParams: { project: name, month: isoMonth(this.month()) },
+    void this.router.navigate(['/freelancer-sheets/daily'], {
+      queryParams: { project: name, date: isoDay(this.month()) },
     });
+  }
+
+  public openDay(cell: CalendarCell): void {
+    if (cell.outside) return;
+    void this.router.navigate(['/freelancer-sheets/daily'], { queryParams: { date: cell.key } });
+  }
+
+  /** "New Monthly Sheet": roll this month's approved daily sheets into one. */
+  public generate(): Promise<void> {
+    const month = this.month();
+    return this.runAction(async () => {
+      await this.store.generateMonthlySheet(month.getMonth() + 1, month.getFullYear());
+    });
+  }
+
+  public regenerate(): Promise<void> {
+    const sheet = this.monthlySheet();
+    return sheet
+      ? this.runAction(() => this.store.regenerateMonthlySheet(sheet.id))
+      : Promise.resolve();
+  }
+
+  public submitMonthly(): Promise<void> {
+    const sheet = this.monthlySheet();
+    return sheet
+      ? this.runAction(() => this.store.submitMonthlySheet(sheet.id))
+      : Promise.resolve();
+  }
+
+  public deleteMonthly(): Promise<void> {
+    const sheet = this.monthlySheet();
+    return sheet
+      ? this.runAction(async () => {
+          await this.store.deleteMonthlySheet(sheet.id);
+          this.confirmingDelete.set(false);
+        })
+      : Promise.resolve();
+  }
+
+  public reload(): void {
+    this.load();
   }
 
   public cellClass(cell: CalendarCell): string {
@@ -335,11 +436,33 @@ export class MonthlySheetsComponent implements OnInit {
     return status === 'none' ? 'No entry' : statusLabel(status);
   }
 
+  /** The previous month is loaded too, for the month-over-month comparison. */
   private load(): void {
     const month = this.month();
+    const previous = new Date(month.getFullYear(), month.getMonth() - 1, 1);
     const end = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-    this.store.loadDailySheets({ startDate: isoDay(month), endDate: isoDay(end) });
-    this.store.loadMonthlySheets({ month: month.getMonth() + 1, year: month.getFullYear() });
+    void this.store.loadDailySheets({
+      scope: 'mine',
+      startDate: isoDay(previous),
+      endDate: isoDay(end),
+    });
+    void this.store.loadMonthlySheets({
+      scope: 'mine',
+      month: month.getMonth() + 1,
+      year: month.getFullYear(),
+    });
+  }
+
+  /** The store has already toasted any failure; the page only tracks busy state. */
+  private async runAction(action: () => Promise<unknown>): Promise<void> {
+    this.busy.set(true);
+    try {
+      await action();
+    } catch {
+      // Reported by the store.
+    } finally {
+      this.busy.set(false);
+    }
   }
 }
 
@@ -352,6 +475,7 @@ const fillerCell = (date: Date): CalendarCell => ({
   status: 'none',
   outside: true,
   isToday: false,
+  absence: null,
   label: date.toLocaleDateString('en-US', { dateStyle: 'medium' }),
 });
 

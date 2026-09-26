@@ -1051,6 +1051,15 @@ model DailySheet {
   hourlyRate      Decimal   @map("hourly_rate") @db.Decimal(10, 2)
   totalAmount     Decimal   @map("total_amount") @db.Decimal(12, 2)
 
+  // work | leave | holiday — leave and holiday days carry no hours or amount
+  entryType       String    @default("work") @map("entry_type") @db.VarChar(16)
+
+  // Wall-clock span as "HH:mm"; hours are derived from these when present
+  startTime       String?   @map("start_time") @db.VarChar(5)
+  endTime         String?   @map("end_time") @db.VarChar(5)
+  breakMinutes    Int       @default(0) @map("break_minutes")
+  isBillable      Boolean   @default(true) @map("is_billable")
+
   // Description & Tasks
   description     String?   @map("description") @db.Text
   tasksCompleted  String?   @map("tasks_completed") @db.Text
@@ -1058,6 +1067,7 @@ model DailySheet {
 
   // Status & Approval
   status          String    @default("draft") @map("status") // draft, submitted, approved, rejected
+  submittedAt     DateTime? @map("submitted_at") @db.Timestamptz
   approvedBy      String?   @map("approved_by") @db.Uuid
   approvedAt      DateTime? @map("approved_at") @db.Timestamptz
   rejectionReason String?   @map("rejection_reason") @db.Text
@@ -1077,7 +1087,8 @@ model DailySheet {
   user            User      @relation("DailySheetUser", fields: [userId], references: [id], onDelete: Cascade)
   approver        User?     @relation("DailySheetApprover", fields: [approvedBy], references: [id])
 
-  @@unique([userId, sheetDate, organizationId])
+  // Several entries per day are allowed: one per project or task.
+  @@index([organizationId, sheetDate])
   @@index([organizationId])
   @@index([userId, sheetDate(sort: Desc)])
   @@index([status])

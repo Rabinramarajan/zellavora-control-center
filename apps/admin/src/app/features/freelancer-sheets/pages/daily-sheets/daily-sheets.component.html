@@ -9,15 +9,21 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-3">
       <div class="date-nav">
         <button type="button" class="date-nav__arrow" (click)="shiftDay(-1)" aria-label="Previous day">‹</button>
-        <span class="date-nav__label">
+        <label class="date-nav__label">
           <span aria-hidden="true">📅</span>
-          {{ selectedDateLabel() }}
-        </span>
+          <span class="sr-only">Selected day</span>
+          <input
+            type="date"
+            class="date-nav__input"
+            [value]="selectedDayKey()"
+            (change)="pickDate($any($event.target).value)" />
+        </label>
         <button type="button" class="date-nav__arrow" (click)="shiftDay(1)" aria-label="Next day">›</button>
       </div>
+      <button type="button" class="ghost-btn" (click)="goToday()">Today</button>
 
       <button type="button" class="primary-btn" (click)="createSheet()">
         <span aria-hidden="true">＋</span> New Daily Sheet
@@ -26,8 +32,16 @@
   </header>
 
   @if (error()) {
-    <div class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-      {{ error() }}
+    <div class="notice notice--danger flex flex-wrap items-center justify-between gap-3" role="alert">
+      <span>{{ error() }}</span>
+      <button type="button" class="ghost-btn" (click)="reload()">Retry</button>
+    </div>
+  }
+
+  @if (draftCount() > 0) {
+    <div class="notice notice--info" role="status">
+      {{ draftCount() }} draft {{ draftCount() === 1 ? 'sheet has' : 'sheets have' }} not been submitted yet this month.
+      Only approved sheets count towards your monthly sheet.
     </div>
   }
 
@@ -150,11 +164,29 @@
         </ng-template>
 
         <ng-template smartCell="status" let-row>
-          <span [class]="statusPill(row.status)">{{ row.statusLabel }}</span>
+          <span [class]="statusPill(row.status)" [attr.title]="row.rejectionReason ?? null">{{ row.statusLabel }}</span>
         </ng-template>
 
         <ng-template smartCell="actions" let-row>
-          <button type="button" class="row-action" (click)="editSheet(row.id)" [attr.aria-label]="'Edit entry for ' + row.dateLabel">⋯</button>
+          <div class="flex items-center justify-end gap-1.5">
+            @if (row.status === 'draft' || row.status === 'rejected') {
+              <button
+                type="button"
+                class="ghost-btn"
+                [disabled]="isBusy(row.id)"
+                (click)="submitSheet(row)"
+                [attr.aria-label]="'Submit entry for ' + row.dateLabel">
+                Submit
+              </button>
+            }
+            <button
+              type="button"
+              class="ghost-btn"
+              (click)="openSheet(row)"
+              [attr.aria-label]="(row.editable ? 'Edit' : 'View') + ' entry for ' + row.dateLabel">
+              {{ row.editable ? 'Edit' : 'View' }}
+            </button>
+          </div>
         </ng-template>
 
         <ng-template smartEmpty>

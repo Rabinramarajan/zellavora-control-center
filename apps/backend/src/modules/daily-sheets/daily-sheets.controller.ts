@@ -7,82 +7,81 @@ import {
   ApproveDailySheetSchema,
   DailySheetQuerySchema,
 } from './daily-sheets.dto';
-import { logger } from '../../infrastructure/logger';
+import { requestContext, resolveViewer } from './sheets.shared';
 
 export class DailySheetsController {
-  private service = new DailySheetsService();
+  private readonly service = new DailySheetsService();
 
-  async create(req: AuthRequest, res: Response) {
-    try {
-      const dto = CreateDailySheetSchema.parse(req.body);
-      const sheet = await this.service.create(dto, req.tenantId!, req.userId!);
-      res.status(201).json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Create daily sheet failed', error);
-      throw error;
-    }
+  public async create(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = CreateDailySheetSchema.parse(req.body);
+    const sheet = await this.service.create(dto, organizationId, await resolveViewer(req));
+    res.status(201).json({ success: true, data: sheet });
   }
 
-  async list(req: AuthRequest, res: Response) {
-    try {
-      const dto = DailySheetQuerySchema.parse(req.query);
-      const sheets = await this.service.list(req.tenantId!, dto);
-      res.json({ success: true, data: sheets });
-    } catch (error) {
-      logger.error('List daily sheets failed', error);
-      throw error;
-    }
+  public async list(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = DailySheetQuerySchema.parse(req.query);
+    const sheets = await this.service.list(organizationId, dto, await resolveViewer(req));
+    res.json({ success: true, data: sheets });
   }
 
-  async getById(req: AuthRequest, res: Response) {
-    try {
-      const sheet = await this.service.getById(req.params.id, req.tenantId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Get daily sheet failed', error);
-      throw error;
-    }
+  public async projects(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    res.json({ success: true, data: await this.service.projectOptions(organizationId) });
   }
 
-  async update(req: AuthRequest, res: Response) {
-    try {
-      const dto = UpdateDailySheetSchema.parse(req.body);
-      const sheet = await this.service.update(req.params.id, dto, req.tenantId!, req.userId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Update daily sheet failed', error);
-      throw error;
-    }
+  public async getById(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const sheet = await this.service.getById(
+      req.params.id,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
   }
 
-  async submit(req: AuthRequest, res: Response) {
-    try {
-      const sheet = await this.service.submitForApproval(req.params.id, req.tenantId!, req.userId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Submit daily sheet failed', error);
-      throw error;
-    }
+  public async update(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = UpdateDailySheetSchema.parse(req.body);
+    const sheet = await this.service.update(
+      req.params.id,
+      dto,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
   }
 
-  async approve(req: AuthRequest, res: Response) {
-    try {
-      const dto = ApproveDailySheetSchema.parse(req.body);
-      const sheet = await this.service.approve(req.params.id, dto, req.tenantId!, req.userId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Approve daily sheet failed', error);
-      throw error;
-    }
+  public async submit(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const sheet = await this.service.submitForApproval(
+      req.params.id,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
   }
 
-  async delete(req: AuthRequest, res: Response) {
-    try {
-      const result = await this.service.delete(req.params.id, req.tenantId!);
-      res.json({ success: true, data: result });
-    } catch (error) {
-      logger.error('Delete daily sheet failed', error);
-      throw error;
-    }
+  public async approve(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = ApproveDailySheetSchema.parse(req.body);
+    const sheet = await this.service.approve(
+      req.params.id,
+      dto,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
+  }
+
+  public async delete(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const result = await this.service.delete(
+      req.params.id,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: result });
   }
 }

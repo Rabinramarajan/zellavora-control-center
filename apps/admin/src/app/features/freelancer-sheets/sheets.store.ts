@@ -1,319 +1,221 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
-import { ApiIntegrationService } from '../../core/services/api-integration.service';
-
-export interface DailySheet {
-  id: string;
-  userId: string;
-  projectId?: string;
-  sheetDate: string;
-  hoursWorked: number;
-  hourlyRate: number;
-  totalAmount: number;
-  description?: string;
-  tasksCompleted?: string;
-  notes?: string;
-  status: 'draft' | 'submitted' | 'approved' | 'rejected';
-  createdAt: string;
-  updatedAt: string;
-  lineItems?: DailySheetLineItem[];
-  /** Presentation fields the API sends alongside the sheet, when known. */
-  projectName?: string;
-  projectType?: string;
-  taskName?: string;
-  startTime?: string;
-  endTime?: string;
-  breakMinutes?: number;
-  billableHours?: number;
-}
-
-export interface DailySheetLineItem {
-  id: string;
-  taskName: string;
-  description?: string;
-  hours: number;
-  rate?: number;
-  amount: number;
-}
-
-export interface MonthlySheet {
-  id: string;
-  userId: string;
-  projectId?: string;
-  month: number;
-  year: number;
-  totalHours: number;
-  totalAmount: number;
-  averageHourlyRate: number;
-  workingDays: number;
-  status: 'draft' | 'submitted' | 'approved' | 'paid' | 'rejected';
-  createdAt: string;
-  updatedAt: string;
-  billableHours?: number;
-  approvedSheets?: number;
-  totalSheets?: number;
-}
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { ErrorBus } from '../../core/error/error-bus';
+import { SheetsApi } from './sheets.api';
+import {
+  DailySheet,
+  DailySheetInput,
+  DailySheetQuery,
+  MonthlySheet,
+  MonthlySheetQuery,
+  SheetRequestError,
+} from './sheets.models';
 
 /**
- * List endpoints answer with { success, data: { data, total, page, pageSize } }, so
- * the rows sit one level deeper than the envelope. A bare array in `data` is still
- * accepted for endpoints that return one.
+ * Page state for the daily, monthly and approval pages.
+ *
+ * Mutations resolve with the saved sheet or reject with a `SheetRequestError`
+ * so the calling page can close a form or map field errors; the store also
+ * raises the toast, so pages do not repeat it.
+ *
+ * Provided per page rather than in root: the approval queue lists the team
+ * while the daily page lists only the caller, and neither should briefly
+ * render the other's rows.
  */
-const unwrapList = <T>(response: any): T[] => {
-  if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response?.data?.data)) return response.data.data;
-  return [];
-};
-
-const unwrapTotal = (response: any): number =>
-  response?.data?.total ?? response?.total ?? unwrapList(response).length;
-
-interface SheetsState {
-  dailySheets: DailySheet[];
-  monthlySheets: MonthlySheet[];
-  selectedDailySheet: DailySheet | null;
-  selectedMonthlySheet: MonthlySheet | null;
-  isLoading: boolean;
-  error: string | null;
-  totalDailySheets: number;
-  totalMonthlySheets: number;
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class SheetsStore {
-  private api = inject(ApiIntegrationService);
+  private readonly api = inject(SheetsApi);
+  private readonly bus = inject(ErrorBus);
 
-  private state = signal<SheetsState>({
-    dailySheets: [],
-    monthlySheets: [],
-    selectedDailySheet: null,
-    selectedMonthlySheet: null,
-    isLoading: false,
-    error: null,
-    totalDailySheets: 0,
-    totalMonthlySheets: 0,
-  });
+  private readonly daily = signal<readonly DailySheet[]>([]);
+  private readonly monthly = signal<readonly MonthlySheet[]>([]);
+  private readonly dailyLoadingState = signal(false);
+  private readonly monthlyLoadingState = signal(false);
+  private readonly errorState = signal<string | null>(null);
 
-  // Signals
-  dailySheets = computed(() => this.state().dailySheets);
-  monthlySheets = computed(() => this.state().monthlySheets);
-  selectedDailySheet = computed(() => this.state().selectedDailySheet);
-  selectedMonthlySheet = computed(() => this.state().selectedMonthlySheet);
-  isLoading = computed(() => this.state().isLoading);
-  error = computed(() => this.state().error);
+  /** Only the latest load may write, so a slow earlier response cannot win. */
+  private dailyRequest = 0;
+  private monthlyRequest = 0;
 
-  // Daily Sheets Methods
-  loadDailySheets(filters?: Record<string, any>) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.getDailySheets(filters).subscribe({
-      next: (response: any) => {
-        this.state.update(s => ({
-          ...s,
-          dailySheets: unwrapList<DailySheet>(response),
-          totalDailySheets: unwrapTotal(response),
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to load daily sheets',
-          isLoading: false,
-        }));
-      },
-    });
+  public readonly dailySheets = this.daily.asReadonly();
+  public readonly monthlySheets = this.monthly.asReadonly();
+  public readonly isDailyLoading = this.dailyLoadingState.asReadonly();
+  public readonly isMonthlyLoading = this.monthlyLoadingState.asReadonly();
+  public readonly isLoading = computed(
+    () => this.dailyLoadingState() || this.monthlyLoadingState()
+  );
+  public readonly error = this.errorState.asReadonly();
+
+  public async loadDailySheets(query: DailySheetQuery): Promise<void> {
+    const request = ++this.dailyRequest;
+    this.dailyLoadingState.set(true);
+    this.errorState.set(null);
+    try {
+      const page = await this.api.listDaily({ pageSize: 500, ...query });
+      if (request === this.dailyRequest) this.daily.set(page.data);
+    } catch (error) {
+      if (request === this.dailyRequest) {
+        this.errorState.set(`Could not load daily sheets: ${(error as SheetRequestError).message}`);
+      }
+    } finally {
+      if (request === this.dailyRequest) this.dailyLoadingState.set(false);
+    }
   }
 
-  createDailySheet(data: any) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.createDailySheet(data).subscribe({
-      next: (response: any) => {
-        const newSheet = response.data;
-        this.state.update(s => ({
-          ...s,
-          dailySheets: [newSheet, ...s.dailySheets],
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to create daily sheet',
-          isLoading: false,
-        }));
-      },
-    });
+  public async loadMonthlySheets(query: MonthlySheetQuery): Promise<void> {
+    const request = ++this.monthlyRequest;
+    this.monthlyLoadingState.set(true);
+    this.errorState.set(null);
+    try {
+      const page = await this.api.listMonthly(query);
+      if (request === this.monthlyRequest) this.monthly.set(page.data);
+    } catch (error) {
+      if (request === this.monthlyRequest) {
+        this.errorState.set(
+          `Could not load monthly sheets: ${(error as SheetRequestError).message}`
+        );
+      }
+    } finally {
+      if (request === this.monthlyRequest) this.monthlyLoadingState.set(false);
+    }
   }
 
-  updateDailySheet(id: string, data: any) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.updateDailySheet(id, data).subscribe({
-      next: (response: any) => {
-        const updated = response.data;
-        this.state.update(s => ({
-          ...s,
-          dailySheets: s.dailySheets.map(sheet => sheet.id === id ? updated : sheet),
-          selectedDailySheet: s.selectedDailySheet?.id === id ? updated : s.selectedDailySheet,
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to update daily sheet',
-          isLoading: false,
-        }));
-      },
-    });
+  public clearError(): void {
+    this.errorState.set(null);
   }
 
-  submitDailySheet(id: string) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.submitDailySheet(id).subscribe({
-      next: (response: any) => {
-        const updated = response.data;
-        this.state.update(s => ({
-          ...s,
-          dailySheets: s.dailySheets.map(sheet => sheet.id === id ? updated : sheet),
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to submit daily sheet',
-          isLoading: false,
-        }));
-      },
-    });
+  // ---- daily ------------------------------------------------------------
+
+  public createDailySheet(input: DailySheetInput): Promise<DailySheet> {
+    return this.mutate(
+      () => this.api.createDaily(input),
+      (sheet) => this.upsertDaily(sheet),
+      'Daily sheet saved'
+    );
   }
 
-  approveDailySheet(id: string, approved: boolean, rejectionReason?: string) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.approveDailySheet(id, { approved, rejectionReason }).subscribe({
-      next: (response: any) => {
-        const updated = response.data;
-        this.state.update(s => ({
-          ...s,
-          dailySheets: s.dailySheets.map(sheet => sheet.id === id ? updated : sheet),
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to approve daily sheet',
-          isLoading: false,
-        }));
-      },
-    });
+  public updateDailySheet(id: string, input: Partial<DailySheetInput>): Promise<DailySheet> {
+    return this.mutate(
+      () => this.api.updateDaily(id, input),
+      (sheet) => this.upsertDaily(sheet),
+      'Daily sheet updated'
+    );
   }
 
-  deleteDailySheet(id: string) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.deleteDailySheet(id).subscribe({
-      next: () => {
-        this.state.update(s => ({
-          ...s,
-          dailySheets: s.dailySheets.filter(sheet => sheet.id !== id),
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to delete daily sheet',
-          isLoading: false,
-        }));
-      },
-    });
+  public submitDailySheet(id: string): Promise<DailySheet> {
+    return this.mutate(
+      () => this.api.submitDaily(id),
+      (sheet) => this.upsertDaily(sheet),
+      'Submitted for approval'
+    );
   }
 
-  // Monthly Sheets Methods
-  loadMonthlySheets(filters?: Record<string, any>) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.getMonthlySheets(filters).subscribe({
-      next: (response: any) => {
-        this.state.update(s => ({
-          ...s,
-          monthlySheets: unwrapList<MonthlySheet>(response),
-          totalMonthlySheets: unwrapTotal(response),
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to load monthly sheets',
-          isLoading: false,
-        }));
-      },
-    });
+  public reviewDailySheet(
+    id: string,
+    approved: boolean,
+    rejectionReason?: string
+  ): Promise<DailySheet> {
+    return this.mutate(
+      () => this.api.reviewDaily(id, approved, rejectionReason),
+      (sheet) => this.upsertDaily(sheet),
+      approved ? 'Sheet approved' : 'Sheet sent back to the freelancer'
+    );
   }
 
-  createMonthlySheet(data: any) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.createMonthlySheet(data).subscribe({
-      next: (response: any) => {
-        const newSheet = response.data;
-        this.state.update(s => ({
-          ...s,
-          monthlySheets: [newSheet, ...s.monthlySheets],
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to create monthly sheet',
-          isLoading: false,
-        }));
-      },
-    });
+  public deleteDailySheet(id: string): Promise<{ id: string }> {
+    return this.mutate(
+      () => this.api.deleteDaily(id),
+      () => this.daily.update((list) => list.filter((sheet) => sheet.id !== id)),
+      'Daily sheet deleted'
+    );
   }
 
-  approveMonthlySheet(id: string, approved: boolean, rejectionReason?: string) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.approveMonthlySheet(id, { approved, rejectionReason }).subscribe({
-      next: (response: any) => {
-        const updated = response.data;
-        this.state.update(s => ({
-          ...s,
-          monthlySheets: s.monthlySheets.map(sheet => sheet.id === id ? updated : sheet),
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to approve monthly sheet',
-          isLoading: false,
-        }));
-      },
-    });
+  // ---- monthly ----------------------------------------------------------
+
+  public generateMonthlySheet(month: number, year: number): Promise<MonthlySheet> {
+    return this.mutate(
+      () => this.api.generateMonthly(month, year),
+      (sheet) => this.upsertMonthly(sheet),
+      'Monthly sheet created'
+    );
   }
 
-  markMonthlySheetAsPaid(id: string) {
-    this.state.update(s => ({ ...s, isLoading: true, error: null }));
-    this.api.markMonthlySheetAsPaid(id).subscribe({
-      next: (response: any) => {
-        const updated = response.data;
-        this.state.update(s => ({
-          ...s,
-          monthlySheets: s.monthlySheets.map(sheet => sheet.id === id ? updated : sheet),
-          isLoading: false,
-        }));
-      },
-      error: (err) => {
-        this.state.update(s => ({
-          ...s,
-          error: err.message || 'Failed to mark sheet as paid',
-          isLoading: false,
-        }));
-      },
-    });
+  public regenerateMonthlySheet(id: string): Promise<MonthlySheet> {
+    return this.mutate(
+      () => this.api.regenerateMonthly(id),
+      (sheet) => this.upsertMonthly(sheet),
+      'Monthly sheet refreshed from approved daily sheets'
+    );
   }
 
-  clearError() {
-    this.state.update(s => ({ ...s, error: null }));
+  public submitMonthlySheet(id: string): Promise<MonthlySheet> {
+    return this.mutate(
+      () => this.api.submitMonthly(id),
+      (sheet) => this.upsertMonthly(sheet),
+      'Monthly sheet submitted for approval'
+    );
+  }
+
+  public reviewMonthlySheet(
+    id: string,
+    approved: boolean,
+    rejectionReason?: string
+  ): Promise<MonthlySheet> {
+    return this.mutate(
+      () => this.api.reviewMonthly(id, approved, rejectionReason),
+      (sheet) => this.upsertMonthly(sheet),
+      approved ? 'Monthly sheet approved' : 'Monthly sheet sent back'
+    );
+  }
+
+  public markMonthlySheetAsPaid(id: string): Promise<MonthlySheet> {
+    return this.mutate(
+      () => this.api.markMonthlyPaid(id),
+      (sheet) => this.upsertMonthly(sheet),
+      'Marked as paid'
+    );
+  }
+
+  public deleteMonthlySheet(id: string): Promise<{ id: string }> {
+    return this.mutate(
+      () => this.api.deleteMonthly(id),
+      () => this.monthly.update((list) => list.filter((sheet) => sheet.id !== id)),
+      'Monthly sheet deleted'
+    );
+  }
+
+  private async mutate<T>(
+    call: () => Promise<T>,
+    apply: (result: T) => void,
+    successMessage: string
+  ): Promise<T> {
+    try {
+      const result = await call();
+      apply(result);
+      this.bus.push({ kind: 'info', message: successMessage, ttl: 3000 });
+      return result;
+    } catch (error) {
+      const failure = error as SheetRequestError;
+      // 0, 403 and 5xx are already toasted by the global error interceptor.
+      if (failure.status >= 400 && failure.status < 500 && failure.status !== 403) {
+        this.bus.push({ kind: 'error', message: failure.message });
+      }
+      throw failure;
+    }
+  }
+
+  private upsertDaily(sheet: DailySheet): void {
+    this.daily.update((list) =>
+      list.some((item) => item.id === sheet.id)
+        ? list.map((item) => (item.id === sheet.id ? sheet : item))
+        : [sheet, ...list]
+    );
+  }
+
+  private upsertMonthly(sheet: MonthlySheet): void {
+    this.monthly.update((list) =>
+      list.some((item) => item.id === sheet.id)
+        ? list.map((item) => (item.id === sheet.id ? sheet : item))
+        : [sheet, ...list]
+    );
   }
 }

@@ -37,6 +37,51 @@ export const assertEntriesEditable = (
   }
 };
 
+/** Permission that lets a user see and decide on other people's timesheets. */
+export const REVIEW_PERMISSION = 'timesheet:approve';
+
+/** Who is asking, and whether they may look beyond their own sheets. */
+export interface TimesheetViewer {
+  userId: string;
+  canReview: boolean;
+}
+
+/**
+ * Owners always see their own sheet; anyone else needs the review
+ * permission. The error is a 404 rather than a 403 so a caller cannot
+ * confirm that a colleague's sheet exists by probing ids.
+ */
+export const assertCanView = (sheet: { userId: string }, viewer: TimesheetViewer): void => {
+  if (sheet.userId !== viewer.userId && !viewer.canReview) {
+    throw new AppError('Timesheet not found', 404, 'TIMESHEET_NOT_FOUND');
+  }
+};
+
+/** Reading anyone but yourself is a reviewer-only query. */
+export const assertCanQueryEmployee = (
+  employeeId: string | undefined,
+  viewer: TimesheetViewer
+): void => {
+  if (employeeId && employeeId !== viewer.userId && !viewer.canReview) {
+    throw new AppError(
+      "You do not have permission to view other employees' timesheets",
+      403,
+      'FORBIDDEN_PERMISSION'
+    );
+  }
+};
+
+/** Separation of duties: nobody signs off their own hours. */
+export const assertNotOwnSheet = (sheet: { userId: string }, reviewerUserId: string): void => {
+  if (sheet.userId === reviewerUserId) {
+    throw new AppError(
+      'You cannot approve or reject your own timesheet',
+      403,
+      'SELF_REVIEW_FORBIDDEN'
+    );
+  }
+};
+
 /** Allowed status moves. Anything absent here is rejected. */
 const TRANSITIONS: Record<TimesheetStatus, TimesheetStatus[]> = {
   [TimesheetStatus.DRAFT]: [TimesheetStatus.SUBMITTED],

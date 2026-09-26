@@ -121,7 +121,10 @@ router.get(
  *         description: The yearly rollup
  */
 // Declared before `/:id` so "summary" is not matched as an id.
-router.get('/summary', handle((req, res) => controller.summary(req, res)));
+router.get(
+  '/summary',
+  handle((req, res) => controller.summary(req, res))
+);
 
 /**
  * @swagger
@@ -144,7 +147,10 @@ router.get('/summary', handle((req, res) => controller.summary(req, res)));
  *       404:
  *         description: Not found in this organization
  */
-router.get('/:id', handle((req, res) => controller.getById(req, res)));
+router.get(
+  '/:id',
+  handle((req, res) => controller.getById(req, res))
+);
 
 /**
  * @swagger
@@ -168,7 +174,10 @@ router.get('/:id', handle((req, res) => controller.getById(req, res)));
  *       200:
  *         description: The exported timesheet
  */
-router.get('/:id/export', handle((req, res) => controller.export(req, res)));
+router.get(
+  '/:id/export',
+  handle((req, res) => controller.export(req, res))
+);
 
 /**
  * @swagger
@@ -215,7 +224,10 @@ router.get('/:id/export', handle((req, res) => controller.export(req, res)));
  *       409:
  *         description: The timesheet is locked for editing
  */
-router.post('/:id/entries/bulk', handle((req, res) => controller.bulkUpsertEntries(req, res)));
+router.post(
+  '/:id/entries/bulk',
+  handle((req, res) => controller.bulkUpsertEntries(req, res))
+);
 
 /**
  * @swagger
@@ -256,7 +268,10 @@ router.post('/:id/entries/bulk', handle((req, res) => controller.bulkUpsertEntri
  *       403:
  *         description: Only the owning employee may edit entries
  */
-router.patch('/:id/entries/:entryId', handle((req, res) => controller.updateEntry(req, res)));
+router.patch(
+  '/:id/entries/:entryId',
+  handle((req, res) => controller.updateEntry(req, res))
+);
 
 /**
  * @swagger
@@ -280,7 +295,10 @@ router.patch('/:id/entries/:entryId', handle((req, res) => controller.updateEntr
  *       409:
  *         description: Not in a submittable state
  */
-router.post('/:id/submit', handle((req, res) => controller.submit(req, res)));
+router.post(
+  '/:id/submit',
+  handle((req, res) => controller.submit(req, res))
+);
 
 /**
  * @swagger

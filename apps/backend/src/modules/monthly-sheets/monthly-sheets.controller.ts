@@ -6,95 +6,98 @@ import {
   UpdateMonthlySheetSchema,
   ApproveMonthlySheetSchema,
   MarkAsPaidSchema,
+  MonthlyDocumentQuerySchema,
   MonthlySheetQuerySchema,
 } from './monthly-sheets.dto';
-import { logger } from '../../infrastructure/logger';
+import { requestContext, resolveViewer } from '../daily-sheets/sheets.shared';
 
 export class MonthlySheetsController {
-  private service = new MonthlySheetsService();
+  private readonly service = new MonthlySheetsService();
 
-  async create(req: AuthRequest, res: Response) {
-    try {
-      const dto = CreateMonthlySheetSchema.parse(req.body);
-      const sheet = await this.service.create(dto, req.tenantId!, req.userId!);
-      res.status(201).json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Create monthly sheet failed', error);
-      throw error;
-    }
+  public async create(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = CreateMonthlySheetSchema.parse(req.body);
+    const sheet = await this.service.create(dto, organizationId, await resolveViewer(req));
+    res.status(201).json({ success: true, data: sheet });
   }
 
-  async list(req: AuthRequest, res: Response) {
-    try {
-      const dto = MonthlySheetQuerySchema.parse(req.query);
-      const sheets = await this.service.list(req.tenantId!, dto);
-      res.json({ success: true, data: sheets });
-    } catch (error) {
-      logger.error('List monthly sheets failed', error);
-      throw error;
-    }
+  public async list(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = MonthlySheetQuerySchema.parse(req.query);
+    const sheets = await this.service.list(organizationId, dto, await resolveViewer(req));
+    res.json({ success: true, data: sheets });
   }
 
-  async getById(req: AuthRequest, res: Response) {
-    try {
-      const sheet = await this.service.getById(req.params.id, req.tenantId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Get monthly sheet failed', error);
-      throw error;
-    }
+  public async document(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = MonthlyDocumentQuerySchema.parse(req.query);
+    const document = await this.service.document(dto, organizationId, await resolveViewer(req));
+    res.json({ success: true, data: document });
   }
 
-  async update(req: AuthRequest, res: Response) {
-    try {
-      const dto = UpdateMonthlySheetSchema.parse(req.body);
-      const sheet = await this.service.update(req.params.id, dto, req.tenantId!, req.userId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Update monthly sheet failed', error);
-      throw error;
-    }
+  public async getById(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const sheet = await this.service.getById(
+      req.params.id,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
   }
 
-  async submit(req: AuthRequest, res: Response) {
-    try {
-      const sheet = await this.service.submitForApproval(req.params.id, req.tenantId!, req.userId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Submit monthly sheet failed', error);
-      throw error;
-    }
+  /** PUT regenerates the totals from the month's approved daily sheets. */
+  public async update(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    UpdateMonthlySheetSchema.parse(req.body ?? {});
+    const sheet = await this.service.regenerate(
+      req.params.id,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
   }
 
-  async approve(req: AuthRequest, res: Response) {
-    try {
-      const dto = ApproveMonthlySheetSchema.parse(req.body);
-      const sheet = await this.service.approve(req.params.id, dto, req.tenantId!, req.userId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Approve monthly sheet failed', error);
-      throw error;
-    }
+  public async submit(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const sheet = await this.service.submitForApproval(
+      req.params.id,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
   }
 
-  async markAsPaid(req: AuthRequest, res: Response) {
-    try {
-      const dto = MarkAsPaidSchema.parse(req.body);
-      const sheet = await this.service.markAsPaid(req.params.id, dto, req.tenantId!, req.userId!);
-      res.json({ success: true, data: sheet });
-    } catch (error) {
-      logger.error('Mark monthly sheet as paid failed', error);
-      throw error;
-    }
+  public async approve(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = ApproveMonthlySheetSchema.parse(req.body);
+    const sheet = await this.service.approve(
+      req.params.id,
+      dto,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
   }
 
-  async delete(req: AuthRequest, res: Response) {
-    try {
-      const result = await this.service.delete(req.params.id, req.tenantId!);
-      res.json({ success: true, data: result });
-    } catch (error) {
-      logger.error('Delete monthly sheet failed', error);
-      throw error;
-    }
+  public async markAsPaid(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = MarkAsPaidSchema.parse(req.body ?? {});
+    const sheet = await this.service.markAsPaid(
+      req.params.id,
+      dto,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
+  }
+
+  public async delete(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const result = await this.service.delete(
+      req.params.id,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: result });
   }
 }

@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   ColumnDef,
   FilterState,
@@ -16,7 +16,9 @@ import {
   SmartTableComponent,
   SortState,
 } from '../../../../shared/components/smart-table';
-import { DailySheet, SheetsStore } from '../../sheets.store';
+import { SheetsStore } from '../../sheets.store';
+import { DailySheet } from '../../sheets.models';
+import { isDayKey, parseDayKey } from '../../sheets.time';
 import {
   SheetStatus,
   initialsOf,
@@ -43,6 +45,9 @@ interface EntryRow {
   hours: number;
   status: SheetStatus;
   statusLabel: string;
+  /** Draft or rejected: the owner can still change it. */
+  editable: boolean;
+  rejectionReason: string | null;
 }
 
 interface Slice {
@@ -96,6 +101,7 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
   selector: 'app-daily-sheets',
   standalone: true,
   imports: [CommonModule, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
+  providers: [SheetsStore],
   templateUrl: './daily-sheets.component.html',
   styleUrls: ['../../styles/sheets-theme.css', './daily-sheets.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -103,11 +109,16 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
 export class DailySheetsComponent implements OnInit {
   private readonly store = inject(SheetsStore);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   public readonly isLoading = this.store.isLoading;
   public readonly error = this.store.error;
 
   public readonly selectedDate = signal(new Date());
+  public readonly selectedDayKey = computed(() => isoDay(this.selectedDate()));
+
+  /** Ids with a submit in flight, so their buttons stay disabled. */
+  private readonly busy = signal<ReadonlySet<string>>(new Set());
 
   public readonly selectedDateLabel = computed(() =>
     this.selectedDate().toLocaleDateString('en-US', {
@@ -128,8 +139,17 @@ export class DailySheetsComponent implements OnInit {
   public readonly sort = signal<SortState>({ key: 'date', direction: 'desc' });
   public readonly pageSize = signal(PAGE_SIZE_OPTIONS[0]);
 
-  public readonly rows = computed<EntryRow[]>(() =>
-    this.store.dailySheets().map((sheet) => this.toRow(sheet))
+  /** The table lists the selected month; the extra day loaded is for KPIs only. */
+  public readonly rows = computed<EntryRow[]>(() => {
+    const month = isoMonth(this.selectedDate());
+    return this.store
+      .dailySheets()
+      .filter((sheet) => sheet.sheetDate.startsWith(month))
+      .map((sheet) => this.toRow(sheet));
+  });
+
+  public readonly draftCount = computed(
+    () => this.rows().filter((row) => row.status === 'draft').length
   );
 
   public readonly projectOptions = computed(() => {
@@ -153,7 +173,7 @@ export class DailySheetsComponent implements OnInit {
   });
 
   public readonly pendingCount = computed(
-    () => this.store.dailySheets().filter((sheet) => sheet.status === 'submitted').length
+    () => this.rows().filter((row) => row.status === 'submitted').length
   );
 
   private readonly monthSheets = computed(() => {
@@ -196,7 +216,7 @@ export class DailySheetsComponent implements OnInit {
     if (!total) return [];
 
     const byProject = new Map<string, number>();
-    for (const sheet of this.sheetsOn(this.selectedDate())) {
+    for (const sheet of this.sheetsOn(this.selectedDate()).filter((s) => s.entryType === 'work')) {
       const name = projectNameOf(sheet);
       byProject.set(name, (byProject.get(name) ?? 0) + sheet.hoursWorked);
     }
@@ -219,8 +239,17 @@ export class DailySheetsComponent implements OnInit {
       });
   });
 
+  /**
+   * `?date=` and `?project=` seed the page, so a link from the monthly view
+   * or a return from the form lands on the right day and filter.
+   */
   public ngOnInit(): void {
-    this.load();
+    const params = this.route.snapshot.queryParamMap;
+    const date = params.get('date');
+    if (isDayKey(date)) this.selectedDate.set(parseDayKey(date));
+    const project = params.get('project');
+    if (project) this.filters.update((filters) => ({ ...filters, project }));
+    void this.load();
   }
 
   // ---- interactions -----------------------------------------------------
@@ -228,8 +257,15 @@ export class DailySheetsComponent implements OnInit {
   public shiftDay(days: number): void {
     const next = new Date(this.selectedDate());
     next.setDate(next.getDate() + days);
-    this.selectedDate.set(next);
-    this.load();
+    this.selectDate(next);
+  }
+
+  public goToday(): void {
+    this.selectDate(new Date());
+  }
+
+  public pickDate(value: string): void {
+    if (isDayKey(value)) this.selectDate(parseDayKey(value));
   }
 
   public setFilter(key: 'project' | 'status', value: string): void {
@@ -237,45 +273,99 @@ export class DailySheetsComponent implements OnInit {
   }
 
   public createSheet(): void {
-    void this.router.navigate(['/freelancer-sheets/daily/new']);
+    void this.router.navigate(['/freelancer-sheets/daily/new'], {
+      queryParams: { date: isoDay(this.selectedDate()) },
+    });
   }
 
-  public editSheet(id: string): void {
-    void this.router.navigate(['/freelancer-sheets/daily', id, 'edit']);
+  public openSheet(row: EntryRow): void {
+    void this.router.navigate(
+      row.editable
+        ? ['/freelancer-sheets/daily', row.id, 'edit']
+        : ['/freelancer-sheets/daily', row.id]
+    );
+  }
+
+  public async submitSheet(row: EntryRow): Promise<void> {
+    this.busy.update((ids) => new Set(ids).add(row.id));
+    try {
+      await this.store.submitDailySheet(row.id);
+    } catch {
+      // The store has already told the user why.
+    } finally {
+      this.busy.update((ids) => {
+        const next = new Set(ids);
+        next.delete(row.id);
+        return next;
+      });
+    }
+  }
+
+  public isBusy(id: string): boolean {
+    return this.busy().has(id);
+  }
+
+  public reload(): void {
+    void this.load();
   }
 
   public readonly statusPill = statusPill;
 
-  private load(): void {
+  private selectDate(date: Date): void {
+    const monthChanged = isoMonth(date) !== isoMonth(this.selectedDate());
+    this.selectedDate.set(date);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { date: isoDay(date) },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    if (monthChanged) void this.load();
+  }
+
+  /**
+   * The whole selected month plus the day before it, so "from yesterday"
+   * still has a comparison on the 1st.
+   */
+  private load(): Promise<void> {
     const date = this.selectedDate();
-    const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-    this.store.loadDailySheets({ startDate: isoDay(monthStart), endDate: isoDay(date) });
+    const start = new Date(date.getFullYear(), date.getMonth(), 0);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return this.store.loadDailySheets({
+      scope: 'mine',
+      startDate: isoDay(start),
+      endDate: isoDay(end),
+    });
   }
 
   private toRow(sheet: DailySheet): EntryRow {
     const project = projectNameOf(sheet);
-    const breakMinutes = sheet.breakMinutes ?? 0;
+    const absence =
+      sheet.entryType === 'leave' ? 'Leave' : sheet.entryType === 'holiday' ? 'Holiday' : null;
+    const task = absence ?? sheet.taskName ?? sheet.description ?? 'Untitled task';
 
     return {
       id: sheet.id,
       date: sheet.sheetDate,
-      dateLabel: new Date(sheet.sheetDate).toLocaleDateString('en-US', {
+      dateLabel: parseDayKey(sheet.sheetDate).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
       }),
       project,
-      projectType: sheet.projectType ?? 'General',
+      projectType: absence ? 'Day off' : sheet.isBillable ? 'Billable' : 'Non-billable',
       projectColor: paletteFor(project),
       projectInitials: initialsOf(project),
-      task: sheet.taskName ?? sheet.tasksCompleted ?? 'Untitled task',
-      description: sheet.description ?? '',
+      task,
+      description: (absence || sheet.taskName) && sheet.description ? sheet.description : '',
       start: sheet.startTime ?? '—',
       end: sheet.endTime ?? '—',
-      breakLabel: breakMinutes ? `${breakMinutes}m` : '0m',
+      breakLabel: sheet.breakMinutes ? `${sheet.breakMinutes}m` : '—',
       hours: round(sheet.hoursWorked),
       status: sheet.status,
       statusLabel: statusLabel(sheet.status),
+      editable: sheet.status === 'draft' || sheet.status === 'rejected',
+      rejectionReason: sheet.rejectionReason,
     };
   }
 }

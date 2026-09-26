@@ -49,10 +49,7 @@ export class TimesheetsRepository extends BaseRepository {
     });
   }
 
-  async create(
-    data: Prisma.TimesheetUncheckedCreateInput,
-    tx?: TxClient
-  ): Promise<{ id: string }> {
+  async create(data: Prisma.TimesheetUncheckedCreateInput, tx?: TxClient): Promise<{ id: string }> {
     return this.getDb(tx).timesheet.create({ data, select: { id: true } });
   }
 

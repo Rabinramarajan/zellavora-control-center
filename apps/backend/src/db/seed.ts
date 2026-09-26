@@ -8,20 +8,20 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...\n');
 
-    // 1. Create Default Tenant
-    console.log('📦 Creating default organization...');
-    const tenant = await prisma.organization.upsert({
-      where: { clientCode: 'zellavora-inc' },
-      update: {},
-      create: {
-        name: 'Zellavora Inc',
-        clientCode: 'zellavora-inc',
-        logoUrl: null,
-        plan: 'enterprise',
-        enforce2fa: false,
-      },
-    });
-    console.log(`✅ Organization created: ${tenant.name} (${tenant.id})\n`);
+  // 1. Create Default Tenant
+  console.log('📦 Creating default organization...');
+  const tenant = await prisma.organization.upsert({
+    where: { clientCode: 'zellavora-inc' },
+    update: {},
+    create: {
+      name: 'Zellavora Inc',
+      clientCode: 'zellavora-inc',
+      logoUrl: null,
+      plan: 'enterprise',
+      enforce2fa: false,
+    },
+  });
+  console.log(`✅ Organization created: ${tenant.name} (${tenant.id})\n`);
 
   // 2. Create HQ Branch
   console.log('🏢 Creating branch...');
@@ -157,6 +157,13 @@ async function main() {
       resource: 'users',
       action: 'manage',
       description: 'Provision and revoke system access roles',
+    },
+    {
+      name: 'approve:timesheet',
+      key: 'timesheet:approve',
+      resource: 'timesheet',
+      action: 'approve',
+      description: "Review, approve, reject and mark paid other people's timesheets and sheets",
     },
   ];
 

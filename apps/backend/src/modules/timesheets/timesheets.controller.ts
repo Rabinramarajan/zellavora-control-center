@@ -2,7 +2,9 @@ import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
 import { logger } from '../../infrastructure/logger';
+import { PermissionService } from '../../services/auth/permission.service';
 import { TimesheetsService } from './timesheets.service';
+import { REVIEW_PERMISSION, TimesheetViewer } from './timesheets.rules';
 import { buildExportModel, toCsv, toPrintableHtml } from './timesheets.export';
 import {
   BulkUpsertEntriesSchema,
@@ -29,15 +31,32 @@ export class TimesheetsController {
     return { organizationId: req.tenantId, actorUserId: req.userId };
   }
 
+  /**
+   * The caller plus whether they hold the review permission. The permission
+   * set is cached on the request, so a route that already ran
+   * `requirePermission` does not query it twice.
+   */
+  private async viewer(req: AuthRequest): Promise<TimesheetViewer> {
+    const { organizationId, actorUserId } = this.context(req);
+    if (!req.permissions) {
+      req.permissions = await PermissionService.loadForUser(actorUserId, organizationId);
+    }
+    return {
+      userId: actorUserId,
+      canReview: PermissionService.has(req.permissions, REVIEW_PERMISSION),
+    };
+  }
+
   async getForPeriod(req: AuthRequest, res: Response) {
     try {
-      const { organizationId, actorUserId } = this.context(req);
+      const { organizationId } = this.context(req);
+      const viewer = await this.viewer(req);
       const dto = GetTimesheetQuerySchema.parse(req.query);
       const sheet = await this.service.getOrCreateForPeriod(
-        dto.employeeId ?? actorUserId,
+        dto.employeeId ?? viewer.userId,
         dto.period,
         organizationId,
-        actorUserId
+        viewer
       );
       res.json({ success: true, data: sheet });
     } catch (error) {
@@ -49,8 +68,9 @@ export class TimesheetsController {
   async list(req: AuthRequest, res: Response) {
     try {
       const { organizationId } = this.context(req);
+      const viewer = await this.viewer(req);
       const dto = ListTimesheetsQuerySchema.parse(req.query);
-      const sheets = await this.service.list(organizationId, dto);
+      const sheets = await this.service.list(organizationId, dto, viewer);
       res.json({ success: true, data: sheets });
     } catch (error) {
       logger.error('List timesheets failed', error);
@@ -61,7 +81,8 @@ export class TimesheetsController {
   async getById(req: AuthRequest, res: Response) {
     try {
       const { organizationId } = this.context(req);
-      const sheet = await this.service.getById(req.params.id, organizationId);
+      const viewer = await this.viewer(req);
+      const sheet = await this.service.getVisible(req.params.id, organizationId, viewer);
       res.json({ success: true, data: sheet });
     } catch (error) {
       logger.error('Get timesheet by id failed', error);
@@ -141,10 +162,17 @@ export class TimesheetsController {
   async export(req: AuthRequest, res: Response) {
     try {
       const { organizationId } = this.context(req);
+      const viewer = await this.viewer(req);
       const { format } = ExportQuerySchema.parse(req.query);
-      const sheet = await this.service.getById(req.params.id, organizationId);
+      const sheet = await this.service.getVisible(req.params.id, organizationId, viewer);
       const model = buildExportModel(sheet);
-      const filename = `timesheet-${model.employee.name.replace(/\s+/g, '-').toLowerCase()}-${model.period}`;
+      // Names land in a header, so anything outside [a-z0-9-] is dropped.
+      const slug = model.employee.name
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      const filename = `timesheet-${slug || 'employee'}-${model.period}`;
 
       if (format === 'csv') {
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -170,9 +198,10 @@ export class TimesheetsController {
 
   async summary(req: AuthRequest, res: Response) {
     try {
-      const { organizationId, actorUserId } = this.context(req);
+      const { organizationId } = this.context(req);
+      const viewer = await this.viewer(req);
       const dto = SummaryQuerySchema.parse(req.query);
-      const summary = await this.service.summary(organizationId, dto, actorUserId);
+      const summary = await this.service.summary(organizationId, dto, viewer);
       res.json({ success: true, data: summary });
     } catch (error) {
       logger.error('Timesheet summary failed', error);

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { MonthlySheetsController } from './monthly-sheets.controller';
-import { authGuard } from '../../middleware/auth';
+import { asyncRoute } from '../daily-sheets/sheets.shared';
+import { REVIEW_PERMISSION } from '../timesheets/timesheets.rules';
+import { authGuard, requirePermission } from '../../middleware/auth';
 
 const router = Router();
 const controller = new MonthlySheetsController();
@@ -22,7 +24,10 @@ router.use(authGuard);
  *       default:
  *         description: Operation response
  */
-router.post('/', (req, res) => controller.create(req as any, res));
+router.post(
+  '/',
+  asyncRoute((req, res) => controller.create(req, res))
+);
 
 /**
  * @route GET /api/v1/monthly-sheets
@@ -39,7 +44,35 @@ router.post('/', (req, res) => controller.create(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.get('/', (req, res) => controller.list(req as any, res));
+router.get(
+  '/',
+  asyncRoute((req, res) => controller.list(req, res))
+);
+
+/**
+ * @swagger
+ * /api/v1/monthly-sheets/document:
+ *   get:
+ *     summary: getMonthlyTimesheetDocument
+ *     operationId: getMonthlySheetsDocument
+ *     description: >
+ *       The printable timesheet for a month: one row per calendar day, summary,
+ *       schedule notes and approvals. `userId` defaults to the caller; anyone
+ *       else requires the `timesheet:approve` permission.
+ *     tags: [monthlySheets]
+ *     parameters:
+ *       - { in: query, name: month, required: true, schema: { type: integer, minimum: 1, maximum: 12 } }
+ *       - { in: query, name: year, required: true, schema: { type: integer } }
+ *       - { in: query, name: userId, schema: { type: string, format: uuid } }
+ *     responses:
+ *       200:
+ *         description: The timesheet document
+ */
+// Declared before `/:id` so "document" is not matched as an id.
+router.get(
+  '/document',
+  asyncRoute((req, res) => controller.document(req, res))
+);
 
 /**
  * @route GET /api/v1/monthly-sheets/:id
@@ -61,7 +94,10 @@ router.get('/', (req, res) => controller.list(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.get('/:id', (req, res) => controller.getById(req as any, res));
+router.get(
+  '/:id',
+  asyncRoute((req, res) => controller.getById(req, res))
+);
 
 /**
  * @route PUT /api/v1/monthly-sheets/:id
@@ -83,7 +119,10 @@ router.get('/:id', (req, res) => controller.getById(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.put('/:id', (req, res) => controller.update(req as any, res));
+router.put(
+  '/:id',
+  asyncRoute((req, res) => controller.update(req, res))
+);
 
 /**
  * @route POST /api/v1/monthly-sheets/:id/submit
@@ -105,7 +144,10 @@ router.put('/:id', (req, res) => controller.update(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
+router.post(
+  '/:id/submit',
+  asyncRoute((req, res) => controller.submit(req, res))
+);
 
 /**
  * @route POST /api/v1/monthly-sheets/:id/approve
@@ -127,7 +169,11 @@ router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
+router.post(
+  '/:id/approve',
+  requirePermission(REVIEW_PERMISSION),
+  asyncRoute((req, res) => controller.approve(req, res))
+);
 
 /**
  * @route POST /api/v1/monthly-sheets/:id/mark-paid
@@ -149,7 +195,11 @@ router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.post('/:id/mark-paid', (req, res) => controller.markAsPaid(req as any, res));
+router.post(
+  '/:id/mark-paid',
+  requirePermission(REVIEW_PERMISSION),
+  asyncRoute((req, res) => controller.markAsPaid(req, res))
+);
 
 /**
  * @route DELETE /api/v1/monthly-sheets/:id
@@ -171,6 +221,9 @@ router.post('/:id/mark-paid', (req, res) => controller.markAsPaid(req as any, re
  *       default:
  *         description: Operation response
  */
-router.delete('/:id', (req, res) => controller.delete(req as any, res));
+router.delete(
+  '/:id',
+  asyncRoute((req, res) => controller.delete(req, res))
+);
 
 export default router;

@@ -1,0 +1,152 @@
+<div class="ts-page">
+  <!-- Toolbar: on screen only -->
+  <div class="ts-toolbar">
+    <div class="ts-toolbar__lead">
+      <a routerLink="/freelancer-sheets/monthly" class="ts-link">‹ Monthly Sheets</a>
+      <div class="ts-nav">
+        <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+        <span>{{ monthLabel() }}</span>
+        <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+      </div>
+      @if (document(); as doc) {
+        <span class="ts-badge" [class.ts-badge--preview]="doc.status === 'preview'">{{ statusText() }}</span>
+      }
+    </div>
+    <button type="button" class="ts-print" (click)="print()" [disabled]="!document()">
+      Print / Save as PDF
+    </button>
+  </div>
+
+  @if (document(); as doc) {
+    @if (doc.status === 'preview') {
+      <p class="ts-hint" role="status">
+        Preview built from your current daily sheets.
+        @if (doc.pendingDailyCount > 0) {
+          {{ doc.pendingDailyCount }} {{ doc.pendingDailyCount === 1 ? 'entry is' : 'entries are' }} not approved yet.
+        }
+        Generate and submit the monthly sheet to make it official.
+      </p>
+    }
+  }
+
+  @if (loading()) {
+    <p class="ts-hint">Loading timesheet…</p>
+  } @else if (error()) {
+    <div class="ts-hint ts-hint--error" role="alert">
+      {{ error() }} <button type="button" class="ts-link" (click)="reload()">Retry</button>
+    </div>
+  } @else if (document(); as doc) {
+    <article class="ts-doc" aria-label="Timesheet for {{ doc.periodLabel }}">
+      <h1 class="ts-doc__title">TIMESHEET</h1>
+
+      <table class="ts-doc__info" role="presentation">
+        <tr>
+          <td>Employee: {{ doc.employee.name }}</td>
+          <td>Department: {{ doc.employee.department || '—' }}</td>
+          <td>Period: {{ doc.periodLabel }}</td>
+          <td>Total Hours: {{ formatHours(doc.totalHours) }}</td>
+        </tr>
+      </table>
+
+      <table class="ts-doc__grid">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Day</th>
+            <th scope="col">Start Time</th>
+            <th scope="col">End Time</th>
+            <th scope="col">Hours</th>
+            <th scope="col">Status/Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of doc.rows; track row.date) {
+            <tr [class.is-weekend]="row.isWeekend && row.kind === 'blank'">
+              <td>{{ row.dateLabel }}</td>
+              <td>{{ row.day }}</td>
+              @switch (row.kind) {
+                @case ('leave') {
+                  <td>-</td>
+                  <td>-</td>
+                  <td class="is-strong">LEAVE</td>
+                  <td class="is-strong">LEAVE</td>
+                }
+                @case ('holiday') {
+                  <td>-</td>
+                  <td>-</td>
+                  <td class="is-strong">HOLIDAY</td>
+                  <td class="is-strong">HOLIDAY</td>
+                }
+                @case ('blank') {
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                }
+                @default {
+                  <td>{{ row.startTime ?? '-' }}</td>
+                  <td>{{ row.endTime ?? '-' }}</td>
+                  <td>{{ formatHours(row.hours ?? 0) }}</td>
+                  <td>{{ row.statusLabel }}@if (row.notes) {<span class="ts-doc__note"> — {{ row.notes }}</span>}</td>
+                }
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <h2 class="ts-doc__heading">Summary</h2>
+      <table class="ts-doc__summary">
+        <tr>
+          <th scope="row">Total Working Days</th>
+          <td>{{ doc.summary.workingDays }} days</td>
+        </tr>
+        <tr>
+          <th scope="row">Total Leave Days</th>
+          <td>
+            {{ doc.summary.leaveDays }} {{ doc.summary.leaveDays === 1 ? 'day' : 'days' }}@if (doc.summary.leaveDays) { ({{ doc.summary.leaveDates.join(', ') }})}
+          </td>
+        </tr>
+        @if (doc.summary.holidayDays) {
+          <tr>
+            <th scope="row">Total Holidays</th>
+            <td>{{ doc.summary.holidayDays }} {{ doc.summary.holidayDays === 1 ? 'day' : 'days' }} ({{ doc.summary.holidayDates.join(', ') }})</td>
+          </tr>
+        }
+        <tr>
+          <th scope="row">Total Working Hours</th>
+          <td>{{ formatHours(doc.summary.totalHours) }} hours</td>
+        </tr>
+      </table>
+
+      <h3 class="ts-doc__subheading">Work Schedule Notes:</h3>
+      <ul class="ts-doc__notes">
+        @for (note of scheduleNotes(); track note) {
+          <li>{{ note }}</li>
+        }
+      </ul>
+
+      <h2 class="ts-doc__heading">Approvals</h2>
+      <table class="ts-doc__signatures">
+        <tr>
+          <td>
+            <strong>Employee Signature</strong>
+            <div class="ts-doc__sigline">_______________________</div>
+            <div>Date: {{ signedOn(doc.approvals.submittedAt) ?? '_______________' }}</div>
+          </td>
+          <td>
+            <strong>Manager/Team Head Signature</strong>
+            <div class="ts-doc__sigline">
+              @if (doc.approvals.approverName && doc.approvals.approvedAt) {
+                Approved in app by {{ doc.approvals.approverName }}
+              } @else {
+                _______________________
+              }
+            </div>
+            <div>Date: {{ signedOn(doc.approvals.approvedAt) ?? '_______________' }}</div>
+          </td>
+        </tr>
+      </table>
+    </article>
+  }
+</div>

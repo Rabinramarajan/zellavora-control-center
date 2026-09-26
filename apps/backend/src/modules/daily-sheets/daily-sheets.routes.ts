@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { DailySheetsController } from './daily-sheets.controller';
-import { authGuard } from '../../middleware/auth';
+import { asyncRoute } from './sheets.shared';
+import { REVIEW_PERMISSION } from '../timesheets/timesheets.rules';
+import { authGuard, requirePermission } from '../../middleware/auth';
 
 const router = Router();
 const controller = new DailySheetsController();
@@ -22,7 +24,10 @@ router.use(authGuard);
  *       default:
  *         description: Operation response
  */
-router.post('/', (req, res) => controller.create(req as any, res));
+router.post(
+  '/',
+  asyncRoute((req, res) => controller.create(req, res))
+);
 
 /**
  * @route GET /api/v1/daily-sheets
@@ -39,7 +44,28 @@ router.post('/', (req, res) => controller.create(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.get('/', (req, res) => controller.list(req as any, res));
+router.get(
+  '/',
+  asyncRoute((req, res) => controller.list(req, res))
+);
+
+/**
+ * @swagger
+ * /api/v1/daily-sheets/projects:
+ *   get:
+ *     summary: listDailySheetProjects
+ *     operationId: getDailySheetsProjects
+ *     description: Active projects in the caller's organization that a sheet can be booked against.
+ *     tags: [dailySheets]
+ *     responses:
+ *       200:
+ *         description: Project ids and names
+ */
+// Declared before `/:id` so "projects" is not matched as an id.
+router.get(
+  '/projects',
+  asyncRoute((req, res) => controller.projects(req, res))
+);
 
 /**
  * @route GET /api/v1/daily-sheets/:id
@@ -61,7 +87,10 @@ router.get('/', (req, res) => controller.list(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.get('/:id', (req, res) => controller.getById(req as any, res));
+router.get(
+  '/:id',
+  asyncRoute((req, res) => controller.getById(req, res))
+);
 
 /**
  * @route PUT /api/v1/daily-sheets/:id
@@ -83,7 +112,10 @@ router.get('/:id', (req, res) => controller.getById(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.put('/:id', (req, res) => controller.update(req as any, res));
+router.put(
+  '/:id',
+  asyncRoute((req, res) => controller.update(req, res))
+);
 
 /**
  * @route POST /api/v1/daily-sheets/:id/submit
@@ -105,7 +137,10 @@ router.put('/:id', (req, res) => controller.update(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
+router.post(
+  '/:id/submit',
+  asyncRoute((req, res) => controller.submit(req, res))
+);
 
 /**
  * @route POST /api/v1/daily-sheets/:id/approve
@@ -127,7 +162,11 @@ router.post('/:id/submit', (req, res) => controller.submit(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
+router.post(
+  '/:id/approve',
+  requirePermission(REVIEW_PERMISSION),
+  asyncRoute((req, res) => controller.approve(req, res))
+);
 
 /**
  * @route DELETE /api/v1/daily-sheets/:id
@@ -149,6 +188,9 @@ router.post('/:id/approve', (req, res) => controller.approve(req as any, res));
  *       default:
  *         description: Operation response
  */
-router.delete('/:id', (req, res) => controller.delete(req as any, res));
+router.delete(
+  '/:id',
+  asyncRoute((req, res) => controller.delete(req, res))
+);
 
 export default router;
