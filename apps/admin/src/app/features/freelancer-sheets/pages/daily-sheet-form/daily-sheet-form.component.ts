@@ -3,6 +3,7 @@ import {
   Component,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -23,14 +24,8 @@ import { startWith } from 'rxjs';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { SheetsApi } from '../../sheets.api';
 import { SheetsStore } from '../../sheets.store';
-import {
-  DailySheet,
-  DailySheetInput,
-  EntryType,
-  ProjectOption,
-  SheetRequestError,
-} from '../../sheets.models';
-import { isDayKey, previewSheet, todayKey } from '../../sheets.time';
+import { DailySheet, DailySheetInput, EntryType, SheetRequestError } from '../../sheets.models';
+import { isDayKey, isWeekendDayKey, parseDayKey, previewSheet, todayKey } from '../../sheets.time';
 import { statusLabel, statusPill } from '../../sheets.presentation';
 
 const LAST_RATE_KEY = 'zcc.sheets.lastHourlyRate';
@@ -119,7 +114,8 @@ export class DailySheetFormComponent implements OnInit {
   protected readonly formError = signal<string | null>(null);
   protected readonly confirmingDelete = signal(false);
   protected readonly sheet = signal<DailySheet | null>(null);
-  protected readonly projects = signal<ProjectOption[]>([]);
+  /** Suggestions for the project field; typing anything else is fine too. */
+  protected readonly projectSuggestions = signal<string[]>([]);
 
   /** Set once a save succeeds, so leaving afterwards is not "unsaved". */
   private saved = false;
@@ -128,7 +124,7 @@ export class DailySheetFormComponent implements OnInit {
     {
       entryType: this.fb.control<EntryType>('work'),
       sheetDate: [todayKey(), Validators.required],
-      projectId: [''],
+      projectName: ['', Validators.maxLength(200)],
       startTime: [''],
       endTime: [''],
       breakMinutes: [0, [Validators.min(0), Validators.max(720)]],
@@ -150,8 +146,26 @@ export class DailySheetFormComponent implements OnInit {
     { initialValue: this.form.getRawValue() }
   );
 
-  protected readonly entryTypeOptions = ENTRY_TYPE_OPTIONS;
   protected readonly isWork = computed(() => (this.value().entryType ?? 'work') === 'work');
+
+  /** Weekends are off by default: only work is logged on them. */
+  protected readonly isWeekend = computed(() => isWeekendDayKey(this.value().sheetDate));
+
+  protected readonly weekdayName = computed(() => {
+    const date = this.value().sheetDate;
+    return isDayKey(date) ? parseDayKey(date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
+  });
+
+  public constructor() {
+    // Leave or a holiday on a weekend would double-count a day already off.
+    effect(() => {
+      if (this.isWeekend() && !this.isWork() && !this.readOnly()) {
+        this.form.controls.entryType.setValue('work');
+      }
+    });
+  }
+
+  protected readonly entryTypeOptions = ENTRY_TYPE_OPTIONS;
 
   protected readonly preview = computed(() => {
     const value = this.value();
@@ -341,7 +355,7 @@ export class DailySheetFormComponent implements OnInit {
     this.form.reset({
       entryType: sheet.entryType,
       sheetDate: sheet.sheetDate,
-      projectId: sheet.projectId ?? '',
+      projectName: sheet.projectName ?? '',
       startTime: sheet.startTime ?? '',
       endTime: sheet.endTime ?? '',
       breakMinutes: sheet.breakMinutes,
@@ -359,7 +373,7 @@ export class DailySheetFormComponent implements OnInit {
       return {
         entryType: value.entryType,
         sheetDate: value.sheetDate,
-        projectId: null,
+        projectName: null,
         startTime: null,
         endTime: null,
         breakMinutes: 0,
@@ -376,7 +390,7 @@ export class DailySheetFormComponent implements OnInit {
     return {
       entryType: 'work',
       sheetDate: value.sheetDate,
-      projectId: value.projectId || null,
+      projectName: value.projectName.trim() || null,
       startTime: hasSpan ? value.startTime : null,
       endTime: hasSpan ? value.endTime : null,
       breakMinutes: hasSpan ? value.breakMinutes : 0,
@@ -416,10 +430,10 @@ export class DailySheetFormComponent implements OnInit {
 
   private async loadProjects(): Promise<void> {
     try {
-      this.projects.set(await this.api.projectOptions());
+      this.projectSuggestions.set(await this.api.projectSuggestions());
     } catch {
       // The picker is optional: without it a sheet is simply unassigned.
-      this.projects.set([]);
+      this.projectSuggestions.set([]);
     }
   }
 

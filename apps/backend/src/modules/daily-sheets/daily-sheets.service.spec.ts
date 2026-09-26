@@ -200,6 +200,76 @@ describe('DailySheetsService', () => {
     });
   });
 
+  describe('weekends', () => {
+    it.each(['leave', 'holiday'] as const)(
+      'refuses %s on a Saturday: weekends are already off',
+      async (entryType) => {
+        await expect(
+          service.create({ sheetDate: '2026-08-08', entryType }, ORG, SELF)
+        ).rejects.toMatchObject({ status: 400, code: 'ABSENCE_ON_WEEKEND' });
+        expect(db.dailySheet.create).not.toHaveBeenCalled();
+      }
+    );
+
+    it('accepts work entered on a Sunday', async () => {
+      db.dailySheet.create.mockResolvedValue(record());
+
+      await expect(
+        service.create({ sheetDate: '2026-08-09', hoursWorked: 4, hourlyRate: 50 }, ORG, SELF)
+      ).resolves.toBeDefined();
+    });
+
+    it('refuses moving a leave day onto a weekend', async () => {
+      db.dailySheet.findFirst.mockResolvedValue(
+        record({ entryType: 'leave', sheetDate: new Date('2026-08-06T00:00:00.000Z') })
+      );
+
+      await expect(
+        service.update('sheet-1', { sheetDate: '2026-08-08' }, ORG, SELF)
+      ).rejects.toMatchObject({ code: 'ABSENCE_ON_WEEKEND' });
+    });
+  });
+
+  describe('free-text project', () => {
+    it('stores the project name as typed', async () => {
+      db.dailySheet.create.mockResolvedValue(record({ projectName: 'Acme Website' }));
+
+      const view = await service.create(
+        { sheetDate: '2026-09-25', hoursWorked: 8, hourlyRate: 50, projectName: 'Acme Website' },
+        ORG,
+        SELF
+      );
+
+      expect(db.dailySheet.create.mock.calls[0][0].data.projectName).toBe('Acme Website');
+      expect(view.projectName).toBe('Acme Website');
+    });
+
+    it('clears the name when an empty string is sent', async () => {
+      db.dailySheet.findFirst.mockResolvedValue(record({ projectName: 'Old' }));
+      db.dailySheet.update.mockResolvedValue(record());
+
+      await service.update('sheet-1', { projectName: '' }, ORG, SELF);
+
+      expect(db.dailySheet.update.mock.calls[0][0].data.projectName).toBeNull();
+    });
+
+    it('suggests managed projects and past names once each, sorted', async () => {
+      db.project.findMany.mockResolvedValue([{ name: 'Zeta' }, { name: 'acme website' }]);
+      db.dailySheet.findMany.mockResolvedValue([
+        { projectName: 'Acme Website' },
+        { projectName: 'Beta App' },
+      ]);
+
+      const names = await service.projectSuggestions(ORG, OWNER);
+
+      expect(names).toEqual(['acme website', 'Beta App', 'Zeta']);
+      expect(db.dailySheet.findMany.mock.calls[0][0].where).toMatchObject({
+        organizationId: ORG,
+        userId: OWNER,
+      });
+    });
+  });
+
   describe('leave and holiday days', () => {
     it('records a leave day with no hours, times or amount', async () => {
       db.dailySheet.create.mockResolvedValue(record({ entryType: 'leave' }));

@@ -20,6 +20,8 @@ export type EntryType = (typeof ENTRY_TYPES)[number];
 const SheetFieldsShape = {
   entryType: z.enum(ENTRY_TYPES).optional(),
   projectId: z.string().uuid().nullable().optional(),
+  /** Free text; the name shown on sheets and the monthly timesheet. */
+  projectName: z.string().trim().max(200).nullable().optional(),
   startTime: ClockSchema.nullable().optional(),
   endTime: ClockSchema.nullable().optional(),
   breakMinutes: z.number().int().min(0).max(720).optional(),

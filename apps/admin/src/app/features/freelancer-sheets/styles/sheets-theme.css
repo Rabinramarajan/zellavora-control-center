@@ -475,3 +475,8 @@
 .segmented__option input:disabled {
   cursor: default;
 }
+
+.segmented__option input:disabled + span {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

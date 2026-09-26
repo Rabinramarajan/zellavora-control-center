@@ -13,6 +13,7 @@ import {
 import {
   Paged,
   SheetViewer,
+  assertAbsenceOnWeekday,
   assertCanActFor,
   assertCanDecide,
   assertCanListScope,
@@ -21,6 +22,9 @@ import {
   hoursBetween,
   toDateKey,
 } from './sheets.shared';
+
+/** How many distinct past project names the form suggests. */
+const PROJECT_SUGGESTION_LIMIT = 200;
 
 const dailySheetInclude = {
   lineItems: { orderBy: { createdAt: 'asc' } },
@@ -150,7 +154,9 @@ export const toDailySheetView = (
     userId: sheet.userId,
     user: sheet.user,
     projectId: sheet.projectId,
-    projectName: sheet.projectId ? (projectNames.get(sheet.projectId) ?? null) : null,
+    // Typed text wins; a linked managed Project fills in for older sheets.
+    projectName:
+      sheet.projectName ?? (sheet.projectId ? (projectNames.get(sheet.projectId) ?? null) : null),
     entryType: asEntryType(sheet.entryType),
     sheetDate: toDateKey(sheet.sheetDate),
     startTime: sheet.startTime,
@@ -289,6 +295,7 @@ export class DailySheetsService {
     await this.assertProjectInOrg(dto.projectId, organizationId);
 
     const entryType = dto.entryType ?? 'work';
+    assertAbsenceOnWeekday(dto.sheetDate, entryType);
     await this.assertDayAccepts(ownerId, dto.sheetDate, entryType, organizationId);
 
     const values = computeSheetValues({
@@ -307,6 +314,7 @@ export class DailySheetsService {
         organizationId,
         userId: ownerId,
         projectId: dto.projectId ?? null,
+        projectName: dto.projectName || null,
         sheetDate: new Date(`${dto.sheetDate}T00:00:00.000Z`),
         ...valueColumns(values),
         description: dto.description ?? null,
@@ -348,6 +356,7 @@ export class DailySheetsService {
 
     const entryType = dto.entryType ?? asEntryType(existing.entryType);
     const sheetDate = dto.sheetDate ?? toDateKey(existing.sheetDate);
+    assertAbsenceOnWeekday(sheetDate, entryType);
     if (entryType !== existing.entryType || sheetDate !== toDateKey(existing.sheetDate)) {
       await this.assertDayAccepts(existing.userId, sheetDate, entryType, organizationId, id);
     }
@@ -374,6 +383,7 @@ export class DailySheetsService {
         data: {
           sheetDate: new Date(`${sheetDate}T00:00:00.000Z`),
           ...(dto.projectId !== undefined ? { projectId: dto.projectId } : {}),
+          ...(dto.projectName !== undefined ? { projectName: dto.projectName || null } : {}),
           ...(dto.description !== undefined ? { description: dto.description } : {}),
           ...(dto.tasksCompleted !== undefined ? { tasksCompleted: dto.tasksCompleted } : {}),
           ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
@@ -505,15 +515,32 @@ export class DailySheetsService {
     };
   }
 
-  /** Projects a sheet can be booked against: the organization's active ones. */
-  public async projectOptions(
-    organizationId: string
-  ): Promise<Array<{ id: string; name: string }>> {
-    return prisma.project.findMany({
-      where: { organizationId, status: 'active' },
-      select: { id: true, name: true },
-      orderBy: { name: 'asc' },
-    });
+  /**
+   * Suggestions for the free-text project field: the organization's active
+   * projects plus names this person has typed before, de-duplicated
+   * case-insensitively and sorted.
+   */
+  public async projectSuggestions(organizationId: string, userId: string): Promise<string[]> {
+    const [projects, used] = await Promise.all([
+      prisma.project.findMany({
+        where: { organizationId, status: 'active' },
+        select: { name: true },
+      }),
+      prisma.dailySheet.findMany({
+        where: { organizationId, userId, deletedAt: null, projectName: { not: null } },
+        select: { projectName: true },
+        distinct: ['projectName'],
+        orderBy: { sheetDate: 'desc' },
+        take: PROJECT_SUGGESTION_LIMIT,
+      }),
+    ]);
+
+    const byKey = new Map<string, string>();
+    for (const name of [...projects.map((p) => p.name), ...used.map((u) => u.projectName)]) {
+      const trimmed = name?.trim();
+      if (trimmed && !byKey.has(trimmed.toLowerCase())) byKey.set(trimmed.toLowerCase(), trimmed);
+    }
+    return [...byKey.values()].sort((a, b) => a.localeCompare(b));
   }
 
   /** Soft delete, so the audit trail keeps the row. */

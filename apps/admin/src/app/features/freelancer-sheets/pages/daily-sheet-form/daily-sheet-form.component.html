@@ -54,8 +54,10 @@
               <legend class="field__label">Day type</legend>
               <div class="segmented" role="radiogroup">
                 @for (option of entryTypeOptions; track option.value) {
-                  <label class="segmented__option" [title]="option.hint">
-                    <input type="radio" formControlName="entryType" [value]="option.value" />
+                  <label class="segmented__option"
+                         [title]="isWeekend() && option.value !== 'work' ? 'Weekends are already days off' : option.hint">
+                    <input type="radio" formControlName="entryType" [value]="option.value"
+                           [attr.disabled]="isWeekend() && option.value !== 'work' ? '' : null" />
                     <span>{{ option.label }}</span>
                   </label>
                 }
@@ -71,6 +73,13 @@
               }
             </div>
 
+            @if (isWeekend() && !readOnly()) {
+              <p class="notice notice--info field-grid__full" role="status">
+                {{ weekdayName() }} is a weekend day, counted as off automatically. Save this only if you
+                worked; it will show as <strong>Weekend work</strong> on the monthly timesheet.
+              </p>
+            }
+
             @if (!isWork()) {
               <p class="notice notice--info field-grid__full">
                 This day will show as <strong>{{ value().entryType === 'leave' ? 'LEAVE' : 'HOLIDAY' }}</strong>
@@ -78,15 +87,20 @@
               </p>
             } @else {
             <div class="field">
-              <label class="field__label" for="projectId">Project</label>
-              <select id="projectId" class="field__input" formControlName="projectId">
-                <option value="">Unassigned</option>
-                @for (project of projects(); track project.id) {
-                  <option [value]="project.id">{{ project.name }}</option>
+              <label class="field__label" for="projectName">Project</label>
+              <input id="projectName" type="text" class="field__input" formControlName="projectName"
+                     maxlength="200" autocomplete="off" list="project-suggestions"
+                     placeholder="e.g. Acme Website"
+                     [attr.aria-invalid]="fieldInvalid('projectName')" />
+              <datalist id="project-suggestions">
+                @for (name of projectSuggestions(); track name) {
+                  <option [value]="name"></option>
                 }
-              </select>
-              @if (fieldInvalid('projectId')) {
-                <p class="field__error">{{ form.get('projectId')?.errors?.['server'] }}</p>
+              </datalist>
+              @if (fieldInvalid('projectName')) {
+                <p class="field__error">
+                  {{ form.get('projectName')?.errors?.['server'] ?? 'Keep the project name under 200 characters.' }}
+                </p>
               }
             </div>
 

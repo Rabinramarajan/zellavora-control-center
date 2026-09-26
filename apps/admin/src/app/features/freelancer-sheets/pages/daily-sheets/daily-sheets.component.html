@@ -243,7 +243,9 @@
                 <span class="text-slate-200 font-semibold tabular-nums">{{ slice.hours }}h</span>
               </li>
             } @empty {
-              <li class="text-center text-xs text-slate-500">No hours logged for this day.</li>
+              <li class="text-center text-xs text-slate-500">
+                {{ isWeekend() ? "Weekend, day off. Add a sheet only if you worked." : "No hours logged for this day." }}
+              </li>
             }
           </ul>
 

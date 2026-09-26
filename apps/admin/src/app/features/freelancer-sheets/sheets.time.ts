@@ -77,3 +77,10 @@ export const parseDayKey = (key: string): Date => {
 
 export const isDayKey = (value: string | null | undefined): value is string =>
   !!value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(parseDayKey(value).getTime());
+
+/** Saturday or Sunday: a day off unless the person logs work on it. */
+export const isWeekendDayKey = (key: string | null | undefined): boolean => {
+  if (!isDayKey(key)) return false;
+  const weekday = parseDayKey(key).getDay();
+  return weekday === 0 || weekday === 6;
+};

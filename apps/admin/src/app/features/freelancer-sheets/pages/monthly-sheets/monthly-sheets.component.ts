@@ -33,7 +33,7 @@ interface CalendarCell {
   key: string;
   day: number;
   hours: number;
-  status: SheetStatus | 'none';
+  status: CellStatus;
   outside: boolean;
   isToday: boolean;
   label: string;
@@ -98,11 +98,15 @@ const PROJECT_COLUMNS: ColumnDef<ProjectRow>[] = [
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const CALENDAR_LEGEND: { label: string; status: SheetStatus | 'none' }[] = [
+/** A day's state on the calendar; weekends with no entry are simply off. */
+type CellStatus = SheetStatus | 'none' | 'weekend';
+
+const CALENDAR_LEGEND: { label: string; status: CellStatus }[] = [
   { label: 'Approved', status: 'approved' },
   { label: 'Pending', status: 'submitted' },
   { label: 'Draft', status: 'draft' },
   { label: 'No entry', status: 'none' },
+  { label: 'Weekend (off)', status: 'weekend' },
 ];
 
 @Component({
@@ -223,6 +227,17 @@ export class MonthlySheetsComponent implements OnInit {
       ).size
   );
 
+  /** Weekdays in the month: weekends are off unless worked. */
+  public readonly weekdaysInMonth = computed(() => {
+    const first = this.month();
+    let count = 0;
+    for (let day = 1; day <= this.daysInMonth(); day++) {
+      const weekday = new Date(first.getFullYear(), first.getMonth(), day).getDay();
+      if (weekday !== 0 && weekday !== 6) count++;
+    }
+    return count;
+  });
+
   public readonly daysInMonth = computed(() =>
     new Date(this.month().getFullYear(), this.month().getMonth() + 1, 0).getDate()
   );
@@ -284,7 +299,7 @@ export class MonthlySheetsComponent implements OnInit {
         key,
         day,
         hours: round(entry?.hours ?? 0),
-        status: entry?.status ?? 'none',
+        status: entry?.status ?? (date.getDay() === 0 || date.getDay() === 6 ? 'weekend' : 'none'),
         outside: false,
         isToday: key === today,
         label: date.toLocaleDateString('en-US', { dateStyle: 'medium' }),
@@ -432,8 +447,10 @@ export class MonthlySheetsComponent implements OnInit {
     return `cal-cell cal-cell--${cell.status}${cell.isToday ? ' cal-cell--today' : ''}`;
   }
 
-  public statusText(status: SheetStatus | 'none'): string {
-    return status === 'none' ? 'No entry' : statusLabel(status);
+  public statusText(status: CellStatus): string {
+    if (status === 'none') return 'No entry';
+    if (status === 'weekend') return 'Weekend, off';
+    return statusLabel(status);
   }
 
   /** The previous month is loaded too, for the month-over-month comparison. */

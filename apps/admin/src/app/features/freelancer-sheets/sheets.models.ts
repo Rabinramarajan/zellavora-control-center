@@ -86,11 +86,6 @@ export interface Paged<T> {
   totalPages: number;
 }
 
-export interface ProjectOption {
-  id: string;
-  name: string;
-}
-
 export interface LineItemInput {
   taskName: string;
   description?: string;
@@ -102,7 +97,8 @@ export interface LineItemInput {
 export interface DailySheetInput {
   entryType: EntryType;
   sheetDate: string;
-  projectId: string | null;
+  /** Free text, as typed; empty clears it. */
+  projectName: string | null;
   startTime: string | null;
   endTime: string | null;
   breakMinutes: number;

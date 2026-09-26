@@ -1044,6 +1044,8 @@ model DailySheet {
   organizationId  String    @map("organization_id") @db.Uuid
   userId          String    @map("user_id") @db.Uuid
   projectId       String?   @map("project_id") @db.Uuid
+  // Free-text project label as typed; projectId links a managed Project when set
+  projectName     String?   @map("project_name") @db.VarChar(200)
 
   // Sheet Details
   sheetDate       DateTime  @map("sheet_date") @db.Date

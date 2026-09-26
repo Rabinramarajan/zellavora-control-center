@@ -142,3 +142,23 @@ export interface Paged<T> {
   pageSize: number;
   totalPages: number;
 }
+
+/** Saturday or Sunday for a "YYYY-MM-DD" key, read in UTC like the stored date. */
+export const isWeekendKey = (key: string): boolean => {
+  const weekday = new Date(`${key}T00:00:00.000Z`).getUTCDay();
+  return weekday === 0 || weekday === 6;
+};
+
+/**
+ * Weekends are days off without any entry, so leave or a holiday on one
+ * would double-count the absence. Only work is recorded on a weekend.
+ */
+export const assertAbsenceOnWeekday = (sheetDate: string, entryType: string): void => {
+  if (entryType !== 'work' && isWeekendKey(sheetDate)) {
+    throw new AppError(
+      'Saturdays and Sundays are already days off; record leave or holidays on weekdays only',
+      400,
+      'ABSENCE_ON_WEEKEND'
+    );
+  }
+};

@@ -27,8 +27,11 @@ export class DailySheetsController {
   }
 
   public async projects(req: AuthRequest, res: Response): Promise<void> {
-    const { organizationId } = requestContext(req);
-    res.json({ success: true, data: await this.service.projectOptions(organizationId) });
+    const { organizationId, userId } = requestContext(req);
+    res.json({
+      success: true,
+      data: await this.service.projectSuggestions(organizationId, userId),
+    });
   }
 
   public async getById(req: AuthRequest, res: Response): Promise<void> {

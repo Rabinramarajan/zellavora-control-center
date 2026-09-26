@@ -1,4 +1,4 @@
-import { hoursBetween, isDayKey, parseDayKey, previewSheet } from './sheets.time';
+import { hoursBetween, isDayKey, isWeekendDayKey, parseDayKey, previewSheet } from './sheets.time';
 
 describe('sheet time helpers', () => {
   describe('hoursBetween', () => {
@@ -72,6 +72,18 @@ describe('sheet time helpers', () => {
       expect(isDayKey('2026-8-6')).toBeFalse();
       expect(isDayKey(null)).toBeFalse();
       expect(isDayKey('2026-08-06')).toBeTrue();
+    });
+  });
+
+  describe('isWeekendDayKey', () => {
+    it('treats Saturday and Sunday as days off', () => {
+      expect(isWeekendDayKey('2026-08-08')).toBeTrue();
+      expect(isWeekendDayKey('2026-08-09')).toBeTrue();
+    });
+
+    it('treats weekdays and invalid keys as not weekend', () => {
+      expect(isWeekendDayKey('2026-08-10')).toBeFalse();
+      expect(isWeekendDayKey('')).toBeFalse();
     });
   });
 });

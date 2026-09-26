@@ -55,11 +55,13 @@ router.get(
  *   get:
  *     summary: listDailySheetProjects
  *     operationId: getDailySheetsProjects
- *     description: Active projects in the caller's organization that a sheet can be booked against.
+ *     description: >
+ *       Suggestions for the free-text project field: the organization's active
+ *       projects plus project names the caller has used before.
  *     tags: [dailySheets]
  *     responses:
  *       200:
- *         description: Project ids and names
+ *         description: Project names, sorted
  */
 // Declared before `/:id` so "projects" is not matched as an id.
 router.get(

@@ -117,6 +117,12 @@ export class DailySheetsComponent implements OnInit {
   public readonly selectedDate = signal(new Date());
   public readonly selectedDayKey = computed(() => isoDay(this.selectedDate()));
 
+  /** Weekends are off unless work is logged, so an empty one is not a gap. */
+  public readonly isWeekend = computed(() => {
+    const weekday = this.selectedDate().getDay();
+    return weekday === 0 || weekday === 6;
+  });
+
   /** Ids with a submit in flight, so their buttons stay disabled. */
   private readonly busy = signal<ReadonlySet<string>>(new Set());
 

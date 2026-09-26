@@ -9,7 +9,6 @@ import {
   MonthlySheet,
   MonthlySheetQuery,
   Paged,
-  ProjectOption,
   SheetRequestError,
 } from './sheets.models';
 
@@ -110,10 +109,9 @@ export class SheetsApi {
     );
   }
 
-  public projectOptions(): Promise<ProjectOption[]> {
-    return this.unwrap(
-      this.http.get<Envelope<ProjectOption[]>>(`${this.base}/daily-sheets/projects`)
-    );
+  /** Names to suggest in the free-text project field. */
+  public projectSuggestions(): Promise<string[]> {
+    return this.unwrap(this.http.get<Envelope<string[]>>(`${this.base}/daily-sheets/projects`));
   }
 
   public listMonthly(query: MonthlySheetQuery): Promise<Paged<MonthlySheet>> {
