@@ -7,7 +7,7 @@
       <div class="min-w-0">
         <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Media Gallery</h1>
         <p class="text-sm sm:text-base text-slate-400 mt-1">
-          Files stored in your Vercel Blob storage. Manage, organize and share your media files.
+          Files stored in your organization's media library. Upload, organize and share your media files.
         </p>
       </div>
     </div>
@@ -34,9 +34,28 @@
           <i class="pi pi-list" aria-hidden="true"></i>
         </button>
       </div>
-      <button type="button" class="mg-btn mg-btn--primary" [disabled]="loading()" (click)="load()">
+      <button type="button" class="mg-btn" [disabled]="loading()" (click)="load()">
         <i class="pi pi-refresh" [class.pi-spin]="loading()" aria-hidden="true"></i>
         Refresh
+      </button>
+      <input
+        #fileInput
+        type="file"
+        multiple
+        class="sr-only"
+        tabindex="-1"
+        aria-hidden="true"
+        (change)="uploadFiles(fileInput)"
+      />
+      <button
+        type="button"
+        class="mg-btn mg-btn--primary"
+        [disabled]="uploading()"
+        [attr.title]="'Max ' + maxUploadMb + ' MB per file'"
+        (click)="fileInput.click()"
+      >
+        <i class="pi" [class.pi-upload]="!uploading()" [class.pi-spinner]="uploading()" [class.pi-spin]="uploading()" aria-hidden="true"></i>
+        {{ uploading() ? 'Uploading…' : 'Upload' }}
       </button>
     </div>
   </header>

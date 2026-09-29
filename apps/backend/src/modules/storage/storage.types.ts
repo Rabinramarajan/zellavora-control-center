@@ -1,23 +1,9 @@
-export type BlobAccess = 'public' | 'private';
+export type MediaAccess = 'public' | 'private';
 
 export type MediaType = 'image' | 'video' | 'audio' | 'document' | 'other';
 
-export interface BlobFile {
-  url: string;
-  downloadUrl: string;
-  pathname: string;
-  size: number;
-  uploadedAt: Date;
-  access: BlobAccess;
-}
-
-export interface BlobPage {
-  blobs: BlobFile[];
-  cursor?: string;
-  hasMore: boolean;
-}
-
 export interface MediaItem {
+  id: string;
   pathname: string;
   name: string;
   folder: string;
@@ -25,8 +11,11 @@ export interface MediaItem {
   mimeType: string;
   size: number;
   uploadedAt: string;
-  access: BlobAccess;
-  /** Directly loadable by the browser only when `access` is public. */
+  /**
+   * `public` items are loadable directly from `url` (thumbnails, players);
+   * `private` items must be fetched through the authenticated file endpoint.
+   */
+  access: MediaAccess;
   url: string;
   downloadUrl: string;
 }
@@ -37,8 +26,9 @@ export interface MediaPage {
   hasMore: boolean;
 }
 
-export interface BlobContent {
-  stream: ReadableStream<Uint8Array>;
-  contentType: string;
+export interface MediaContent {
+  data: Buffer;
+  name: string;
+  mimeType: string;
   size: number;
 }

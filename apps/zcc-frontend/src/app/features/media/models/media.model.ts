@@ -2,8 +2,9 @@ export type MediaKind = 'image' | 'video' | 'audio' | 'document' | 'other';
 
 export type MediaAccess = 'public' | 'private';
 
-/** A file stored in the Vercel Blob store, as returned by GET /storage/media. */
+/** A file stored in the media_files table, as returned by GET /storage/media. */
 export interface MediaItem {
+  id: string;
   pathname: string;
   name: string;
   folder: string;

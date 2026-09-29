@@ -1,19 +1,19 @@
 import fs from 'fs';
 import path from 'path';
-import {
-  BlobAccessError,
-  BlobError,
-  BlobNotFoundError,
-  BlobStoreNotFoundError,
-  del,
-  get,
-  list,
-} from '@vercel/blob';
-import { AppError } from '../../middleware/error';
-import type { BlobAccess, BlobContent, BlobPage } from './storage.types';
-import type { StorageScope } from './storage.scope';
+import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 
-export class StorageRepository {
+/** Every column except the file bytes, so listings never pull blobs into memory. */
+const MEDIA_METADATA = {
+  id: true,
+  folder: true,
+  name: true,
+  pathname: true,
+  mimeType: true,
+  size: true,
+  createdAt: true,
+} as const;
+
+export class StorageRepository extends BaseRepository {
   async saveFile(fileName: string, base64Data: string): Promise<string> {
     const dir = path.join(process.cwd(), 'scratch');
     if (!fs.existsSync(dir)) {
@@ -26,78 +26,57 @@ export class StorageRepository {
     return `/scratch/${fileName}`;
   }
 
-  async listBlobs(
-    options: { prefix?: string; cursor?: string; limit?: number },
-    scope: StorageScope
-  ): Promise<BlobPage> {
-    const result = await withBlobErrors(() => list({ ...options, token: scope.token }));
-    return {
-      blobs: result.blobs
-        .filter(
-          (blob) =>
-            blob.pathname.startsWith(scope.prefix) &&
-            (scope.prefix || !blob.pathname.startsWith('tenants/'))
-        )
-        .map((blob) => ({
-          url: blob.url,
-          downloadUrl: blob.downloadUrl,
-          pathname: blob.pathname,
-          size: blob.size,
-          uploadedAt: blob.uploadedAt,
-          access: accessOf(blob.url),
-        })),
-      cursor: result.cursor,
-      hasMore: result.hasMore,
-    };
+  async listMedia(
+    organizationId: string,
+    options: { prefix?: string; offset: number; limit: number },
+    tx?: TxClient
+  ) {
+    return this.getDb(tx).mediaFile.findMany({
+      where: {
+        organizationId,
+        ...(options.prefix ? { pathname: { startsWith: options.prefix } } : {}),
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      skip: options.offset,
+      // One extra row tells us whether another page exists.
+      take: options.limit + 1,
+      select: MEDIA_METADATA,
+    });
   }
 
-  async openBlob(pathname: string, access: BlobAccess, scope: StorageScope): Promise<BlobContent> {
-    const result = await withBlobErrors(() => get(pathname, { access, token: scope.token }));
-    if (!result || result.statusCode !== 200) {
-      throw new AppError('Media file not found', 404, 'MEDIA_NOT_FOUND');
-    }
-    return { stream: result.stream, contentType: result.blob.contentType, size: result.blob.size };
+  async findByPathname(organizationId: string, pathname: string, tx?: TxClient) {
+    return this.getDb(tx).mediaFile.findUnique({
+      where: { organizationId_pathname: { organizationId, pathname } },
+    });
   }
 
-  async deleteBlob(urlOrPathname: string, scope: StorageScope): Promise<void> {
-    await withBlobErrors(() => del(urlOrPathname, { token: scope.token }));
+  async findById(id: string, tx?: TxClient) {
+    return this.getDb(tx).mediaFile.findUnique({ where: { id } });
   }
-}
 
-/**
- * The SDK resolves credentials itself (BLOB_READ_WRITE_TOKEN, or the per-request Vercel
- * OIDC token + BLOB_STORE_ID), so misconfiguration only surfaces as a thrown BlobError.
- * Translate those into actionable API errors instead of generic 500s.
- */
-async function withBlobErrors<T>(operation: () => Promise<T>): Promise<T> {
-  try {
-    return await operation();
-  } catch (err) {
-    if (err instanceof BlobNotFoundError) {
-      throw new AppError('Media file not found', 404, 'MEDIA_NOT_FOUND');
-    }
-    if (err instanceof BlobStoreNotFoundError) {
-      throw new AppError('The configured Blob store does not exist', 503, 'BLOB_STORE_NOT_FOUND');
-    }
-    if (err instanceof BlobAccessError) {
-      throw new AppError(
-        'Blob credentials were rejected; check the token belongs to this store',
-        503,
-        'BLOB_ACCESS_DENIED'
-      );
-    }
-    if (err instanceof BlobError && /credentials|token/i.test(err.message)) {
-      throw new AppError(
-        'Media storage is not configured: set BLOB_READ_WRITE_TOKEN, or connect the Blob store to this Vercel project',
-        503,
-        'BLOB_NOT_CONFIGURED'
-      );
-    }
-    throw err;
+  async pathnameExists(organizationId: string, pathname: string, tx?: TxClient): Promise<boolean> {
+    const count = await this.getDb(tx).mediaFile.count({ where: { organizationId, pathname } });
+    return count > 0;
   }
-}
 
-/** Blob hostnames encode the store's access level: <store>.public|private.blob.vercel-storage.com */
-function accessOf(url: string): BlobAccess {
-  return new URL(url).hostname.includes('.private.') ? 'private' : 'public';
+  async createMedia(
+    data: {
+      organizationId: string;
+      folder: string;
+      name: string;
+      pathname: string;
+      mimeType: string;
+      size: number;
+      data: Buffer;
+      createdBy: string | null;
+    },
+    tx?: TxClient
+  ) {
+    return this.getDb(tx).mediaFile.create({ data, select: MEDIA_METADATA });
+  }
+
+  async deleteByPathname(organizationId: string, pathname: string, tx?: TxClient): Promise<number> {
+    const result = await this.getDb(tx).mediaFile.deleteMany({ where: { organizationId, pathname } });
+    return result.count;
+  }
 }

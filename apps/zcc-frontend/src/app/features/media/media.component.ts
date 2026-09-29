@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
@@ -29,8 +30,8 @@ const KIND_ICONS: Record<MediaKind, string> = {
   other: 'pi pi-box',
 };
 
-/** Only content served from Vercel Blob (or our own object URLs) may be framed. */
-const TRUSTED_FRAME_HOST = /\.blob\.vercel-storage\.com$/;
+/** Mirrors the backend cap, so oversized files fail fast without an upload round-trip. */
+const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 
 export type MediaTab = 'all' | 'image' | 'video' | 'document';
 export type MediaSort = 'newest' | 'oldest' | 'name' | 'largest' | 'smallest';
@@ -61,6 +62,8 @@ export class MediaComponent {
   readonly items = signal<MediaItem[]>([]);
   readonly loading = signal(true);
   readonly loadingMore = signal(false);
+  readonly uploading = signal(false);
+  readonly maxUploadMb = MAX_UPLOAD_BYTES / (1024 * 1024);
   readonly error = signal<string | null>(null);
   readonly hasMore = signal(false);
   private cursor: string | null = null;
@@ -532,6 +535,41 @@ export class MediaComponent {
     this.previewLoading.set(false);
   }
 
+  async uploadFiles(input: HTMLInputElement): Promise<void> {
+    const files = Array.from(input.files ?? []);
+    input.value = ''; // allow re-selecting the same file
+    if (!files.length) return;
+
+    const oversized = files.filter((file) => file.size > MAX_UPLOAD_BYTES);
+    if (oversized.length) {
+      this.toastError(
+        `${oversized.map((f) => f.name).join(', ')} exceed${oversized.length === 1 ? 's' : ''} the ${this.maxUploadMb} MB limit.`
+      );
+    }
+    const accepted = files.filter((file) => file.size <= MAX_UPLOAD_BYTES);
+    if (!accepted.length) return;
+
+    this.uploading.set(true);
+    const uploaded: MediaItem[] = [];
+    for (const file of accepted) {
+      try {
+        uploaded.push(await firstValueFrom(this.mediaService.upload(file)));
+      } catch (err) {
+        this.toastError(errorMessage(err, `Could not upload ${file.name}.`));
+      }
+    }
+    this.uploading.set(false);
+
+    if (uploaded.length) {
+      this.items.update((items) => [...uploaded.reverse(), ...items]);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Uploaded',
+        detail: `${uploaded.length} file(s) added to the library.`,
+      });
+    }
+  }
+
   private toastError(detail: string): void {
     this.messageService.add({ severity: 'error', summary: 'Media', detail });
   }
@@ -547,14 +585,9 @@ const SORTERS: Record<MediaSort, (a: MediaItem, b: MediaItem) => number> = {
   smallest: (a, b) => a.size - b.size,
 };
 
+/** Documents are previewed from object URLs we created, never from a remote origin. */
 function isFrameable(src: string): boolean {
-  if (src.startsWith('blob:')) return true;
-  try {
-    const url = new URL(src);
-    return url.protocol === 'https:' && TRUSTED_FRAME_HOST.test(url.hostname);
-  } catch {
-    return false;
-  }
+  return src.startsWith('blob:');
 }
 
 function triggerDownload(href: string, fileName: string): void {

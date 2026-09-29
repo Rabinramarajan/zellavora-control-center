@@ -1,7 +1,8 @@
 import { StorageRepository } from './storage.repository';
-import type { ListMediaQuery, MediaPathQuery } from './storage.dto';
-import type { BlobContent, BlobFile, MediaItem, MediaPage, MediaType } from './storage.types';
-import { scopedPath, storageScope } from './storage.scope';
+import { AppError } from '../../middleware/error';
+import { MAX_MEDIA_BYTES } from './storage.dto';
+import type { ListMediaQuery, MediaPathQuery, UploadMediaInput } from './storage.dto';
+import type { MediaAccess, MediaContent, MediaItem, MediaPage, MediaType } from './storage.types';
 
 const MIME_BY_EXTENSION: Record<string, string> = {
   jpg: 'image/jpeg',
@@ -35,6 +36,16 @@ const MIME_BY_EXTENSION: Record<string, string> = {
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 };
 
+interface MediaMetadata {
+  id: string;
+  folder: string;
+  name: string;
+  pathname: string;
+  mimeType: string;
+  size: number;
+  createdAt: Date;
+}
+
 export class StorageService {
   private readonly repo = new StorageRepository();
 
@@ -45,45 +56,122 @@ export class StorageService {
     return { url, name: uniqueName };
   }
 
-  async listMedia(query: ListMediaQuery, tenantId: string): Promise<MediaPage> {
-    const scope = await storageScope(tenantId);
-    const prefix = query.prefix ? scopedPath(scope, query.prefix) : scope.prefix;
-    const page = await this.repo.listBlobs({ ...query, prefix }, scope);
+  async listMedia(query: ListMediaQuery, tenantId: string, publicBaseUrl: string): Promise<MediaPage> {
+    const offset = query.cursor ? Number(query.cursor) : 0;
+    const rows = await this.repo.listMedia(requireTenant(tenantId), {
+      prefix: query.prefix,
+      offset,
+      limit: query.limit,
+    });
+    const hasMore = rows.length > query.limit;
     return {
-      // The Blob API lists folder placeholders as zero-byte entries ending in '/'.
-      items: page.blobs.filter((blob) => !blob.pathname.endsWith('/')).map(toMediaItem),
-      cursor: page.cursor ?? null,
-      hasMore: page.hasMore,
+      items: rows.slice(0, query.limit).map((row) => toMediaItem(row, publicBaseUrl)),
+      cursor: hasMore ? String(offset + query.limit) : null,
+      hasMore,
     };
   }
 
-  async openMedia(query: MediaPathQuery, tenantId: string): Promise<BlobContent> {
-    const scope = await storageScope(tenantId);
-    return this.repo.openBlob(scopedPath(scope, query.pathname), query.access, scope);
+  async uploadMedia(
+    input: UploadMediaInput,
+    tenantId: string,
+    userId: string | undefined,
+    publicBaseUrl: string
+  ): Promise<MediaItem> {
+    const organizationId = requireTenant(tenantId);
+    const data = Buffer.from(input.base64Data.replace(/^data:[^;,]*;base64,/, ''), 'base64');
+    if (data.length === 0) {
+      throw new AppError('File is empty', 400, 'MEDIA_EMPTY');
+    }
+    if (data.length > MAX_MEDIA_BYTES) {
+      throw new AppError(
+        `File exceeds the ${MAX_MEDIA_BYTES / (1024 * 1024)} MB upload limit`,
+        413,
+        'MEDIA_TOO_LARGE'
+      );
+    }
+
+    const name = await this.availableName(organizationId, input.folder, input.fileName);
+    const row = await this.repo.createMedia({
+      organizationId,
+      folder: input.folder,
+      name,
+      pathname: joinPath(input.folder, name),
+      mimeType: input.mimeType || mimeTypeOf(name),
+      size: data.length,
+      data,
+      createdBy: userId ?? null,
+    });
+    return toMediaItem(row, publicBaseUrl);
+  }
+
+  async openMedia(query: MediaPathQuery, tenantId: string): Promise<MediaContent> {
+    const row = await this.repo.findByPathname(requireTenant(tenantId), query.pathname);
+    if (!row) throw new AppError('Media file not found', 404, 'MEDIA_NOT_FOUND');
+    return { data: Buffer.from(row.data), name: row.name, mimeType: row.mimeType, size: row.size };
+  }
+
+  /** Serves `public` media by id: the unguessable UUID is the capability, like a Blob URL. */
+  async openPublicMedia(id: string): Promise<MediaContent> {
+    const row = await this.repo.findById(id);
+    if (!row || accessOf(row.mimeType) !== 'public') {
+      throw new AppError('Media file not found', 404, 'MEDIA_NOT_FOUND');
+    }
+    return { data: Buffer.from(row.data), name: row.name, mimeType: row.mimeType, size: row.size };
   }
 
   async deleteMedia(query: MediaPathQuery, tenantId: string): Promise<void> {
-    const scope = await storageScope(tenantId);
-    return this.repo.deleteBlob(scopedPath(scope, query.pathname), scope);
+    const deleted = await this.repo.deleteByPathname(requireTenant(tenantId), query.pathname);
+    if (deleted === 0) throw new AppError('Media file not found', 404, 'MEDIA_NOT_FOUND');
+  }
+
+  /** Appends " (n)" before the extension until the pathname is free, like a desktop file manager. */
+  private async availableName(organizationId: string, folder: string, fileName: string): Promise<string> {
+    const dot = fileName.lastIndexOf('.');
+    const stem = dot > 0 ? fileName.slice(0, dot) : fileName;
+    const extension = dot > 0 ? fileName.slice(dot) : '';
+    let candidate = fileName;
+    for (let n = 1; await this.repo.pathnameExists(organizationId, joinPath(folder, candidate)); n++) {
+      candidate = `${stem} (${n})${extension}`;
+    }
+    return candidate;
   }
 }
 
-function toMediaItem(blob: BlobFile): MediaItem {
-  const segments = blob.pathname.split('/');
-  const name = segments.pop() ?? blob.pathname;
-  const mimeType = mimeTypeOf(name);
+function requireTenant(tenantId: string | undefined): string {
+  if (!tenantId) {
+    throw new AppError('Media Library requires an organization context', 403, 'TENANT_REQUIRED');
+  }
+  return tenantId;
+}
+
+function joinPath(folder: string, name: string): string {
+  return folder ? `${folder}/${name}` : name;
+}
+
+function toMediaItem(row: MediaMetadata, publicBaseUrl: string): MediaItem {
+  const url = `${publicBaseUrl}/${row.id}`;
   return {
-    pathname: blob.pathname,
-    name,
-    folder: segments.join('/'),
-    type: mediaTypeOf(mimeType),
-    mimeType,
-    size: blob.size,
-    uploadedAt: new Date(blob.uploadedAt).toISOString(),
-    access: blob.access,
-    url: blob.url,
-    downloadUrl: blob.downloadUrl,
+    id: row.id,
+    pathname: row.pathname,
+    name: row.name,
+    folder: row.folder,
+    type: mediaTypeOf(row.mimeType),
+    mimeType: row.mimeType,
+    size: row.size,
+    uploadedAt: row.createdAt.toISOString(),
+    access: accessOf(row.mimeType),
+    url,
+    downloadUrl: `${url}?download=1`,
   };
+}
+
+/**
+ * Images, video and audio get a direct URL so thumbnails and players can load them.
+ * Documents stay behind the authenticated endpoint; the UI previews them as object URLs.
+ */
+function accessOf(mimeType: string): MediaAccess {
+  const type = mediaTypeOf(mimeType);
+  return type === 'image' || type === 'video' || type === 'audio' ? 'public' : 'private';
 }
 
 function mimeTypeOf(fileName: string): string {
