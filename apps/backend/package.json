@@ -18,6 +18,7 @@
     "db:reset": "node scripts/with-env.cjs prisma migrate reset",
     "db:seed": "node scripts/with-env.cjs tsx src/db/seed.ts",
     "db:seed:owner": "node scripts/with-env.cjs tsx src/db/seed-owner-user.ts",
+    "db:seed:freelancer": "node scripts/with-env.cjs tsx src/db/seed-freelancer-user.ts",
     "db:import:galaxy-sofas": "node scripts/import-galaxy-sofas.cjs",
     "lint": "eslint src --ext .ts",
     "test": "jest"

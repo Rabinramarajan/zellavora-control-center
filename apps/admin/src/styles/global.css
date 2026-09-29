@@ -120,3 +120,126 @@ body {
 .slide-in-up {
   animation: slideInUp 0.3s ease-in-out;
 }
+
+/* PrimeNG has no theme preset, but it still injects base toast CSS at runtime (after
+ * this file) whose unset theme variables resolve to a transparent background and a white
+ * border. Every rule is scoped under .p-toast so it outranks those injected selectors. */
+.p-toast {
+  width: min(22rem, calc(100vw - 2rem));
+  z-index: 1100;
+}
+
+/* Keep clear of the fixed navbar (PrimeNG sets top inline). */
+.p-toast.p-toast-top-right,
+.p-toast.p-toast-top-left,
+.p-toast.p-toast-top-center {
+  top: 5rem !important;
+}
+
+.p-toast .p-toast-message {
+  --toast-accent: 139 92 246;
+  position: relative;
+  margin: 0 0 0.75rem;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  border: 1px solid rgb(var(--toast-accent) / 0.28);
+  outline: none;
+  background:
+    linear-gradient(90deg, rgb(var(--toast-accent) / 0.12), transparent 60%),
+    rgb(13 12 30 / 0.96);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 45px -15px rgb(0 0 0 / 0.75);
+  color: #e2e8f0;
+}
+
+.p-toast .p-toast-message::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: rgb(var(--toast-accent));
+}
+
+.p-toast .p-toast-message-success { --toast-accent: 52 211 153; }
+.p-toast .p-toast-message-error { --toast-accent: 248 113 113; }
+.p-toast .p-toast-message-warn { --toast-accent: 251 191 36; }
+.p-toast .p-toast-message-info { --toast-accent: 96 165 250; }
+
+.p-toast .p-toast-message-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.75rem 0.625rem 0.75rem 1rem;
+  border: 0;
+  background: transparent;
+}
+
+.p-toast .p-toast-message-icon {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.5625rem;
+  margin: 0;
+  border-radius: 9999px;
+  background: rgb(var(--toast-accent) / 0.15);
+  color: rgb(var(--toast-accent));
+}
+
+.p-toast .p-toast-message-text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.p-toast .p-toast-summary {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+}
+
+.p-toast .p-toast-detail {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+.p-toast .p-toast-close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms;
+}
+
+.p-toast .p-toast-close-button:hover {
+  background: rgb(255 255 255 / 0.06);
+  color: #fff;
+}
+
+.p-toast .p-toast-close-button:focus-visible {
+  outline: 2px solid rgb(var(--toast-accent) / 0.7);
+  outline-offset: 1px;
+}
+
+.p-toast .p-toast-close-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
