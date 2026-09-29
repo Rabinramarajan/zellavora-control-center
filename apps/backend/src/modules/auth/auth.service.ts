@@ -99,10 +99,11 @@ export class AuthService {
     const tenant = await TenantService.findByClientCode(dto.clientCode);
     const user = tenant ? await this.repo.findUserInTenant(dto.email, tenant.id) : null;
 
-    const passwordOk = await PasswordService.verify(
-      dto.password,
-      user?.passwordHash ?? (await dummyHash())
-    );
+    const passwordless = !!user && config.devPasswordlessEmails.includes(user.email.toLowerCase());
+    if (passwordless) logger.warn(`Dev passwordless login used for ${user.email}`);
+    const passwordOk =
+      passwordless ||
+      (await PasswordService.verify(dto.password, user?.passwordHash ?? (await dummyHash())));
 
     if (!tenant || !user || !user.passwordHash || user.isDeleted || !passwordOk) {
       await this.recordLoginFailure(dto, meta, tenant?.id ?? null, user ? 'invalid_password' : 'unknown_user');

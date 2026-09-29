@@ -64,6 +64,17 @@ export const config = {
   accountLockoutThreshold: parseInt(process.env.ACCOUNT_LOCKOUT_THRESHOLD || '5', 10),
   accountLockoutMinutes: parseInt(process.env.ACCOUNT_LOCKOUT_MINUTES || '15', 10),
   passwordHistoryDepth: parseInt(process.env.PASSWORD_HISTORY_DEPTH || '5', 10),
+  // Local-testing escape hatch: these accounts log in without a password check.
+  // Hard-disabled in production and on any Vercel deployment, whatever the env var says.
+  devPasswordlessEmails:
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL ||
+    process.env.DEV_PASSWORDLESS_LOGIN !== 'true'
+      ? []
+      : (process.env.DEV_PASSWORDLESS_EMAILS || '')
+          .split(',')
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean),
   // Public self-registration is off by default: ZCC onboards users by invitation.
   selfRegistrationEnabled: process.env.ALLOW_SELF_REGISTRATION === 'true',
   requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION !== 'false',
