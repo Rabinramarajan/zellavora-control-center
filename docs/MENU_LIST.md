@@ -15,6 +15,9 @@ the user's permissions. The frontend renders it in
 
 ## Full Menu Tree
 
+Group headers (route `—`) have no page of their own and are hidden when none of
+their children are visible to the user.
+
 | # | Icon | Label | Route | Key | Required Permission |
 |---|------|-------|-------|-----|---------------------|
 | 1 | 📊 | Dashboard | `/dashboard` | `dashboard` | `dashboard:read` |
@@ -28,72 +31,38 @@ the user's permissions. The frontend renders it in
 | 2.7 | 🛠️ | ↳ Services | `/portfolio/services` | `portfolio-services` | — |
 | 2.8 | 💬 | ↳ Testimonials | `/portfolio/testimonials` | `portfolio-testimonials` | — |
 | 3 | 🗂️ | Projects | `/projects` | `projects` | — |
-| 4 | ✍️ | Blog | `/blog` | `blog` | — |
-| 5 | 🖼️ | Media | `/media` | `media` | — |
-| 6 | 🧱 | CMS Builder | `/cms-builder` | `cms-builder` | — |
-| 7 | 🎛️ | Theme Builder | `/theme-builder` | `theme-builder` | — |
-| 8 | 📈 | Analytics | `/analytics` | `analytics` | — |
-| 9 | 📋 | Freelancer Sheets | `/freelancer-sheets` | `freelancer-sheets` | — |
-| 9.1 | 📅 | ↳ Daily Sheets | `/freelancer-sheets/daily` | `daily-sheets` | — |
-| 9.2 | 📊 | ↳ Monthly Sheets | `/freelancer-sheets/monthly` | `monthly-sheets` | — |
-| 9.3 | ✓ | ↳ Approval Queue | `/freelancer-sheets/approval` | `approval-queue` | `timesheet:approve` |
-| 10 | ⏱️ | Timesheets | `/timesheets` | `timesheets` | — |
-| 11 | 👥 | Users | `/users` | `users` | `users:read` |
-| 12 | 🔑 | Identity & Access | `/iam` | `iam` | `system:rbac:read` |
-| 12.1 | 🧩 | ↳ Resources | `/iam/resources` | `iam-resources` | `resources:read` |
-| 12.2 | 👑 | ↳ Roles | `/iam/roles` | `iam-roles` | `roles:read` |
-| 12.3 | 🧑‍🤝‍🧑 | ↳ Groups | `/iam/groups` | `iam-groups` | `groups:read` |
-| 12.4 | 🙍 | ↳ Users | `/iam/users` | `iam-users` | `users:read` |
-| 13 | 🛡️ | Admin | `/admin` | `admin` | `users:manage` |
-| 13.1 | 👥 | ↳ Users | `/admin/users` | `admin-users` | `users:manage` |
-| 13.2 | 🔐 | ↳ Roles & Permissions | `/admin/roles` | `admin-roles` | `roles:manage` |
-| 13.3 | 🧩 | ↳ Resources | `/admin/resources` | `admin-resources` | `resources:manage` |
-| 13.4 | 🏢 | ↳ Branches | `/admin/branches` | `admin-branches` | `users:manage` |
-| 14 | 🧾 | Audit Logs | `/audit-logs` | `audit-logs` | `system:audit:read` |
-| 15 | 🩺 | System Health | `/system-health` | `system-health` | `system:rbac:read` |
-| 16 | 🔔 | Notifications | `/notifications` | `notifications` | — |
-| 17 | ⚙️ | Settings | `/settings` | `settings` | `settings:manage` |
+| 4 | 📝 | Content | — | `content` | — |
+| 4.1 | ✍️ | ↳ Blog / Insights | `/blog` | `blog` | — |
+| 4.2 | 🖼️ | ↳ Media Library | `/media` | `media` | — |
+| 4.3 | 🧱 | ↳ CMS Builder | `/cms-builder` | `cms-builder` | — |
+| 5 | 🖌️ | Appearance | — | `appearance` | — |
+| 5.1 | 🎛️ | ↳ Theme Builder | `/theme-builder` | `theme-builder` | — |
+| 6 | 📈 | Analytics | `/analytics` | `analytics` | — |
+| 7 | 💼 | Freelancer | — | `freelancer` | — |
+| 7.1 | 📅 | ↳ Daily Sheets | `/freelancer-sheets/daily` | `daily-sheets` | — |
+| 7.2 | 📊 | ↳ Monthly Sheets | `/freelancer-sheets/monthly` | `monthly-sheets` | — |
+| 7.3 | ⏱️ | ↳ Timesheets | `/timesheets` | `timesheets` | — |
+| 7.4 | ✓ | ↳ Approval Queue | `/freelancer-sheets/approval` | `approval-queue` | `timesheet:approve` |
+| 8 | 👥 | Identity & Access | — | `iam` | — |
+| 8.1 | 🙍 | ↳ Users | `/iam/users` | `iam-users` | `users:read` |
+| 8.2 | 👑 | ↳ Roles | `/iam/roles` | `iam-roles` | `roles:read` |
+| 8.3 | 🔐 | ↳ Permissions | `/admin/roles` | `iam-permissions` | `roles:manage` |
+| 8.4 | 🧑‍🤝‍🧑 | ↳ Groups | `/iam/groups` | `iam-groups` | `groups:read` |
+| 8.5 | 🧩 | ↳ Resources | `/iam/resources` | `iam-resources` | `resources:read` |
+| 9 | 🏢 | Organization | — | `organization` | — |
+| 9.1 | 🏬 | ↳ Branches | `/admin/branches` | `org-branches` | `users:manage` |
+| 10 | 🔔 | Notifications | `/notifications` | `notifications` | — |
+| 11 | 🛡️ | Operations | — | `operations` | — |
+| 11.1 | 🧾 | ↳ Audit Logs | `/audit-logs` | `audit-logs` | `system:audit:read` |
+| 11.2 | 🩺 | ↳ System Health | `/system-health` | `system-health` | `system:rbac:read` |
+| 12 | ⚙️ | System | — | `system` | — |
+| 12.1 | 🛠️ | ↳ General Settings | `/settings` | `settings` | `settings:manage` |
 
-**Totals:** 17 top-level items, 19 sub-items (36 entries).
+**Totals:** 12 top-level items, 25 sub-items (37 entries).
 
-## Outline View
-
-- 📊 Dashboard
-- 🎨 Portfolio
-  - 👤 Profile
-  - 🌟 Hero
-  - 📝 About
-  - 🧠 Skills
-  - 💼 Experience
-  - 🎓 Education
-  - 🛠️ Services
-  - 💬 Testimonials
-- 🗂️ Projects
-- ✍️ Blog
-- 🖼️ Media
-- 🧱 CMS Builder
-- 🎛️ Theme Builder
-- 📈 Analytics
-- 📋 Freelancer Sheets
-  - 📅 Daily Sheets
-  - 📊 Monthly Sheets
-  - ✓ Approval Queue
-- ⏱️ Timesheets
-- 👥 Users
-- 🔑 Identity & Access
-  - 🧩 Resources
-  - 👑 Roles
-  - 🧑‍🤝‍🧑 Groups
-  - 🙍 Users
-- 🛡️ Admin
-  - 👥 Users
-  - 🔐 Roles & Permissions
-  - 🧩 Resources
-  - 🏢 Branches
-- 🧾 Audit Logs
-- 🩺 System Health
-- 🔔 Notifications
-- ⚙️ Settings
+The separate top-level `Users` and `Admin` entries were removed; all user
+administration lives under Identity & Access. The `/users` and `/admin/*` routes
+still exist for deep links.
 
 ## Supabase Deployment Note
 
