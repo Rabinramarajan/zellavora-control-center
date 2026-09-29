@@ -6,22 +6,22 @@ import { AuthLayoutComponent } from './layout/auth-layout.component';
 export const authRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   {
-    // Sign-in owns its full-screen composition, so it skips the shared layout.
+    // Sign-in and registration own a full-screen composition, so they skip the shared layout.
     path: 'login',
     title: 'Sign in · ZCC',
     canActivate: [guestGuard],
     loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
   {
+    path: 'register',
+    title: 'Create account · ZCC',
+    canActivate: [guestGuard, registrationGuard],
+    loadComponent: () => import('./pages/register/register.page').then((m) => m.RegisterPage),
+  },
+  {
     path: '',
     component: AuthLayoutComponent,
     children: [
-      {
-        path: 'register',
-        title: 'Create account · ZCC',
-        canActivate: [guestGuard, registrationGuard],
-        loadComponent: () => import('./pages/register/register.page').then((m) => m.RegisterPage),
-      },
       {
         path: 'accept-invitation',
         title: 'Accept invitation · ZCC',

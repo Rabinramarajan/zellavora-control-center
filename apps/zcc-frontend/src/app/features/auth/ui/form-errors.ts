@@ -38,7 +38,7 @@ export function injectPasswordPolicy(): Signal<PasswordPolicy> {
     inject(AuthService)
       .config()
       .pipe(
-        map((c) => c.passwordPolicy),
+        map((c) => c.passwordPolicy ?? DEFAULT_PASSWORD_POLICY),
         catchError(() => of(DEFAULT_PASSWORD_POLICY))
       ),
     { initialValue: DEFAULT_PASSWORD_POLICY }

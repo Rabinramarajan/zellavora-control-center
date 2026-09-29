@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { FormField, FormRoot, form, required, validate } from '@angular/forms/signals';
+import { FormField, FormRoot, form, required, validate, type FieldTree } from '@angular/forms/signals';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { SelectControl, type SelectControlOption } from '@zellavoras/ui';
 import { AuthService } from '@core/auth/auth.service';
@@ -16,7 +16,17 @@ import {
 } from '../../ui/auth-validation';
 import { injectPasswordPolicy, mapServerErrors } from '../../ui/form-errors';
 
-/** Self-registration. Routed only when the server enables it (registrationGuard). */
+interface Highlight {
+  readonly icon: 'shield' | 'chart' | 'layers';
+  readonly tone: 'cyan' | 'violet' | 'emerald';
+  readonly title: string;
+  readonly copy: string;
+}
+
+/**
+ * Full-screen self-registration, sharing the sign-in showcase. Routed only
+ * when the server enables it (registrationGuard).
+ */
 @Component({
   selector: 'app-register-page',
   standalone: true,
@@ -29,114 +39,38 @@ import { injectPasswordPolicy, mapServerErrors } from '../../ui/form-errors';
     AuthAlertComponent,
     PasswordRequirementsComponent,
   ],
-  template: `
-    <section class="auth-page" aria-labelledby="register-title">
-      <header>
-        <h1 id="register-title" class="auth-title">Create your account</h1>
-        <p class="auth-lead">Join your organization's workspace on Zellavora Control Center.</p>
-      </header>
-
-      @if (submitted()) {
-        <app-auth-alert tone="success" heading="Check your email">
-          If the details are valid, a verification link is on its way to
-          <strong>{{ model().email }}</strong>. Verify your email, then sign in.
-        </app-auth-alert>
-        <a class="auth-btn auth-btn--primary" routerLink="/auth/login">Go to sign in</a>
-        <p class="auth-footer-note">
-          No email? <a class="auth-link" routerLink="/auth/resend-verification">Resend verification</a>
-        </p>
-      } @else {
-        @if (formError()) {
-          <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
-        }
-        <form class="auth-form" [formRoot]="form" aria-labelledby="register-title">
-          <app-select-control
-            [formField]="form.clientCode"
-            label="Organization"
-            icon="building"
-            placeholder="Select your organization"
-            searchPlaceholder="Search organizations…"
-            [options]="orgOptions()"
-            [searchable]="true"
-          />
-          <div class="auth-row">
-            <app-auth-field [formField]="form.firstName" label="First name" autocomplete="given-name" />
-            <app-auth-field [formField]="form.lastName" label="Last name" autocomplete="family-name" />
-          </div>
-          <app-auth-field
-            [formField]="form.email"
-            label="Work email"
-            type="email"
-            autocomplete="email"
-            inputmode="email"
-            placeholder="name@company.com"
-          />
-          <div>
-            <app-auth-field
-              [formField]="form.password"
-              label="Password"
-              type="password"
-              autocomplete="new-password"
-            />
-            <app-password-requirements [password]="model().password" [policy]="policy()" />
-          </div>
-          <app-auth-field
-            [formField]="form.confirmPassword"
-            label="Confirm password"
-            type="password"
-            autocomplete="new-password"
-          />
-
-          <div>
-            <label class="auth-check">
-              <input
-                type="checkbox"
-                [formField]="form.acceptTerms"
-                [attr.aria-invalid]="termsError() ? true : null"
-                [attr.aria-describedby]="termsError() ? 'terms-error' : null"
-              />
-              <span>
-                I agree to the
-                <a class="auth-link" href="https://zellavora.com/terms" target="_blank" rel="noopener">Terms of Service</a>
-                and
-                <a class="auth-link" href="https://zellavora.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
-              </span>
-            </label>
-            @if (termsError()) {
-              <p id="terms-error" class="auth-inline-error">
-                {{ termsError() }}
-              </p>
-            }
-          </div>
-
-          <button type="submit" class="auth-btn auth-btn--primary" [disabled]="form().submitting()">
-            @if (form().submitting()) {
-              <span class="auth-spinner" aria-hidden="true"></span><span>Creating account…</span>
-            } @else {
-              <span>Create account</span>
-            }
-          </button>
-        </form>
-        <p class="auth-footer-note">
-          Already have an account? <a class="auth-link" routerLink="/auth/login">Sign in</a>
-        </p>
-      }
-    </section>
-  `,
+  templateUrl: './register.page.html',
+  styleUrls: ['../../ui/auth-showcase.css', './register.page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterPage {
   private readonly auth = inject(AuthService);
+  private readonly injector = inject(Injector);
+
+  protected readonly year = new Date().getFullYear();
+  protected readonly highlights: readonly Highlight[] = [
+    { icon: 'shield', tone: 'violet', title: 'Enterprise grade', copy: 'Secure, compliant and audit ready' },
+    { icon: 'chart', tone: 'cyan', title: 'Built for scale', copy: 'Grow your business without limits' },
+    { icon: 'layers', tone: 'emerald', title: 'Unified control', copy: 'Everything you need in one place' },
+  ];
 
   protected readonly policy = injectPasswordPolicy();
   protected readonly submitted = signal(false);
+  protected readonly step = signal<1 | 2>(1);
+  protected readonly steps = [
+    { id: 1, label: 'Your details' },
+    { id: 2, label: 'Secure account' },
+  ] as const;
+  protected readonly initials = computed(() => {
+    const { firstName, lastName } = this.model();
+    return `${firstName.trim()[0] ?? ''}${lastName.trim()[0] ?? ''}`.toUpperCase();
+  });
   protected readonly formError = signal<string | null>(null);
 
-  private readonly orgs = toSignal(this.auth.clients().pipe(catchError(() => of([]))), {
-    initialValue: [],
-  });
+  private readonly orgs = toSignal(this.auth.clients().pipe(catchError(() => of([]))));
+  protected readonly orgsLoading = computed(() => this.orgs() === undefined);
   protected readonly orgOptions = computed<SelectControlOption[]>(() =>
-    this.orgs().map((org) => ({
+    (this.orgs() ?? []).map((org) => ({
       value: org.clientCode.toLowerCase(),
       label: org.name,
       description: org.clientCode,
@@ -203,7 +137,38 @@ export class RegisterPage {
         "We couldn't create your account. Please try again."
       );
       this.formError.set(message);
+      const detailFields = this.detailFields();
+      if (fieldErrors.some((e) => detailFields.includes(e.fieldTree as FieldTree<unknown>))) {
+        this.step.set(1);
+      }
       return fieldErrors;
     }
+  }
+
+  private detailFields(): FieldTree<unknown>[] {
+    return [this.form.clientCode, this.form.firstName, this.form.lastName, this.form.email];
+  }
+
+  /** Validates step one in place; the full form only submits from step two. */
+  protected next(): void {
+    const fields = this.detailFields();
+    fields.forEach((f) => f().markAsTouched());
+    const firstInvalid = fields.find((f) => f().invalid());
+    if (firstInvalid) {
+      firstInvalid().focusBoundControl();
+      return;
+    }
+    this.formError.set(null);
+    this.goTo(2, this.form.password);
+  }
+
+  protected back(): void {
+    this.goTo(1, this.form.clientCode);
+  }
+
+  /** Swaps steps and moves focus into the new one so keyboard and screen-reader users are not stranded. */
+  private goTo(step: 1 | 2, focusTarget: FieldTree<unknown>): void {
+    this.step.set(step);
+    afterNextRender(() => focusTarget().focusBoundControl(), { injector: this.injector });
   }
 }

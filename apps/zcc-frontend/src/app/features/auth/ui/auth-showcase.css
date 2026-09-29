@@ -1,6 +1,6 @@
 /* =====================================================================
-   Sign-in — full-screen brand story with product preview and a glass card.
-   Desktop: two-column grid. Below lg: the card alone, brand on top.
+   Full-screen auth showcase (sign-in, registration): brand story, product
+   preview and a glass card. Desktop: two-column grid. Below lg: card only.
    ===================================================================== */
 
 :host {

@@ -1,0 +1,461 @@
+/* Registration-specific additions on top of the shared auth showcase. */
+
+.register-shell {
+  grid-template-areas:
+    'top'
+    'card'
+    'legal';
+}
+
+.trust-pill {
+  display: none;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.06);
+  font-size: 0.85rem;
+  color: var(--auth-text);
+}
+.trust-pill__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--lp-emerald);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.8);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.kicker {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a78bfa;
+}
+.kicker + .card-title {
+  margin-top: 0.6rem;
+}
+.title-accent {
+  background: linear-gradient(90deg, #818cf8 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Open stats strip, as in the reference: no panel, icons in soft rings. */
+.stats--open {
+  padding: 0;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+}
+.stats--open li + li {
+  border-left: 0;
+}
+.stats--open .stat-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 22px -6px rgba(139, 92, 246, 0.6);
+}
+.stat-icon--emerald {
+  color: var(--lp-emerald);
+  background: rgba(52, 211, 153, 0.1);
+}
+.stats--open .stat-icon--emerald {
+  border-color: rgba(52, 211, 153, 0.3);
+  box-shadow: 0 0 22px -6px rgba(52, 211, 153, 0.6);
+}
+
+.page-legal {
+  grid-area: legal;
+  margin-top: 0;
+}
+
+.card-inner .auth-form {
+  margin-top: 1.5rem;
+}
+.note--plain {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 1.25rem;
+}
+
+a.submit {
+  margin-top: 1.75rem;
+  text-decoration: none;
+}
+
+.done {
+  display: flex;
+  flex-direction: column;
+  animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.done__icon {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 1.25rem;
+  border-radius: 1rem;
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 0 30px -8px rgba(139, 92, 246, 0.8);
+}
+.done__email {
+  color: var(--auth-text-strong);
+  word-break: break-all;
+}
+
+@media (min-width: 640px) {
+  .trust-pill {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 1024px) {
+  .register-shell {
+    grid-template-columns: minmax(0, 1.25fr) minmax(26rem, 33rem);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'top   card'
+      'story card'
+      'stats card'
+      'legal card';
+  }
+  .register-shell .topbar {
+    align-self: start;
+  }
+  .register-shell .card {
+    align-self: center;
+  }
+  .page-legal {
+    justify-content: flex-start;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Soften the corner glow into a diffuse bloom; the base sweep shows a hard edge on this taller card. */
+.card-inner::before {
+  top: -20%;
+  right: -20%;
+  width: 60%;
+  height: 50%;
+  border-radius: 50%;
+  filter: blur(40px);
+}
+
+.card-inner .auth-check {
+  align-items: flex-start;
+  cursor: pointer;
+}
+.card-inner .auth-check input {
+  appearance: none;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.1rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.card-inner .auth-check input::after {
+  content: '';
+  width: 0.35rem;
+  height: 0.6rem;
+  margin-top: -0.12rem;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.15s ease;
+}
+.card-inner .auth-check input:checked {
+  border-color: transparent;
+  background: linear-gradient(135deg, #7c3aed, var(--lp-indigo));
+  box-shadow: 0 0 14px -2px rgba(124, 58, 237, 0.7);
+}
+.card-inner .auth-check input:checked::after {
+  transform: rotate(45deg) scale(1);
+}
+.card-inner .auth-check input:hover {
+  border-color: #a78bfa;
+}
+.card-inner .auth-check input:focus-visible {
+  outline: 2px solid var(--auth-accent);
+  outline-offset: 2px;
+}
+.card-inner .auth-check input[aria-invalid='true'] {
+  border-color: var(--auth-danger);
+}
+
+@media (min-width: 1024px) {
+  .register-shell .card-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2.5rem 2.5rem 2rem;
+  }
+}
+
+/* Match the library select's label to the auth-field labels beside it. */
+:host ::ng-deep .card-inner .sc-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--auth-text-strong);
+  padding-left: 0;
+}
+
+/* Themed, overlay-thin scrollbar instead of the light native one. */
+.card-inner {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.45) transparent;
+  scrollbar-gutter: stable;
+}
+.card-inner::-webkit-scrollbar {
+  width: 6px;
+}
+.card-inner::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 1.25rem 0;
+}
+.card-inner::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(139, 92, 246, 0.45);
+}
+.card-inner::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.7);
+}
+
+@media (min-width: 1024px) {
+  /* "safe" keeps the top reachable when the form outgrows the card. */
+  .register-shell .card-inner {
+    justify-content: safe center;
+  }
+}
+
+/* Keep the laptop clear of the highlight copy when vertical room is short. */
+@media (min-width: 1024px) and (max-height: 860px) {
+  .register-shell .device {
+    width: min(50%, 30rem);
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* ---------- Stepper ---------- */
+.stepper {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.stepper__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--auth-text-muted);
+  transition:
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+.stepper__item--active {
+  color: var(--auth-text-strong);
+  border-image: linear-gradient(90deg, #7c3aed, var(--lp-indigo)) 1;
+}
+.stepper__item--done {
+  color: var(--auth-text);
+  border-bottom-color: rgba(52, 211, 153, 0.55);
+}
+.stepper__dot {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.stepper__item--active .stepper__dot {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, var(--lp-indigo));
+  box-shadow: 0 0 18px -3px rgba(124, 58, 237, 0.85);
+}
+.stepper__item--done .stepper__dot {
+  border-color: rgba(52, 211, 153, 0.5);
+  color: var(--lp-emerald);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.step-pane {
+  animation: step-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ---------- Step 2: who is registering ---------- */
+.step-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: rgba(139, 92, 246, 0.07);
+}
+.step-summary__avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, var(--lp-indigo) 50%, #c026d3);
+}
+.step-summary__text {
+  min-width: 0;
+  flex: 1;
+}
+.step-summary__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.step-summary__email {
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  color: var(--auth-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.step-summary__edit {
+  flex-shrink: 0;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a5b4fc;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.step-summary__edit:hover {
+  background: rgba(139, 92, 246, 0.15);
+}
+.step-summary__edit:focus-visible,
+.back-btn:focus-visible {
+  outline: 2px solid var(--auth-accent);
+  outline-offset: 2px;
+}
+
+.step-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+.step-actions .submit {
+  flex: 1;
+  margin-top: 0;
+}
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 3.1rem;
+  padding: 0 1.2rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  font-weight: 600;
+  color: var(--auth-text);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.back-btn:hover {
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Laptop-height screens: tighter rhythm so each step fits without scrolling. */
+@media (min-width: 1024px) and (max-height: 860px) {
+  .register-shell .card-inner {
+    padding: 1.5rem 2.25rem 1.25rem;
+  }
+  .register-shell .card-title {
+    font-size: 1.65rem;
+    margin-top: 0.4rem;
+  }
+  .register-shell .card-lead {
+    margin-top: 0.3rem;
+    font-size: 0.875rem;
+  }
+  .register-shell .stepper {
+    margin-top: 1rem;
+  }
+  .register-shell .stepper__item {
+    padding-bottom: 0.6rem;
+  }
+  .register-shell .card-inner .auth-form {
+    margin-top: 1rem;
+    gap: 0.8rem;
+  }
+  .register-shell .step-summary {
+    padding: 0.5rem 0.75rem;
+  }
+  :host ::ng-deep .register-shell .reqs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.2rem 0.6rem;
+  }
+  .register-shell .note {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+  }
+}

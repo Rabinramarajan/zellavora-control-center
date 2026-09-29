@@ -14,7 +14,7 @@ import type { FormValueControl, ValidationError, WithOptionalFieldTree } from '@
 let nextId = 0;
 
 type FieldType = 'text' | 'email' | 'password';
-type FieldIcon = 'mail' | 'lock';
+type FieldIcon = 'mail' | 'lock' | 'user';
 
 /**
  * Text / email / password input bound with `[formField]`.
@@ -42,6 +42,8 @@ type FieldIcon = 'mail' | 'lock';
           <svg class="auth-field__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             @if (glyph === 'mail') {
               <rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" />
+            } @else if (glyph === 'user') {
+              <circle cx="12" cy="8" r="3.6" /><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6" />
             } @else {
               <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /><circle cx="12" cy="15.5" r="1.2" />
             }
