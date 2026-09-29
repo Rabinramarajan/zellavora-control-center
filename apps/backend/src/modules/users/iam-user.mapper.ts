@@ -27,6 +27,7 @@ export interface IamUserListItemDto {
   lastLoginDatetime: string | null;
   emailVerified: boolean;
   roleCount: number;
+  primaryRole: { name: string; key: string } | null;
   groupCount: number;
   createdAt: string;
   updatedAt: string;
@@ -93,6 +94,9 @@ export class IamUserMapper {
       lastLoginDatetime: row.lastLoginDatetime?.toISOString() ?? null,
       emailVerified: row.emailVerified,
       roleCount: row._count?.roleAssignments ?? row.roleAssignments?.length ?? 0,
+      primaryRole: row.roleAssignments?.[0]?.role
+        ? { name: row.roleAssignments[0].role.name, key: row.roleAssignments[0].role.key }
+        : null,
       groupCount: row._count?.userGroups ?? row.userGroups?.length ?? 0,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),

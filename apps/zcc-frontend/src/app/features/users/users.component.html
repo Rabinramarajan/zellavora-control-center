@@ -1,331 +1,391 @@
 <p-toast />
 
-<section class="um-page relative flex flex-col gap-6">
-  <div class="um-aurora pointer-events-none" aria-hidden="true"></div>
+<section class="us-page relative flex flex-col gap-6">
+  <div class="us-aurora pointer-events-none" aria-hidden="true"></div>
 
-  <!-- Header -->
-  <header class="um-rise relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <!-- Breadcrumb + header -->
+  <header class="us-rise flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-white sm:text-[1.9rem]">User Management</h1>
-      <p class="mt-1 text-sm text-slate-400 sm:text-base">
-        Manage system users, roles, permissions and branch access.
-      </p>
+      <nav aria-label="Breadcrumb" class="mb-3 flex items-center gap-2 text-sm text-slate-400">
+        <a routerLink="/" class="transition-colors hover:text-white">Home</a>
+        <i class="pi pi-angle-right text-[0.7rem] text-slate-500" aria-hidden="true"></i>
+        <span class="text-slate-200" aria-current="page">Users</span>
+      </nav>
+      <h1 class="text-[1.75rem] font-bold leading-tight tracking-tight text-white sm:text-[2rem]">User Search</h1>
+      <p class="mt-1.5 text-sm text-slate-400 sm:text-[0.95rem]">Search, filter, view and manage all users across ZCC.</p>
     </div>
-    <button type="button" class="um-btn-primary h-12 px-6 text-[0.95rem]" (click)="addUser()">
-      <i class="pi pi-plus text-sm"></i>
-      Add New User
-    </button>
+    <div class="flex gap-3">
+      <button type="button" class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none" (click)="exportUsers()">
+        <i class="pi pi-download text-sm" aria-hidden="true"></i>
+        Export
+      </button>
+      <a routerLink="/iam/users/new" class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none">
+        <i class="pi pi-plus text-sm" aria-hidden="true"></i>
+        Add New User
+      </a>
+    </div>
   </header>
 
-  <!-- Stat cards -->
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-    @for (card of stats(); track card.label; let i = $index) {
-      <article class="um-stat um-rise" [attr.data-accent]="card.accent" [style.animation-delay.ms]="60 + i * 60">
-        <div class="flex items-start gap-4">
-          <span class="um-stat-icon"><i [class]="card.icon"></i></span>
-          <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-slate-300">{{ card.label }}</p>
-            <p class="mt-1 text-3xl font-bold leading-none text-white tabular-nums">{{ card.value }}</p>
-            <p class="mt-3 text-xs" [class]="card.captionTone === 'up' ? 'text-emerald-400' : 'text-slate-400'">
-              @if (card.captionTone === 'up') {
-                <i class="pi pi-arrow-up mr-1 text-[0.6rem]"></i>
-              }
-              {{ card.caption }}
-            </p>
-          </div>
-        </div>
-        @if (card.chart === 'bars') {
-          <div class="um-bars" aria-hidden="true">
-            @for (h of barHeights; track $index) {
-              <span [style.height.%]="h" [style.animation-delay.ms]="200 + $index * 70"></span>
-            }
-          </div>
-        } @else {
-          <svg class="um-spark" viewBox="0 0 88 40" aria-hidden="true">
-            <defs>
-              <linearGradient [attr.id]="'spark-' + card.accent" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="currentColor" stop-opacity="0.35" />
-                <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
-              </linearGradient>
-            </defs>
-            <path [attr.d]="card.path + ' L 86 40 L 2 40 Z'" [attr.fill]="'url(#spark-' + card.accent + ')'" />
-            <path class="um-spark-line" [attr.d]="card.path" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        }
-      </article>
+  <!-- Stat chips -->
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:flex lg:flex-wrap">
+    @for (card of stats; track card.label; let i = $index) {
+      <button
+        type="button"
+        class="us-stat us-rise"
+        [attr.data-tone]="card.tone"
+        [class.is-active]="applied().status === card.status"
+        [attr.aria-pressed]="applied().status === card.status"
+        [style.animation-delay.ms]="50 + i * 55"
+        (click)="filterByStatus(card.status)"
+      >
+        <span class="us-stat-icon"><i [class]="card.icon" aria-hidden="true"></i></span>
+        <span class="min-w-0 text-left">
+          @if (statCounts()[card.label] === undefined) {
+            <span class="us-skeleton mb-1 block h-5 w-10"></span>
+          } @else {
+            <span class="block text-lg font-semibold leading-tight text-white tabular-nums">
+              {{ statCounts()[card.label] === null ? '—' : statCounts()[card.label]!.toLocaleString() }}
+            </span>
+          }
+          <span class="block truncate text-xs text-slate-400">{{ card.label }}</span>
+        </span>
+      </button>
     }
   </div>
 
-  <!-- Filters -->
-  <form class="um-panel um-rise p-4" style="animation-delay: 360ms" (ngSubmit)="applyFilters()">
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:items-end">
-      <label class="um-field self-end sm:col-span-2 lg:col-span-1 xl:flex-[1.5]">
-        <span class="sr-only">Search users</span>
-        <i class="pi pi-search um-field-icon"></i>
-        <input
-          type="search"
-          name="search"
-          class="um-input pl-10"
-          placeholder="Search by name, email or role..."
-          [ngModel]="searchDraft()"
-          (ngModelChange)="searchDraft.set($event)"
-        />
-      </label>
-
-      <label class="flex flex-col gap-1.5 xl:flex-1">
-        <span class="um-label">Role</span>
-        <div class="um-select-wrap">
-          <select name="role" class="um-input um-select" [ngModel]="roleDraft()" (ngModelChange)="roleDraft.set($event)">
-            <option value="">All Roles</option>
-            @for (role of roles; track role) {
-              <option [value]="role">{{ role }}</option>
-            }
-          </select>
-          <i class="pi pi-chevron-down"></i>
-        </div>
-      </label>
-
-      <label class="flex flex-col gap-1.5 xl:flex-1">
-        <span class="um-label">Status</span>
-        <div class="um-select-wrap">
-          <select name="status" class="um-input um-select" [ngModel]="statusDraft()" (ngModelChange)="statusDraft.set($event)">
-            <option value="">All Status</option>
-            <option value="Online">Online</option>
-            <option value="Offline">Offline</option>
-          </select>
-          <i class="pi pi-chevron-down"></i>
-        </div>
-      </label>
-
-      <label class="flex flex-col gap-1.5 xl:flex-1">
-        <span class="um-label">Branch</span>
-        <div class="um-select-wrap">
-          <select name="branch" class="um-input um-select" [ngModel]="branchDraft()" (ngModelChange)="branchDraft.set($event)">
-            <option value="">All Branches</option>
-            @for (branch of branches; track branch) {
-              <option [value]="branch">{{ branch }}</option>
-            }
-          </select>
-          <i class="pi pi-chevron-down"></i>
-        </div>
-      </label>
-
-      <div class="relative self-end xl:flex-[1.3]">
-        <button
-          type="button"
-          class="um-input flex h-[3.1rem] w-full items-center gap-3 text-left"
-          [attr.aria-expanded]="dateRangeOpen()"
-          (click)="dateRangeOpen.set(!dateRangeOpen())"
-        >
-          <i class="pi pi-calendar text-slate-400"></i>
-          <span class="min-w-0 flex-1 leading-tight">
-            <span class="block text-xs text-slate-400">Joined</span>
-            <span class="block truncate text-xs text-slate-300">{{ dateRangeLabel() }}</span>
-          </span>
-          <i class="pi pi-chevron-down text-xs text-slate-400"></i>
-        </button>
-        @if (dateRangeOpen()) {
-          <div class="um-popover right-0 top-full mt-2 w-64 space-y-3 p-4">
-            <label class="flex flex-col gap-1.5">
-              <span class="um-label">From</span>
-              <input type="date" name="from" class="um-input" [ngModel]="joinedFrom()" (ngModelChange)="joinedFrom.set($event)" />
-            </label>
-            <label class="flex flex-col gap-1.5">
-              <span class="um-label">To</span>
-              <input type="date" name="to" class="um-input" [ngModel]="joinedTo()" (ngModelChange)="joinedTo.set($event)" />
-            </label>
-          </div>
+  <!-- Search bar -->
+  <div class="us-panel us-rise flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:p-4" style="animation-delay: 300ms">
+    <label class="us-input-wrap flex-1">
+      <i class="pi pi-search text-slate-400" aria-hidden="true"></i>
+      <input
+        type="search"
+        class="us-input"
+        placeholder="Search by name, email, username, department..."
+        aria-label="Search users"
+        [ngModel]="store.q()"
+        (ngModelChange)="onQuickSearch($event)"
+      />
+      @if (store.loading()) {
+        <i class="pi pi-spin pi-spinner text-violet-300" aria-hidden="true"></i>
+      }
+    </label>
+    <div class="flex gap-3">
+      <button
+        type="button"
+        class="us-btn us-btn-outline us-filter-btn relative h-11 flex-1 px-5 sm:flex-none"
+        [class.is-active]="activeFilterCount() > 0"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="filtersOpen()"
+        (click)="openFilters()"
+      >
+        <i class="pi pi-filter text-sm" aria-hidden="true"></i>
+        Filters
+        @if (activeFilterCount() > 0) {
+          <span class="us-badge" [attr.aria-label]="activeFilterCount() + ' active filters'">{{ activeFilterCount() }}</span>
         }
-      </div>
-
-      <div class="flex items-center gap-2 self-end sm:col-span-2 lg:col-span-2 xl:shrink-0">
-        <button type="button" class="um-btn-ghost h-11 flex-1 whitespace-nowrap px-3 xl:flex-none" (click)="clearFilters()">
-          <i class="pi pi-filter-slash text-sm"></i>
-          Clear Filters
-        </button>
-        <button type="submit" class="um-btn-primary h-11 flex-1 px-5 xl:flex-none">
-          <i class="pi pi-search text-sm"></i>
-          Search
-        </button>
-      </div>
+      </button>
+      <button type="button" class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none" (click)="resetAll()">
+        <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
+        Reset
+      </button>
     </div>
-  </form>
+  </div>
 
-  <!-- Users table -->
-  <div class="um-panel um-table-panel um-rise flex flex-col overflow-hidden" style="animation-delay: 420ms">
-    <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 class="text-lg font-semibold text-white">Users ({{ filteredUsers().length }})</h2>
-        <p class="mt-0.5 text-sm text-slate-400">
-          Manage and view all system users. You can edit, deactivate or assign roles.
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        @if (selected().size) {
-          <span class="um-chip mr-1">{{ selected().size }} selected</span>
-        }
-        <button type="button" class="um-btn-outline h-11 px-4" (click)="importUsers()">
-          <i class="pi pi-upload text-sm"></i> Import
-        </button>
-        <button type="button" class="um-btn-outline h-11 px-4" (click)="exportUsers()">
-          <i class="pi pi-download text-sm"></i> Export
-        </button>
-        <button type="button" class="um-btn-outline h-11 w-11" aria-label="More options">
-          <i class="pi pi-ellipsis-v text-sm"></i>
-        </button>
-      </div>
+  <!-- Results -->
+  <div class="us-rise flex flex-col gap-3" style="animation-delay: 360ms">
+    <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+      <p class="text-sm text-slate-300" aria-live="polite">{{ rangeLabel() }}</p>
+      @if (selected().size) {
+        <p class="text-xs font-medium text-violet-300">{{ selected().size }} selected · Export includes selection only</p>
+      }
     </div>
 
-    <div class="um-table-scroll overflow-auto">
-      <table class="um-table w-full min-w-[1100px]">
-        <thead>
-          <tr>
-            <th class="w-12">
-              <input
-                type="checkbox"
-                class="um-check"
-                aria-label="Select all users on this page"
-                [checked]="allOnPageSelected()"
-                [indeterminate]="someOnPageSelected()"
-                (change)="togglePage()"
-              />
-            </th>
-            <th class="w-10">#</th>
-            <th>User</th>
-            <th>Role</th>
-            <th>Branch</th>
-            <th>Status</th>
-            <th>Last Login</th>
-            <th>Joined</th>
-            <th class="text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (user of pagedUsers(); track user.id; let i = $index) {
-            <tr class="um-row" [class.is-selected]="selected().has(user.id)" [style.animation-delay.ms]="i * 35">
-              <td>
+    <div class="us-panel overflow-hidden">
+      <div class="us-table-scroll" [class.is-loading]="store.loading() && store.hasItems()">
+        <table class="us-table">
+          <thead>
+            <tr>
+              <th class="w-12">
                 <input
                   type="checkbox"
-                  class="um-check"
-                  [attr.aria-label]="'Select ' + user.name"
-                  [checked]="selected().has(user.id)"
-                  (change)="toggleRow(user.id)"
+                  class="us-check"
+                  aria-label="Select all on page"
+                  [checked]="allOnPageSelected()"
+                  [indeterminate]="someOnPageSelected()"
+                  (change)="togglePage()"
                 />
-              </td>
-              <td class="text-slate-400 tabular-nums">{{ rangeStart() + i }}</td>
-              <td>
-                <div class="flex items-center gap-3">
-                  <span class="um-avatar bg-gradient-to-br" [class]="avatarGradient(user)">{{ user.name.charAt(0) }}</span>
-                  <div class="min-w-0">
-                    <p class="truncate text-sm font-medium text-white">{{ user.name }}</p>
-                    <p class="truncate text-xs text-slate-400">{{ user.email }}</p>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="um-role" [attr.data-tone]="roleMeta(user.role).tone">
-                  <i [class]="roleMeta(user.role).icon"></i>{{ user.role }}
-                </span>
-              </td>
-              <td class="text-slate-200">{{ user.branch }}</td>
-              <td>
-                <span class="um-status" [class.is-online]="user.status === 'Online'">
-                  <span class="um-dot"></span>{{ user.status }}
-                </span>
-              </td>
-              <td>
-                <p class="text-slate-200">{{ formatDateTime(user.lastLogin) }}</p>
-                <p class="text-xs text-slate-400">{{ relativeTime(user.lastLogin) }}</p>
-              </td>
-              <td class="text-slate-300">{{ formatDate(user.joined) }}</td>
-              <td>
-                <div class="relative flex items-center justify-end gap-2">
-                  <button type="button" class="um-icon-btn" [attr.aria-label]="'View ' + user.name" (click)="viewUser(user)">
-                    <i class="pi pi-eye"></i>
-                  </button>
-                  <button type="button" class="um-icon-btn" [attr.aria-label]="'Edit ' + user.name" (click)="editUser(user)">
-                    <i class="pi pi-pencil"></i>
-                  </button>
-                  <button type="button" class="um-icon-btn is-danger" [attr.aria-label]="'Delete ' + user.name" (click)="deleteUser(user)">
-                    <i class="pi pi-trash"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="um-icon-btn"
-                    [attr.aria-label]="'More actions for ' + user.name"
-                    [attr.aria-expanded]="openMenuId() === user.id"
-                    (click)="toggleMenu(user.id)"
-                  >
-                    <i class="pi pi-ellipsis-v"></i>
-                  </button>
-                  @if (openMenuId() === user.id) {
-                    <div class="um-popover right-0 top-full mt-2 w-48 p-1.5" role="menu">
-                      <button type="button" role="menuitem" class="um-menu-item" (click)="toggleStatus(user)">
-                        <i [class]="user.status === 'Online' ? 'pi pi-ban' : 'pi pi-check-circle'"></i>
-                        {{ user.status === 'Online' ? 'Deactivate' : 'Activate' }}
-                      </button>
-                      <button type="button" role="menuitem" class="um-menu-item" (click)="editUser(user); openMenuId.set(null)">
-                        <i class="pi pi-shield"></i> Assign Role
-                      </button>
-                    </div>
+              </th>
+              @for (col of columns; track col.label) {
+                <th [attr.aria-sort]="ariaSort(col.key)">
+                  @if (col.key; as key) {
+                    <button type="button" class="us-sort" [class.is-sorted]="sortKey() === key" (click)="sortBy(key)">
+                      {{ col.label }}
+                      <i
+                        class="pi text-[0.6rem]"
+                        [class.pi-arrow-up]="sortKey() !== key || sortDir() === 'asc'"
+                        [class.pi-arrow-down]="sortKey() === key && sortDir() === 'desc'"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
+                  } @else {
+                    {{ col.label }}
                   }
-                </div>
-              </td>
+                </th>
+              }
+              <th class="text-right"><span class="pr-2">Actions</span></th>
             </tr>
-          } @empty {
-            <tr>
-              <td colspan="9" class="py-16 text-center">
-                <i class="pi pi-users mb-3 block text-3xl text-slate-500"></i>
-                <p class="font-medium text-slate-200">No users match your filters</p>
-                <button type="button" class="mt-3 text-sm font-medium text-violet-400 hover:text-violet-300" (click)="clearFilters()">
-                  Clear filters
-                </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Footer / pagination -->
-    <div class="flex shrink-0 flex-col items-center gap-4 border-t border-white/5 p-4 lg:flex-row lg:justify-between">
-      <p class="text-sm text-slate-400">
-        Showing {{ rangeStart() }} to {{ rangeEnd() }} of {{ filteredUsers().length }} users
-      </p>
-      <nav class="flex items-center gap-1" aria-label="Pagination">
-        <button type="button" class="um-page-btn" aria-label="Previous page" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
-          <i class="pi pi-chevron-left text-xs"></i>
-        </button>
-        @for (item of pageItems(); track $index) {
-          @if (item === 'gap') {
-            <span class="w-8 text-center text-slate-500">…</span>
-          } @else {
-            <button
-              type="button"
-              class="um-page-btn"
-              [class.is-active]="item === page()"
-              [attr.aria-current]="item === page() ? 'page' : null"
-              (click)="goToPage(item)"
-            >
-              {{ item }}
-            </button>
-          }
-        }
-        <button type="button" class="um-page-btn" aria-label="Next page" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)">
-          <i class="pi pi-chevron-right text-xs"></i>
-        </button>
-      </nav>
-      <label class="flex items-center gap-3 text-sm text-slate-400">
-        Rows per page
-        <div class="um-select-wrap w-20">
-          <select class="um-input um-select h-11" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
-            @for (size of pageSizes; track size) {
-              <option [ngValue]="size">{{ size }}</option>
+          </thead>
+          <tbody>
+            @if (store.loading() && !store.hasItems()) {
+              @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+                <tr>
+                  <td colspan="12"><span class="us-skeleton block h-8 w-full"></span></td>
+                </tr>
+              }
+            } @else if (store.error()) {
+              <tr>
+                <td colspan="12">
+                  <div class="flex flex-col items-center gap-3 py-16 text-center">
+                    <span class="us-stat-icon" data-tone="rose"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i></span>
+                    <p class="font-semibold text-white">Failed to load users</p>
+                    <p class="text-sm text-slate-400">{{ store.error() }}</p>
+                    <button type="button" class="us-btn us-btn-outline mt-1 h-10 px-4" (click)="store.reload()">Try again</button>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (user of store.items(); track user.id; let i = $index) {
+                <tr
+                  class="us-row"
+                  [class.is-selected]="selected().has(user.id)"
+                  [class.is-busy]="busyId() === user.id"
+                  [style.animation-delay.ms]="i * 28"
+                >
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="us-check"
+                      [attr.aria-label]="'Select ' + user.fullName"
+                      [checked]="selected().has(user.id)"
+                      (change)="toggleRow(user.id)"
+                    />
+                  </td>
+                  <td class="font-medium text-slate-200" [title]="user.id">{{ shortId(user) }}</td>
+                  <td>
+                    <a [routerLink]="['/iam/users', user.id]" class="group flex items-center gap-3">
+                      @if (user.avatarUrl) {
+                        <img [src]="user.avatarUrl" alt="" class="us-avatar object-cover" width="34" height="34" loading="lazy" />
+                      } @else {
+                        <span class="us-avatar" [style.background]="avatarColor(user)" aria-hidden="true">{{ initials(user.fullName) }}</span>
+                      }
+                      <span class="whitespace-nowrap font-medium text-white group-hover:text-violet-300">{{ user.fullName }}</span>
+                    </a>
+                  </td>
+                  <td class="text-slate-300">{{ user.email }}</td>
+                  <td class="whitespace-nowrap text-slate-200">{{ user.department ?? '—' }}</td>
+                  <td class="whitespace-nowrap text-slate-200">{{ user.jobTitle ?? '—' }}</td>
+                  <td><span class="us-count">{{ user.groupCount }}</span></td>
+                  <td>
+                    @if (user.primaryRole; as role) {
+                      <span class="us-role" [attr.data-tone]="roleTone(role.key)">
+                        {{ role.name }}
+                        @if (user.roleCount > 1) {
+                          <span class="opacity-70">+{{ user.roleCount - 1 }}</span>
+                        }
+                      </span>
+                    } @else {
+                      <span class="text-slate-500">—</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="us-status" [attr.data-status]="user.status">{{ user.statusLabel }}</span>
+                  </td>
+                  <td class="whitespace-nowrap text-slate-400">{{ relativeTime(user.lastLoginDatetime) }}</td>
+                  <td class="whitespace-nowrap text-slate-400">{{ formatDate(user.createdAt) }}</td>
+                  <td class="text-right">
+                    <div class="relative inline-block">
+                      <button
+                        type="button"
+                        class="us-icon-btn"
+                        [attr.aria-label]="'Actions for ' + user.fullName"
+                        aria-haspopup="menu"
+                        [attr.aria-expanded]="openMenuId() === user.id"
+                        [disabled]="busyId() === user.id"
+                        (click)="toggleMenu(user.id, $event)"
+                      >
+                        <i class="pi" [class.pi-ellipsis-h]="busyId() !== user.id" [class.pi-spin]="busyId() === user.id" [class.pi-spinner]="busyId() === user.id" aria-hidden="true"></i>
+                      </button>
+                      @if (openMenuId() === user.id) {
+                        <div class="us-menu" role="menu" (click)="$event.stopPropagation()">
+                          <button type="button" role="menuitem" (click)="viewUser(user)"><i class="pi pi-eye"></i>View profile</button>
+                          <button type="button" role="menuitem" (click)="toggleLock(user)">
+                            <i class="pi" [class.pi-lock-open]="user.isAccountLocked" [class.pi-lock]="!user.isAccountLocked"></i>
+                            {{ user.isAccountLocked ? 'Unlock account' : 'Lock account' }}
+                          </button>
+                          <button type="button" role="menuitem" class="is-danger" (click)="removeUser(user)"><i class="pi pi-trash"></i>Remove</button>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="12">
+                    <div class="flex flex-col items-center gap-3 py-16 text-center">
+                      <span class="us-stat-icon" data-tone="violet"><i class="pi pi-search" aria-hidden="true"></i></span>
+                      <p class="font-semibold text-white">No users match your search</p>
+                      <p class="text-sm text-slate-400">Try adjusting filters or clearing the search.</p>
+                      <button type="button" class="us-btn us-btn-outline mt-1 h-10 px-4" (click)="resetAll()">Clear everything</button>
+                    </div>
+                  </td>
+                </tr>
+              }
             }
-          </select>
-          <i class="pi pi-chevron-down"></i>
-        </div>
-      </label>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <footer class="flex flex-col items-center justify-between gap-4 border-t border-white/5 px-4 py-4 sm:flex-row sm:px-5">
+        <label class="flex items-center gap-3 text-sm text-slate-400">
+          Rows per page
+          <span class="us-select-wrap w-20">
+            <select class="us-select h-9" [ngModel]="store.pageSize()" (ngModelChange)="setPageSize($event)">
+              @for (size of pageSizes; track size) {
+                <option [ngValue]="size">{{ size }}</option>
+              }
+            </select>
+            <i class="pi pi-chevron-down" aria-hidden="true"></i>
+          </span>
+        </label>
+
+        <nav class="flex items-center gap-1" aria-label="Pagination">
+          <button type="button" class="us-page-btn" aria-label="Previous page" [disabled]="store.page() <= 1" (click)="goToPage(store.page() - 1)">
+            <i class="pi pi-chevron-left text-xs" aria-hidden="true"></i>
+          </button>
+          @for (item of pageItems(); track $index) {
+            @if (item === '…') {
+              <span class="w-8 text-center text-slate-500" aria-hidden="true">…</span>
+            } @else {
+              <button
+                type="button"
+                class="us-page-btn"
+                [class.is-current]="item === store.page()"
+                [attr.aria-current]="item === store.page() ? 'page' : null"
+                (click)="goToPage(item)"
+              >
+                {{ item }}
+              </button>
+            }
+          }
+          <button type="button" class="us-page-btn" aria-label="Next page" [disabled]="store.page() >= totalPages()" (click)="goToPage(store.page() + 1)">
+            <i class="pi pi-chevron-right text-xs" aria-hidden="true"></i>
+          </button>
+        </nav>
+      </footer>
     </div>
   </div>
 </section>
+
+<!-- Search filters dialog -->
+@if (filtersOpen()) {
+  <div class="us-backdrop" (click)="closeFilters()" aria-hidden="true"></div>
+  <div class="us-dialog" role="dialog" aria-modal="true" aria-labelledby="us-filter-title">
+    <div class="flex items-start justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6">
+      <div class="flex items-center gap-4">
+        <span class="us-dialog-icon"><i class="pi pi-filter" aria-hidden="true"></i></span>
+        <div>
+          <h2 id="us-filter-title" class="text-lg font-semibold text-white">Search Filters</h2>
+          <p class="text-sm text-slate-400">Find and filter users across ZCC</p>
+        </div>
+      </div>
+      <button type="button" class="us-icon-btn" aria-label="Close filters" (click)="closeFilters()">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <form class="us-dialog-body" (ngSubmit)="applyFilters()" id="us-filter-form">
+      <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        @for (field of textFields; track field.key) {
+          <label class="us-field">
+            <span class="us-label">
+              {{ field.label }}
+              @if (field.hint) {
+                <i class="pi pi-info-circle" [title]="field.hint"></i>
+              }
+            </span>
+            <span class="us-input-wrap">
+              <i [class]="field.icon" aria-hidden="true"></i>
+              <input
+                class="us-input"
+                [type]="field.type"
+                [name]="field.key"
+                [placeholder]="field.placeholder"
+                [ngModel]="draft()[field.key]"
+                (ngModelChange)="patchDraft(field.key, $event)"
+              />
+            </span>
+          </label>
+        }
+
+        @for (sel of selectFields(); track sel.key) {
+          <label class="us-field">
+            <span class="us-label">{{ sel.label }}</span>
+            <span class="us-input-wrap us-select-wrap">
+              <i [class]="sel.icon" aria-hidden="true"></i>
+              <select class="us-select" [name]="sel.key" [ngModel]="draft()[sel.key]" (ngModelChange)="patchDraft(sel.key, $event)">
+                <option value="">{{ sel.all }}</option>
+                @for (opt of sel.options; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <i class="pi pi-chevron-down" aria-hidden="true"></i>
+            </span>
+          </label>
+        }
+
+        @for (range of dateRanges; track range.label) {
+          <div class="us-field">
+            <span class="us-label">{{ range.label }}</span>
+            <span class="us-input-wrap us-range">
+              <i class="pi pi-calendar" aria-hidden="true"></i>
+              <input
+                type="date"
+                class="us-input"
+                [name]="range.from"
+                [attr.aria-label]="range.label + ' from'"
+                [max]="draft()[range.to] || null"
+                [ngModel]="draft()[range.from]"
+                (ngModelChange)="patchDraft(range.from, $event)"
+              />
+              <span class="text-slate-500" aria-hidden="true">–</span>
+              <input
+                type="date"
+                class="us-input"
+                [name]="range.to"
+                [attr.aria-label]="range.label + ' to'"
+                [min]="draft()[range.from] || null"
+                [ngModel]="draft()[range.to]"
+                (ngModelChange)="patchDraft(range.to, $event)"
+              />
+            </span>
+          </div>
+        }
+      </div>
+    </form>
+
+    <div class="flex flex-col-reverse gap-3 border-t border-white/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <button type="button" class="us-btn us-btn-outline h-11 px-4" (click)="resetDraft()">
+        <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
+        Reset Filters
+      </button>
+      <div class="flex gap-3">
+        <button type="button" class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none" (click)="closeFilters()">Cancel</button>
+        <button type="submit" form="us-filter-form" class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none">
+          <i class="pi pi-filter text-sm" aria-hidden="true"></i>
+          Apply Filters
+        </button>
+      </div>
+    </div>
+  </div>
+}

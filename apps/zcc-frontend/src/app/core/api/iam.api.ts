@@ -206,6 +206,15 @@ export class IamApiService {
       'roleId',
       'groupId',
       'department',
+      'name',
+      'email',
+      'mobile',
+      'createdFrom',
+      'createdTo',
+      'lastLoginFrom',
+      'lastLoginTo',
+      'sort',
+      'order',
     ]) {
       const value = query[key];
       if (value !== undefined && value !== null && value !== '') {

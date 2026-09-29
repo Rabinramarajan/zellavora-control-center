@@ -1,341 +1,437 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { IamApiService, unwrap } from '@core/api/iam.api';
+import { IamUserListItem, UserStatus } from '@shared/models/iam.model';
+import { createListStore } from '@shared/utils/create-list-store';
 import { CsvExporter } from '../../shared/utils/csv-exporter';
 
-type UserRole = 'Super Admin' | 'Admin' | 'Manager' | 'Editor' | 'Viewer';
-type UserStatus = 'Online' | 'Offline';
+type SortKey = 'fullName' | 'email' | 'status' | 'department' | 'createdAt' | 'lastLoginDatetime';
 
-interface ManagedUser {
-  id: string;
+interface UserFilters {
+  q: string;
   name: string;
   email: string;
-  role: UserRole;
-  branch: string;
-  status: UserStatus;
-  lastLogin: Date;
-  joined: Date;
+  mobile: string;
+  department: string;
+  roleId: string;
+  groupId: string;
+  status: string;
+  createdFrom: string;
+  createdTo: string;
+  lastLoginFrom: string;
+  lastLoginTo: string;
+}
+
+interface Option {
+  value: string;
+  label: string;
 }
 
 interface StatCard {
   label: string;
-  value: number;
-  caption: string;
-  captionTone: 'up' | 'muted';
   icon: string;
-  accent: 'violet' | 'emerald' | 'amber' | 'fuchsia' | 'blue';
-  chart: 'bars' | 'line';
-  path: string;
+  tone: 'violet' | 'emerald' | 'rose' | 'amber' | 'indigo';
+  status: UserStatus | '';
 }
 
-const ROLES: UserRole[] = ['Super Admin', 'Admin', 'Manager', 'Editor', 'Viewer'];
-const BRANCHES = [
-  'Head Office',
-  'Chennai Branch',
-  'Bangalore Branch',
-  'Hyderabad Branch',
-  'Coimbatore Branch',
-  'Pune Branch',
-];
-
-const ROLE_META: Record<UserRole, { icon: string; tone: string }> = {
-  'Super Admin': { icon: 'pi pi-crown', tone: 'violet' },
-  Admin: { icon: 'pi pi-home', tone: 'blue' },
-  Manager: { icon: 'pi pi-star-fill', tone: 'amber' },
-  Editor: { icon: 'pi pi-pencil', tone: 'emerald' },
-  Viewer: { icon: 'pi pi-heart', tone: 'rose' },
+const EMPTY_FILTERS: UserFilters = {
+  q: '',
+  name: '',
+  email: '',
+  mobile: '',
+  department: '',
+  roleId: '',
+  groupId: '',
+  status: '',
+  createdFrom: '',
+  createdTo: '',
+  lastLoginFrom: '',
+  lastLoginTo: '',
 };
 
-const AVATAR_GRADIENTS = [
-  'from-indigo-500 to-violet-600',
-  'from-violet-500 to-fuchsia-600',
-  'from-purple-500 to-indigo-600',
-  'from-fuchsia-500 to-purple-600',
+const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof UserFilters>;
+
+const STATUS_OPTIONS: Option[] = [
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'INACTIVE', label: 'Inactive' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'LOCKED', label: 'Locked' },
+  { value: 'SUSPENDED', label: 'Suspended' },
 ];
 
-const NOW = new Date(2025, 4, 24, 12, 30);
+const STAT_CARDS: StatCard[] = [
+  { label: 'Total Users', icon: 'pi pi-users', tone: 'violet', status: '' },
+  { label: 'Active', icon: 'pi pi-user', tone: 'emerald', status: 'ACTIVE' },
+  { label: 'Inactive', icon: 'pi pi-user-minus', tone: 'rose', status: 'INACTIVE' },
+  { label: 'Pending Invites', icon: 'pi pi-envelope', tone: 'amber', status: 'PENDING' },
+  { label: 'Locked', icon: 'pi pi-lock', tone: 'indigo', status: 'LOCKED' },
+];
 
-function seedUsers(): ManagedUser[] {
-  const featured: Array<[string, string, UserRole, string, UserStatus, Date, Date]> = [
-    ['Rabin R', 'rabin', 'Super Admin', 'Head Office', 'Online', new Date(2025, 4, 24, 10, 30), new Date(2025, 0, 10)],
-    ['Ananya S', 'ananya', 'Admin', 'Head Office', 'Online', new Date(2025, 4, 24, 9, 15), new Date(2025, 1, 18)],
-    ['Karthik P', 'karthik', 'Manager', 'Chennai Branch', 'Online', new Date(2025, 4, 23, 18, 45), new Date(2025, 2, 2)],
-    ['Meera R', 'meera', 'Editor', 'Bangalore Branch', 'Online', new Date(2025, 4, 24, 12, 10), new Date(2025, 3, 11)],
-    ['Vikram T', 'vikram', 'Viewer', 'Hyderabad Branch', 'Offline', new Date(2025, 4, 19, 11, 20), new Date(2025, 3, 30)],
-    ['Divya L', 'divya', 'Editor', 'Coimbatore Branch', 'Online', new Date(2025, 4, 24, 8, 40), new Date(2025, 4, 5)],
-    ['Arun Kumar', 'arun', 'Manager', 'Pune Branch', 'Offline', new Date(2025, 4, 19, 15, 30), new Date(2025, 0, 25)],
-    ['Sneha M', 'sneha', 'Viewer', 'Head Office', 'Offline', new Date(2025, 4, 17, 10, 0), new Date(2025, 1, 15)],
-  ];
-  const firstNames = ['Priya', 'Rahul', 'Nisha', 'Suresh', 'Kavya', 'Manoj', 'Lakshmi', 'Deepak', 'Asha', 'Ganesh', 'Revathi', 'Harish'];
-  const initials = 'ABCDEGHJKLMNPRSTV';
-  // Weighted so the generated roster mirrors a realistic role distribution.
-  const roleCycle: UserRole[] = ['Viewer', 'Viewer', 'Viewer', 'Editor', 'Viewer', 'Manager', 'Viewer', 'Editor', 'Admin'];
-
-  const users: ManagedUser[] = featured.map(([name, handle, role, branch, status, lastLogin, joined], i) => ({
-    id: String(i + 1),
-    name,
-    email: `${handle}@zellavora.com`,
-    role,
-    branch,
-    status,
-    lastLogin,
-    joined,
-  }));
-
-  for (let i = users.length; i < 128; i++) {
-    const first = firstNames[i % firstNames.length];
-    const initial = initials[(i * 7) % initials.length];
-    const role: UserRole = i % 40 === 0 ? 'Super Admin' : roleCycle[i % roleCycle.length];
-    users.push({
-      id: String(i + 1),
-      name: `${first} ${initial}`,
-      email: `${first.toLowerCase()}.${initial.toLowerCase()}${i}@zellavora.com`,
-      role,
-      branch: BRANCHES[(i * 5) % BRANCHES.length],
-      status: i % 4 === 0 ? 'Offline' : 'Online',
-      lastLogin: new Date(NOW.getTime() - ((i * 37) % 96) * 3_600_000 - (i % 60) * 60_000),
-      joined: new Date(2024, 6 + (i % 11), 1 + ((i * 3) % 27)),
-    });
-  }
-  return users;
-}
+const AVATAR_TONES = ['#7c3aed', '#8b5cf6', '#a855f7', '#6366f1', '#db2777', '#c026d3'];
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [FormsModule, ToastModule],
+  imports: [FormsModule, RouterLink, ToastModule],
   templateUrl: './users.component.html',
   styleUrl: './users.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown.escape)': 'onEscape()', '(document:click)': 'openMenuId.set(null)' },
 })
 export class UsersComponent {
+  private readonly api = inject(IamApiService);
+  private readonly router = inject(Router);
   private readonly messages = inject(MessageService);
 
-  readonly roles = ROLES;
-  readonly branches = BRANCHES;
-  readonly pageSizes = [8, 16, 32, 64];
+  readonly pageSizes = [10, 25, 50, 100];
+  readonly statusOptions = STATUS_OPTIONS;
+  readonly roleOptions = signal<Option[]>([]);
+  readonly groupOptions = signal<Option[]>([]);
 
-  readonly users = signal<ManagedUser[]>(seedUsers());
+  readonly columns: Array<{ key: SortKey | null; label: string }> = [
+    { key: null, label: 'User ID' },
+    { key: 'fullName', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'department', label: 'Department' },
+    { key: null, label: 'Title' },
+    { key: null, label: 'Groups' },
+    { key: null, label: 'Roles' },
+    { key: 'status', label: 'Status' },
+    { key: 'lastLoginDatetime', label: 'Last Login' },
+    { key: 'createdAt', label: 'Created On' },
+  ];
 
-  readonly searchDraft = signal('');
-  readonly roleDraft = signal('');
-  readonly statusDraft = signal('');
-  readonly branchDraft = signal('');
-  readonly joinedFrom = signal('');
-  readonly joinedTo = signal('');
-  readonly dateRangeOpen = signal(false);
+  readonly textFields: Array<{ key: keyof UserFilters; label: string; icon: string; placeholder: string; type: string; hint?: string }> = [
+    { key: 'q', label: 'Keyword', icon: 'pi pi-search', placeholder: 'Name, email, username, title...', type: 'search', hint: 'Matches name, email, username, department or title' },
+    { key: 'name', label: 'Name', icon: 'pi pi-user', placeholder: 'Enter name', type: 'text' },
+    { key: 'email', label: 'Email', icon: 'pi pi-envelope', placeholder: 'Enter email', type: 'text' },
+    { key: 'mobile', label: 'Mobile', icon: 'pi pi-phone', placeholder: 'Enter mobile number', type: 'tel' },
+    { key: 'department', label: 'Department', icon: 'pi pi-building', placeholder: 'Exact department name', type: 'text' },
+  ];
 
-  private readonly applied = signal({ search: '', role: '', status: '', branch: '', from: '', to: '' });
+  readonly selectFields = computed<Array<{ key: keyof UserFilters; label: string; icon: string; all: string; options: Option[] }>>(() => [
+    { key: 'roleId', label: 'Role', icon: 'pi pi-shield', all: 'All Roles', options: this.roleOptions() },
+    { key: 'groupId', label: 'Group', icon: 'pi pi-sitemap', all: 'All Groups', options: this.groupOptions() },
+    { key: 'status', label: 'Account Status', icon: 'pi pi-circle', all: 'All Status', options: STATUS_OPTIONS },
+  ]);
 
-  readonly page = signal(1);
-  readonly pageSize = signal(8);
+  readonly dateRanges: Array<{ label: string; from: keyof UserFilters; to: keyof UserFilters }> = [
+    { label: 'Created Date', from: 'createdFrom', to: 'createdTo' },
+    { label: 'Last Login', from: 'lastLoginFrom', to: 'lastLoginTo' },
+  ];
+
+  readonly store = createListStore<IamUserListItem>({
+    initialPageSize: 10,
+    filterKeys: [...FILTER_KEYS.filter((k) => k !== 'q'), 'sort', 'order'],
+    loader: (query) => firstValueFrom(this.api.listIamUsers(query)).then(unwrap),
+  });
+
+  readonly statCounts = signal<Record<string, number | null>>({});
+  readonly stats = STAT_CARDS;
+
+  readonly filtersOpen = signal(false);
+  readonly draft = signal<UserFilters>({ ...EMPTY_FILTERS });
+  readonly applied = signal<UserFilters>({ ...EMPTY_FILTERS });
+  readonly sortKey = signal<SortKey>('createdAt');
+  readonly sortDir = signal<'asc' | 'desc'>('desc');
   readonly selected = signal<ReadonlySet<string>>(new Set());
   readonly openMenuId = signal<string | null>(null);
+  readonly busyId = signal<string | null>(null);
 
-  readonly dateRangeLabel = computed(() => {
-    const from = this.joinedFrom();
-    const to = this.joinedTo();
-    if (!from && !to) return 'Select date range';
-    const fmt = (v: string) => (v ? this.formatDate(new Date(v)) : '…');
-    return `${fmt(from)} – ${fmt(to)}`;
-  });
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
-  readonly filteredUsers = computed(() => {
+  readonly activeFilterCount = computed(() => {
     const f = this.applied();
-    const term = f.search.trim().toLowerCase();
-    const from = f.from ? new Date(f.from).getTime() : -Infinity;
-    const to = f.to ? new Date(f.to).getTime() + 86_399_999 : Infinity;
-    return this.users().filter(
-      (u) =>
-        (!term ||
-          u.name.toLowerCase().includes(term) ||
-          u.email.toLowerCase().includes(term) ||
-          u.role.toLowerCase().includes(term)) &&
-        (!f.role || u.role === f.role) &&
-        (!f.status || u.status === f.status) &&
-        (!f.branch || u.branch === f.branch) &&
-        u.joined.getTime() >= from &&
-        u.joined.getTime() <= to,
-    );
+    const ranges = [f.createdFrom || f.createdTo, f.lastLoginFrom || f.lastLoginTo].filter(Boolean).length;
+    const plain = FILTER_KEYS.filter((k) => !this.dateRanges.some((r) => r.from === k || r.to === k) && f[k].trim()).length;
+    return plain + ranges;
   });
 
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredUsers().length / this.pageSize())));
-
-  readonly pagedUsers = computed(() => {
-    const start = (this.page() - 1) * this.pageSize();
-    return this.filteredUsers().slice(start, start + this.pageSize());
+  readonly rangeLabel = computed(() => {
+    const total = this.store.total();
+    if (!total) return 'Showing 0 users';
+    const start = (this.store.page() - 1) * this.store.pageSize() + 1;
+    const end = Math.min(start + this.store.items().length - 1, total);
+    return `Showing ${start} - ${end} of ${total.toLocaleString()} users`;
   });
 
-  readonly rangeStart = computed(() => (this.filteredUsers().length ? (this.page() - 1) * this.pageSize() + 1 : 0));
-  readonly rangeEnd = computed(() => Math.min(this.page() * this.pageSize(), this.filteredUsers().length));
+  readonly totalPages = computed(() => Math.max(1, this.store.totalPages()));
 
-  readonly pageItems = computed<Array<number | 'gap'>>(() => {
+  readonly pageItems = computed<Array<number | '…'>>(() => {
     const total = this.totalPages();
-    const current = this.page();
+    const cur = this.store.page();
     if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    if (current <= 4) return [1, 2, 3, 4, 5, 'gap', total];
-    if (current >= total - 3) return [1, 'gap', total - 4, total - 3, total - 2, total - 1, total];
-    return [1, 'gap', current - 1, current, current + 1, 'gap', total];
+    if (cur <= 4) return [1, 2, 3, 4, 5, '…', total];
+    if (cur >= total - 3) return [1, '…', ...Array.from({ length: 5 }, (_, i) => total - 4 + i)];
+    return [1, '…', cur - 1, cur, cur + 1, '…', total];
   });
 
   readonly allOnPageSelected = computed(() => {
-    const rows = this.pagedUsers();
+    const rows = this.store.items();
     const sel = this.selected();
     return rows.length > 0 && rows.every((u) => sel.has(u.id));
   });
 
-  readonly someOnPageSelected = computed(
-    () => !this.allOnPageSelected() && this.pagedUsers().some((u) => this.selected().has(u.id)),
-  );
+  readonly someOnPageSelected = computed(() => !this.allOnPageSelected() && this.store.items().some((u) => this.selected().has(u.id)));
 
-  readonly stats = computed<StatCard[]>(() => {
-    const all = this.users();
-    const total = all.length;
-    const pct = (n: number) => `${((n / total) * 100).toFixed(1)}% of total`;
-    const count = (predicate: (u: ManagedUser) => boolean) => all.filter(predicate).length;
-    const thisMonth = count((u) => u.joined.getFullYear() === NOW.getFullYear() && u.joined.getMonth() === NOW.getMonth());
-    const active = count((u) => u.status === 'Online');
-    const superAdmins = count((u) => u.role === 'Super Admin');
-    const editors = count((u) => u.role === 'Editor');
-    const viewers = count((u) => u.role === 'Viewer');
-    return [
-      { label: 'Total Users', value: total, caption: `${thisMonth} this month`, captionTone: 'up', icon: 'pi pi-users', accent: 'violet', chart: 'bars', path: '' },
-      { label: 'Active Users', value: active, caption: pct(active), captionTone: 'muted', icon: 'pi pi-circle-fill', accent: 'emerald', chart: 'line', path: 'M2 34 C 18 34, 22 26, 34 30 S 52 36, 62 22 S 76 6, 86 8' },
-      { label: 'Super Admins', value: superAdmins, caption: pct(superAdmins), captionTone: 'muted', icon: 'pi pi-crown', accent: 'amber', chart: 'line', path: 'M2 12 C 14 10, 22 8, 30 16 S 46 36, 58 34 S 76 18, 86 12' },
-      { label: 'Editors', value: editors, caption: pct(editors), captionTone: 'muted', icon: 'pi pi-pencil', accent: 'fuchsia', chart: 'line', path: 'M2 30 C 12 22, 20 16, 30 22 S 44 36, 54 28 S 70 12, 86 20' },
-      { label: 'Viewers', value: viewers, caption: pct(viewers), captionTone: 'muted', icon: 'pi pi-eye', accent: 'blue', chart: 'line', path: 'M2 32 C 14 34, 24 30, 36 32 S 52 16, 62 14 S 78 24, 86 26' },
-    ];
-  });
-
-  readonly barHeights = [38, 62, 46, 84, 56, 100];
-
-  roleMeta(role: UserRole) {
-    return ROLE_META[role];
+  constructor() {
+    void this.loadStats();
+    void this.loadLookups();
   }
 
-  avatarGradient(user: ManagedUser): string {
-    return AVATAR_GRADIENTS[Number(user.id) % AVATAR_GRADIENTS.length];
+  onQuickSearch(value: string): void {
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.store.setQ(value.trim()), 300);
   }
 
-  formatDate(d: Date): string {
-    return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  openFilters(): void {
+    this.draft.set({ ...this.applied(), q: this.store.q() });
+    this.filtersOpen.set(true);
   }
 
-  formatDateTime(d: Date): string {
-    const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    return `${this.formatDate(d)} ${time}`;
+  closeFilters(): void {
+    this.filtersOpen.set(false);
   }
 
-  relativeTime(d: Date): string {
-    const hours = Math.floor((NOW.getTime() - d.getTime()) / 3_600_000);
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return days === 1 ? '1 day ago' : `${days} days ago`;
+  patchDraft(key: keyof UserFilters, value: string): void {
+    this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
   }
 
   applyFilters(): void {
-    this.applied.set({
-      search: this.searchDraft(),
-      role: this.roleDraft(),
-      status: this.statusDraft(),
-      branch: this.branchDraft(),
-      from: this.joinedFrom(),
-      to: this.joinedTo(),
-    });
-    this.dateRangeOpen.set(false);
-    this.page.set(1);
+    const next = { ...this.draft() };
+    this.applied.set(next);
+    this.filtersOpen.set(false);
+    this.pushFilters();
+    if (next.q !== this.store.q()) this.store.setQ(next.q.trim());
   }
 
-  clearFilters(): void {
-    this.searchDraft.set('');
-    this.roleDraft.set('');
-    this.statusDraft.set('');
-    this.branchDraft.set('');
-    this.joinedFrom.set('');
-    this.joinedTo.set('');
-    this.applyFilters();
+  resetDraft(): void {
+    this.draft.set({ ...EMPTY_FILTERS });
   }
 
-  goToPage(target: number): void {
-    this.page.set(Math.min(Math.max(1, target), this.totalPages()));
+  resetAll(): void {
+    this.draft.set({ ...EMPTY_FILTERS });
+    this.applied.set({ ...EMPTY_FILTERS });
+    this.selected.set(new Set());
+    this.pushFilters();
+    this.store.setQ('');
   }
 
-  changePageSize(size: number): void {
-    this.pageSize.set(Number(size));
-    this.page.set(1);
+  filterByStatus(status: UserStatus | ''): void {
+    this.applied.update((f) => ({ ...f, status }));
+    this.pushFilters();
+  }
+
+  onEscape(): void {
+    if (this.filtersOpen()) this.closeFilters();
+    this.openMenuId.set(null);
+  }
+
+  sortBy(key: SortKey): void {
+    if (this.sortKey() === key) {
+      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.sortKey.set(key);
+      this.sortDir.set('asc');
+    }
+    this.pushFilters();
+  }
+
+  ariaSort(key: SortKey | null): 'ascending' | 'descending' | null {
+    if (!key) return null;
+    return this.sortKey() !== key ? null : this.sortDir() === 'asc' ? 'ascending' : 'descending';
+  }
+
+  goToPage(p: number): void {
+    const target = Math.min(Math.max(1, p), this.totalPages());
+    if (target !== this.store.page()) this.store.setPage(target);
+  }
+
+  setPageSize(size: number): void {
+    this.store.setPageSize(Number(size));
   }
 
   toggleRow(id: string): void {
-    this.selected.update((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(id)) next.add(id);
+    this.selected.update((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
 
   togglePage(): void {
-    const ids = this.pagedUsers().map((u) => u.id);
-    const selectAll = !this.allOnPageSelected();
-    this.selected.update((prev) => {
-      const next = new Set(prev);
-      ids.forEach((id) => (selectAll ? next.add(id) : next.delete(id)));
+    const ids = this.store.items().map((u) => u.id);
+    const clear = this.allOnPageSelected();
+    this.selected.update((s) => {
+      const next = new Set(s);
+      ids.forEach((id) => (clear ? next.delete(id) : next.add(id)));
       return next;
     });
   }
 
-  toggleMenu(id: string): void {
-    this.openMenuId.update((current) => (current === id ? null : id));
+  toggleMenu(id: string, event: Event): void {
+    event.stopPropagation();
+    this.openMenuId.update((cur) => (cur === id ? null : id));
   }
 
-  addUser(): void {
-    this.notify('info', 'Add New User', 'User invitation form will open here.');
+  viewUser(user: IamUserListItem): void {
+    void this.router.navigate(['/iam/users', user.id]);
   }
 
-  viewUser(user: ManagedUser): void {
-    this.notify('info', 'View User', `Viewing ${user.name}'s profile`);
-  }
-
-  editUser(user: ManagedUser): void {
-    this.notify('info', 'Edit User', `Editing ${user.name}'s profile`);
-  }
-
-  toggleStatus(user: ManagedUser): void {
-    const status: UserStatus = user.status === 'Online' ? 'Offline' : 'Online';
-    this.users.update((list) => list.map((u) => (u.id === user.id ? { ...u, status } : u)));
+  async toggleLock(user: IamUserListItem): Promise<void> {
     this.openMenuId.set(null);
-    this.notify('success', 'Status Updated', `${user.name} is now ${status.toLowerCase()}`);
+    this.busyId.set(user.id);
+    const locking = !user.isAccountLocked;
+    try {
+      await firstValueFrom(locking ? this.api.lockIamUser(user.id) : this.api.unlockIamUser(user.id));
+      this.notify(locking ? 'warn' : 'success', locking ? 'Account locked' : 'Account unlocked', user.fullName);
+      await Promise.all([this.store.reload(), this.loadStats()]);
+    } catch (err) {
+      this.notify('error', 'Action failed', this.errorMessage(err));
+    } finally {
+      this.busyId.set(null);
+    }
   }
 
-  deleteUser(user: ManagedUser): void {
-    this.users.update((list) => list.filter((u) => u.id !== user.id));
-    this.selected.update((prev) => {
-      const next = new Set(prev);
-      next.delete(user.id);
-      return next;
-    });
+  async removeUser(user: IamUserListItem): Promise<void> {
     this.openMenuId.set(null);
-    this.goToPage(this.page());
-    this.notify('warn', 'User Removed', `${user.name} has been removed`);
-  }
-
-  importUsers(): void {
-    this.notify('info', 'Import', 'Upload a CSV file to import users.');
+    if (!confirm(`Remove ${user.fullName}? This cannot be undone.`)) return;
+    this.busyId.set(user.id);
+    try {
+      await firstValueFrom(this.api.deleteIamUser(user.id));
+      this.selected.update((s) => {
+        const next = new Set(s);
+        next.delete(user.id);
+        return next;
+      });
+      this.notify('warn', 'User removed', `${user.fullName} has been removed`);
+      await Promise.all([this.store.reload(), this.loadStats()]);
+    } catch (err) {
+      this.notify('error', 'Remove failed', this.errorMessage(err));
+    } finally {
+      this.busyId.set(null);
+    }
   }
 
   exportUsers(): void {
     const sel = this.selected();
-    const rows = sel.size ? this.filteredUsers().filter((u) => sel.has(u.id)) : this.filteredUsers();
+    const rows = sel.size ? this.store.items().filter((u) => sel.has(u.id)) : this.store.items();
+    if (!rows.length) {
+      this.notify('info', 'Nothing to export', 'No users on this page.');
+      return;
+    }
     CsvExporter.export(
       'users',
-      ['Name', 'Email', 'Role', 'Branch', 'Status', 'Last Login', 'Joined'],
-      rows.map((u) => [u.name, u.email, u.role, u.branch, u.status, this.formatDateTime(u.lastLogin), this.formatDate(u.joined)]),
+      ['User ID', 'Name', 'Email', 'Mobile', 'Department', 'Title', 'Role', 'Roles', 'Groups', 'Status', 'Last Login', 'Created On'],
+      rows.map((u) => [
+        u.id,
+        u.fullName,
+        u.email,
+        u.mobile,
+        u.department,
+        u.jobTitle,
+        u.primaryRole?.name,
+        u.roleCount,
+        u.groupCount,
+        u.statusLabel,
+        u.lastLoginDatetime ? this.formatDate(u.lastLoginDatetime) : 'Never',
+        this.formatDate(u.createdAt),
+      ]),
     );
-    this.notify('success', 'Export Complete', `${rows.length} users exported`);
+    this.notify('success', 'Export complete', `${rows.length} users exported`);
   }
 
-  private notify(severity: 'info' | 'success' | 'warn', summary: string, detail: string): void {
+  shortId(user: IamUserListItem): string {
+    return user.username ?? user.id.slice(0, 8).toUpperCase();
+  }
+
+  initials(name: string): string {
+    return name
+      .split(/\s+/)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  }
+
+  avatarColor(user: IamUserListItem): string {
+    return AVATAR_TONES[user.fullName.charCodeAt(0) % AVATAR_TONES.length];
+  }
+
+  roleTone(key: string | undefined): string {
+    if (!key) return 'slate';
+    if (key.includes('owner') || key.includes('super')) return 'violet';
+    if (key.includes('admin')) return 'blue';
+    if (key.includes('manager')) return 'amber';
+    if (key.includes('editor') || key.includes('employee')) return 'emerald';
+    return 'rose';
+  }
+
+  relativeTime(iso: string | null): string {
+    if (!iso) return 'Never';
+    const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+    return this.formatDate(iso);
+  }
+
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  private pushFilters(): void {
+    const f = this.applied();
+    const filters: Record<string, string> = { sort: this.sortKey(), order: this.sortDir() };
+    for (const key of FILTER_KEYS) {
+      if (key !== 'q' && f[key]) filters[key] = f[key];
+    }
+    this.store.setFilters(filters);
+  }
+
+  private async loadStats(): Promise<void> {
+    const results = await Promise.all(
+      STAT_CARDS.map(async (card) => {
+        try {
+          const list = unwrap(
+            await firstValueFrom(this.api.listIamUsers({ page: 1, pageSize: 1, status: card.status ? [card.status] : undefined })),
+          );
+          return [card.label, list.meta.total] as const;
+        } catch {
+          return [card.label, null] as const;
+        }
+      }),
+    );
+    this.statCounts.set(Object.fromEntries(results));
+  }
+
+  private async loadLookups(): Promise<void> {
+    try {
+      const [roles, groups] = await Promise.all([
+        firstValueFrom(this.api.listRoles({ page: 1, pageSize: 100 })).then(unwrap),
+        firstValueFrom(this.api.listGroups({ page: 1, pageSize: 100 })).then(unwrap),
+      ]);
+      this.roleOptions.set(roles.data.map((r) => ({ value: r.id, label: r.name })));
+      this.groupOptions.set(groups.data.map((g) => ({ value: g.id, label: g.name })));
+    } catch {
+      this.notify('warn', 'Filters limited', 'Could not load roles and groups.');
+    }
+  }
+
+  private errorMessage(err: unknown): string {
+    const e = err as { error?: { error?: { message?: string } } };
+    return e?.error?.error?.message ?? 'Please try again.';
+  }
+
+  private notify(severity: 'success' | 'info' | 'warn' | 'error', summary: string, detail: string): void {
     this.messages.add({ severity, summary, detail, life: 3000 });
   }
 }

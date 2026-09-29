@@ -2,6 +2,11 @@ import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 import { Prisma } from '@prisma/client';
 import { IamUserListQueryDto } from './iam-user.dto';
 
+// Date-only filters arrive as midnight; widen the upper bound so the whole day is included.
+function endOfDay(date?: Date): Date | undefined {
+  return date ? new Date(date.getTime() + 86_399_999) : undefined;
+}
+
 interface UserWhere extends Prisma.UserWhereInput {}
 
 export class IamUserRepository extends BaseRepository {
@@ -58,6 +63,15 @@ export class IamUserRepository extends BaseRepository {
     if (query.isAccountLocked) where.isAccountLocked = query.isAccountLocked === 'true';
     if (query.roleId) where.roleAssignments = { some: { roleId: query.roleId } };
     if (query.groupId) where.userGroups = { some: { groupId: query.groupId } };
+    if (query.name) where.fullName = { contains: query.name, mode: 'insensitive' };
+    if (query.email) where.email = { contains: query.email, mode: 'insensitive' };
+    if (query.mobile) where.mobile = { contains: query.mobile };
+    if (query.createdFrom || query.createdTo) {
+      where.createdAt = { gte: query.createdFrom, lte: endOfDay(query.createdTo) };
+    }
+    if (query.lastLoginFrom || query.lastLoginTo) {
+      where.lastLoginDatetime = { gte: query.lastLoginFrom, lte: endOfDay(query.lastLoginTo) };
+    }
 
     const [data, total] = await Promise.all([
       this.getDb(tx).user.findMany({
@@ -83,6 +97,7 @@ export class IamUserRepository extends BaseRepository {
           createdAt: true,
           updatedAt: true,
           _count: { select: { roleAssignments: true, userGroups: true } },
+          roleAssignments: { take: 1, select: { role: { select: { name: true, key: true } } } },
         },
         orderBy: { [query.sort]: query.order },
         skip: (query.page - 1) * query.pageSize,

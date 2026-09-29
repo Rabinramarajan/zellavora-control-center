@@ -40,11 +40,20 @@ export const UpdateIamUserSchema = z
 
 export const IamUserListQuerySchema = z.object({
   q: z.string().optional(),
-  status: z.array(UserStatusSchema).optional(),
+  status: z
+    .preprocess((v) => (typeof v === 'string' ? v.split(',') : v), z.array(UserStatusSchema))
+    .optional(),
   roleId: z.string().uuid().optional(),
   groupId: z.string().uuid().optional(),
   department: z.string().optional(),
   isAccountLocked: z.enum(['true', 'false']).optional(),
+  name: z.string().trim().optional(),
+  email: z.string().trim().optional(),
+  mobile: z.string().trim().optional(),
+  createdFrom: z.coerce.date().optional(),
+  createdTo: z.coerce.date().optional(),
+  lastLoginFrom: z.coerce.date().optional(),
+  lastLoginTo: z.coerce.date().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(['fullName', 'email', 'status', 'department', 'createdAt', 'lastLoginDatetime']).default('createdAt'),

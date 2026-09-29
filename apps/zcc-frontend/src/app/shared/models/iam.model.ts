@@ -195,6 +195,7 @@ export interface IamUserListItem {
   lastLoginDatetime: string | null;
   emailVerified: boolean;
   roleCount: number;
+  primaryRole?: { name: string; key: string } | null;
   groupCount: number;
   createdAt: string;
   updatedAt: string;
