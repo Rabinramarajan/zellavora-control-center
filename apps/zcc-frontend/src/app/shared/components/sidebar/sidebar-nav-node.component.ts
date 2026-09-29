@@ -21,6 +21,11 @@ import { LayoutService } from '@core/services/layout.service';
       <button
         type="button"
         (click)="toggle()"
+        (mouseenter)="showTooltip($event)"
+        (mouseleave)="hideTooltip()"
+        (focus)="showTooltip($event)"
+        (blur)="hideTooltip()"
+        [attr.aria-label]="collapsed() ? node().label : null"
         [class.justify-center]="collapsed()"
         [class.w-full]="!collapsed()"
         class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
@@ -54,6 +59,11 @@ import { LayoutService } from '@core/services/layout.service';
         [routerLink]="node().route"
         routerLinkActive="bg-[#13112b] text-white"
         (click)="closeOnMobile()"
+        (mouseenter)="showTooltip($event)"
+        (mouseleave)="hideTooltip()"
+        (focus)="showTooltip($event)"
+        (blur)="hideTooltip()"
+        [attr.aria-label]="collapsed() ? node().label : null"
         [class.justify-center]="collapsed()"
         class="flex items-center justify-between px-3 py-2 rounded-xl text-[#a3a1b8] hover:bg-[#13112b]/50 hover:text-white transition-all text-xs font-semibold cursor-pointer"
       >
@@ -65,6 +75,16 @@ import { LayoutService } from '@core/services/layout.service';
         </div>
       </a>
     }
+
+    @if (collapsed() && tooltipTop() !== null) {
+      <span
+        role="tooltip"
+        class="fixed z-[1000] -translate-y-1/2 pointer-events-none whitespace-nowrap rounded-lg bg-[#13112b] border border-[#2a2750] px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg"
+        [style.top.px]="tooltipTop()"
+        [style.left.px]="tooltipLeft()"
+        >{{ node().label }}</span
+      >
+    }
   `,
 })
 export class SidebarNavNodeComponent {
@@ -72,6 +92,9 @@ export class SidebarNavNodeComponent {
   collapsed = input(false);
 
   readonly expanded = signal(false);
+  // Fixed positioning escapes the sidebar's scroll container, which would clip an absolute tooltip.
+  readonly tooltipTop = signal<number | null>(null);
+  readonly tooltipLeft = signal(0);
 
   private readonly layoutService = inject(LayoutService);
 
@@ -79,7 +102,19 @@ export class SidebarNavNodeComponent {
     this.expanded.update((v) => !v);
   }
 
+  showTooltip(event: Event): void {
+    if (!this.collapsed()) return;
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.tooltipTop.set(rect.top + rect.height / 2);
+    this.tooltipLeft.set(rect.right + 10);
+  }
+
+  hideTooltip(): void {
+    this.tooltipTop.set(null);
+  }
+
   closeOnMobile(): void {
+    this.hideTooltip();
     if (window.innerWidth < 768) {
       this.layoutService.closeSidebar();
     }
