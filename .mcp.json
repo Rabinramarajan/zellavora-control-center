@@ -3,7 +3,7 @@
     "angular-cli": {
       "type": "stdio",
       "command": "cmd",
-      "args": ["/c", "cd apps\\admin && npx -y ng mcp"],
+      "args": ["/c", "cd apps\\zcc-frontend && npx -y ng mcp"],
       "env": {}
     }
   }

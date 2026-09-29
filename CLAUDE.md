@@ -48,7 +48,7 @@
 ### Feature-Based Structure
 ```
 apps/
-├── admin/                    # Admin dashboard (Angular)
+├── zcc-frontend/             # Admin dashboard (Angular)
 │   └── src/app/
 │       ├── core/            # Shared services, auth, HTTP
 │       ├── features/        # Feature modules (lazy-loaded)
@@ -337,11 +337,11 @@ npx prisma migrate dev --name add_new_table
 
 ```bash
 # Frontend
-npm run dev:admin              # Start dev server
-npm run build:admin            # Production build
-npm run test:admin             # Run tests
+npm run dev:frontend              # Start dev server
+npm run build:frontend            # Production build
+npm run test:frontend             # Run tests
 npm run test:e2e              # E2E tests
-npm run lint:admin            # Lint check
+npm run lint:frontend            # Lint check
 npm run format                # Format all files
 
 # Backend

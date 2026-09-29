@@ -1,0 +1,56 @@
+<div class="role-detail">
+  <header class="page-header">
+    <a routerLink="/admin/roles" class="back-link">← Back to Roles</a>
+    <h1>{{ isNew() ? 'New Role' : 'Edit Role' }}</h1>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  }
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  @if (role() && !loading()) {
+    <form [formRoot]="form" class="form">
+      <fieldset class="form-group">
+        <legend>Role Information</legend>
+        <div class="form-row">
+          <app-form-input-control [formField]="form.roleName" label="Role Name" />
+        </div>
+        <div class="form-row">
+          <app-form-input-control [formField]="form.moduleValue" label="Module" />
+        </div>
+        <div class="form-row">
+          <app-select-control
+            [formField]="form.statusValue"
+            label="Status"
+            [options]="statusOptions"
+          />
+        </div>
+      </fieldset>
+      @if (role()!.ilstRoleResource && role()!.ilstRoleResource!.length > 0) {
+        <fieldset class="form-group">
+          <legend>Resources</legend>
+          <div class="resource-list">
+            @for (resource of role()!.ilstRoleResource!; track resource.roleResourceId) {
+              <div class="resource-item">
+                <label>
+                  <input type="checkbox" [checked]="true" />
+                  {{ resource.permissionValue }} (ID: {{ resource.resourceId }})
+                </label>
+              </div>
+            }
+          </div>
+        </fieldset>
+      }
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="form().submitting()">Save</button>
+        <a routerLink="/admin/roles" class="btn btn-secondary">Cancel</a>
+        @if (!isNew()) {
+          <button type="button" class="btn btn-danger" (click)="onDelete()">Delete</button>
+        }
+      </div>
+    </form>
+  }
+</div>

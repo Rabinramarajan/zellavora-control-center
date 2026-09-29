@@ -58,7 +58,7 @@ cp .env.example .env.local
 # Edit .env.local with your Supabase credentials
 
 # Start development
-npm run dev:admin
+npm run dev:frontend
 
 # Dashboard ready at http://localhost:4200
 ```
@@ -67,7 +67,7 @@ npm run dev:admin
 
 - **[Architecture](./docs/ARCHITECTURE.md)** - System design & principles
 - **[Setup Guide](./docs/SETUP_GUIDE.md)** - Installation & configuration
-- **[Development](./apps/admin/README.md)** - Frontend development guide
+- **[Development](./apps/zcc-frontend/README.md)** - Frontend development guide
 - **[API Documentation](./docs/API.md)** - REST API reference
 - **[Database](./docs/DATABASE.md)** - Schema & RLS policies
 - **[Deployment](./docs/DEPLOYMENT.md)** - Production deployment
@@ -78,7 +78,7 @@ See [application structure and cleanup notes](./docs/CODE_CLEANUP.md) for folder
 
 ```
 zcc/
-├── apps/admin/           # Angular admin dashboard
+├── apps/zcc-frontend/           # Angular admin dashboard
 ├── apps/backend/         # Express API and Prisma database layer
 ├── docs/                 # Complete documentation
 ```
@@ -88,7 +88,7 @@ zcc/
 ```bash
 # Development
 npm run dev              # Start admin dashboard
-npm run dev:admin        # Admin only
+npm run dev:frontend        # Admin only
 npm run dev:public       # Public portfolio only
 
 # Testing
@@ -165,7 +165,7 @@ npm run deploy:production
 ## 📝 Development Workflow
 
 1. Create feature branch: `git checkout -b feat/feature-name`
-2. Develop with hot reload: `npm run dev:admin`
+2. Develop with hot reload: `npm run dev:frontend`
 3. Run tests: `npm run test`
 4. Lint & format: `npm run lint && npm run format`
 5. Push & create PR

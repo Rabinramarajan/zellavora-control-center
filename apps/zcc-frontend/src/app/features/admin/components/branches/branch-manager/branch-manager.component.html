@@ -1,0 +1,48 @@
+<div class="branch-manager">
+  <header class="page-header">
+    <h1>Branches</h1>
+    <button *hasPermission="'admin:branches:create'" class="btn btn-primary" (click)="onCreate()">
+      + New Branch
+    </button>
+  </header>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  <app-table
+    [rows]="branches()"
+    [columns]="columns"
+    [loading]="loading()"
+    [trackBy]="trackBy"
+    searchPlaceholder="Search branches..."
+    [columnToggle]="true"
+  >
+    <ng-template [appCell]="'status'" let-branch>
+      <span
+        [class]="'badge ' + (branch.statusValue === 'Active' ? 'badge-active' : 'badge-inactive')"
+      >
+        {{ branch.statusValue }}
+      </span>
+    </ng-template>
+
+    <ng-template [appCell]="'actions'" let-branch>
+      <div class="actions">
+        <button
+          *hasPermission="'admin:branches:read'"
+          class="btn btn-sm btn-ghost"
+          (click)="onView(branch)"
+        >
+          View
+        </button>
+        <button
+          *hasPermission="'admin:branches:update'"
+          class="btn btn-sm btn-ghost"
+          (click)="onEdit(branch)"
+        >
+          Edit
+        </button>
+      </div>
+    </ng-template>
+  </app-table>
+</div>

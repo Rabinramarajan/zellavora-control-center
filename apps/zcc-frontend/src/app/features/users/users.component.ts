@@ -1,0 +1,198 @@
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
+import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  role: string;
+  status: 'Online' | 'Offline';
+  joinedDate: string;
+  lastLogin: string;
+  branch?: string;
+}
+
+@Component({
+  selector: 'app-users',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ButtonModule,
+    TableModule,
+    PaginatorModule,
+    ToastModule,
+    FormInputControl,
+    SelectControl,
+  ],
+  templateUrl: './users.component.html',
+  styleUrl: './users.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class UsersComponent {
+  private messageService = inject(MessageService);
+
+  readonly showAddUserModal = signal(false);
+  readonly searchTerm = signal('');
+  readonly selectedRole = signal<string | null>(null);
+  readonly selectedStatus = signal<string | null>(null);
+  readonly selectedBranch = signal<string | null>(null);
+
+  roleOptions: SelectControlOption[] = [
+    { label: 'All Roles', value: '' },
+    { label: 'Super Admin', value: 'Super Admin' },
+    { label: 'Admin', value: 'Admin' },
+    { label: 'Manager', value: 'Manager' },
+    { label: 'Editor', value: 'Editor' },
+    { label: 'Viewer', value: 'Viewer' },
+  ];
+
+  statusOptions: SelectControlOption[] = [
+    { label: 'All Status', value: '' },
+    { label: 'Online', value: 'Online' },
+    { label: 'Offline', value: 'Offline' },
+  ];
+
+  branchOptions: SelectControlOption[] = [
+    { label: 'All Branches', value: '' },
+    { label: 'Head Office', value: 'Head Office' },
+    { label: 'Chennai Branch', value: 'Chennai Branch' },
+    { label: 'Bangalore Branch', value: 'Bangalore Branch' },
+    { label: 'Hyderabad Branch', value: 'Hyderabad Branch' },
+  ];
+
+  readonly users = signal<User[]>([
+    {
+      id: '1',
+      name: 'Rabin R',
+      email: 'rabin@zellavora.com',
+      role: 'Super Admin',
+      status: 'Online',
+      joinedDate: 'Jan 10, 2025',
+      lastLogin: 'May 24, 2025 10:30 AM',
+      branch: 'Head Office',
+    },
+    {
+      id: '2',
+      name: 'Ananya S',
+      email: 'ananya@zellavora.com',
+      role: 'Admin',
+      status: 'Online',
+      joinedDate: 'Feb 18, 2025',
+      lastLogin: 'May 24, 2025 09:15 AM',
+      branch: 'Head Office',
+    },
+    {
+      id: '3',
+      name: 'Karthik P',
+      email: 'karthik@zellavora.com',
+      role: 'Manager',
+      status: 'Online',
+      joinedDate: 'Mar 02, 2025',
+      lastLogin: 'May 23, 2025 06:45 PM',
+      branch: 'Chennai Branch',
+    },
+    {
+      id: '4',
+      name: 'Meera R',
+      email: 'meera@zellavora.com',
+      role: 'Editor',
+      status: 'Online',
+      joinedDate: 'Apr 11, 2025',
+      lastLogin: 'May 24, 2025 12:10 PM',
+      branch: 'Bangalore Branch',
+    },
+    {
+      id: '5',
+      name: 'Vikram T',
+      email: 'vikram@zellavora.com',
+      role: 'Viewer',
+      status: 'Offline',
+      joinedDate: 'Apr 30, 2025',
+      lastLogin: 'May 19, 2025 11:20 AM',
+      branch: 'Hyderabad Branch',
+    },
+    {
+      id: '6',
+      name: 'Divya L',
+      email: 'divya@zellavora.com',
+      role: 'Editor',
+      status: 'Online',
+      joinedDate: 'May 05, 2025',
+      lastLogin: 'May 24, 2025 08:40 AM',
+      branch: 'Coimbatore Branch',
+    },
+    {
+      id: '7',
+      name: 'Arun Kumar',
+      email: 'arun@zellavora.com',
+      role: 'Manager',
+      status: 'Offline',
+      joinedDate: 'Jan 25, 2025',
+      lastLogin: 'May 19, 2025 03:30 PM',
+      branch: 'Pune Branch',
+    },
+    {
+      id: '8',
+      name: 'Sneha M',
+      email: 'sneha@zellavora.com',
+      role: 'Viewer',
+      status: 'Offline',
+      joinedDate: 'Feb 15, 2025',
+      lastLogin: 'May 17, 2025 10:00 AM',
+      branch: 'Head Office',
+    },
+  ]);
+
+  readonly filteredUsers = computed(() => {
+    const term = this.searchTerm().toLowerCase();
+    const role = this.selectedRole();
+    const status = this.selectedStatus();
+    const branch = this.selectedBranch();
+    return this.users().filter((user) => {
+      const matchesSearch =
+        !term || user.name.toLowerCase().includes(term) || user.email.toLowerCase().includes(term);
+      const matchesRole = !role || user.role === role;
+      const matchesStatus = !status || user.status === status;
+      const matchesBranch = !branch || user.branch === branch;
+      return matchesSearch && matchesRole && matchesStatus && matchesBranch;
+    });
+  });
+
+  clearFilters() {
+    this.searchTerm.set('');
+    this.selectedRole.set(null);
+    this.selectedStatus.set(null);
+    this.selectedBranch.set(null);
+  }
+
+  viewUser(user: User) {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'View User',
+      detail: `Viewing ${user.name}'s profile`,
+    });
+  }
+
+  editUser(user: User) {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Edit User',
+      detail: `Editing ${user.name}'s profile`,
+    });
+  }
+
+  deleteUser(user: User) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Delete User',
+      detail: `Deleting ${user.name}...`,
+    });
+  }
+}

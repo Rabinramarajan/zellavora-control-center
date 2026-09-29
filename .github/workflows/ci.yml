@@ -92,13 +92,13 @@ jobs:
         run: npm ci
 
       - name: Run frontend tests
-        run: npm run test:admin
-        working-directory: ./apps/admin
+        run: npm run test:frontend
+        working-directory: ./apps/zcc-frontend
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
-          files: ./apps/admin/coverage/lcov.info
+          files: ./apps/zcc-frontend/coverage/lcov.info
           flags: frontend
           fail_ci_if_error: false
 
@@ -144,13 +144,13 @@ jobs:
         run: npm ci
 
       - name: Build frontend
-        run: npm run build:admin
+        run: npm run build:frontend
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: frontend-dist
-          path: dist/apps/admin
+          path: dist/apps/zcc-frontend
 
   # Security Scan
   security-scan:
