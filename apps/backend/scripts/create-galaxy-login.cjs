@@ -9,7 +9,10 @@ const { Client } = require('pg');
 const backend = path.resolve(__dirname, '..');
 dotenv.config({ path: path.join(backend, '.env.local') });
 dotenv.config({ path: path.join(backend, '../../.env.local') });
-const db = new Client({ connectionString: process.env.DATABASE_URL });
+const db = new Client({
+  // Advisory locks and transactions need a session connection, not the transaction pooler.
+  connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
+});
 const email = 'galaxysofas1717@gmail.com';
 const menuKeys = ['dashboard', 'media', 'cms-builder', 'settings'];
 const permissionKeys = [

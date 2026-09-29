@@ -24,7 +24,10 @@ if (!fs.existsSync(sourceEnvFile)) {
 const sourceEnv = dotenv.parse(fs.readFileSync(sourceEnvFile));
 const token = sourceEnv.BLOB_READ_WRITE_TOKEN;
 if (!token) throw new Error('Source project has no Blob token');
-const db = new Client({ connectionString: process.env.DATABASE_URL });
+const db = new Client({
+  // Advisory locks and transactions need a session connection, not the transaction pooler.
+  connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
+});
 const code = 'galaxy-sofas';
 // Stable on retries, including a failed upload before the DB transaction commits.
 const seedId = '9809684a-674b-4d13-a729-b2090a2d9924';
@@ -32,7 +35,10 @@ const seedId = '9809684a-674b-4d13-a729-b2090a2d9924';
 async function main() {
   await db.connect();
   // Serialize repeat imports without holding a transaction during network uploads.
-  await db.query("select pg_advisory_lock(hashtext('import:galaxy-sofas'))");
+  const { locked } = (
+    await db.query("select pg_try_advisory_lock(hashtext('import:galaxy-sofas')) as locked")
+  ).rows[0];
+  if (!locked) throw new Error('Another Galaxy Sofas import is running or left a stale session');
   const existing = (
     await db.query('select id,is_deleted from organizations where client_code=$1', [code])
   ).rows[0];
