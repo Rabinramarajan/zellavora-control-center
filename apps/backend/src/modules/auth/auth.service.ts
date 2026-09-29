@@ -218,13 +218,12 @@ export class AuthService {
   // ===========================================================================
 
   async me(actor: AuthenticatedActor) {
-    const user = await this.repo.findUserById(actor.userId);
-    if (!user || user.isDeleted) throw new AppError('Session expired', 401, 'SESSION_REVOKED');
-
-    const [tenant, permissions] = await Promise.all([
+    const [user, tenant, permissions] = await Promise.all([
+      this.repo.findUserById(actor.userId),
       TenantService.getById(actor.tenantId),
       PermissionService.loadForUser(actor.userId, actor.tenantId),
     ]);
+    if (!user || user.isDeleted) throw new AppError('Session expired', 401, 'SESSION_REVOKED');
     if (!tenant) throw new AppError('Organization not found', 404, 'TENANT_NOT_FOUND');
     const menu = await MenuService.loadForUserWithPerms(actor.userId, actor.tenantId, permissions);
 

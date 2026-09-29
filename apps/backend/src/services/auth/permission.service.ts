@@ -34,12 +34,14 @@ export class PermissionService {
       }
     }
 
+    if (codes.size) return codes;
+
     // Fall back to the user's own role name if it matches a seeded role.
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, tenantId: true },
+      select: { role: true },
     });
-    if (user && !codes.size) {
+    if (user) {
       const role = await prisma.role.findFirst({
         where: { name: { equals: user.role, mode: 'insensitive' }, organizationId: orgId },
         include: { rolePermissions: { include: { permission: true } } },

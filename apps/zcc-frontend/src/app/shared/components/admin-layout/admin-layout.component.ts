@@ -27,8 +27,8 @@ import { LayoutService } from '@core/services/layout.service';
         <app-navbar class="shrink-0"></app-navbar>
 
         <!-- Main Content (Scrolls vertically) -->
-        <main class="flex-1 overflow-y-auto bg-[#03020c]">
-          <div class="p-6 min-h-full flex flex-col">
+        <main class="flex flex-1 flex-col overflow-y-auto bg-[#03020c]">
+          <div class="flex flex-1 flex-col p-6">
             <router-outlet></router-outlet>
           </div>
         </main>

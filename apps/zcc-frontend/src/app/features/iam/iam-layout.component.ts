@@ -11,8 +11,9 @@ import { RouterOutlet } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [RouterOutlet],
+  host: { class: 'flex flex-1 flex-col md:min-h-0' },
   template: `
-    <main class="min-w-0 p-6">
+    <main class="flex min-w-0 flex-1 flex-col md:min-h-0">
       <router-outlet />
     </main>
   `,

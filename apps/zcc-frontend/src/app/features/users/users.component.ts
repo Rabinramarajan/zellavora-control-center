@@ -7,6 +7,7 @@ import { MessageService } from 'primeng/api';
 import { IamApiService, unwrap } from '@core/api/iam.api';
 import { IamUserListItem, UserStatus } from '@shared/models/iam.model';
 import { createListStore } from '@shared/utils/create-list-store';
+import { DateControl, FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { CsvExporter } from '../../shared/utils/csv-exporter';
 
 type SortKey = 'fullName' | 'email' | 'status' | 'department' | 'createdAt' | 'lastLoginDatetime';
@@ -26,10 +27,8 @@ interface UserFilters {
   lastLoginTo: string;
 }
 
-interface Option {
-  value: string;
-  label: string;
-}
+type Option = SelectControlOption;
+type FieldIcon = 'search' | 'user' | 'email' | 'phone' | 'list';
 
 interface StatCard {
   label: string;
@@ -56,11 +55,11 @@ const EMPTY_FILTERS: UserFilters = {
 const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof UserFilters>;
 
 const STATUS_OPTIONS: Option[] = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'LOCKED', label: 'Locked' },
-  { value: 'SUSPENDED', label: 'Suspended' },
+  { value: 'ACTIVE', label: 'Active', color: '#10b981' },
+  { value: 'INACTIVE', label: 'Inactive', color: '#f43f5e' },
+  { value: 'PENDING', label: 'Pending', color: '#f59e0b' },
+  { value: 'LOCKED', label: 'Locked', color: '#fb7185' },
+  { value: 'SUSPENDED', label: 'Suspended', color: '#94a3b8' },
 ];
 
 const STAT_CARDS: StatCard[] = [
@@ -76,7 +75,7 @@ const AVATAR_TONES = ['#7c3aed', '#8b5cf6', '#a855f7', '#6366f1', '#db2777', '#c
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [FormsModule, RouterLink, ToastModule],
+  imports: [FormsModule, RouterLink, ToastModule, FormInputControl, SelectControl, DateControl],
   templateUrl: './users.component.html',
   styleUrl: './users.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,18 +104,18 @@ export class UsersComponent {
     { key: 'createdAt', label: 'Created On' },
   ];
 
-  readonly textFields: Array<{ key: keyof UserFilters; label: string; icon: string; placeholder: string; type: string; hint?: string }> = [
-    { key: 'q', label: 'Keyword', icon: 'pi pi-search', placeholder: 'Name, email, username, title...', type: 'search', hint: 'Matches name, email, username, department or title' },
-    { key: 'name', label: 'Name', icon: 'pi pi-user', placeholder: 'Enter name', type: 'text' },
-    { key: 'email', label: 'Email', icon: 'pi pi-envelope', placeholder: 'Enter email', type: 'text' },
-    { key: 'mobile', label: 'Mobile', icon: 'pi pi-phone', placeholder: 'Enter mobile number', type: 'tel' },
-    { key: 'department', label: 'Department', icon: 'pi pi-building', placeholder: 'Exact department name', type: 'text' },
+  readonly textFields: Array<{ key: keyof UserFilters; label: string; icon: FieldIcon; placeholder: string; type: 'text' | 'email' | 'tel'; hint?: string }> = [
+    { key: 'q', label: 'Keyword', icon: 'search', placeholder: 'Name, email, username, title...', type: 'text', hint: 'Matches name, email, username, department or title' },
+    { key: 'name', label: 'Name', icon: 'user', placeholder: 'Enter name', type: 'text' },
+    { key: 'email', label: 'Email', icon: 'email', placeholder: 'Enter email', type: 'text' },
+    { key: 'mobile', label: 'Mobile', icon: 'phone', placeholder: 'Enter mobile number', type: 'tel' },
+    { key: 'department', label: 'Department', icon: 'list', placeholder: 'Exact department name', type: 'text' },
   ];
 
-  readonly selectFields = computed<Array<{ key: keyof UserFilters; label: string; icon: string; all: string; options: Option[] }>>(() => [
-    { key: 'roleId', label: 'Role', icon: 'pi pi-shield', all: 'All Roles', options: this.roleOptions() },
-    { key: 'groupId', label: 'Group', icon: 'pi pi-sitemap', all: 'All Groups', options: this.groupOptions() },
-    { key: 'status', label: 'Account Status', icon: 'pi pi-circle', all: 'All Status', options: STATUS_OPTIONS },
+  readonly selectFields = computed<Array<{ key: keyof UserFilters; label: string; icon: 'user' | 'list' | 'building' | 'globe'; all: string; options: Option[] }>>(() => [
+    { key: 'roleId', label: 'Role', icon: 'user', all: 'All Roles', options: this.roleOptions() },
+    { key: 'groupId', label: 'Group', icon: 'building', all: 'All Groups', options: this.groupOptions() },
+    { key: 'status', label: 'Account Status', icon: 'list', all: 'All Status', options: STATUS_OPTIONS },
   ]);
 
   readonly dateRanges: Array<{ label: string; from: keyof UserFilters; to: keyof UserFilters }> = [
@@ -143,13 +142,30 @@ export class UsersComponent {
   readonly busyId = signal<string | null>(null);
 
   private lookupsLoaded = false;
-  private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   readonly activeFilterCount = computed(() => {
     const f = this.applied();
     const ranges = [f.createdFrom || f.createdTo, f.lastLoginFrom || f.lastLoginTo].filter(Boolean).length;
     const plain = FILTER_KEYS.filter((k) => !this.dateRanges.some((r) => r.from === k || r.to === k) && f[k].trim()).length;
     return plain + ranges;
+  });
+
+  readonly activeChips = computed(() => {
+    const f = { ...this.applied(), q: this.store.q() };
+    const optionLabel = (options: Option[], value: string) => options.find((o) => o.value === value)?.label ?? value;
+    const chips: Array<{ label: string; value: string; keys: Array<keyof UserFilters> }> = [];
+    for (const field of this.textFields) {
+      if (f[field.key]) chips.push({ label: field.label, value: f[field.key], keys: [field.key] });
+    }
+    for (const sel of this.selectFields()) {
+      if (f[sel.key]) chips.push({ label: sel.label, value: optionLabel(sel.options, f[sel.key]), keys: [sel.key] });
+    }
+    for (const range of this.dateRanges) {
+      const from = f[range.from];
+      const to = f[range.to];
+      if (from || to) chips.push({ label: range.label, value: `${from || '…'} → ${to || '…'}`, keys: [range.from, range.to] });
+    }
+    return chips;
   });
 
   readonly rangeLabel = computed(() => {
@@ -183,9 +199,14 @@ export class UsersComponent {
     void this.loadStats();
   }
 
-  onQuickSearch(value: string): void {
-    clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.store.setQ(value.trim()), 300);
+  removeChip(keys: Array<keyof UserFilters>): void {
+    if (keys.includes('q')) this.store.setQ('');
+    this.applied.update((f) => {
+      const next = { ...f };
+      for (const key of keys) next[key] = '';
+      return next;
+    });
+    this.pushFilters();
   }
 
   openFilters(): void {
@@ -415,7 +436,7 @@ export class UsersComponent {
         firstValueFrom(this.api.listRoles({ page: 1, pageSize: 100 })).then(unwrap),
         firstValueFrom(this.api.listGroups({ page: 1, pageSize: 100 })).then(unwrap),
       ]);
-      this.roleOptions.set(roles.data.map((r) => ({ value: r.id, label: r.name })));
+      this.roleOptions.set(roles.data.map((r) => ({ value: r.id, label: r.name, description: r.key })));
       this.groupOptions.set(groups.data.map((g) => ({ value: g.id, label: g.name })));
     } catch {
       this.lookupsLoaded = false;

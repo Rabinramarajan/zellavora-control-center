@@ -1,75 +1,20 @@
 <p-toast />
 
-<section class="us-page relative flex md:h-[calc(100dvh-7.5rem)] flex-col gap-6">
+<section class="us-page relative flex flex-1 flex-col md:min-h-0 gap-5">
   <div class="us-aurora pointer-events-none" aria-hidden="true"></div>
 
-  <!-- Breadcrumb + header -->
-  <header class="us-rise flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-    <div>
-      <nav aria-label="Breadcrumb" class="mb-3 flex items-center gap-2 text-sm text-slate-400">
-        <a routerLink="/" class="transition-colors hover:text-white">Home</a>
-        <i class="pi pi-angle-right text-[0.7rem] text-slate-500" aria-hidden="true"></i>
-        <span class="text-slate-200" aria-current="page">Users</span>
+  <!-- Header -->
+  <header class="us-rise flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="min-w-0">
+      <nav aria-label="Breadcrumb" class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+        <a routerLink="/" class="cursor-pointer transition-colors duration-200 hover:text-slate-200">Home</a>
+        <i class="pi pi-angle-right text-[0.6rem]" aria-hidden="true"></i>
+        <span class="text-slate-300" aria-current="page">Users</span>
       </nav>
-      <h1 class="text-[1.75rem] font-bold leading-tight tracking-tight text-white sm:text-[2rem]">User Search</h1>
-      <p class="mt-1.5 text-sm text-slate-400 sm:text-[0.95rem]">Search, filter, view and manage all users across ZCC.</p>
+      <h1 class="text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">User Search</h1>
+      <p class="mt-1 text-sm text-slate-400">Search, filter, view and manage all users across ZCC.</p>
     </div>
-    <div class="flex gap-3">
-      <button type="button" class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none" (click)="exportUsers()">
-        <i class="pi pi-download text-sm" aria-hidden="true"></i>
-        Export
-      </button>
-      <a routerLink="/iam/users/new" class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none">
-        <i class="pi pi-plus text-sm" aria-hidden="true"></i>
-        Add New User
-      </a>
-    </div>
-  </header>
-
-  <!-- Stat chips -->
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:flex lg:flex-wrap">
-    @for (card of stats; track card.label; let i = $index) {
-      <button
-        type="button"
-        class="us-stat us-rise"
-        [attr.data-tone]="card.tone"
-        [class.is-active]="applied().status === card.status"
-        [attr.aria-pressed]="applied().status === card.status"
-        [style.animation-delay.ms]="50 + i * 55"
-        (click)="filterByStatus(card.status)"
-      >
-        <span class="us-stat-icon"><i [class]="card.icon" aria-hidden="true"></i></span>
-        <span class="min-w-0 text-left">
-          @if (statCounts()[card.label] === undefined) {
-            <span class="us-skeleton mb-1 block h-5 w-10"></span>
-          } @else {
-            <span class="block text-lg font-semibold leading-tight text-white tabular-nums">
-              {{ statCounts()[card.label] === null ? '—' : statCounts()[card.label]!.toLocaleString() }}
-            </span>
-          }
-          <span class="block truncate text-xs text-slate-400">{{ card.label }}</span>
-        </span>
-      </button>
-    }
-  </div>
-
-  <!-- Search bar -->
-  <div class="us-panel us-rise flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:p-4" style="animation-delay: 300ms">
-    <label class="us-input-wrap flex-1">
-      <i class="pi pi-search text-slate-400" aria-hidden="true"></i>
-      <input
-        type="search"
-        class="us-input"
-        placeholder="Search by name, email, username, department..."
-        aria-label="Search users"
-        [ngModel]="store.q()"
-        (ngModelChange)="onQuickSearch($event)"
-      />
-      @if (store.loading()) {
-        <i class="pi pi-spin pi-spinner text-violet-300" aria-hidden="true"></i>
-      }
-    </label>
-    <div class="flex gap-3">
+    <div class="flex shrink-0 gap-3">
       <button
         type="button"
         class="us-btn us-btn-outline us-filter-btn relative h-11 flex-1 px-5 sm:flex-none"
@@ -78,30 +23,65 @@
         [attr.aria-expanded]="filtersOpen()"
         (click)="openFilters()"
       >
-        <i class="pi pi-filter text-sm" aria-hidden="true"></i>
+        <i class="pi pi-sliders-h text-sm" aria-hidden="true"></i>
         Filters
         @if (activeFilterCount() > 0) {
           <span class="us-badge" [attr.aria-label]="activeFilterCount() + ' active filters'">{{ activeFilterCount() }}</span>
         }
       </button>
-      <button type="button" class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none" (click)="resetAll()">
-        <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
-        Reset
-      </button>
+      <a routerLink="/iam/users/new" class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none">
+        <i class="pi pi-plus text-sm" aria-hidden="true"></i>
+        Add New User
+      </a>
     </div>
+  </header>
+
+  <!-- Status chips -->
+  <div class="us-rise -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="Filter by account status">
+    @for (card of stats; track card.label; let i = $index) {
+      <button
+        type="button"
+        class="us-stat"
+        [attr.data-tone]="card.tone"
+        [class.is-active]="applied().status === card.status"
+        [attr.aria-pressed]="applied().status === card.status"
+        [style.animation-delay.ms]="40 + i * 50"
+        (click)="filterByStatus(card.status)"
+      >
+        <span class="us-stat-icon"><i [class]="card.icon" aria-hidden="true"></i></span>
+        <span class="whitespace-nowrap">{{ card.label }}</span>
+        @if (statCounts()[card.label] === undefined) {
+          <span class="us-skeleton h-5 w-7"></span>
+        } @else {
+          <span class="us-stat-count">{{ statCounts()[card.label] === null ? '—' : statCounts()[card.label]!.toLocaleString() }}</span>
+        }
+      </button>
+    }
   </div>
 
-  <!-- Results -->
-  <div class="us-rise flex min-h-0 flex-1 flex-col gap-3" style="animation-delay: 360ms">
-    <div class="flex flex-wrap items-center justify-between gap-2 px-1">
-      <p class="text-sm text-slate-300" aria-live="polite">{{ rangeLabel() }}</p>
-      @if (selected().size) {
-        <p class="text-xs font-medium text-violet-300">{{ selected().size }} selected · Export includes selection only</p>
+  <!-- Active filters -->
+  @if (activeChips().length) {
+    <div class="us-rise flex flex-wrap items-center gap-2" aria-label="Active filters">
+      @for (chip of activeChips(); track chip.label) {
+        <span class="us-chip">
+          <span class="text-slate-400">{{ chip.label }}:</span>
+          <span class="font-medium text-white">{{ chip.value }}</span>
+          <button type="button" class="us-chip-x" [attr.aria-label]="'Remove ' + chip.label + ' filter'" (click)="removeChip(chip.keys)">
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </span>
       }
+      <button type="button" class="ml-1 cursor-pointer text-xs font-semibold text-violet-300 transition-colors duration-200 hover:text-violet-200" (click)="resetAll()">
+        Clear all
+      </button>
     </div>
+  }
 
-    <div class="us-panel flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div class="us-table-scroll min-h-0 flex-1" [class.is-loading]="store.loading() && store.hasItems()">
+  <!-- Results -->
+  <div class="us-rise flex md:min-h-0 flex-1 flex-col" style="animation-delay: 300ms">
+
+    <div class="us-panel flex md:min-h-0 flex-1 flex-col overflow-hidden">
+      <div class="us-table-scroll md:min-h-0 flex-1" [class.is-loading]="store.loading() && store.hasItems()">
         <table class="us-table">
           <thead>
             <tr>
@@ -246,19 +226,32 @@
       </div>
 
       <!-- Pagination -->
-      <footer class="flex flex-col items-center justify-between gap-4 border-t border-white/5 px-4 py-4 sm:flex-row sm:px-5">
-        <label class="flex items-center gap-3 text-sm text-slate-400">
-          Rows per page
-          <span class="us-select-wrap w-20">
-            <select class="us-select h-9" [ngModel]="store.pageSize()" (ngModelChange)="setPageSize($event)">
-              @for (size of pageSizes; track size) {
-                <option [ngValue]="size">{{ size }}</option>
-              }
-            </select>
-            <i class="pi pi-chevron-down" aria-hidden="true"></i>
-          </span>
-        </label>
+      <footer class="us-footer">
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+          <label class="flex items-center gap-2.5 text-sm text-slate-400">
+            Rows
+            <span class="us-select-wrap w-[4.5rem]">
+              <select class="us-select h-9" [ngModel]="store.pageSize()" (ngModelChange)="setPageSize($event)">
+                @for (size of pageSizes; track size) {
+                  <option [ngValue]="size">{{ size }}</option>
+                }
+              </select>
+              <i class="pi pi-chevron-down" aria-hidden="true"></i>
+            </span>
+          </label>
+          <p class="text-sm text-slate-400" aria-live="polite">{{ rangeLabel() }}</p>
+        </div>
 
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <button type="button" class="us-btn us-btn-ghost h-10 px-3.5" (click)="exportUsers()">
+            <i class="pi pi-download text-sm" aria-hidden="true"></i>
+            @if (selected().size) {
+              Export {{ selected().size }} selected
+            } @else {
+              Export CSV
+            }
+          </button>
+          <span class="hidden h-6 w-px bg-white/10 sm:block" aria-hidden="true"></span>
         <nav class="flex items-center gap-1" aria-label="Pagination">
           <button type="button" class="us-page-btn" aria-label="Previous page" [disabled]="store.page() <= 1" (click)="goToPage(store.page() - 1)">
             <i class="pi pi-chevron-left text-xs" aria-hidden="true"></i>
@@ -282,6 +275,7 @@
             <i class="pi pi-chevron-right text-xs" aria-hidden="true"></i>
           </button>
         </nav>
+        </div>
       </footer>
     </div>
   </div>
@@ -305,73 +299,66 @@
     </div>
 
     <form class="us-dialog-body" (ngSubmit)="applyFilters()" id="us-filter-form">
-      <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-        @for (field of textFields; track field.key) {
-          <label class="us-field">
-            <span class="us-label">
-              {{ field.label }}
-              @if (field.hint) {
-                <i class="pi pi-info-circle" [title]="field.hint"></i>
-              }
-            </span>
-            <span class="us-input-wrap">
-              <i [class]="field.icon" aria-hidden="true"></i>
-              <input
-                class="us-input"
-                [type]="field.type"
-                [name]="field.key"
-                [placeholder]="field.placeholder"
-                [ngModel]="draft()[field.key]"
-                (ngModelChange)="patchDraft(field.key, $event)"
-              />
-            </span>
-          </label>
-        }
+      <fieldset class="us-section">
+        <legend class="us-section-title"><i class="pi pi-id-card" aria-hidden="true"></i>Identity</legend>
+        <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          @for (field of textFields; track field.key) {
+            <app-form-input-control
+              [label]="field.label"
+              [type]="field.type"
+              [icon]="field.icon"
+              [placeholder]="field.placeholder"
+              [hint]="field.hint ?? ''"
+              [value]="draft()[field.key]"
+              (valueChange)="patchDraft(field.key, $event)"
+            />
+          }
+        </div>
+      </fieldset>
 
-        @for (sel of selectFields(); track sel.key) {
-          <label class="us-field">
-            <span class="us-label">{{ sel.label }}</span>
-            <span class="us-input-wrap us-select-wrap">
-              <i [class]="sel.icon" aria-hidden="true"></i>
-              <select class="us-select" [name]="sel.key" [ngModel]="draft()[sel.key]" (ngModelChange)="patchDraft(sel.key, $event)">
-                <option value="">{{ sel.all }}</option>
-                @for (opt of sel.options; track opt.value) {
-                  <option [value]="opt.value">{{ opt.label }}</option>
-                }
-              </select>
-              <i class="pi pi-chevron-down" aria-hidden="true"></i>
-            </span>
-          </label>
-        }
+      <fieldset class="us-section">
+        <legend class="us-section-title"><i class="pi pi-shield" aria-hidden="true"></i>Access</legend>
+        <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          @for (sel of selectFields(); track sel.key) {
+            <app-select-control
+              [label]="sel.label"
+              [icon]="sel.icon"
+              [placeholder]="sel.all"
+              [searchPlaceholder]="'Search ' + sel.label.toLowerCase() + '...'"
+              [options]="sel.options"
+              [value]="draft()[sel.key]"
+              (valueChange)="patchDraft(sel.key, $event)"
+            />
+          }
+        </div>
+      </fieldset>
 
-        @for (range of dateRanges; track range.label) {
-          <div class="us-field">
-            <span class="us-label">{{ range.label }}</span>
-            <span class="us-input-wrap us-range">
-              <i class="pi pi-calendar" aria-hidden="true"></i>
-              <input
-                type="date"
-                class="us-input"
-                [name]="range.from"
-                [attr.aria-label]="range.label + ' from'"
-                [max]="draft()[range.to] || null"
-                [ngModel]="draft()[range.from]"
-                (ngModelChange)="patchDraft(range.from, $event)"
-              />
-              <span class="text-slate-500" aria-hidden="true">–</span>
-              <input
-                type="date"
-                class="us-input"
-                [name]="range.to"
-                [attr.aria-label]="range.label + ' to'"
-                [min]="draft()[range.from] || null"
-                [ngModel]="draft()[range.to]"
-                (ngModelChange)="patchDraft(range.to, $event)"
-              />
-            </span>
-          </div>
-        }
-      </div>
+      <fieldset class="us-section">
+        <legend class="us-section-title"><i class="pi pi-clock" aria-hidden="true"></i>Activity</legend>
+        <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+          @for (range of dateRanges; track range.label) {
+            <div class="us-range-group">
+              <span class="us-range-label">{{ range.label }}</span>
+              <div class="grid grid-cols-2 gap-3">
+                <app-date-control
+                  label="From"
+                  placeholder="Start date"
+                  [maxDate]="draft()[range.to] || undefined"
+                  [value]="draft()[range.from]"
+                  (valueChange)="patchDraft(range.from, $event)"
+                />
+                <app-date-control
+                  label="To"
+                  placeholder="End date"
+                  [minDate]="draft()[range.from] || undefined"
+                  [value]="draft()[range.to]"
+                  (valueChange)="patchDraft(range.to, $event)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      </fieldset>
     </form>
 
     <div class="flex flex-col-reverse gap-3 border-t border-white/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
