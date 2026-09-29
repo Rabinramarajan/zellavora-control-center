@@ -109,6 +109,7 @@ const RING_CIRCUMFERENCE = 100;
       </div>
     </div>
   `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsAsideComponent {

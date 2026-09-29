@@ -34,15 +34,15 @@
           />
         }
         @case ('profile') {
-          <app-settings-card heading="Photo" headingId="avatar-heading">
-            <app-avatar-uploader
-              [avatarUrl]="avatarUrl()"
-              [name]="profileSettings().fullName"
-              [busy]="avatarSaving()"
-              (avatarChange)="updateAvatar($event)"
-              (avatarRemove)="updateAvatar(null)"
-            />
-          </app-settings-card>
+          <app-avatar-uploader
+            [avatarUrl]="avatarUrl()"
+            [name]="profileSettings().fullName"
+            [email]="profileSettings().email"
+            [role]="userRole()"
+            [busy]="avatarSaving()"
+            (avatarChange)="updateAvatar($event)"
+            (avatarRemove)="updateAvatar(null)"
+          />
 
           <app-profile-settings-form
             [settings]="profileSettings()"

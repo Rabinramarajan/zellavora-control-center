@@ -79,6 +79,7 @@ export class SettingsComponent {
 
   protected readonly avatarUrl = computed(() => this.auth.user()?.avatarUrl ?? null);
   protected readonly avatarSaving = signal(false);
+  protected readonly userRole = computed(() => this.auth.user()?.role ?? '');
 
   protected readonly passwordSaving = signal(false);
   protected readonly passwordMessage = signal<StatusMessage | null>(null);

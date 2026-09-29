@@ -117,6 +117,7 @@ import { ToggleSwitchComponent } from '../toggle-switch/toggle-switch.component'
       </app-setting-row>
     </app-settings-card>
   `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GeneralSettingsFormComponent {

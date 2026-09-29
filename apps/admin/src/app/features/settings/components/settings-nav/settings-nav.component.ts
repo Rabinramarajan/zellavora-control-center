@@ -51,6 +51,7 @@ import { SettingsIconComponent } from '../settings-icon/settings-icon.component'
       </ul>
     </nav>
   `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsNavComponent {

@@ -73,6 +73,7 @@ const EMPTY_PASSWORD_FORM: PasswordChange = {
       </button>
     </form>
   `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PasswordFormComponent {

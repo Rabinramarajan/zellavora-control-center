@@ -47,6 +47,7 @@ import { SettingsIconComponent } from '../settings-icon/settings-icon.component'
       }
     </section>
   `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsCardComponent {

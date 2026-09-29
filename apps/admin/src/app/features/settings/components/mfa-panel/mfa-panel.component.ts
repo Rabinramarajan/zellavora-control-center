@@ -137,6 +137,7 @@ const BUTTON_BASE =
       }
     </div>
   `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MfaPanelComponent {

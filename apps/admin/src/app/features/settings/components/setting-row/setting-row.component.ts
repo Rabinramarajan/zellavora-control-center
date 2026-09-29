@@ -35,6 +35,7 @@ import { SettingsIconComponent } from '../settings-icon/settings-icon.component'
       </div>
     </div>
   `,
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingRowComponent {
