@@ -32,7 +32,6 @@
 - **Logging**: Winston
 
 ### Infrastructure
-- **Containerization**: Docker + Docker Compose
 - **CDN**: Cloudflare (optional)
 - **Deployment**: Vercel (Frontend), Cloud Run/Render (Backend)
 - **CI/CD**: GitHub Actions
@@ -305,7 +304,7 @@ REDIS_URL=redis://localhost:6379
 3. **Testing**: `npm run test` for unit, `npm run test:e2e` for E2E
 4. **Quality**: `npm run lint && npm run format`
 5. **Build**: `npm run build`
-6. **Deploy**: See DEPLOYMENT.md
+6. **Deploy**: Vercel (`apps/backend/vercel.json`, `.vercelignore`)
 
 ## Common Tasks
 
@@ -353,10 +352,6 @@ npm run db:migrate            # Database migration
 npm run db:seed               # Seed sample data
 npm run db:studio             # Prisma Studio
 
-# Docker
-npm run docker:build          # Build image
-npm run docker:up             # Start containers
-npm run docker:down           # Stop containers
 ```
 
 ## Monitoring & Logging
@@ -369,11 +364,11 @@ npm run docker:down           # Stop containers
 ## Support & Documentation
 
 - **Main Docs**: `/docs` folder
-- **Setup**: `docs/SETUP_GUIDE.md`
-- **Architecture**: `docs/ARCHITECTURE.md`
-- **API**: `docs/API.md`
-- **Database**: `docs/DATABASE.md`
-- **Deployment**: `docs/DEPLOYMENT.md`
+- **Structure**: `docs/CODE_CLEANUP.md`
+- **API**: `docs/API_REFERENCE.md`, `docs/API_NAMING.md`
+- **Admin / IAM**: `docs/ADMIN_MODULE_SETUP.md`
+- **Freelancer sheets**: `docs/FREELANCER_SHEETS_IMPLEMENTATION.md`, `docs/TIMESHEET_MODULE.md`
+- **Email**: `docs/EMAIL_SERVICE.md`
 
 ## Project Status
 

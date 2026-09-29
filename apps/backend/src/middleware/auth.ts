@@ -3,10 +3,8 @@
  *
  * Layered:
  *   authenticate        — verifies access token, attaches claims to req
- *   requireRole(...)    — role check (coarse)
  *   requirePermission(…) — permission check (granular, takes wildcards)
  *   loadPermissions     — populates req.permissions for downstream use
- *   assertSameTenant    — rejects requests whose X-Tenant-ID doesn't match the JWT
  *
  * Tokens carry tenantId in `tid`; we never trust a client-provided tenant id
  * for the actual data fetch (the X-Tenant-ID header is for cross-checking).
@@ -80,25 +78,6 @@ export const authenticate = async (
   }
 };
 
-/** Block requests whose X-Tenant-ID doesn't match the JWT's tenant. */
-export const assertSameTenant = (req: AuthRequest, _res: Response, next: NextFunction): void => {
-  const headerTenant = (req.headers['x-tenant-id'] as string)?.toLowerCase();
-  if (headerTenant && req.tenantId && headerTenant !== req.tenantId.toLowerCase()) {
-    return next(new AppError('Tenant context mismatch', 403, 'TENANT_MISMATCH'));
-  }
-  next();
-};
-
-/** Coarse role check. Roles are org-relative so this is checked after authenticate. */
-export const requireRole =
-  (...roles: string[]) =>
-  (req: AuthRequest, _res: Response, next: NextFunction): void => {
-    if (!req.role || !roles.includes(req.role)) {
-      return next(new AppError('Insufficient role', 403, 'FORBIDDEN_ROLE'));
-    }
-    next();
-  };
-
 /**
  * Granular permission check. The middleware loads the user's effective permission
  * set on first hit and caches it on the request. Use this in front of any
@@ -124,11 +103,7 @@ export const requirePermission =
     }
   };
 
-/**
- * Backward-compatible: keep the old `authenticateToken` / `authorize` exports
- * so existing routes don't break. They delegate to the new functions above.
- */
+/** Backward-compatible alias so existing routes don't break. */
 export const authenticateToken = authenticate;
-export const authorize = requireRole;
 /** `authGuard` alias so the foundation naming matches module prompts. */
 export const authGuard = authenticate;

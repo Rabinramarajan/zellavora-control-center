@@ -2,7 +2,7 @@ export const environment = {
   production: false,
   appName: 'Zellavora Control Center',
   appVersion: '2.0.0',
-  apiUrl: 'http://localhost:3000/api/v1',
+  apiUrl: 'https://api.zellavora.com/api/v1',
   apiTimeout: 30000,
 
   // Authentication

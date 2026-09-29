@@ -32,7 +32,7 @@ Build once, scale infinitely. ZCC starts as your personal portfolio CMS and grow
 | **Backend** | Supabase, PostgreSQL, Edge Functions |
 | **Auth** | JWT, Supabase Auth, RLS Policies |
 | **Storage** | Supabase Storage |
-| **Deployment** | Vercel, Docker, Cloudflare CDN |
+| **Deployment** | Vercel, Cloudflare CDN |
 | **Testing** | Playwright, Jasmine, Karma |
 | **CI/CD** | GitHub Actions |
 
@@ -81,8 +81,6 @@ zcc/
 ├── apps/admin/           # Angular admin dashboard
 ├── apps/backend/         # Express API and Prisma database layer
 ├── docs/                 # Complete documentation
-├── scripts/              # Deployment and operational helpers
-└── docker-compose.yml    # Local development setup
 ```
 
 ## 🎯 Available Scripts

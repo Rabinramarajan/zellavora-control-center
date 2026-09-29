@@ -197,12 +197,6 @@ npm run build
 # Deploy the dist/ folder to Vercel
 ```
 
-### Docker
-```bash
-docker build -t zcc-admin .
-docker run -p 4200:80 zcc-admin
-```
-
 ## 🐛 Debugging
 
 ### Browser DevTools

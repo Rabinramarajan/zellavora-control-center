@@ -161,6 +161,10 @@ h1 { margin-top: 0.25rem; font-size: clamp(1.5rem, 2.2vw, 1.85rem); line-height:
 /* ---------- table ---------- */
 
 .table-scroll { flex: 1; overflow-x: auto; }
+/* Let the empty-state row absorb the panel's spare height so its message sits centred. */
+.table-scroll:has(td.empty) { display: flex; flex-direction: column; }
+.table-scroll:has(td.empty) table { flex: 1; }
+.table-scroll:has(td.empty) thead tr { height: 1px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 th {
   position: sticky; top: 0; z-index: 1;
@@ -173,7 +177,9 @@ th {
 td { padding: 0.8rem 0.75rem; border-bottom: 1px solid var(--q-line); vertical-align: middle; }
 th:first-child, td:first-child { padding-left: 1rem; }
 th:last-child, td:last-child { padding-right: 1rem; }
-.check { width: 2.5rem; }
+/* Override the theme's flex `.check` form-label style so these stay real table cells. */
+th.check, td.check { display: table-cell; width: 2.5rem; min-height: 0; vertical-align: middle; }
+th.check input, td.check input { vertical-align: middle; }
 .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .right { text-align: right; }
 
@@ -229,7 +235,7 @@ input[type='checkbox']:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ---------- empty / pagination / notices ---------- */
 
-.empty { padding: 4rem 1rem; text-align: center; color: var(--q-muted); }
+.empty { padding: 4rem 1rem; text-align: center; vertical-align: middle; color: var(--q-muted); }
 .empty-icon { display: inline-grid; place-items: center; width: 3.25rem; height: 3.25rem; margin-bottom: 0.9rem; border-radius: 50%; background: var(--q-accent-soft); color: #c4b5fd; font-size: 1.3rem; }
 .empty h3 { font-size: 0.95rem; font-weight: 600; color: var(--q-text); }
 .empty p { margin-top: 0.3rem; font-size: 0.82rem; }

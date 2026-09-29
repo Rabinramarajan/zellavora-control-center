@@ -14,10 +14,3 @@ export function ddlToOptions(items: readonly DdlItem[]): SelectControlOption[] {
 export function stringsToOptions(values: readonly string[]): SelectControlOption[] {
   return values.map((value) => ({ value, label: value }));
 }
-
-/** For `{ value, label }` literals, optionally with a description line. */
-export function toOptions<T extends { value: string; label: string; description?: string }>(
-  items: readonly T[]
-): SelectControlOption[] {
-  return items.map(({ value, label, description }) => ({ value, label, description }));
-}
