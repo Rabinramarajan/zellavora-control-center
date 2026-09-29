@@ -102,9 +102,6 @@ export const config = {
   // ============================================================================
   encryptionKey: process.env.ENCRYPTION_KEY || '',
   encryptionAlgorithm: 'aes-256-gcm',
-  // RSA private key (PKCS#8 PEM, newlines may be escaped as \n) that unwraps the
-  // per-request AES keys of encrypted API traffic. See middleware/transport-encryption.ts.
-  transportPrivateKey: process.env.TRANSPORT_PRIVATE_KEY || '',
 
   // ============================================================================
   // Rate Limiting
@@ -190,7 +187,6 @@ const requiredEnvVars = ['JWT_SECRET', 'REFRESH_TOKEN_SECRET'];
 // Additional required for production
 const productionEnvVars = [
   'ENCRYPTION_KEY', // Must be provided in production
-  'TRANSPORT_PRIVATE_KEY', // Stable across instances for encrypted API traffic
   'APP_URL', // Links in invitation / reset / verification emails
   'SMTP_HOST', // Or SendGrid configured
 ];
