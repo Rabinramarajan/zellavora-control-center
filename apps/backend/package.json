@@ -18,6 +18,7 @@
     "db:reset": "node scripts/with-env.cjs prisma migrate reset",
     "db:seed": "node scripts/with-env.cjs tsx src/db/seed.ts",
     "db:seed:owner": "node scripts/with-env.cjs tsx src/db/seed-owner-user.ts",
+    "db:import:galaxy-sofas": "node scripts/import-galaxy-sofas.cjs",
     "lint": "eslint src --ext .ts",
     "test": "jest"
   },
@@ -68,6 +69,7 @@
     "@typescript-eslint/parser": "^6.17.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
+    "pg": "^8.16.3",
     "prisma": "^5.10.0",
     "ts-jest": "^29.1.1",
     "tsx": "^4.7.0",

@@ -3,6 +3,7 @@ import type { ReadableStream as NodeReadableStream } from 'stream/web';
 import { Request, Response, NextFunction } from 'express';
 import { StorageService } from './storage.service';
 import { ListMediaQuerySchema, MediaPathQuerySchema, UploadFileSchema } from './storage.dto';
+import type { AuthRequest } from '../../middleware/auth';
 
 export class StorageController {
   private readonly service = new StorageService();
@@ -17,20 +18,20 @@ export class StorageController {
     }
   };
 
-  listMedia = async (req: Request, res: Response, next: NextFunction) => {
+  listMedia = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const query = ListMediaQuerySchema.parse(req.query);
-      res.json({ success: true, data: await this.service.listMedia(query) });
+      res.json({ success: true, data: await this.service.listMedia(query, req.tenantId) });
     } catch (err) {
       next(err);
     }
   };
 
   /** Streams a blob through the API so private stores can be previewed without exposing the token. */
-  streamMedia = async (req: Request, res: Response, next: NextFunction) => {
+  streamMedia = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const query = MediaPathQuerySchema.parse(req.query);
-      const { stream, contentType, size } = await this.service.openMedia(query);
+      const { stream, contentType, size } = await this.service.openMedia(query, req.tenantId);
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Length', String(size));
       res.setHeader('Cache-Control', 'private, max-age=300');
@@ -42,10 +43,10 @@ export class StorageController {
     }
   };
 
-  deleteMedia = async (req: Request, res: Response, next: NextFunction) => {
+  deleteMedia = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const query = MediaPathQuerySchema.parse(req.query);
-      await this.service.deleteMedia(query);
+      await this.service.deleteMedia(query, req.tenantId);
       res.json({ success: true, data: { pathname: query.pathname } });
     } catch (err) {
       next(err);

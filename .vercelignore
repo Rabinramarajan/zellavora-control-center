@@ -1,0 +1,10 @@
+**/node_modules/**
+**/.angular/**
+**/dist/**
+**/coverage/**
+**/.env*
+tmp/**
+temp/**
+UX/**
+**/*.log
+**/scratch/**

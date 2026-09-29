@@ -1,6 +1,7 @@
 import { StorageRepository } from './storage.repository';
 import type { ListMediaQuery, MediaPathQuery } from './storage.dto';
 import type { BlobContent, BlobFile, MediaItem, MediaPage, MediaType } from './storage.types';
+import { scopedPath, storageScope } from './storage.scope';
 
 const MIME_BY_EXTENSION: Record<string, string> = {
   jpg: 'image/jpeg',
@@ -44,8 +45,10 @@ export class StorageService {
     return { url, name: uniqueName };
   }
 
-  async listMedia(query: ListMediaQuery): Promise<MediaPage> {
-    const page = await this.repo.listBlobs(query);
+  async listMedia(query: ListMediaQuery, tenantId: string): Promise<MediaPage> {
+    const scope = await storageScope(tenantId);
+    const prefix = query.prefix ? scopedPath(scope, query.prefix) : scope.prefix;
+    const page = await this.repo.listBlobs({ ...query, prefix }, scope);
     return {
       // The Blob API lists folder placeholders as zero-byte entries ending in '/'.
       items: page.blobs.filter((blob) => !blob.pathname.endsWith('/')).map(toMediaItem),
@@ -54,12 +57,14 @@ export class StorageService {
     };
   }
 
-  openMedia(query: MediaPathQuery): Promise<BlobContent> {
-    return this.repo.openBlob(query.pathname, query.access);
+  async openMedia(query: MediaPathQuery, tenantId: string): Promise<BlobContent> {
+    const scope = await storageScope(tenantId);
+    return this.repo.openBlob(scopedPath(scope, query.pathname), query.access, scope);
   }
 
-  deleteMedia(query: MediaPathQuery): Promise<void> {
-    return this.repo.deleteBlob(query.pathname);
+  async deleteMedia(query: MediaPathQuery, tenantId: string): Promise<void> {
+    const scope = await storageScope(tenantId);
+    return this.repo.deleteBlob(scopedPath(scope, query.pathname), scope);
   }
 }
 

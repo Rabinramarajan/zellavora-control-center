@@ -1,13 +1,15 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
+import type { AuthRequest } from '../../middleware/auth';
+import { AppError } from '../../middleware/error';
 import { SettingsService } from './settings.service';
 import { SaveSettingSchema } from './settings.dto';
 
 export class SettingsController {
   private readonly service = new SettingsService();
 
-  get = async (req: Request, res: Response, next: NextFunction) => {
+  get = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const orgId = req.query.organizationId as string;
+      const orgId = tenantContext(req, req.query.organizationId);
       const key = req.params.key;
       const config = await this.service.getSetting(orgId, key);
       res.json({ success: true, data: config });
@@ -16,9 +18,9 @@ export class SettingsController {
     }
   };
 
-  list = async (req: Request, res: Response, next: NextFunction) => {
+  list = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const orgId = req.query.organizationId as string;
+      const orgId = tenantContext(req, req.query.organizationId);
       const configs = await this.service.getSettingsForOrg(orgId);
       res.json({ success: true, data: configs });
     } catch (err) {
@@ -26,9 +28,10 @@ export class SettingsController {
     }
   };
 
-  save = async (req: Request, res: Response, next: NextFunction) => {
+  save = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = SaveSettingSchema.parse(req.body);
+      tenantContext(req, data.organizationId);
       const config = await this.service.saveSetting(
         data.organizationId,
         data.key,
@@ -40,4 +43,12 @@ export class SettingsController {
       next(err);
     }
   };
+}
+
+function tenantContext(req: AuthRequest, supplied: unknown): string {
+  if (!req.tenantId) throw new AppError('Tenant context is required', 401, 'TENANT_REQUIRED');
+  if (supplied !== undefined && supplied !== req.tenantId) {
+    throw new AppError('Tenant context mismatch', 403, 'TENANT_MISMATCH');
+  }
+  return req.tenantId;
 }

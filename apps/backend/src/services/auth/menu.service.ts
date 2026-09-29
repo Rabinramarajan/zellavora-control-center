@@ -358,24 +358,35 @@ const toNode = (d: MenuDef): MenuNode => ({
 export class MenuService {
   /** Return the menu tree for a (user, org), filtered by what the user can see. */
   static async loadForUser(userId: string, orgId: string): Promise<MenuNode[]> {
-    return this.loadForUserWithPerms(userId, orgId, await PermissionService.loadForUser(userId, orgId));
+    return this.loadForUserWithPerms(
+      userId,
+      orgId,
+      await PermissionService.loadForUser(userId, orgId)
+    );
   }
 
   /** Load menu tree with pre-loaded permissions (optimization for /auth/me). */
-  static async loadForUserWithPerms(userId: string, orgId: string, perms: Set<string>): Promise<MenuNode[]> {
-    const visible = (node: MenuDef): MenuNode | null => {
+  static async loadForUserWithPerms(
+    userId: string,
+    orgId: string,
+    perms: Set<string>
+  ): Promise<MenuNode[]> {
+    const restricted = perms.has('navigation:restricted');
+    const visible = (node: MenuDef, parentSelected = false): MenuNode | null => {
       if (node.requiredPermission && !PermissionService.has(perms, node.requiredPermission)) {
         return null;
       }
+      const selected = !restricted || parentSelected || perms.has(`navigation:${node.key}`);
       const children = (node.children ?? [])
-        .map(visible)
+        .map((child) => visible(child, selected))
         .filter((n): n is MenuNode => n !== null);
+      if (!selected && !children.length) return null;
       return {
         ...toNode(node),
         children,
       };
     };
 
-    return DEFAULT_MENU.map(visible).filter((n): n is MenuNode => n !== null);
+    return DEFAULT_MENU.map((node) => visible(node)).filter((n): n is MenuNode => n !== null);
   }
 }

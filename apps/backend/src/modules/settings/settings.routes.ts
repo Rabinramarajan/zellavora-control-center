@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authenticate, requirePermission } from '../../middleware/auth';
 import { SettingsController } from './settings.controller';
 
 const router = Router();
@@ -16,7 +17,7 @@ const controller = new SettingsController();
  *       default:
  *         description: Operation response
  */
-router.get('/', controller.list);
+router.get('/', authenticate, controller.list);
 /**
  * @swagger
  * /api/v1/organization-settings/{key}:
@@ -34,7 +35,7 @@ router.get('/', controller.list);
  *       default:
  *         description: Operation response
  */
-router.get('/:key', controller.get);
+router.get('/:key', authenticate, controller.get);
 /**
  * @swagger
  * /api/v1/organization-settings:
@@ -47,6 +48,6 @@ router.get('/:key', controller.get);
  *       default:
  *         description: Operation response
  */
-router.post('/', controller.save);
+router.post('/', authenticate, requirePermission('settings:write'), controller.save);
 
 export default router;

@@ -11,6 +11,7 @@ import {
 } from '@vercel/blob';
 import { AppError } from '../../middleware/error';
 import type { BlobAccess, BlobContent, BlobPage } from './storage.types';
+import type { StorageScope } from './storage.scope';
 
 export class StorageRepository {
   async saveFile(fileName: string, base64Data: string): Promise<string> {
@@ -25,32 +26,41 @@ export class StorageRepository {
     return `/scratch/${fileName}`;
   }
 
-  async listBlobs(options: { prefix?: string; cursor?: string; limit?: number }): Promise<BlobPage> {
-    const result = await withBlobErrors(() => list(options));
+  async listBlobs(
+    options: { prefix?: string; cursor?: string; limit?: number },
+    scope: StorageScope
+  ): Promise<BlobPage> {
+    const result = await withBlobErrors(() => list({ ...options, token: scope.token }));
     return {
-      blobs: result.blobs.map((blob) => ({
-        url: blob.url,
-        downloadUrl: blob.downloadUrl,
-        pathname: blob.pathname,
-        size: blob.size,
-        uploadedAt: blob.uploadedAt,
-        access: accessOf(blob.url),
-      })),
+      blobs: result.blobs
+        .filter(
+          (blob) =>
+            blob.pathname.startsWith(scope.prefix) &&
+            (scope.prefix || !blob.pathname.startsWith('tenants/'))
+        )
+        .map((blob) => ({
+          url: blob.url,
+          downloadUrl: blob.downloadUrl,
+          pathname: blob.pathname,
+          size: blob.size,
+          uploadedAt: blob.uploadedAt,
+          access: accessOf(blob.url),
+        })),
       cursor: result.cursor,
       hasMore: result.hasMore,
     };
   }
 
-  async openBlob(pathname: string, access: BlobAccess): Promise<BlobContent> {
-    const result = await withBlobErrors(() => get(pathname, { access }));
+  async openBlob(pathname: string, access: BlobAccess, scope: StorageScope): Promise<BlobContent> {
+    const result = await withBlobErrors(() => get(pathname, { access, token: scope.token }));
     if (!result || result.statusCode !== 200) {
       throw new AppError('Media file not found', 404, 'MEDIA_NOT_FOUND');
     }
     return { stream: result.stream, contentType: result.blob.contentType, size: result.blob.size };
   }
 
-  async deleteBlob(urlOrPathname: string): Promise<void> {
-    await withBlobErrors(() => del(urlOrPathname));
+  async deleteBlob(urlOrPathname: string, scope: StorageScope): Promise<void> {
+    await withBlobErrors(() => del(urlOrPathname, { token: scope.token }));
   }
 }
 

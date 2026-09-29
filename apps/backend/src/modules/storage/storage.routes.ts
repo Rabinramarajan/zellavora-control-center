@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, requirePermission } from '../../middleware/auth';
 import { StorageController } from './storage.controller';
 
 const router = Router();
@@ -45,7 +45,7 @@ router.post('/upload', controller.upload);
  *         description: Operation response
  */
 router.get('/media', authenticate, controller.listMedia);
-router.delete('/media', authenticate, controller.deleteMedia);
+router.delete('/media', authenticate, requirePermission('media:delete'), controller.deleteMedia);
 
 /**
  * @swagger
