@@ -96,6 +96,17 @@ const RefreshSchema = z.object({
   refreshToken: z.string().min(10),
 });
 
+// Avatars are resized client-side to a small WebP/PNG/JPEG and stored inline as a
+// data URL so they render in <img> regardless of the tenant's Blob store access mode.
+const AVATAR_MAX_DATA_URL_LENGTH = 300_000;
+const UpdateAvatarSchema = z.object({
+  avatar: z
+    .string()
+    .max(AVATAR_MAX_DATA_URL_LENGTH, 'Avatar image is too large')
+    .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/, 'Unsupported avatar format')
+    .nullable(),
+});
+
 const ChangePasswordSchema = z.object({
   currentPassword: z.string().min(1).max(128),
   newPassword: z.string().min(12).max(128),
@@ -1349,6 +1360,58 @@ router.post('/switch-tenant', authenticate, async (req: AuthRequest, res, next) 
  *       401:
  *         description: Current password incorrect
  */
+/**
+ * @swagger
+ * /api/v1/auth/me/avatar:
+ *   put:
+ *     summary: updateCurrentUserAvatar
+ *     operationId: putAuthMeAvatar
+ *     tags: [authentication]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [avatar]
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 nullable: true
+ *                 description: PNG, JPEG or WebP data URL; null removes the avatar
+ *     responses:
+ *       200:
+ *         description: Avatar updated
+ *       400:
+ *         description: Invalid or oversized image
+ *       401:
+ *         description: Unauthorized
+ */
+router.put('/me/avatar', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const { avatar } = UpdateAvatarSchema.parse(req.body);
+    await prisma.user.update({ where: { id: req.userId! }, data: { avatarUrl: avatar } });
+
+    await AuditService.log({
+      organizationId: req.tenantId!,
+      actorId: req.userId!,
+      action: 'user_updated',
+      resourceType: 'user',
+      resourceId: req.userId!,
+      description: avatar ? 'Profile picture updated' : 'Profile picture removed',
+      severity: 'info',
+      ipAddress: req.ipAddress,
+      userAgent: req.userAgent,
+    });
+
+    res.json({ avatarUrl: avatar });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post('/change-password', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { currentPassword, newPassword } = ChangePasswordSchema.parse(req.body);

@@ -136,6 +136,11 @@ export class AuthStore {
     }));
   }
 
+  /** Merge profile changes (e.g. a new avatar) into the signed-in user. */
+  patchUser(changes: Partial<AuthUser>): void {
+    this.state.update((s) => (s.user ? { ...s, user: { ...s.user, ...changes } } : s));
+  }
+
   /** Update only tokens (after a refresh). */
   updateTokens(input: {
     accessToken: string;

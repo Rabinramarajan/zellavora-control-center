@@ -439,6 +439,16 @@ export class AuthService {
     return this.http.post<void>(`${this.apiUrl}/reset-password`, req);
   }
 
+  /** Pass a PNG/JPEG/WebP data URL, or null to remove the avatar. */
+  updateAvatar(avatar: string | null): Observable<void> {
+    return this.http
+      .put<{ avatarUrl: string | null }>(`${this.apiUrl}/me/avatar`, { avatar })
+      .pipe(
+        tap(({ avatarUrl }) => this.store.patchUser({ avatarUrl })),
+        switchMap(() => of(undefined))
+      );
+  }
+
   changePassword(req: ChangePasswordRequest): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/change-password`, req);
   }

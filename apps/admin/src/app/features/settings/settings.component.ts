@@ -1,308 +1,240 @@
-import { Component, inject, signal, computed, effect, untracked } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { TextareaModule } from 'primeng/textarea';
-import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom, map } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
-import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { ApiIntegrationService } from '@core/services/api-integration.service';
 import { AuthService } from '@core/auth/auth.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { firstValueFrom } from 'rxjs';
+import {
+  DEFAULT_GENERAL_SETTINGS,
+  DEFAULT_PROFILE_SETTINGS,
+  GeneralSettings,
+  MfaStep,
+  ProfileSettings,
+  SETTINGS_TABS,
+  SettingsTabId,
+  StatusMessage,
+  SystemInfoItem,
+} from './models/settings.model';
+import { SettingsIconComponent } from './components/settings-icon/settings-icon.component';
+import { SettingsNavComponent } from './components/settings-nav/settings-nav.component';
+import { SettingsCardComponent } from './components/settings-card/settings-card.component';
+import { GeneralSettingsFormComponent } from './components/general-settings-form/general-settings-form.component';
+import { ProfileSettingsFormComponent } from './components/profile-settings-form/profile-settings-form.component';
+import { PasswordFormComponent } from './components/password-form/password-form.component';
+import { MfaPanelComponent } from './components/mfa-panel/mfa-panel.component';
+import { SettingsAsideComponent } from './components/settings-aside/settings-aside.component';
+import { AvatarUploaderComponent } from './components/avatar-uploader/avatar-uploader.component';
+
+type SavingSection = 'general' | 'profile' | null;
 
 @Component({
   selector: 'app-settings',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ButtonModule,
-    TextareaModule,
-    FormInputControl,
-    SelectControl,
     ToastModule,
-    CheckboxModule,
+    SettingsIconComponent,
+    SettingsNavComponent,
+    SettingsCardComponent,
+    GeneralSettingsFormComponent,
+    ProfileSettingsFormComponent,
+    PasswordFormComponent,
+    MfaPanelComponent,
+    SettingsAsideComponent,
+    AvatarUploaderComponent,
   ],
   providers: [MessageService],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent {
-  private messageService = inject(MessageService);
-  private apiService = inject(ApiIntegrationService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private auth = inject(AuthService);
+  private readonly messageService = inject(MessageService);
+  private readonly apiService = inject(ApiIntegrationService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
-  activeTab = signal('general');
+  protected readonly tabs = SETTINGS_TABS;
 
-  /** Active tab driven by the route param (e.g. /settings/security). */
-  private readonly tabParam = toSignal(this.route.paramMap, {
-    initialValue: this.route.snapshot.paramMap,
-  });
+  protected readonly activeTabId = toSignal(
+    this.route.paramMap.pipe(map(params => this.toTabId(params.get('tab')))),
+    { initialValue: this.toTabId(this.route.snapshot.paramMap.get('tab')) }
+  );
+  protected readonly activeTab = computed(
+    () => this.tabs.find(tab => tab.id === this.activeTabId()) ?? this.tabs[0]
+  );
+
+  protected readonly generalSettings = signal<GeneralSettings>(DEFAULT_GENERAL_SETTINGS);
+  protected readonly profileSettings = signal<ProfileSettings>(DEFAULT_PROFILE_SETTINGS);
+  protected readonly savingSection = signal<SavingSection>(null);
+
+  protected readonly avatarUrl = computed(() => this.auth.user()?.avatarUrl ?? null);
+  protected readonly avatarSaving = signal(false);
+
+  protected readonly passwordSaving = signal(false);
+  protected readonly passwordMessage = signal<StatusMessage | null>(null);
+
+  protected readonly mfaEnabled = computed(() => !!this.auth.user()?.mfaEnabled);
+  protected readonly mfaStep = signal<MfaStep>('idle');
+  protected readonly mfaBusy = signal(false);
+  protected readonly mfaError = signal<string | null>(null);
+  protected readonly mfaQrCode = signal('');
+  protected readonly recoveryCodes = signal<readonly string[]>([]);
+  private mfaSecret = '';
+
+  protected readonly systemInfo: readonly SystemInfoItem[] = [
+    { label: 'Version', value: 'v2.3.1' },
+    { label: 'Environment', value: 'Production' },
+    { label: 'Last updated', value: 'May 24, 2025' },
+    { label: 'Uptime', value: '15d 7h 23m' },
+  ];
 
   constructor() {
-    effect(() => {
-      const tab = this.tabParam()?.get('tab');
-      untracked(() => {
-        if (tab) this.activeTab.set(tab);
-      });
-    });
     void this.loadAllSettings();
   }
 
-  settingsTabs = [
-    { id: 'general', label: 'General', desc: 'Basic application settings', icon: '⚙️' },
-    { id: 'profile', label: 'Profile', desc: 'Personal information', icon: '👤' },
-    { id: 'security', label: 'Security', desc: 'Password & authentication', icon: '🔒' },
-    { id: 'notifications', label: 'Notifications', desc: 'Email & system alerts', icon: '🔔' },
-    { id: 'appearance', label: 'Appearance', desc: 'Theme & display settings', icon: '🎨' },
-    { id: 'localization', label: 'Localization', desc: 'Language & timezone', icon: '🌐' },
-    { id: 'integrations', label: 'Integrations', desc: 'Third-party services', icon: '🔌' },
-    { id: 'storage', label: 'Storage', desc: 'Media & file settings', icon: '📁' },
-    { id: 'backup', label: 'Backup & Restore', desc: 'Data backup preferences', icon: '💾' },
-    { id: 'advanced', label: 'Advanced', desc: 'Developer & system settings', icon: '🛠️' },
-  ];
-
-  generalSettings = {
-    siteTitle: 'Zellavora Control Center',
-    siteDescription: 'Centralized platform to manage portfolio, projects, content, and analytics.',
-    timezone: 'GMT+5:30',
-    dateFormat: 'MMM DD, YYYY',
-    itemsPerPage: 10,
-    maintenanceMode: false,
-  };
-
-  profileSettings = {
-    fullName: 'Rabin R',
-    email: 'rabin@zellavora.com',
-    bio: 'Frontend Angular Consultant with 4+ years of experience building scalable, accessible and high-performance web applications.',
-    location: 'Chennai, Tamil Nadu, India',
-    phone: '+91 8765432109',
-  };
-
-  preferenceSettings = {
-    theme: 'dark',
-    emailNotifications: true,
-    pushNotifications: true,
-    weeklyDigest: true,
-    language: 'en',
-  };
-
-  timezoneOptions: SelectControlOption[] = [
-    { label: '(GMT+05:30) Asia/Kolkata', value: 'GMT+5:30' },
-    { label: '(GMT+00:00) UTC', value: 'GMT+0' },
-    { label: '(GMT-05:00) EST', value: 'GMT-5' },
-    { label: '(GMT+01:00) CET', value: 'GMT+1' },
-  ];
-
-  dateFormatOptions: SelectControlOption[] = [
-    { label: 'May 24, 2025 (MMM DD, YYYY)', value: 'MMM DD, YYYY' },
-    { label: '24/05/2025 (DD/MM/YYYY)', value: 'DD/MM/YYYY' },
-    { label: '2025-05-24 (YYYY-MM-DD)', value: 'YYYY-MM-DD' },
-  ];
-
-  itemsPerPageOptions: SelectControlOption[] = [
-    { label: '10', value: '10' },
-    { label: '25', value: '25' },
-    { label: '50', value: '50' },
-  ];
-
-  languageOptions: SelectControlOption[] = [
-    { label: 'English', value: 'en' },
-    { label: 'Hindi', value: 'hi' },
-    { label: 'Tamil', value: 'ta' },
-    { label: 'Spanish', value: 'es' },
-  ];
-
-  selectTab(tabId: string) {
-    this.activeTab.set(tabId);
-    this.router.navigate(['/settings', tabId]);
+  protected selectTab(tabId: SettingsTabId): void {
+    void this.router.navigate(['/settings', tabId]);
   }
 
-  async loadAllSettings() {
-    try {
-      const response = await firstValueFrom(this.apiService.getSettings());
-      if (response && response.data) {
-        const data = response.data;
-        if (data.general) {
-          this.generalSettings = { ...this.generalSettings, ...data.general };
-        }
-        if (data.profile) {
-          this.profileSettings = { ...this.profileSettings, ...data.profile };
-        }
-        if (data.preferences) {
-          this.preferenceSettings = { ...this.preferenceSettings, ...data.preferences };
-        }
-      }
-    } catch {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to load settings',
-        life: 3000,
-      });
+  protected async saveGeneral(settings: GeneralSettings): Promise<void> {
+    if (await this.saveSection('general', settings, 'General settings')) {
+      this.generalSettings.set(settings);
     }
   }
 
-  async saveGeneralSettings() {
-    try {
-      await firstValueFrom(this.apiService.updateSettings('general', this.generalSettings));
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Saved',
-        detail: 'General settings saved successfully',
-        life: 3000,
-      });
-    } catch {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to save general settings',
-        life: 3000,
-      });
+  protected async saveProfile(settings: ProfileSettings): Promise<void> {
+    if (await this.saveSection('profile', settings, 'Profile')) {
+      this.profileSettings.set(settings);
     }
   }
 
-  async saveProfileSettings() {
+  protected async updateAvatar(avatar: string | null): Promise<void> {
+    this.avatarSaving.set(true);
     try {
-      await firstValueFrom(this.apiService.updateSettings('profile', this.profileSettings));
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Saved',
-        detail: 'Profile settings saved successfully',
-        life: 3000,
-      });
-    } catch {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to save profile settings',
-        life: 3000,
-      });
+      await firstValueFrom(this.auth.updateAvatar(avatar));
+      this.toast('success', 'Saved', avatar ? 'Profile picture updated' : 'Profile picture removed');
+    } catch (err) {
+      this.toast('error', 'Error', this.errorMessage(err, 'Failed to update profile picture'));
+    } finally {
+      this.avatarSaving.set(false);
     }
   }
 
-  // -------------------------------------------------------------------------
-  // SECURITY TAB — change password + MFA management
-  // -------------------------------------------------------------------------
-
-  passwordModel = { currentPassword: '', newPassword: '', confirmPassword: '' };
-  passwordSaving = false;
-  passwordMessage: { severity: 'success' | 'error'; text: string } | null = null;
-
-  mfaStep = signal<'idle' | 'qr' | 'codes'>('idle');
-  mfaEnabled = computed(() => !!this.auth.user()?.mfaEnabled);
-  mfaSecret = '';
-  mfaQrCode = '';
-  mfaCodeInput = '';
-  mfaBusy = false;
-  mfaError: string | null = null;
-  recoveryCodes: string[] = [];
-  disablePassword = '';
-
-  async changePassword() {
-    const { currentPassword, newPassword, confirmPassword } = this.passwordModel;
-    if (!currentPassword) {
-      this.passwordMessage = { severity: 'error', text: 'Enter your current password.' };
-      return;
-    }
-    if (newPassword.length < 12) {
-      this.passwordMessage = {
-        severity: 'error',
-        text: 'New password must be at least 12 characters.',
-      };
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      this.passwordMessage = { severity: 'error', text: 'New passwords do not match.' };
-      return;
-    }
-    this.passwordSaving = true;
-    this.passwordMessage = null;
+  protected async changePassword(req: { currentPassword: string; newPassword: string }): Promise<void> {
+    this.passwordSaving.set(true);
     try {
-      await firstValueFrom(this.auth.changePassword({ currentPassword, newPassword }));
-      this.passwordSaving = false;
-      this.passwordModel = { currentPassword: '', newPassword: '', confirmPassword: '' };
-      this.passwordMessage = { severity: 'success', text: 'Password updated successfully.' };
-    } catch (err: any) {
-      this.passwordSaving = false;
-      this.passwordMessage = {
+      await firstValueFrom(this.auth.changePassword(req));
+      this.passwordMessage.set({ severity: 'success', text: 'Password updated successfully.' });
+    } catch (err) {
+      this.passwordMessage.set({
         severity: 'error',
-        text: err?.error?.error?.message || 'Failed to update password.',
-      };
+        text: this.errorMessage(err, 'Failed to update password.'),
+      });
+    } finally {
+      this.passwordSaving.set(false);
     }
   }
 
-  async startMfaEnrollment() {
-    this.mfaBusy = true;
-    this.mfaError = null;
-    try {
+  protected startMfaEnrollment(): Promise<void> {
+    return this.runMfa('Failed to start enrollment.', async () => {
       const res = await firstValueFrom(this.auth.startMfaEnrollment());
       this.mfaSecret = res.secret;
-      this.mfaQrCode = res.qrCodeDataUrl;
-      this.mfaCodeInput = '';
+      this.mfaQrCode.set(res.qrCodeDataUrl);
       this.mfaStep.set('qr');
-      this.mfaBusy = false;
-    } catch (err: any) {
-      this.mfaBusy = false;
-      this.mfaError = err?.error?.error?.message || 'Failed to start enrollment.';
-    }
+    });
   }
 
-  async confirmMfa() {
-    if (this.mfaCodeInput.length !== 6) return;
-    this.mfaBusy = true;
-    this.mfaError = null;
-    try {
+  protected confirmMfa(code: string): Promise<void> {
+    return this.runMfa('Invalid code. Please try again.', async () => {
       const res = await firstValueFrom(
-        this.auth.confirmMfaEnrollment({ secret: this.mfaSecret, code: this.mfaCodeInput })
+        this.auth.confirmMfaEnrollment({ secret: this.mfaSecret, code })
       );
-      this.recoveryCodes = res.recoveryCodes ?? [];
       this.mfaSecret = '';
-      this.mfaCodeInput = '';
+      this.recoveryCodes.set(res.recoveryCodes ?? []);
       this.mfaStep.set('codes');
-      this.mfaBusy = false;
-    } catch (err: any) {
-      this.mfaBusy = false;
-      this.mfaError = err?.error?.error?.message || 'Invalid code. Please try again.';
-    }
+    });
   }
 
-  async regenerateCodes() {
-    this.mfaBusy = true;
-    this.mfaError = null;
-    try {
+  protected regenerateCodes(): Promise<void> {
+    return this.runMfa('Failed to regenerate codes.', async () => {
       const res = await firstValueFrom(this.auth.regenerateRecoveryCodes());
-      this.recoveryCodes = res.recoveryCodes ?? [];
+      this.recoveryCodes.set(res.recoveryCodes ?? []);
       this.mfaStep.set('codes');
-      this.mfaBusy = false;
-    } catch (err: any) {
-      this.mfaBusy = false;
-      this.mfaError = err?.error?.error?.message || 'Failed to regenerate codes.';
-    }
+    });
   }
 
-  async disableMfa() {
-    if (!this.disablePassword) return;
-    this.mfaBusy = true;
-    this.mfaError = null;
-    try {
-      await firstValueFrom(this.auth.disableMfa({ password: this.disablePassword }));
-      this.disablePassword = '';
+  protected disableMfa(password: string): Promise<void> {
+    return this.runMfa('Failed to disable MFA.', async () => {
+      await firstValueFrom(this.auth.disableMfa({ password }));
       this.mfaStep.set('idle');
-      this.mfaBusy = false;
-    } catch (err: any) {
-      this.mfaBusy = false;
-      this.mfaError = err?.error?.error?.message || 'Failed to disable MFA.';
+    });
+  }
+
+  protected closeCodes(): void {
+    this.mfaStep.set('idle');
+    this.recoveryCodes.set([]);
+  }
+
+  private async loadAllSettings(): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.apiService.getSettings());
+      const data = response?.data;
+      if (data?.general) this.generalSettings.update(s => ({ ...s, ...data.general }));
+      if (data?.profile) this.profileSettings.update(s => ({ ...s, ...data.profile }));
+    } catch {
+      this.toast('error', 'Error', 'Failed to load settings');
     }
   }
 
-  closeCodes() {
-    this.mfaStep.set('idle');
-    this.recoveryCodes = [];
+  private async saveSection(
+    section: Exclude<SavingSection, null>,
+    payload: GeneralSettings | ProfileSettings,
+    label: string
+  ): Promise<boolean> {
+    this.savingSection.set(section);
+    try {
+      await firstValueFrom(this.apiService.updateSettings(section, payload));
+      this.toast('success', 'Saved', `${label} saved successfully`);
+      return true;
+    } catch {
+      this.toast('error', 'Error', `Failed to save ${label.toLowerCase()}`);
+      return false;
+    } finally {
+      this.savingSection.set(null);
+    }
+  }
+
+  private async runMfa(fallbackError: string, action: () => Promise<void>): Promise<void> {
+    this.mfaBusy.set(true);
+    this.mfaError.set(null);
+    try {
+      await action();
+    } catch (err) {
+      this.mfaError.set(this.errorMessage(err, fallbackError));
+    } finally {
+      this.mfaBusy.set(false);
+    }
+  }
+
+  private errorMessage(err: unknown, fallback: string): string {
+    return err instanceof HttpErrorResponse ? (err.error?.error?.message ?? fallback) : fallback;
+  }
+
+  private toast(severity: 'success' | 'error', summary: string, detail: string): void {
+    this.messageService.add({ severity, summary, detail, life: 3000 });
+  }
+
+  private toTabId(value: string | null): SettingsTabId {
+    return SETTINGS_TABS.some(tab => tab.id === value) ? (value as SettingsTabId) : 'general';
   }
 }

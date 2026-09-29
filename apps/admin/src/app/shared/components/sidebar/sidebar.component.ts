@@ -52,7 +52,7 @@ import { SidebarNavNodeComponent } from './sidebar-nav-node.component';
           }
         </nav>
 
-        <!-- Upgrade Section (Fixed at bottom) -->
+        <!-- Upgrade Section (Fixed at bottom)
         <div *ngIf="!layoutService.isSidebarCollapsed()" class="p-4 shrink-0 mt-auto border-t border-[#13112b] transition-all duration-300">
           <div class="glass-panel p-4 rounded-2xl relative overflow-hidden bg-gradient-to-br from-purple-900/40 via-blue-900/10 to-transparent border border-purple-500/20">
             <div class="absolute -right-2 -top-2 w-10 h-10 bg-purple-500/10 rounded-full blur-md"></div>
@@ -68,6 +68,7 @@ import { SidebarNavNodeComponent } from './sidebar-nav-node.component';
             </button>
           </div>
         </div>
+        -->
       </div>
     </aside>
 

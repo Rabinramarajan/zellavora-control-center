@@ -1,167 +1,300 @@
 <p-toast></p-toast>
-<div class="space-y-6">
+<div class="mg space-y-5">
   <!-- Header -->
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-      <h1 class="text-3xl font-bold text-white">Media Gallery</h1>
-      <p class="text-slate-400 mt-1">Files stored in your Vercel Blob store.</p>
+  <header class="mg-rise flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-4 min-w-0">
+      <div class="mg-hero-icon" aria-hidden="true"><i class="pi pi-images"></i></div>
+      <div class="min-w-0">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Media Gallery</h1>
+        <p class="text-sm sm:text-base text-slate-400 mt-1">
+          Files stored in your Vercel Blob storage. Manage, organize and share your media files.
+        </p>
+      </div>
     </div>
-    <button
-      pButton
-      pRipple
-      label="Refresh"
-      icon="pi pi-refresh"
-      class="p-button-secondary"
-      [loading]="loading()"
-      (click)="load()"
-    ></button>
-  </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <div class="mg-segment" role="group" aria-label="View mode">
+        <button
+          type="button"
+          class="mg-segment-btn"
+          [class.is-active]="viewMode() === 'grid'"
+          aria-label="Grid view"
+          [attr.aria-pressed]="viewMode() === 'grid'"
+          (click)="viewMode.set('grid')"
+        >
+          <i class="pi pi-th-large" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="mg-segment-btn"
+          [class.is-active]="viewMode() === 'list'"
+          aria-label="List view"
+          [attr.aria-pressed]="viewMode() === 'list'"
+          (click)="viewMode.set('list')"
+        >
+          <i class="pi pi-list" aria-hidden="true"></i>
+        </button>
+      </div>
+      <button type="button" class="mg-btn mg-btn--primary" [disabled]="loading()" (click)="load()">
+        <i class="pi pi-refresh" [class.pi-spin]="loading()" aria-hidden="true"></i>
+        Refresh
+      </button>
+    </div>
+  </header>
 
-  <!-- Stats Grid -->
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+  <!-- Stats -->
+  <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4" aria-label="Storage summary">
+    <button
+      type="button"
+      class="mg-stat mg-stat--violet mg-rise col-span-2 sm:col-span-1 text-left"
+      style="--d: 40ms"
+      (click)="selectTab('all')"
+    >
+      <div class="flex items-start justify-between">
+        <span class="mg-stat-icon"><i class="pi pi-file" aria-hidden="true"></i></span>
+        <i class="pi pi-angle-right text-violet-300/70" aria-hidden="true"></i>
+      </div>
+      <p class="mg-stat-label">Total Files</p>
+      <p class="mg-stat-value">{{ loading() ? '—' : stats().total }}</p>
+      <p class="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+        <i class="pi pi-arrow-up text-[10px]" aria-hidden="true"></i>
+        {{ stats().recent }} added in the last 30 days
+      </p>
+    </button>
+
     @for (
-      stat of [
-        { label: 'Total Files', value: stats().total, icon: 'pi pi-box' },
-        { label: 'Images', value: stats().images, icon: 'pi pi-image' },
-        { label: 'Videos', value: stats().videos, icon: 'pi pi-video' },
-        { label: 'Documents', value: stats().documents, icon: 'pi pi-file' },
-        { label: 'Storage Used', value: formatFileSize(stats().totalBytes), icon: 'pi pi-database' }
+      card of [
+        {
+          tab: 'image',
+          label: 'Images',
+          value: stats().images,
+          icon: 'pi pi-image',
+          tone: 'emerald',
+          d: '80ms',
+        },
+        {
+          tab: 'video',
+          label: 'Videos',
+          value: stats().videos,
+          icon: 'pi pi-play',
+          tone: 'rose',
+          d: '120ms',
+        },
+        {
+          tab: 'document',
+          label: 'Documents',
+          value: stats().documents,
+          icon: 'pi pi-file',
+          tone: 'blue',
+          d: '160ms',
+        },
       ];
-      track stat.label
+      track card.label
     ) {
-      <div class="bg-[#07051a] border border-white/10 rounded-2xl p-5">
-        <div class="flex items-center justify-between gap-2">
-          <div class="min-w-0">
-            <span class="text-xs font-bold text-slate-400 uppercase">{{ stat.label }}</span>
-            <span class="text-2xl font-bold text-white block mt-2 truncate">
-              {{ loading() ? '—' : stat.value }}
-            </span>
-          </div>
-          <i [class]="stat.icon" class="text-2xl text-purple-400" aria-hidden="true"></i>
+      <button
+        type="button"
+        class="mg-stat mg-rise text-left"
+        [class]="'mg-stat--' + card.tone"
+        [style.--d]="card.d"
+        (click)="selectTab($any(card.tab))"
+      >
+        <span class="mg-stat-icon"><i [class]="card.icon" aria-hidden="true"></i></span>
+        <p class="mg-stat-label">{{ card.label }}</p>
+        <div class="flex items-end justify-between gap-2">
+          <p class="mg-stat-value">{{ loading() ? '—' : card.value }}</p>
+          <svg class="mg-spark" viewBox="0 0 80 24" aria-hidden="true">
+            <path d="M2 18 C 16 18, 22 6, 36 10 S 58 22, 78 6" />
+          </svg>
+        </div>
+      </button>
+    }
+
+    <div class="mg-stat mg-stat--slate mg-rise col-span-2 sm:col-span-1" style="--d: 200ms">
+      <div class="flex items-center justify-between gap-3 h-full">
+        <div class="min-w-0">
+          <p class="mg-stat-label !mt-0">Storage Used</p>
+          <p class="mg-stat-value truncate">
+            {{ loading() ? '—' : formatFileSize(stats().totalBytes) }}
+          </p>
+          <p class="text-xs text-slate-400 mt-1">across {{ folders().length }} folder(s)</p>
+        </div>
+        <div class="mg-ring" aria-hidden="true">
+          <i class="pi pi-database"></i>
         </div>
       </div>
-    }
-  </div>
+    </div>
+  </section>
   @if (hasMore()) {
-    <p class="text-xs text-slate-500 -mt-3">Stats cover the files loaded so far.</p>
+    <p class="text-xs text-slate-500 -mt-2">Stats cover the files loaded so far.</p>
   }
 
-  <!-- Filters & Search -->
-  <div class="bg-[#07051a] border border-white/10 rounded-2xl p-6">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <app-form-input-control
-        label="Search media..."
-        icon="search"
-        placeholder="Search by file name or path..."
-        [value]="searchTerm()"
-        (valueChange)="searchTerm.set($event)"
-      />
-
-      <app-select-control
-        label="Type"
-        placeholder="All Types"
-        [options]="typeOptions"
-        [value]="selectedType()"
-        (valueChange)="selectedType.set($event)"
-      />
-
-      <app-select-control
-        label="Folder"
-        placeholder="All Folders"
-        [options]="folderOptions()"
-        [value]="selectedFolder()"
-        (valueChange)="selectedFolder.set($event)"
-      />
-
-      <div class="flex items-end">
-        <button
-          pButton
-          pRipple
-          label="Clear Filters"
-          icon="pi pi-filter-slash"
-          class="p-button-text w-full"
-          [disabled]="!hasActiveFilters()"
-          (click)="clearFilters()"
-        ></button>
+  <!-- Filters -->
+  <form
+    class="mg-panel mg-rise p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))_auto] gap-3 sm:gap-4 items-end"
+    style="--d: 240ms"
+    role="search"
+    (submit)="$event.preventDefault(); applyFilters()"
+  >
+    <label class="mg-field sm:col-span-2 xl:col-span-1">
+      <span class="sr-only">Search</span>
+      <div class="mg-input-wrap">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input
+          type="search"
+          class="mg-input"
+          placeholder="Search by file name, tags or folder..."
+          [value]="searchDraft()"
+          (input)="searchDraft.set($any($event.target).value)"
+        />
       </div>
+    </label>
+    <label class="mg-field">
+      <span class="mg-field-label">File Type</span>
+      <select
+        class="mg-select"
+        [value]="typeDraft()"
+        (change)="typeDraft.set($any($event.target).value)"
+      >
+        @for (option of typeOptions; track option.value) {
+          <option [value]="option.value" [selected]="option.value === typeDraft()">
+            {{ option.label }}
+          </option>
+        }
+      </select>
+    </label>
+    <label class="mg-field">
+      <span class="mg-field-label">Folder</span>
+      <select class="mg-select" (change)="folderDraft.set($any($event.target).value)">
+        <option value="" [selected]="folderDraft() === ''">All Folders</option>
+        @for (folder of folders(); track folder) {
+          <option [value]="folder || '/'" [selected]="(folder || '/') === folderDraft()">
+            {{ folder || '(root)' }}
+          </option>
+        }
+      </select>
+    </label>
+    <label class="mg-field">
+      <span class="mg-field-label">Sort By</span>
+      <select class="mg-select" (change)="sortDraft.set($any($event.target).value)">
+        @for (option of sortOptions; track option.value) {
+          <option [value]="option.value" [selected]="option.value === sortDraft()">
+            {{ option.label }}
+          </option>
+        }
+      </select>
+    </label>
+    <div class="flex gap-3 sm:col-span-2 xl:col-span-1">
+      <button
+        type="button"
+        class="mg-btn mg-btn--ghost flex-1 xl:flex-none"
+        (click)="clearFilters()"
+      >
+        Clear
+      </button>
+      <button type="submit" class="mg-btn mg-btn--primary flex-1 xl:flex-none">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        Search
+      </button>
+    </div>
+  </form>
+
+  <!-- Tabs + toolbar -->
+  <div
+    class="mg-rise flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+    style="--d: 280ms"
+  >
+    <div class="mg-tabs" role="tablist" aria-label="File type">
+      @for (tab of tabs(); track tab.value) {
+        <button
+          type="button"
+          role="tab"
+          class="mg-tab"
+          [class.is-active]="activeTab() === tab.value"
+          [attr.aria-selected]="activeTab() === tab.value"
+          (click)="selectTab(tab.value)"
+        >
+          <i [class]="tab.icon" aria-hidden="true"></i>
+          {{ tab.label }} ({{ tab.count }})
+        </button>
+      }
+    </div>
+    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+      @if (selectMode()) {
+        <span class="text-sm text-slate-300">{{ selected().size }} selected</span>
+        <button type="button" class="mg-btn mg-btn--ghost" (click)="toggleSelectPage()">
+          {{ allPageSelected() ? 'Deselect page' : 'Select page' }}
+        </button>
+        <button
+          type="button"
+          class="mg-btn mg-btn--danger"
+          [disabled]="!selected().size"
+          (click)="requestDelete(selectedItems())"
+        >
+          <i class="pi pi-trash" aria-hidden="true"></i>
+          Delete
+        </button>
+      }
+      <button
+        type="button"
+        class="mg-btn mg-btn--ghost"
+        [class.is-on]="selectMode()"
+        [attr.aria-pressed]="selectMode()"
+        (click)="toggleSelectMode()"
+      >
+        <i [class]="selectMode() ? 'pi pi-times' : 'pi pi-check-circle'" aria-hidden="true"></i>
+        {{ selectMode() ? 'Cancel' : 'Select' }}
+      </button>
     </div>
   </div>
 
-  <!-- View Toggle -->
-  <div class="flex items-center justify-between">
-    <p class="text-sm text-slate-400">
-      Showing {{ filteredItems().length }} of {{ items().length }} files
-    </p>
-    <div class="flex gap-2" role="group" aria-label="View mode">
-      <button
-        pButton
-        pRipple
-        icon="pi pi-bars"
-        class="p-button-text p-button-sm"
-        aria-label="List view"
-        [attr.aria-pressed]="viewMode() === 'list'"
-        [disabled]="viewMode() === 'list'"
-        (click)="viewMode.set('list')"
-      ></button>
-      <button
-        pButton
-        pRipple
-        icon="pi pi-th-large"
-        class="p-button-text p-button-sm"
-        aria-label="Grid view"
-        [attr.aria-pressed]="viewMode() === 'grid'"
-        [disabled]="viewMode() === 'grid'"
-        (click)="viewMode.set('grid')"
-      ></button>
-    </div>
-  </div>
-
+  <!-- Content -->
   @if (loading()) {
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" aria-busy="true">
-      @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
-        <div class="aspect-square rounded-xl bg-white/5 animate-pulse"></div>
+    <div class="mg-grid" aria-busy="true" aria-label="Loading media">
+      @for (placeholder of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track placeholder) {
+        <div class="mg-card">
+          <div class="aspect-[16/10] mg-shimmer"></div>
+          <div class="p-3 space-y-2">
+            <div class="h-3 w-3/4 rounded mg-shimmer"></div>
+            <div class="h-2.5 w-1/2 rounded mg-shimmer"></div>
+          </div>
+        </div>
       }
     </div>
   } @else if (error()) {
-    <div
-      class="bg-[#07051a] border border-red-500/30 rounded-2xl p-8 text-center"
-      role="alert"
-    >
+    <div class="mg-panel p-10 text-center border-red-500/30" role="alert">
       <i class="pi pi-exclamation-triangle text-3xl text-red-400" aria-hidden="true"></i>
       <p class="text-white font-semibold mt-3">Couldn't load media</p>
       <p class="text-sm text-slate-400 mt-1">{{ error() }}</p>
-      <button
-        pButton
-        pRipple
-        label="Try again"
-        icon="pi pi-refresh"
-        class="p-button-secondary mt-4"
-        (click)="load()"
-      ></button>
+      <button type="button" class="mg-btn mg-btn--primary mt-5 mx-auto" (click)="load()">
+        <i class="pi pi-refresh" aria-hidden="true"></i>
+        Try again
+      </button>
     </div>
   } @else if (filteredItems().length === 0) {
-    <div class="bg-[#07051a] border border-white/10 rounded-2xl p-8 text-center">
-      <i class="pi pi-images text-3xl text-slate-500" aria-hidden="true"></i>
-      <p class="text-white font-semibold mt-3">
+    <div class="mg-panel p-12 text-center">
+      <div class="mg-hero-icon mx-auto" aria-hidden="true"><i class="pi pi-images"></i></div>
+      <p class="text-white font-semibold mt-4">
         {{ items().length ? 'No files match your filters' : 'Your Blob store is empty' }}
       </p>
       @if (hasActiveFilters()) {
-        <button
-          pButton
-          pRipple
-          label="Clear Filters"
-          class="p-button-text mt-2"
-          (click)="clearFilters()"
-        ></button>
+        <button type="button" class="mg-btn mg-btn--ghost mt-4 mx-auto" (click)="clearFilters()">
+          Clear filters
+        </button>
       }
     </div>
   } @else if (viewMode() === 'grid') {
-    <!-- Media Grid View -->
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      @for (file of filteredItems(); track file.pathname) {
-        <div class="group">
-          <div
-            class="bg-[#07051a] border border-white/10 rounded-xl aspect-square flex items-center justify-center hover:border-purple-500/50 focus-within:border-purple-500/50 transition overflow-hidden relative"
+    <div class="mg-grid">
+      @for (file of pagedItems(); track file.pathname; let i = $index) {
+        <article
+          class="mg-card mg-card-enter group"
+          [class.is-selected]="isSelected(file)"
+          [style.--d]="(i % 24) * 25 + 'ms'"
+        >
+          <button
+            type="button"
+            class="mg-thumb"
+            [attr.aria-label]="(selectMode() ? 'Select ' : 'Preview ') + file.name"
+            [attr.aria-pressed]="selectMode() ? isSelected(file) : null"
+            (click)="onCardClick(file)"
           >
             @if (file.type === 'image' && file.access === 'public') {
               <img
@@ -169,7 +302,7 @@
                 [alt]="file.name"
                 loading="lazy"
                 decoding="async"
-                class="w-full h-full object-cover group-hover:scale-105 transition"
+                (load)="recordDimensions(file, $event)"
               />
             } @else if (file.type === 'video' && file.access === 'public') {
               <video
@@ -177,232 +310,455 @@
                 preload="metadata"
                 muted
                 playsinline
-                class="w-full h-full object-cover"
                 aria-hidden="true"
               ></video>
-              <i
-                class="pi pi-play-circle absolute text-3xl text-white/80 drop-shadow"
-                aria-hidden="true"
-              ></i>
+              <span class="mg-play" aria-hidden="true"><i class="pi pi-play"></i></span>
             } @else {
-              <i [class]="kindIcon(file.type)" class="text-4xl text-slate-400" aria-hidden="true"></i>
+              <span class="mg-thumb-icon" [attr.data-kind]="file.type" aria-hidden="true">
+                <i [class]="kindIcon(file.type)"></i>
+              </span>
             }
+          </button>
 
-            <!-- Overlay -->
-            <div
-              class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition flex items-center justify-center gap-2"
+          <button
+            type="button"
+            class="mg-check"
+            [class.is-visible]="selectMode() || isSelected(file)"
+            [attr.aria-label]="(isSelected(file) ? 'Deselect ' : 'Select ') + file.name"
+            [attr.aria-pressed]="isSelected(file)"
+            (click)="toggleSelected(file)"
+          >
+            @if (isSelected(file)) {
+              <i class="pi pi-check" aria-hidden="true"></i>
+            }
+          </button>
+
+          <div class="absolute top-2.5 right-2.5">
+            <button
+              type="button"
+              class="mg-kebab"
+              [attr.aria-label]="'Actions for ' + file.name"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="openMenu() === file.pathname"
+              (click)="toggleMenu(file, $event)"
             >
-              <button
-                pButton
-                pRipple
-                icon="pi pi-eye"
-                class="p-button-rounded p-button-secondary p-button-sm"
-                [attr.aria-label]="'Preview ' + file.name"
-                (click)="openPreview(file)"
-              ></button>
-              <button
-                pButton
-                pRipple
-                icon="pi pi-download"
-                class="p-button-rounded p-button-secondary p-button-sm"
-                [attr.aria-label]="'Download ' + file.name"
-                (click)="download(file)"
-              ></button>
-              <button
-                pButton
-                pRipple
-                icon="pi pi-trash"
-                class="p-button-rounded p-button-danger p-button-sm"
-                [attr.aria-label]="'Delete ' + file.name"
-                (click)="requestDelete(file)"
-              ></button>
-            </div>
+              <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+            </button>
+            @if (openMenu() === file.pathname) {
+              <div
+                class="mg-menu"
+                role="menu"
+                (click)="$event.stopPropagation(); openMenu.set(null)"
+              >
+                <button type="button" role="menuitem" (click)="openPreview(file)">
+                  <i class="pi pi-eye" aria-hidden="true"></i> Preview
+                </button>
+                <button type="button" role="menuitem" (click)="copyUrl(file)">
+                  <i class="pi pi-link" aria-hidden="true"></i> Copy URL
+                </button>
+                <button type="button" role="menuitem" (click)="download(file)">
+                  <i class="pi pi-download" aria-hidden="true"></i> Download
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="is-danger"
+                  (click)="requestDelete([file])"
+                >
+                  <i class="pi pi-trash" aria-hidden="true"></i> Delete
+                </button>
+              </div>
+            }
           </div>
-          <p class="text-xs text-slate-300 mt-2 truncate" [title]="file.pathname">{{ file.name }}</p>
-          <p class="text-[10px] text-slate-500">
-            {{ formatFileSize(file.size) }} • {{ file.uploadedAt | date: 'mediumDate' }}
-          </p>
-        </div>
+
+          <div class="flex items-center gap-2 px-3 py-2.5">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-white truncate" [title]="file.pathname">
+                {{ file.name }}
+              </p>
+              <p class="text-xs text-slate-400 truncate mt-0.5">
+                {{ formatFileSize(file.size) }}
+                <span class="mx-1 text-slate-600" aria-hidden="true">•</span>
+                {{ dimensionsOf(file) ?? (file.uploadedAt | date: 'mediumDate') }}
+              </p>
+            </div>
+            <span class="mg-ext">{{ extension(file) }}</span>
+          </div>
+        </article>
       }
     </div>
   } @else {
-    <!-- Media List View -->
-    <div class="bg-[#07051a] border border-white/10 rounded-2xl overflow-hidden">
-      @for (file of filteredItems(); track file.pathname) {
+    <div class="mg-panel overflow-hidden">
+      @for (file of pagedItems(); track file.pathname) {
         <div
-          class="flex flex-wrap items-center gap-3 p-4 hover:bg-white/5 transition border-b border-white/5 last:border-0"
+          class="mg-row flex flex-wrap items-center gap-3 px-4 py-3 border-b border-white/5 last:border-0"
+          [class.is-selected]="isSelected(file)"
         >
+          @if (selectMode()) {
+            <button
+              type="button"
+              class="mg-check is-visible !static"
+              [attr.aria-label]="(isSelected(file) ? 'Deselect ' : 'Select ') + file.name"
+              [attr.aria-pressed]="isSelected(file)"
+              (click)="toggleSelected(file)"
+            >
+              @if (isSelected(file)) {
+                <i class="pi pi-check" aria-hidden="true"></i>
+              }
+            </button>
+          }
           <button
             type="button"
             class="flex items-center gap-3 flex-1 min-w-0 text-left"
             [attr.aria-label]="'Preview ' + file.name"
-            (click)="openPreview(file)"
+            (click)="onCardClick(file)"
           >
-            <div
-              class="w-11 h-11 shrink-0 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden"
+            <span
+              class="w-14 h-11 shrink-0 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden"
             >
               @if (file.type === 'image' && file.access === 'public') {
                 <img [src]="file.url" alt="" loading="lazy" class="w-full h-full object-cover" />
               } @else {
-                <i [class]="kindIcon(file.type)" class="text-lg text-slate-400" aria-hidden="true"></i>
+                <i
+                  [class]="kindIcon(file.type)"
+                  class="text-lg text-slate-400"
+                  aria-hidden="true"
+                ></i>
               }
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm font-semibold text-white truncate">{{ file.name }}</p>
-              <p class="text-xs text-slate-400 truncate">
+            </span>
+            <span class="min-w-0">
+              <span class="block text-sm font-semibold text-white truncate">{{ file.name }}</span>
+              <span class="block text-xs text-slate-400 truncate">
                 {{ formatFileSize(file.size) }} • {{ file.uploadedAt | date: 'medium' }}
-              </p>
-            </div>
+              </span>
+            </span>
           </button>
           @if (file.folder) {
             <span
-              class="px-2 py-1 rounded text-xs font-semibold bg-purple-500/10 border border-purple-500/20 text-purple-400 max-w-[12rem] truncate"
+              class="hidden sm:inline-block px-2 py-1 rounded-md text-xs font-medium bg-violet-500/10 border border-violet-500/20 text-violet-300 max-w-[12rem] truncate"
             >
               {{ file.folder }}
             </span>
           }
-          <div class="flex items-center gap-1">
+          <span class="mg-ext">{{ extension(file) }}</span>
+          <div class="flex items-center">
             <button
-              pButton
-              pRipple
-              icon="pi pi-link"
-              class="p-button-rounded p-button-text p-button-sm"
+              type="button"
+              class="mg-icon-btn"
               [attr.aria-label]="'Copy URL of ' + file.name"
               (click)="copyUrl(file)"
-            ></button>
+            >
+              <i class="pi pi-link" aria-hidden="true"></i>
+            </button>
             <button
-              pButton
-              pRipple
-              icon="pi pi-download"
-              class="p-button-rounded p-button-text p-button-sm"
+              type="button"
+              class="mg-icon-btn"
               [attr.aria-label]="'Download ' + file.name"
               (click)="download(file)"
-            ></button>
+            >
+              <i class="pi pi-download" aria-hidden="true"></i>
+            </button>
             <button
-              pButton
-              pRipple
-              icon="pi pi-trash"
-              class="p-button-rounded p-button-danger p-button-text p-button-sm"
+              type="button"
+              class="mg-icon-btn mg-icon-btn--danger"
               [attr.aria-label]="'Delete ' + file.name"
-              (click)="requestDelete(file)"
-            ></button>
+              (click)="requestDelete([file])"
+            >
+              <i class="pi pi-trash" aria-hidden="true"></i>
+            </button>
           </div>
         </div>
       }
     </div>
+  }
+
+  <!-- Pagination -->
+  @if (!loading() && !error() && filteredItems().length) {
+    <nav
+      class="mg-panel flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3"
+      aria-label="Pagination"
+    >
+      <p class="text-sm text-slate-300">{{ rangeLabel() }}</p>
+      <div class="flex items-center justify-center gap-1">
+        <button
+          type="button"
+          class="mg-page"
+          aria-label="Previous page"
+          [disabled]="page() === 1"
+          (click)="goToPage(page() - 1)"
+        >
+          <i class="pi pi-angle-left" aria-hidden="true"></i>
+        </button>
+        @for (p of pageNumbers(); track $index) {
+          @if (p === null) {
+            <span class="mg-page is-gap" aria-hidden="true">…</span>
+          } @else {
+            <button
+              type="button"
+              class="mg-page"
+              [class.is-active]="p === page()"
+              [attr.aria-current]="p === page() ? 'page' : null"
+              (click)="goToPage(p)"
+            >
+              {{ p }}
+            </button>
+          }
+        }
+        <button
+          type="button"
+          class="mg-page"
+          aria-label="Next page"
+          [disabled]="page() === totalPages()"
+          (click)="goToPage(page() + 1)"
+        >
+          <i class="pi pi-angle-right" aria-hidden="true"></i>
+        </button>
+      </div>
+      <label class="flex items-center justify-center gap-3 text-sm text-slate-300">
+        Rows per page
+        <select class="mg-select !w-20" (change)="setPageSize($any($event.target).value)">
+          @for (size of pageSizeOptions; track size) {
+            <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
+          }
+        </select>
+      </label>
+    </nav>
   }
 
   @if (hasMore() && !loading()) {
     <div class="flex justify-center">
       <button
-        pButton
-        pRipple
-        label="Load more"
-        icon="pi pi-angle-down"
-        class="p-button-secondary"
-        [loading]="loadingMore()"
+        type="button"
+        class="mg-btn mg-btn--ghost"
+        [disabled]="loadingMore()"
         (click)="loadMore()"
-      ></button>
+      >
+        <i
+          [class]="loadingMore() ? 'pi pi-spin pi-spinner' : 'pi pi-cloud-download'"
+          aria-hidden="true"
+        ></i>
+        Load more from storage
+      </button>
     </div>
   }
 </div>
 
-<!-- Preview Dialog -->
-<p-dialog
-  [visible]="previewItem() !== null"
-  (visibleChange)="$event || closePreview()"
-  [modal]="true"
-  [dismissableMask]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [header]="previewItem()?.name ?? ''"
-  [style]="{ width: 'min(1100px, 95vw)' }"
->
-  @if (previewItem(); as item) {
-    <div class="relative flex items-center justify-center min-h-[40vh] bg-black/40 rounded-lg">
-      @if (previewLoading() || !previewSrc()) {
-        <i class="pi pi-spin pi-spinner text-3xl text-slate-400" aria-label="Loading preview"></i>
-      } @else {
-        @switch (item.type) {
-          @case ('image') {
-            <img [src]="previewSrc()" [alt]="item.name" class="max-h-[70vh] max-w-full object-contain" />
+<!-- Preview Lightbox -->
+@if (previewItem(); as item) {
+  <div
+    class="lightbox fixed inset-0 z-[1100] flex flex-col bg-[#05030f]/95 backdrop-blur-xl"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Preview of ' + item.name"
+  >
+    <!-- Top bar -->
+    <header
+      class="flex items-center gap-3 px-4 sm:px-6 h-16 shrink-0 border-b border-white/10 bg-black/30"
+    >
+      <div
+        class="hidden sm:flex w-10 h-10 shrink-0 rounded-xl bg-purple-500/15 border border-purple-500/30 items-center justify-center"
+      >
+        <i [class]="kindIcon(item.type)" class="text-purple-300" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0 flex-1">
+        <h2 class="text-sm sm:text-base font-semibold text-white truncate" [title]="item.name">
+          {{ item.name }}
+        </h2>
+        <p class="text-xs text-slate-400 truncate">
+          {{ (previewIndex() ?? 0) + 1 }} of {{ filteredItems().length }}
+          @if (item.folder) {
+            • {{ item.folder }}
           }
-          @case ('video') {
-            <video [src]="previewSrc()" controls autoplay class="max-h-[70vh] w-full"></video>
-          }
-          @case ('audio') {
-            <div class="w-full p-8 text-center">
-              <i class="pi pi-volume-up text-5xl text-purple-400" aria-hidden="true"></i>
-              <audio [src]="previewSrc()" controls autoplay class="w-full mt-6"></audio>
-            </div>
-          }
-          @default {
-            @if (previewCanFrame() && previewFrameSrc()) {
-              <iframe
-                [src]="previewFrameSrc()"
-                [title]="item.name"
-                class="w-full h-[70vh] rounded-lg bg-white"
-              ></iframe>
-            } @else {
-              <div class="p-10 text-center">
-                <i [class]="kindIcon(item.type)" class="text-5xl text-slate-400" aria-hidden="true"></i>
-                <p class="text-white font-semibold mt-4">No inline preview for this file type</p>
-                <p class="text-sm text-slate-400 mt-1">{{ item.mimeType }}</p>
-              </div>
-            }
-          }
-        }
-      }
-
-      @if (filteredItems().length > 1) {
-        <button
-          pButton
-          icon="pi pi-chevron-left"
-          class="p-button-rounded p-button-secondary absolute left-2 top-1/2 -translate-y-1/2"
-          aria-label="Previous file"
-          (click)="showPrevious()"
-        ></button>
-        <button
-          pButton
-          icon="pi pi-chevron-right"
-          class="p-button-rounded p-button-secondary absolute right-2 top-1/2 -translate-y-1/2"
-          aria-label="Next file"
-          (click)="showNext()"
-        ></button>
-      }
-    </div>
-
-    <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="text-sm text-slate-400 min-w-0">
-        <p class="truncate" [title]="item.pathname">{{ item.pathname }}</p>
-        <p>
-          {{ formatFileSize(item.size) }} • {{ item.mimeType }} •
-          {{ item.uploadedAt | date: 'medium' }}
         </p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex items-center gap-1">
         @if (item.access === 'public') {
           <a
-            pButton
-            icon="pi pi-external-link"
-            label="Open"
-            class="p-button-text"
             [href]="item.url"
             target="_blank"
             rel="noopener noreferrer"
-          ></a>
+            class="lightbox-action"
+            aria-label="Open in new tab"
+            title="Open in new tab"
+          >
+            <i class="pi pi-external-link" aria-hidden="true"></i>
+          </a>
         }
-        <button pButton icon="pi pi-link" label="Copy URL" class="p-button-text" (click)="copyUrl(item)"></button>
-        <button pButton icon="pi pi-download" label="Download" (click)="download(item)"></button>
+        <button
+          type="button"
+          class="lightbox-action"
+          aria-label="Copy URL"
+          title="Copy URL"
+          (click)="copyUrl(item)"
+        >
+          <i class="pi pi-link" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="lightbox-action"
+          aria-label="Download"
+          title="Download"
+          (click)="download(item)"
+        >
+          <i class="pi pi-download" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="lightbox-action lightbox-action--danger"
+          aria-label="Delete"
+          title="Delete"
+          (click)="requestDelete([item])"
+        >
+          <i class="pi pi-trash" aria-hidden="true"></i>
+        </button>
+        <span class="w-px h-6 bg-white/10 mx-1" aria-hidden="true"></span>
+        <button
+          type="button"
+          class="lightbox-action"
+          aria-label="Close preview"
+          title="Close (Esc)"
+          (click)="closePreview()"
+        >
+          <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
       </div>
-    </div>
-  }
-</p-dialog>
+    </header>
 
-@if (pendingDelete(); as item) {
+    <!-- Stage: clicking the empty backdrop closes the viewer -->
+    <div
+      class="relative flex-1 min-h-0 flex items-center justify-center p-4 sm:px-20 sm:py-6"
+      (click)="closePreview()"
+    >
+      <div
+        class="max-w-full max-h-full flex items-center justify-center"
+        (click)="$event.stopPropagation()"
+      >
+        @if (previewLoading() || !previewSrc()) {
+          <div class="flex flex-col items-center gap-3 text-slate-400">
+            <i class="pi pi-spin pi-spinner text-3xl" aria-hidden="true"></i>
+            <span class="text-sm">Loading preview…</span>
+          </div>
+        } @else {
+          @switch (item.type) {
+            @case ('image') {
+              <img
+                [src]="previewSrc()"
+                [alt]="item.name"
+                class="lightbox-media max-h-[calc(100dvh-14rem)] max-w-full object-contain rounded-lg shadow-2xl shadow-black/60 ring-1 ring-white/10"
+              />
+            }
+            @case ('video') {
+              <video
+                [src]="previewSrc()"
+                controls
+                autoplay
+                class="lightbox-media max-h-[calc(100dvh-14rem)] max-w-full rounded-lg shadow-2xl ring-1 ring-white/10 bg-black"
+              ></video>
+            }
+            @case ('audio') {
+              <div
+                class="w-[min(32rem,90vw)] p-10 text-center rounded-2xl bg-white/5 border border-white/10"
+              >
+                <i class="pi pi-volume-up text-5xl text-purple-400" aria-hidden="true"></i>
+                <audio [src]="previewSrc()" controls autoplay class="w-full mt-6"></audio>
+              </div>
+            }
+            @default {
+              @if (previewCanFrame() && previewFrameSrc()) {
+                <iframe
+                  [src]="previewFrameSrc()"
+                  [title]="item.name"
+                  class="w-[min(1100px,90vw)] h-[calc(100dvh-14rem)] rounded-lg bg-white shadow-2xl"
+                ></iframe>
+              } @else {
+                <div class="p-10 text-center rounded-2xl bg-white/5 border border-white/10">
+                  <i
+                    [class]="kindIcon(item.type)"
+                    class="text-5xl text-slate-400"
+                    aria-hidden="true"
+                  ></i>
+                  <p class="text-white font-semibold mt-4">No inline preview for this file type</p>
+                  <p class="text-sm text-slate-400 mt-1">{{ item.mimeType }}</p>
+                  <button
+                    pButton
+                    icon="pi pi-download"
+                    label="Download"
+                    class="mt-5"
+                    (click)="download(item)"
+                  ></button>
+                </div>
+              }
+            }
+          }
+        }
+      </div>
+
+      @if (filteredItems().length > 1) {
+        <button
+          type="button"
+          class="lightbox-nav left-2 sm:left-5"
+          aria-label="Previous file"
+          title="Previous (←)"
+          (click)="$event.stopPropagation(); showPrevious()"
+        >
+          <i class="pi pi-chevron-left" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="lightbox-nav right-2 sm:right-5"
+          aria-label="Next file"
+          title="Next (→)"
+          (click)="$event.stopPropagation(); showNext()"
+        >
+          <i class="pi pi-chevron-right" aria-hidden="true"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Details + filmstrip -->
+    <footer class="shrink-0 border-t border-white/10 bg-black/30">
+      <div class="flex flex-wrap items-center gap-2 px-4 sm:px-6 pt-3 text-xs">
+        <span class="lightbox-chip">{{ formatFileSize(item.size) }}</span>
+        <span class="lightbox-chip">{{ item.mimeType }}</span>
+        <span class="lightbox-chip">{{ item.uploadedAt | date: 'medium' }}</span>
+        <span class="lightbox-chip capitalize">{{ item.access }}</span>
+        <span
+          class="hidden md:block flex-1 min-w-0 truncate text-right text-slate-500"
+          [title]="item.pathname"
+        >
+          {{ item.pathname }}
+        </span>
+      </div>
+      @if (filteredItems().length > 1) {
+        <div class="flex gap-2 overflow-x-auto px-4 sm:px-6 py-3" aria-label="All files">
+          @for (file of filteredItems(); track file.pathname; let i = $index) {
+            <button
+              type="button"
+              class="lightbox-thumb"
+              [class.lightbox-thumb--active]="i === previewIndex()"
+              [attr.aria-label]="'Show ' + file.name"
+              [attr.aria-current]="i === previewIndex() ? 'true' : null"
+              (click)="showPreviewAt(i)"
+            >
+              @if (file.type === 'image' && file.access === 'public') {
+                <img [src]="file.url" alt="" loading="lazy" class="w-full h-full object-cover" />
+              } @else {
+                <i [class]="kindIcon(file.type)" class="text-slate-400" aria-hidden="true"></i>
+              }
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="h-3"></div>
+      }
+    </footer>
+  </div>
+}
+
+@if (pendingDelete(); as targets) {
   <zcc-confirm-dialog
-    title="Delete file?"
-    [message]="item.name + ' will be permanently removed from the Blob store. Any page linking to it will break.'"
+    [title]="targets.length === 1 ? 'Delete file?' : 'Delete ' + targets.length + ' files?'"
+    [message]="deleteMessage(targets)"
     [confirmLabel]="deleting() ? 'Deleting…' : 'Delete'"
     (confirm)="confirmDelete()"
     (cancel)="pendingDelete.set(null)"
