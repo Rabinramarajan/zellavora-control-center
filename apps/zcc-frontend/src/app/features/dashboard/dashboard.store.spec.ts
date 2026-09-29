@@ -126,9 +126,11 @@ describe('DashboardStore', () => {
   });
 
   it('captures load errors without breaking state', async () => {
-    apiMock.getOverview.and.returnValue(throwError(() => ({
-      error: { error: { message: 'boom' } },
-    })));
+    apiMock.getOverview.and.returnValue(
+      throwError(() => ({
+        error: { error: { message: 'boom' } },
+      }))
+    );
     await store.loadOverview('30');
 
     expect(store.errorOverview()).toBe('boom');
@@ -141,14 +143,14 @@ describe('DashboardStore', () => {
     expect(store.activity()?.items.length).toBe(1);
     expect(store.activity()?.total).toBe(1);
     expect(store.activity()?.page).toBe(1);
-    expect(apiMock.getActivityFeed).toHaveBeenCalledWith('30', 1, 20, {});
+    expect(apiMock.getActivityFeed).toHaveBeenCalledWith('30', 1, 8, {});
   });
 
   it('applies severity filters and reloads from page 1', async () => {
     store.setActivityFilters({ severity: 'critical' });
 
     expect(store.activityFilters().severity).toBe('critical');
-    expect(apiMock.getActivityFeed).toHaveBeenCalledWith('30', 1, 20, {
+    expect(apiMock.getActivityFeed).toHaveBeenCalledWith('30', 1, 8, {
       severity: 'critical',
     });
   });

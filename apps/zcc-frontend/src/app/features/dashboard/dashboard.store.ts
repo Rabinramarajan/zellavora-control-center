@@ -14,6 +14,7 @@ export interface DashboardStoreState {
   overview: DashboardOverview | null;
   activity: ActivityFeedPage | null;
   activityFilters: ActivityFeedFilters;
+  activityPageSize: number;
 
   loadingOverview: boolean;
   loadingActivity: boolean;
@@ -28,6 +29,7 @@ const initial: DashboardStoreState = {
   overview: null,
   activity: null,
   activityFilters: {},
+  activityPageSize: 8,
 
   loadingOverview: false,
   loadingActivity: false,
@@ -47,6 +49,7 @@ export class DashboardStore {
   readonly overview = computed(() => this.state().overview);
   readonly activity = computed(() => this.state().activity);
   readonly activityFilters = computed(() => this.state().activityFilters);
+  readonly activityPageSize = computed(() => this.state().activityPageSize);
 
   readonly loadingOverview = computed(() => this.state().loadingOverview);
   readonly loadingActivity = computed(() => this.state().loadingActivity);
@@ -93,8 +96,7 @@ export class DashboardStore {
           resolve();
         },
         error: (err) => {
-          const message =
-            err?.error?.error?.message ?? 'Unable to load the dashboard overview.';
+          const message = err?.error?.error?.message ?? 'Unable to load the dashboard overview.';
           this.state.update((s) => ({
             ...s,
             loadingOverview: false,
@@ -111,12 +113,17 @@ export class DashboardStore {
     void this.loadActivity(1);
   }
 
+  setActivityPageSize(pageSize: number): void {
+    this.state.update((s) => ({ ...s, activityPageSize: pageSize }));
+    void this.loadActivity(1);
+  }
+
   loadActivity(page: number = this.state().activity?.page ?? 1): Promise<void> {
-    const { range, activityFilters } = this.state();
+    const { range, activityFilters, activityPageSize } = this.state();
     this.state.update((s) => ({ ...s, loadingActivity: true, errorActivity: null }));
     return new Promise<void>((resolve) => {
       this.api
-        .getActivityFeed(range, page, 20, activityFilters)
+        .getActivityFeed(range, page, activityPageSize, activityFilters)
         .pipe(finalize(() => resolve()))
         .subscribe({
           next: (res) =>
@@ -126,8 +133,7 @@ export class DashboardStore {
               loadingActivity: false,
             })),
           error: (err) => {
-            const message =
-              err?.error?.error?.message ?? 'Unable to load the activity feed.';
+            const message = err?.error?.error?.message ?? 'Unable to load the activity feed.';
             this.state.update((s) => ({
               ...s,
               loadingActivity: false,

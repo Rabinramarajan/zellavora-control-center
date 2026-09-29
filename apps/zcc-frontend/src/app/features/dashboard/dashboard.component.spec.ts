@@ -1,16 +1,9 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Component, input, signal } from '@angular/core';
+import { signal } from '@angular/core';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardStore } from './dashboard.store';
 import { DashboardOverview } from './dashboard.models';
-import { ApexChartComponent } from '@shared/components/apex-chart/apex-chart.component';
-
-@Component({ selector: 'app-apex-chart', standalone: true, template: '' })
-class StubApexChartComponent {
-  readonly chartConfig = input<unknown>({});
-  readonly height = input<number | string>(280);
-}
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -60,8 +53,10 @@ describe('DashboardComponent', () => {
       trends: signal(overview.trends),
       recentActivity: signal(overview.activity),
       planDistribution: signal(overview.planDistribution),
-      activity: signal({ items: overview.activity, total: 1, page: 1, pageSize: 20 }),
+      activity: signal({ items: overview.activity, total: 1, page: 1, pageSize: 8 }),
       activityFilters: signal({}),
+      activityPageSize: signal(8),
+      setActivityPageSize: jasmine.createSpy('setActivityPageSize'),
       trendLabels: signal(['Jul 1']),
       activitySeries: signal([40]),
       membersSeries: signal([10]),
@@ -78,12 +73,7 @@ describe('DashboardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [provideRouter([]), { provide: DashboardStore, useValue: storeStub }],
-    })
-      .overrideComponent(DashboardComponent, {
-        remove: { imports: [ApexChartComponent] },
-        add: { imports: [StubApexChartComponent] },
-      })
-      .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
