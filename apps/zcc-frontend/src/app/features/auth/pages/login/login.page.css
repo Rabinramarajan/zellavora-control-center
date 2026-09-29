@@ -118,13 +118,6 @@
 .tagline span {
   color: var(--auth-text-faint);
 }
-.tagline-rule {
-  display: inline-block;
-  width: 3rem;
-  height: 1px;
-  margin-left: 0.85rem;
-  background: var(--auth-text-faint);
-}
 
 /* ---------- Left story (desktop only) ---------- */
 .story,
@@ -199,6 +192,19 @@
 .device {
   position: relative;
   pointer-events: none;
+}
+/* Pool of light under the laptop so it sits on the page instead of floating in the void. */
+.device::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -6%;
+  height: 18%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(139, 92, 246, 0.35), transparent 70%);
+  filter: blur(24px);
 }
 .device-img {
   display: block;
@@ -288,16 +294,27 @@
   pointer-events: none;
 }
 .eyebrow {
-  font-size: 1.1rem;
-  color: var(--auth-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.1);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #c4b5fd;
 }
-.wave {
-  display: inline-block;
-  transform-origin: 70% 70%;
-  animation: wave 2.4s 0.8s ease-in-out 2;
+.eyebrow-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: var(--lp-emerald);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
 }
 .card-title {
-  margin-top: 0.4rem;
+  margin-top: 1rem;
   font-size: clamp(1.6rem, 2.4vw, 2rem);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -381,8 +398,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem 1.4rem;
-  margin-top: 1.75rem;
+  margin-top: 1.25rem;
   font-size: 0.78rem;
   color: var(--auth-text-faint);
 }
@@ -459,9 +477,8 @@
     grid-area: story;
     align-self: end;
     justify-self: end;
-    width: min(78%, 46rem);
-    margin-right: calc(-1 * clamp(2rem, 4vw, 4rem) - 5rem);
-    margin-bottom: 1rem;
+    width: min(72%, 42rem);
+    margin-bottom: clamp(1rem, 4vh, 3rem);
     z-index: 0;
   }
   .stats {
@@ -525,11 +542,6 @@
   50% {
     transform: translateY(-10px);
   }
-}
-@keyframes wave {
-  0%, 60%, 100% { transform: rotate(0); }
-  10%, 30% { transform: rotate(14deg); }
-  20%, 40% { transform: rotate(-8deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
