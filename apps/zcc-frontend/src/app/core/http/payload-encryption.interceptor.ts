@@ -108,12 +108,35 @@ async function prepare(
   };
 }
 
+function isStaleKeyError(err: unknown): boolean {
+  return (
+    err instanceof HttpErrorResponse &&
+    err.status === 400 &&
+    (err.error as { error?: { code?: string } } | null)?.error?.code === 'BAD_ENCRYPTION'
+  );
+}
+
 export const payloadEncryptionInterceptor: HttpInterceptorFn = (req, next) => {
   if (!shouldEncrypt(req)) return next(req);
 
   // HttpBackend skips the interceptor chain, so the key fetch is not itself encrypted.
   const http = new HttpClient(inject(HttpBackend));
 
+  // The server key may have rotated since it was cached: refetch it once and retry.
+  return send(http, req, next).pipe(
+    catchError((err: unknown) => {
+      if (!isStaleKeyError(err)) return throwError(() => err);
+      publicKeys.delete(new URL(req.url).origin);
+      return send(http, req, next);
+    })
+  );
+};
+
+function send(
+  http: HttpClient,
+  req: HttpRequest<unknown>,
+  next: (req: HttpRequest<unknown>) => Observable<HttpEvent<unknown>>
+): Observable<HttpEvent<unknown>> {
   return from(prepare(http, req)).pipe(
     switchMap(({ req: encrypted, aesKey }): Observable<HttpEvent<unknown>> =>
       next(encrypted).pipe(
@@ -143,4 +166,4 @@ export const payloadEncryptionInterceptor: HttpInterceptorFn = (req, next) => {
       )
     )
   );
-};
+}

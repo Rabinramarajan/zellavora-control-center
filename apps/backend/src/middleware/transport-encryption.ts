@@ -114,6 +114,8 @@ export const transportEncryption: RequestHandler = (req, res, next) => {
 };
 
 export const transportPublicKeyHandler: RequestHandler = (_req, res) => {
-  res.set('Cache-Control', 'public, max-age=3600');
+  // A CDN-cached key outlives key rotation (and, without TRANSPORT_PRIVATE_KEY,
+  // belongs to some other instance), so every client request would fail to unwrap.
+  res.set('Cache-Control', 'no-store');
   res.json({ algorithm: 'RSA-OAEP-256', format: 'spki', key: getTransportPublicKey() });
 };
