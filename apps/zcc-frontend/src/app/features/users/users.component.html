@@ -1,6 +1,6 @@
 <p-toast />
 
-<section class="us-page relative flex flex-col gap-6">
+<section class="us-page relative flex md:h-[calc(100dvh-7.5rem)] flex-col gap-6">
   <div class="us-aurora pointer-events-none" aria-hidden="true"></div>
 
   <!-- Breadcrumb + header -->
@@ -92,7 +92,7 @@
   </div>
 
   <!-- Results -->
-  <div class="us-rise flex flex-col gap-3" style="animation-delay: 360ms">
+  <div class="us-rise flex min-h-0 flex-1 flex-col gap-3" style="animation-delay: 360ms">
     <div class="flex flex-wrap items-center justify-between gap-2 px-1">
       <p class="text-sm text-slate-300" aria-live="polite">{{ rangeLabel() }}</p>
       @if (selected().size) {
@@ -100,8 +100,8 @@
       }
     </div>
 
-    <div class="us-panel overflow-hidden">
-      <div class="us-table-scroll" [class.is-loading]="store.loading() && store.hasItems()">
+    <div class="us-panel flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div class="us-table-scroll min-h-0 flex-1" [class.is-loading]="store.loading() && store.hasItems()">
         <table class="us-table">
           <thead>
             <tr>

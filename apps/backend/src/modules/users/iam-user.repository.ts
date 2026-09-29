@@ -46,6 +46,14 @@ export class IamUserRepository extends BaseRepository {
     return this.getDb(tx).user.findUnique({ where: { username } });
   }
 
+  async countByStatus(tx?: TxClient) {
+    return this.getDb(tx).user.groupBy({
+      by: ['status'],
+      where: { isDeleted: false },
+      _count: { _all: true },
+    });
+  }
+
   async list(query: IamUserListQueryDto, tx?: TxClient) {
     const where: UserWhere = { isDeleted: false };
 

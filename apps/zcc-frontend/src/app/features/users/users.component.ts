@@ -142,6 +142,7 @@ export class UsersComponent {
   readonly openMenuId = signal<string | null>(null);
   readonly busyId = signal<string | null>(null);
 
+  private lookupsLoaded = false;
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   readonly activeFilterCount = computed(() => {
@@ -180,7 +181,6 @@ export class UsersComponent {
 
   constructor() {
     void this.loadStats();
-    void this.loadLookups();
   }
 
   onQuickSearch(value: string): void {
@@ -191,6 +191,7 @@ export class UsersComponent {
   openFilters(): void {
     this.draft.set({ ...this.applied(), q: this.store.q() });
     this.filtersOpen.set(true);
+    void this.loadLookups();
   }
 
   closeFilters(): void {
@@ -398,22 +399,17 @@ export class UsersComponent {
   }
 
   private async loadStats(): Promise<void> {
-    const results = await Promise.all(
-      STAT_CARDS.map(async (card) => {
-        try {
-          const list = unwrap(
-            await firstValueFrom(this.api.listIamUsers({ page: 1, pageSize: 1, status: card.status ? [card.status] : undefined })),
-          );
-          return [card.label, list.meta.total] as const;
-        } catch {
-          return [card.label, null] as const;
-        }
-      }),
-    );
-    this.statCounts.set(Object.fromEntries(results));
+    try {
+      const { total, byStatus } = unwrap(await firstValueFrom(this.api.getIamUserStats()));
+      this.statCounts.set(Object.fromEntries(STAT_CARDS.map((c) => [c.label, c.status ? (byStatus[c.status] ?? 0) : total])));
+    } catch {
+      this.statCounts.set(Object.fromEntries(STAT_CARDS.map((c) => [c.label, null])));
+    }
   }
 
   private async loadLookups(): Promise<void> {
+    if (this.lookupsLoaded) return;
+    this.lookupsLoaded = true;
     try {
       const [roles, groups] = await Promise.all([
         firstValueFrom(this.api.listRoles({ page: 1, pageSize: 100 })).then(unwrap),
@@ -422,6 +418,7 @@ export class UsersComponent {
       this.roleOptions.set(roles.data.map((r) => ({ value: r.id, label: r.name })));
       this.groupOptions.set(groups.data.map((g) => ({ value: g.id, label: g.name })));
     } catch {
+      this.lookupsLoaded = false;
       this.notify('warn', 'Filters limited', 'Could not load roles and groups.');
     }
   }

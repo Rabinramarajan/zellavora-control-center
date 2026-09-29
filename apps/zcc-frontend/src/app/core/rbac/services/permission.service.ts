@@ -76,24 +76,25 @@ export class PermissionService {
    * Call on login, tenant switch, and from the policy-version interceptor.
    */
   async refreshPolicy(): Promise<EffectivePolicy> {
-    this.store.setLoading(true);
-    try {
-      const res = await firstValueFrom(
-        this.http.get<{ data: EffectivePolicy }>('/api/v1/rbac/me/policy')
-      );
-      this.store.setPolicy(res.data);
-      return res.data;
-    } catch {
-      // The RBAC engine needs Redis and answers 503 where it is not
-      // configured. Falling through with a null policy would fail every
-      // check closed and hide the whole IAM section from an owner, so fall
-      // back to the permission set /auth/me already returned.
-      const fallback = this.policyFromSession();
-      this.store.setPolicy(fallback);
-      return fallback;
-    } finally {
-      this.store.setLoading(false);
-    }
+    // /rbac/me/policy is disabled: the RBAC engine needs Redis and answers
+    // 503 in production, so the policy comes from the /auth/me session.
+    // this.store.setLoading(true);
+    // try {
+    //   const res = await firstValueFrom(
+    //     this.http.get<{ data: EffectivePolicy }>('/api/v1/rbac/me/policy')
+    //   );
+    //   this.store.setPolicy(res.data);
+    //   return res.data;
+    // } catch {
+    //   const fallback = this.policyFromSession();
+    //   this.store.setPolicy(fallback);
+    //   return fallback;
+    // } finally {
+    //   this.store.setLoading(false);
+    // }
+    const policy = this.policyFromSession();
+    this.store.setPolicy(policy);
+    return policy;
   }
 
   /** Policy built from the permissions the login response carried. */

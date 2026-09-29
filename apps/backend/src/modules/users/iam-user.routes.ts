@@ -49,6 +49,22 @@ router.get('/', authenticate, requirePermission('users:read'), controller.list);
 
 /**
  * @swagger
+ * /api/v1/iam/users/stats:
+ *   get:
+ *     summary: getUserStats
+ *     operationId: getIamUsersStats
+ *     description: User counts in total and per lifecycle status.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "{ total, byStatus: { ACTIVE, INACTIVE, LOCKED, PENDING, SUSPENDED } }"
+ */
+router.get('/stats', authenticate, requirePermission('users:read'), controller.stats);
+
+/**
+ * @swagger
  * /api/v1/iam/users/{id}:
  *   get:
  *     summary: getUserById

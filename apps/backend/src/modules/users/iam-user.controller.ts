@@ -28,6 +28,15 @@ export class IamUserController {
     }
   };
 
+  stats = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.stats();
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.getById(req.params.id);

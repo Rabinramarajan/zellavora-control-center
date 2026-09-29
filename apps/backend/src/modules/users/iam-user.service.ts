@@ -1,4 +1,6 @@
 import { AppError } from '../../middleware/error';
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { AuditService } from '../../infrastructure/audit';
 import { cacheDelPattern } from '../../infrastructure/cache';
 import { IamUserRepository } from './iam-user.repository';
@@ -50,7 +52,19 @@ export class IamUserService {
     return { data: rows, meta: { page: query.page, pageSize: query.pageSize, total, totalPages } };
   }
 
+  async stats() {
+    const rows = await this.repo.countByStatus();
+    const byStatus: Record<string, number> = { ACTIVE: 0, INACTIVE: 0, LOCKED: 0, PENDING: 0, SUSPENDED: 0 };
+    for (const row of rows) byStatus[row.status] = row._count._all;
+    const total = Object.values(byStatus).reduce((sum, n) => sum + n, 0);
+    return { total, byStatus };
+  }
+
   async getById(id: string) {
+    // Prisma throws a 500 on non-UUID input for @db.Uuid columns; treat it as a missing user.
+    if (!UUID_PATTERN.test(id)) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    }
     const row = await this.repo.findByIdDetail(id);
     if (!row) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');

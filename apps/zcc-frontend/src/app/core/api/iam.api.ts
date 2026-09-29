@@ -185,6 +185,10 @@ export class IamApiService {
     return this.apiData.putData<ApiEnvelope<IamUserDetail>>(`/iam/users/${id}/groups`, body);
   }
 
+  getIamUserStats(): Observable<ApiEnvelope<{ total: number; byStatus: Record<string, number> }>> {
+    return this.apiData.getData<ApiEnvelope<{ total: number; byStatus: Record<string, number> }>>('/iam/users/stats');
+  }
+
   deleteIamUser(id: string): Observable<ApiEnvelope<{ success: boolean }>> {
     return this.apiData.deleteData<ApiEnvelope<{ success: boolean }>>(`/iam/users/${id}`);
   }

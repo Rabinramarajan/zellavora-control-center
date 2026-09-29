@@ -727,3 +727,17 @@ span.us-select-wrap:not(.us-input-wrap) .us-select {
 .us-status[data-status='SUSPENDED'] {
   --dot: #94a3b8;
 }
+
+/* Page stays viewport-height on md+; only the table body scrolls, header row stays pinned. */
+@media (min-width: 768px) {
+  .us-table-scroll {
+    overflow-y: auto;
+  }
+
+  .us-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #13112f;
+  }
+}
