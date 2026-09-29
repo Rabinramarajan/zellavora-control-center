@@ -20,6 +20,7 @@ import { AuthService } from './core/auth/auth.service';
 import { apiBaseUrlInterceptor } from './core/http/api-base-url.interceptor';
 import { correlationIdInterceptor } from './core/http/correlation-id.interceptor';
 import { loggingInterceptor } from './core/http/logging.interceptor';
+import { payloadEncryptionInterceptor } from './core/http/payload-encryption.interceptor';
 import { retryInterceptor } from './core/http/retry.interceptor';
 import { errorInterceptor } from './core/error/error.interceptor';
 import { PolicyVersionInterceptor } from './core/rbac/interceptors/policy-version.interceptor';
@@ -37,6 +38,7 @@ export const appConfig: ApplicationConfig = {
         authInterceptor,
         retryInterceptor,
         errorInterceptor,
+        payloadEncryptionInterceptor,
       ]),
       withInterceptorsFromDi()
     ),

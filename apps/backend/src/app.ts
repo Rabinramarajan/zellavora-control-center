@@ -12,6 +12,7 @@ import { registerSwaggerRoutes } from './routes/swagger';
 import { registerApiRoutes } from './routes';
 import { responseEnvelope } from './middleware/response-envelope';
 import { requestContext } from './middleware/request-context';
+import { transportEncryption, transportPublicKeyHandler } from './middleware/transport-encryption';
 import crypto from 'crypto';
 import os from 'os';
 import { prisma } from './infrastructure/prisma';
@@ -34,14 +35,16 @@ app.use('/favicon.png', express.static('public'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-app.use(responseEnvelope);
-
 app.use(
   cors({
     origin: config.corsOrigins,
     credentials: true,
   })
 );
+
+app.get('/api/v1/crypto/public-key', transportPublicKeyHandler);
+app.use(transportEncryption);
+app.use(responseEnvelope);
 
 // Security headers with CSP for both Angular SPA and Swagger UI
 app.use(
