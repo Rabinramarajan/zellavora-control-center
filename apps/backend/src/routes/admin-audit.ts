@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { authenticate, type AuthRequest } from '../middleware/auth';
+import { prisma } from '../infrastructure/prisma';
 import { wrapResponse } from './admin-helpers';
 
 const router = Router();
@@ -218,6 +219,78 @@ router.post(['/audit-logs/details', '/auditlog/LoadAuditLogDetails'], authentica
   } catch (error) {
     next(error);
   }
+});
+
+type AuditSeverity = 'info' | 'warn' | 'critical';
+
+// The admin UI only distinguishes three levels; stored severities are finer-grained.
+const toUiSeverity = (severity: string): AuditSeverity => {
+  if (severity === 'critical' || severity === 'error') return 'critical';
+  if (severity === 'warning' || severity === 'warn') return 'warn';
+  return 'info';
+};
+
+async function loadAuditRecords(req: AuthRequest) {
+  const limit = Math.min(Math.max(parseInt((req.query.limit as string) || '200', 10) || 200, 1), 1000);
+  const rows = await prisma.auditLog.findMany({
+    where: req.tenantId ? { organizationId: req.tenantId } : {},
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: { actor: { select: { fullName: true, displayName: true, email: true } } },
+  });
+  return rows.map((row) => ({
+    id: row.id,
+    actorId: row.actorId,
+    actorName: row.actor?.displayName || row.actor?.fullName || row.actor?.email || 'System',
+    action: row.action,
+    severity: toUiSeverity(row.severity),
+    ipAddress: row.ipAddress,
+    userAgent: row.userAgent,
+    createdAt: row.createdAt.toISOString(),
+  }));
+}
+
+const csvCell = (value: string | null) => `"${(value ?? '').replace(/"/g, '""')}"`;
+
+/**
+ * @swagger
+ * /api/v1/admin/audit:
+ *   get:
+ *     summary: listAdminAuditRecords
+ *     operationId: getAdminAudit
+ *     tags: [administrationAuditLogs]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Audit records for the caller's organization, newest first
+ */
+router.get('/audit', authenticate, async (req: AuthRequest, res) => {
+  res.json(await loadAuditRecords(req));
+});
+
+/**
+ * @swagger
+ * /api/v1/admin/audit/export:
+ *   get:
+ *     summary: exportAdminAuditRecords
+ *     operationId: getAdminAuditExport
+ *     tags: [administrationAuditLogs]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Audit records as CSV
+ */
+router.get('/audit/export', authenticate, async (req: AuthRequest, res) => {
+  const records = await loadAuditRecords(req);
+  const header = 'id,actorName,action,severity,ipAddress,createdAt';
+  const lines = records.map((r) =>
+    [r.id, r.actorName, r.action, r.severity, r.ipAddress, r.createdAt].map(csvCell).join(',')
+  );
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="audit_logs.csv"');
+  res.send([header, ...lines].join('\n'));
 });
 
 export default router;

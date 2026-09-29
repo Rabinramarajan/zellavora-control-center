@@ -13,6 +13,8 @@ import { registerApiRoutes } from './routes';
 import { responseEnvelope } from './middleware/response-envelope';
 import { requestContext } from './middleware/request-context';
 import crypto from 'crypto';
+import os from 'os';
+import { prisma } from './infrastructure/prisma';
 import { buildRbac } from './rbac';
 import { logger } from './infrastructure/logger';
 
@@ -121,6 +123,61 @@ app.get('/health', (_req, res) => {
     timestamp: new Date().toISOString(),
     ...(healthy ? {} : { configErrors }),
     ...(rbacFailure ? { rbac: { status: 'unavailable', reason: rbacFailure } } : {}),
+  });
+});
+
+/**
+ * @swagger
+ * /api/v1/health:
+ *   get:
+ *     summary: getSystemMetrics
+ *     operationId: getApiHealth
+ *     tags: [system]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Resource usage and dependency status for the admin System Health page
+ */
+type ServiceState = 'healthy' | 'degraded' | 'failed';
+
+async function probeDatabase(): Promise<{ status: ServiceState; latencyMs: number; message?: string }> {
+  const started = Date.now();
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return { status: 'healthy', latencyMs: Date.now() - started };
+  } catch (err) {
+    return {
+      status: 'failed',
+      latencyMs: Date.now() - started,
+      message: err instanceof Error ? err.message.trim().split('\n').pop() : 'Database unreachable',
+    };
+  }
+}
+
+app.get('/api/v1/health', async (_req, res) => {
+  const totalRam = os.totalmem();
+  const usedRam = totalRam - os.freemem();
+  const cpuCount = os.cpus().length || 1;
+  const load = Math.min(os.loadavg()[0], cpuCount);
+  const database = await probeDatabase();
+  const blobConfigured = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_OIDC_TOKEN);
+  const redisState: ServiceState = !config.redisUrl ? 'failed' : rbacFailure ? 'degraded' : 'healthy';
+  const gb = (bytes: number) => Math.round((bytes / 1024 ** 3) * 10) / 10;
+
+  res.json({
+    cpu: { used: Math.round(load * 10) / 10, total: cpuCount, percentage: Math.round((load / cpuCount) * 100) },
+    ram: { used: gb(usedRam), total: gb(totalRam), percentage: Math.round((usedRam / totalRam) * 100) },
+    database,
+    storage: blobConfigured
+      ? { status: 'healthy', latencyMs: 0 }
+      : { status: 'failed', latencyMs: 0, message: 'BLOB_READ_WRITE_TOKEN is not set' },
+    redis: {
+      status: redisState,
+      latencyMs: 0,
+      ...(redisState === 'healthy' ? {} : { message: rbacFailure ?? 'REDIS_URL is not set' }),
+    },
+    queue: { pendingJobs: 0, activeWorkers: 0, status: redisState },
+    timestamp: new Date().toISOString(),
   });
 });
 
