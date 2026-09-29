@@ -1,48 +1,28 @@
 /**
  * AuthStore — single source of truth for the authentication & tenant context.
  *
- * Why a separate store?
- *   - Easier to test (state is a pure object)
- *   - Easier to swap to a different framework later (e.g. NgRx Signal Store)
- *   - Keeps the AuthService focused on HTTP + side-effects
- *
- * State is exposed as readonly signals. Mutations go through dedicated actions.
+ * State is exposed as readonly signals; mutations go through dedicated actions.
+ * Form-level loading and error state lives in the components that own the form.
  */
 import { Injectable, computed, signal } from '@angular/core';
-import type {
-  AuthUser,
-  TenantSummary,
-  MenuNode,
-} from '@shared/models';
+import type { AuthUser, MenuNode, TenantSummary } from '@shared/models';
 import { UserRole } from '@shared/models';
 
 export interface AuthStoreState {
-  // Identity
   user: AuthUser | null;
-
-  // Active tenant (the one the user is currently acting as)
   tenant: TenantSummary | null;
-
-  // All tenants the user can switch into
   availableTenants: TenantSummary[];
-
-  // RBAC
   permissions: Set<string>;
   menu: MenuNode[];
-
-  // Tokens
   accessToken: string | null;
   refreshToken: string | null;
   accessTokenExpiresAt: Date | null;
   refreshTokenExpiresAt: Date | null;
   sessionId: string | null;
-
-  // Lifecycle
+  /** Organization policy requires 2FA and the user hasn't enrolled yet. */
+  mfaSetupRequired: boolean;
   isAuthenticated: boolean;
-  isLoading: boolean;
   isInitialized: boolean;
-  error: string | null;
-  errorCode: string | null;
 }
 
 const initial: AuthStoreState = {
@@ -56,18 +36,15 @@ const initial: AuthStoreState = {
   accessTokenExpiresAt: null,
   refreshTokenExpiresAt: null,
   sessionId: null,
+  mfaSetupRequired: false,
   isAuthenticated: false,
-  isLoading: false,
   isInitialized: false,
-  error: null,
-  errorCode: null,
 };
 
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
   private readonly state = signal<AuthStoreState>(initial);
 
-  // --- Selectors (read-only signals) -----------------------------------------
   readonly user = computed(() => this.state().user);
   readonly tenant = computed(() => this.state().tenant);
   readonly tenants = computed(() => this.state().availableTenants);
@@ -78,35 +55,22 @@ export class AuthStore {
   readonly accessTokenExpiresAt = computed(() => this.state().accessTokenExpiresAt);
   readonly refreshTokenExpiresAt = computed(() => this.state().refreshTokenExpiresAt);
   readonly sessionId = computed(() => this.state().sessionId);
-
+  readonly mfaSetupRequired = computed(() => this.state().mfaSetupRequired);
   readonly isAuthenticated = computed(() => this.state().isAuthenticated);
-  readonly isLoading = computed(() => this.state().isLoading);
   readonly isInitialized = computed(() => this.state().isInitialized);
-  readonly error = computed(() => this.state().error);
-  readonly errorCode = computed(() => this.state().errorCode);
 
   readonly role = computed<UserRole | null>(() => this.state().user?.role ?? null);
   readonly tenantId = computed<string | null>(() => this.state().tenant?.id ?? null);
 
-  // --- Snapshot for non-reactive consumers -----------------------------------
   snapshot(): Readonly<AuthStoreState> {
     return this.state();
-  }
-
-  // --- Actions ---------------------------------------------------------------
-  setLoading(isLoading: boolean): void {
-    this.state.update((s) => ({ ...s, isLoading }));
-  }
-
-  setError(message: string | null, code: string | null = null): void {
-    this.state.update((s) => ({ ...s, error: message, errorCode: code }));
   }
 
   markInitialized(): void {
     this.state.update((s) => ({ ...s, isInitialized: true }));
   }
 
-  /** Set the full authenticated context after login / refresh / switch. */
+  /** Set the full authenticated context after sign-in. */
   setSession(input: {
     user: AuthUser;
     tenant: TenantSummary;
@@ -115,8 +79,6 @@ export class AuthStore {
     accessTokenExpiresAt: string;
     refreshTokenExpiresAt: string;
     sessionId: string;
-    permissions?: string[];
-    menu?: MenuNode[];
   }): void {
     this.state.update((s) => ({
       ...s,
@@ -127,13 +89,33 @@ export class AuthStore {
       accessTokenExpiresAt: new Date(input.accessTokenExpiresAt),
       refreshTokenExpiresAt: new Date(input.refreshTokenExpiresAt),
       sessionId: input.sessionId,
-      permissions: new Set(input.permissions ?? []),
-      menu: input.menu ?? [],
+      permissions: new Set<string>(),
+      menu: [],
       isAuthenticated: true,
-      isLoading: false,
-      error: null,
-      errorCode: null,
     }));
+  }
+
+  /** Apply the /auth/me payload: identity, permissions and the server-filtered menu. */
+  setProfile(input: {
+    user: AuthUser;
+    tenant: TenantSummary;
+    permissions: string[];
+    menu: MenuNode[];
+    mfaSetupRequired: boolean;
+  }): void {
+    this.state.update((s) => ({
+      ...s,
+      user: input.user,
+      tenant: input.tenant,
+      permissions: new Set(input.permissions),
+      menu: input.menu,
+      mfaSetupRequired: input.mfaSetupRequired,
+      isAuthenticated: true,
+    }));
+  }
+
+  setMfaSetupRequired(required: boolean): void {
+    this.state.update((s) => ({ ...s, mfaSetupRequired: required }));
   }
 
   /** Merge profile changes (e.g. a new avatar) into the signed-in user. */
@@ -163,7 +145,7 @@ export class AuthStore {
     this.state.update((s) => ({ ...s, availableTenants: tenants }));
   }
 
-  /** Wipe all state (logout). */
+  /** Wipe all state (sign-out / session expiry). */
   reset(): void {
     this.state.set({ ...initial, permissions: new Set() });
   }

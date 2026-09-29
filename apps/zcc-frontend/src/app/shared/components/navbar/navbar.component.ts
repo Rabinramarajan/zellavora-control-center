@@ -252,7 +252,7 @@ interface BreadcrumbSegment {
                 </a>
 
                 <a
-                  routerLink="/auth/sessions"
+                  routerLink="/account/security"
                   (click)="closeUserMenu()"
                   role="menuitem"
                   class="group flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60"
@@ -273,8 +273,8 @@ interface BreadcrumbSegment {
                     </svg>
                   </span>
                   <span class="flex-1 min-w-0">
-                    <span class="block text-[13px] font-medium text-white">Sessions</span>
-                    <span class="block text-[11px] text-[#8f8cb3] truncate">Active devices</span>
+                    <span class="block text-[13px] font-medium text-white">Security</span>
+                    <span class="block text-[11px] text-[#8f8cb3] truncate">Password, 2FA &amp; sessions</span>
                   </span>
                   <svg
                     class="w-3.5 h-3.5 text-[#8f8cb3] group-hover:text-white group-hover:translate-x-0.5 transition"

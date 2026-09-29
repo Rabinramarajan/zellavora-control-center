@@ -3,18 +3,19 @@
  *
  * Two layers:
  *   1. Per-IP:  10 failed attempts in 15 min → block for 15 min.
- *   2. Per-account: 5 failed attempts in 15 min → lock account for 15 min.
+ *   2. Per-account: ACCOUNT_LOCKOUT_THRESHOLD failures in the window → temporary lock.
  *
  * We use the `login_attempts` table as the source of truth and derive the
  * counters in SQL (cheap with the indexes we added in 0004).
  */
 import { prisma } from '../../infrastructure/prisma';
 import { AppError } from '../../middleware/error';
+import { config } from '../../config/env';
 
-const WINDOW_MS = 15 * 60 * 1000;
+const WINDOW_MS = config.accountLockoutMinutes * 60 * 1000;
 const IP_LIMIT = 10;
-const ACCOUNT_LIMIT = 5;
-const LOCKOUT_MS = 15 * 60 * 1000;
+const ACCOUNT_LIMIT = config.accountLockoutThreshold;
+const LOCKOUT_MS = config.accountLockoutMinutes * 60 * 1000;
 
 export class RateLimitService {
   /** Record an attempt and return the updated state. */

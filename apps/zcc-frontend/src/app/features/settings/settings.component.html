@@ -50,39 +50,6 @@
             (save)="saveProfile($event)"
           />
         }
-        @case ('security') {
-          <app-settings-card
-            heading="Change password"
-            headingId="password-heading"
-            description="Update the password used to sign in to your account."
-          >
-            <div class="py-5">
-              <app-password-form
-                [saving]="passwordSaving()"
-                [serverMessage]="passwordMessage()"
-                (submitted)="changePassword($event)"
-              />
-            </div>
-          </app-settings-card>
-
-          <app-settings-card heading="Two-factor authentication" headingId="mfa-heading">
-            <div class="py-5">
-              <app-mfa-panel
-                [enabled]="mfaEnabled()"
-                [step]="mfaStep()"
-                [qrCode]="mfaQrCode()"
-                [recoveryCodes]="recoveryCodes()"
-                [busy]="mfaBusy()"
-                [error]="mfaError()"
-                (start)="startMfaEnrollment()"
-                (confirm)="confirmMfa($event)"
-                (regenerate)="regenerateCodes()"
-                (disable)="disableMfa($event)"
-                (done)="closeCodes()"
-              />
-            </div>
-          </app-settings-card>
-        }
         @default {
           <app-settings-card
             [heading]="activeTab().label"
@@ -111,7 +78,7 @@
         [storageUsedGb]="24.3"
         [storageTotalGb]="50"
         [systemInfo]="systemInfo"
-        (manageSecurity)="selectTab('security')"
+        (manageSecurity)="openSecurity()"
       />
     </div>
   </div>

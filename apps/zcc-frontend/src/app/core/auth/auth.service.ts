@@ -1,73 +1,70 @@
 /**
- * AuthService — high-level authentication operations.
- *
- * Responsibilities:
- *   - Public API for login / logout / refresh / switch-tenant / MFA
- *   - Token storage (with encryption-in-transit via HTTPS) and refresh scheduling
- *   - Triggers the AuthStore updates that drive the UI
+ * AuthService — authentication operations and session lifecycle.
  *
  * Storage strategy:
- *   - accessToken: signal + sessionStorage, reused across reloads until near expiry.
- *   - refreshToken: httpOnly cookie if backend supports it; otherwise sessionStorage.
- *   - tenantId + sessionId: sessionStorage (so a tab reload doesn't lose them).
- *   - user: sessionStorage (UI personalization).
+ *   - refresh token: localStorage when "keep me signed in", otherwise sessionStorage
+ *   - access token + expiry: sessionStorage, reused across reloads until near expiry
+ *   - pending 2FA challenge: sessionStorage, cleared on completion or cancel
  *
  * On app boot:
- *   1. Reuse the stored access token, or silently refresh if it is near expiry
- *   2. If success, hydrate the store from /auth/me
- *   3. If failure, fall back to login
+ *   1. Reuse the stored access token, or silently refresh when near expiry
+ *   2. On success, hydrate the store from /auth/me (permissions + menu)
+ *   3. On failure, clear local state; route guards send the user to sign in
+ *
+ * Route guards and hidden buttons are UX only — the API authorizes every call.
  */
-import { Injectable, inject, effect, DestroyRef } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { DestroyRef, Injectable, effect, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, throwError, timer, Subscription, from } from 'rxjs';
-import { catchError, finalize, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { Observable, Subscription, of, throwError, timer } from 'rxjs';
+import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 import { AuthStore } from './auth.store';
-import {
+import { PolicyStore } from '../rbac/store/policy.store';
+import { apiErrorCode } from './auth-errors';
+import type {
+  AcceptInvitationRequest,
+  AcceptInvitationResponse,
+  ActiveSession,
+  AuthConfig,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
+  GenericMessageResponse,
+  InvitationPreview,
   LoginRequest,
   LoginResponse,
-  MfaChallengeResponse,
-  LoginMfaRequest,
   LoginSuccessResponse,
-  RefreshResponse,
   MeResponse,
-  ChangePasswordRequest,
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
-  MfaEnrollStartResponse,
-  MfaEnrollConfirmRequest,
+  MfaChallengeResponse,
   MfaEnrollConfirmResponse,
-  MfaDisableRequest,
+  MfaEnrollStartResponse,
   MfaRecoveryCodesResponse,
-  ApiError,
+  PendingMfaChallenge,
+  RefreshResponse,
+  RegisterRequest,
+  ResetPasswordRequest,
+  SecurityOverview,
+  TenantSummary,
+  VerifyEmailResponse,
 } from '@shared/models';
 
 const STORAGE = {
   refresh: 'zcc.refresh',
   tokens: 'zcc.tokens',
-  user: 'zcc.user',
-  tenantId: 'zcc.tenantId',
   redirect: 'zcc.redirect',
+  mfaChallenge: 'zcc.mfaChallenge',
+  pendingEmail: 'zcc.pendingEmail',
+  clientCode: 'zcc.clientCode',
+  lowRecoveryCodes: 'zcc.lowRecoveryCodes',
 } as const;
 
-/** Decode a base64 string into raw bytes. */
-function base64ToBytes(base64: string): Uint8Array<ArrayBuffer> {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
+const AUTH_API = '/api/v1/auth';
+const LOW_RECOVERY_CODE_THRESHOLD = 3;
 
-/** Encode raw bytes as a base64 string. */
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+/** Only same-app, non-auth paths may be restored after sign-in (no open redirects). */
+function safeRedirect(url: string | null | undefined): string | null {
+  if (!url || !url.startsWith('/') || url.startsWith('//') || url.startsWith('/auth/')) return null;
+  return url;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -75,71 +72,39 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly store = inject(AuthStore);
+  private readonly policy = inject(PolicyStore);
   private readonly destroyRef = inject(DestroyRef);
 
   private refreshTimer: Subscription | null = null;
   private refreshRequest$?: Observable<boolean>;
-  private apiUrl = '/api/v1/auth';
-
-  // "Remember me" refreshes survive the browser session (localStorage);
-  // otherwise they are session-scoped (sessionStorage).
+  private config$?: Observable<AuthConfig>;
+  private clients$?: Observable<TenantSummary[]>;
   private refreshStorage: Storage = sessionStorage;
 
   constructor() {
-    // Effect: when isAuthenticated flips false, kick the user to /auth/login.
-    effect(() => {
-      if (this.store.isInitialized() && !this.store.isAuthenticated()) {
-        // Only redirect if we're not already on an auth page
-        const url = this.router.url;
-        if (!url.startsWith('/auth/')) {
-          this.router.navigate(['/auth/login'], { replaceUrl: true });
-        }
-      }
-    });
-
-    // Effect: schedule a refresh whenever the access token expiry changes.
     effect(() => {
       const expiresAt = this.store.accessTokenExpiresAt();
-      if (!expiresAt) return;
-      this.scheduleRefresh(expiresAt);
+      if (expiresAt) this.scheduleRefresh(expiresAt);
     });
-
     this.destroyRef.onDestroy(() => this.clearRefreshTimer());
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Boot
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-  /**
-   * Try to silently restore the session from stored tokens.
-   * Safe to call on every app boot.
-   */
   initialize(): Observable<boolean> {
     const refreshToken =
       sessionStorage.getItem(STORAGE.refresh) ?? localStorage.getItem(STORAGE.refresh);
     if (!refreshToken) {
-      // No stored session — leave isInitialized false so the boot-time
-      // kick-to-login effect stays inert; route guards handle the redirect.
       this.store.reset();
       return of(false);
     }
-    // Persist into whichever storage the token came from so refreshes stay put.
     this.refreshStorage = sessionStorage.getItem(STORAGE.refresh) ? sessionStorage : localStorage;
     const restored = this.restoreAccessToken(refreshToken);
-    return (restored ? of(true) : this.refresh({ refreshToken }, { silent: true })).pipe(
+    return (restored ? of(true) : this.refresh(refreshToken)).pipe(
       switchMap((ok) => (ok ? this.loadMe() : of(false))),
-      tap((ok) => {
-        // Only mark initialized once the restore has settled. Marking it before
-        // the async refresh/loadMe completes would arm the kick-to-login effect
-        // while isAuthenticated is still false, redirecting a valid refresh
-        // straight to /auth/login.
-        if (ok) {
-          this.store.markInitialized();
-        } else {
-          this.clearLocalSession();
-        }
-      }),
+      tap((ok) => (ok ? this.store.markInitialized() : this.clearLocalSession())),
       catchError(() => {
         this.clearLocalSession();
         return of(false);
@@ -147,26 +112,28 @@ export class AuthService {
     );
   }
 
-  // -------------------------------------------------------------------------
-  // Client code
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Public data
+  // ---------------------------------------------------------------------------
 
-  /**
-   * The tenant list is public and static for the lifetime of the app, so the
-   * request is shared: concurrent callers join the in-flight request and later
-   * callers replay the cached response instead of re-hitting the API.
-   */
-  private clients$?: Observable<any>;
-
-  loadClients(): Observable<any> {
-    this.clients$ ??= this.http.get<any>(`${this.apiUrl}/clients`).pipe(
-      tap((res) => {
-        if (res && res.tenants) {
-          this.store.setAvailableTenants(res.tenants);
-        }
-      }),
+  /** Public auth policy (registration flag, password policy). Cached for the app lifetime. */
+  config(): Observable<AuthConfig> {
+    this.config$ ??= this.http.get<AuthConfig>(`${AUTH_API}/config`).pipe(
       catchError((err) => {
-        // Don't cache failures — let the next caller retry.
+        this.config$ = undefined;
+        return throwError(() => err);
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+    return this.config$;
+  }
+
+  /** Organizations offered in the sign-in picker. */
+  clients(): Observable<TenantSummary[]> {
+    this.clients$ ??= this.http.get<{ tenants: TenantSummary[] }>(`${AUTH_API}/clients`).pipe(
+      map((res) => res.tenants ?? []),
+      tap((tenants) => this.store.setAvailableTenants(tenants)),
+      catchError((err) => {
         this.clients$ = undefined;
         return throwError(() => err);
       }),
@@ -175,349 +142,325 @@ export class AuthService {
     return this.clients$;
   }
 
-  private me$?: Observable<MeResponse>;
-  private meCacheTime = 0;
-  private readonly MeCache = 5 * 60 * 1000;
-
-  // -------------------------------------------------------------------------
-  // Login / MFA
-  // -------------------------------------------------------------------------
-
-  /**
-   * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
-   * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
-   */
-  private async encryptAesCbc(
-    plainText: string,
-    keyBase64: string,
-    ivBase64: string
-  ): Promise<string> {
-    const key = await crypto.subtle.importKey(
-      'raw',
-      base64ToBytes(keyBase64),
-      { name: 'AES-CBC' },
-      false,
-      ['encrypt']
-    );
-    const ciphertext = await crypto.subtle.encrypt(
-      { name: 'AES-CBC', iv: base64ToBytes(ivBase64) },
-      key,
-      new TextEncoder().encode(plainText)
-    );
-    return bytesToBase64(new Uint8Array(ciphertext));
+  get lastClientCode(): string {
+    return localStorage.getItem(STORAGE.clientCode) ?? '';
   }
 
+  // ---------------------------------------------------------------------------
+  // Sign in
+  // ---------------------------------------------------------------------------
+
   /**
-   * Login. Returns either an MfaChallengeResponse (if user has MFA enabled) or
-   * a LoginSuccessResponse. Callers must check `mfaRequired` on the result.
+   * Sign in. Navigates on success (dashboard / intended route), on a 2FA
+   * challenge (/auth/two-factor) and on lock/disable (/auth/account-locked).
+   * Other failures are rethrown for the form to display.
    */
-  /** Login using raw tokens (e.g. following OAuth callback redirects). */
-  loginWithTokens(accessToken: string, refreshToken: string): Observable<boolean> {
-    this.store.setLoading(true);
-    this.store.setError(null);
-
-    this.store.updateTokens({
-      accessToken,
-      refreshToken,
-      accessTokenExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15m default
-      refreshTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7d default
-      sessionId: 'oauth-session',
-    });
-    this.persistTokens();
-
-    return this.loadMe().pipe(
-      tap((ok) => {
-        this.store.setLoading(false);
-        if (ok) {
-          const redirect = sessionStorage.getItem(STORAGE.redirect) ?? '/dashboard';
-          sessionStorage.removeItem(STORAGE.redirect);
-          this.router.navigateByUrl(redirect, { replaceUrl: true });
-        }
-      }),
-      catchError((err) => {
-        this.clearLocalSession();
-        this.store.setLoading(false);
-        return of(false);
-      })
-    );
-  }
-
   login(request: LoginRequest): Observable<LoginResponse> {
-    this.store.setLoading(true);
-    this.store.setError(null);
     this.refreshStorage = request.rememberMe ? localStorage : sessionStorage;
-    return this.http.get<string[]>(`${this.apiUrl}/encryption-key`).pipe(
-      switchMap((keyToken) => {
-        const [keyStr, ivStr] = keyToken;
-        return from(
-          Promise.all([
-            this.encryptAesCbc(request.clientCode, keyStr, ivStr),
-            this.encryptAesCbc(request.email, keyStr, ivStr),
-            this.encryptAesCbc(request.password, keyStr, ivStr),
-          ])
-        ).pipe(
-          switchMap(([encClientCode, encEmail, encPassword]) => {
-            const encryptedRequest = {
-              ...request,
-              clientCode: encClientCode,
-              email: encEmail,
-              password: encPassword,
-              keyToken: keyToken,
-            };
-            return this.http.post<LoginResponse>(`${this.apiUrl}/login`, encryptedRequest, {
-              headers: {
-                'X-Payload-Encrypted': 'true',
-              },
-            });
-          })
-        );
-      }),
+    const body: LoginRequest = { ...request, email: request.email.trim().toLowerCase() };
+    return this.http.post<LoginResponse>(`${AUTH_API}/login`, body).pipe(
       tap((res) => {
-        if (this.isMfaChallenge(res)) {
-          sessionStorage.setItem('zcc.mfaToken', res.mfaToken);
-          sessionStorage.setItem('zcc.mfaMethod', (res as MfaChallengeResponse).mfaMethods?.[0] ?? 'totp');
-          this.store.setLoading(false);
-          this.router.navigate(['/auth/mfa-verify'], { replaceUrl: true });
+        localStorage.setItem(STORAGE.clientCode, request.clientCode);
+        sessionStorage.removeItem(STORAGE.pendingEmail);
+        if (res.mfaRequired) {
+          this.storeMfaChallenge(res);
+          void this.router.navigate(['/auth/two-factor'], { replaceUrl: true });
           return;
         }
-        this.handleSuccess(res);
+        this.completeSignIn(res);
       }),
       catchError((err) => {
-        const code = this.extractErrorCode(err);
-        if (code === 'ACCOUNT_LOCKED') {
-          const details = (err as HttpErrorResponse)?.error?.error ?? {};
-          this.store.setLoading(false);
-          this.router.navigate(['/auth/account-locked'], {
-            queryParams: {
-              lockTime: details.retryAfterSeconds ?? 900,
-              reason: details.message ?? 'Too many failed login attempts',
-            },
+        const code = apiErrorCode(err);
+        if (code === 'EMAIL_NOT_VERIFIED') sessionStorage.setItem(STORAGE.pendingEmail, body.email);
+        if (code === 'ACCOUNT_LOCKED' || code === 'ACCOUNT_DISABLED') {
+          void this.router.navigate(['/auth/account-locked'], {
+            queryParams: { reason: code === 'ACCOUNT_DISABLED' ? 'disabled' : 'locked' },
           });
-          return throwError(() => err);
         }
-        if (code === 'ACCOUNT_SUSPENDED') {
-          const details = (err as HttpErrorResponse)?.error?.error ?? {};
-          this.store.setLoading(false);
-          this.router.navigate(['/auth/account-suspended'], {
-            queryParams: {
-              reason: details.message ?? 'Account suspended by administrator',
-            },
-          });
-          return throwError(() => err);
-        }
-        this.store.setError(this.extractErrorMessage(err), this.extractErrorCode(err));
-        this.store.setLoading(false);
         return throwError(() => err);
       })
     );
   }
 
-  /** Complete an MFA challenge. */
-  loginMfa(request: LoginMfaRequest): Observable<LoginSuccessResponse> {
-    this.store.setLoading(true);
-    this.store.setError(null);
-    this.refreshStorage = request.rememberMe ? localStorage : sessionStorage;
-    return this.http
-      .post<LoginSuccessResponse>(`${this.apiUrl}/login/mfa`, request)
-      .pipe(
-        tap((res) => this.handleSuccess(res)),
-        catchError((err) => {
-          this.store.setError(this.extractErrorMessage(err), this.extractErrorCode(err));
-          this.store.setLoading(false);
-          return throwError(() => err);
-        })
-      );
+  pendingMfaChallenge(): PendingMfaChallenge | null {
+    try {
+      const raw = sessionStorage.getItem(STORAGE.mfaChallenge);
+      const challenge = raw ? (JSON.parse(raw) as PendingMfaChallenge) : null;
+      if (!challenge?.mfaToken || Date.parse(challenge.expiresAt) <= Date.now()) {
+        sessionStorage.removeItem(STORAGE.mfaChallenge);
+        return null;
+      }
+      return challenge;
+    } catch {
+      sessionStorage.removeItem(STORAGE.mfaChallenge);
+      return null;
+    }
   }
 
-  // -------------------------------------------------------------------------
-  // Refresh
-  // -------------------------------------------------------------------------
+  cancelMfaChallenge(): void {
+    sessionStorage.removeItem(STORAGE.mfaChallenge);
+    void this.router.navigate(['/auth/login'], { replaceUrl: true });
+  }
 
-  /**
-   * Rotate the access+refresh token pair. Used both for proactive scheduling
-   * and reactively (interceptor) on 401.
-   * `silent` = true suppresses loading state (background refresh).
-   */
-  refresh(
-    { refreshToken }: { refreshToken: string },
-    opts: { silent?: boolean } = {}
-  ): Observable<boolean> {
+  verifyTwoFactor(code: string): Observable<LoginSuccessResponse> {
+    return this.completeChallenge('login/mfa', code);
+  }
+
+  verifyRecoveryCode(code: string): Observable<LoginSuccessResponse> {
+    return this.completeChallenge('login/recovery-code', code);
+  }
+
+  /** Pending email from a sign-in blocked on verification, for the resend form. */
+  get pendingVerificationEmail(): string {
+    return sessionStorage.getItem(STORAGE.pendingEmail) ?? '';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tokens
+  // ---------------------------------------------------------------------------
+
+  /** Rotate the token pair. Concurrent callers share one request. */
+  refresh(refreshToken: string): Observable<boolean> {
     if (this.refreshRequest$) return this.refreshRequest$;
-    if (!opts.silent) this.store.setLoading(true);
     this.refreshRequest$ = this.http
-      .post<RefreshResponse>(`${this.apiUrl}/refresh`, { refreshToken })
+      .post<RefreshResponse>(`${AUTH_API}/refresh`, { refreshToken })
       .pipe(
         tap((res) => {
           this.store.updateTokens(res);
           this.persistTokens();
         }),
-        switchMap(() => of(true)),
+        map(() => true),
         catchError(() => {
           this.clearLocalSession();
           return of(false);
         }),
-        finalize(() => {
-          this.refreshRequest$ = undefined;
-          if (!opts.silent) this.store.setLoading(false);
-        }),
+        finalize(() => (this.refreshRequest$ = undefined)),
         shareReplay({ bufferSize: 1, refCount: false })
       );
     return this.refreshRequest$;
   }
 
-  // -------------------------------------------------------------------------
-  // Logout
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Sign out
+  // ---------------------------------------------------------------------------
 
+  /** Revoke the server session, then clear every piece of user-specific client state. */
   logout(): Observable<void> {
-    this.clearRefreshTimer();
-    return of(void 0).pipe(
-      tap(() => {
+    const hasSession = !!this.store.accessToken();
+    const revoke$ = hasSession
+      ? this.http.post<void>(`${AUTH_API}/logout`, {}).pipe(catchError(() => of(undefined)))
+      : of(undefined);
+    return revoke$.pipe(
+      map(() => undefined),
+      finalize(() => {
         this.clearLocalSession();
-        this.router.navigate(['/auth/login'], { replaceUrl: true });
+        sessionStorage.removeItem(STORAGE.redirect);
+        void this.router.navigate(['/auth/login'], { replaceUrl: true });
       })
     );
   }
 
-  /** Logout from every device / session. */
-  logoutAll(): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/logout-all`, {}).pipe(
-      tap(() => this.clearLocalSession()),
-      catchError((err) => throwError(() => err))
+  /** Revoke every session for this account (requires the password), then sign out here. */
+  logoutAll(password: string): Observable<void> {
+    return this.http.post<void>(`${AUTH_API}/logout-all`, { password }).pipe(
+      tap(() => {
+        this.clearLocalSession();
+        void this.router.navigate(['/auth/login'], { replaceUrl: true });
+      })
     );
   }
 
-  // -------------------------------------------------------------------------
-  // Tenant
-  // -------------------------------------------------------------------------
+  /**
+   * Called when the API rejects the session (expired / revoked). Keeps the
+   * current route so sign-in can return to it — never replays the failed request.
+   */
+  expireSession(): void {
+    this.clearLocalSession();
+    // Already on a public page: nothing to protect, and redirecting could loop.
+    if (this.router.url.startsWith('/auth/')) return;
+    const current = safeRedirect(this.router.url);
+    if (current) sessionStorage.setItem(STORAGE.redirect, current);
+    void this.router.navigate(['/auth/session-expired'], { replaceUrl: true });
+  }
 
-  // -------------------------------------------------------------------------
-  // /auth/me — load the full user context
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Current user
+  // ---------------------------------------------------------------------------
 
   loadMe(): Observable<boolean> {
-    const now = Date.now();
-    if (this.me$ && now - this.meCacheTime < this.MeCache) {
-      return this.me$.pipe(
-        switchMap(() => of(true)),
-        catchError(() => of(false))
-      );
-    }
-    return this.http.get<MeResponse>(`${this.apiUrl}/me`).pipe(
+    return this.http.get<MeResponse>(`${AUTH_API}/me`).pipe(
       tap((me) => {
-        this.meCacheTime = now;
-        this.store.setSession({
+        this.store.setProfile({
           user: me.user,
           tenant: me.tenant,
-          accessToken: this.store.accessToken() ?? '',
-          refreshToken: this.store.refreshToken() ?? '',
-          accessTokenExpiresAt: this.store.accessTokenExpiresAt()?.toISOString() ?? new Date().toISOString(),
-          refreshTokenExpiresAt: this.store.refreshTokenExpiresAt()?.toISOString() ?? new Date().toISOString(),
-          sessionId: this.store.sessionId() ?? '',
           permissions: me.permissions,
           menu: me.menu,
+          mfaSetupRequired: me.mfaSetupRequired,
         });
       }),
-      switchMap(() => of(true)),
-      catchError((err) => {
-        this.me$ = undefined;
-        return of(false);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
+      map(() => true),
+      catchError(() => of(false))
     );
-  }
-
-  // -------------------------------------------------------------------------
-  // Password
-  // -------------------------------------------------------------------------
-
-  forgotPassword(req: ForgotPasswordRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/forgot-password`, req);
-  }
-
-  resetPassword(req: ResetPasswordRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/reset-password`, req);
   }
 
   /** Pass a PNG/JPEG/WebP data URL, or null to remove the avatar. */
   updateAvatar(avatar: string | null): Observable<void> {
     return this.http
-      .put<{ avatarUrl: string | null }>(`${this.apiUrl}/me/avatar`, { avatar })
+      .put<{ avatarUrl: string | null }>(`${AUTH_API}/me/avatar`, { avatar })
       .pipe(
         tap(({ avatarUrl }) => this.store.patchUser({ avatarUrl })),
-        switchMap(() => of(undefined))
+        map(() => undefined)
       );
   }
 
-  changePassword(req: ChangePasswordRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/change-password`, req);
+  // ---------------------------------------------------------------------------
+  // Onboarding
+  // ---------------------------------------------------------------------------
+
+  register(request: RegisterRequest): Observable<GenericMessageResponse> {
+    return this.http.post<GenericMessageResponse>(`${AUTH_API}/register`, request);
   }
 
-  // -------------------------------------------------------------------------
-  // MFA enrollment
-  // -------------------------------------------------------------------------
-
-  startMfaEnrollment(): Observable<MfaEnrollStartResponse> {
-    return this.http.post<MfaEnrollStartResponse>(`${this.apiUrl}/mfa/enroll`, {});
+  previewInvitation(token: string): Observable<InvitationPreview> {
+    return this.http.post<InvitationPreview>(`${AUTH_API}/invitations/preview`, { token });
   }
 
-  confirmMfaEnrollment(req: MfaEnrollConfirmRequest): Observable<MfaEnrollConfirmResponse> {
-    return this.http.post<MfaEnrollConfirmResponse>(`${this.apiUrl}/mfa/confirm`, req);
-  }
-
-  disableMfa(req: MfaDisableRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/mfa/disable`, req);
-  }
-
-  regenerateRecoveryCodes(): Observable<MfaRecoveryCodesResponse> {
-    return this.http.post<MfaRecoveryCodesResponse>(`${this.apiUrl}/mfa/recovery-codes`, {});
-  }
-
-  // -------------------------------------------------------------------------
-  // Sessions
-  // -------------------------------------------------------------------------
-
-  /** GET /auth/sessions — list all active sessions for the current user. */
-  getSessions(): Observable<{ sessions: any[] }> {
-    return this.http.get<{ sessions: any[] }>(`${this.apiUrl}/sessions`);
-  }
-
-  /** DELETE /auth/session/:id — revoke a specific session. */
-  revokeSession(sessionId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/sessions/${sessionId}`);
-  }
-
-  /** DELETE /auth/sessions — revoke all sessions except current. */
-  revokeAllSessions(): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/sessions`);
-  }
-
-  // -------------------------------------------------------------------------
-  // Email Verification
-  // -------------------------------------------------------------------------
-
-  /** POST /auth/verify-email — verify email via deep-link token or OTP code. */
-  verifyEmail(token: string, otp: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/verify-email`, { token, otp }).pipe(
-      tap(() => sessionStorage.removeItem('zcc.pendingEmail'))
+  acceptInvitation(request: AcceptInvitationRequest): Observable<AcceptInvitationResponse> {
+    return this.http.post<AcceptInvitationResponse>(`${AUTH_API}/invitations/accept`, request).pipe(
+      tap((res) => {
+        if (res.clientCode) localStorage.setItem(STORAGE.clientCode, res.clientCode.toLowerCase());
+      })
     );
   }
 
-  /** POST /auth/resend-otp — resend verification OTP to email. */
-  resendOtp(email: string): Observable<void> {
-    sessionStorage.setItem('zcc.pendingEmail', email);
-    return this.http.post<void>(`${this.apiUrl}/resend-otp`, { email });
+  verifyEmail(token: string): Observable<VerifyEmailResponse> {
+    return this.http.post<VerifyEmailResponse>(`${AUTH_API}/verify-email`, { token }).pipe(
+      tap(() => sessionStorage.removeItem(STORAGE.pendingEmail))
+    );
   }
 
-  // -------------------------------------------------------------------------
+  resendVerification(email: string): Observable<GenericMessageResponse> {
+    return this.http.post<GenericMessageResponse>(`${AUTH_API}/resend-verification`, { email });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Password
+  // ---------------------------------------------------------------------------
+
+  forgotPassword(email: string): Observable<GenericMessageResponse> {
+    return this.http.post<GenericMessageResponse>(`${AUTH_API}/forgot-password`, { email });
+  }
+
+  validateResetToken(token: string): Observable<boolean> {
+    return this.http
+      .post<{ valid: boolean }>(`${AUTH_API}/reset-password/validate`, { token })
+      .pipe(map((res) => res.valid));
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${AUTH_API}/reset-password`, request);
+  }
+
+  changePassword(request: ChangePasswordRequest): Observable<ChangePasswordResponse> {
+    return this.http.post<ChangePasswordResponse>(`${AUTH_API}/change-password`, request);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Account security
+  // ---------------------------------------------------------------------------
+
+  securityOverview(): Observable<SecurityOverview> {
+    return this.http.get<SecurityOverview>(`${AUTH_API}/security`);
+  }
+
+  startMfaEnrollment(password: string): Observable<MfaEnrollStartResponse> {
+    return this.http.post<MfaEnrollStartResponse>(`${AUTH_API}/mfa/enroll`, { password });
+  }
+
+  confirmMfaEnrollment(enrollmentToken: string, code: string): Observable<MfaEnrollConfirmResponse> {
+    return this.http
+      .post<MfaEnrollConfirmResponse>(`${AUTH_API}/mfa/confirm`, { enrollmentToken, code })
+      .pipe(
+        tap(() => {
+          this.store.patchUser({ mfaEnabled: true });
+          this.store.setMfaSetupRequired(false);
+          sessionStorage.removeItem(STORAGE.lowRecoveryCodes);
+        })
+      );
+  }
+
+  disableMfa(password: string, code: string): Observable<void> {
+    return this.http
+      .post<void>(`${AUTH_API}/mfa/disable`, { password, code })
+      .pipe(tap(() => this.store.patchUser({ mfaEnabled: false })));
+  }
+
+  regenerateRecoveryCodes(password: string): Observable<MfaRecoveryCodesResponse> {
+    return this.http
+      .post<MfaRecoveryCodesResponse>(`${AUTH_API}/mfa/recovery-codes`, { password })
+      .pipe(tap(() => sessionStorage.removeItem(STORAGE.lowRecoveryCodes)));
+  }
+
+  sessions(): Observable<ActiveSession[]> {
+    return this.http
+      .get<{ sessions: ActiveSession[] }>(`${AUTH_API}/sessions`)
+      .pipe(map((res) => res.sessions));
+  }
+
+  revokeSession(sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${AUTH_API}/sessions/${encodeURIComponent(sessionId)}`);
+  }
+
+  revokeOtherSessions(): Observable<{ revoked: number }> {
+    return this.http.delete<{ revoked: number }>(`${AUTH_API}/sessions`);
+  }
+
+  /** Set after a recovery-code sign-in left few codes; drives the regenerate prompt. */
+  get lowRecoveryCodes(): number | null {
+    const value = sessionStorage.getItem(STORAGE.lowRecoveryCodes);
+    return value === null ? null : Number(value);
+  }
+
+  // ---------------------------------------------------------------------------
   // Internals
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-  private isMfaChallenge(res: LoginResponse): res is MfaChallengeResponse {
-    return (res as MfaChallengeResponse).mfaRequired === true;
+  private completeChallenge(path: string, code: string): Observable<LoginSuccessResponse> {
+    const challenge = this.pendingMfaChallenge();
+    if (!challenge) {
+      void this.router.navigate(['/auth/login'], { replaceUrl: true });
+      return throwError(() => new Error('No pending two-factor challenge'));
+    }
+    return this.http
+      .post<LoginSuccessResponse>(`${AUTH_API}/${path}`, { mfaToken: challenge.mfaToken, code })
+      .pipe(
+        tap((res) => {
+          sessionStorage.removeItem(STORAGE.mfaChallenge);
+          this.completeSignIn(res);
+        }),
+        catchError((err) => {
+          const errorCode = apiErrorCode(err);
+          // The server discards the challenge on expiry / exhausted attempts.
+          if (errorCode === 'MFA_CHALLENGE_EXPIRED' || errorCode === 'MFA_TOO_MANY_ATTEMPTS') {
+            sessionStorage.removeItem(STORAGE.mfaChallenge);
+          }
+          return throwError(() => err);
+        })
+      );
   }
 
-  private handleSuccess(res: LoginSuccessResponse): void {
+  private storeMfaChallenge(res: MfaChallengeResponse): void {
+    const pending: PendingMfaChallenge = {
+      mfaToken: res.mfaToken,
+      mfaMethod: res.mfaMethod,
+      expiresAt: res.expiresAt,
+    };
+    sessionStorage.setItem(STORAGE.mfaChallenge, JSON.stringify(pending));
+  }
+
+  private completeSignIn(res: LoginSuccessResponse): void {
+    // A new identity must never inherit the previous user's cached policy.
+    this.policy.clear();
     this.store.setSession({
       user: res.user,
       tenant: res.tenant,
@@ -527,30 +470,38 @@ export class AuthService {
       refreshTokenExpiresAt: res.refreshTokenExpiresAt,
       sessionId: res.sessionId,
     });
+    this.store.setMfaSetupRequired(res.mfaSetupRequired);
+    this.store.markInitialized();
     this.persistTokens();
-    this.persistUser(res.user);
-    sessionStorage.setItem(STORAGE.tenantId, res.tenant.id);
 
-    // Continue: load /me so we get permissions + menu
+    if (
+      res.recoveryCodesRemaining !== undefined &&
+      res.recoveryCodesRemaining <= LOW_RECOVERY_CODE_THRESHOLD
+    ) {
+      sessionStorage.setItem(STORAGE.lowRecoveryCodes, String(res.recoveryCodesRemaining));
+    }
+
     this.loadMe().subscribe();
 
-    // Redirect to the originally-requested URL, or the user's default landing
-    // page, or /dashboard.
-    const redirect =
-      sessionStorage.getItem(STORAGE.redirect) ??
-      res.defaultLandingPage ??
-      '/dashboard';
+    const intended = safeRedirect(sessionStorage.getItem(STORAGE.redirect));
     sessionStorage.removeItem(STORAGE.redirect);
-    this.router.navigateByUrl(redirect, { replaceUrl: true });
+    const destination = res.mfaSetupRequired
+      ? '/account/security'
+      : this.lowRecoveryCodes !== null
+        ? '/account/security'
+        : (intended ?? safeRedirect(res.defaultLandingPage) ?? '/dashboard');
+    void this.router.navigateByUrl(destination, { replaceUrl: true });
   }
 
   private scheduleRefresh(expiresAt: Date): void {
     this.clearRefreshTimer();
     const msUntilRefresh = Math.max(expiresAt.getTime() - Date.now() - 60_000, 5_000);
     this.refreshTimer = timer(msUntilRefresh).subscribe(() => {
-      const refresh = this.store.refreshToken();
-      if (!refresh) return;
-      this.refresh({ refreshToken: refresh }, { silent: true }).subscribe();
+      const refreshToken = this.store.refreshToken();
+      if (!refreshToken) return;
+      this.refresh(refreshToken).subscribe((ok) => {
+        if (!ok) this.expireSession();
+      });
     });
   }
 
@@ -565,23 +516,29 @@ export class AuthService {
     const otherStorage = this.refreshStorage === localStorage ? sessionStorage : localStorage;
     otherStorage.removeItem(STORAGE.refresh);
     this.refreshStorage.setItem(STORAGE.refresh, state.refreshToken);
-    sessionStorage.setItem(STORAGE.tokens, JSON.stringify({
-      accessToken: state.accessToken,
-      refreshToken: state.refreshToken,
-      accessTokenExpiresAt: state.accessTokenExpiresAt?.toISOString(),
-      refreshTokenExpiresAt: state.refreshTokenExpiresAt?.toISOString(),
-      sessionId: state.sessionId,
-    }));
+    sessionStorage.setItem(
+      STORAGE.tokens,
+      JSON.stringify({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        accessTokenExpiresAt: state.accessTokenExpiresAt?.toISOString(),
+        refreshTokenExpiresAt: state.refreshTokenExpiresAt?.toISOString(),
+        sessionId: state.sessionId,
+      })
+    );
   }
 
   private restoreAccessToken(refreshToken: string): boolean {
     try {
-      const tokens: RefreshResponse = JSON.parse(sessionStorage.getItem(STORAGE.tokens) ?? 'null');
-      if (!tokens || tokens.refreshToken !== refreshToken ||
-          typeof tokens.accessToken !== 'string' || !tokens.accessToken ||
-          typeof tokens.sessionId !== 'string' || !tokens.sessionId ||
-          !(Date.parse(tokens.accessTokenExpiresAt) > Date.now() + 60_000) ||
-          !(Date.parse(tokens.refreshTokenExpiresAt) > Date.now())) {
+      const tokens = JSON.parse(sessionStorage.getItem(STORAGE.tokens) ?? 'null') as RefreshResponse | null;
+      if (
+        !tokens ||
+        tokens.refreshToken !== refreshToken ||
+        !tokens.accessToken ||
+        !tokens.sessionId ||
+        !(Date.parse(tokens.accessTokenExpiresAt) > Date.now() + 60_000) ||
+        !(Date.parse(tokens.refreshTokenExpiresAt) > Date.now())
+      ) {
         return false;
       }
       // Only a scheduling hint: /me still verifies this token server-side.
@@ -593,64 +550,26 @@ export class AuthService {
     }
   }
 
-  private persistUser(user: unknown): void {
-    sessionStorage.setItem(STORAGE.user, JSON.stringify(user));
-  }
-
   private clearLocalSession(): void {
     this.clearRefreshTimer();
     sessionStorage.removeItem(STORAGE.tokens);
     sessionStorage.removeItem(STORAGE.refresh);
-    sessionStorage.removeItem(STORAGE.user);
-    sessionStorage.removeItem(STORAGE.tenantId);
+    sessionStorage.removeItem(STORAGE.mfaChallenge);
+    sessionStorage.removeItem(STORAGE.lowRecoveryCodes);
     localStorage.removeItem(STORAGE.refresh);
-    sessionStorage.removeItem('zcc.mfaMethod');
+    this.policy.clear();
     this.store.reset();
   }
 
-  private extractErrorMessage(err: unknown): string {
-    if (err instanceof HttpErrorResponse) {
-      const api = err.error as ApiError | null;
-      if (api?.error?.message) return api.error.message;
-      if (err.status === 0) return 'Cannot reach the server. Check your network.';
-      if (err.status === 401) return 'Session expired. Please log in again.';
-      if (err.status === 403) return 'You do not have permission to do that.';
-      if (err.status === 423) return 'Account locked. Try again later.';
-      if (err.status === 429) return 'Too many attempts. Please slow down.';
-      if (err.status >= 500) return 'Server error. Please try again later.';
-    }
-    return 'An unexpected error occurred.';
-  }
-
-  private extractErrorCode(err: unknown): string | null {
-    if (err instanceof HttpErrorResponse) {
-      const api = err.error as ApiError | null;
-      return api?.error?.code ?? null;
-    }
-    return null;
-  }
-
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Signal accessors for components
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   get isAuthenticated() {
     return this.store.isAuthenticated;
   }
 
-  get isLoading() {
-    return this.store.isLoading;
-  }
-
-  get error() {
-    return this.store.error;
-  }
-
   get user() {
     return this.store.user;
-  }
-
-  get errorCode() {
-    return this.store.errorCode;
   }
 }

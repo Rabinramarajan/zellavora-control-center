@@ -81,9 +81,9 @@ export const emailTemplates = {
     `,
   }),
 
-  passwordResetEmail: (resetLink: string, expiryHours: number = 1) => ({
+  passwordResetEmail: (resetLink: string, expiryMinutes: number = 15) => ({
     subject: 'Reset Your ZCC Password',
-    text: `Click this link to reset your password: ${resetLink}. This link expires in ${expiryHours} hour(s).`,
+    text: `Click this link to reset your password: ${resetLink}. This link expires in ${expiryMinutes} minutes.`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background: #ffffff;">
         <div style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
@@ -96,7 +96,7 @@ export const emailTemplates = {
           </div>
           <p style="color: #6b7280; font-size: 14px;">Or copy this link: ${resetLink}</p>
           <div style="border-top: 1px solid #e5e7eb; margin: 20px 0; padding-top: 20px;">
-            <p style="font-size: 12px; color: #9ca3af; margin: 0;">This link will expire in ${expiryHours} hour(s). If you didn't request a password reset, you can safely ignore this email.</p>
+            <p style="font-size: 12px; color: #9ca3af; margin: 0;">This link will expire in ${expiryMinutes} minutes. If you didn't request a password reset, you can safely ignore this email.</p>
           </div>
         </div>
         <div style="background: #f9fafb; padding: 15px 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 11px; color: #9ca3af;">

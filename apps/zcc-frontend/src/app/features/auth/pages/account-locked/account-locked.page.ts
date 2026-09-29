@@ -1,0 +1,63 @@
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { catchError, map, of } from 'rxjs';
+import { AuthService } from '@core/auth/auth.service';
+
+/**
+ * Safe explanation for a locked or disabled account. Deliberately omits
+ * thresholds and exact unlock times.
+ */
+@Component({
+  selector: 'app-account-locked-page',
+  standalone: true,
+  imports: [RouterLink],
+  template: `
+    <section class="auth-page" aria-labelledby="locked-title">
+      <div class="auth-page__icon auth-page__icon--danger" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10.5" width="16" height="10" rx="2" /><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5M12 14.5v2" />
+        </svg>
+      </div>
+      <header>
+        <h1 id="locked-title" class="auth-title">
+          {{ disabled() ? 'Account unavailable' : 'Account temporarily locked' }}
+        </h1>
+        <p class="auth-lead">
+          @if (disabled()) {
+            This account has been disabled. Contact your administrator or support to restore access.
+          } @else {
+            We've paused sign-in to protect your account. Try again later, or reset your password to
+            regain access now.
+          }
+        </p>
+      </header>
+
+      <div class="flex flex-col gap-3">
+        @if (!disabled()) {
+          <a class="auth-btn auth-btn--primary" routerLink="/auth/forgot-password">Reset password</a>
+        }
+        <a class="auth-btn auth-btn--secondary" [href]="'mailto:' + supportEmail()">Contact support</a>
+      </div>
+
+      <p class="auth-footer-note">
+        <a class="auth-link" routerLink="/auth/login">Back to sign in</a>
+      </p>
+    </section>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AccountLockedPage {
+  private readonly route = inject(ActivatedRoute);
+
+  protected readonly disabled = computed(() => this.route.snapshot.queryParamMap.get('reason') === 'disabled');
+  protected readonly supportEmail = toSignal(
+    inject(AuthService)
+      .config()
+      .pipe(
+        map((c) => c.supportEmail),
+        catchError(() => of('support@zellavora.com'))
+      ),
+    { initialValue: 'support@zellavora.com' }
+  );
+}

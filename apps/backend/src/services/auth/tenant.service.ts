@@ -47,6 +47,26 @@ export class TenantService {
     return TenantService.fromOrganization(org);
   }
 
+  /** Like resolveByClientCode, but returns null so callers can stay enumeration-resistant. */
+  static async findByClientCode(code: string): Promise<Tenant | null> {
+    const org = await prisma.organization.findFirst({
+      where: { clientCode: { equals: code, mode: 'insensitive' }, isDeleted: false },
+    });
+    return org ? TenantService.fromOrganization(org) : null;
+  }
+
+  /** Organizations offered in the sign-in organization picker. */
+  static async listActive(): Promise<
+    Array<Pick<Tenant, 'id' | 'name' | 'clientCode' | 'logoUrl' | 'plan'>>
+  > {
+    const orgs = await prisma.organization.findMany({
+      where: { isDeleted: false },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, clientCode: true, logoUrl: true, plan: true },
+    });
+    return orgs;
+  }
+
   /** Get a tenant by id (for the /auth/me payload). */
   static async getById(orgId: string): Promise<Tenant | null> {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });

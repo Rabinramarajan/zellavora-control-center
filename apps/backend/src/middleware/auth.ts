@@ -67,10 +67,11 @@ export const authenticate = async (
 
     attachMetadata(req);
 
-    // Touch the session for sliding-window idle tracking
-    SessionService.touch(claims.sid).catch(() => {
-      /* best-effort */
-    });
+    // Access tokens outlive a logout by up to their TTL unless the session is
+    // checked here; this is what makes logout / revoke / password reset immediate.
+    if (!(await SessionService.touchIfActive(claims.sid, claims.sub))) {
+      throw new AppError('Session expired or revoked', 401, 'SESSION_REVOKED');
+    }
 
     next();
   } catch (e) {

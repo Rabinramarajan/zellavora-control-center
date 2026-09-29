@@ -97,12 +97,34 @@ export class SessionService {
     };
   }
 
-  /** Update last_activity_at; called on each authenticated request. */
-  static async touch(sessionId: string): Promise<void> {
-    await prisma.session.update({
-      where: { id: sessionId },
+  /**
+   * Update last_activity_at when the session is still live. Returns false for a
+   * revoked, expired or foreign session — one query on every authenticated request.
+   */
+  static async touchIfActive(sessionId: string, userId: string): Promise<boolean> {
+    const { count } = await prisma.session.updateMany({
+      where: { id: sessionId, userId, isActive: true, expiresAt: { gt: new Date() } },
       data: { lastActivityAt: new Date() },
     });
+    return count === 1;
+  }
+
+  /** Revoke a session owned by `userId`. Returns false when no such live session exists. */
+  static async revokeOwned(sessionId: string, userId: string): Promise<boolean> {
+    const { count } = await prisma.session.updateMany({
+      where: { id: sessionId, userId, isActive: true },
+      data: { isActive: false, lastActivityAt: new Date() },
+    });
+    return count === 1;
+  }
+
+  /** Revoke every live session for a user except `keepSessionId`. */
+  static async revokeAllExcept(userId: string, keepSessionId: string): Promise<number> {
+    const { count } = await prisma.session.updateMany({
+      where: { userId, isActive: true, id: { not: keepSessionId } },
+      data: { isActive: false, lastActivityAt: new Date() },
+    });
+    return count;
   }
 
   /** Revoke a single session. */

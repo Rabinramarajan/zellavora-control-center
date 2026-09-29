@@ -149,6 +149,7 @@ model User {
   mfaEnrolledAt  DateTime?    @map("mfa_enrolled_at") @db.Timestamptz
   mfaMethod      String?      @map("mfa_method")      // email_otp, authenticator, sms
   mfaSecret      String?      @map("mfa_secret")
+  mfaLastUsedCounter Int?     @map("mfa_last_used_counter")
   recoveryCodes  Json?        @map("recovery_codes")
   otp            String?
   
@@ -438,6 +439,9 @@ model Invitation {
   organizationId String?  @map("organization_id") @db.Uuid
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   role           String   @default("employee") @map("role")
+  firstName      String?  @map("first_name")
+  lastName       String?  @map("last_name")
+  userId         String?  @map("user_id") @db.Uuid
   departmentId   String?  @map("department_id") @db.Uuid
   invitedById    String?  @map("invited_by_id") @db.Uuid
   invitedBy      User?    @relation("InvitedBy", fields: [invitedById], references: [id])
@@ -594,6 +598,29 @@ model MobileVerification {
   @@unique([mobile])
   @@index([userId])
   @@map("mobile_verifications")
+}
+
+// ============================================================================
+// AUTH CHALLENGE — short-lived server-side state (2FA login, TOTP enrollment)
+// ============================================================================
+
+model AuthChallenge {
+  id             String    @id @default(uuid()) @db.Uuid
+  tokenHash      String    @unique @map("token_hash")
+  purpose        String    // mfa_login | mfa_enrollment
+  userId         String    @map("user_id") @db.Uuid
+  organizationId String?   @map("organization_id") @db.Uuid
+  method         String?
+  payload        String?   // encrypted, purpose-specific
+  rememberMe     Boolean   @default(false) @map("remember_me")
+  attempts       Int       @default(0)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz
+  consumedAt     DateTime? @map("consumed_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+  @@map("auth_challenges")
 }
 
 // ============================================================================

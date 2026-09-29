@@ -30,6 +30,7 @@
             ],
             "styles": [
               "src/styles/global.css",
+              "src/styles/auth.css",
               "src/styles/zellavora-ui.scss"
             ],
             "scripts": [],
@@ -97,6 +98,7 @@
             ],
             "styles": [
               "src/styles/global.css",
+              "src/styles/auth.css",
               "src/styles/zellavora-ui.scss"
             ],
             "scripts": [],

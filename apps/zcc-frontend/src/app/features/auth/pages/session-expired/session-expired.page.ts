@@ -1,0 +1,31 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+
+/**
+ * Landing page after the API rejects an expired or revoked session. Local auth
+ * state is already cleared; the intended route is restored after sign-in.
+ */
+@Component({
+  selector: 'app-session-expired-page',
+  standalone: true,
+  imports: [RouterLink],
+  template: `
+    <section class="auth-page" aria-labelledby="expired-title">
+      <div class="auth-page__icon auth-page__icon--warning" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+        </svg>
+      </div>
+      <header>
+        <h1 id="expired-title" class="auth-title">Your session has ended</h1>
+        <p class="auth-lead" role="status">
+          You were signed out because your session expired or was ended from another device. Sign in
+          again to pick up where you left off.
+        </p>
+      </header>
+      <a class="auth-btn auth-btn--primary" routerLink="/auth/login" replaceUrl>Sign in again</a>
+    </section>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SessionExpiredPage {}

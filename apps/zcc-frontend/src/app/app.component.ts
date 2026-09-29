@@ -12,7 +12,7 @@ import { AdminLayoutComponent } from './shared/components/admin-layout/admin-lay
   imports: [RouterOutlet, AdminLayoutComponent],
   template: `
     <div class="min-h-screen bg-[#03020c]">
-      <!-- Show admin layout for all pages except auth (login/register) -->
+      <!-- Auth pages render in their own layout, outside the app shell and sidebar -->
       @if (showAdminLayout()) {
         <app-admin-layout></app-admin-layout>
       }
@@ -39,6 +39,6 @@ export class AppComponent {
 
   readonly showAdminLayout = computed(() => {
     const url = this.currentUrl();
-    return !url.includes('/auth');
+    return !(url === '/auth' || url.startsWith('/auth/') || url.startsWith('/auth?'));
   });
 }

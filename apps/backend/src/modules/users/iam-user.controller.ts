@@ -40,7 +40,16 @@ export class IamUserController {
   create = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const dto = CreateIamUserSchema.parse(req.body);
-      const data = await this.service.create(dto, req.userId);
+      const inviter =
+        req.userId && req.tenantId
+          ? {
+              userId: req.userId,
+              organizationId: req.tenantId,
+              ipAddress: req.ip,
+              userAgent: req.get('user-agent'),
+            }
+          : undefined;
+      const data = await this.service.create(dto, req.userId, inviter);
       res.status(201).json({ success: true, data });
     } catch (err) {
       next(err);

@@ -45,6 +45,8 @@ async function main() {
         passwordHash,
         role: 'owner',
         tenantId: organization.id,
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
       },
     });
     console.log(`✅ Owner user created: ${ownerUser.fullName}\n`);

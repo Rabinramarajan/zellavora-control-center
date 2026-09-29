@@ -27,7 +27,6 @@ export type SettingsIconName =
 export type SettingsTabId =
   | 'general'
   | 'profile'
-  | 'security'
   | 'notifications'
   | 'appearance'
   | 'localization'
@@ -60,19 +59,6 @@ export interface ProfileSettings {
   phone: string;
 }
 
-export interface PasswordChange {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-export interface StatusMessage {
-  severity: 'success' | 'error';
-  text: string;
-}
-
-export type MfaStep = 'idle' | 'qr' | 'codes';
-
 export interface SystemInfoItem {
   label: string;
   value: string;
@@ -81,7 +67,6 @@ export interface SystemInfoItem {
 export const SETTINGS_TABS: readonly SettingsTab[] = [
   { id: 'general', label: 'General', description: 'Basic application settings', icon: 'cog' },
   { id: 'profile', label: 'Profile', description: 'Personal information', icon: 'user' },
-  { id: 'security', label: 'Security', description: 'Password & authentication', icon: 'lock' },
   { id: 'notifications', label: 'Notifications', description: 'Email & system alerts', icon: 'bell' },
   { id: 'appearance', label: 'Appearance', description: 'Theme & display', icon: 'palette' },
   { id: 'localization', label: 'Localization', description: 'Language & timezone', icon: 'globe' },
@@ -113,7 +98,6 @@ export const SITE_DESCRIPTION_MAX_LENGTH = 160;
 export const AVATAR_ACCEPTED_TYPES: readonly string[] = ['image/png', 'image/jpeg', 'image/webp'];
 export const AVATAR_MAX_UPLOAD_MB = 5;
 export const AVATAR_OUTPUT_SIZE_PX = 256;
-export const MIN_PASSWORD_LENGTH = 12;
 
 export const TIMEZONE_OPTIONS: SelectControlOption[] = [
   { label: '(GMT+05:30) Asia/Kolkata', value: 'GMT+5:30' },

@@ -1,102 +1,76 @@
 /**
- * Auth Guards — route protection.
+ * Route guards — UX only. The API independently authorizes every request.
  *
- *   authGuard             — must be authenticated
- *   guestGuard            — must NOT be authenticated (e.g. /auth/login)
- *   permissionGuard       — must be authenticated AND hold a permission (CanActivate)
- *   canMatchPermission    — must be authenticated AND hold a permission (CanMatch)
- *
- * Each guard is a CanActivateFn/CanMatchFn (function) that uses `inject()` for DI.
+ *   authGuard           — must be signed in (ZCC app and /account/*)
+ *   guestGuard          — must NOT be signed in (sign-in, registration, recovery pages)
+ *   mfaChallengeGuard   — requires a live, server-issued 2FA challenge
+ *   registrationGuard   — /auth/register only when self-registration is enabled
+ *   permissionGuard     — signed in AND holds a permission (CanActivate)
+ *   canMatchPermission  — signed in AND holds a permission (CanMatch)
  */
 import { inject } from '@angular/core';
-import { CanActivateFn, CanMatchFn, Router, RouterStateSnapshot } from '@angular/router';
+import { CanActivateFn, CanMatchFn, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { catchError, map, of } from 'rxjs';
 import { AuthStore } from './auth.store';
+import { AuthService } from './auth.service';
 import { PermissionService } from '../rbac/services/permission.service';
 
+const REDIRECT_KEY = 'zcc.redirect';
+
 const rememberRedirect = (state: RouterStateSnapshot): void => {
-  if (state.url && !state.url.startsWith('/auth/')) {
-    sessionStorage.setItem('zcc.redirect', state.url);
-  }
+  if (state.url && !state.url.startsWith('/auth/')) sessionStorage.setItem(REDIRECT_KEY, state.url);
 };
 
-const redirectToLogin = (router: Router): false => {
-  router.navigate(['/auth/login'], { replaceUrl: true });
-  return false;
-};
+const loginTree = (): UrlTree => inject(Router).createUrlTree(['/auth/login']);
 
-/** Must be authenticated. Stash the original URL so login can return there. */
 export const authGuard: CanActivateFn = (_route, state) => {
-  const store = inject(AuthStore);
-  const router = inject(Router);
-  if (store.isAuthenticated()) return true;
+  if (inject(AuthStore).isAuthenticated()) return true;
   rememberRedirect(state);
-  return redirectToLogin(router);
+  return loginTree();
 };
 
-/** Must NOT be authenticated. Used for the /auth/* routes. */
-export const guestGuard: CanActivateFn = () => {
-  const store = inject(AuthStore);
+export const guestGuard: CanActivateFn = () =>
+  inject(AuthStore).isAuthenticated() ? inject(Router).createUrlTree(['/dashboard']) : true;
+
+export const mfaChallengeGuard: CanActivateFn = () =>
+  inject(AuthService).pendingMfaChallenge() ? true : loginTree();
+
+export const registrationGuard: CanActivateFn = () => {
   const router = inject(Router);
-  if (!store.isAuthenticated()) return true;
-  router.navigate(['/dashboard'], { replaceUrl: true });
-  return false;
+  return inject(AuthService)
+    .config()
+    .pipe(
+      map((config) => (config.selfRegistrationEnabled ? true : router.createUrlTree(['/auth/login']))),
+      catchError(() => of(router.createUrlTree(['/auth/login'])))
+    );
 };
 
-const authenticatedAndAllowed = (
-  permission: string,
-  fallback: string
-): boolean | Promise<boolean> => {
-  const store = inject(AuthStore);
+const authenticatedAndAllowed = (permission: string): boolean | UrlTree | Promise<boolean | UrlTree> => {
   const router = inject(Router);
   const permissions = inject(PermissionService);
+  if (!inject(AuthStore).isAuthenticated()) return router.createUrlTree(['/auth/login']);
 
-  if (!store.isAuthenticated()) {
-    router.navigate(['/auth/login'], { replaceUrl: true });
-    return false;
-  }
+  const decide = (): boolean | UrlTree =>
+    permissions.canSync(permission) ? true : router.createUrlTree(['/dashboard']);
 
   // The policy may not be materialized yet (cold start). Refresh once so the
   // guard reflects server truth before deciding.
   if (!permissions.canSync(permission) && permissions.maxRoleLevel() === 0) {
-    return permissions.refreshPolicy().then(
-      () => {
-        if (permissions.canSync(permission)) return true;
-        router.navigate([fallback], { replaceUrl: true });
-        return false;
-      },
-      () => {
-        router.navigate([fallback], { replaceUrl: true });
-        return false;
-      }
-    );
+    return permissions.refreshPolicy().then(decide, () => router.createUrlTree(['/dashboard']));
   }
-
-  if (permissions.canSync(permission)) return true;
-  router.navigate([fallback], { replaceUrl: true });
-  return false;
+  return decide();
 };
 
-/**
- * Must be authenticated AND hold the given permission (CanActivate).
- * Usage: `canActivate: [permissionGuard('resources:read')]`
- */
+/** Usage: `canActivate: [permissionGuard('resources:read')]` */
 export const permissionGuard =
   (permission: string): CanActivateFn =>
   (_route, state) => {
-    if (state.url && !state.url.startsWith('/auth/')) {
-      sessionStorage.setItem('zcc.redirect', state.url);
-    }
-    return authenticatedAndAllowed(permission, '/dashboard');
+    rememberRedirect(state);
+    return authenticatedAndAllowed(permission);
   };
 
-/**
- * Must be authenticated AND hold the given permission (CanMatch).
- * Use on lazy-loaded route groups to skip loading the chunk entirely when the
- * user lacks the permission.
- * Usage: `canMatch: [canMatchPermission('users:read')]`
- */
+/** Usage: `canMatch: [canMatchPermission('users:read')]` — skips loading the chunk when denied. */
 export const canMatchPermission =
   (permission: string): CanMatchFn =>
   () =>
-    authenticatedAndAllowed(permission, '/dashboard');
-
+    authenticatedAndAllowed(permission);

@@ -13,6 +13,12 @@ export const appRoutes: Routes = [
       import('./features/auth/auth.routes').then((m) => m.authRoutes),
   },
   {
+    path: 'account',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/account/account.routes').then((m) => m.accountRoutes),
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadChildren: () =>

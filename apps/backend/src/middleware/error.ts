@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import { config } from '../config/env';
 
 export interface ApiError extends Error {
@@ -32,6 +33,23 @@ export const errorHandler = (
   // built-in handler, which aborts the connection cleanly.
   if (res.headersSent) {
     next(error);
+    return;
+  }
+
+  if (error instanceof ZodError) {
+    const fields: Record<string, string> = {};
+    for (const issue of error.issues) {
+      const key = issue.path.join('.') || '_';
+      fields[key] ??= issue.message;
+    }
+    res.status(400).json({
+      error: {
+        message: error.issues[0]?.message ?? 'Invalid request',
+        code: 'VALIDATION_ERROR',
+        status: 400,
+        fields,
+      },
+    });
     return;
   }
 

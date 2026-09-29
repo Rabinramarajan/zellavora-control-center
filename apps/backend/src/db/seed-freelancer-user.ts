@@ -71,6 +71,8 @@ async function main() {
       passwordHash,
       role: 'freelancer',
       tenantId: organization.id,
+      emailVerified: true,
+      emailVerifiedAt: new Date(),
     },
   });
 

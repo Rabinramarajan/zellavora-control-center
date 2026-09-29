@@ -3,6 +3,7 @@ import { AuditService } from '../../infrastructure/audit';
 import { cacheDelPattern } from '../../infrastructure/cache';
 import { IamUserRepository } from './iam-user.repository';
 import { IamUserMapper } from './iam-user.mapper';
+import { InvitationService, type InviteActor } from '../invitation/invitation.service';
 import {
   CreateIamUserDto,
   UpdateIamUserDto,
@@ -61,7 +62,7 @@ export class IamUserService {
   // Mutations
   // ---------------------------------------------------------------------------
 
-  async create(dto: CreateIamUserDto, actorId?: string | null) {
+  async create(dto: CreateIamUserDto, actorId?: string | null, inviter?: InviteActor) {
     const existingEmail = await this.repo.findByEmail(dto.email);
     if (existingEmail) {
       throw new AppError(`A user with email '${dto.email}' already exists`, 409, 'USER_EMAIL_EXISTS');
@@ -86,6 +87,7 @@ export class IamUserService {
           timezone: dto.timezone ?? null,
           language: dto.language,
           status: dto.sendInvite ? 'PENDING' : 'ACTIVE',
+          tenantId: inviter?.organizationId ?? null,
           createdBy: actorId ?? null,
         },
         tx
@@ -106,6 +108,18 @@ export class IamUserService {
       severity: 'info',
       metadata: { email: created.email, username, sendInvite: dto.sendInvite, roles: dto.roleIds.length, groups: dto.groupIds.length },
     });
+
+    if (dto.sendInvite && inviter) {
+      await new InvitationService().issueForUser(
+        {
+          userId: created.id,
+          email: created.email,
+          firstName: created.firstName,
+          lastName: created.lastName,
+        },
+        inviter
+      );
+    }
 
     this.invalidate();
     return this.getById(created.id);

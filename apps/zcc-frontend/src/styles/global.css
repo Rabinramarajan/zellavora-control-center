@@ -243,3 +243,30 @@ body {
   width: 0.75rem;
   height: 0.75rem;
 }
+
+/* Authentication & account-security surfaces (features/auth, features/account).
+ * Text/background pairs meet WCAG 2.2 AA contrast on the dark shell. */
+:root {
+  --auth-bg: #05070f;
+  --auth-surface: rgba(255, 255, 255, 0.03);
+  --auth-surface-raised: rgba(255, 255, 255, 0.05);
+  --auth-input-bg: rgba(255, 255, 255, 0.04);
+  --auth-input-bg-focus: rgba(255, 255, 255, 0.06);
+  --auth-border: rgba(255, 255, 255, 0.12);
+  --auth-border-strong: rgba(255, 255, 255, 0.22);
+  --auth-text-strong: #f1f5f9;
+  --auth-text: #cbd5e1;
+  --auth-text-muted: #94a3b8;
+  --auth-text-faint: #64748b;
+  --auth-accent: #818cf8;
+  --auth-accent-strong: #6366f1;
+  --auth-accent-ring: rgba(129, 140, 248, 0.28);
+  --auth-link: #a5b4fc;
+  --auth-danger: #f87171;
+  --auth-danger-text: #fca5a5;
+  --auth-danger-ring: rgba(248, 113, 113, 0.25);
+  --auth-success: #34d399;
+  --auth-success-text: #6ee7b7;
+  --auth-warning: #fbbf24;
+  --auth-info: #7dd3fc;
+}

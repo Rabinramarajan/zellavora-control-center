@@ -77,9 +77,6 @@ describe('API naming contract', () => {
     expect(mounts.find((m) => m.paths.includes('/api/v1/clean/ddls'))?.paths[0]).toBe(
       '/api/v1/lookups'
     );
-    expect(mounts.find((m) => m.paths.includes('/api/v1/register'))?.paths[0]).toBe(
-      '/api/v1/registrations'
-    );
     expect(mounts.find((m) => m.paths.includes('/api/v1/clean/settings'))?.paths[0]).toBe(
       '/api/v1/organization-settings'
     );
@@ -133,15 +130,24 @@ describe('Renamed API HTTP routing', () => {
     }
   });
 
-  it('serves encryption keys on both canonical and historical URLs', async () => {
-    for (const path of ['/auth/encryption-key', '/auth/gettoken']) {
-      const response = await fetch(baseUrl + path);
-      expect(response.status).toBe(200);
-      const payload = await response.json();
-      expect(payload).toHaveLength(2);
-      expect(Array.isArray(payload) && payload.every((part) => typeof part === 'string')).toBe(
-        true
-      );
-    }
+  it('publishes the public auth policy without a token', async () => {
+    const response = await fetch(baseUrl + '/auth/config');
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      selfRegistrationEnabled: false,
+      passwordPolicy: { minLength: 12, maxLength: 128 },
+    });
+  });
+
+  it('rejects malformed auth input with field-level validation errors', async () => {
+    const response = await fetch(baseUrl + '/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'not-an-email' }),
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: { code: 'VALIDATION_ERROR', fields: { email: expect.any(String) } },
+    });
   });
 });

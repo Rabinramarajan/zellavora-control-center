@@ -48,6 +48,8 @@ async function main() {
       passwordHash,
       role: 'owner',
       tenantId: tenant.id,
+      emailVerified: true,
+      emailVerifiedAt: new Date(),
     },
   });
   console.log(`✅ Admin user created: ${adminUser.fullName}\n`);
@@ -228,21 +230,7 @@ async function main() {
   }
   console.log();
 
-  // 8. Create a default invitation code for registration testing
-  console.log('🎟️  Creating invitation code...');
-  await prisma.invitation.upsert({
-    where: { code: 'ZCC-INVITE-2026' },
-    update: { used: false },
-    create: {
-      email: 'admin@zellavora.com',
-      code: 'ZCC-INVITE-2026',
-      used: false,
-      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-    },
-  });
-  console.log('  ✅ Invitation code created: ZCC-INVITE-2026\n');
-
-  // 9. Seed DDL lists (countries, languages, genders, etc.)
+  // 8. Seed DDL lists (countries, languages, genders, etc.)
   console.log('📋 Seeding DDL data (countries, languages, etc.)...');
   const ddlRepo = new DdlRepository();
   let ddlCount = 0;
@@ -255,8 +243,7 @@ async function main() {
   console.log('✨ Database seeding completed successfully!');
   console.log('\n📖 Login credentials:');
   console.log('   Email: admin@zellavora.com');
-  console.log('   Password: AdminPassword123!');
-  console.log('   Invitation Code: ZCC-INVITE-2026\n');
+  console.log('   Password: AdminPassword123!\n');
 }
 
 main()

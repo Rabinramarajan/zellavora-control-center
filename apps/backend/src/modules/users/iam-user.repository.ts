@@ -109,6 +109,7 @@ export class IamUserRepository extends BaseRepository {
       timezone?: string | null;
       language?: string;
       status?: string;
+      tenantId?: string | null;
       createdBy?: string | null;
     },
     tx?: TxClient
@@ -128,6 +129,7 @@ export class IamUserRepository extends BaseRepository {
         timezone: data.timezone ?? null,
         language: data.language ?? 'en',
         status: (data.status as never) ?? 'ACTIVE',
+        tenantId: data.tenantId ?? null,
         createdBy: data.createdBy ?? null,
       },
     });

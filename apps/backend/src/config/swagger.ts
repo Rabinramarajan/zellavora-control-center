@@ -102,10 +102,6 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Administrative configuration and regional metadata.',
       },
       {
-        name: 'email',
-        description: 'Transactional email delivery and service health.',
-      },
-      {
         name: 'administrationAuditLogs',
         description: 'Administrative audit search and details.',
       },
@@ -142,16 +138,8 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Administrative branch search and maintenance.',
       },
       {
-        name: 'registration',
-        description: 'Account and organization registration.',
-      },
-      {
-        name: 'identityAuthentication',
-        description: 'Authentication for the organization identity service.',
-      },
-      {
         name: 'invitations',
-        description: 'Invitation generation and verification.',
+        description: 'Admin-issued user invitations.',
       },
       {
         name: 'organizations',
@@ -172,10 +160,6 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
       {
         name: 'notifications',
         description: 'Notification records and delivery.',
-      },
-      {
-        name: 'verifications',
-        description: 'Verification challenges.',
       },
       {
         name: 'auditLogs',

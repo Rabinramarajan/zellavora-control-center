@@ -44,11 +44,6 @@ export enum MediaType {
   AUDIO = 'audio',
 }
 
-export enum MfaMethod {
-  TOTP = 'totp',
-  RECOVERY_CODE = 'recovery_code',
-}
-
 // ============================================================================
 // TENANT
 // ============================================================================
@@ -83,106 +78,6 @@ export interface TenantWithRole extends TenantSummary {
 }
 
 // ============================================================================
-// AUTHENTICATION — REQUESTS / RESPONSES
-// ============================================================================
-
-export interface LoginRequest {
-  clientCode: string;
-  email: string;
-  password: string;
-  rememberMe?: boolean;
-}
-
-export interface LoginMfaRequest {
-  mfaToken: string;
-  code: string;
-  rememberMe?: boolean;
-}
-
-export interface MfaChallengeResponse {
-  mfaRequired: true;
-  mfaToken: string;
-  mfaMethods: MfaMethod[];
-}
-
-export interface LoginSuccessResponse {
-  mfaRequired: false;
-  user: AuthUser;
-  tenant: TenantSummary;
-  defaultLandingPage?: string;
-  accessToken: string;
-  refreshToken: string;
-  accessTokenExpiresAt: string;
-  refreshTokenExpiresAt: string;
-  sessionId: string;
-}
-
-export type LoginResponse = MfaChallengeResponse | LoginSuccessResponse;
-
-export interface RefreshResponse {
-  accessToken: string;
-  refreshToken: string;
-  accessTokenExpiresAt: string;
-  refreshTokenExpiresAt: string;
-  sessionId: string;
-}
-
-export interface RegisterRequest {
-  clientCode: string;
-  email: string;
-  fullName: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export interface ForgotPasswordRequest {
-  clientCode: string;
-  email: string;
-}
-
-export interface ResetPasswordRequest {
-  token: string;
-  newPassword: string;
-}
-
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
-export interface SwitchTenantRequest {
-  organizationId: string;
-}
-
-export interface ValidateClientResponse {
-  valid: boolean;
-  tenant: {
-    id: string;
-    name: string;
-    clientCode: string;
-    logoUrl: string | null;
-    enforce2fa: boolean;
-    allowedDomains: string[] | null;
-  };
-}
-
-// ============================================================================
-// AUTHENTICATED USER
-// ============================================================================
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  fullName: string;
-  avatarUrl?: string | null;
-  role: UserRole;
-  mfaEnabled: boolean;
-  mfaEnrolledAt?: string | null;
-  lastLoginAt?: string | null;
-  createdAt?: string;
-}
-
-// ============================================================================
 // RBAC
 // ============================================================================
 
@@ -210,89 +105,6 @@ export interface MenuNode {
   orderIndex: number;
   children: MenuNode[];
 }
-
-// ============================================================================
-// ME PAYLOAD
-// ============================================================================
-
-export interface MeResponse {
-  user: AuthUser;
-  tenant: TenantSummary & { plan: string; enforce2fa: boolean };
-  permissions: string[];
-  menu: MenuNode[];
-}
-
-// ============================================================================
-// MFA ENROLLMENT
-// ============================================================================
-
-export interface MfaEnrollStartResponse {
-  otpauth: string;
-  qrCodeDataUrl: string;
-  secret: string; // returned once so the client can confirm enrollment
-}
-
-export interface MfaEnrollConfirmRequest {
-  secret: string;
-  code: string; // 6-digit TOTP
-}
-
-export interface MfaEnrollConfirmResponse {
-  ok: true;
-  recoveryCodes: string[];
-}
-
-export interface MfaDisableRequest {
-  password: string;
-}
-
-export interface MfaRecoveryCodesResponse {
-  recoveryCodes: string[];
-}
-
-// ============================================================================
-// ERROR HANDLING
-// ============================================================================
-
-export interface ApiError {
-  error: {
-    code: string;
-    message: string;
-    status: number;
-    details?: Record<string, unknown>;
-  };
-}
-
-export type ErrorCode =
-  | 'INVALID_CREDENTIALS'
-  | 'INVALID_TOKEN'
-  | 'TOKEN_REVOKED'
-  | 'REFRESH_TOKEN_REUSE'
-  | 'REFRESH_TOKEN_UNKNOWN'
-  | 'INVALID_REFRESH_TOKEN'
-  | 'NO_TOKEN'
-  | 'MFA_REQUIRED_BY_ORG'
-  | 'MFA_INVALID_CODE'
-  | 'MFA_CHALLENGE_EXPIRED'
-  | 'MFA_TOO_MANY_ATTEMPTS'
-  | 'MFA_ENROLLMENT_EXPIRED'
-  | 'ACCOUNT_LOCKED'
-  | 'RATE_LIMITED_IP'
-  | 'PASSWORD_POLICY_VIOLATION'
-  | 'PASSWORD_TOO_COMMON'
-  | 'INVALID_CURRENT_PASSWORD'
-  | 'INVALID_CLIENT_CODE'
-  | 'INVALID_RESET_TOKEN'
-  | 'TENANT_MISMATCH'
-  | 'TENANT_NOT_FOUND'
-  | 'NOT_A_MEMBER'
-  | 'FORBIDDEN_ROLE'
-  | 'FORBIDDEN_PERMISSION'
-  | 'EMAIL_EXISTS'
-  | 'USER_NOT_FOUND'
-  | 'SESSION_INVALID'
-  | 'INTERNAL_SERVER_ERROR'
-  | string; // server-defined extension
 
 // ============================================================================
 // PORTFOLIO
@@ -543,11 +355,4 @@ export * from './audit.model';
 export * from './system-health.model';
 export * from './cms-builder.model';
 export * from './iam.model';
-
-
-
-
-
-
-
-
+export * from './auth.model';

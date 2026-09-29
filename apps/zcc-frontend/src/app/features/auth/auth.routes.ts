@@ -1,90 +1,95 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from '../../core/auth/auth.guard';
+import { guestGuard, mfaChallengeGuard, registrationGuard } from '@core/auth/auth.guard';
+import { AuthLayoutComponent } from './layout/auth-layout.component';
 
+/** Public / auth pages. They render in the auth layout, never in the app shell. */
 export const authRoutes: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
   {
-    path: 'landing',
-    loadComponent: () =>
-      import('./components/landing/landing.component').then(
-        (m) => m.LandingComponent
-      ),
-  },
-  {
+    // Sign-in owns its full-screen composition, so it skips the shared layout.
     path: 'login',
+    title: 'Sign in · ZCC',
     canActivate: [guestGuard],
-    loadComponent: () =>
-      import('./components/login/login.component').then(
-        (m) => m.LoginComponent
-      ),
-  },
-  {
-    path: 'register',
-    canActivate: [guestGuard],
-    loadComponent: () =>
-      import('./components/register/register.component').then(
-        (m) => m.RegisterComponent
-      ),
-  },
-  {
-    path: 'forgot-password',
-    loadComponent: () =>
-      import('./components/forgot-password/forgot-password.component').then(
-        (m) => m.ForgotPasswordComponent
-      ),
-  },
-  {
-    path: 'reset-password',
-    loadComponent: () =>
-      import('./components/reset-password/reset-password.component').then(
-        (m) => m.ResetPasswordComponent
-      ),
-  },
-  {
-    path: 'verify-email',
-    loadComponent: () =>
-      import('./components/verify-email/verify-email.component').then(
-        (m) => m.VerifyEmailComponent
-      ),
-  },
-  {
-    path: 'mfa-verify',
-    loadComponent: () =>
-      import('./components/mfa-verify/mfa-verify.component').then(
-        (m) => m.MfaVerifyComponent
-      ),
-  },
-  {
-    path: 'account-locked',
-    loadComponent: () =>
-      import('./components/account-locked/account-locked.component').then(
-        (m) => m.AccountLockedComponent
-      ),
-  },
-  {
-    path: 'account-suspended',
-    loadComponent: () =>
-      import('./components/account-suspended/account-suspended.component').then(
-        (m) => m.AccountSuspendedComponent
-      ),
-  },
-  {
-    path: 'sessions',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./components/session-management/session-management.component').then(
-        (m) => m.SessionManagementComponent
-      ),
-  },
-  {
-    path: 'welcome',
-    loadComponent: () =>
-      import('./components/welcome/welcome.component').then(
-        (m) => m.WelcomeComponent
-      ),
+    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
   {
     path: '',
-    redirectTo: 'landing',
-    pathMatch: 'full',
+    component: AuthLayoutComponent,
+    children: [
+      {
+        path: 'register',
+        title: 'Create account · ZCC',
+        canActivate: [guestGuard, registrationGuard],
+        loadComponent: () => import('./pages/register/register.page').then((m) => m.RegisterPage),
+      },
+      {
+        path: 'accept-invitation',
+        title: 'Accept invitation · ZCC',
+        canActivate: [guestGuard],
+        loadComponent: () =>
+          import('./pages/accept-invitation/accept-invitation.page').then((m) => m.AcceptInvitationPage),
+      },
+      {
+        path: 'verify-email',
+        title: 'Verify email · ZCC',
+        loadComponent: () =>
+          import('./pages/verify-email/verify-email.page').then((m) => m.VerifyEmailPage),
+      },
+      {
+        path: 'resend-verification',
+        title: 'Resend verification · ZCC',
+        canActivate: [guestGuard],
+        loadComponent: () =>
+          import('./pages/resend-verification/resend-verification.page').then(
+            (m) => m.ResendVerificationPage
+          ),
+      },
+      {
+        path: 'forgot-password',
+        title: 'Forgot password · ZCC',
+        canActivate: [guestGuard],
+        loadComponent: () =>
+          import('./pages/forgot-password/forgot-password.page').then((m) => m.ForgotPasswordPage),
+      },
+      {
+        path: 'reset-password',
+        title: 'Reset password · ZCC',
+        loadComponent: () =>
+          import('./pages/reset-password/reset-password.page').then((m) => m.ResetPasswordPage),
+      },
+      {
+        path: 'password-reset-success',
+        title: 'Password updated · ZCC',
+        loadComponent: () =>
+          import('./pages/password-reset-success/password-reset-success.page').then(
+            (m) => m.PasswordResetSuccessPage
+          ),
+      },
+      {
+        path: 'two-factor',
+        title: 'Two-factor authentication · ZCC',
+        canActivate: [guestGuard, mfaChallengeGuard],
+        loadComponent: () => import('./pages/two-factor/two-factor.page').then((m) => m.TwoFactorPage),
+      },
+      {
+        path: 'recovery-code',
+        title: 'Recovery code · ZCC',
+        canActivate: [guestGuard, mfaChallengeGuard],
+        loadComponent: () =>
+          import('./pages/recovery-code/recovery-code.page').then((m) => m.RecoveryCodePage),
+      },
+      {
+        path: 'account-locked',
+        title: 'Account locked · ZCC',
+        loadComponent: () =>
+          import('./pages/account-locked/account-locked.page').then((m) => m.AccountLockedPage),
+      },
+      {
+        path: 'session-expired',
+        title: 'Session expired · ZCC',
+        loadComponent: () =>
+          import('./pages/session-expired/session-expired.page').then((m) => m.SessionExpiredPage),
+      },
+    ],
   },
 ];

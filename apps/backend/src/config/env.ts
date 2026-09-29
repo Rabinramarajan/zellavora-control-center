@@ -58,6 +58,20 @@ export const config = {
     process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS || '24',
     10
   ),
+  invitationTokenExpiryHours: parseInt(process.env.INVITATION_TOKEN_EXPIRY_HOURS || '72', 10),
+  mfaChallengeTtlMinutes: parseInt(process.env.MFA_CHALLENGE_TTL_MINUTES || '5', 10),
+  mfaMaxAttempts: parseInt(process.env.MFA_MAX_ATTEMPTS || '5', 10),
+  accountLockoutThreshold: parseInt(process.env.ACCOUNT_LOCKOUT_THRESHOLD || '5', 10),
+  accountLockoutMinutes: parseInt(process.env.ACCOUNT_LOCKOUT_MINUTES || '15', 10),
+  passwordHistoryDepth: parseInt(process.env.PASSWORD_HISTORY_DEPTH || '5', 10),
+  // Public self-registration is off by default: ZCC onboards users by invitation.
+  selfRegistrationEnabled: process.env.ALLOW_SELF_REGISTRATION === 'true',
+  requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION !== 'false',
+  revokeSessionsOnPasswordChange: process.env.REVOKE_SESSIONS_ON_PASSWORD_CHANGE !== 'false',
+  // Base URL of the Angular app, used to build links in auth emails. Never derived
+  // from request headers (Host / Origin can be forged to poison reset links).
+  appUrl: (process.env.APP_URL || 'http://localhost:4200').replace(/\/+$/, ''),
+  supportEmail: process.env.SUPPORT_EMAIL || 'support@zellavora.com',
 
   // ============================================================================
   // Multi-Tenancy
@@ -132,7 +146,6 @@ export const config = {
   enableOAuth: process.env.ENABLE_OAUTH === 'true',
   enableSAML: process.env.ENABLE_SAML === 'true',
   enableApiKeys: process.env.ENABLE_API_KEYS !== 'false',
-  ALLOW_SELF_REGISTRATION: process.env.ALLOW_SELF_REGISTRATION !== 'false',
 
   // ============================================================================
   // OAuth Providers
@@ -174,6 +187,7 @@ const requiredEnvVars = ['JWT_SECRET', 'REFRESH_TOKEN_SECRET'];
 // Additional required for production
 const productionEnvVars = [
   'ENCRYPTION_KEY', // Must be provided in production
+  'APP_URL', // Links in invitation / reset / verification emails
   'SMTP_HOST', // Or SendGrid configured
 ];
 

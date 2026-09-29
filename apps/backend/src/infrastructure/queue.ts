@@ -49,7 +49,7 @@ const processJobLocally = async (name: string, data: any): Promise<void> => {
         await sendEmailVerificationEmail(data.email, data.verificationLink);
         break;
       case 'send-password-reset':
-        await sendPasswordResetEmail(data.email, data.resetLink, data.expiryHours);
+        await sendPasswordResetEmail(data.email, data.resetLink, data.expiryMinutes);
         break;
       case 'send-user-invitation':
         await sendUserInvitationEmail(
@@ -154,10 +154,10 @@ export const sendEmailVerificationEmail = async (
 export const sendPasswordResetEmail = async (
   email: string,
   resetLink: string,
-  expiryHours: number = 1
+  expiryMinutes: number = 15
 ): Promise<boolean> => {
   try {
-    const template = emailTemplates.passwordResetEmail(resetLink, expiryHours);
+    const template = emailTemplates.passwordResetEmail(resetLink, expiryMinutes);
     const result = await emailService.sendEmail({
       to: email,
       subject: template.subject,
