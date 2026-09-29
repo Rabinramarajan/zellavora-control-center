@@ -459,8 +459,8 @@
     grid-area: story;
     align-self: end;
     justify-self: end;
-    width: min(64%, 40rem);
-    margin-right: calc(-1 * clamp(2rem, 4vw, 4rem) - 1.5rem);
+    width: min(78%, 46rem);
+    margin-right: calc(-1 * clamp(2rem, 4vw, 4rem) - 5rem);
     margin-bottom: 1rem;
     z-index: 0;
   }
