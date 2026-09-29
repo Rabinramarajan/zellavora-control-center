@@ -65,7 +65,7 @@ router.post('/upload', controller.upload);
  *         description: Operation response
  */
 router.get('/media', authenticate, controller.listMedia);
-router.post('/media', authenticate, requirePermission('media:create'), controller.uploadMedia);
+router.post('/media', authenticate, requirePermission('media:upload'), controller.uploadMedia);
 router.delete('/media', authenticate, requirePermission('media:delete'), controller.deleteMedia);
 
 /**
