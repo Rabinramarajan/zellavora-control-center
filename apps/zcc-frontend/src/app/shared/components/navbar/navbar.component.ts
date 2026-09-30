@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { LayoutService } from '@core/services/layout.service';
+import { AppDialogService } from '@shared/components/dialog';
 import { firstValueFrom } from 'rxjs';
 
 interface BreadcrumbSegment {
@@ -350,6 +351,7 @@ export class NavbarComponent {
   auth = inject(AuthService);
   router = inject(Router);
   layoutService = inject(LayoutService);
+  private readonly dialog = inject(AppDialogService);
 
   isUserMenuOpen = signal(false);
   avatarFailed = signal(false);
@@ -373,9 +375,19 @@ export class NavbarComponent {
     this.isUserMenuOpen.set(false);
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
     this.closeUserMenu();
-    void firstValueFrom(this.auth.logout());
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Log out?',
+        message: 'Are you sure you want to log out of your account?',
+        confirmText: 'Yes, log out',
+        cancelText: 'Cancel',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
+    await firstValueFrom(this.auth.logout());
   }
 
   getBreadcrumbs(): BreadcrumbSegment[] {
