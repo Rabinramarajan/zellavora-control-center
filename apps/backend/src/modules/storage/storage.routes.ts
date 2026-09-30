@@ -65,7 +65,8 @@ router.post('/upload', controller.upload);
  *         description: Operation response
  */
 router.get('/media', authenticate, controller.listMedia);
-router.post('/media', authenticate, requirePermission('media:upload'), controller.uploadMedia);
+// `media:create` is the key used before the rename to `media:upload`; roles granted it keep upload access.
+router.post('/media', authenticate, requirePermission('media:upload', 'media:create'), controller.uploadMedia);
 router.delete('/media', authenticate, requirePermission('media:delete'), controller.deleteMedia);
 
 /**
