@@ -14,6 +14,10 @@ export interface PickerOption {
   id: string;
   label: string;
   sublabel?: string | null;
+  /** Nesting level for tree sources (child groups); 0 = top level. */
+  depth?: number;
+  /** Small status tag, e.g. "Inactive" or "System". */
+  badge?: string | null;
 }
 
 export interface EntityPickerData {
@@ -77,7 +81,12 @@ const SEARCH_DEBOUNCE_MS = 250;
               [class.cursor-not-allowed]="isExcluded(opt.id)"
               role="option"
               [attr.aria-selected]="selected().has(opt.id)"
+              [attr.aria-level]="(opt.depth ?? 0) + 1"
+              [style.padding-left.rem]="0.75 + (opt.depth ?? 0) * 1.25"
             >
+              @if (opt.depth) {
+                <i class="pi pi-angle-right -mr-1 text-xs text-gray-400" aria-hidden="true"></i>
+              }
               <input
                 type="checkbox"
                 class="size-4 accent-indigo-500"
@@ -95,8 +104,11 @@ const SEARCH_DEBOUNCE_MS = 250;
                   }}</span>
                 }
               </span>
+              @if (opt.badge) {
+                <span class="shrink-0 rounded-full bg-gray-500/10 px-2 py-0.5 text-[11px] font-medium text-gray-400 ring-1 ring-inset ring-gray-500/20">{{ opt.badge }}</span>
+              }
               @if (isExcluded(opt.id)) {
-                <span class="text-xs text-gray-400">Already added</span>
+                <span class="shrink-0 text-xs text-gray-400">Already added</span>
               }
             </label>
           }

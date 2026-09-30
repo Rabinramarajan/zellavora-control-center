@@ -6,6 +6,7 @@ import {
   CopyRoleRequest,
   GroupDetail,
   GroupListItem,
+  GroupTreeNode,
   IamUserDetail,
   IamUserListItem,
   PaginatedList,
@@ -109,6 +110,16 @@ export class IamApiService {
   }
 
   /** Every permission key in the system (for the role permission matrix). */
+  /** Every role, unpaginated (for pickers). */
+  listAllRoles(): Observable<ApiEnvelope<RoleListItem[]>> {
+    return this.apiData.getData<ApiEnvelope<RoleListItem[]>>('/iam/roles/all');
+  }
+
+  /** Every group as a nested tree (for pickers). */
+  getGroupTree(): Observable<ApiEnvelope<GroupTreeNode[]>> {
+    return this.apiData.getData<ApiEnvelope<GroupTreeNode[]>>('/iam/groups/tree');
+  }
+
   listAllPermissions(): Observable<ApiEnvelope<PermissionListItem[]>> {
     return this.apiData.getData<ApiEnvelope<PermissionListItem[]>>('/permissions');
   }

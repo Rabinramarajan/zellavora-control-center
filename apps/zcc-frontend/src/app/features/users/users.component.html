@@ -112,7 +112,7 @@
                   }
                 </th>
               }
-              <th class="text-right"><span class="pr-2">Actions</span></th>
+              <th class="us-col-actions" scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -182,29 +182,45 @@
                   </td>
                   <td class="whitespace-nowrap text-slate-400">{{ relativeTime(user.lastLoginDatetime) }}</td>
                   <td class="whitespace-nowrap text-slate-400">{{ formatDate(user.createdAt) }}</td>
-                  <td class="text-right">
-                    <div class="relative inline-block">
+                  <td class="us-col-actions">
+                    <div class="us-actions" role="group" [attr.aria-label]="'Actions for ' + user.fullName">
                       <button
                         type="button"
-                        class="us-icon-btn"
-                        [attr.aria-label]="'Actions for ' + user.fullName"
-                        aria-haspopup="menu"
-                        [attr.aria-expanded]="openMenuId() === user.id"
-                        [disabled]="busyId() === user.id"
-                        (click)="toggleMenu(user.id, $event)"
+                        class="us-action"
+                        data-tone="view"
+                        title="View profile"
+                        [attr.aria-label]="'View profile of ' + user.fullName"
+                        (click)="viewUser(user)"
                       >
-                        <i class="pi" [class.pi-ellipsis-h]="busyId() !== user.id" [class.pi-spin]="busyId() === user.id" [class.pi-spinner]="busyId() === user.id" aria-hidden="true"></i>
+                        <i class="pi pi-eye" aria-hidden="true"></i>
                       </button>
-                      @if (openMenuId() === user.id) {
-                        <div class="us-menu" role="menu" (click)="$event.stopPropagation()">
-                          <button type="button" role="menuitem" (click)="viewUser(user)"><i class="pi pi-eye"></i>View profile</button>
-                          <button type="button" role="menuitem" (click)="toggleLock(user)">
-                            <i class="pi" [class.pi-lock-open]="user.isAccountLocked" [class.pi-lock]="!user.isAccountLocked"></i>
-                            {{ user.isAccountLocked ? 'Unlock account' : 'Lock account' }}
-                          </button>
-                          <button type="button" role="menuitem" class="is-danger" (click)="removeUser(user)"><i class="pi pi-trash"></i>Remove</button>
-                        </div>
-                      }
+                      <button
+                        type="button"
+                        class="us-action"
+                        data-tone="lock"
+                        [title]="user.isAccountLocked ? 'Unlock account' : 'Lock account'"
+                        [attr.aria-label]="(user.isAccountLocked ? 'Unlock account of ' : 'Lock account of ') + user.fullName"
+                        [attr.aria-pressed]="user.isAccountLocked"
+                        [disabled]="busyId() === user.id"
+                        (click)="toggleLock(user)"
+                      >
+                        @if (busyId() === user.id) {
+                          <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                        } @else {
+                          <i class="pi" [class.pi-lock-open]="user.isAccountLocked" [class.pi-lock]="!user.isAccountLocked" aria-hidden="true"></i>
+                        }
+                      </button>
+                      <button
+                        type="button"
+                        class="us-action"
+                        data-tone="danger"
+                        title="Remove user"
+                        [attr.aria-label]="'Remove ' + user.fullName"
+                        [disabled]="busyId() === user.id"
+                        (click)="removeUser(user)"
+                      >
+                        <i class="pi pi-trash" aria-hidden="true"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>

@@ -89,7 +89,7 @@ const AVATAR_TONES = ['#7c3aed', '#8b5cf6', '#a855f7', '#6366f1', '#db2777', '#c
   templateUrl: './users.component.html',
   styleUrl: './users.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(document:keydown.escape)': 'onEscape()', '(document:click)': 'openMenuId.set(null)' },
+  host: { '(document:keydown.escape)': 'onEscape()' },
 })
 export class UsersComponent {
   private readonly api = inject(IamApiService);
@@ -195,7 +195,6 @@ export class UsersComponent {
   readonly sortKey = signal<SortKey>('createdAt');
   readonly sortDir = signal<'asc' | 'desc'>('desc');
   readonly selected = signal<ReadonlySet<string>>(new Set());
-  readonly openMenuId = signal<string | null>(null);
   readonly busyId = signal<string | null>(null);
 
   private lookupsLoaded = false;
@@ -305,7 +304,6 @@ export class UsersComponent {
 
   onEscape(): void {
     if (this.filtersOpen()) this.closeFilters();
-    this.openMenuId.set(null);
   }
 
   sortBy(key: SortKey): void {
@@ -347,17 +345,11 @@ export class UsersComponent {
     });
   }
 
-  toggleMenu(id: string, event: Event): void {
-    event.stopPropagation();
-    this.openMenuId.update((cur) => (cur === id ? null : id));
-  }
-
   viewUser(user: IamUserListItem): void {
     void this.router.navigate(['/iam/users', user.id]);
   }
 
   async toggleLock(user: IamUserListItem): Promise<void> {
-    this.openMenuId.set(null);
     this.busyId.set(user.id);
     const locking = !user.isAccountLocked;
     try {
@@ -378,7 +370,6 @@ export class UsersComponent {
   }
 
   async removeUser(user: IamUserListItem): Promise<void> {
-    this.openMenuId.set(null);
     const confirmed = await firstValueFrom(
       this.dialog.confirm({
         title: 'Remove user?',
