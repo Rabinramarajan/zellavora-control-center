@@ -9,10 +9,10 @@ import {
   DataTableComponent,
   DataTableColumn,
   FilterBarComponent,
-  PaginationBarComponent,
   StatusChipComponent,
   EmptyStateComponent,
 } from '@shared/components/iam';
+import { PaginationComponent } from '@shared/components/pagination/pagination.component';
 
 const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   { label: 'Security', value: 'SECURITY' },
@@ -30,7 +30,7 @@ const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
     RouterLink,
     DataTableComponent,
     FilterBarComponent,
-    PaginationBarComponent,
+    PaginationComponent,
     StatusChipComponent,
     EmptyStateComponent,
   ],
@@ -113,10 +113,11 @@ const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
         </ng-template>
       </zcc-data-table>
 
-      <zcc-pagination-bar
+      <app-pagination
+        class="px-1 py-3"
+        [totalItems]="store.total()"
         [page]="store.page()"
         [pageSize]="store.pageSize()"
-        [total]="store.total()"
         (pageChange)="store.setPage($event)"
       />
     } @else {

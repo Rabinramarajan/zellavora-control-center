@@ -215,19 +215,15 @@
         </table>
       </div>
 
-      <footer class="pagination">
-        <span>{{ filteredDaily().length }} sheet{{ filteredDaily().length === 1 ? '' : 's' }}</span>
-        <div class="actions">
-          <label>Rows
-            <select class="control control--sm" [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value); page.set(1); selectedDaily.set([])">
-              @for (size of pageSizeOptions; track size) {<option [value]="size">{{ size }}</option>}
-            </select>
-          </label>
-          <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
-          <button class="icon-btn" aria-label="Previous page" [disabled]="currentPage() === 1" (click)="page.set(currentPage() - 1); selectedDaily.set([])"><i class="pi pi-angle-left" aria-hidden="true"></i></button>
-          <button class="icon-btn" aria-label="Next page" [disabled]="currentPage() === totalPages()" (click)="page.set(currentPage() + 1); selectedDaily.set([])"><i class="pi pi-angle-right" aria-hidden="true"></i></button>
-        </div>
-      </footer>
+      <app-pagination
+        class="pagination"
+        entityLabel="sheets"
+        [totalItems]="filteredDaily().length"
+        [page]="currentPage()"
+        [(pageSize)]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        (paginate)="page.set($event.page); selectedDaily.set([])"
+      />
     } @else {
       <app-smart-table [rows]="filteredMonthly()" [columns]="monthlyColumns" [loading]="isLoading()" [searchable]="false" [(pageSize)]="pageSize" [(sort)]="monthlySort" [pageSizeOptions]="pageSizeOptions" entityLabel="sheets">
         <ng-template smartCell="employee" let-row><div class="person"><span class="avatar">{{ initials(row.employee) }}</span>{{ row.employee }}</div></ng-template>

@@ -127,7 +127,6 @@ h1 { margin-top: 0.25rem; font-size: clamp(1.5rem, 2.2vw, 1.85rem); line-height:
   background-position: right 0.7rem center;
   color-scheme: dark;
 }
-.control--sm { min-height: 2rem; padding-left: 0.6rem; }
 .control.set { border-color: rgba(139, 92, 246, 0.55); background-color: rgba(139, 92, 246, 0.08); }
 
 .search { display: flex; align-items: center; gap: 0.6rem; flex: 1 1 16rem; padding: 0 0.75rem; }
@@ -241,9 +240,7 @@ input[type='checkbox']:disabled { opacity: 0.3; cursor: not-allowed; }
 .empty p { margin-top: 0.3rem; font-size: 0.82rem; }
 .empty .ghost-btn { margin-top: 1rem; }
 
-.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.6rem 1rem; border-top: 1px solid var(--q-line); font-size: 0.78rem; color: var(--q-muted); }
-.pagination label { display: flex; align-items: center; gap: 0.5rem; margin-right: 0.5rem; }
-.page-info { margin-right: 0.25rem; font-variant-numeric: tabular-nums; }
+.pagination { padding: 0.6rem 1rem; border-top: 1px solid var(--q-line); }
 
 .notice { display: flex; align-items: center; gap: 0.75rem; }
 .notice .ghost-btn { margin-left: auto; }
@@ -287,7 +284,6 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   .control, .search input { font-size: 1rem; }
   .bulk-bar .actions { width: 100%; }
   .bulk-bar .actions button { flex: 1; justify-content: center; }
-  .pagination { justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

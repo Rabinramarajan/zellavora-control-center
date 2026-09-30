@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { AppDialogService } from '@shared/components/dialog';
+import { PageChangeEvent, PaginationComponent } from '@shared/components/pagination/pagination.component';
 import { IamApiService, unwrap } from '@core/api/iam.api';
 import { IamUserListItem, UserStatus } from '@shared/models/iam.model';
 import { createListStore } from '@shared/utils/create-list-store';
@@ -76,7 +77,15 @@ const AVATAR_TONES = ['#7c3aed', '#8b5cf6', '#a855f7', '#6366f1', '#db2777', '#c
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [FormsModule, RouterLink, ToastModule, FormInputControl, SelectControl, DateControl],
+  imports: [
+    FormsModule,
+    RouterLink,
+    ToastModule,
+    FormInputControl,
+    SelectControl,
+    DateControl,
+    PaginationComponent,
+  ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -231,25 +240,6 @@ export class UsersComponent {
     return chips;
   });
 
-  readonly rangeLabel = computed(() => {
-    const total = this.store.total();
-    if (!total) return 'Showing 0 users';
-    const start = (this.store.page() - 1) * this.store.pageSize() + 1;
-    const end = Math.min(start + this.store.items().length - 1, total);
-    return `Showing ${start} - ${end} of ${total.toLocaleString()} users`;
-  });
-
-  readonly totalPages = computed(() => Math.max(1, this.store.totalPages()));
-
-  readonly pageItems = computed<Array<number | '…'>>(() => {
-    const total = this.totalPages();
-    const cur = this.store.page();
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    if (cur <= 4) return [1, 2, 3, 4, 5, '…', total];
-    if (cur >= total - 3) return [1, '…', ...Array.from({ length: 5 }, (_, i) => total - 4 + i)];
-    return [1, '…', cur - 1, cur, cur + 1, '…', total];
-  });
-
   readonly allOnPageSelected = computed(() => {
     const rows = this.store.items();
     const sel = this.selected();
@@ -333,13 +323,9 @@ export class UsersComponent {
     return this.sortKey() !== key ? null : this.sortDir() === 'asc' ? 'ascending' : 'descending';
   }
 
-  goToPage(p: number): void {
-    const target = Math.min(Math.max(1, p), this.totalPages());
-    if (target !== this.store.page()) this.store.setPage(target);
-  }
-
-  setPageSize(size: number): void {
-    this.store.setPageSize(Number(size));
+  onPaginate({ page, pageSize }: PageChangeEvent): void {
+    if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
+    else this.store.setPage(page);
   }
 
   toggleRow(id: string): void {

@@ -16,6 +16,7 @@ import {
   SortState,
 } from '../../../../shared/components/smart-table';
 import { DateRangePickerComponent } from '../../../../shared/components/date-range-picker/date-range-picker.component';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { SheetsStore } from '../../sheets.store';
 import { DailySheet, MonthlySheet } from '../../sheets.models';
 import { initialsOf, paletteFor, statusLabel, statusPill } from '../../sheets.presentation';
@@ -132,6 +133,7 @@ const MONTHLY_COLUMNS: ColumnDef<MonthlyRow>[] = [
     SmartCellDirective,
     SmartEmptyDirective,
     DateRangePickerComponent,
+    PaginationComponent,
   ],
   providers: [SheetsStore],
   templateUrl: './approval-queue.component.html',

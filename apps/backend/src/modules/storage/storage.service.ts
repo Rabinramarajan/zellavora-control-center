@@ -28,6 +28,7 @@ const MIME_BY_EXTENSION: Record<string, string> = {
   txt: 'text/plain',
   csv: 'text/csv',
   json: 'application/json',
+  md: 'text/markdown',
   doc: 'application/msword',
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   xls: 'application/vnd.ms-excel',

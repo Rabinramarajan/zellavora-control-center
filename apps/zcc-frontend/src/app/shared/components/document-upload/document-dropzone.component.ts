@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { DOCUMENT_UPLOAD_ACCEPT, DOCUMENT_UPLOAD_LABEL } from './document-upload.models';
 
 @Component({
   selector: 'zcc-document-dropzone',
@@ -32,7 +33,7 @@ import { ChangeDetectionStrategy, Component, input, output, signal } from '@angu
         (change)="select($event)"
       />
       <small
-        >Supports PDF, JPG, PNG only <span aria-hidden="true"> | </span> Max file size:
+        >Supports {{ label() }} <span aria-hidden="true"> | </span> Max file size:
         {{ maxSizeMb() }} MB per file</small
       >
     </section>
@@ -109,7 +110,8 @@ import { ChangeDetectionStrategy, Component, input, output, signal } from '@angu
   `,
 })
 export class DocumentDropzoneComponent {
-  readonly accept = input('.pdf,.jpg,.jpeg,.png');
+  readonly accept = input(DOCUMENT_UPLOAD_ACCEPT);
+  readonly label = input(DOCUMENT_UPLOAD_LABEL);
   readonly maxSizeMb = input(25);
   readonly disabled = input(false);
   readonly filesSelected = output<File[]>();

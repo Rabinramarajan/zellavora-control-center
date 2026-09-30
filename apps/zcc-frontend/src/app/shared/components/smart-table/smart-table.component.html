@@ -149,65 +149,13 @@
 </div>
 
 @if (paginated()) {
-  <div class="st-footer">
-    <span class="st-range" aria-live="polite">
-      @if (store.total()) {
-        Showing {{ store.rangeStart() }} to {{ store.rangeEnd() }} of {{ store.total() }}
-        {{ entityLabel() }}
-      } @else {
-        No {{ entityLabel() }} to show
-      }
-    </span>
-
-    <div class="st-footer__controls">
-      <nav class="st-pager" aria-label="Pagination">
-        <button
-          type="button"
-          class="st-page"
-          aria-label="Previous page"
-          [disabled]="store.currentPage() === 1"
-          (click)="store.goToPage(store.currentPage() - 1)"
-        >
-          ‹
-        </button>
-
-        @for (item of store.pageItems(); track $index) {
-          @if (item === null) {
-            <span class="st-page st-page--gap" aria-hidden="true">…</span>
-          } @else {
-            <button
-              type="button"
-              class="st-page"
-              [class.st-page--current]="item === store.currentPage()"
-              [attr.aria-current]="item === store.currentPage() ? 'page' : null"
-              (click)="store.goToPage(item)"
-            >
-              {{ item }}
-            </button>
-          }
-        }
-
-        <button
-          type="button"
-          class="st-page"
-          aria-label="Next page"
-          [disabled]="store.currentPage() === store.pageCount()"
-          (click)="store.goToPage(store.currentPage() + 1)"
-        >
-          ›
-        </button>
-      </nav>
-
-      @if (pageSizeOptions().length > 1) {
-        <label class="st-pagesize">
-          Rows per page
-          <select class="st-select" [value]="pageSize()" (change)="onPageSize($event)">
-            @for (size of pageSizeOptions(); track size) {
-              <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
-            }
-          </select>
-        </label>
-      }
-    </div>
-  </div>
+  <app-pagination
+    class="st-footer"
+    [totalItems]="store.total()"
+    [page]="store.currentPage()"
+    (pageChange)="store.goToPage($event)"
+    [(pageSize)]="pageSize"
+    [pageSizeOptions]="pageSizeOptions()"
+    [entityLabel]="entityLabel()"
+  />
 }

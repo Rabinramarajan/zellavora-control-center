@@ -9,5 +9,4 @@ export * from './data-table.component';
 export * from './confirm-dialog.component';
 export * from './detail-tabs.component';
 export * from './empty-state.component';
-export * from './pagination-bar.component';
 export * from './json-diff-viewer.component';

@@ -1,11 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { TableModule } from 'primeng/table';
-import { PaginatorModule } from 'primeng/paginator';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { PaginationComponent } from '@shared/components/pagination/pagination.component';
 
 interface BlogPost {
   id: string;
@@ -27,10 +34,10 @@ interface BlogPost {
     CommonModule,
     ButtonModule,
     TableModule,
-    PaginatorModule,
     ToastModule,
     FormInputControl,
     SelectControl,
+    PaginationComponent,
   ],
   templateUrl: './blog.component.html',
   styleUrl: './blog.component.css',
@@ -139,6 +146,16 @@ export class BlogComponent {
       const matchesStatus = !status || post.status === status;
       return matchesSearch && matchesCategory && matchesStatus;
     });
+  });
+
+  readonly pageSizeOptions = [10, 20, 50];
+  readonly pageSize = signal(10);
+  // Any filter change jumps back to the first page.
+  readonly page = linkedSignal({ source: this.filteredBlogs, computation: () => 1 });
+
+  readonly pagedBlogs = computed(() => {
+    const start = (this.page() - 1) * this.pageSize();
+    return this.filteredBlogs().slice(start, start + this.pageSize());
   });
 
   clearFilters() {

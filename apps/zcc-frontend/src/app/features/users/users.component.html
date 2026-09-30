@@ -227,55 +227,23 @@
 
       <!-- Pagination -->
       <footer class="us-footer">
-        <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
-          <label class="flex items-center gap-2.5 text-sm text-slate-400">
-            Rows
-            <span class="us-select-wrap w-[4.5rem]">
-              <select class="us-select h-9" [ngModel]="store.pageSize()" (ngModelChange)="setPageSize($event)">
-                @for (size of pageSizes; track size) {
-                  <option [ngValue]="size">{{ size }}</option>
-                }
-              </select>
-              <i class="pi pi-chevron-down" aria-hidden="true"></i>
-            </span>
-          </label>
-          <p class="text-sm text-slate-400" aria-live="polite">{{ rangeLabel() }}</p>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-center gap-3">
-          <button type="button" class="us-btn us-btn-ghost h-10 px-3.5" (click)="exportUsers()">
-            <i class="pi pi-download text-sm" aria-hidden="true"></i>
-            @if (selected().size) {
-              Export {{ selected().size }} selected
-            } @else {
-              Export CSV
-            }
-          </button>
-          <span class="hidden h-6 w-px bg-white/10 sm:block" aria-hidden="true"></span>
-        <nav class="flex items-center gap-1" aria-label="Pagination">
-          <button type="button" class="us-page-btn" aria-label="Previous page" [disabled]="store.page() <= 1" (click)="goToPage(store.page() - 1)">
-            <i class="pi pi-chevron-left text-xs" aria-hidden="true"></i>
-          </button>
-          @for (item of pageItems(); track $index) {
-            @if (item === '…') {
-              <span class="w-8 text-center text-slate-500" aria-hidden="true">…</span>
-            } @else {
-              <button
-                type="button"
-                class="us-page-btn"
-                [class.is-current]="item === store.page()"
-                [attr.aria-current]="item === store.page() ? 'page' : null"
-                (click)="goToPage(item)"
-              >
-                {{ item }}
-              </button>
-            }
+        <button type="button" class="us-btn us-btn-ghost h-10 px-3.5" (click)="exportUsers()">
+          <i class="pi pi-download text-sm" aria-hidden="true"></i>
+          @if (selected().size) {
+            Export {{ selected().size }} selected
+          } @else {
+            Export CSV
           }
-          <button type="button" class="us-page-btn" aria-label="Next page" [disabled]="store.page() >= totalPages()" (click)="goToPage(store.page() + 1)">
-            <i class="pi pi-chevron-right text-xs" aria-hidden="true"></i>
-          </button>
-        </nav>
-        </div>
+        </button>
+        <app-pagination
+          class="w-full md:w-auto md:flex-1"
+          entityLabel="users"
+          [totalItems]="store.total()"
+          [page]="store.page()"
+          [pageSize]="store.pageSize()"
+          [pageSizeOptions]="pageSizes"
+          (paginate)="onPaginate($event)"
+        />
       </footer>
     </div>
   </div>

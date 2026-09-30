@@ -28,6 +28,7 @@ import {
   CdkVirtualForOf,
   CdkFixedSizeVirtualScroll,
 } from '@angular/cdk/scrolling';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 /* ================================================================== *
  *  Requires: npm i @angular/cdk
@@ -108,6 +109,7 @@ export class EmptyDirective {
     CdkVirtualScrollViewport,
     CdkVirtualForOf,
     CdkFixedSizeVirtualScroll,
+    PaginationComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'dt-host' },
@@ -248,29 +250,6 @@ export class Table<T extends object> {
     if (this.virtualScroll()) return this.sorted();
     const start = (this.safePage() - 1) * this.pageSize();
     return this.sorted().slice(start, start + this.pageSize());
-  });
-  protected readonly rangeStart = computed(() =>
-    this.total() === 0 ? 0 : (this.safePage() - 1) * this.pageSize() + 1
-  );
-  protected readonly rangeEnd = computed(() =>
-    Math.min(this.safePage() * this.pageSize(), this.total())
-  );
-  protected readonly pages = computed<(number | null)[]>(() => {
-    const total = this.totalPages();
-    const current = this.safePage();
-    const max = 7;
-    if (total <= max) return Array.from({ length: total }, (_, i) => i + 1);
-    const core = [current - 1, current, current + 1].filter((p) => p >= 1 && p <= total);
-    const out: (number | null)[] = [];
-    const push = (n: number) => {
-      const last = out[out.length - 1];
-      if (typeof last === 'number' && n - last > 1) out.push(null);
-      out.push(n);
-    };
-    if (core[0] !== 1) push(1);
-    for (const p of core) push(p);
-    if (core[core.length - 1] !== total) push(total);
-    return out;
   });
 
   /* ---- header helpers (#3) ---- */

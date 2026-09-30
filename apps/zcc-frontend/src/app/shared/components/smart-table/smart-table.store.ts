@@ -13,9 +13,6 @@ export interface SmartTableStoreOptions<T> {
   pageSize?: WritableSignal<number>;
 }
 
-/** `null` marks an ellipsis in the page list. */
-export type PageItem = number | null;
-
 const defaultTrackBy = <T>(row: T): unknown => (row as { id?: unknown }).id ?? row;
 
 /**
@@ -106,18 +103,6 @@ export class SmartTableStore<T> {
 
   readonly rangeEnd = computed(() => Math.min(this.currentPage() * this.pageSize(), this.total()));
 
-  /** First, last and the neighbours of the current page, with gaps collapsed. */
-  readonly pageItems = computed<PageItem[]>(() => {
-    const total = this.pageCount();
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-
-    const current = this.currentPage();
-    const pages = [...new Set([1, total, current - 1, current, current + 1])]
-      .filter((n) => n >= 1 && n <= total)
-      .sort((a, b) => a - b);
-
-    return pages.flatMap((n, i) => (i > 0 && n - pages[i - 1] > 1 ? [null, n] : [n]));
-  });
 
   // ---- selection ---------------------------------------------------------
 

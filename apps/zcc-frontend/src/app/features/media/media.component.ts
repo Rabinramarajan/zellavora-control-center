@@ -17,6 +17,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { AuthStore } from '@core/auth/auth.store';
 import { AppDialogService } from '@shared/components/dialog';
+import { PaginationComponent } from '@shared/components/pagination/pagination.component';
 import {
   DocumentUploadComponent,
   DocumentUploadDialogData,
@@ -49,7 +50,7 @@ interface Dimensions {
 @Component({
   selector: 'app-media',
   standalone: true,
-  imports: [CommonModule, ButtonModule, ToastModule],
+  imports: [CommonModule, ButtonModule, ToastModule, PaginationComponent],
   templateUrl: './media.component.html',
   styleUrl: './media.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -148,27 +149,6 @@ export class MediaComponent {
     return this.filteredItems().slice(start, start + this.pageSize());
   });
 
-  readonly pageRange = computed(() => {
-    const total = this.filteredItems().length;
-    if (total === 0) return null;
-    const start = (this.page() - 1) * this.pageSize() + 1;
-    const end = Math.min(start + this.pageSize() - 1, total);
-    return { start, end, total };
-  });
-
-  /** Compact page list with ellipses: 1 … 4 5 6 … 12. */
-  readonly pageNumbers = computed<(number | null)[]>(() => {
-    const total = this.totalPages();
-    const current = this.page();
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    const pages = new Set([1, total, current - 1, current, current + 1]);
-    if (current <= 4) [2, 3, 4, 5].forEach((p) => pages.add(p));
-    if (current >= total - 3)
-      [total - 4, total - 3, total - 2, total - 1].forEach((p) => pages.add(p));
-    const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
-    return sorted.flatMap((p, i) => (i > 0 && p - sorted[i - 1] > 1 ? [null, p] : [p]));
-  });
-
   readonly selectedItems = computed(() => {
     const keys = this.selected();
     return this.items().filter((item) => keys.has(item.pathname));
@@ -263,15 +243,6 @@ export class MediaComponent {
 
   selectTab(tab: MediaTab): void {
     this.activeTab.set(tab);
-    this.page.set(1);
-  }
-
-  goToPage(page: number): void {
-    this.page.set(Math.min(Math.max(1, page), this.totalPages()));
-  }
-
-  setPageSize(size: string): void {
-    this.pageSize.set(Number(size));
     this.page.set(1);
   }
 

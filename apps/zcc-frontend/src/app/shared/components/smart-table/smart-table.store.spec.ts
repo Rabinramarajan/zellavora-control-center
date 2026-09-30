@@ -78,12 +78,6 @@ describe('SmartTableStore', () => {
     expect(store.currentPage()).toBe(1);
   });
 
-  it('collapses long page lists with gaps', () => {
-    const { store } = createStore(makeRows(100));
-    store.goToPage(5);
-    expect(store.pageItems()).toEqual([1, null, 4, 5, 6, null, 10]);
-  });
-
   it('selects the current page and drops rows that leave the data set', () => {
     const { store, source } = createStore(makeRows(15));
     store.togglePage();

@@ -647,47 +647,6 @@
   box-shadow: 0 -12px 30px -18px rgb(0 0 0 / 0.9);
 }
 
-.mg-page {
-  display: grid;
-  place-items: center;
-  min-width: 2.25rem;
-  height: 2.25rem;
-  padding: 0 0.5rem;
-  border-radius: 0.55rem;
-  font-size: 0.875rem;
-  color: rgb(203 213 225);
-  font-variant-numeric: tabular-nums;
-  transition:
-    background-color 150ms,
-    color 150ms;
-}
-
-.mg-page:not(:disabled):not(.is-gap) {
-  cursor: pointer;
-}
-
-@media (pointer: coarse) {
-  .mg-page {
-    min-width: 2.75rem;
-    height: 2.75rem;
-  }
-}
-
-.mg-page:not(:disabled):not(.is-gap):hover {
-  color: #fff;
-  background: rgb(255 255 255 / 0.07);
-}
-
-.mg-page:disabled {
-  opacity: 0.35;
-}
-
-.mg-page.is-active {
-  color: #fff;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--mg-accent), var(--mg-accent-2));
-  box-shadow: 0 6px 16px -6px rgb(124 58 237 / 0.9);
-}
 
 .mg-btn:focus-visible,
 .mg-segment-btn:focus-visible,
@@ -696,8 +655,7 @@
 .mg-thumb:focus-visible,
 .mg-check:focus-visible,
 .mg-kebab:focus-visible,
-.mg-icon-btn:focus-visible,
-.mg-page:focus-visible {
+.mg-icon-btn:focus-visible {
   outline: 2px solid var(--mg-ring);
   outline-offset: 2px;
 }

@@ -92,7 +92,6 @@
 
 .us-btn:focus-visible,
 .us-icon-btn:focus-visible,
-.us-page-btn:focus-visible,
 .us-stat:focus-visible,
 .us-sort:focus-visible {
   outline: 2px solid #a78bfa;
@@ -651,37 +650,6 @@ span.us-select-wrap:not(.us-input-wrap) .us-select {
 }
 
 /* Pagination */
-.us-page-btn {
-  display: grid;
-  place-items: center;
-  min-width: 2.25rem;
-  height: 2.25rem;
-  padding: 0 0.4rem;
-  border-radius: 0.55rem;
-  color: #cbd5e1;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition:
-    background-color 160ms ease,
-    color 160ms ease;
-}
-
-.us-page-btn:hover:not(:disabled):not(.is-current) {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
-
-.us-page-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.us-page-btn.is-current {
-  color: #fff;
-  background: linear-gradient(135deg, var(--us-primary), var(--us-primary-2));
-  box-shadow: 0 6px 18px -6px rgba(109, 76, 255, 0.8);
-}
-
 /* Filter dialog */
 .us-backdrop {
   position: fixed;

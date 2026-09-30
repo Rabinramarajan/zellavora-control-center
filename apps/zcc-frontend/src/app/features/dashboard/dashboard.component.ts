@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SelectControl } from '@zellavoras/ui';
 import { AuthStore } from '@core/auth/auth.store';
+import { PageChangeEvent, PaginationComponent } from '@shared/components/pagination/pagination.component';
 import { CsvExporter } from '@shared/utils/csv-exporter';
 import { DashboardStore } from './dashboard.store';
 import { ActivityEvent, AuditSeverity, DashboardRange, TrendPoint } from './dashboard.models';
@@ -22,7 +23,7 @@ const SEVERITY_OPTIONS: Array<{ label: string; value: AuditSeverity | '' }> = [
   { label: 'Critical', value: 'critical' },
 ];
 
-const PAGE_SIZE_OPTIONS = [8, 15, 25, 50].map((n) => ({ label: String(n), value: String(n) }));
+const PAGE_SIZE_OPTIONS = [8, 15, 25, 50];
 
 const RANGES: DashboardRange[] = ['7', '30', '90'];
 
@@ -120,6 +121,7 @@ function halfOverHalf(points: TrendPoint[] | undefined): number | null {
     TrendChartComponent,
     PlanDonutComponent,
     DashboardIconComponent,
+    PaginationComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
@@ -213,20 +215,6 @@ export class DashboardComponent implements OnInit {
     { name: 'Members', color: '#3b82f6', data: this.store.membersSeries() },
   ]);
 
-  readonly totalPages = computed(() => {
-    const a = this.store.activity();
-    return a ? Math.max(1, Math.ceil(a.total / this.store.activityPageSize())) : 1;
-  });
-
-  // Compact page list: first, last, current ±1, with null marking an ellipsis gap.
-  readonly pageNumbers = computed<Array<number | null>>(() => {
-    const total = this.totalPages();
-    const current = this.store.activity()?.page ?? 1;
-    const pages = new Set([1, total, current - 1, current, current + 1]);
-    const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
-    return sorted.flatMap((p, i) => (i > 0 && p - sorted[i - 1] > 1 ? [null, p] : [p]));
-  });
-
   readonly rangeStart = computed(() => {
     const a = this.store.activity();
     return a && a.total ? (a.page - 1) * this.store.activityPageSize() + 1 : 0;
@@ -252,13 +240,9 @@ export class DashboardComponent implements OnInit {
     this.store.setActivityFilters(value === '' ? {} : { severity: value as AuditSeverity });
   }
 
-  setPageSize(value: string): void {
-    this.store.setActivityPageSize(Number(value));
-  }
-
-  goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    void this.store.loadActivity(page);
+  onPaginate({ page, pageSize }: PageChangeEvent): void {
+    if (pageSize !== this.store.activityPageSize()) this.store.setActivityPageSize(pageSize);
+    else void this.store.loadActivity(page);
   }
 
   severityClass(severity: AuditSeverity): string {

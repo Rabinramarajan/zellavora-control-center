@@ -3,7 +3,13 @@ import { DatePipe } from '@angular/common';
 import { DocumentDropzoneComponent } from './document-dropzone.component';
 import { injectDialogData, injectDialogRef } from '../dialog/dialog.inject';
 import { APP_DIALOG_TITLE_ID } from '../dialog/dialog.types';
-import { DocumentUploadDialogData, UploadDocument } from './document-upload.models';
+import {
+  DOCUMENT_UPLOAD_ACCEPT,
+  DOCUMENT_UPLOAD_LABEL,
+  DOCUMENT_UPLOAD_TYPES,
+  DocumentUploadDialogData,
+  UploadDocument,
+} from './document-upload.models';
 
 @Component({
   selector: 'zcc-document-upload',
@@ -29,7 +35,8 @@ export class DocumentUploadComponent {
   readonly ready = computed(() =>
     this.documents().filter((d) => d.status === 'ready' || d.status === 'failed')
   );
-  readonly accept = '.pdf,.jpg,.jpeg,.png';
+  readonly accept = DOCUMENT_UPLOAD_ACCEPT;
+  readonly acceptLabel = DOCUMENT_UPLOAD_LABEL;
 
   requestClose(): void {
     if (!this.busy()) this.ref.close();
@@ -41,11 +48,12 @@ export class DocumentUploadComponent {
     const next = [...this.documents()];
     for (const file of files) {
       const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-      const allowed = ['pdf', 'jpg', 'jpeg', 'png'];
-      const mime =
-        extension === 'pdf' ? 'application/pdf' : extension === 'png' ? 'image/png' : 'image/jpeg';
-      if (!allowed.includes(extension) || (file.type && file.type !== mime))
-        errors.push(`${file.name}: only PDF, JPG and PNG files are supported.`);
+      const mimes = DOCUMENT_UPLOAD_TYPES[extension];
+      // Browsers report empty or generic types for many formats, so only reject a clear mismatch.
+      const typeMismatch =
+        !!file.type && file.type !== 'application/octet-stream' && !mimes?.includes(file.type);
+      if (!mimes || typeMismatch)
+        errors.push(`${file.name}: only ${DOCUMENT_UPLOAD_LABEL} files are supported.`);
       else if (!file.size || file.size > this.maxSizeMb * 1024 * 1024)
         errors.push(
           `${file.name}: file must be non-empty and no larger than ${this.maxSizeMb} MB.`

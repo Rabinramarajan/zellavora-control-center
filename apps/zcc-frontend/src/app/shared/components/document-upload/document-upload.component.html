@@ -21,6 +21,7 @@
     <h3>Upload Documents</h3>
     <zcc-document-dropzone
       [accept]="accept"
+      [label]="acceptLabel"
       [maxSizeMb]="maxSizeMb"
       [disabled]="busy()"
       (filesSelected)="addFiles($event)"
@@ -78,7 +79,9 @@
                   @if (row.uploadedOn) {
                     <div class="upload-meta">
                       @if (row.uploadedBy) {
-                        <span class="avatar" aria-hidden="true">{{ initials(row.uploadedBy) }}</span>
+                        <span class="avatar" aria-hidden="true">{{
+                          initials(row.uploadedBy)
+                        }}</span>
                       }
                       <div class="upload-meta-text">
                         <span class="uploader">{{ row.uploadedBy ?? 'Unknown user' }}</span>

@@ -13,13 +13,14 @@ import {
   output,
 } from '@angular/core';
 import { SmartCellContext, SmartCellDirective, SmartEmptyDirective } from './cells/cell.directive';
+import { PaginationComponent } from '../pagination/pagination.component';
 import { SmartTableStore } from './smart-table.store';
 import { ColumnDef, FilterState, SelectionMode, SortState, TrackByFn } from './smart-table.types';
 
 @Component({
   selector: 'app-smart-table',
   standalone: true,
-  imports: [NgTemplateOutlet, FormInputControl],
+  imports: [NgTemplateOutlet, FormInputControl, PaginationComponent],
   templateUrl: './smart-table.component.html',
   styleUrl: './smart-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -124,9 +125,5 @@ export class SmartTableComponent<T> {
 
   protected rowKey(row: T): unknown {
     return this.trackBy()(row);
-  }
-
-  protected onPageSize(event: Event): void {
-    this.pageSize.set(Number((event.target as HTMLSelectElement).value));
   }
 }

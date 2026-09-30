@@ -314,60 +314,16 @@
           </table>
         </div>
 
-        <nav
-          class="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-white/5 text-[12px] text-slate-400"
-          aria-label="Activity log pagination"
-        >
-          <span
-            >Showing {{ rangeStart() }} to {{ rangeEnd() }} of
-            {{ store.activity()!.total }} events</span
-          >
-          <div class="flex items-center gap-1">
-            <button
-              type="button"
-              class="dash-page"
-              (click)="goToPage(store.activity()!.page - 1)"
-              [disabled]="store.activity()!.page <= 1"
-              aria-label="Previous page"
-            >
-              <app-dashboard-icon name="chevron-left" [size]="14" />
-            </button>
-            @for (p of pageNumbers(); track $index) {
-              @if (p === null) {
-                <span class="px-1">…</span>
-              } @else {
-                <button
-                  type="button"
-                  class="dash-page"
-                  [class.is-active]="p === store.activity()!.page"
-                  [attr.aria-current]="p === store.activity()!.page ? 'page' : null"
-                  (click)="goToPage(p)"
-                >
-                  {{ p }}
-                </button>
-              }
-            }
-            <button
-              type="button"
-              class="dash-page"
-              (click)="goToPage(store.activity()!.page + 1)"
-              [disabled]="store.activity()!.page >= totalPages()"
-              aria-label="Next page"
-            >
-              <app-dashboard-icon name="chevron-right" [size]="14" />
-            </button>
-          </div>
-          <label class="flex items-center gap-2">
-            <span class="whitespace-nowrap">Rows per page</span>
-            <app-select-control
-              class="dash-select w-20"
-              aria-label="Rows per page"
-              [options]="pageSizeOptions"
-              [value]="'' + store.activityPageSize()"
-              (valueChange)="setPageSize($event)"
-            />
-          </label>
-        </nav>
+        <app-pagination
+          class="mt-4 pt-3 border-t border-white/5"
+          ariaLabel="Activity log pagination"
+          entityLabel="events"
+          [totalItems]="store.activity()!.total"
+          [page]="store.activity()!.page"
+          [pageSize]="store.activityPageSize()"
+          [pageSizeOptions]="pageSizeOptions"
+          (paginate)="onPaginate($event)"
+        />
       } @else {
         <div class="dash-empty min-h-[240px]">
           <app-dashboard-icon name="file" [size]="22" />

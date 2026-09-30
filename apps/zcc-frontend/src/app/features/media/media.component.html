@@ -393,60 +393,14 @@
 
   <!-- Pagination: pinned to the bottom of the content area -->
   @if (!loading() && !error() && filteredItems().length) {
-    <nav
-      class="mg-pager flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-      aria-label="Pagination"
-    >
-      <p class="text-sm text-slate-400" aria-live="polite">
-        @if (pageRange(); as range) {
-          Showing <span class="font-semibold text-white">{{ range.start }}–{{ range.end }}</span>
-          of <span class="font-semibold text-white">{{ range.total }}</span> files
-        }
-      </p>
-      <div class="flex items-center justify-center gap-1">
-        <button
-          type="button"
-          class="mg-page"
-          aria-label="Previous page"
-          [disabled]="page() === 1"
-          (click)="goToPage(page() - 1)"
-        >
-          <i class="pi pi-angle-left" aria-hidden="true"></i>
-        </button>
-        @for (p of pageNumbers(); track $index) {
-          @if (p === null) {
-            <span class="mg-page is-gap" aria-hidden="true">…</span>
-          } @else {
-            <button
-              type="button"
-              class="mg-page"
-              [class.is-active]="p === page()"
-              [attr.aria-current]="p === page() ? 'page' : null"
-              (click)="goToPage(p)"
-            >
-              {{ p }}
-            </button>
-          }
-        }
-        <button
-          type="button"
-          class="mg-page"
-          aria-label="Next page"
-          [disabled]="page() === totalPages()"
-          (click)="goToPage(page() + 1)"
-        >
-          <i class="pi pi-angle-right" aria-hidden="true"></i>
-        </button>
-      </div>
-      <label class="flex items-center justify-center gap-3 text-sm text-slate-400">
-        Per page
-        <select class="mg-select !w-20" (change)="setPageSize($any($event.target).value)">
-          @for (size of pageSizeOptions; track size) {
-            <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
-          }
-        </select>
-      </label>
-    </nav>
+    <app-pagination
+      class="mg-pager"
+      entityLabel="files"
+      [totalItems]="filteredItems().length"
+      [(page)]="page"
+      [(pageSize)]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+    />
   }
 </div>
 
