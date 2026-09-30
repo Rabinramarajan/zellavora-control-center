@@ -24,6 +24,7 @@ import dashboardRoutes from '../modules/dashboard/dashboard.routes';
 import resourceRoutes from '../modules/resources/resource.routes';
 import roleRoutes from '../modules/roles/role.routes';
 import groupRoutes from '../modules/groups/group.routes';
+import userRequestRoutes from '../modules/user-requests/user-request.routes';
 import iamUserRoutes from '../modules/users/iam-user.routes';
 import iamPermissionRoutes from '../modules/permission/permission-catalog.routes';
 import iamDepartmentRoutes from '../modules/departments/departments.routes';
@@ -60,6 +61,7 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/iam/roles', roleRoutes);
   app.use('/api/v1/iam/groups', groupRoutes);
   app.use('/api/v1/iam/users', iamUserRoutes);
+  app.use('/api/v1/iam/user-requests', userRequestRoutes);
   app.use('/api/v1/iam/permissions', iamPermissionRoutes);
   app.use('/api/v1/iam/departments', iamDepartmentRoutes);
   app.use('/api/v1/iam/teams', iamTeamRoutes);

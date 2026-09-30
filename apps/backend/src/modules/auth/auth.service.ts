@@ -33,6 +33,7 @@ import {
   SecurityPolicyService,
   ipInRanges,
 } from '../security-policy/security-policy.service';
+import { UserRequestService } from '../user-requests/user-request.service';
 import type { LoginPolicy } from '../security-policy/security-policy.dto';
 import { AuthRepository } from './auth.repository';
 import type { AcceptInvitationDto, LoginDto, RegisterDto } from './auth.dto';
@@ -421,6 +422,7 @@ export class AuthService {
     });
 
     await this.audit('invitation_accepted', organizationId, userId, meta);
+    await new UserRequestService().onInvitationAccepted(userId);
     return { ok: true, clientCode: invitation.organization?.clientCode ?? null };
   }
 

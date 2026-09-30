@@ -99,6 +99,7 @@ model Organization {
   teams         Team[]
   projects       Project[]
   portfolioProjects PortfolioProject[]
+  userRequests   UserRequest[]
 
   @@map("organizations")
 }
@@ -129,6 +130,10 @@ model User {
   // IAM / Admin fields
   department     String?      @map("department")
   jobTitle       String?      @map("job_title")
+  employeeCode   String?      @unique @map("employee_code")
+  userType       String?      @map("user_type")           // EMPLOYEE, CONTRACTOR, EXTERNAL
+  branchId       String?      @map("branch_id") @db.Uuid
+  reportingManagerId String?  @map("reporting_manager_id") @db.Uuid
   status         UserStatus   @default(ACTIVE) @map("status")
   
   // Location
@@ -210,6 +215,10 @@ model User {
 
   // Teams
   teams             Team[]
+
+  // User requests
+  userRequestsFor   UserRequest[]  @relation("UserRequestTarget")
+  userRequestsBy    UserRequest[]  @relation("UserRequestRequester")
 
   @@map("users")
 }
@@ -1403,4 +1412,143 @@ model PortfolioProject {
   @@index([status])
   @@index([createdAt(sort: Desc)])
   @@map("portfolio_projects")
+}
+
+// ============================================================================
+// USER REQUESTS (IAM change workflow)
+// ============================================================================
+
+model UserRequest {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  refNo           String    @unique @map("ref_no")          // UR-2026-000124
+  type            String                                     // NEW_USER, UPDATE_USER, ACCESS_CHANGE, ...
+  status          String    @default("DRAFT")                // see user-request.types.ts
+  priority        String    @default("NORMAL")               // LOW, NORMAL, HIGH, URGENT
+  source          String    @default("ADMIN_PORTAL")         // ADMIN_PORTAL, API, SYSTEM
+
+  // Target user: null for NEW_USER until provisioning creates the account.
+  targetUserId    String?   @map("target_user_id") @db.Uuid
+  targetUser      User?     @relation("UserRequestTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  requestedById   String?   @map("requested_by_id") @db.Uuid
+  requestedBy     User?     @relation("UserRequestRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  // Denormalised search columns, copied from the payload on every save.
+  subjectName     String?   @map("subject_name")
+  subjectEmail    String?   @map("subject_email")
+  employeeCode    String?   @map("employee_code")
+  branchId        String?   @map("branch_id") @db.Uuid
+  departmentId    String?   @map("department_id") @db.Uuid
+  teamId          String?   @map("team_id") @db.Uuid
+  groupIds        String[]  @default([]) @map("group_ids") @db.Uuid
+  roleIds         String[]  @default([]) @map("role_ids") @db.Uuid
+
+  justification   String
+  effectiveFrom   DateTime? @map("effective_from") @db.Timestamptz
+  effectiveUntil  DateTime? @map("effective_until") @db.Timestamptz
+  attachmentUrl   String?   @map("attachment_url")
+  payload         Json      @default("{}")                   // user/employee/contact/organization/access sections
+  snapshot        Json?                                      // target user's access captured at submission
+  currentStep     Int?      @map("current_step")
+  submittedAt     DateTime? @map("submitted_at") @db.Timestamptz
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz
+  failureReason   String?   @map("failure_reason")
+
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy       String?   @map("created_by") @db.Uuid
+  updatedBy       String?   @map("updated_by") @db.Uuid
+  deletedBy       String?   @map("deleted_by") @db.Uuid
+  version         Int       @default(1)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  approvals       UserRequestApproval[]
+  events          UserRequestEvent[]
+  notes           UserRequestNote[]
+  emails          UserRequestEmail[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([targetUserId])
+  @@index([requestedById])
+  @@map("user_requests")
+}
+
+model UserRequestApproval {
+  id             String    @id @default(uuid()) @db.Uuid
+  requestId      String    @map("request_id") @db.Uuid
+  level          Int
+  stepName       String    @map("step_name")                // Manager Approval, IAM / Admin Approval, Security Approval
+  approverId     String?   @map("approver_id") @db.Uuid      // null = any holder of users:manage
+  approverName   String?   @map("approver_name")
+  status         String    @default("WAITING")              // WAITING, PENDING, APPROVED, REJECTED, SENT_BACK, CANCELLED
+  assignedAt     DateTime? @map("assigned_at") @db.Timestamptz
+  actionedAt     DateTime? @map("actioned_at") @db.Timestamptz
+  actionedById   String?   @map("actioned_by_id") @db.Uuid
+  actionedByName String?   @map("actioned_by_name")
+  comments       String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  request        UserRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("user_request_approvals")
+}
+
+/// Append-only status history.
+model UserRequestEvent {
+  id            String    @id @default(uuid()) @db.Uuid
+  requestId     String    @map("request_id") @db.Uuid
+  fromStatus    String?   @map("from_status")
+  toStatus      String    @map("to_status")
+  actorId       String?   @map("actor_id") @db.Uuid
+  actorName     String?   @map("actor_name")
+  comments      String?
+  correlationId String?   @map("correlation_id")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  request       UserRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+  @@map("user_request_events")
+}
+
+/// Append-only notes; historical notes are never edited.
+model UserRequestNote {
+  id            String    @id @default(uuid()) @db.Uuid
+  requestId     String    @map("request_id") @db.Uuid
+  noteType      String    @default("GENERAL") @map("note_type")   // GENERAL, APPROVAL, PROVISIONING, SYSTEM
+  visibility    String    @default("INTERNAL")                      // INTERNAL, REQUESTER
+  body          String
+  attachmentUrl String?   @map("attachment_url")
+  authorId      String?   @map("author_id") @db.Uuid
+  authorName    String?   @map("author_name")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  request       UserRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+  @@map("user_request_notes")
+}
+
+model UserRequestEmail {
+  id             String    @id @default(uuid()) @db.Uuid
+  requestId      String    @map("request_id") @db.Uuid
+  template       String                                     // INVITATION, SUBMITTED, APPROVAL_REQUIRED, APPROVED, REJECTED, SENT_BACK, COMPLETED
+  recipient      String
+  subject        String
+  bodyText       String    @map("body_text")
+  trigger        String
+  deliveryStatus String    @default("QUEUED") @map("delivery_status")   // QUEUED, SENT, DELIVERED, FAILED
+  attempts       Int       @default(0)
+  lastError      String?   @map("last_error")
+  sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  request        UserRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("user_request_emails")
 }

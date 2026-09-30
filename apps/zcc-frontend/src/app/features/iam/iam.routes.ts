@@ -38,9 +38,8 @@ export const iamRoutes: Routes = [
       {
         path: 'user-requests',
         canMatch: [canMatchPermission('users:read')],
-        loadComponent: () =>
-          import('./user-requests/user-requests.component').then((m) => m.UserRequestsComponent),
-        data: { title: 'User Requests' },
+        loadChildren: () =>
+          import('./user-requests/user-requests.routes').then((m) => m.userRequestsRoutes),
       },
       {
         path: 'groups',

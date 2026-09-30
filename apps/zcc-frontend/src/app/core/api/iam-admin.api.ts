@@ -13,8 +13,6 @@ import {
   DeliverySummary,
   DepartmentDetail,
   DepartmentItem,
-  InvitationList,
-  InviteUserRequest,
   LoginPolicy,
   MfaCompliance,
   MfaPolicy,
@@ -43,7 +41,7 @@ const clean = (params: QueryParams): Record<string, string> =>
 
 /**
  * API client for the IAM console modules beyond users/roles/groups/resources:
- * user requests, permission catalog, departments, teams, sessions, security
+ * permission catalog, departments, teams, sessions, security
  * policies, configuration and communications. Every method returns the
  * unwrapped `data` payload.
  */
@@ -62,21 +60,6 @@ export class IamAdminApiService {
   }
   private delete<T>(path: string): Observable<T> {
     return this.api.deleteData<ApiEnvelope<T>>(path).pipe(map((r) => r.data));
-  }
-
-  // User requests -------------------------------------------------------------
-  listInvitations(params: QueryParams): Observable<InvitationList> {
-    return this.get('/invitations', params);
-  }
-  // The invitation write endpoints respond without the envelope.
-  inviteUser(body: InviteUserRequest): Observable<unknown> {
-    return this.api.postData('/invitations', body);
-  }
-  resendInvitation(id: string): Observable<unknown> {
-    return this.api.postData(`/invitations/${id}/resend`, {});
-  }
-  revokeInvitation(id: string): Observable<unknown> {
-    return this.api.postData(`/invitations/${id}/revoke`, {});
   }
 
   // Permission catalog --------------------------------------------------------

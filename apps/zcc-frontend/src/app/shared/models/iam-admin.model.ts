@@ -1,36 +1,6 @@
 import { PaginatedList, UserStatus } from './iam.model';
 
 // ============================================================================
-// USER REQUESTS (invitations)
-// ============================================================================
-
-export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'expired';
-
-export interface InvitationItem {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  userId: string | null;
-  status: InvitationStatus;
-  invitedById: string | null;
-  invitedByName: string | null;
-  expiresAt: string;
-  usedAt: string | null;
-  createdAt: string;
-}
-
-export interface InvitationList extends PaginatedList<InvitationItem> {
-  counts: Record<InvitationStatus, number>;
-}
-
-export interface InviteUserRequest {
-  email: string;
-  firstName?: string | null;
-  lastName?: string | null;
-}
-
-// ============================================================================
 // PERMISSIONS CATALOG
 // ============================================================================
 
