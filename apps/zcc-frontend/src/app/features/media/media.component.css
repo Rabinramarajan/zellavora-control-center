@@ -6,7 +6,10 @@
   --mg-accent: #7c3aed;
   --mg-accent-2: #6366f1;
   --mg-ring: rgb(167 139 250);
-  display: block;
+  /* Fill the layout's flex column so the pager can sit at the bottom on short pages. */
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
 /* ---------- Entrance motion ---------- */
@@ -148,115 +151,99 @@
   background: rgb(239 68 68 / 0.15);
 }
 
-/* ---------- Stat cards ---------- */
-.mg-stat {
-  --tone: 139 92 246;
-  position: relative;
-  overflow: hidden;
-  min-height: 7.5rem;
-  padding: 1.1rem 1.25rem;
-  border-radius: 1rem;
-  background:
-    radial-gradient(120% 90% at 0% 0%, rgb(var(--tone) / 0.16), transparent 60%), var(--mg-surface);
-  border: 1px solid rgb(var(--tone) / 0.22);
-  transition:
-    transform 200ms,
-    border-color 200ms,
-    box-shadow 200ms;
-}
-
-button.mg-stat:hover {
-  transform: translateY(-2px);
-  border-color: rgb(var(--tone) / 0.5);
-  box-shadow: 0 16px 36px -20px rgb(var(--tone) / 0.8);
-}
-
-.mg-stat--violet {
-  --tone: 139 92 246;
-  border-color: rgb(139 92 246 / 0.55);
-}
-
-.mg-stat--emerald {
-  --tone: 16 185 129;
-}
-
-.mg-stat--rose {
-  --tone: 244 63 94;
-}
-
-.mg-stat--blue {
-  --tone: 59 130 246;
-}
-
-.mg-stat--slate {
-  --tone: 148 163 184;
-  border-color: var(--mg-border);
-}
-
-.mg-stat-icon {
-  display: inline-grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.7rem;
-  color: rgb(var(--tone));
-  background: rgb(var(--tone) / 0.16);
-  border: 1px solid rgb(var(--tone) / 0.25);
-}
-
-.mg-stat-label {
-  margin-top: 0.6rem;
-  font-size: 0.8125rem;
+/* ---------- Stat chips ---------- */
+.mg-chip {
+  --tone: 167 139 250;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.9rem 0.35rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--mg-border);
+  background: var(--mg-surface);
+  font-size: 0.875rem;
   color: rgb(203 213 225);
+  cursor: pointer;
+  transition:
+    border-color 200ms,
+    background-color 200ms,
+    color 200ms;
 }
 
-.mg-stat-value {
-  margin-top: 0.15rem;
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1.2;
+.mg-chip[data-tone='emerald'] {
+  --tone: 52 211 153;
+}
+
+.mg-chip[data-tone='rose'] {
+  --tone: 251 113 133;
+}
+
+.mg-chip[data-tone='blue'] {
+  --tone: 96 165 250;
+}
+
+.mg-chip[data-tone='slate'] {
+  --tone: 148 163 184;
+}
+
+.mg-chip:not(.mg-chip--static):hover {
   color: #fff;
-  font-variant-numeric: tabular-nums;
+  border-color: rgb(var(--tone) / 0.45);
 }
 
-.mg-spark {
-  width: 5rem;
-  height: 1.5rem;
-  flex-shrink: 0;
-  fill: none;
-  stroke: rgb(var(--tone));
-  stroke-width: 2;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 6px rgb(var(--tone) / 0.6));
-  stroke-dasharray: 120;
-  animation: mg-draw 1.2s 300ms ease-out both;
+.mg-chip[aria-pressed='true'] {
+  color: #fff;
+  border-color: rgb(var(--tone) / 0.6);
+  background: rgb(var(--tone) / 0.12);
 }
 
-@keyframes mg-draw {
-  from {
-    stroke-dashoffset: 120;
-  }
+.mg-chip--static {
+  cursor: default;
 }
 
-.mg-ring {
+.mg-chip-icon {
   display: grid;
   place-items: center;
-  flex-shrink: 0;
-  width: 4.25rem;
-  height: 4.25rem;
-  border-radius: 9999px;
-  color: var(--mg-ring);
-  font-size: 1.2rem;
-  background:
-    radial-gradient(closest-side, var(--mg-surface) 78%, transparent 80%),
-    conic-gradient(var(--mg-ring) 0 25%, rgb(255 255 255 / 0.08) 25% 100%);
-  animation: mg-spin-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: rgb(var(--tone));
+  background: rgb(var(--tone) / 0.14);
 }
 
-@keyframes mg-spin-in {
-  from {
-    transform: rotate(-90deg);
-    opacity: 0;
+.mg-chip-label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mg-chip-value {
+  min-width: 1.5rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.mg-chip[aria-pressed='true'] .mg-chip-value {
+  background: rgb(var(--tone) / 0.3);
+}
+
+.mg-chip-divider {
+  width: 1px;
+  height: 1.75rem;
+  margin: 0 0.25rem;
+  background: var(--mg-border-strong);
+}
+
+@media (max-width: 639px) {
+  .mg-chip-divider {
+    display: none;
   }
 }
 
@@ -388,7 +375,7 @@ button.mg-stat:hover {
 .mg-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
 }
 
 @media (max-width: 639px) {
@@ -432,7 +419,7 @@ button.mg-stat:hover {
   display: grid;
   place-items: center;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: 0.8rem 0.8rem 0 0;
   background: var(--mg-surface-2);
@@ -597,6 +584,29 @@ button.mg-stat:hover {
   border: 1px solid var(--mg-border-strong);
 }
 
+.mg-ext--overlay {
+  position: absolute;
+  z-index: 1;
+  left: 0.65rem;
+  bottom: 0.65rem;
+  color: #fff;
+  background: rgb(15 10 40 / 0.7);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.mg-ext--overlay[data-kind='image'] {
+  border-color: rgb(52 211 153 / 0.45);
+}
+
+.mg-ext--overlay[data-kind='video'] {
+  border-color: rgb(244 63 94 / 0.45);
+}
+
+.mg-ext--overlay[data-kind='document'] {
+  border-color: rgb(96 165 250 / 0.45);
+}
+
 .mg-row {
   transition: background-color 150ms;
 }
@@ -624,6 +634,19 @@ button.mg-stat:hover {
 }
 
 /* ---------- Pagination ---------- */
+.mg-pager {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin-top: auto;
+  padding: 0.75rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--mg-border);
+  background: rgb(11 8 32 / 0.82);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 -12px 30px -18px rgb(0 0 0 / 0.9);
+}
+
 .mg-page {
   display: grid;
   place-items: center;
@@ -637,6 +660,17 @@ button.mg-stat:hover {
   transition:
     background-color 150ms,
     color 150ms;
+}
+
+.mg-page:not(:disabled):not(.is-gap) {
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .mg-page {
+    min-width: 2.75rem;
+    height: 2.75rem;
+  }
 }
 
 .mg-page:not(:disabled):not(.is-gap):hover {
@@ -658,7 +692,7 @@ button.mg-stat:hover {
 .mg-btn:focus-visible,
 .mg-segment-btn:focus-visible,
 .mg-tab:focus-visible,
-.mg-stat:focus-visible,
+.mg-chip:focus-visible,
 .mg-thumb:focus-visible,
 .mg-check:focus-visible,
 .mg-kebab:focus-visible,
@@ -671,8 +705,6 @@ button.mg-stat:hover {
 @media (prefers-reduced-motion: reduce) {
   .mg-rise,
   .mg-card-enter,
-  .mg-spark,
-  .mg-ring,
   .mg-menu,
   .mg-shimmer {
     animation: none;

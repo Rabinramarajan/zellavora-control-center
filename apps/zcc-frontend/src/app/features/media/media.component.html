@@ -1,5 +1,5 @@
 <p-toast></p-toast>
-<div class="mg space-y-5">
+<div class="mg flex flex-1 flex-col gap-5">
   <!-- Header -->
   <header class="mg-rise flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex items-center gap-4 min-w-0">
@@ -51,160 +51,47 @@
   </header>
 
   <!-- Stats -->
-  <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4" aria-label="Storage summary">
-    <button
-      type="button"
-      class="mg-stat mg-stat--violet mg-rise col-span-2 sm:col-span-1 text-left"
-      style="--d: 40ms"
-      (click)="selectTab('all')"
-    >
-      <div class="flex items-start justify-between">
-        <span class="mg-stat-icon"><i class="pi pi-file" aria-hidden="true"></i></span>
-        <i class="pi pi-angle-right text-violet-300/70" aria-hidden="true"></i>
-      </div>
-      <p class="mg-stat-label">Total Files</p>
-      <p class="mg-stat-value">{{ loading() ? '—' : stats().total }}</p>
-      <p class="text-xs text-emerald-400 mt-1 flex items-center gap-1">
-        <i class="pi pi-arrow-up text-[10px]" aria-hidden="true"></i>
-        {{ stats().recent }} added in the last 30 days
-      </p>
-    </button>
-
+  <section class="flex flex-wrap items-center gap-2.5 mg-rise" style="--d: 60ms" aria-label="Storage summary">
     @for (
-      card of [
-        {
-          tab: 'image',
-          label: 'Images',
-          value: stats().images,
-          icon: 'pi pi-image',
-          tone: 'emerald',
-          d: '80ms',
-        },
-        {
-          tab: 'video',
-          label: 'Videos',
-          value: stats().videos,
-          icon: 'pi pi-play',
-          tone: 'rose',
-          d: '120ms',
-        },
-        {
-          tab: 'document',
-          label: 'Documents',
-          value: stats().documents,
-          icon: 'pi pi-file',
-          tone: 'blue',
-          d: '160ms',
-        },
+      chip of [
+        { tab: 'all', label: 'All files', value: stats().total, icon: 'pi pi-th-large', tone: 'violet' },
+        { tab: 'image', label: 'Images', value: stats().images, icon: 'pi pi-image', tone: 'emerald' },
+        { tab: 'video', label: 'Videos', value: stats().videos, icon: 'pi pi-play', tone: 'rose' },
+        { tab: 'document', label: 'Documents', value: stats().documents, icon: 'pi pi-file', tone: 'blue' },
       ];
-      track card.label
+      track chip.tab
     ) {
       <button
         type="button"
-        class="mg-stat mg-rise text-left"
-        [class]="'mg-stat--' + card.tone"
-        [style.--d]="card.d"
-        (click)="selectTab($any(card.tab))"
+        class="mg-chip"
+        [attr.data-tone]="chip.tone"
+        [attr.aria-pressed]="activeTab() === chip.tab"
+        (click)="selectTab($any(chip.tab))"
       >
-        <span class="mg-stat-icon"><i [class]="card.icon" aria-hidden="true"></i></span>
-        <p class="mg-stat-label">{{ card.label }}</p>
-        <div class="flex items-end justify-between gap-2">
-          <p class="mg-stat-value">{{ loading() ? '—' : card.value }}</p>
-          <svg class="mg-spark" viewBox="0 0 80 24" aria-hidden="true">
-            <path d="M2 18 C 16 18, 22 6, 36 10 S 58 22, 78 6" />
-          </svg>
-        </div>
+        <span class="mg-chip-icon"><i [class]="chip.icon" aria-hidden="true"></i></span>
+        <span class="mg-chip-label">{{ chip.label }}</span>
+        <span class="mg-chip-value">{{ loading() ? '—' : chip.value }}</span>
       </button>
     }
 
-    <div class="mg-stat mg-stat--slate mg-rise col-span-2 sm:col-span-1" style="--d: 200ms">
-      <div class="flex items-center justify-between gap-3 h-full">
-        <div class="min-w-0">
-          <p class="mg-stat-label !mt-0">Storage Used</p>
-          <p class="mg-stat-value truncate">
-            {{ loading() ? '—' : formatFileSize(stats().totalBytes) }}
-          </p>
-          <p class="text-xs text-slate-400 mt-1">across {{ folders().length }} folder(s)</p>
-        </div>
-        <div class="mg-ring" aria-hidden="true">
-          <i class="pi pi-database"></i>
-        </div>
-      </div>
-    </div>
+    <span class="mg-chip-divider" aria-hidden="true"></span>
+
+    <span class="mg-chip mg-chip--static" data-tone="slate">
+      <span class="mg-chip-icon"><i class="pi pi-database" aria-hidden="true"></i></span>
+      <span class="mg-chip-label">Storage</span>
+      <span class="mg-chip-value">{{ loading() ? '—' : formatFileSize(stats().totalBytes) }}</span>
+    </span>
+
+    @if (stats().recent) {
+      <span class="mg-chip mg-chip--static" data-tone="emerald">
+        <span class="mg-chip-icon"><i class="pi pi-arrow-up" aria-hidden="true"></i></span>
+        <span class="mg-chip-label">{{ stats().recent }} added in 30 days</span>
+      </span>
+    }
   </section>
   @if (hasMore()) {
     <p class="text-xs text-slate-500 -mt-2">Stats cover the files loaded so far.</p>
   }
-
-  <!-- Filters -->
-  <form
-    class="mg-panel mg-rise p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))_auto] gap-3 sm:gap-4 items-end"
-    style="--d: 240ms"
-    role="search"
-    (submit)="$event.preventDefault(); applyFilters()"
-  >
-    <label class="mg-field sm:col-span-2 xl:col-span-1">
-      <span class="sr-only">Search</span>
-      <div class="mg-input-wrap">
-        <i class="pi pi-search" aria-hidden="true"></i>
-        <input
-          type="search"
-          class="mg-input"
-          placeholder="Search by file name, tags or folder..."
-          [value]="searchDraft()"
-          (input)="searchDraft.set($any($event.target).value)"
-        />
-      </div>
-    </label>
-    <label class="mg-field">
-      <span class="mg-field-label">File Type</span>
-      <select
-        class="mg-select"
-        [value]="typeDraft()"
-        (change)="typeDraft.set($any($event.target).value)"
-      >
-        @for (option of typeOptions; track option.value) {
-          <option [value]="option.value" [selected]="option.value === typeDraft()">
-            {{ option.label }}
-          </option>
-        }
-      </select>
-    </label>
-    <label class="mg-field">
-      <span class="mg-field-label">Folder</span>
-      <select class="mg-select" (change)="folderDraft.set($any($event.target).value)">
-        <option value="" [selected]="folderDraft() === ''">All Folders</option>
-        @for (folder of folders(); track folder) {
-          <option [value]="folder || '/'" [selected]="(folder || '/') === folderDraft()">
-            {{ folder || '(root)' }}
-          </option>
-        }
-      </select>
-    </label>
-    <label class="mg-field">
-      <span class="mg-field-label">Sort By</span>
-      <select class="mg-select" (change)="sortDraft.set($any($event.target).value)">
-        @for (option of sortOptions; track option.value) {
-          <option [value]="option.value" [selected]="option.value === sortDraft()">
-            {{ option.label }}
-          </option>
-        }
-      </select>
-    </label>
-    <div class="flex gap-3 sm:col-span-2 xl:col-span-1">
-      <button
-        type="button"
-        class="mg-btn mg-btn--ghost flex-1 xl:flex-none"
-        (click)="clearFilters()"
-      >
-        Clear
-      </button>
-      <button type="submit" class="mg-btn mg-btn--primary flex-1 xl:flex-none">
-        <i class="pi pi-search" aria-hidden="true"></i>
-        Search
-      </button>
-    </div>
-  </form>
 
   <!-- Tabs + toolbar -->
   <div
@@ -327,6 +214,9 @@
                 <i [class]="kindIcon(file.type)"></i>
               </span>
             }
+            <span class="mg-ext mg-ext--overlay" [attr.data-kind]="file.type" aria-hidden="true">{{
+              extension(file)
+            }}</span>
           </button>
 
           <button
@@ -380,18 +270,21 @@
             }
           </div>
 
-          <div class="flex items-center gap-2 px-3 py-2.5">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-white truncate" [title]="file.pathname">
-                {{ file.name }}
-              </p>
-              <p class="text-xs text-slate-400 truncate mt-0.5">
+          <div class="px-3.5 pt-3 pb-3.5">
+            <p class="text-sm font-semibold text-white truncate" [title]="file.pathname">
+              {{ file.name }}
+            </p>
+            <div class="mt-1.5 flex items-center justify-between gap-2 text-xs text-slate-400">
+              <span class="truncate">
                 {{ formatFileSize(file.size) }}
-                <span class="mx-1 text-slate-600" aria-hidden="true">•</span>
-                {{ dimensionsOf(file) ?? (file.uploadedAt | date: 'mediumDate') }}
-              </p>
+                @if (dimensionsOf(file); as dims) {
+                  <span class="mx-1 text-slate-600" aria-hidden="true">•</span>{{ dims }}
+                }
+              </span>
+              <time class="shrink-0" [attr.datetime]="file.uploadedAt">
+                {{ file.uploadedAt | date: 'MMM d' }}
+              </time>
             </div>
-            <span class="mg-ext">{{ extension(file) }}</span>
           </div>
         </article>
       }
@@ -481,13 +374,35 @@
     </div>
   }
 
-  <!-- Pagination -->
+  @if (hasMore() && !loading()) {
+    <div class="flex justify-center">
+      <button
+        type="button"
+        class="mg-btn mg-btn--ghost"
+        [disabled]="loadingMore()"
+        (click)="loadMore()"
+      >
+        <i
+          [class]="loadingMore() ? 'pi pi-spin pi-spinner' : 'pi pi-cloud-download'"
+          aria-hidden="true"
+        ></i>
+        Load more from storage
+      </button>
+    </div>
+  }
+
+  <!-- Pagination: pinned to the bottom of the content area -->
   @if (!loading() && !error() && filteredItems().length) {
     <nav
-      class="mg-panel flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3"
+      class="mg-pager flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       aria-label="Pagination"
     >
-      <p class="text-sm text-slate-300">{{ rangeLabel() }}</p>
+      <p class="text-sm text-slate-400" aria-live="polite">
+        @if (pageRange(); as range) {
+          Showing <span class="font-semibold text-white">{{ range.start }}–{{ range.end }}</span>
+          of <span class="font-semibold text-white">{{ range.total }}</span> files
+        }
+      </p>
       <div class="flex items-center justify-center gap-1">
         <button
           type="button"
@@ -523,8 +438,8 @@
           <i class="pi pi-angle-right" aria-hidden="true"></i>
         </button>
       </div>
-      <label class="flex items-center justify-center gap-3 text-sm text-slate-300">
-        Rows per page
+      <label class="flex items-center justify-center gap-3 text-sm text-slate-400">
+        Per page
         <select class="mg-select !w-20" (change)="setPageSize($any($event.target).value)">
           @for (size of pageSizeOptions; track size) {
             <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
@@ -532,23 +447,6 @@
         </select>
       </label>
     </nav>
-  }
-
-  @if (hasMore() && !loading()) {
-    <div class="flex justify-center">
-      <button
-        type="button"
-        class="mg-btn mg-btn--ghost"
-        [disabled]="loadingMore()"
-        (click)="loadMore()"
-      >
-        <i
-          [class]="loadingMore() ? 'pi pi-spin pi-spinner' : 'pi pi-cloud-download'"
-          aria-hidden="true"
-        ></i>
-        Load more from storage
-      </button>
-    </div>
   }
 </div>
 

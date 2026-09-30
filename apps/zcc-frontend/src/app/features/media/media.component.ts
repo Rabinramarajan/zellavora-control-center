@@ -40,7 +40,6 @@ const KIND_ICONS: Record<MediaKind, string> = {
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 
 export type MediaTab = 'all' | 'image' | 'video' | 'document';
-export type MediaSort = 'newest' | 'oldest' | 'name' | 'largest' | 'smallest';
 
 interface Dimensions {
   width: number;
@@ -82,16 +81,7 @@ export class MediaComponent {
   readonly hasMore = signal(false);
   private cursor: string | null = null;
 
-  /** Draft filter values; applied on Search / Enter so the grid doesn't reflow per keystroke. */
-  readonly searchDraft = signal('');
-  readonly typeDraft = signal<MediaTab>('all');
-  readonly folderDraft = signal('');
-  readonly sortDraft = signal<MediaSort>('newest');
-
-  readonly searchTerm = signal('');
   readonly activeTab = signal<MediaTab>('all');
-  readonly selectedFolder = signal('');
-  readonly sortBy = signal<MediaSort>('newest');
   readonly viewMode = signal<'grid' | 'list'>('grid');
 
   readonly page = signal(1);
@@ -109,22 +99,6 @@ export class MediaComponent {
 
   readonly deleting = signal(false);
 
-  readonly typeOptions: { label: string; value: MediaTab }[] = [
-    { label: 'All Types', value: 'all' },
-    { label: 'Images', value: 'image' },
-    { label: 'Videos', value: 'video' },
-    { label: 'Documents', value: 'document' },
-  ];
-
-  readonly sortOptions: { label: string; value: MediaSort }[] = [
-    { label: 'Newest', value: 'newest' },
-    { label: 'Oldest', value: 'oldest' },
-    { label: 'Name (A–Z)', value: 'name' },
-    { label: 'Largest', value: 'largest' },
-    { label: 'Smallest', value: 'smallest' },
-  ];
-
-  readonly folders = computed(() => [...new Set(this.items().map((item) => item.folder))].sort());
 
   readonly stats = computed(() => {
     const items = this.items();
@@ -140,19 +114,8 @@ export class MediaComponent {
     };
   });
 
-  /** Items matching search + folder, before the type tab narrows them — drives tab counts. */
-  private readonly baseFiltered = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const folder = this.selectedFolder();
-    return this.items().filter(
-      (item) =>
-        (!term || item.pathname.toLowerCase().includes(term)) &&
-        (!folder || (folder === '/' ? item.folder === '' : item.folder === folder))
-    );
-  });
-
   readonly tabs = computed(() => {
-    const base = this.baseFiltered();
+    const base = this.items();
     const count = (kind: MediaKind): number => base.filter((item) => item.type === kind).length;
     return [
       { value: 'all' as const, label: 'All Files', icon: 'pi pi-th-large', count: base.length },
@@ -169,16 +132,12 @@ export class MediaComponent {
 
   readonly filteredItems = computed(() => {
     const tab = this.activeTab();
-    const list = this.baseFiltered().filter((item) => tab === 'all' || item.type === tab);
-    return list.sort(SORTERS[this.sortBy()]);
+    return this.items()
+      .filter((item) => tab === 'all' || item.type === tab)
+      .sort((a, b) => time(b) - time(a));
   });
 
-  readonly hasActiveFilters = computed(
-    () =>
-      !!(this.searchTerm() || this.selectedFolder()) ||
-      this.activeTab() !== 'all' ||
-      this.sortBy() !== 'newest'
-  );
+  readonly hasActiveFilters = computed(() => this.activeTab() !== 'all');
 
   readonly totalPages = computed(() =>
     Math.max(1, Math.ceil(this.filteredItems().length / this.pageSize()))
@@ -189,12 +148,12 @@ export class MediaComponent {
     return this.filteredItems().slice(start, start + this.pageSize());
   });
 
-  readonly rangeLabel = computed(() => {
+  readonly pageRange = computed(() => {
     const total = this.filteredItems().length;
-    if (total === 0) return 'No files';
+    if (total === 0) return null;
     const start = (this.page() - 1) * this.pageSize() + 1;
     const end = Math.min(start + this.pageSize() - 1, total);
-    return `Showing ${start} to ${end} of ${total} files`;
+    return { start, end, total };
   });
 
   /** Compact page list with ellipses: 1 … 4 5 6 … 12. */
@@ -298,25 +257,12 @@ export class MediaComponent {
       });
   }
 
-  applyFilters(): void {
-    this.searchTerm.set(this.searchDraft());
-    this.activeTab.set(this.typeDraft());
-    this.selectedFolder.set(this.folderDraft());
-    this.sortBy.set(this.sortDraft());
-    this.page.set(1);
-  }
-
   clearFilters(): void {
-    this.searchDraft.set('');
-    this.typeDraft.set('all');
-    this.folderDraft.set('');
-    this.sortDraft.set('newest');
-    this.applyFilters();
+    this.selectTab('all');
   }
 
   selectTab(tab: MediaTab): void {
     this.activeTab.set(tab);
-    this.typeDraft.set(tab);
     this.page.set(1);
   }
 
@@ -572,14 +518,6 @@ export class MediaComponent {
 }
 
 const time = (item: MediaItem): number => new Date(item.uploadedAt).getTime();
-
-const SORTERS: Record<MediaSort, (a: MediaItem, b: MediaItem) => number> = {
-  newest: (a, b) => time(b) - time(a),
-  oldest: (a, b) => time(a) - time(b),
-  name: (a, b) => a.name.localeCompare(b.name),
-  largest: (a, b) => b.size - a.size,
-  smallest: (a, b) => a.size - b.size,
-};
 
 /** Documents are previewed from object URLs we created, never from a remote origin. */
 function isFrameable(src: string): boolean {
