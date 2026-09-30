@@ -636,15 +636,20 @@
 /* ---------- Pagination ---------- */
 .mg-pager {
   position: sticky;
-  bottom: 0;
+  /* Float off the viewport edge so the bar never looks clipped by it. */
+  bottom: 0.75rem;
   z-index: 20;
   margin-top: auto;
   padding: 0.75rem 1rem;
   border-radius: 0.9rem;
   border: 1px solid var(--mg-border);
-  background: rgb(11 8 32 / 0.82);
+  /* Near-opaque: thumbnails scrolling underneath must not bleed through. */
+  background: rgb(11 8 32 / 0.96);
   backdrop-filter: blur(14px);
-  box-shadow: 0 -12px 30px -18px rgb(0 0 0 / 0.9);
+  /* First shadow is a solid page-colored copy offset downward, masking the gap under the bar. */
+  box-shadow:
+    0 calc(0.75rem + 1px) 0 0 #03020c,
+    0 -16px 32px -12px rgb(2 1 10 / 0.95);
 }
 
 
@@ -791,4 +796,192 @@
   .lightbox-media {
     animation: none;
   }
+}
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --mg-surface: #ffffff;
+  --mg-surface-2: #f6f5f8;
+  --mg-border: rgba(15, 23, 42, 0.088);
+  --mg-border-strong: rgba(15, 23, 42, 0.154);
+}
+
+:host-context(html.light) .mg-hero-icon {
+  color: #fff;
+  box-shadow: 0 10px 30px -10px rgb(124 58 237 / 0.7),
+    inset 0 1px 0 rgba(15, 23, 42, 0.135);
+}
+
+:host-context(html.light) .mg-segment-btn {
+  color: #475569;
+}
+
+:host-context(html.light) .mg-segment-btn:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .mg-segment-btn.is-active {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.09);
+}
+
+:host-context(html.light) .mg-btn--primary {
+  color: #fff;
+}
+
+:host-context(html.light) .mg-btn--ghost {
+  color: #0f172a;
+}
+
+:host-context(html.light) .mg-btn--danger {
+  color: #8f1414;
+}
+
+:host-context(html.light) .mg-icon-btn {
+  color: #475569;
+}
+
+:host-context(html.light) .mg-icon-btn:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.072);
+}
+
+:host-context(html.light) .mg-icon-btn--danger:hover {
+  color: #8f1414;
+}
+
+:host-context(html.light) .mg-chip {
+  color: #334155;
+}
+
+:host-context(html.light) .mg-chip:not(.mg-chip--static):hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .mg-chip[aria-pressed='true'] {
+  color: #0f172a;
+}
+
+:host-context(html.light) .mg-chip-value {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.072);
+}
+
+:host-context(html.light) .mg-field-label {
+  color: #475569;
+}
+
+:host-context(html.light) .mg-input-wrap > i {
+  color: #475569;
+}
+
+:host-context(html.light) .mg-input,
+:host-context(html.light) .mg-select {
+  color: #0f172a;
+}
+
+:host-context(html.light) .mg-tab {
+  color: #334155;
+}
+
+:host-context(html.light) .mg-tab:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.036);
+}
+
+:host-context(html.light) .mg-tab.is-active {
+  color: #0f172a;
+}
+
+:host-context(html.light) .mg-thumb-icon[data-kind='document'] {
+  color: #144b8f;
+}
+
+:host-context(html.light) .mg-thumb-icon[data-kind='audio'] {
+  color: #1d8660;
+}
+
+:host-context(html.light) .mg-check,
+:host-context(html.light) .mg-kebab {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.385);
+}
+
+:host-context(html.light) .mg-kebab:hover,
+:host-context(html.light) .mg-kebab[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html.light) .mg-menu {
+  background: #f4f3f7;
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.21);
+}
+
+:host-context(html.light) .mg-menu button {
+  color: #0f172a;
+}
+
+:host-context(html.light) .mg-menu button:hover,
+:host-context(html.light) .mg-menu button:focus-visible {
+  background: rgba(15, 23, 42, 0.063);
+}
+
+:host-context(html.light) .mg-menu button.is-danger {
+  color: #8f1414;
+}
+
+:host-context(html.light) .mg-ext {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.063);
+}
+
+:host-context(html.light) .mg-ext--overlay {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html.light) .mg-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.036),
+    rgba(15, 23, 42, 0.081),
+    rgba(15, 23, 42, 0.036)
+  );
+}
+
+:host-context(html.light) .mg-pager {
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow:
+    0 calc(0.75rem + 1px) 0 0 #f8fafc,
+    0 -16px 32px -12px rgba(15, 23, 42, 0.18);
+}
+
+:host-context(html.light) .lightbox-action {
+  color: #334155;
+}
+
+:host-context(html.light) .lightbox-action:hover {
+  background: rgba(15, 23, 42, 0.09);
+  color: #0f172a;
+}
+
+:host-context(html.light) .lightbox-action--danger:hover {
+  color: #8f1414;
+}
+
+:host-context(html.light) .lightbox-nav {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.132);
+}
+
+:host-context(html.light) .lightbox-chip {
+  color: #334155;
+  background: rgba(15, 23, 42, 0.054);
+  border: 1px solid rgba(15, 23, 42, 0.088);
+}
+
+:host-context(html.light) .lightbox-thumb {
+  background: rgba(15, 23, 42, 0.045);
 }

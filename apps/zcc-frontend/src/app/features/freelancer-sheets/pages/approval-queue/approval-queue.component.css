@@ -288,3 +288,98 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --q-surface: #ffffff;
+  --q-surface-2: #f5f6f8;
+  --q-control: #ffffff;
+  --q-text: #2f4b75;
+  --q-muted: #475569;
+}
+
+:host-context(html.light) h1 {
+  color: #0f172a;
+}
+
+:host-context(html.light) .metric--amber {
+  --tone: #8f6d14;
+}
+
+:host-context(html.light) .metric--green {
+  --tone: #1d8660;
+}
+
+:host-context(html.light) .metric--blue {
+  --tone: #144b8f;
+}
+
+:host-context(html.light) .metric strong {
+  color: #0f172a;
+}
+
+:host-context(html.light) .avatar-stack span,
+:host-context(html.light) .avatar {
+  color: #14448f;
+}
+
+:host-context(html.light) .link-btn {
+  color: #2e148f;
+}
+
+:host-context(html.light) .link-btn:hover {
+  color: #2a148f;
+}
+
+:host-context(html.light) .segmented .active {
+  color: #0f172a;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.036) inset, 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+:host-context(html.light) .segmented .active .count {
+  color: #c4b5fd;
+}
+
+:host-context(html.light) .toolbar {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html.light) .control {
+  color-scheme: light;
+}
+
+:host-context(html.light) .clear {
+  color: #2e148f;
+}
+
+:host-context(html.light) .group button {
+  color: #314a72;
+}
+
+:host-context(html.light) .project span {
+  color: #0f172a;
+}
+
+:host-context(html.light) .task {
+  color: #334155;
+}
+
+:host-context(html.light) .icon-btn--danger:hover:not(:disabled) {
+  color: #8f1414;
+}
+
+:host-context(html.light) .own-note {
+  color: #89661a;
+}
+
+:host-context(html.light) .empty-icon {
+  color: #c4b5fd;
+}
+
+:host-context(html.light) .rejection {
+  background: #ffffff;
+}
+
+:host-context(html.light) .rejection h2 {
+  color: #0f172a;
+}

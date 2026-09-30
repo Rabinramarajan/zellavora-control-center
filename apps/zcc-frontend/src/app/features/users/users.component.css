@@ -838,3 +838,204 @@ span.us-select-wrap:not(.us-input-wrap) .us-select {
   font-weight: 600;
   color: #e2e8f0;
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --us-surface: rgba(255, 255, 255, 0.85);
+  --us-surface-solid: #f5f5f8;
+  --us-border: rgba(15, 23, 42, 0.077);
+  --us-border-strong: rgba(15, 23, 42, 0.154);
+  --us-input: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html.light) .us-btn-primary {
+  color: #fff;
+  box-shadow: 0 10px 28px -10px rgba(109, 76, 255, 0.75),
+    inset 0 1px 0 rgba(15, 23, 42, 0.162);
+}
+
+:host-context(html.light) .us-btn-primary:hover {
+  box-shadow: 0 14px 34px -10px rgba(139, 92, 246, 0.9),
+    inset 0 1px 0 rgba(15, 23, 42, 0.198);
+}
+
+:host-context(html.light) .us-btn-outline {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.018);
+}
+
+:host-context(html.light) .us-btn-outline:hover {
+  background: rgba(15, 23, 42, 0.054);
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-badge {
+  color: #fff;
+  box-shadow: 0 0 0 3px #ffffff;
+}
+
+:host-context(html.light) .us-icon-btn {
+  color: #475569;
+}
+
+:host-context(html.light) .us-icon-btn:hover,
+:host-context(html.light) .us-icon-btn[aria-expanded='true'] {
+  background: rgba(15, 23, 42, 0.063);
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-stat {
+  color: #334155;
+}
+
+:host-context(html.light) .us-stat:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-stat.is-active {
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-stat.is-active .us-stat-icon {
+  color: #fff;
+}
+
+:host-context(html.light) .us-stat.is-active .us-stat-count {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.144);
+}
+
+:host-context(html.light) .us-chip-x {
+  color: #2e148f;
+}
+
+:host-context(html.light) .us-chip-x:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-footer {
+  background: rgba(15, 23, 42, 0.013);
+}
+
+:host-context(html.light) .us-btn-ghost {
+  color: #2e148f;
+}
+
+:host-context(html.light) .us-btn-ghost:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-stat-icon[data-tone='violet'] {
+  color: #fff;
+}
+
+:host-context(html.light) .us-input-wrap {
+  color: #475569;
+}
+
+:host-context(html.light) .us-input,
+:host-context(html.light) .us-select {
+  color: #315272;
+}
+
+:host-context(html.light) .us-select option {
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-select-wrap > .pi-chevron-down {
+  color: #475569;
+}
+
+:host-context(html.light) .us-table th {
+  color: #475569;
+  background: rgba(15, 23, 42, 0.023);
+}
+
+:host-context(html.light) .us-table td {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.044);
+}
+
+:host-context(html.light) .us-sort:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-sort.is-sorted {
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-avatar {
+  color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.072);
+}
+
+:host-context(html.light) .us-count {
+  background: rgba(15, 23, 42, 0.054);
+  color: #334155;
+}
+
+:host-context(html.light) .us-status {
+  --dot: #148f66;
+}
+
+:host-context(html.light) .us-status[data-status='PENDING'] {
+  --dot: #8f6114;
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-menu {
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.21);
+}
+
+:host-context(html.light) .us-menu button {
+  color: #334155;
+}
+
+:host-context(html.light) .us-menu button:hover {
+  background: rgba(15, 23, 42, 0.054);
+  color: #0f172a;
+}
+
+:host-context(html.light) .us-menu .is-danger:hover {
+  color: #8f1424;
+}
+
+:host-context(html.light) .us-backdrop {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html.light) .us-dialog {
+  background: linear-gradient(180deg, #f2f2f6, #f6f6f9);
+  box-shadow: 0 40px 80px -20px rgba(15, 23, 42, 0.24),
+    0 0 0 1px rgba(15, 23, 42, 0.027) inset;
+}
+
+:host-context(html.light) .us-dialog-icon {
+  color: #fff;
+}
+
+:host-context(html.light) .us-skeleton {
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.036), rgba(15, 23, 42, 0.09), rgba(15, 23, 42, 0.036));
+}
+
+:host-context(html.light) .us-status[data-status='SUSPENDED'] {
+  --dot: #475569;
+}
+
+@media (min-width: 768px) {
+  :host-context(html.light) .us-table thead th {
+    background: #f4f4f7;
+  }
+}
+
+:host-context(html.light) .us-section + .us-section {
+  border-top: 1px solid rgba(15, 23, 42, 0.066);
+}
+
+:host-context(html.light) .us-range-group {
+  background: rgba(15, 23, 42, 0.018);
+  border: 1px solid rgba(15, 23, 42, 0.066);
+}
+
+:host-context(html.light) .us-range-label {
+  color: #0f172a;
+}

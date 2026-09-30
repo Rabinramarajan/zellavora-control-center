@@ -50,6 +50,9 @@
             (save)="saveProfile($event)"
           />
         }
+        @case ('appearance') {
+          <app-appearance-settings />
+        }
         @default {
           <app-settings-card
             [heading]="activeTab().label"

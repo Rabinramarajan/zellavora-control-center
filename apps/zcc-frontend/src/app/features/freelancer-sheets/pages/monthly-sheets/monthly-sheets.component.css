@@ -287,3 +287,78 @@
   );
   color: #64748b;
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) .date-nav__label {
+  color: #0f172a;
+}
+
+:host-context(html.light) .date-nav__arrow {
+  color: #475569;
+}
+
+:host-context(html.light) .date-nav__arrow:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .cal-cell {
+  background: rgba(15, 23, 42, 0.023);
+}
+
+:host-context(html.light) .cal-cell__day {
+  color: #0f172a;
+}
+
+:host-context(html.light) .cal-cell__hours {
+  color: #475569;
+}
+
+:host-context(html.light) .cal-cell--approved .cal-cell__hours {
+  color: #198a42;
+}
+
+:host-context(html.light) .cal-cell--submitted .cal-cell__hours {
+  color: #8f6d14;
+}
+
+:host-context(html.light) .cal-cell--today {
+  border-color: rgba(15, 23, 42, 0.385);
+}
+
+:host-context(html.light) .cal-cell--today .cal-cell__day,
+:host-context(html.light) .cal-cell--today .cal-cell__hours {
+  color: #0f172a;
+}
+
+:host-context(html.light) .legend-dot--none {
+  background: rgba(15, 23, 42, 0.162);
+}
+
+:host-context(html.light) .chart__value {
+  color: #475569;
+}
+
+:host-context(html.light) .chart__stack {
+  background: rgba(15, 23, 42, 0.036);
+}
+
+:host-context(html.light) .row-action {
+  color: #475569;
+}
+
+:host-context(html.light) .row-action:hover {
+  background: rgba(15, 23, 42, 0.072);
+  color: #0f172a;
+}
+
+:host-context(html.light) .month-stats > div {
+  background: rgba(15, 23, 42, 0.018);
+}
+
+:host-context(html.light) .month-stats dt {
+  color: #475569;
+}
+
+:host-context(html.light) .month-stats dd {
+  color: #0f172a;
+}

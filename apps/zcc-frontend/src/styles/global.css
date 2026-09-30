@@ -43,7 +43,7 @@ html {
 }
 
 body {
-  @apply bg-[#030712] text-slate-100 transition-colors;
+  @apply bg-slate-50 text-slate-900 dark:bg-[#030712] dark:text-slate-100 transition-colors;
   font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
 }
@@ -61,6 +61,19 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+/* Swap themes in a single frame instead of letting every transition-colors element fade separately. */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
 }
 
 .glow-purple {
@@ -84,16 +97,42 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #030712;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: var(--scrollbar-thumb-hover);
+}
+
+:root {
+  --scrollbar-track: #030712;
+  --scrollbar-thumb: #1f2937;
+  --scrollbar-thumb-hover: #374151;
+  --toast-surface: rgb(13 12 30 / 0.96);
+  --toast-title: #ffffff;
+  --toast-detail: #94a3b8;
+  --toast-close: #64748b;
+  --toast-close-hover-bg: rgb(255 255 255 / 0.06);
+  --toast-close-hover: #ffffff;
+  --toast-shadow: 0 20px 45px -15px rgb(0 0 0 / 0.75);
+}
+
+html.light {
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+  --toast-surface: rgb(255 255 255 / 0.97);
+  --toast-title: #0f172a;
+  --toast-detail: #475569;
+  --toast-close: #64748b;
+  --toast-close-hover-bg: rgb(15 23 42 / 0.06);
+  --toast-close-hover: #0f172a;
+  --toast-shadow: 0 20px 45px -18px rgb(15 23 42 / 0.25);
 }
 
 /* Animations */
@@ -146,10 +185,10 @@ body {
   outline: none;
   background:
     linear-gradient(90deg, rgb(var(--toast-accent) / 0.12), transparent 60%),
-    rgb(13 12 30 / 0.96);
+    var(--toast-surface);
   backdrop-filter: blur(14px);
-  box-shadow: 0 20px 45px -15px rgb(0 0 0 / 0.75);
-  color: #e2e8f0;
+  box-shadow: var(--toast-shadow);
+  color: var(--toast-title);
 }
 
 .p-toast .p-toast-message::before {
@@ -201,14 +240,14 @@ body {
   font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.25;
-  color: #fff;
+  color: var(--toast-title);
 }
 
 .p-toast .p-toast-detail {
   margin: 0;
   font-size: 0.75rem;
   line-height: 1.4;
-  color: #94a3b8;
+  color: var(--toast-detail);
 }
 
 .p-toast .p-toast-close-button {
@@ -224,14 +263,14 @@ body {
   border: 0;
   border-radius: 0.5rem;
   background: transparent;
-  color: #64748b;
+  color: var(--toast-close);
   cursor: pointer;
   transition: background-color 150ms, color 150ms;
 }
 
 .p-toast .p-toast-close-button:hover {
-  background: rgb(255 255 255 / 0.06);
-  color: #fff;
+  background: var(--toast-close-hover-bg);
+  color: var(--toast-close-hover);
 }
 
 .p-toast .p-toast-close-button:focus-visible {
@@ -269,4 +308,31 @@ body {
   --auth-success-text: #6ee7b7;
   --auth-warning: #fbbf24;
   --auth-info: #7dd3fc;
+}
+
+/* Account pages reuse the auth tokens inside the admin shell, so they follow the theme there.
+ * The sign-in screens are pinned to dark by ThemeService.forcedTheme. */
+html.light {
+  --auth-bg: #f8fafc;
+  --auth-surface: #ffffff;
+  --auth-surface-raised: #f1f5f9;
+  --auth-input-bg: #ffffff;
+  --auth-input-bg-focus: #ffffff;
+  --auth-border: #e2e8f0;
+  --auth-border-strong: #cbd5e1;
+  --auth-text-strong: #0f172a;
+  --auth-text: #334155;
+  --auth-text-muted: #475569;
+  --auth-text-faint: #64748b;
+  --auth-accent: #6366f1;
+  --auth-accent-strong: #4f46e5;
+  --auth-accent-ring: rgba(99, 102, 241, 0.25);
+  --auth-link: #4f46e5;
+  --auth-danger: #dc2626;
+  --auth-danger-text: #b91c1c;
+  --auth-danger-ring: rgba(220, 38, 38, 0.2);
+  --auth-success: #059669;
+  --auth-success-text: #047857;
+  --auth-warning: #d97706;
+  --auth-info: #0369a1;
 }

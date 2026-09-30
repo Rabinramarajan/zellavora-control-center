@@ -329,3 +329,87 @@
 .cdk-drag-placeholder {
   opacity: 0.4;
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --dt-border: rgba(15, 23, 42, 0.088);
+  --dt-fg: #0f172a;
+  --dt-muted: #475569;
+  --dt-bg: rgba(255, 255, 255, 0.85);
+  --dt-hover: rgba(15, 23, 42, 0.045);
+  box-shadow: 0 8px 40px rgba(15, 23, 42, 0.105);
+  color-scheme: light;
+}
+
+:host-context(html.light) .dt-chip {
+  color: #50148f;
+}
+
+:host-context(html.light) .dt-scroll {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html.light) .dt-scroll::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.135);
+}
+
+:host-context(html.light) .dt-table th,
+:host-context(html.light) .dt-table td {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.055);
+}
+
+:host-context(html.light) .dt-table th {
+  background: #ffffff;
+  color: #334155;
+}
+
+:host-context(html.light) .dt-th--sortable .dt-th__label:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .dt-th--frozen,
+:host-context(html.light) .dt-td--frozen {
+  background: #ffffff;
+}
+
+:host-context(html.light) .dt-editor {
+  background: #ffffff;
+}
+
+:host-context(html.light) .dt-skeleton-row .dt-skel {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.036) 25%,
+    rgba(15, 23, 42, 0.09) 37%,
+    rgba(15, 23, 42, 0.036) 63%
+  );
+}
+
+:host-context(html.light) .dt-footer {
+  border-top: 1px solid rgba(15, 23, 42, 0.066);
+}
+
+:host-context(html.light) .dt-btn {
+  border: 1px solid rgba(15, 23, 42, 0.11);
+  background: rgba(15, 23, 42, 0.054);
+}
+
+:host-context(html.light) .dt-btn:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.108);
+  border-color: rgba(15, 23, 42, 0.198);
+}
+
+:host-context(html.light) .dt-menu {
+  background: #f6f7f9;
+  border: 1px solid rgba(15, 23, 42, 0.11);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.15);
+}
+
+:host-context(html.light) .dt-menu__item:hover {
+  background: rgba(15, 23, 42, 0.054);
+}
+
+:host-context(html.light) .cdk-drag-preview {
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.15);
+  background: #f6f7f9;
+}

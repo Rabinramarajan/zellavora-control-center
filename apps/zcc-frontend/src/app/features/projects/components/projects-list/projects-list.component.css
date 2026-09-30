@@ -14,21 +14,19 @@
   --st-select-bg: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  .projects-table app-smart-table {
-    --st-line: #334155;
-    --st-line-soft: rgba(51, 65, 85, 0.6);
-    --st-fg: #e2e8f0;
-    --st-muted: #94a3b8;
-    --st-faint: #64748b;
-    --st-accent: #60a5fa;
-    --st-accent-2: #3b82f6;
-    --st-accent-soft: rgba(96, 165, 250, 0.16);
-    --st-row-hover: rgba(148, 163, 184, 0.08);
-    --st-head-bg: rgba(15, 23, 42, 0.4);
-    --st-control-bg: rgba(15, 23, 42, 0.4);
-    --st-select-bg: #1e293b;
-  }
+:host-context(html.dark) .projects-table app-smart-table {
+  --st-line: #334155;
+  --st-line-soft: rgba(51, 65, 85, 0.6);
+  --st-fg: #e2e8f0;
+  --st-muted: #94a3b8;
+  --st-faint: #64748b;
+  --st-accent: #60a5fa;
+  --st-accent-2: #3b82f6;
+  --st-accent-soft: rgba(96, 165, 250, 0.16);
+  --st-row-hover: rgba(148, 163, 184, 0.08);
+  --st-head-bg: rgba(15, 23, 42, 0.4);
+  --st-control-bg: rgba(15, 23, 42, 0.4);
+  --st-select-bg: #1e293b;
 }
 
 .status-tab {
@@ -59,19 +57,17 @@
   color: #2563eb;
 }
 
-@media (prefers-color-scheme: dark) {
-  .status-tab {
-    color: #94a3b8;
-  }
+:host-context(html.dark) .status-tab {
+  color: #94a3b8;
+}
 
-  .status-tab:hover {
-    background: rgba(148, 163, 184, 0.12);
-    color: #ffffff;
-  }
+:host-context(html.dark) .status-tab:hover {
+  background: rgba(148, 163, 184, 0.12);
+  color: #ffffff;
+}
 
-  .status-tab--active,
-  .status-tab--active:hover {
-    background: rgba(96, 165, 250, 0.16);
-    color: #93c5fd;
-  }
+:host-context(html.dark) .status-tab--active,
+:host-context(html.dark) .status-tab--active:hover {
+  background: rgba(96, 165, 250, 0.16);
+  color: #93c5fd;
 }

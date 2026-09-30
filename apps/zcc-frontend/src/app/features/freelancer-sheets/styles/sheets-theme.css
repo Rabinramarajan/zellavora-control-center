@@ -517,3 +517,115 @@ textarea.field__input { resize: vertical; min-height: 7rem; line-height: 1.6; }
   min-width: 0;
   --st-body-flex: 1 0 auto;
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --sheet-surface: #ffffff;
+  --sheet-surface-raised: #f4f5f6;
+}
+
+:host-context(html.light) app-smart-table {
+  --st-select-bg: #f4f5f6;
+}
+
+:host-context(html.light) .field__input::placeholder {
+  color: #475569;
+}
+
+:host-context(html.light) .field:focus-within .field__label {
+  color: #2a148f;
+}
+
+:host-context(html.light) .sheet-header__icon {
+  color: #c4b5fd;
+}
+
+:host-context(html.light) .bar {
+  background: rgba(15, 23, 42, 0.072);
+}
+
+:host-context(html.light) .pill--approved {
+  color: #198a42;
+}
+
+:host-context(html.light) .pill--pending {
+  color: #8f6d14;
+}
+
+:host-context(html.light) .pill--draft {
+  color: #334155;
+}
+
+:host-context(html.light) .pill--paid {
+  color: #14698f;
+}
+
+:host-context(html.light) .avatar-chip {
+  color: #0f172a;
+}
+
+:host-context(html.light) .ghost-btn {
+  background: rgba(15, 23, 42, 0.027);
+  color: #0f172a;
+}
+
+:host-context(html.light) .primary-btn {
+  color: #fff;
+}
+
+:host-context(html.light) .sheet-select {
+  color: #0f172a;
+}
+
+:host-context(html.light) .danger-btn {
+  color: #8f1423;
+}
+
+:host-context(html.light) .link-btn {
+  color: #2e148f;
+}
+
+:host-context(html.light) .link-btn--danger {
+  color: #8f1424;
+}
+
+:host-context(html.light) .back-link {
+  color: #142a8f;
+}
+
+:host-context(html.light) .field__label {
+  color: #334155;
+}
+
+:host-context(html.light) .field__input {
+  color: #315272;
+  color-scheme: light;
+}
+
+:host-context(html.light) .field__error {
+  color: #8f1424;
+}
+
+:host-context(html.light) .check {
+  color: #0f172a;
+}
+
+:host-context(html.light) .notice--danger {
+  color: #8f1423;
+}
+
+:host-context(html.light) .notice--info {
+  color: #ddd6fe;
+}
+
+:host-context(html.light) .empty-state {
+  color: #475569;
+}
+
+:host-context(html.light) .segmented__option span {
+  color: #334155;
+}
+
+:host-context(html.light) .segmented__option input:checked + span {
+  color: #fff;
+}

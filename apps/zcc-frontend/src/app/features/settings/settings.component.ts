@@ -29,6 +29,7 @@ import { GeneralSettingsFormComponent } from './components/general-settings-form
 import { ProfileSettingsFormComponent } from './components/profile-settings-form/profile-settings-form.component';
 import { SettingsAsideComponent } from './components/settings-aside/settings-aside.component';
 import { AvatarUploaderComponent } from './components/avatar-uploader/avatar-uploader.component';
+import { AppearanceSettingsComponent } from './components/appearance-settings/appearance-settings.component';
 
 type SavingSection = 'general' | 'profile' | null;
 
@@ -44,6 +45,7 @@ type SavingSection = 'general' | 'profile' | null;
     ProfileSettingsFormComponent,
     SettingsAsideComponent,
     AvatarUploaderComponent,
+    AppearanceSettingsComponent,
   ],
   providers: [MessageService],
   templateUrl: './settings.component.html',

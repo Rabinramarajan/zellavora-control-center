@@ -425,3 +425,90 @@
     display: none;
   }
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --dash-surface: rgba(15, 23, 42, 0.023);
+  --dash-border: rgba(15, 23, 42, 0.077);
+  --dash-border-strong: rgba(15, 23, 42, 0.132);
+}
+
+:host-context(html.light) .dash-card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.032), rgba(15, 23, 42, 0.011)), rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.036),
+    0 20px 40px -24px rgba(15, 23, 42, 0.18);
+}
+
+:host-context(html.light) .dash-title {
+  color: #0f172a;
+}
+
+:host-context(html.light) .dash-subtitle {
+  color: #475569;
+}
+
+:host-context(html.light) .dash-chip {
+  color: #0f172a;
+}
+
+:host-context(html.light) .dash-segment button {
+  color: #475569;
+}
+
+:host-context(html.light) .dash-segment button:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.045);
+}
+
+:host-context(html.light) .dash-segment button.is-active {
+  color: #fff;
+}
+
+:host-context(html.light) .dash-btn {
+  color: #0f172a;
+}
+
+:host-context(html.light) .dash-btn:hover:not(:disabled) {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.054);
+}
+
+:host-context(html.light) .dash-timeline::before {
+  background: linear-gradient(180deg, rgb(var(--dash-accent) / 0.5), rgba(15, 23, 42, 0.072));
+}
+
+:host-context(html.light) .dash-table td {
+  color: #0f172a;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.039);
+}
+
+:host-context(html.light) .dash-table tbody tr:hover {
+  background: rgba(15, 23, 42, 0.027);
+}
+
+:host-context(html.light) .dash-action-icon {
+  color: #fff;
+  box-shadow: 0 8px 18px -8px rgb(var(--tone) / 0.9),
+    inset 0 1px 0 rgba(15, 23, 42, 0.225);
+}
+
+:host-context(html.light) .dash-action-arrow {
+  color: #475569;
+}
+
+:host-context(html.light) .dash-action:hover .dash-action-arrow {
+  color: #0f172a;
+}
+
+:host-context(html.light) .dash-empty {
+  color: #475569;
+}
+
+:host-context(html.light) .dash-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.036) 25%,
+    rgba(15, 23, 42, 0.081) 50%,
+    rgba(15, 23, 42, 0.036) 75%
+  );
+}

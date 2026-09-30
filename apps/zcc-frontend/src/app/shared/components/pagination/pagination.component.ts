@@ -141,6 +141,13 @@ export interface PageChangeEvent {
       font: inherit;
       color: var(--pg-muted);
     }
+    :host-context(html.light) {
+      --pg-border: #e2e8f0;
+      --pg-fg: #0f172a;
+      --pg-muted: #475569;
+      --pg-hover: #f1f5f9;
+      --pg-select-bg: #ffffff;
+    }
     .pg-summary { font-size: 0.8125rem; }
     .pg-summary strong { font-weight: 600; color: var(--pg-fg); }
     .pg-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }

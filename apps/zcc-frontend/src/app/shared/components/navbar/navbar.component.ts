@@ -4,6 +4,7 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { LayoutService } from '@core/services/layout.service';
 import { AppDialogService } from '@shared/components/dialog';
+import { ThemeToggleComponent } from '@shared/components/theme-toggle/theme-toggle.component';
 import { firstValueFrom } from 'rxjs';
 
 interface BreadcrumbSegment {
@@ -15,18 +16,18 @@ interface BreadcrumbSegment {
   selector: 'app-navbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ThemeToggleComponent],
   template: `
     <!-- Top Header -->
     <header
-      class="h-16 bg-[#05040e] border-b border-[#13112b] px-6 flex items-center justify-between sticky top-0 z-40 font-sans"
+      class="h-16 bg-white/90 backdrop-blur border-b border-slate-200 dark:bg-[#05040e] dark:border-[#13112b] px-6 flex items-center justify-between sticky top-0 z-40 font-sans"
     >
       <!-- Left side: Logo, Hamburger and Breadcrumbs -->
       <div class="flex items-center gap-4">
         <!-- Hamburger Menu toggle -->
         <button
           (click)="layoutService.toggleSidebar()"
-          class="text-slate-400 hover:text-white transition"
+          class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -42,20 +43,20 @@ interface BreadcrumbSegment {
         <nav class="flex items-center gap-2 text-xs font-semibold select-none ml-2">
           @for (seg of getBreadcrumbs(); track seg; let last = $last) {
             @if (seg.route) {
-              <a [routerLink]="seg.route" class="text-[#a3a1b8] hover:text-white transition">
+              <a [routerLink]="seg.route" class="text-slate-500 hover:text-slate-900 dark:text-[#a3a1b8] dark:hover:text-white transition">
                 {{ seg.label }}
               </a>
             }
             <!-- Active breadcrumb highlighted in vibrant violet/purple -->
             @if (!seg.route) {
-              <span class="text-[#8B5CF6]">
+              <span class="text-violet-600 dark:text-[#8B5CF6]">
                 {{ seg.label }}
               </span>
             }
             <!-- Chevron separator -->
             @if (!last) {
               <svg
-                class="w-3 h-3 text-[#4e4b70] mx-1"
+                class="w-3 h-3 text-slate-300 dark:text-[#4e4b70] mx-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -86,6 +87,8 @@ interface BreadcrumbSegment {
           </span>
         </div>
         -->
+
+        <app-theme-toggle />
 
         <!-- User profile dropdown -->
         <div class="relative" (keydown.escape)="closeUserMenu()">
@@ -123,14 +126,14 @@ interface BreadcrumbSegment {
                 </span>
               </span>
               <span
-                class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#05040e]"
+                class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#05040e]"
                 aria-hidden="true"
               ></span>
             </span>
 
             <span class="text-left hidden sm:block leading-none">
-              <span class="block text-[13px] font-semibold text-white">{{ displayName() }}</span>
-              <span class="block text-[11px] text-[#9b98b8] mt-1 capitalize">{{
+              <span class="block text-[13px] font-semibold text-slate-900 dark:text-white">{{ displayName() }}</span>
+              <span class="block text-[11px] text-slate-500 dark:text-[#9b98b8] mt-1 capitalize">{{
                 displayRole()
               }}</span>
             </span>

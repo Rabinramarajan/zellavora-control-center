@@ -1,0 +1,73 @@
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ThemeService } from '@core/services/theme.service';
+
+@Component({
+  selector: 'app-theme-toggle',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  template: `
+    <button
+      type="button"
+      (click)="theme.toggle()"
+      [attr.aria-label]="label()"
+      [attr.title]="label()"
+      [attr.aria-pressed]="theme.isDark()"
+      class="relative w-11 h-11 rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
+             border-slate-200 bg-white text-amber-500 hover:bg-slate-100
+             dark:border-[#13112b] dark:bg-white/5 dark:text-violet-300 dark:hover:bg-white/10 dark:hover:text-white"
+    >
+      <!-- Sun: shown in light mode -->
+      <svg
+        class="theme-icon absolute w-5 h-5"
+        [class.theme-icon--hidden]="theme.isDark()"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4" />
+        <path
+          stroke-linecap="round"
+          d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"
+        />
+      </svg>
+      <!-- Moon: shown in dark mode -->
+      <svg
+        class="theme-icon absolute w-5 h-5"
+        [class.theme-icon--hidden]="!theme.isDark()"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+      </svg>
+    </button>
+  `,
+  styles: [
+    `
+      .theme-icon {
+        transition:
+          transform 250ms ease,
+          opacity 200ms ease;
+      }
+      .theme-icon--hidden {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.5);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .theme-icon {
+          transition: none;
+        }
+      }
+    `,
+  ],
+})
+export class ThemeToggleComponent {
+  readonly theme = inject(ThemeService);
+  readonly label = computed(() =>
+    this.theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'
+  );
+}

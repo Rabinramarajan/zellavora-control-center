@@ -74,3 +74,45 @@
   background: rgba(139, 92, 246, 0.15) !important;
   color: #fff !important;
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.055);
+}
+
+:host-context(html.light) .preview-tablet {
+  border-left: 6px solid #f5f5f7;
+  border-right: 6px solid #f5f5f7;
+  border-top: 10px solid #f5f5f7;
+  border-bottom: 10px solid #f5f5f7;
+  background-color: #ffffff !important;
+}
+
+:host-context(html.light) .preview-mobile {
+  border-left: 8px solid #f5f5f7;
+  border-right: 8px solid #f5f5f7;
+  border-top: 16px solid #f5f5f7;
+  border-bottom: 16px solid #f5f5f7;
+  background-color: #ffffff !important;
+}
+
+:host-context(html.light) ::ng-deep .p-select {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(15, 23, 42, 0.088) !important;
+  color: #0f172a !important;
+}
+
+:host-context(html.light) ::ng-deep .p-select-panel {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.11) !important;
+}
+
+:host-context(html.light) ::ng-deep .p-select-item {
+  color: #475569 !important;
+}
+
+:host-context(html.light) ::ng-deep .p-select-item:hover,
+:host-context(html.light) ::ng-deep .p-select-item.p-highlight {
+  color: #0f172a !important;
+}

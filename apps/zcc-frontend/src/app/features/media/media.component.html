@@ -166,7 +166,7 @@
       </button>
     </div>
   } @else if (filteredItems().length === 0) {
-    <div class="mg-panel p-12 text-center">
+    <div class="mg-panel flex flex-1 flex-col items-center justify-center p-12 text-center">
       <div class="mg-hero-icon mx-auto" aria-hidden="true"><i class="pi pi-images"></i></div>
       <p class="text-white font-semibold mt-4">
         {{ items().length ? 'No files match your filters' : 'Your Blob store is empty' }}

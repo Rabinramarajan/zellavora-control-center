@@ -1,8 +1,10 @@
 // Tokens and CDK overlay styles for @zellavoras/ui form controls.
-// The admin shell is dark-only, so the library's light defaults are replaced
-// with the same slate surfaces and indigo accent the rest of the app uses.
+// Dark tokens are the default; html.light (end of file) swaps in light surfaces.
+// Both use the same indigo accent as the rest of the app.
 @use '@zellavoras/ui/styles' as zv;
 @use '../app/shared/components/dialog/dialog';
+// Light-theme remapping of the dark-only utilities; loaded last so it overrides Tailwind's base colours.
+@use 'theme-light';
 
 @include zv.core(
   (
@@ -100,4 +102,32 @@ app-form-input-control input.fic-input:focus {
   --app-dialog-radius: 16px;
   --app-dialog-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
   --app-dialog-scrim: rgb(2 6 23 / 0.6);
+}
+
+// Light theme: same token set, light surfaces.
+html.light:not(.dark) {
+  @include zv.theme(
+    (
+      surface: #ffffff,
+      surface-muted: #f8fafc,
+      text: #0f172a,
+      text-muted: #475569,
+      text-placeholder: #64748b,
+      text-disabled: #94a3b8,
+      border: #cbd5e1,
+      border-strong: #64748b,
+      border-disabled: #e2e8f0,
+      accent: #6366f1,
+      danger: #e11d48,
+      radius-control: 10px,
+      control-height: 44px,
+      font: #{"'Outfit', 'Inter', system-ui, -apple-system, sans-serif"},
+    )
+  );
+
+  --app-dialog-surface: #ffffff;
+  --app-dialog-on-surface: #0f172a;
+  --app-dialog-on-surface-variant: #475569;
+  --app-dialog-shadow: 0 24px 64px rgb(15 23 42 / 0.18);
+  --app-dialog-scrim: rgb(15 23 42 / 0.4);
 }

@@ -256,3 +256,67 @@
     break-inside: avoid;
   }
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) .ts-toolbar {
+  background: #ffffff;
+}
+
+:host-context(html.light) .ts-link {
+  color: #142a8f;
+}
+
+:host-context(html.light) .ts-nav {
+  border: 1px solid rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+}
+
+:host-context(html.light) .ts-nav button {
+  color: #475569;
+}
+
+:host-context(html.light) .ts-nav button:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .ts-badge {
+  color: #148f3f;
+}
+
+:host-context(html.light) .ts-badge--preview {
+  color: #8f7614;
+}
+
+:host-context(html.light) .ts-print {
+  color: #fff;
+}
+
+:host-context(html.light) .ts-hint {
+  color: #334155;
+}
+
+:host-context(html.light) .ts-hint--error {
+  color: #8f1423;
+}
+
+:host-context(html.light) .ts-doc {
+  box-shadow: 0 20px 50px -30px rgba(15, 23, 42, 0.24);
+}
+
+:host-context(html.light) .ts-doc__info td {
+  border: 1px solid #ffffff;
+}
+
+:host-context(html.light) .ts-doc__grid th,
+:host-context(html.light) .ts-doc__grid td {
+  border: 1px solid #ffffff;
+}
+
+:host-context(html.light) .ts-doc__summary th,
+:host-context(html.light) .ts-doc__summary td {
+  border: 1px solid #ffffff;
+}
+
+:host-context(html.light) .ts-doc__signatures td {
+  border: 1px solid #ffffff;
+}

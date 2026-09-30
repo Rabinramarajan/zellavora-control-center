@@ -144,3 +144,69 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   .panel, .chevron, .trigger, .preset { animation: none; transition: none; }
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) .trigger {
+  background: #ffffff;
+  color: #2f4b75;
+}
+
+:host-context(html.light) .trigger > .pi-calendar {
+  color: #475569;
+}
+
+:host-context(html.light) .chevron {
+  color: #475569;
+}
+
+:host-context(html.light) .trigger.set > .pi-calendar {
+  color: #2e148f;
+}
+
+:host-context(html.light) .panel {
+  background: #f6f7f8;
+  color: #2f4b75;
+  box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.21), 0 0 0 1px rgba(15, 23, 42, 0.09);
+}
+
+:host-context(html.light) .preset {
+  color: #314a72;
+}
+
+:host-context(html.light) .preset:hover {
+  color: #0f172a;
+}
+
+:host-context(html.light) .preset.active {
+  color: #2c148f;
+}
+
+:host-context(html.light) .preset .pi-check {
+  color: #2e148f;
+}
+
+:host-context(html.light) .field > span {
+  color: #475569;
+}
+
+:host-context(html.light) .field input {
+  background: #ffffff;
+  color: #2f4b75;
+  color-scheme: light;
+}
+
+:host-context(html.light) .error {
+  color: #8f1414;
+}
+
+:host-context(html.light) .text-btn {
+  color: #475569;
+}
+
+:host-context(html.light) .text-btn:hover:not(:disabled) {
+  color: #2f4b75;
+}
+
+:host-context(html.light) .apply-btn {
+  color: #fff;
+}

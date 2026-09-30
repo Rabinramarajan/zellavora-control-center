@@ -250,3 +250,22 @@
     transition: none;
   }
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --st-line: rgba(15, 23, 42, 0.088);
+  --st-line-soft: rgba(15, 23, 42, 0.055);
+  --st-fg: #0f172a;
+  --st-muted: #475569;
+  --st-head-bg: rgba(15, 23, 42, 0.018);
+  --st-control-bg: rgba(15, 23, 42, 0.027);
+}
+
+:host-context(html.light) .st-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.036) 0%,
+    rgba(15, 23, 42, 0.09) 50%,
+    rgba(15, 23, 42, 0.036) 100%
+  );
+}

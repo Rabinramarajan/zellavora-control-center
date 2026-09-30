@@ -90,3 +90,24 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) .task-row {
+  background: #f5f6f8;
+}
+
+:host-context(html.light) .icon-btn {
+  color: #475569;
+}
+
+:host-context(html.light) .icon-btn:hover {
+  color: #8f1424;
+}
+
+:host-context(html.light) .summary dt {
+  color: #334155;
+}
+
+:host-context(html.light) .summary dd {
+  color: #0f172a;
+}

@@ -251,3 +251,7 @@
   line-height: 1.45;
   color: var(--auth-danger-text);
 }
+
+html.light .auth-btn--secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}

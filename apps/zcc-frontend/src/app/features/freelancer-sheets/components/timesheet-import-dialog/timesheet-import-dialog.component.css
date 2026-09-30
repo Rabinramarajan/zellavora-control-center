@@ -172,3 +172,103 @@ button:focus-visible, input:focus-visible { outline: 2px solid #b99aff; outline-
   .scrim, .dialog { animation: none; }
   .progress span, tbody tr { transition: none; }
 }
+
+/* ---- Light theme (generated from the dark rules above) ---- */
+:host-context(html.light) {
+  --d-surface: #ffffff;
+  --d-control: #ffffff;
+  --d-text: #2f4b75;
+  --d-muted: #475569;
+}
+
+:host-context(html.light) .scrim {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html.light) .dialog {
+  box-shadow: 0 30px 70px -20px rgba(15, 23, 42, 0.24);
+}
+
+:host-context(html.light) .head-icon {
+  color: #2e148f;
+}
+
+:host-context(html.light) h2 {
+  color: #0f172a;
+}
+
+:host-context(html.light) .stat--work strong {
+  color: #2e148f;
+}
+
+:host-context(html.light) .stat--hours strong {
+  color: #8f7214;
+}
+
+:host-context(html.light) .stat--leave strong {
+  color: #14678f;
+}
+
+:host-context(html.light) .callout {
+  color: #14468f;
+}
+
+:host-context(html.light) .callout i {
+  color: #144e8f;
+}
+
+:host-context(html.light) .callout--warn {
+  color: #8f6f14;
+}
+
+:host-context(html.light) .callout--warn i {
+  color: #8f6d14;
+}
+
+:host-context(html.light) .invalid small {
+  color: #8f1414;
+}
+
+:host-context(html.light) th {
+  background: #f5f5f7;
+}
+
+:host-context(html.light) .time {
+  color: #334155;
+}
+
+:host-context(html.light) .tag--work {
+  color: #2e148f;
+}
+
+:host-context(html.light) .tag--leave {
+  color: #14678f;
+}
+
+:host-context(html.light) .tag--holiday {
+  color: #178c5e;
+}
+
+:host-context(html.light) .logged {
+  color: #8f7214;
+}
+
+:host-context(html.light) .state-icon {
+  color: #178c5e;
+}
+
+:host-context(html.light) .state--error .state-icon {
+  color: #8f1414;
+}
+
+:host-context(html.light) .state--partial .state-icon {
+  color: #8f7214;
+}
+
+:host-context(html.light) .failures span {
+  color: #8f1414;
+}
+
+:host-context(html.light) .dialog-foot {
+  background: rgba(255, 255, 255, 0.85);
+}
