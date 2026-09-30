@@ -53,7 +53,7 @@
               <th scope="col">#</th>
               <th scope="col">Document Name</th>
               <th scope="col">File Size</th>
-              <th scope="col">Uploaded</th>
+              <th scope="col">Uploaded By</th>
               <th scope="col">Status</th>
               <th scope="col">Action</th>
             </tr>
@@ -76,14 +76,19 @@
                 <td>{{ size(row.file.size) }}</td>
                 <td>
                   @if (row.uploadedOn) {
-                    <span class="uploaded">
-                      {{ row.uploadedOn | date: 'MM/dd/yyyy hh:mm a' }}
+                    <div class="upload-meta">
                       @if (row.uploadedBy) {
-                        <small>by {{ row.uploadedBy }}</small>
+                        <span class="avatar" aria-hidden="true">{{ initials(row.uploadedBy) }}</span>
                       }
-                    </span>
+                      <div class="upload-meta-text">
+                        <span class="uploader">{{ row.uploadedBy ?? 'Unknown user' }}</span>
+                        <time [attr.datetime]="row.uploadedOn">
+                          {{ row.uploadedOn | date: 'MMM d, y · h:mm a' }}
+                        </time>
+                      </div>
+                    </div>
                   } @else {
-                    —
+                    <span class="muted">—</span>
                   }
                 </td>
                 <td aria-live="polite">

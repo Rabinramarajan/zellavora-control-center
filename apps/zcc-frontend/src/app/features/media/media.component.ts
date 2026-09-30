@@ -15,6 +15,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { AuthStore } from '@core/auth/auth.store';
 import { AppDialogService } from '@shared/components/dialog';
 import {
   DocumentUploadComponent,
@@ -64,6 +65,7 @@ export class MediaComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = inject(AppDialogService);
+  private readonly authStore = inject(AuthStore);
 
   readonly items = signal<MediaItem[]>([]);
   readonly loading = signal(true);
@@ -71,7 +73,9 @@ export class MediaComponent {
   readonly uploadDocument: DocumentUploadHandler = async (file) => {
     const item = await firstValueFrom(this.mediaService.upload(file));
     this.items.update((items) => [item, ...items]);
-    return { uploadedOn: item.uploadedAt };
+    // The media API doesn't return an uploader, and the uploader is always the signed-in user.
+    const user = this.authStore.user();
+    return { uploadedOn: item.uploadedAt, uploadedBy: user?.fullName || user?.email };
   };
   readonly maxUploadMb = MAX_UPLOAD_BYTES / (1024 * 1024);
   readonly error = signal<string | null>(null);

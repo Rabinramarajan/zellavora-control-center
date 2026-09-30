@@ -73,6 +73,10 @@ export class DocumentUploadComponent {
       this.errors.set([]);
     }
   }
+  initials(name: string): string {
+    const parts = name.split(/[\s@._-]+/).filter(Boolean);
+    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+  }
   format(file: File): string {
     return file.name.split('.').pop()!.toUpperCase();
   }

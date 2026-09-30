@@ -167,12 +167,26 @@ async function main() {
       action: 'approve',
       description: "Review, approve, reject and mark paid other people's timesheets and sheets",
     },
+    {
+      name: 'upload:media',
+      key: 'media:upload',
+      resource: 'media',
+      action: 'upload',
+      description: 'Upload files to the media library',
+    },
+    {
+      name: 'delete:media',
+      key: 'media:delete',
+      resource: 'media',
+      action: 'delete',
+      description: 'Delete files from the media library',
+    },
   ];
 
   const permissionsList = [];
   for (const perm of permissionsData) {
     const createdPerm = await prisma.permission.upsert({
-      where: { name: perm.name },
+      where: { key: perm.key },
       update: {},
       create: perm,
     });
@@ -201,6 +215,25 @@ async function main() {
         },
       });
       console.log(`  ✅ Permission assigned to Owner role`);
+    }
+  }
+  console.log();
+
+  // Admins manage content, so they get the media library keys as well.
+  for (const perm of permissionsList.filter((p) => p.key.startsWith('media:'))) {
+    const existing = await prisma.rolePermission.findFirst({
+      where: { organizationId: tenant.id, roleId: adminRole.id, permissionId: perm.id },
+    });
+    if (!existing) {
+      await prisma.rolePermission.create({
+        data: {
+          organizationId: tenant.id,
+          roleId: adminRole.id,
+          permissionId: perm.id,
+          effect: 'allow',
+        },
+      });
+      console.log(`  ✅ ${perm.key} assigned to Admin role`);
     }
   }
   console.log();

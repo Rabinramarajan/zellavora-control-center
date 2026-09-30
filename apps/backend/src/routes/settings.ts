@@ -1,5 +1,6 @@
-import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { Router, type Response, type NextFunction } from 'express';
+import { authenticate, type AuthRequest } from '../middleware/auth';
+import { prisma } from '../infrastructure/prisma';
 
 const router = Router();
 
@@ -12,13 +13,6 @@ const store: Record<string, any> = {
     dateFormat: 'MMM DD, YYYY',
     itemsPerPage: 10,
     maintenanceMode: false,
-  },
-  profile: {
-    fullName: 'Rabin R',
-    email: 'rabin@zellavora.com',
-    bio: 'Frontend Angular Consultant with 4+ years of experience building scalable, accessible and high-performance web applications.',
-    location: 'Chennai, Tamil Nadu, India',
-    phone: '+91 8765432109',
   },
   preferences: {
     theme: 'dark',
@@ -100,9 +94,50 @@ const store: Record<string, any> = {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/settings', authenticate, (req, res) => {
-  res.json({ data: store });
+// Profile belongs to the signed-in user, so it is read from and written to their user record.
+const profileSelect = {
+  fullName: true,
+  email: true,
+  bio: true,
+  country: true,
+  mobile: true,
+} as const;
+
+type ProfileRow = {
+  fullName: string;
+  email: string;
+  bio: string | null;
+  country: string | null;
+  mobile: string | null;
+};
+
+const toProfile = (user: ProfileRow) => ({
+  fullName: user.fullName,
+  email: user.email,
+  bio: user.bio ?? '',
+  location: user.country ?? '',
+  phone: user.mobile ?? '',
 });
+
+const loadProfile = async (userId: string) => {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: profileSelect });
+  return user ? toProfile(user) : {};
+};
+
+const optionalText = (value: unknown): string | null | undefined =>
+  value === undefined ? undefined : typeof value === 'string' && value.trim() ? value.trim() : null;
+
+router.get(
+  '/settings',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      res.json({ data: { ...store, profile: await loadProfile(req.userId!) } });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
 
 /**
  * @swagger
@@ -138,11 +173,19 @@ router.get('/settings', authenticate, (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/settings/:section', authenticate, (req, res) => {
-  const { section } = req.params;
-  const data = store[section] || {};
-  res.json({ data });
-});
+router.get(
+  '/settings/:section',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { section } = req.params;
+      const data = section === 'profile' ? await loadProfile(req.userId!) : store[section] || {};
+      res.json({ data });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
 
 // PUT /api/v1/settings/:section
 /**
@@ -186,13 +229,38 @@ router.get('/settings/:section', authenticate, (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/settings/:section', authenticate, (req, res) => {
-  const { section } = req.params;
-  if (!store[section]) {
-    store[section] = {};
+router.put(
+  '/settings/:section',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { section } = req.params;
+    if (section === 'profile') {
+      try {
+        const body = req.body as Record<string, unknown>;
+        const fullName = typeof body.fullName === 'string' ? body.fullName.trim() : undefined;
+        // Email is the login identity; it is changed through the account flow, not here.
+        const user = await prisma.user.update({
+          where: { id: req.userId! },
+          data: {
+            ...(fullName ? { fullName } : {}),
+            bio: optionalText(body.bio),
+            country: optionalText(body.location),
+            mobile: optionalText(body.phone),
+          },
+          select: profileSelect,
+        });
+        res.json({ data: toProfile(user) });
+      } catch (e) {
+        next(e);
+      }
+      return;
+    }
+    if (!store[section]) {
+      store[section] = {};
+    }
+    store[section] = { ...store[section], ...req.body };
+    res.json({ data: store[section] });
   }
-  store[section] = { ...store[section], ...req.body };
-  res.json({ data: store[section] });
-});
+);
 
 export default router;
