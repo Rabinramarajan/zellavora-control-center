@@ -33,11 +33,11 @@ export const PRIORITIES = ['LOW', 'NORMAL', 'HIGH', 'URGENT'] as const;
 export const SOURCES = ['ADMIN_PORTAL', 'API', 'SYSTEM'] as const;
 export const USER_TYPES = ['EMPLOYEE', 'CONTRACTOR', 'EXTERNAL'] as const;
 export const EMPLOYMENT_TYPES = [
-  'FULL_TIME',
-  'PART_TIME',
+  'PERMANENT',
   'CONTRACT',
-  'INTERN',
   'CONSULTANT',
+  'INTERN',
+  'EXTERNAL',
 ] as const;
 export const ACCESS_SCOPES = ['GLOBAL', 'BRANCH', 'DEPARTMENT', 'TEAM', 'OWN'] as const;
 export const NOTE_TYPES = ['GENERAL', 'APPROVAL', 'PROVISIONING', 'SYSTEM'] as const;

@@ -19,7 +19,7 @@ import {
 import { PaginationComponent } from '@shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { formatDate } from '../shared/iam-format';
-import { MultiSelectComponent, MultiSelectOption } from './components/multi-select.component';
+import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
 import { UserSelectComponent } from './components/user-select.component';
 import { REQUEST_TYPE_OPTIONS, STATUS_OPTIONS, STATUS_TONES } from './user-request.constants';
 

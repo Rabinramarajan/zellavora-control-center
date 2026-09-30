@@ -68,11 +68,11 @@ export const USER_TYPE_OPTIONS: Option[] = [
 ];
 
 export const EMPLOYMENT_TYPE_OPTIONS: Option[] = [
-  { value: 'FULL_TIME', label: 'Full-time' },
-  { value: 'PART_TIME', label: 'Part-time' },
+  { value: 'PERMANENT', label: 'Permanent' },
   { value: 'CONTRACT', label: 'Contract' },
-  { value: 'INTERN', label: 'Intern' },
   { value: 'CONSULTANT', label: 'Consultant' },
+  { value: 'INTERN', label: 'Intern' },
+  { value: 'EXTERNAL', label: 'External' },
 ];
 
 export const ACCESS_SCOPE_OPTIONS: Option[] = [

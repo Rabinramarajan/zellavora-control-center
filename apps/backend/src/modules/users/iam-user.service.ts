@@ -5,6 +5,14 @@ import { AuditService } from '../../infrastructure/audit';
 import { cacheDelPattern } from '../../infrastructure/cache';
 import { IamUserRepository } from './iam-user.repository';
 import { IamUserMapper } from './iam-user.mapper';
+import { UserAdminService } from './user-admin.service';
+import {
+  ACCOUNT_STATUSES,
+  AccountStatus,
+  accountStatusOf,
+  accountStatusWhere,
+  recordStatusChange,
+} from './account-status';
 import { InvitationService, type InviteActor } from '../invitation/invitation.service';
 import {
   CreateIamUserDto,
@@ -25,7 +33,14 @@ const slugifyUsername = (fullName: string): string =>
     .replace(/^\.+|\.+$/g, '')
     .slice(0, 32);
 
-const VALID_STATUSES = ['ACTIVE', 'INACTIVE', 'LOCKED', 'PENDING', 'SUSPENDED'] as const;
+const VALID_STATUSES = [
+  'ACTIVE',
+  'INACTIVE',
+  'LOCKED',
+  'PENDING',
+  'SUSPENDED',
+  'DISABLED',
+] as const;
 
 /**
  * IAM Users module service.
@@ -47,16 +62,30 @@ export class IamUserService {
 
   async list(query: IamUserListQueryDto) {
     const { data, total } = await this.repo.list(query);
-    const rows = data.map((row) => IamUserMapper.toListItem(row as never));
+    const branchIds = [...new Set(data.map((r) => r.branchId).filter((v): v is string => !!v))];
+    const branches = new Map((await this.repo.branchNames(branchIds)).map((b) => [b.id, b.name]));
+    const rows = data.map((row) =>
+      IamUserMapper.toListItem(
+        row as never,
+        row.branchId ? (branches.get(row.branchId) ?? null) : null
+      )
+    );
     const totalPages = Math.ceil(total / query.pageSize);
     return { data: rows, meta: { page: query.page, pageSize: query.pageSize, total, totalPages } };
   }
 
+  /** Counts per account status (Invited, Active, Locked, ...), matching the list filter. */
   async stats() {
-    const rows = await this.repo.countByStatus();
-    const byStatus: Record<string, number> = { ACTIVE: 0, INACTIVE: 0, LOCKED: 0, PENDING: 0, SUSPENDED: 0 };
-    for (const row of rows) byStatus[row.status] = row._count._all;
-    const total = Object.values(byStatus).reduce((sum, n) => sum + n, 0);
+    const counts = await Promise.all(
+      ACCOUNT_STATUSES.map((s) =>
+        this.repo.countWhere({ isDeleted: false, ...accountStatusWhere([s]) })
+      )
+    );
+    const byStatus = Object.fromEntries(ACCOUNT_STATUSES.map((s, i) => [s, counts[i]])) as Record<
+      AccountStatus,
+      number
+    >;
+    const total = await this.repo.countWhere({ isDeleted: false });
     return { total, byStatus };
   }
 
@@ -79,7 +108,11 @@ export class IamUserService {
   async create(dto: CreateIamUserDto, actorId?: string | null, inviter?: InviteActor) {
     const existingEmail = await this.repo.findByEmail(dto.email);
     if (existingEmail) {
-      throw new AppError(`A user with email '${dto.email}' already exists`, 409, 'USER_EMAIL_EXISTS');
+      throw new AppError(
+        `A user with email '${dto.email}' already exists`,
+        409,
+        'USER_EMAIL_EXISTS'
+      );
     }
     const username = dto.username ?? slugifyUsername(dto.fullName);
     const existingUsername = await this.repo.findByUsername(username);
@@ -107,7 +140,11 @@ export class IamUserService {
         tx
       );
       if (dto.roleIds.length) {
-        await this.repo.replaceRoles(user.id, dto.roleIds.map((roleId) => ({ roleId })), tx);
+        await this.repo.replaceRoles(
+          user.id,
+          dto.roleIds.map((roleId) => ({ roleId })),
+          tx
+        );
       }
       if (dto.groupIds.length) {
         await this.repo.replaceGroups(user.id, dto.groupIds, tx);
@@ -115,12 +152,25 @@ export class IamUserService {
       return user;
     });
 
+    await recordStatusChange({
+      userId: created.id,
+      from: null,
+      to: dto.sendInvite ? 'INVITED' : 'ACTIVE',
+      reason: 'Account created',
+      actorId,
+    });
     await AuditService.log({
       action: dto.sendInvite ? 'user.invited' : 'user.created',
       resource: 'user',
       resourceId: created.id,
       severity: 'info',
-      metadata: { email: created.email, username, sendInvite: dto.sendInvite, roles: dto.roleIds.length, groups: dto.groupIds.length },
+      metadata: {
+        email: created.email,
+        username,
+        sendInvite: dto.sendInvite,
+        roles: dto.roleIds.length,
+        groups: dto.groupIds.length,
+      },
     });
 
     if (dto.sendInvite && inviter) {
@@ -163,7 +213,10 @@ export class IamUserService {
       resource: 'user',
       resourceId: id,
       severity: 'info',
-      metadata: { email: existing.email, changed: Object.keys(dto).filter((k) => dto[k] !== undefined) },
+      metadata: {
+        email: existing.email,
+        changed: Object.keys(dto).filter((k) => dto[k] !== undefined),
+      },
     });
 
     this.invalidate();
@@ -178,23 +231,63 @@ export class IamUserService {
     if (!VALID_STATUSES.includes(dto.status)) {
       throw new AppError(`Invalid status '${dto.status}'`, 400, 'INVALID_STATUS');
     }
+    const before = accountStatusOf(existing);
 
-    await this.repo.update(id, {
-      status: dto.status,
-      ...(dto.status === 'LOCKED' ? { isAccountLocked: true, lastLockedDate: new Date() } : {}),
-      ...(dto.status === 'ACTIVE' ? { isAccountLocked: false, lastLockedDate: null, failedLoginAttempts: 0 } : {}),
-      updatedBy: actorId ?? null,
+    await this.repo.transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: {
+          status: dto.status,
+          ...(dto.status === 'LOCKED'
+            ? { isAccountLocked: true, lastLockedDate: new Date(), lockReason: dto.reason ?? null }
+            : {}),
+          ...(dto.status === 'ACTIVE'
+            ? {
+                isAccountLocked: false,
+                lastLockedDate: null,
+                lockReason: null,
+                failedLoginAttempts: 0,
+              }
+            : {}),
+          updatedBy: actorId ?? null,
+        },
+      });
+      await recordStatusChange(
+        {
+          userId: id,
+          from: before,
+          to: accountStatusOf({
+            ...existing,
+            status: dto.status,
+            isAccountLocked: dto.status === 'LOCKED',
+          }),
+          reason: dto.reason,
+          actorId,
+        },
+        tx
+      );
     });
 
     await AuditService.log({
       action: 'user.status_changed',
       resource: 'user',
       resourceId: id,
-      severity: dto.status === 'LOCKED' || dto.status === 'SUSPENDED' ? 'warning' : 'info',
+      severity: ['LOCKED', 'SUSPENDED', 'DISABLED', 'INACTIVE'].includes(dto.status)
+        ? 'warning'
+        : 'info',
       before: { status: existing.status },
       after: { status: dto.status },
       metadata: { email: existing.email, reason: dto.reason ?? null },
     });
+    await new UserAdminService().notifyStatusChange(
+      id,
+      accountStatusOf({
+        ...existing,
+        status: dto.status,
+        isAccountLocked: dto.status === 'LOCKED',
+      }),
+      dto.reason ?? null
+    );
 
     this.invalidate();
     return this.getById(id);
@@ -205,11 +298,24 @@ export class IamUserService {
     if (!existing) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
-    await this.repo.update(id, {
-      isAccountLocked: true,
-      lastLockedDate: new Date(),
-      status: 'LOCKED',
-      updatedBy: actorId ?? null,
+    if (existing.isAccountLocked || existing.status === 'LOCKED') {
+      throw new AppError('This account is already locked', 409, 'ALREADY_LOCKED');
+    }
+    await this.repo.transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: {
+          isAccountLocked: true,
+          lastLockedDate: new Date(),
+          lockReason: dto.reason ?? null,
+          status: 'LOCKED',
+          updatedBy: actorId ?? null,
+        },
+      });
+      await recordStatusChange(
+        { userId: id, from: accountStatusOf(existing), to: 'LOCKED', reason: dto.reason, actorId },
+        tx
+      );
     });
 
     await AuditService.log({
@@ -217,8 +323,11 @@ export class IamUserService {
       resource: 'user',
       resourceId: id,
       severity: 'warning',
+      before: { status: existing.status, isAccountLocked: false },
+      after: { status: 'LOCKED', isAccountLocked: true },
       metadata: { email: existing.email, reason: dto.reason ?? null },
     });
+    await new UserAdminService().notifyStatusChange(id, 'LOCKED', dto.reason ?? null);
 
     this.invalidate();
     return this.getById(id);
@@ -229,12 +338,25 @@ export class IamUserService {
     if (!existing) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
-    await this.repo.update(id, {
-      isAccountLocked: false,
-      lastLockedDate: null,
-      failedLoginAttempts: 0,
-      status: 'ACTIVE',
-      updatedBy: actorId ?? null,
+    if (!existing.isAccountLocked && existing.status !== 'LOCKED') {
+      throw new AppError('This account is not locked', 409, 'NOT_LOCKED');
+    }
+    await this.repo.transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: {
+          isAccountLocked: false,
+          lastLockedDate: null,
+          lockReason: null,
+          failedLoginAttempts: 0,
+          status: 'ACTIVE',
+          updatedBy: actorId ?? null,
+        },
+      });
+      await recordStatusChange(
+        { userId: id, from: 'LOCKED', to: 'ACTIVE', reason: 'Unlocked', actorId },
+        tx
+      );
     });
 
     await AuditService.log({
@@ -242,8 +364,11 @@ export class IamUserService {
       resource: 'user',
       resourceId: id,
       severity: 'info',
+      before: { status: existing.status, isAccountLocked: true },
+      after: { status: 'ACTIVE', isAccountLocked: false },
       metadata: { email: existing.email },
     });
+    await new UserAdminService().notifyStatusChange(id, 'ACTIVE', null);
 
     this.invalidate();
     return this.getById(id);
@@ -258,9 +383,9 @@ export class IamUserService {
 
     await this.repo.transaction(async (tx) => {
       if (dto.mode === 'replace') {
-        await this.repo.replaceRoles(id, entries, tx);
+        await this.repo.replaceRoles(id, entries, tx, actorId ?? null);
       } else {
-        await this.repo.mergeRoles(id, entries, tx);
+        await this.repo.mergeRoles(id, entries, tx, actorId ?? null);
       }
       await tx.user.update({ where: { id }, data: { updatedBy: actorId ?? null } });
     });
@@ -284,9 +409,9 @@ export class IamUserService {
     }
     await this.repo.transaction(async (tx) => {
       if (dto.mode === 'replace') {
-        await this.repo.replaceGroups(id, dto.groupIds, tx);
+        await this.repo.replaceGroups(id, dto.groupIds, tx, actorId ?? null);
       } else {
-        await this.repo.mergeGroups(id, dto.groupIds, tx);
+        await this.repo.mergeGroups(id, dto.groupIds, tx, actorId ?? null);
       }
       await tx.user.update({ where: { id }, data: { updatedBy: actorId ?? null } });
     });

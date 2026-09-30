@@ -8,7 +8,7 @@ import {
   model,
   signal,
 } from '@angular/core';
-import { IAM_INPUT } from '../../shared/iam-page-header.component';
+import { IAM_INPUT } from './iam-page-header.component';
 
 export interface MultiSelectOption {
   value: string;

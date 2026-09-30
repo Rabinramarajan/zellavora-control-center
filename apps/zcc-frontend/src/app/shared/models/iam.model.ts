@@ -25,7 +25,17 @@ export interface PaginatedList<T> {
 // ============================================================================
 
 export type EntityStatus = 'ACTIVE' | 'INACTIVE';
-export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'PENDING' | 'SUSPENDED';
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'PENDING' | 'SUSPENDED' | 'DISABLED';
+
+/** Account lifecycle shown to admins; INVITED / PENDING_VERIFICATION are both stored as PENDING. */
+export type AccountStatus =
+  | 'INVITED'
+  | 'PENDING_VERIFICATION'
+  | 'ACTIVE'
+  | 'INACTIVE'
+  | 'LOCKED'
+  | 'SUSPENDED'
+  | 'DISABLED';
 export type GroupType = 'SECURITY' | 'ORG' | 'DISTRIBUTION' | 'PROJECT' | 'DYNAMIC';
 export type ResourceType = 'API' | 'FEATURE' | 'DATA' | 'MENU' | 'REPORT' | 'INTEGRATION';
 export type RoleScope = 'GLOBAL' | 'ORG' | 'RESOURCE';
@@ -178,6 +188,16 @@ export interface SetGroupRolesRequest {
 
 export interface IamUserListItem {
   id: string;
+  /** Human-readable id, e.g. USR000236. */
+  userCode: string | null;
+  employeeCode: string | null;
+  userType: string | null;
+  branchId: string | null;
+  branchName: string | null;
+  teamName: string | null;
+  primaryGroup: string | null;
+  accountStatus: AccountStatus;
+  mfaEnabled: boolean;
   email: string;
   username: string | null;
   fullName: string;

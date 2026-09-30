@@ -7,6 +7,7 @@ import { AccessCalculator, AccessState, applyRequest } from './user-request.acce
 import { RequestPayload } from './user-request.dto';
 import { UserRequestRepository } from './user-request.repository';
 import { RequestType } from './user-request.types';
+import { accountStatusOf, recordStatusChange } from '../users/account-status';
 
 export interface ProvisionInput {
   id: string;
@@ -109,6 +110,21 @@ export class UserRequestProvisioner {
           department: departmentName ?? null,
           mobile: contact.contactNumber,
           country: contact.country,
+          middleName: user.middleName,
+          employmentType: employee.employmentType,
+          joiningDate: employee.joiningDate,
+          company: employee.company,
+          workLocation: employee.workLocation ?? organization.location,
+          costCenter: organization.costCenter,
+          assignedOfficerId: organization.assignedOfficerId,
+          accessScope: organization.accessScope,
+          alternateEmail: contact.alternateEmail,
+          alternateMobile: contact.alternateContactNumber,
+          addressLine1: contact.addressLine1,
+          addressLine2: contact.addressLine2,
+          city: contact.city,
+          state: contact.state,
+          postalCode: contact.postalCode,
           branchId: requested.branchId,
           reportingManagerId: organization.reportingManagerId,
           tenantId: input.organizationId,
@@ -129,7 +145,8 @@ export class UserRequestProvisioner {
         created.id,
         input.organizationId,
         { ...requested, roleIds: [], groupIds: [], teamIds: [] },
-        requested
+        requested,
+        actorId
       );
       await AuditService.log(
         {
@@ -146,6 +163,17 @@ export class UserRequestProvisioner {
             groups: access.addGroupIds,
           },
           metadata: { requestId: input.id },
+        },
+        tx
+      );
+      await recordStatusChange(
+        {
+          userId: created.id,
+          organizationId: input.organizationId,
+          from: null,
+          to: 'INVITED',
+          reason: 'Provisioned from user request',
+          actorId,
         },
         tx
       );
@@ -212,12 +240,28 @@ export class UserRequestProvisioner {
               country: contact.country,
               email: contact.workEmail,
               reportingManagerId: organization.reportingManagerId,
+              middleName: user.middleName,
+              employmentType: employee.employmentType,
+              joiningDate: employee.joiningDate,
+              company: employee.company,
+              workLocation: employee.workLocation,
+              alternateEmail: contact.alternateEmail,
+              alternateMobile: contact.alternateContactNumber,
+              addressLine1: contact.addressLine1,
+              addressLine2: contact.addressLine2,
+              city: contact.city,
+              state: contact.state,
+              postalCode: contact.postalCode,
             })
           ).forEach(([k, v]) => set(k as keyof typeof existing & string, v));
           break;
         }
         case 'TRANSFER':
           set('reportingManagerId', organization.reportingManagerId);
+          set('assignedOfficerId', organization.assignedOfficerId);
+          set('costCenter', organization.costCenter);
+          set('workLocation', organization.location);
+          set('accessScope', organization.accessScope);
           break;
         case 'ACTIVATE_USER':
           set('status', 'ACTIVE');
@@ -273,12 +317,29 @@ export class UserRequestProvisioner {
       }
 
       await tx.user.update({ where: { id: userId }, data });
+      await recordStatusChange(
+        {
+          userId,
+          organizationId: input.organizationId,
+          from: accountStatusOf(existing),
+          to: accountStatusOf({
+            ...existing,
+            status: (data.status as string | undefined) ?? existing.status,
+            isAccountLocked:
+              (data.isAccountLocked as boolean | undefined) ?? existing.isAccountLocked,
+          }),
+          reason: 'Provisioned from user request',
+          actorId,
+        },
+        tx
+      );
       const accessChanges = await this.syncAccess(
         tx,
         userId,
         input.organizationId,
         current,
-        requested
+        requested,
+        actorId
       );
 
       await AuditService.log(
@@ -307,7 +368,8 @@ export class UserRequestProvisioner {
     userId: string,
     organizationId: string,
     current: AccessState,
-    requested: AccessState
+    requested: AccessState,
+    actorId: string
   ) {
     const added = (a: string[], b: string[]) => b.filter((id) => !a.includes(id));
     const addRoles = added(current.roleIds, requested.roleIds);
@@ -324,14 +386,14 @@ export class UserRequestProvisioner {
     }
     if (addRoles.length) {
       await tx.userRoleAssignment.createMany({
-        data: addRoles.map((roleId) => ({ userId, roleId, organizationId })),
+        data: addRoles.map((roleId) => ({ userId, roleId, organizationId, assignedBy: actorId })),
       });
     }
     if (removeGroups.length)
       await tx.userGroup.deleteMany({ where: { userId, groupId: { in: removeGroups } } });
     if (addGroups.length) {
       await tx.userGroup.createMany({
-        data: addGroups.map((groupId) => ({ userId, groupId })),
+        data: addGroups.map((groupId) => ({ userId, groupId, assignedBy: actorId })),
         skipDuplicates: true,
       });
     }

@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { IamUserController } from './iam-user.controller';
+import { UserAdminController } from './user-admin.controller';
 import { authenticate, requirePermission } from '../../middleware/auth';
 
 const router = Router();
 const controller = new IamUserController();
+const admin = new UserAdminController();
+const read = [authenticate, requirePermission('users:read')];
+const manage = [authenticate, requirePermission('users:manage')];
 
 /**
  * @swagger
@@ -325,5 +329,112 @@ router.put('/:id/groups', authenticate, requirePermission('users:manage'), contr
  *         description: User deleted
  */
 router.delete('/:id', authenticate, requirePermission('users:manage'), controller.delete);
+
+/**
+ * @swagger
+ * /api/v1/iam/users/{id}/profile:
+ *   get:
+ *     summary: getUserProfile
+ *     operationId: getIamUsersByIdProfile
+ *     description: >
+ *       User Details header, overview and the personal, employee, contact, organization and
+ *       security sections, plus the actions allowed for the account's current state.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: User profile }
+ *   patch:
+ *     summary: updateUserProfile
+ *     operationId: patchIamUsersByIdProfile
+ *     description: Update any of the personal, employee, contact and organization sections. Changes are audited.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Updated profile }
+ * /api/v1/iam/users/{id}/access:
+ *   get:
+ *     summary: getUserAccess
+ *     operationId: getIamUsersByIdAccess
+ *     description: Groups, roles with their assignment source (direct or group) and effective permissions.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Effective access }
+ * /api/v1/iam/users/{id}/sessions:
+ *   get:
+ *     summary: listUserSessions
+ *     operationId: getIamUsersByIdSessions
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Active sessions }
+ *   delete:
+ *     summary: revokeAllUserSessions
+ *     operationId: deleteIamUsersByIdSessions
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Sessions revoked }
+ * /api/v1/iam/users/{id}/{history}:
+ *   get:
+ *     summary: getUserHistory
+ *     operationId: getIamUsersByIdHistory
+ *     description: One of notes, requests, status-history, emails, audit (read-only).
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *       - { in: path, name: history, required: true, schema: { type: string, enum: [notes, requests, status-history, emails, audit] } }
+ *     responses:
+ *       200: { description: History rows }
+ * /api/v1/iam/users/{id}/{action}:
+ *   post:
+ *     summary: userSecurityAction
+ *     operationId: postIamUsersByIdAction
+ *     description: >
+ *       password-reset, require-password-change, reset-mfa, resend-invitation, cancel-invitation.
+ *       Each is only accepted when the account's state allows it, and is audited.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *       - { in: path, name: action, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Updated profile }
+ */
+router.get('/:id/profile', ...read, admin.profile);
+router.patch('/:id/profile', ...manage, admin.updateProfile);
+router.get('/:id/access', ...read, admin.access);
+router.get('/:id/sessions', ...read, admin.sessions);
+router.delete('/:id/sessions', ...manage, admin.revokeAllSessions);
+router.delete('/:id/sessions/:sessionId', ...manage, admin.revokeSession);
+router.get('/:id/notes', ...read, admin.notes);
+router.post('/:id/notes', ...manage, admin.addNote);
+router.get('/:id/requests', ...read, admin.requests);
+router.get('/:id/status-history', ...read, admin.statusHistory);
+router.get('/:id/emails', ...read, admin.emails);
+router.get('/:id/audit', ...read, admin.audit);
+router.post('/:id/password-reset', ...manage, admin.sendPasswordReset);
+router.post('/:id/require-password-change', ...manage, admin.requirePasswordChange);
+router.post('/:id/reset-mfa', ...manage, admin.resetMfa);
+router.post('/:id/resend-invitation', ...manage, admin.resendInvitation);
+router.post('/:id/cancel-invitation', ...manage, admin.cancelInvitation);
 
 export default router;

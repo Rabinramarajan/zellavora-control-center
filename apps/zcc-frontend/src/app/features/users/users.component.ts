@@ -4,50 +4,50 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { AppDialogService } from '@shared/components/dialog';
-import { PageChangeEvent, PaginationComponent } from '@shared/components/pagination/pagination.component';
-import { IamApiService, unwrap } from '@core/api/iam.api';
-import { IamUserListItem, UserStatus } from '@shared/models/iam.model';
-import { createListStore } from '@shared/utils/create-list-store';
 import { DateControl, FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
+import {
+  PageChangeEvent,
+  PaginationComponent,
+} from '@shared/components/pagination/pagination.component';
+import { UserAdminApiService } from '@core/api/user-admin.api';
+import { UserRequestsApiService } from '@core/api/user-requests.api';
+import { PermissionService } from '@core/rbac/services/permission.service';
+import { AccountStatus, IamUserListItem } from '@shared/models/iam.model';
+import { UserRequestLookups } from '@shared/models/user-request.model';
+import { createListStore } from '@shared/utils/create-list-store';
+import { MultiSelectComponent, MultiSelectOption } from '../iam/shared/multi-select.component';
 import { CsvExporter } from '../../shared/utils/csv-exporter';
+import { ACTION_META, StateAction, UserActionsService, rowActions } from './user-actions';
 
-type SortKey = 'fullName' | 'email' | 'status' | 'department' | 'createdAt' | 'lastLoginDatetime';
+type SortKey =
+  'userNo' | 'fullName' | 'email' | 'employeeCode' | 'status' | 'createdAt' | 'lastLoginDatetime';
+type TextKey =
+  'q' | 'userId' | 'username' | 'firstName' | 'lastName' | 'employeeCode' | 'email' | 'mobile';
+type ListKey =
+  'status' | 'userType' | 'branchId' | 'departmentId' | 'teamId' | 'groupId' | 'roleId';
+type ChoiceKey = 'emailVerified' | 'mfaEnabled';
+type DateKey = 'createdFrom' | 'createdTo' | 'lastLoginFrom' | 'lastLoginTo';
 
-interface UserFilters {
-  q: string;
-  name: string;
-  email: string;
-  mobile: string;
-  department: string;
-  roleId: string;
-  groupId: string;
-  status: string;
-  createdFrom: string;
-  createdTo: string;
-  lastLoginFrom: string;
-  lastLoginTo: string;
-}
-
-type Option = SelectControlOption;
-type FieldIcon = 'search' | 'user' | 'email' | 'phone' | 'list';
-
-interface StatCard {
-  label: string;
-  icon: string;
-  tone: 'violet' | 'emerald' | 'rose' | 'amber' | 'indigo';
-  status: UserStatus | '';
-}
+type UserFilters = Record<TextKey | ChoiceKey | DateKey, string> & Record<ListKey, string[]>;
 
 const EMPTY_FILTERS: UserFilters = {
   q: '',
-  name: '',
+  userId: '',
+  username: '',
+  firstName: '',
+  lastName: '',
+  employeeCode: '',
   email: '',
   mobile: '',
-  department: '',
-  roleId: '',
-  groupId: '',
-  status: '',
+  status: [],
+  userType: [],
+  branchId: [],
+  departmentId: [],
+  teamId: [],
+  groupId: [],
+  roleId: [],
+  emailVerified: '',
+  mfaEnabled: '',
   createdFrom: '',
   createdTo: '',
   lastLoginFrom: '',
@@ -55,24 +55,49 @@ const EMPTY_FILTERS: UserFilters = {
 };
 
 const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof UserFilters>;
+const clone = (f: UserFilters): UserFilters => structuredClone(f);
 
-const STATUS_OPTIONS: Option[] = [
-  { value: 'ACTIVE', label: 'Active', color: '#10b981' },
-  { value: 'INACTIVE', label: 'Inactive', color: '#f43f5e' },
-  { value: 'PENDING', label: 'Pending', color: '#f59e0b' },
-  { value: 'LOCKED', label: 'Locked', color: '#fb7185' },
-  { value: 'SUSPENDED', label: 'Suspended', color: '#94a3b8' },
+const STATUS_OPTIONS: MultiSelectOption[] = [
+  { value: 'INVITED', label: 'Invited' },
+  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'INACTIVE', label: 'Inactive' },
+  { value: 'LOCKED', label: 'Locked' },
+  { value: 'SUSPENDED', label: 'Suspended' },
+  { value: 'DISABLED', label: 'Disabled' },
 ];
+
+const USER_TYPE_OPTIONS: MultiSelectOption[] = [
+  { value: 'EMPLOYEE', label: 'Employee' },
+  { value: 'CONTRACTOR', label: 'Contractor' },
+  { value: 'EXTERNAL', label: 'External' },
+];
+
+interface StatCard {
+  label: string;
+  icon: string;
+  tone: 'violet' | 'emerald' | 'rose' | 'amber' | 'indigo';
+  status: AccountStatus | '';
+}
 
 const STAT_CARDS: StatCard[] = [
   { label: 'Total Users', icon: 'pi pi-users', tone: 'violet', status: '' },
   { label: 'Active', icon: 'pi pi-user', tone: 'emerald', status: 'ACTIVE' },
-  { label: 'Inactive', icon: 'pi pi-user-minus', tone: 'rose', status: 'INACTIVE' },
-  { label: 'Pending Invites', icon: 'pi pi-envelope', tone: 'amber', status: 'PENDING' },
+  { label: 'Invited', icon: 'pi pi-envelope', tone: 'amber', status: 'INVITED' },
   { label: 'Locked', icon: 'pi pi-lock', tone: 'indigo', status: 'LOCKED' },
+  { label: 'Inactive', icon: 'pi pi-user-minus', tone: 'rose', status: 'INACTIVE' },
+  { label: 'Disabled', icon: 'pi pi-ban', tone: 'rose', status: 'DISABLED' },
 ];
 
 const AVATAR_TONES = ['#7c3aed', '#8b5cf6', '#a855f7', '#6366f1', '#db2777', '#c026d3'];
+
+interface MenuItem {
+  key: string;
+  label: string;
+  icon: string;
+  danger?: boolean;
+  run: () => void;
+}
 
 @Component({
   selector: 'app-users',
@@ -84,157 +109,185 @@ const AVATAR_TONES = ['#7c3aed', '#8b5cf6', '#a855f7', '#6366f1', '#db2777', '#c
     FormInputControl,
     SelectControl,
     DateControl,
+    MultiSelectComponent,
     PaginationComponent,
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(document:keydown.escape)': 'onEscape()' },
+  host: {
+    '(document:keydown.escape)': 'onEscape()',
+    '(document:click)': 'menuFor.set(null)',
+  },
 })
 export class UsersComponent {
-  private readonly api = inject(IamApiService);
+  private readonly api = inject(UserAdminApiService);
+  private readonly requestsApi = inject(UserRequestsApiService);
   private readonly router = inject(Router);
   private readonly messages = inject(MessageService);
-  private readonly dialog = inject(AppDialogService);
+  private readonly actions = inject(UserActionsService);
+  protected readonly canManage = inject(PermissionService).can('users:manage');
 
   readonly pageSizes = [10, 25, 50, 100];
   readonly statusOptions = STATUS_OPTIONS;
-  readonly roleOptions = signal<Option[]>([]);
-  readonly groupOptions = signal<Option[]>([]);
+  readonly userTypeOptions = USER_TYPE_OPTIONS;
+  readonly verifiedOptions: SelectControlOption[] = [
+    { value: '', label: 'Any' },
+    { value: 'true', label: 'Verified' },
+    { value: 'false', label: 'Unverified' },
+  ];
+  readonly mfaOptions: SelectControlOption[] = [
+    { value: '', label: 'Any' },
+    { value: 'true', label: 'Enabled' },
+    { value: 'false', label: 'Disabled' },
+  ];
 
-  readonly columns: Array<{ key: SortKey | null; label: string }> = [
-    { key: null, label: 'User ID' },
+  private readonly lookups = signal<UserRequestLookups | null>(null);
+  readonly branchOptions = computed(() => this.toOptions(this.lookups()?.branches));
+  readonly departmentOptions = computed(() => this.toOptions(this.lookups()?.departments));
+  readonly teamOptions = computed(() => this.toOptions(this.lookups()?.teams));
+  readonly groupOptions = computed(() => this.toOptions(this.lookups()?.groups));
+  readonly roleOptions = computed(() => this.toOptions(this.lookups()?.roles));
+
+  readonly columns: Array<{ key: SortKey | null; label: string; wide?: boolean }> = [
+    { key: 'userNo', label: 'User ID' },
     { key: 'fullName', label: 'Name' },
+    { key: 'employeeCode', label: 'Employee Code' },
     { key: 'email', label: 'Email' },
-    { key: 'department', label: 'Department' },
-    { key: null, label: 'Title' },
-    { key: null, label: 'Groups' },
-    { key: null, label: 'Roles' },
+    { key: null, label: 'Branch' },
+    { key: null, label: 'Team', wide: true },
+    { key: null, label: 'Group', wide: true },
+    { key: null, label: 'Role' },
     { key: 'status', label: 'Status' },
     { key: 'lastLoginDatetime', label: 'Last Login' },
-    { key: 'createdAt', label: 'Created On' },
   ];
 
-  readonly textFields: Array<{
-    key: keyof UserFilters;
+  readonly identityFields: Array<{
+    key: TextKey;
     label: string;
-    icon: FieldIcon;
+    icon: 'search' | 'user' | 'email' | 'phone' | 'list';
+    type: 'text' | 'tel';
     placeholder: string;
-    type: 'text' | 'email' | 'tel';
-    hint?: string;
   }> = [
+    { key: 'userId', label: 'User ID', icon: 'search', type: 'text', placeholder: 'USR000236' },
+    { key: 'username', label: 'Username', icon: 'user', type: 'text', placeholder: 'eric.parker' },
     {
-      key: 'q',
-      label: 'Keyword',
-      icon: 'search',
-      placeholder: 'Name, email, username, title...',
+      key: 'firstName',
+      label: 'First Name',
+      icon: 'user',
       type: 'text',
-      hint: 'Matches name, email, username, department or title',
+      placeholder: 'First name',
     },
-    { key: 'name', label: 'Name', icon: 'user', placeholder: 'Enter name', type: 'text' },
-    { key: 'email', label: 'Email', icon: 'email', placeholder: 'Enter email', type: 'text' },
+    { key: 'lastName', label: 'Last Name', icon: 'user', type: 'text', placeholder: 'Last name' },
+    {
+      key: 'employeeCode',
+      label: 'Employee Code',
+      icon: 'list',
+      type: 'text',
+      placeholder: 'EMP00236',
+    },
+    {
+      key: 'email',
+      label: 'Email ID',
+      icon: 'email',
+      type: 'text',
+      placeholder: 'name@company.com',
+    },
     {
       key: 'mobile',
-      label: 'Mobile',
+      label: 'Contact Number',
       icon: 'phone',
-      placeholder: 'Enter mobile number',
       type: 'tel',
-    },
-    {
-      key: 'department',
-      label: 'Department',
-      icon: 'list',
-      placeholder: 'Exact department name',
-      type: 'text',
+      placeholder: 'Digits only',
     },
   ];
 
-  readonly selectFields = computed<
-    Array<{
-      key: keyof UserFilters;
-      label: string;
-      icon: 'user' | 'list' | 'building' | 'globe';
-      all: string;
-      options: Option[];
-    }>
+  readonly accessFields = computed<
+    Array<{ key: ListKey; label: string; options: MultiSelectOption[] }>
   >(() => [
-    { key: 'roleId', label: 'Role', icon: 'user', all: 'All Roles', options: this.roleOptions() },
-    {
-      key: 'groupId',
-      label: 'Group',
-      icon: 'building',
-      all: 'All Groups',
-      options: this.groupOptions(),
-    },
-    {
-      key: 'status',
-      label: 'Account Status',
-      icon: 'list',
-      all: 'All Status',
-      options: STATUS_OPTIONS,
-    },
+    { key: 'status', label: 'Account Status', options: STATUS_OPTIONS },
+    { key: 'userType', label: 'User Type', options: USER_TYPE_OPTIONS },
+    { key: 'branchId', label: 'Branch', options: this.branchOptions() },
+    { key: 'departmentId', label: 'Department', options: this.departmentOptions() },
+    { key: 'teamId', label: 'Team', options: this.teamOptions() },
+    { key: 'groupId', label: 'Group', options: this.groupOptions() },
+    { key: 'roleId', label: 'Role', options: this.roleOptions() },
   ]);
 
-  readonly dateRanges: Array<{ label: string; from: keyof UserFilters; to: keyof UserFilters }> = [
-    { label: 'Created Date', from: 'createdFrom', to: 'createdTo' },
+  readonly dateRanges: Array<{ label: string; from: DateKey; to: DateKey }> = [
+    { label: 'Created', from: 'createdFrom', to: 'createdTo' },
     { label: 'Last Login', from: 'lastLoginFrom', to: 'lastLoginTo' },
   ];
 
   readonly store = createListStore<IamUserListItem>({
     initialPageSize: 10,
-    filterKeys: [...FILTER_KEYS.filter((k) => k !== 'q'), 'sort', 'order'],
-    loader: (query) => firstValueFrom(this.api.listIamUsers(query)).then(unwrap),
+    filterKeys: [...FILTER_KEYS, 'sort', 'order'],
+    loader: (query) => firstValueFrom(this.api.search(query)),
   });
 
   readonly statCounts = signal<Record<string, number | null>>({});
   readonly stats = STAT_CARDS;
 
   readonly filtersOpen = signal(false);
-  readonly draft = signal<UserFilters>({ ...EMPTY_FILTERS });
-  readonly applied = signal<UserFilters>({ ...EMPTY_FILTERS });
+  readonly draft = signal<UserFilters>(clone(EMPTY_FILTERS));
+  readonly applied = signal<UserFilters>(clone(EMPTY_FILTERS));
+  readonly search = signal('');
   readonly sortKey = signal<SortKey>('createdAt');
   readonly sortDir = signal<'asc' | 'desc'>('desc');
   readonly selected = signal<ReadonlySet<string>>(new Set());
   readonly busyId = signal<string | null>(null);
+  readonly menuFor = signal<string | null>(null);
 
-  private lookupsLoaded = false;
-
-  readonly activeFilterCount = computed(() => {
+  /** Filters behind "More Filters" that are currently applied. */
+  readonly moreFilterCount = computed(() => {
     const f = this.applied();
-    const ranges = [f.createdFrom || f.createdTo, f.lastLoginFrom || f.lastLoginTo].filter(
-      Boolean
+    const quick = new Set<keyof UserFilters>(['q', 'status', 'roleId', 'groupId', 'branchId']);
+    const ranges = this.dateRanges.filter((r) => f[r.from] || f[r.to]).length;
+    const rest = FILTER_KEYS.filter(
+      (k) =>
+        !quick.has(k) &&
+        !this.dateRanges.some((r) => r.from === k || r.to === k) &&
+        this.isSet(f[k])
     ).length;
-    const plain = FILTER_KEYS.filter(
-      (k) => !this.dateRanges.some((r) => r.from === k || r.to === k) && f[k].trim()
-    ).length;
-    return plain + ranges;
+    return rest + ranges;
   });
 
   readonly activeChips = computed(() => {
-    const f = { ...this.applied(), q: this.store.q() };
-    const optionLabel = (options: Option[], value: string) =>
-      options.find((o) => o.value === value)?.label ?? value;
+    const f = this.applied();
     const chips: Array<{ label: string; value: string; keys: Array<keyof UserFilters> }> = [];
-    for (const field of this.textFields) {
+    if (f.q) chips.push({ label: 'Search', value: f.q, keys: ['q'] });
+    for (const field of this.identityFields) {
       if (f[field.key]) chips.push({ label: field.label, value: f[field.key], keys: [field.key] });
     }
-    for (const sel of this.selectFields()) {
-      if (f[sel.key])
-        chips.push({
-          label: sel.label,
-          value: optionLabel(sel.options, f[sel.key]),
-          keys: [sel.key],
-        });
+    for (const field of this.accessFields()) {
+      const values = f[field.key];
+      if (values.length) {
+        const labels = values.map((v) => field.options.find((o) => o.value === v)?.label ?? v);
+        chips.push({ label: field.label, value: labels.join(', '), keys: [field.key] });
+      }
+    }
+    if (f.emailVerified) {
+      chips.push({
+        label: 'Email',
+        value: f.emailVerified === 'true' ? 'Verified' : 'Unverified',
+        keys: ['emailVerified'],
+      });
+    }
+    if (f.mfaEnabled) {
+      chips.push({
+        label: 'MFA',
+        value: f.mfaEnabled === 'true' ? 'Enabled' : 'Disabled',
+        keys: ['mfaEnabled'],
+      });
     }
     for (const range of this.dateRanges) {
-      const from = f[range.from];
-      const to = f[range.to];
-      if (from || to)
+      if (f[range.from] || f[range.to]) {
         chips.push({
           label: range.label,
-          value: `${from || '…'} → ${to || '…'}`,
+          value: `${f[range.from] || '…'} → ${f[range.to] || '…'}`,
           keys: [range.from, range.to],
         });
+      }
     }
     return chips;
   });
@@ -251,59 +304,91 @@ export class UsersComponent {
 
   constructor() {
     void this.loadStats();
+    firstValueFrom(this.requestsApi.lookups())
+      .then((l) => this.lookups.set(l))
+      .catch(() =>
+        this.notify('warn', 'Filters limited', 'Could not load branches, groups and roles.')
+      );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Filters
+  // ---------------------------------------------------------------------------
+
+  runSearch(): void {
+    this.applied.update((f) => ({ ...f, q: this.search().trim() }));
+    this.pushFilters();
+  }
+
+  setQuick(key: ListKey, values: string[]): void {
+    this.applied.update((f) => ({ ...f, [key]: values }));
+    this.pushFilters();
   }
 
   removeChip(keys: Array<keyof UserFilters>): void {
-    if (keys.includes('q')) this.store.setQ('');
+    if (keys.includes('q')) this.search.set('');
     this.applied.update((f) => {
-      const next = { ...f };
-      for (const key of keys) next[key] = '';
+      const next = clone(f);
+      for (const key of keys) (next as Record<string, unknown>)[key] = clone(EMPTY_FILTERS)[key];
       return next;
     });
     this.pushFilters();
   }
 
   openFilters(): void {
-    this.draft.set({ ...this.applied(), q: this.store.q() });
+    this.draft.set(clone(this.applied()));
     this.filtersOpen.set(true);
-    void this.loadLookups();
   }
 
   closeFilters(): void {
     this.filtersOpen.set(false);
   }
 
-  patchDraft(key: keyof UserFilters, value: string): void {
+  patchDraft(key: keyof UserFilters, value: string | string[]): void {
     this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
   }
 
+  draftList(key: ListKey): string[] {
+    return this.draft()[key];
+  }
+
+  draftText(key: TextKey | ChoiceKey | DateKey): string {
+    return this.draft()[key];
+  }
+
   applyFilters(): void {
-    const next = { ...this.draft() };
+    const next = clone(this.draft());
     this.applied.set(next);
+    this.search.set(next.q);
     this.filtersOpen.set(false);
     this.pushFilters();
-    if (next.q !== this.store.q()) this.store.setQ(next.q.trim());
   }
 
   resetDraft(): void {
-    this.draft.set({ ...EMPTY_FILTERS });
+    this.draft.set(clone(EMPTY_FILTERS));
   }
 
   resetAll(): void {
-    this.draft.set({ ...EMPTY_FILTERS });
-    this.applied.set({ ...EMPTY_FILTERS });
+    this.draft.set(clone(EMPTY_FILTERS));
+    this.applied.set(clone(EMPTY_FILTERS));
+    this.search.set('');
     this.selected.set(new Set());
     this.pushFilters();
-    this.store.setQ('');
   }
 
-  filterByStatus(status: UserStatus | ''): void {
-    this.applied.update((f) => ({ ...f, status }));
+  filterByStatus(status: AccountStatus | ''): void {
+    this.applied.update((f) => ({ ...f, status: status ? [status] : [] }));
     this.pushFilters();
+  }
+
+  isStatusCard(status: AccountStatus | ''): boolean {
+    const current = this.applied().status;
+    return status ? current.length === 1 && current[0] === status : current.length === 0;
   }
 
   onEscape(): void {
-    if (this.filtersOpen()) this.closeFilters();
+    if (this.menuFor()) this.menuFor.set(null);
+    else if (this.filtersOpen()) this.closeFilters();
   }
 
   sortBy(key: SortKey): void {
@@ -326,6 +411,10 @@ export class UsersComponent {
     else this.store.setPage(page);
   }
 
+  // ---------------------------------------------------------------------------
+  // Selection & export
+  // ---------------------------------------------------------------------------
+
   toggleRow(id: string): void {
     this.selected.update((s) => {
       const next = new Set(s);
@@ -345,57 +434,6 @@ export class UsersComponent {
     });
   }
 
-  viewUser(user: IamUserListItem): void {
-    void this.router.navigate(['/iam/users', user.id]);
-  }
-
-  async toggleLock(user: IamUserListItem): Promise<void> {
-    this.busyId.set(user.id);
-    const locking = !user.isAccountLocked;
-    try {
-      await firstValueFrom(
-        locking ? this.api.lockIamUser(user.id) : this.api.unlockIamUser(user.id)
-      );
-      this.notify(
-        locking ? 'warn' : 'success',
-        locking ? 'Account locked' : 'Account unlocked',
-        user.fullName
-      );
-      await Promise.all([this.store.reload(), this.loadStats()]);
-    } catch (err) {
-      this.notify('error', 'Action failed', this.errorMessage(err));
-    } finally {
-      this.busyId.set(null);
-    }
-  }
-
-  async removeUser(user: IamUserListItem): Promise<void> {
-    const confirmed = await firstValueFrom(
-      this.dialog.confirm({
-        title: 'Remove user?',
-        message: `${user.fullName} will be removed. This cannot be undone.`,
-        confirmText: 'Remove',
-        variant: 'danger',
-      })
-    );
-    if (!confirmed) return;
-    this.busyId.set(user.id);
-    try {
-      await firstValueFrom(this.api.deleteIamUser(user.id));
-      this.selected.update((s) => {
-        const next = new Set(s);
-        next.delete(user.id);
-        return next;
-      });
-      this.notify('warn', 'User removed', `${user.fullName} has been removed`);
-      await Promise.all([this.store.reload(), this.loadStats()]);
-    } catch (err) {
-      this.notify('error', 'Remove failed', this.errorMessage(err));
-    } finally {
-      this.busyId.set(null);
-    }
-  }
-
   exportUsers(): void {
     const sel = this.selected();
     const rows = sel.size ? this.store.items().filter((u) => sel.has(u.id)) : this.store.items();
@@ -408,38 +446,87 @@ export class UsersComponent {
       [
         'User ID',
         'Name',
+        'Employee Code',
         'Email',
-        'Mobile',
-        'Department',
-        'Title',
+        'Branch',
+        'Team',
+        'Group',
         'Role',
-        'Roles',
-        'Groups',
         'Status',
         'Last Login',
-        'Created On',
       ],
       rows.map((u) => [
-        u.id,
+        u.userCode ?? u.id,
         u.fullName,
+        u.employeeCode,
         u.email,
-        u.mobile,
-        u.department,
-        u.jobTitle,
+        u.branchName,
+        u.teamName,
+        u.primaryGroup,
         u.primaryRole?.name,
-        u.roleCount,
-        u.groupCount,
         u.statusLabel,
-        u.lastLoginDatetime ? this.formatDate(u.lastLoginDatetime) : 'Never',
-        this.formatDate(u.createdAt),
+        u.lastLoginDatetime ? this.formatDateTime(u.lastLoginDatetime) : 'Never',
       ])
     );
     this.notify('success', 'Export complete', `${rows.length} users exported`);
   }
 
-  shortId(user: IamUserListItem): string {
-    return user.username ?? user.id.slice(0, 8).toUpperCase();
+  // ---------------------------------------------------------------------------
+  // Row actions
+  // ---------------------------------------------------------------------------
+
+  toggleMenu(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.menuFor.set(this.menuFor() === id ? null : id);
   }
+
+  menuItems(user: IamUserListItem): MenuItem[] {
+    const go =
+      (section: string, extra: Record<string, string> = {}) =>
+      () =>
+        void this.router.navigate(['/iam/users', user.id], { queryParams: { section, ...extra } });
+    const allowed = rowActions(user, this.canManage());
+    const items: MenuItem[] = [
+      { key: 'view', label: 'View Details', icon: 'pi pi-eye', run: go('overview') },
+    ];
+    if (allowed.includes('edit'))
+      items.push({ key: 'edit', ...ACTION_META.edit, run: go('personal', { edit: '1' }) });
+    if (allowed.includes('manageAccess')) {
+      items.push({ key: 'groups', label: 'Manage Groups', icon: 'pi pi-users', run: go('groups') });
+      items.push({ key: 'roles', label: 'Manage Roles', icon: 'pi pi-key', run: go('roles') });
+    }
+    for (const action of allowed.filter(
+      (a): a is StateAction => a !== 'edit' && a !== 'manageAccess'
+    )) {
+      items.push({
+        key: action,
+        ...ACTION_META[action],
+        run: () => void this.runAction(action, user),
+      });
+    }
+    items.push({ key: 'audit', label: 'View Audit', icon: 'pi pi-shield', run: go('audit') });
+    return items;
+  }
+
+  async runAction(action: StateAction, user: IamUserListItem): Promise<void> {
+    this.menuFor.set(null);
+    this.busyId.set(user.id);
+    try {
+      if (await this.actions.run(action, user)) {
+        await Promise.all([this.store.reload(), this.loadStats()]);
+      }
+    } finally {
+      this.busyId.set(null);
+    }
+  }
+
+  addUser(): void {
+    void this.router.navigate(['/iam/user-requests/create'], { queryParams: { type: 'NEW_USER' } });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Display helpers
+  // ---------------------------------------------------------------------------
 
   initials(name: string): string {
     return name
@@ -463,38 +550,41 @@ export class UsersComponent {
     return 'rose';
   }
 
-  relativeTime(iso: string | null): string {
+  formatDateTime(iso: string | null): string {
     if (!iso) return 'Never';
-    const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} min ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
-    return this.formatDate(iso);
+    return new Date(iso).toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
   }
 
-  formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  private isSet(value: string | string[]): boolean {
+    return Array.isArray(value) ? value.length > 0 : !!value.trim();
+  }
+
+  private toOptions(items: Array<{ id: string; name: string }> | undefined): MultiSelectOption[] {
+    return (items ?? []).map((i) => ({ value: i.id, label: i.name }));
   }
 
   private pushFilters(): void {
     const f = this.applied();
-    const filters: Record<string, string> = { sort: this.sortKey(), order: this.sortDir() };
+    const filters: Record<string, string | string[]> = {
+      sort: this.sortKey(),
+      order: this.sortDir(),
+    };
     for (const key of FILTER_KEYS) {
-      if (key !== 'q' && f[key]) filters[key] = f[key];
+      if (this.isSet(f[key])) filters[key] = f[key];
     }
     this.store.setFilters(filters);
   }
 
   private async loadStats(): Promise<void> {
     try {
-      const { total, byStatus } = unwrap(await firstValueFrom(this.api.getIamUserStats()));
+      const { total, byStatus } = await firstValueFrom(this.api.stats());
       this.statCounts.set(
         Object.fromEntries(
           STAT_CARDS.map((c) => [c.label, c.status ? (byStatus[c.status] ?? 0) : total])
@@ -503,29 +593,6 @@ export class UsersComponent {
     } catch {
       this.statCounts.set(Object.fromEntries(STAT_CARDS.map((c) => [c.label, null])));
     }
-  }
-
-  private async loadLookups(): Promise<void> {
-    if (this.lookupsLoaded) return;
-    this.lookupsLoaded = true;
-    try {
-      const [roles, groups] = await Promise.all([
-        firstValueFrom(this.api.listRoles({ page: 1, pageSize: 100 })).then(unwrap),
-        firstValueFrom(this.api.listGroups({ page: 1, pageSize: 100 })).then(unwrap),
-      ]);
-      this.roleOptions.set(
-        roles.data.map((r) => ({ value: r.id, label: r.name, description: r.key }))
-      );
-      this.groupOptions.set(groups.data.map((g) => ({ value: g.id, label: g.name })));
-    } catch {
-      this.lookupsLoaded = false;
-      this.notify('warn', 'Filters limited', 'Could not load roles and groups.');
-    }
-  }
-
-  private errorMessage(err: unknown): string {
-    const e = err as { error?: { error?: { message?: string } } };
-    return e?.error?.error?.message ?? 'Please try again.';
   }
 
   private notify(

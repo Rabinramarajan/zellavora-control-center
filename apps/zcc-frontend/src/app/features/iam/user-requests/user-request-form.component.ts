@@ -17,7 +17,7 @@ import { EmptyStateComponent } from '@shared/components/iam';
 import { IAM_BTN, IAM_CARD, IAM_INPUT } from '../shared/iam-page-header.component';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { AccessPreviewComponent } from './components/access-preview.component';
-import { MultiSelectComponent, MultiSelectOption } from './components/multi-select.component';
+import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
 import { SelectedUser, UserSelectComponent } from './components/user-select.component';
 import {
   ACCESS_SCOPE_OPTIONS,
@@ -557,10 +557,9 @@ export class UserRequestFormComponent {
   private readonly router = inject(Router);
   private readonly feedback = inject(IamFeedbackService);
 
+  private readonly route = inject(ActivatedRoute).snapshot;
   /** Set on the edit route. */
-  protected readonly requestId = signal(
-    inject(ActivatedRoute).snapshot.paramMap.get('requestId') ?? undefined
-  );
+  protected readonly requestId = signal(this.route.paramMap.get('requestId') ?? undefined);
 
   protected readonly btn = IAM_BTN;
   protected readonly card = IAM_CARD;
@@ -659,11 +658,28 @@ export class UserRequestFormComponent {
       this.feedback.error(err, 'Could not load branches, groups and roles.');
     }
     const id = this.requestId();
-    if (!id) return;
+    if (!id) {
+      await this.prefill();
+      return;
+    }
     try {
       this.patch(await firstValueFrom(this.api.get(id)));
     } catch (err) {
       this.loadError.set(errorMessage(err, 'Request not found.'));
+    }
+  }
+
+  /** `?type=ACCESS_CHANGE&userId=…` from the Users pages preselects the type and user. */
+  private async prefill(): Promise<void> {
+    const type = this.route.queryParamMap.get('type');
+    if (type && REQUEST_TYPE_OPTIONS.some((o) => o.value === type)) this.setType(type as UserRequestType);
+    const userId = this.route.queryParamMap.get('userId');
+    if (!userId || this.isNew()) return;
+    try {
+      const user = (await firstValueFrom(this.iam.getIamUser(userId))).data;
+      this.onTarget({ id: user.id, name: user.fullName, email: user.email });
+    } catch {
+      this.feedback.error({ message: 'The selected user could not be loaded.' });
     }
   }
 

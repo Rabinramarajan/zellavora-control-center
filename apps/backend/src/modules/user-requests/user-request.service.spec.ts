@@ -105,7 +105,7 @@ describe('validateForSubmit', () => {
           lastName: 'Parker',
           userType: 'EMPLOYEE',
         },
-        employee: { employeeCode: 'EMP00236', employmentType: 'FULL_TIME' },
+        employee: { employeeCode: 'EMP00236', employmentType: 'PERMANENT' },
         contact: { workEmail: 'eric.parker@company.com' },
         organization: { branchId: id(1), departmentId: id(2) },
       }),

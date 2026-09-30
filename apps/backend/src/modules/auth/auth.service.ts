@@ -34,6 +34,7 @@ import {
   ipInRanges,
 } from '../security-policy/security-policy.service';
 import { UserRequestService } from '../user-requests/user-request.service';
+import { recordStatusChange } from '../users/account-status';
 import type { LoginPolicy } from '../security-policy/security-policy.dto';
 import { AuthRepository } from './auth.repository';
 import type { AcceptInvitationDto, LoginDto, RegisterDto } from './auth.dto';
@@ -422,6 +423,14 @@ export class AuthService {
     });
 
     await this.audit('invitation_accepted', organizationId, userId, meta);
+    await recordStatusChange({
+      userId,
+      organizationId,
+      from: 'INVITED',
+      to: 'ACTIVE',
+      reason: 'Invitation accepted; email verified',
+      actorId: userId,
+    });
     await new UserRequestService().onInvitationAccepted(userId);
     return { ok: true, clientCode: invitation.organization?.clientCode ?? null };
   }
@@ -717,7 +726,7 @@ export class AuthService {
 
   /** Admin locks and account status. Temporary lockout is enforced by RateLimitService. */
   private assertAccountUsable(user: User): void {
-    if (user.status === 'SUSPENDED' || user.status === 'INACTIVE') {
+    if (user.status === 'SUSPENDED' || user.status === 'INACTIVE' || user.status === 'DISABLED') {
       throw new AppError(
         'This account is disabled. Contact your administrator.',
         403,
@@ -730,6 +739,13 @@ export class AuthService {
     if (user.status === 'LOCKED' || user.isAccountLocked) {
       throw new AppError('This account is locked.', 423, 'ACCOUNT_LOCKED');
     }
+    if (user.passwordResetFlag) {
+      throw new AppError(
+        'Your administrator requires a password change. Use the reset link sent to your email, or choose "Forgot password".',
+        403,
+        'PASSWORD_CHANGE_REQUIRED'
+      );
+    }
   }
 
   private isEligibleForReset(user: User): boolean {
@@ -738,6 +754,7 @@ export class AuthService {
       !!user.passwordHash &&
       user.status !== 'SUSPENDED' &&
       user.status !== 'INACTIVE' &&
+      user.status !== 'DISABLED' &&
       user.status !== 'PENDING'
     );
   }

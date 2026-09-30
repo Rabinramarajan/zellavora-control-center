@@ -107,7 +107,12 @@ export class IamUserController {
   setRoles = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const dto = SetUserRolesSchema.parse(req.body);
-      const data = await this.service.setRoles(req.params.id, dto, req.userId);
+      // Assignments are organization-scoped; default to the caller's organization.
+      const data = await this.service.setRoles(
+        req.params.id,
+        { ...dto, organizationId: dto.organizationId ?? req.tenantId },
+        req.userId
+      );
       res.json({ success: true, data });
     } catch (err) {
       next(err);

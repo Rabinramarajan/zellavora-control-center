@@ -12,29 +12,67 @@
         <span class="text-slate-300" aria-current="page">Users</span>
       </nav>
       <h1 class="text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">User Search</h1>
-      <p class="mt-1 text-sm text-slate-400">Search, filter, view and manage all users across ZCC.</p>
+      <p class="mt-1 text-sm text-slate-400">
+        Provisioned accounts: profile, access and security. New accounts are created through
+        <a routerLink="/iam/user-requests" class="text-violet-300 hover:underline">User Requests</a>.
+      </p>
     </div>
-    <div class="flex shrink-0 gap-3">
+    @if (canManage()) {
+      <button type="button" class="us-btn us-btn-primary h-11 shrink-0 px-5" (click)="addUser()">
+        <i class="pi pi-plus text-sm" aria-hidden="true"></i>
+        Add User
+      </button>
+    }
+  </header>
+
+  <!-- Quick search -->
+  <form class="us-rise us-quickbar" role="search" aria-label="Search users" (ngSubmit)="runSearch()">
+    <div class="us-quick-search">
+      <app-form-input-control
+        label="Search"
+        icon="search"
+        placeholder="Name / Employee Code / Email / User ID"
+        [value]="search()"
+        (valueChange)="search.set($event)"
+      />
+    </div>
+    <div class="us-quick-field">
+      <label class="us-quick-label" for="qs-status-btn">Status</label>
+      <zcc-multi-select inputId="qs-status-btn" placeholder="Any status" [options]="statusOptions" [value]="applied().status" (valueChange)="setQuick('status', $event)" />
+    </div>
+    <div class="us-quick-field">
+      <label class="us-quick-label" for="qs-role-btn">Role</label>
+      <zcc-multi-select inputId="qs-role-btn" placeholder="Any role" [options]="roleOptions()" [value]="applied().roleId" (valueChange)="setQuick('roleId', $event)" />
+    </div>
+    <div class="us-quick-field">
+      <label class="us-quick-label" for="qs-group-btn">Group</label>
+      <zcc-multi-select inputId="qs-group-btn" placeholder="Any group" [options]="groupOptions()" [value]="applied().groupId" (valueChange)="setQuick('groupId', $event)" />
+    </div>
+    <div class="us-quick-field">
+      <label class="us-quick-label" for="qs-branch-btn">Branch</label>
+      <zcc-multi-select inputId="qs-branch-btn" placeholder="Any branch" [options]="branchOptions()" [value]="applied().branchId" (valueChange)="setQuick('branchId', $event)" />
+    </div>
+    <div class="us-quick-actions">
+      <button type="submit" class="us-btn us-btn-primary h-11 px-4">
+        <i class="pi pi-search text-sm" aria-hidden="true"></i>
+        Search
+      </button>
       <button
         type="button"
-        class="us-btn us-btn-outline us-filter-btn relative h-11 flex-1 px-5 sm:flex-none"
-        [class.is-active]="activeFilterCount() > 0"
+        class="us-btn us-btn-outline us-filter-btn relative h-11 px-4"
+        [class.is-active]="moreFilterCount() > 0"
         aria-haspopup="dialog"
         [attr.aria-expanded]="filtersOpen()"
         (click)="openFilters()"
       >
         <i class="pi pi-sliders-h text-sm" aria-hidden="true"></i>
-        Filters
-        @if (activeFilterCount() > 0) {
-          <span class="us-badge" [attr.aria-label]="activeFilterCount() + ' active filters'">{{ activeFilterCount() }}</span>
+        More Filters
+        @if (moreFilterCount() > 0) {
+          <span class="us-badge" [attr.aria-label]="moreFilterCount() + ' more filters active'">{{ moreFilterCount() }}</span>
         }
       </button>
-      <a routerLink="/iam/users/new" class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none">
-        <i class="pi pi-plus text-sm" aria-hidden="true"></i>
-        Add New User
-      </a>
     </div>
-  </header>
+  </form>
 
   <!-- Status chips -->
   <div class="us-rise -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="Filter by account status">
@@ -43,8 +81,8 @@
         type="button"
         class="us-stat"
         [attr.data-tone]="card.tone"
-        [class.is-active]="applied().status === card.status"
-        [attr.aria-pressed]="applied().status === card.status"
+        [class.is-active]="isStatusCard(card.status)"
+        [attr.aria-pressed]="isStatusCard(card.status)"
         [style.animation-delay.ms]="40 + i * 50"
         (click)="filterByStatus(card.status)"
       >
@@ -79,7 +117,6 @@
 
   <!-- Results -->
   <div class="us-rise flex md:min-h-0 flex-1 flex-col" style="animation-delay: 300ms">
-
     <div class="us-panel flex md:min-h-0 flex-1 flex-col overflow-hidden">
       <div class="us-table-scroll md:min-h-0 flex-1" [class.is-loading]="store.loading() && store.hasItems()">
         <table class="us-table">
@@ -96,7 +133,7 @@
                 />
               </th>
               @for (col of columns; track col.label) {
-                <th [attr.aria-sort]="ariaSort(col.key)">
+                <th [attr.aria-sort]="ariaSort(col.key)" [class.us-col-wide]="col.wide">
                   @if (col.key; as key) {
                     <button type="button" class="us-sort" [class.is-sorted]="sortKey() === key" (click)="sortBy(key)">
                       {{ col.label }}
@@ -112,7 +149,7 @@
                   }
                 </th>
               }
-              <th class="us-col-actions" scope="col">Actions</th>
+              <th class="us-col-actions" scope="col"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -150,7 +187,7 @@
                       (change)="toggleRow(user.id)"
                     />
                   </td>
-                  <td class="font-medium text-slate-200" [title]="user.id">{{ shortId(user) }}</td>
+                  <td class="whitespace-nowrap font-mono text-xs font-medium text-slate-200" [title]="user.id">{{ user.userCode ?? '—' }}</td>
                   <td>
                     <a [routerLink]="['/iam/users', user.id]" class="group flex items-center gap-3">
                       @if (user.avatarUrl) {
@@ -161,10 +198,16 @@
                       <span class="whitespace-nowrap font-medium text-white group-hover:text-violet-300">{{ user.fullName }}</span>
                     </a>
                   </td>
+                  <td class="whitespace-nowrap font-mono text-xs text-slate-300">{{ user.employeeCode ?? '—' }}</td>
                   <td class="text-slate-300">{{ user.email }}</td>
-                  <td class="whitespace-nowrap text-slate-200">{{ user.department ?? '—' }}</td>
-                  <td class="whitespace-nowrap text-slate-200">{{ user.jobTitle ?? '—' }}</td>
-                  <td><span class="us-count">{{ user.groupCount }}</span></td>
+                  <td class="whitespace-nowrap text-slate-200">{{ user.branchName ?? '—' }}</td>
+                  <td class="us-col-wide whitespace-nowrap text-slate-200">{{ user.teamName ?? '—' }}</td>
+                  <td class="us-col-wide whitespace-nowrap text-slate-200">
+                    {{ user.primaryGroup ?? '—' }}
+                    @if (user.groupCount > 1) {
+                      <span class="text-slate-500">+{{ user.groupCount - 1 }}</span>
+                    }
+                  </td>
                   <td>
                     @if (user.primaryRole; as role) {
                       <span class="us-role" [attr.data-tone]="roleTone(role.key)">
@@ -178,49 +221,37 @@
                     }
                   </td>
                   <td>
-                    <span class="us-status" [attr.data-status]="user.status">{{ user.statusLabel }}</span>
+                    <span class="us-status" [attr.data-status]="user.accountStatus">{{ user.statusLabel }}</span>
                   </td>
-                  <td class="whitespace-nowrap text-slate-400">{{ relativeTime(user.lastLoginDatetime) }}</td>
-                  <td class="whitespace-nowrap text-slate-400">{{ formatDate(user.createdAt) }}</td>
+                  <td class="whitespace-nowrap text-slate-400">{{ formatDateTime(user.lastLoginDatetime) }}</td>
                   <td class="us-col-actions">
-                    <div class="us-actions" role="group" [attr.aria-label]="'Actions for ' + user.fullName">
+                    <div class="relative inline-block">
                       <button
                         type="button"
                         class="us-action"
                         data-tone="view"
-                        title="View profile"
-                        [attr.aria-label]="'View profile of ' + user.fullName"
-                        (click)="viewUser(user)"
-                      >
-                        <i class="pi pi-eye" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        type="button"
-                        class="us-action"
-                        data-tone="lock"
-                        [title]="user.isAccountLocked ? 'Unlock account' : 'Lock account'"
-                        [attr.aria-label]="(user.isAccountLocked ? 'Unlock account of ' : 'Lock account of ') + user.fullName"
-                        [attr.aria-pressed]="user.isAccountLocked"
+                        [attr.aria-label]="'Actions for ' + user.fullName"
+                        aria-haspopup="menu"
+                        [attr.aria-expanded]="menuFor() === user.id"
                         [disabled]="busyId() === user.id"
-                        (click)="toggleLock(user)"
+                        (click)="toggleMenu(user.id, $event)"
                       >
                         @if (busyId() === user.id) {
                           <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
                         } @else {
-                          <i class="pi" [class.pi-lock-open]="user.isAccountLocked" [class.pi-lock]="!user.isAccountLocked" aria-hidden="true"></i>
+                          <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
                         }
                       </button>
-                      <button
-                        type="button"
-                        class="us-action"
-                        data-tone="danger"
-                        title="Remove user"
-                        [attr.aria-label]="'Remove ' + user.fullName"
-                        [disabled]="busyId() === user.id"
-                        (click)="removeUser(user)"
-                      >
-                        <i class="pi pi-trash" aria-hidden="true"></i>
-                      </button>
+                      @if (menuFor() === user.id) {
+                        <div class="us-menu" role="menu" [attr.aria-label]="'Actions for ' + user.fullName" (click)="$event.stopPropagation()">
+                          @for (item of menuItems(user); track item.key) {
+                            <button type="button" role="menuitem" class="us-menu-item" [class.is-danger]="item.danger" (click)="menuFor.set(null); item.run()">
+                              <i [class]="item.icon" aria-hidden="true"></i>
+                              {{ item.label }}
+                            </button>
+                          }
+                        </div>
+                      }
                     </div>
                   </td>
                 </tr>
@@ -265,7 +296,7 @@
   </div>
 </section>
 
-<!-- Search filters dialog -->
+<!-- More filters dialog -->
 @if (filtersOpen()) {
   <div class="us-backdrop" (click)="closeFilters()" aria-hidden="true"></div>
   <div class="us-dialog" role="dialog" aria-modal="true" aria-labelledby="us-filter-title">
@@ -273,8 +304,8 @@
       <div class="flex items-center gap-4">
         <span class="us-dialog-icon"><i class="pi pi-filter" aria-hidden="true"></i></span>
         <div>
-          <h2 id="us-filter-title" class="text-lg font-semibold text-white">Search Filters</h2>
-          <p class="text-sm text-slate-400">Find and filter users across ZCC</p>
+          <h2 id="us-filter-title" class="text-lg font-semibold text-white">More Filters</h2>
+          <p class="text-sm text-slate-400">Narrow the search by identity, organization, access and activity</p>
         </div>
       </div>
       <button type="button" class="us-icon-btn" aria-label="Close filters" (click)="closeFilters()">
@@ -286,14 +317,13 @@
       <fieldset class="us-section">
         <legend class="us-section-title"><i class="pi pi-id-card" aria-hidden="true"></i>Identity</legend>
         <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          @for (field of textFields; track field.key) {
+          @for (field of identityFields; track field.key) {
             <app-form-input-control
               [label]="field.label"
               [type]="field.type"
               [icon]="field.icon"
               [placeholder]="field.placeholder"
-              [hint]="field.hint ?? ''"
-              [value]="draft()[field.key]"
+              [value]="draftText(field.key)"
               (valueChange)="patchDraft(field.key, $event)"
             />
           }
@@ -301,19 +331,35 @@
       </fieldset>
 
       <fieldset class="us-section">
-        <legend class="us-section-title"><i class="pi pi-shield" aria-hidden="true"></i>Access</legend>
+        <legend class="us-section-title"><i class="pi pi-shield" aria-hidden="true"></i>Organization &amp; Access</legend>
         <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          @for (sel of selectFields(); track sel.key) {
-            <app-select-control
-              [label]="sel.label"
-              [icon]="sel.icon"
-              [placeholder]="sel.all"
-              [searchPlaceholder]="'Search ' + sel.label.toLowerCase() + '...'"
-              [options]="sel.options"
-              [value]="draft()[sel.key]"
-              (valueChange)="patchDraft(sel.key, $event)"
-            />
+          @for (field of accessFields(); track field.key) {
+            <div>
+              <span class="us-range-label">{{ field.label }}</span>
+              <zcc-multi-select
+                [placeholder]="'Any ' + field.label.toLowerCase()"
+                [options]="field.options"
+                [value]="draftList(field.key)"
+                (valueChange)="patchDraft(field.key, $event)"
+              />
+            </div>
           }
+          <app-select-control
+            label="Email Verification"
+            icon="list"
+            [searchable]="false"
+            [options]="verifiedOptions"
+            [value]="draftText('emailVerified')"
+            (valueChange)="patchDraft('emailVerified', $event)"
+          />
+          <app-select-control
+            label="MFA Status"
+            icon="list"
+            [searchable]="false"
+            [options]="mfaOptions"
+            [value]="draftText('mfaEnabled')"
+            (valueChange)="patchDraft('mfaEnabled', $event)"
+          />
         </div>
       </fieldset>
 
@@ -327,15 +373,15 @@
                 <app-date-control
                   label="From"
                   placeholder="Start date"
-                  [maxDate]="draft()[range.to] || undefined"
-                  [value]="draft()[range.from]"
+                  [maxDate]="draftText(range.to) || undefined"
+                  [value]="draftText(range.from)"
                   (valueChange)="patchDraft(range.from, $event)"
                 />
                 <app-date-control
                   label="To"
                   placeholder="End date"
-                  [minDate]="draft()[range.from] || undefined"
-                  [value]="draft()[range.to]"
+                  [minDate]="draftText(range.from) || undefined"
+                  [value]="draftText(range.to)"
                   (valueChange)="patchDraft(range.to, $event)"
                 />
               </div>
