@@ -22,6 +22,10 @@ export interface CreateSessionInput {
   userAgent: string;
   deviceFingerprint?: string;
   rememberMe?: boolean;
+  /** Org cap on session age in days; never lengthens the built-in lifetimes. */
+  maxLifetimeDays?: number;
+  /** Org cap on live sessions per user (0 = unlimited); the oldest are revoked. */
+  maxConcurrentSessions?: number;
 }
 
 export interface SessionRow {
@@ -44,7 +48,24 @@ export class SessionService {
   /** Create a new session and return its id. */
   static async create(input: CreateSessionInput): Promise<{ sessionId: string }> {
     const sessionId = uuidv4();
-    const expiresAt = new Date(Date.now() + (input.rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000);
+    const lifetimeDays = Math.min(input.rememberMe ? 30 : 7, input.maxLifetimeDays ?? Infinity);
+    const expiresAt = new Date(Date.now() + lifetimeDays * 24 * 60 * 60 * 1000);
+
+    if (input.maxConcurrentSessions && input.maxConcurrentSessions > 0) {
+      // Make room for the new session by revoking the least recently used ones.
+      const live = await prisma.session.findMany({
+        where: { userId: input.userId, isActive: true, expiresAt: { gt: new Date() } },
+        orderBy: { lastActivityAt: 'desc' },
+        select: { id: true },
+      });
+      const excess = live.slice(input.maxConcurrentSessions - 1).map((s) => s.id);
+      if (excess.length) {
+        await prisma.session.updateMany({
+          where: { id: { in: excess } },
+          data: { isActive: false },
+        });
+      }
+    }
 
     await prisma.session.create({
       data: {
@@ -101,12 +122,28 @@ export class SessionService {
    * Update last_activity_at when the session is still live. Returns false for a
    * revoked, expired or foreign session — one query on every authenticated request.
    */
-  static async touchIfActive(sessionId: string, userId: string): Promise<boolean> {
+  static async touchIfActive(sessionId: string, userId: string, idleMinutes = 0): Promise<boolean> {
+    const now = new Date();
+    const idleCutoff = idleMinutes > 0 ? new Date(now.getTime() - idleMinutes * 60 * 1000) : null;
     const { count } = await prisma.session.updateMany({
-      where: { id: sessionId, userId, isActive: true, expiresAt: { gt: new Date() } },
-      data: { lastActivityAt: new Date() },
+      where: {
+        id: sessionId,
+        userId,
+        isActive: true,
+        expiresAt: { gt: now },
+        ...(idleCutoff ? { lastActivityAt: { gte: idleCutoff } } : {}),
+      },
+      data: { lastActivityAt: now },
     });
-    return count === 1;
+    if (count === 1) return true;
+    if (idleCutoff) {
+      // Deactivate an idled-out session so its refresh token can't revive it.
+      await prisma.session.updateMany({
+        where: { id: sessionId, userId, isActive: true, lastActivityAt: { lt: idleCutoff } },
+        data: { isActive: false },
+      });
+    }
+    return false;
   }
 
   /** Revoke a session owned by `userId`. Returns false when no such live session exists. */

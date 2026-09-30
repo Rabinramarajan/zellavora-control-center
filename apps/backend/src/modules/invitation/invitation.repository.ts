@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 
 export class InvitationRepository extends BaseRepository {
@@ -82,6 +83,50 @@ export class InvitationRepository extends BaseRepository {
       where: { id, status: 'pending' },
       data: { status: 'revoked', updatedBy: actorId },
     });
+  }
+
+  /** `expired` is derived: a pending invitation past its expiry. */
+  async list(
+    organizationId: string,
+    query: { q?: string; status?: 'pending' | 'accepted' | 'revoked' | 'expired'; page: number; pageSize: number },
+    tx?: TxClient
+  ) {
+    const now = new Date();
+    const where: Prisma.InvitationWhereInput = { organizationId, isDeleted: false };
+    if (query.status === 'pending') Object.assign(where, { status: 'pending', expiresAt: { gt: now } });
+    else if (query.status === 'expired') Object.assign(where, { status: 'pending', expiresAt: { lte: now } });
+    else if (query.status) where.status = query.status;
+    if (query.q) {
+      where.OR = [
+        { email: { contains: query.q, mode: 'insensitive' } },
+        { firstName: { contains: query.q, mode: 'insensitive' } },
+        { lastName: { contains: query.q, mode: 'insensitive' } },
+      ];
+    }
+    const [data, total] = await Promise.all([
+      this.getDb(tx).invitation.findMany({
+        where,
+        include: { invitedBy: { select: { id: true, fullName: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.getDb(tx).invitation.count({ where }),
+    ]);
+    return { data, total };
+  }
+
+  async statusCounts(organizationId: string, tx?: TxClient) {
+    const now = new Date();
+    const base = { organizationId, isDeleted: false };
+    const db = this.getDb(tx);
+    const [pending, expired, accepted, revoked] = await Promise.all([
+      db.invitation.count({ where: { ...base, status: 'pending', expiresAt: { gt: now } } }),
+      db.invitation.count({ where: { ...base, status: 'pending', expiresAt: { lte: now } } }),
+      db.invitation.count({ where: { ...base, status: 'accepted' } }),
+      db.invitation.count({ where: { ...base, status: 'revoked' } }),
+    ]);
+    return { pending, expired, accepted, revoked };
   }
 
   findActorName(userId: string, tx?: TxClient) {

@@ -44,7 +44,10 @@ export class AuditService {
           ipAddress: input.ipAddress ?? ctx.ipAddress ?? null,
           userAgent: input.userAgent ?? ctx.userAgent ?? null,
           requestId: input.requestId ?? ctx.requestId ?? null,
-          metadata: (input.metadata ?? undefined) as Prisma.InputJsonValue | undefined,
+          // The table has no before/after columns, so the diff travels in metadata.
+          metadata: (input.before || input.after
+            ? { ...input.metadata, before: input.before ?? null, after: input.after ?? null }
+            : (input.metadata ?? undefined)) as Prisma.InputJsonValue | undefined,
         },
       });
     } catch (err) {

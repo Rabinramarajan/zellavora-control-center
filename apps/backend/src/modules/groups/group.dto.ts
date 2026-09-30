@@ -28,8 +28,12 @@ export const UpdateGroupSchema = z
 
 export const GroupListQuerySchema = z.object({
   q: z.string().optional(),
-  type: z.array(GroupTypeSchema).optional(),
-  status: z.array(EntityStatusSchema).optional(),
+  type: z
+    .preprocess((v) => (typeof v === 'string' ? v.split(',') : v), z.array(GroupTypeSchema))
+    .optional(),
+  status: z
+    .preprocess((v) => (typeof v === 'string' ? v.split(',') : v), z.array(EntityStatusSchema))
+    .optional(),
   parentId: z.string().uuid().optional(),
   ownerId: z.string().uuid().optional(),
   isSystem: z.enum(['true', 'false']).optional(),

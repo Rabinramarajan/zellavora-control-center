@@ -145,6 +145,10 @@ export class IamApiService {
     return this.apiData.getData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}`);
   }
 
+  addGroupMembers(id: string, userIds: string[]): Observable<ApiEnvelope<GroupDetail>> {
+    return this.apiData.postData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}/members`, { userIds });
+  }
+
   removeGroupMember(id: string, userId: string): Observable<ApiEnvelope<GroupDetail>> {
     return this.apiData.deleteData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}/members/${userId}`);
   }

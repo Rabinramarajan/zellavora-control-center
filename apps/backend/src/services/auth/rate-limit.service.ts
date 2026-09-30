@@ -14,8 +14,17 @@ import { config } from '../../config/env';
 
 const WINDOW_MS = config.accountLockoutMinutes * 60 * 1000;
 const IP_LIMIT = 10;
-const ACCOUNT_LIMIT = config.accountLockoutThreshold;
-const LOCKOUT_MS = config.accountLockoutMinutes * 60 * 1000;
+
+/** Per-organization lockout rule; defaults to the env-configured values. */
+export interface LockoutPolicy {
+  lockoutThreshold: number;
+  lockoutMinutes: number;
+}
+
+const DEFAULT_LOCKOUT: LockoutPolicy = {
+  lockoutThreshold: config.accountLockoutThreshold,
+  lockoutMinutes: config.accountLockoutMinutes,
+};
 
 export class RateLimitService {
   /** Record an attempt and return the updated state. */
@@ -56,19 +65,21 @@ export class RateLimitService {
 
   /** Throws AppError(423) if the account is currently locked. */
   static async assertAccountAllowed(
-    email: string
+    email: string,
+    policy: LockoutPolicy = DEFAULT_LOCKOUT
   ): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
-    const since = new Date(Date.now() - WINDOW_MS);
+    const lockoutMs = policy.lockoutMinutes * 60 * 1000;
+    const since = new Date(Date.now() - lockoutMs);
     const failures = await prisma.loginAttempt.findMany({
       where: { email: email.toLowerCase(), success: false, attemptedAt: { gte: since } },
       orderBy: { attemptedAt: 'asc' },
     });
 
     const failedAttempts = failures?.length ?? 0;
-    if (failedAttempts >= ACCOUNT_LIMIT) {
-      // Lock expires LOCKOUT_MS after the first failure in the window.
+    if (failedAttempts >= policy.lockoutThreshold) {
+      // Lock expires lockoutMinutes after the first failure in the window.
       const earliest = failures?.[0]?.attemptedAt ? new Date(failures[0].attemptedAt) : new Date();
-      const lockedUntil = new Date(earliest.getTime() + LOCKOUT_MS);
+      const lockedUntil = new Date(earliest.getTime() + lockoutMs);
       const retryAfterSeconds = Math.max(
         Math.ceil((lockedUntil.getTime() - Date.now()) / 1000),
         1

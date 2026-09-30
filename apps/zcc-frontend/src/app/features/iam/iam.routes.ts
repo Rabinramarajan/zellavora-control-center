@@ -4,10 +4,23 @@ import { IamLayoutComponent } from './iam-layout.component';
 import { ResourcesListComponent } from './resources/resources-list.component';
 import { ResourcesDetailComponent } from './resources/resources-detail.component';
 
-const section = (path: string, title: string, icon: string, description: string): Route => ({
+const securityPolicy = (
+  path: string,
+  section: 'password' | 'login' | 'mfa',
+  title: string
+): Route => ({
   path,
-  loadComponent: () => import('./iam-section.component').then((m) => m.IamSectionComponent),
-  data: { title, icon, description },
+  loadComponent: () =>
+    import('./security/security-policy.component').then((m) => m.SecurityPolicyComponent),
+  data: { title, section },
+});
+
+const communications = (path: string, channel: 'in_app' | 'email', title: string): Route => ({
+  path,
+  canMatch: [canMatchPermission('settings:manage')],
+  loadComponent: () =>
+    import('./communications/communications.component').then((m) => m.CommunicationsComponent),
+  data: { title, channel },
 });
 
 export const iamRoutes: Routes = [
@@ -22,7 +35,13 @@ export const iamRoutes: Routes = [
         canMatch: [canMatchPermission('users:read')],
         loadChildren: () => import('./users/users.routes').then((m) => m.usersRoutes),
       },
-      section('user-requests', 'User Requests', 'pi pi-inbox', 'Review and approve access and sign-up requests.'),
+      {
+        path: 'user-requests',
+        canMatch: [canMatchPermission('users:read')],
+        loadComponent: () =>
+          import('./user-requests/user-requests.component').then((m) => m.UserRequestsComponent),
+        data: { title: 'User Requests' },
+      },
       {
         path: 'groups',
         canMatch: [canMatchPermission('groups:read')],
@@ -33,7 +52,13 @@ export const iamRoutes: Routes = [
         canMatch: [canMatchPermission('roles:read')],
         loadChildren: () => import('./roles/roles.routes').then((m) => m.rolesRoutes),
       },
-      section('permissions', 'Permissions', 'pi pi-lock', 'System permissions available for role assignment.'),
+      {
+        path: 'permissions',
+        canMatch: [canMatchPermission('roles:read')],
+        loadComponent: () =>
+          import('./permissions/permissions.component').then((m) => m.PermissionsComponent),
+        data: { title: 'Permissions' },
+      },
       {
         path: 'resources',
         canMatch: [canMatchPermission('resources:read')],
@@ -44,33 +69,73 @@ export const iamRoutes: Routes = [
       },
       {
         path: 'organization',
+        canMatch: [canMatchPermission('users:read')],
         children: [
           { path: '', redirectTo: 'branches', pathMatch: 'full' },
           {
             path: 'branches',
             loadComponent: () =>
               import('../admin/components/branches/branch-manager/branch-manager.component').then(
-                (m) => m.BranchManagerComponent,
+                (m) => m.BranchManagerComponent
               ),
             data: { title: 'Branches' },
           },
-          section('departments', 'Departments', 'pi pi-briefcase', 'Departments within your organization.'),
-          section('teams', 'Teams', 'pi pi-sitemap', 'Teams and their members.'),
+          {
+            path: 'departments',
+            loadComponent: () =>
+              import('./organization/departments-list.component').then(
+                (m) => m.DepartmentsListComponent
+              ),
+            data: { title: 'Departments' },
+          },
+          {
+            path: 'departments/:id',
+            loadComponent: () =>
+              import('./organization/department-detail.component').then(
+                (m) => m.DepartmentDetailComponent
+              ),
+            data: { title: 'Department' },
+          },
+          {
+            path: 'teams',
+            loadComponent: () =>
+              import('./organization/teams-list.component').then((m) => m.TeamsListComponent),
+            data: { title: 'Teams' },
+          },
+          {
+            path: 'teams/:id',
+            loadComponent: () =>
+              import('./organization/team-detail.component').then((m) => m.TeamDetailComponent),
+            data: { title: 'Team' },
+          },
         ],
       },
-      section('sessions', 'Sessions', 'pi pi-desktop', 'Active user sessions and devices.'),
+      {
+        path: 'sessions',
+        canMatch: [canMatchPermission('users:manage')],
+        loadComponent: () =>
+          import('./sessions/sessions.component').then((m) => m.SessionsComponent),
+        data: { title: 'Sessions' },
+      },
       {
         path: 'security',
+        canMatch: [canMatchPermission('settings:manage')],
         children: [
           { path: '', redirectTo: 'mfa', pathMatch: 'full' },
-          section('mfa', 'MFA / 2FA', 'pi pi-mobile', 'Multi-factor authentication requirements.'),
-          section('password-policy', 'Password Policy', 'pi pi-key', 'Password strength, rotation and reuse rules.'),
-          section('login-policy', 'Login Policy', 'pi pi-sign-in', 'Lockout, IP and sign-in restrictions.'),
+          securityPolicy('mfa', 'mfa', 'MFA / 2FA'),
+          securityPolicy('password-policy', 'password', 'Password Policy'),
+          securityPolicy('login-policy', 'login', 'Login Policy'),
         ],
       },
-      section('configuration', 'Common Configuration', 'pi pi-cog', 'Shared identity settings and defaults.'),
-      section('messages', 'Messages', 'pi pi-comments', 'In-app messages sent to users.'),
-      section('email', 'Email Communication', 'pi pi-envelope', 'Email templates and delivery for identity events.'),
+      {
+        path: 'configuration',
+        canMatch: [canMatchPermission('settings:manage')],
+        loadComponent: () =>
+          import('./configuration/configuration.component').then((m) => m.ConfigurationComponent),
+        data: { title: 'Common Configuration' },
+      },
+      communications('messages', 'in_app', 'Messages'),
+      communications('email', 'email', 'Email Communication'),
       {
         path: 'audit-logs',
         loadComponent: () =>

@@ -16,6 +16,7 @@ import {
   type AccessTokenClaims,
   SessionService,
   } from '../services/auth';
+import { SecurityPolicyService } from '../modules/security-policy/security-policy.service';
 import { AppError } from './error';
 
 export interface AuthRequest extends Request {
@@ -69,7 +70,8 @@ export const authenticate = async (
 
     // Access tokens outlive a logout by up to their TTL unless the session is
     // checked here; this is what makes logout / revoke / password reset immediate.
-    if (!(await SessionService.touchIfActive(claims.sid, claims.sub))) {
+    const { login } = await SecurityPolicyService.forOrganization(claims.tid);
+    if (!(await SessionService.touchIfActive(claims.sid, claims.sub, login.sessionIdleMinutes))) {
       throw new AppError('Session expired or revoked', 401, 'SESSION_REVOKED');
     }
 

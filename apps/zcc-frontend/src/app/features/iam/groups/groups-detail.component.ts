@@ -11,6 +11,8 @@ import {
   EmptyStateComponent,
 } from '@shared/components/iam';
 import { AppDialogService } from '@shared/components/dialog';
+import { IamDialogsService } from '../shared/iam-dialogs.service';
+import { IamFeedbackService } from '../shared/iam-feedback.service';
 
 @Component({
   selector: 'zcc-groups-detail',
@@ -191,6 +193,8 @@ export class GroupsDetailComponent {
   private readonly router = inject(Router);
   private readonly api = inject(IamApiService);
   private readonly dialog = inject(AppDialogService);
+  private readonly dialogs = inject(IamDialogsService);
+  private readonly feedback = inject(IamFeedbackService);
 
   readonly group = signal<GroupDetail | null>(null);
   readonly loading = signal(true);
@@ -231,21 +235,18 @@ export class GroupsDetailComponent {
   }
 
   async onAddMember(): Promise<void> {
-    const email = await firstValueFrom(
-      this.dialog.prompt({
-        title: 'Add member',
-        label: 'Member email',
-        placeholder: 'name@company.com',
-        inputType: 'email',
-        required: true,
-        confirmText: 'Add',
-      })
-    );
-    if (!email) return;
-    // Resolving email → user id needs the member picker; point users to the supported path.
-    this.dialog.alert({
-      title: 'Add from the Users list',
-      message: 'Add members by user id from the Users list — full picker arrives with Module 1.',
+    const g = this.group()!;
+    await this.dialogs.pick({
+      title: `Add members to ${g.name}`,
+      description: 'Members inherit every role attached to this group.',
+      searchPlaceholder: 'Search users…',
+      excludeIds: g.members.map((m) => m.userId),
+      search: this.dialogs.searchUsers,
+      submit: async (userIds) => {
+        const res = await firstValueFrom(this.api.addGroupMembers(g.id, userIds));
+        this.group.set(res.data);
+        this.feedback.success(`${userIds.length} member(s) added.`);
+      },
     });
   }
 
@@ -262,15 +263,23 @@ export class GroupsDetailComponent {
     try {
       const res = await firstValueFrom(this.api.removeGroupMember(this.group()!.id, userId));
       this.group.set(res.data);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      this.feedback.error(err);
     }
   }
 
   async onAddRole(): Promise<void> {
-    this.dialog.alert({
-      title: 'Coming soon',
-      message: 'Role picker arrives with the Roles integration.',
+    const g = this.group()!;
+    await this.dialogs.pick({
+      title: `Attach roles to ${g.name}`,
+      searchPlaceholder: 'Search roles…',
+      excludeIds: g.roles.map((r) => r.roleId),
+      search: this.dialogs.searchRoles,
+      submit: async (roleIds) => {
+        const res = await firstValueFrom(this.api.setGroupRoles(g.id, { roleIds, mode: 'merge' }));
+        this.group.set(res.data);
+        this.feedback.success(`${roleIds.length} role(s) attached.`);
+      },
     });
   }
 
@@ -282,8 +291,8 @@ export class GroupsDetailComponent {
         this.api.setGroupRoles(current.id, { roleIds: next, mode: 'replace' })
       );
       this.group.set(res.data);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      this.feedback.error(err);
     }
   }
 
@@ -300,8 +309,8 @@ export class GroupsDetailComponent {
     try {
       await firstValueFrom(this.api.deleteGroup(this.group()!.id));
       await this.router.navigate(['/iam/groups']);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      this.feedback.error(err);
     }
   }
 }

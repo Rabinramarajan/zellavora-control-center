@@ -15,6 +15,7 @@ export type AuditAction =
   | 'logout'
   | 'login_failed'
   | 'lockout'
+  | 'login_blocked_ip'
   | 'password_change'
   | 'password_reset_requested'
   | 'password_reset_completed'

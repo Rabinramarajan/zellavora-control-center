@@ -10,7 +10,6 @@ import adminRolesRoutes from './admin-roles';
 import adminResourcesRoutes from './admin-resources';
 import adminConfigsRoutes from './admin-configs';
 import adminAuditRoutes from './admin-audit';
-import adminMessagesRoutes from './admin-messages';
 import settingsRoutes from './settings';
 import invitationRoutes from '../modules/invitation/invitation.routes';
 import organizationRoutes from '../modules/organization/organization.routes';
@@ -26,6 +25,13 @@ import resourceRoutes from '../modules/resources/resource.routes';
 import roleRoutes from '../modules/roles/role.routes';
 import groupRoutes from '../modules/groups/group.routes';
 import iamUserRoutes from '../modules/users/iam-user.routes';
+import iamPermissionRoutes from '../modules/permission/permission-catalog.routes';
+import iamDepartmentRoutes from '../modules/departments/departments.routes';
+import iamTeamRoutes from '../modules/teams/teams.routes';
+import iamSessionRoutes from '../modules/sessions/sessions.routes';
+import iamSecurityRoutes from '../modules/security-policy/security-policy.routes';
+import iamConfigurationRoutes from '../modules/configuration/configuration.routes';
+import iamCommunicationRoutes from '../modules/communications/communications.routes';
 import dailySheetsRoutes from '../modules/daily-sheets/daily-sheets.routes';
 import monthlySheetsRoutes from '../modules/monthly-sheets/monthly-sheets.routes';
 import timesheetsRoutes from '../modules/timesheets/timesheets.routes';
@@ -54,6 +60,13 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/iam/roles', roleRoutes);
   app.use('/api/v1/iam/groups', groupRoutes);
   app.use('/api/v1/iam/users', iamUserRoutes);
+  app.use('/api/v1/iam/permissions', iamPermissionRoutes);
+  app.use('/api/v1/iam/departments', iamDepartmentRoutes);
+  app.use('/api/v1/iam/teams', iamTeamRoutes);
+  app.use('/api/v1/iam/sessions', iamSessionRoutes);
+  app.use('/api/v1/iam/security', iamSecurityRoutes);
+  app.use('/api/v1/iam/configurations', iamConfigurationRoutes);
+  app.use('/api/v1/iam/communications', iamCommunicationRoutes);
   // Mounted under /projects: this router declares bare '/' and '/:id' paths, which at
   // the /api/v1 root would swallow every other top-level route (daily-sheets, etc).
   app.use('/api/v1/projects', projectRoutes);
@@ -73,5 +86,4 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/admin', adminResourcesRoutes);
   app.use('/api/v1/admin', adminConfigsRoutes);
   app.use('/api/v1/admin', adminAuditRoutes);
-  app.use('/api/v1/admin', adminMessagesRoutes);
 }

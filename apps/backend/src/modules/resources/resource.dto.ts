@@ -57,9 +57,13 @@ export const AddResourceActionSchema = z
 
 export const ResourceListQuerySchema = z.object({
   q: z.string().optional(),
-  type: z.array(ResourceTypeSchema).optional(),
+  type: z
+    .preprocess((v) => (typeof v === 'string' ? v.split(',') : v), z.array(ResourceTypeSchema))
+    .optional(),
   category: z.string().optional(),
-  status: z.array(EntityStatusSchema).optional(),
+  status: z
+    .preprocess((v) => (typeof v === 'string' ? v.split(',') : v), z.array(EntityStatusSchema))
+    .optional(),
   parentId: z.string().uuid().optional(),
   ownerId: z.string().uuid().optional(),
   isSystem: z.enum(['true', 'false']).optional(),

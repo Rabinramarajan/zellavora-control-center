@@ -1,0 +1,265 @@
+import { PaginatedList, UserStatus } from './iam.model';
+
+// ============================================================================
+// USER REQUESTS (invitations)
+// ============================================================================
+
+export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'expired';
+
+export interface InvitationItem {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  userId: string | null;
+  status: InvitationStatus;
+  invitedById: string | null;
+  invitedByName: string | null;
+  expiresAt: string;
+  usedAt: string | null;
+  createdAt: string;
+}
+
+export interface InvitationList extends PaginatedList<InvitationItem> {
+  counts: Record<InvitationStatus, number>;
+}
+
+export interface InviteUserRequest {
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
+// ============================================================================
+// PERMISSIONS CATALOG
+// ============================================================================
+
+export interface CatalogPermission {
+  id: string;
+  key: string;
+  name: string;
+  resource: string | null;
+  action: string | null;
+  description: string | null;
+  groupId: string | null;
+  groupName: string | null;
+  roleCount: number;
+  resourceActionCount: number;
+  isWildcard: boolean;
+  createdAt: string;
+}
+
+export interface CatalogPermissionDetail extends CatalogPermission {
+  roles: Array<{ roleId: string; roleName: string; roleKey: string; effect: 'allow' | 'deny' }>;
+}
+
+export interface CatalogPermissionList extends PaginatedList<CatalogPermission> {
+  resources: string[];
+}
+
+export interface PermissionGroupItem {
+  id: string;
+  name: string;
+  description: string | null;
+  permissionCount: number;
+}
+
+export interface CreateCatalogPermissionRequest {
+  resource: string;
+  action: string;
+  description?: string | null;
+  groupId?: string | null;
+}
+
+// ============================================================================
+// ORGANIZATION (departments, teams)
+// ============================================================================
+
+export interface OrgMember {
+  userId: string;
+  fullName: string;
+  email: string;
+  jobTitle: string | null;
+  avatarUrl: string | null;
+  status: UserStatus;
+}
+
+export type DepartmentStatus = 'active' | 'inactive';
+
+export interface DepartmentItem {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  status: DepartmentStatus;
+  parentId: string | null;
+  parentName: string | null;
+  memberCount: number;
+  childCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DepartmentDetail extends DepartmentItem {
+  members: OrgMember[];
+}
+
+export interface SaveDepartmentRequest {
+  name: string;
+  code?: string | null;
+  description?: string | null;
+  parentId?: string | null;
+  status?: DepartmentStatus;
+}
+
+export interface TeamItem {
+  id: string;
+  name: string;
+  description: string | null;
+  memberCount: number;
+  memberPreview: OrgMember[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamDetail extends Omit<TeamItem, 'memberPreview'> {
+  members: OrgMember[];
+}
+
+export interface SaveTeamRequest {
+  name: string;
+  description?: string | null;
+}
+
+// ============================================================================
+// SESSIONS
+// ============================================================================
+
+export interface SessionItem {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string | null;
+  userAvatarUrl: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  browser: string | null;
+  platform: string | null;
+  isMobile: boolean;
+  createdAt: string;
+  lastActivityAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
+}
+
+export interface SessionStats {
+  activeSessions: number;
+  activeUsers: number;
+}
+
+// ============================================================================
+// SECURITY POLICIES
+// ============================================================================
+
+export interface PasswordPolicy {
+  minLength: number;
+  historyDepth: number;
+  disallowEmailInPassword: boolean;
+}
+
+export interface LoginPolicy {
+  lockoutThreshold: number;
+  lockoutMinutes: number;
+  sessionIdleMinutes: number;
+  sessionLifetimeDays: number;
+  maxConcurrentSessions: number;
+  allowedIpRanges: string[];
+}
+
+export interface MfaPolicy {
+  enforce: boolean;
+}
+
+export interface SecurityPolicies {
+  password: PasswordPolicy;
+  login: LoginPolicy;
+  mfa: MfaPolicy;
+}
+
+export interface MfaComplianceUser {
+  id: string;
+  fullName: string;
+  email: string;
+  mfaEnabled: boolean;
+  mfaMethod: string | null;
+  mfaEnrolledAt: string | null;
+  lastLoginAt: string | null;
+}
+
+export interface MfaCompliance extends PaginatedList<MfaComplianceUser> {
+  summary: { total: number; enrolled: number; notEnrolled: number };
+}
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+export interface ConfigurationItem {
+  id: string;
+  key: string;
+  value: string;
+  category: string | null;
+  isEncrypted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConfigurationList extends PaginatedList<ConfigurationItem> {
+  categories: string[];
+}
+
+export interface UpsertConfigurationRequest {
+  key: string;
+  value?: string;
+  category?: string | null;
+  isEncrypted: boolean;
+}
+
+// ============================================================================
+// COMMUNICATIONS
+// ============================================================================
+
+export type AudienceType = 'all' | 'users' | 'group' | 'team' | 'department';
+
+export type Audience = { type: 'all' } | { type: Exclude<AudienceType, 'all'>; ids: string[] };
+
+export type MessageType = 'info' | 'success' | 'warning' | 'error';
+
+export interface SendMessageRequest {
+  audience: Audience;
+  title: string;
+  body: string;
+  type: MessageType;
+}
+
+export interface SendEmailRequest {
+  audience: Audience;
+  subject: string;
+  body: string;
+}
+
+export interface DeliverySummary {
+  recipients: number;
+  delivered: number;
+  failed: number;
+}
+
+export interface CommunicationHistoryItem extends DeliverySummary {
+  id: string;
+  subject: string;
+  type: MessageType | null;
+  audience: { type: AudienceType; count?: number } | null;
+  sentById: string | null;
+  sentByName: string | null;
+  sentAt: string;
+}

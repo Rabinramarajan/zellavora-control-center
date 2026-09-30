@@ -29,6 +29,11 @@ import {
   type AuditAction,
   type Tenant,
 } from '../../services/auth';
+import {
+  SecurityPolicyService,
+  ipInRanges,
+} from '../security-policy/security-policy.service';
+import type { LoginPolicy } from '../security-policy/security-policy.dto';
 import { AuthRepository } from './auth.repository';
 import type { AcceptInvitationDto, LoginDto, RegisterDto } from './auth.dto';
 import type {
@@ -94,9 +99,11 @@ export class AuthService {
 
   async login(dto: LoginDto, meta: RequestMeta): Promise<LoginResult> {
     await RateLimitService.assertIpAllowed(meta.ipAddress);
-    await RateLimitService.assertAccountAllowed(dto.email);
 
     const tenant = await TenantService.findByClientCode(dto.clientCode);
+    const { login: loginPolicy } = await SecurityPolicyService.forOrganization(tenant?.id);
+    await RateLimitService.assertAccountAllowed(dto.email, loginPolicy);
+
     const user = tenant ? await this.repo.findUserInTenant(dto.email, tenant.id) : null;
 
     const passwordless = !!user && config.devPasswordlessEmails.includes(user.email.toLowerCase());
@@ -106,12 +113,19 @@ export class AuthService {
       (await PasswordService.verify(dto.password, user?.passwordHash ?? (await dummyHash())));
 
     if (!tenant || !user || !user.passwordHash || user.isDeleted || !passwordOk) {
-      await this.recordLoginFailure(dto, meta, tenant?.id ?? null, user ? 'invalid_password' : 'unknown_user');
+      await this.recordLoginFailure(
+        dto,
+        meta,
+        tenant?.id ?? null,
+        user ? 'invalid_password' : 'unknown_user',
+        loginPolicy
+      );
       throw new AppError(GENERIC_LOGIN_ERROR, 401, 'INVALID_CREDENTIALS');
     }
 
     // Credentials are proven from here on, so status-specific errors leak nothing.
     this.assertAccountUsable(user);
+    await this.assertIpAllowedByPolicy(loginPolicy, tenant.id, user.id, meta);
     // Accounts created before verification existed have no verification record;
     // they are grandfathered rather than locked out.
     if (
@@ -258,12 +272,15 @@ export class AuthService {
     const role = await TenantService.assertMembership(actor.userId, organizationId);
     const tenant = await TenantService.getById(organizationId);
     if (!tenant) throw new AppError('Organization not found', 404, 'TENANT_NOT_FOUND');
+    const { login: loginPolicy } = await SecurityPolicyService.forOrganization(organizationId);
+    await this.assertIpAllowedByPolicy(loginPolicy, organizationId, actor.userId, actor);
 
     const { sessionId } = await SessionService.create({
       userId: actor.userId,
       organizationId,
       ipAddress: actor.ipAddress,
       userAgent: actor.userAgent,
+      ...(await this.sessionCapsFor(organizationId)),
     });
     const tokens = await TokenService.issue({
       userId: actor.userId,
@@ -306,6 +323,7 @@ export class AuthService {
       return response;
     }
 
+    await this.assertPasswordPolicy(tenant.id, dto.password, dto.email);
     const passwordHash = await PasswordService.hash(dto.password);
     const user = await this.repo.transaction(async (tx) => {
       const created = await this.repo.createUser(
@@ -362,6 +380,7 @@ export class AuthService {
       throw this.invitationError(state);
     }
     const organizationId = invitation.organizationId;
+    await this.assertPasswordPolicy(organizationId, dto.password, invitation.email);
     const passwordHash = await PasswordService.hash(dto.password);
 
     const userId = await this.repo.transaction(async (tx) => {
@@ -725,7 +744,8 @@ export class AuthService {
     dto: LoginDto,
     meta: RequestMeta,
     organizationId: string | null,
-    reason: string
+    reason: string,
+    loginPolicy: LoginPolicy
   ): Promise<void> {
     await RateLimitService.record({
       email: dto.email,
@@ -743,7 +763,7 @@ export class AuthService {
       userAgent: meta.userAgent,
     });
     try {
-      await RateLimitService.assertAccountAllowed(dto.email);
+      await RateLimitService.assertAccountAllowed(dto.email, loginPolicy);
     } catch (e) {
       // This failure tipped the account into lockout.
       if (organizationId) {
@@ -759,6 +779,42 @@ export class AuthService {
       }
       throw e;
     }
+  }
+
+  private async assertIpAllowedByPolicy(
+    loginPolicy: LoginPolicy,
+    organizationId: string,
+    userId: string,
+    meta: RequestMeta
+  ): Promise<void> {
+    if (!loginPolicy.allowedIpRanges.length) return;
+    if (ipInRanges(meta.ipAddress, loginPolicy.allowedIpRanges)) return;
+    await this.audit('login_blocked_ip', organizationId, userId, meta, 'warn', {
+      ipAddress: meta.ipAddress,
+    });
+    throw new AppError(
+      'Sign-in is not allowed from this network. Contact your administrator.',
+      403,
+      'IP_NOT_ALLOWED'
+    );
+  }
+
+  /** Applies the org password policy on top of the global DTO rules. */
+  private async assertPasswordPolicy(
+    organizationId: string | null | undefined,
+    password: string,
+    email: string | null | undefined
+  ): Promise<void> {
+    const { password: policy } = await SecurityPolicyService.forOrganization(organizationId);
+    SecurityPolicyService.assertPasswordAllowed(policy, password, email);
+  }
+
+  private async sessionCapsFor(organizationId: string) {
+    const { login } = await SecurityPolicyService.forOrganization(organizationId);
+    return {
+      maxLifetimeDays: login.sessionLifetimeDays,
+      maxConcurrentSessions: login.maxConcurrentSessions,
+    };
   }
 
   private async issueMfaChallenge(user: User, tenant: Tenant, rememberMe: boolean): Promise<MfaChallenge> {
@@ -836,6 +892,7 @@ export class AuthService {
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
       rememberMe,
+      ...(await this.sessionCapsFor(tenant.id)),
     });
     const tokens = await TokenService.issue({
       userId: user.id,
@@ -926,11 +983,17 @@ export class AuthService {
   }
 
   private async hashNewPassword(userId: string, newPassword: string): Promise<string> {
-    const history = await this.repo.recentPasswordHashes(userId, config.passwordHistoryDepth);
+    const user = await this.repo.findUserById(userId);
+    const { password: policy } = await SecurityPolicyService.forOrganization(user?.tenantId);
+    SecurityPolicyService.assertPasswordAllowed(policy, newPassword, user?.email);
+
+    const history = policy.historyDepth
+      ? await this.repo.recentPasswordHashes(userId, policy.historyDepth)
+      : [];
     for (const entry of history) {
       if (await PasswordService.verify(newPassword, entry.passwordHash)) {
         throw new AppError(
-          `Choose a password you haven't used for your last ${config.passwordHistoryDepth} changes.`,
+          `Choose a password you haven't used for your last ${policy.historyDepth} changes.`,
           400,
           'PASSWORD_REUSE',
           { field: 'newPassword' }

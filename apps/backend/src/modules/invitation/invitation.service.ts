@@ -108,6 +108,39 @@ export class InvitationService {
     return { id: invitation.id, email: invitation.email, status: invitation.status, expiresAt };
   }
 
+  async list(
+    organizationId: string,
+    query: { q?: string; status?: 'pending' | 'accepted' | 'revoked' | 'expired'; page: number; pageSize: number }
+  ) {
+    const [{ data, total }, counts] = await Promise.all([
+      this.repo.list(organizationId, query),
+      this.repo.statusCounts(organizationId),
+    ]);
+    const now = Date.now();
+    return {
+      data: data.map((inv) => ({
+        id: inv.id,
+        email: inv.email,
+        firstName: inv.firstName,
+        lastName: inv.lastName,
+        userId: inv.userId,
+        status: inv.status === 'pending' && inv.expiresAt.getTime() <= now ? 'expired' : inv.status,
+        invitedById: inv.invitedBy?.id ?? null,
+        invitedByName: inv.invitedBy?.fullName ?? null,
+        expiresAt: inv.expiresAt.toISOString(),
+        usedAt: inv.usedAt?.toISOString() ?? null,
+        createdAt: inv.createdAt.toISOString(),
+      })),
+      counts,
+      meta: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+    };
+  }
+
   async resend(invitationId: string, actor: InviteActor) {
     const invitation = await this.repo.findById(invitationId, actor.organizationId);
     if (!invitation?.userId) throw new AppError('Invitation not found', 404, 'INVITATION_NOT_FOUND');

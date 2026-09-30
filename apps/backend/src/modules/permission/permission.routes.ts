@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PermissionController } from './permission.controller';
+import { authenticate, requirePermission } from '../../middleware/auth';
 
 const router = Router();
 const controller = new PermissionController();
@@ -11,12 +12,13 @@ const controller = new PermissionController();
  *     summary: listPermissions
  *     operationId: getPermissions
  *     tags: [permissions]
- *     security: []
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       default:
  *         description: Operation response
  */
-router.get('/', controller.list);
+router.get('/', authenticate, controller.list);
 /**
  * @swagger
  * /api/v1/permissions:
@@ -24,12 +26,13 @@ router.get('/', controller.list);
  *     summary: createPermission
  *     operationId: postPermissions
  *     tags: [permissions]
- *     security: []
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       default:
  *         description: Operation response
  */
-router.post('/', controller.create);
+router.post('/', authenticate, requirePermission('roles:manage'), controller.create);
 /**
  * @swagger
  * /api/v1/permissions/assign:
@@ -37,11 +40,12 @@ router.post('/', controller.create);
  *     summary: assignPermission
  *     operationId: postPermissionsAssign
  *     tags: [permissions]
- *     security: []
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       default:
  *         description: Operation response
  */
-router.post('/assign', controller.assign);
+router.post('/assign', authenticate, requirePermission('roles:manage'), controller.assign);
 
 export default router;

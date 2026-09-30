@@ -9,6 +9,11 @@ import {
   TokenService,
 } from '../../services/auth';
 import { addQueueJob } from '../../infrastructure/queue';
+import {
+  DEFAULT_LOGIN_POLICY,
+  DEFAULT_PASSWORD_POLICY,
+  SecurityPolicyService,
+} from '../security-policy/security-policy.service';
 
 jest.mock('../../services/auth', () => ({
   AuditService: { log: jest.fn(), logLoginFailure: jest.fn() },
@@ -53,6 +58,19 @@ jest.mock('../../services/auth', () => ({
     revokeAllForUser: jest.fn(),
   },
 }));
+jest.mock('../security-policy/security-policy.service', () => {
+  const actual = jest.requireActual('../security-policy/security-policy.service');
+  return {
+    ...actual,
+    SecurityPolicyService: Object.assign(Object.create(actual.SecurityPolicyService), {
+      assertPasswordAllowed: actual.SecurityPolicyService.assertPasswordAllowed,
+      forOrganization: jest.fn(async () => ({
+        password: actual.DEFAULT_PASSWORD_POLICY,
+        login: actual.DEFAULT_LOGIN_POLICY,
+      })),
+    }),
+  };
+});
 jest.mock('../../infrastructure/queue', () => ({ addQueueJob: jest.fn(async () => undefined) }));
 jest.mock('../../infrastructure/logger', () => ({ logger: { info: jest.fn(), error: jest.fn() } }));
 
@@ -110,6 +128,10 @@ describe('AuthService', () => {
     (TenantService.findByClientCode as jest.Mock).mockResolvedValue(tenant);
     (TenantService.getById as jest.Mock).mockResolvedValue(tenant);
     (PasswordService.verify as jest.Mock).mockResolvedValue(true);
+    (SecurityPolicyService.forOrganization as jest.Mock).mockResolvedValue({
+      password: DEFAULT_PASSWORD_POLICY,
+      login: DEFAULT_LOGIN_POLICY,
+    });
   });
 
   describe('login', () => {
@@ -117,6 +139,42 @@ describe('AuthService', () => {
       const result = await new AuthService(makeRepo()).login(loginDto, meta);
       expect(result).toMatchObject({ mfaRequired: false, accessToken: 'access', mfaSetupRequired: false });
       expect(RateLimitService.clearForEmail).toHaveBeenCalledWith(baseUser.email);
+    });
+
+    describe('organization login policy', () => {
+      const withLoginPolicy = (patch: Record<string, unknown>) => {
+        const actual = jest.requireActual('../security-policy/security-policy.service');
+        (SecurityPolicyService.forOrganization as jest.Mock).mockResolvedValue({
+          password: actual.DEFAULT_PASSWORD_POLICY,
+          login: { ...actual.DEFAULT_LOGIN_POLICY, ...patch },
+        });
+      };
+
+      it('refuses sign-in from outside the IP allow-list once the password is proven', async () => {
+        withLoginPolicy({ allowedIpRanges: ['10.0.0.0/8'] });
+        await expect(new AuthService(makeRepo()).login(loginDto, meta)).rejects.toMatchObject({
+          status: 403,
+          code: 'IP_NOT_ALLOWED',
+        });
+        expect(SessionService.create).not.toHaveBeenCalled();
+      });
+
+      it('allows sign-in from inside the allow-list and applies session caps', async () => {
+        withLoginPolicy({ allowedIpRanges: ['203.0.113.0/24'], sessionLifetimeDays: 3, maxConcurrentSessions: 2 });
+        await new AuthService(makeRepo()).login(loginDto, meta);
+        expect(SessionService.create).toHaveBeenCalledWith(
+          expect.objectContaining({ maxLifetimeDays: 3, maxConcurrentSessions: 2 })
+        );
+      });
+
+      it('checks lockout against the organization threshold', async () => {
+        withLoginPolicy({ lockoutThreshold: 3, lockoutMinutes: 30 });
+        await new AuthService(makeRepo()).login(loginDto, meta);
+        expect(RateLimitService.assertAccountAllowed).toHaveBeenCalledWith(
+          loginDto.email,
+          expect.objectContaining({ lockoutThreshold: 3, lockoutMinutes: 30 })
+        );
+      });
     });
 
     it('returns the same error for an unknown user and a wrong password', async () => {

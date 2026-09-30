@@ -160,6 +160,32 @@ async function main() {
       action: 'manage',
       description: 'Provision and revoke system access roles',
     },
+    // Identity & Access console. Keys match the requirePermission() gates and the IAM menu.
+    ...(
+      [
+        ['users', 'read', 'View users, departments, teams and invitations'],
+        ['groups', 'read', 'View groups and their members'],
+        ['groups', 'manage', 'Create, edit and delete groups and memberships'],
+        ['roles', 'read', 'View roles and the permission catalog'],
+        ['roles', 'manage', 'Create, edit and delete roles and permissions'],
+        ['resources', 'read', 'View protected resources'],
+        ['resources', 'manage', 'Create, edit and delete protected resources'],
+        ['settings', 'manage', 'Manage security policies, configuration and communications'],
+      ] as const
+    ).map(([resource, action, description]) => ({
+      name: `${action}:${resource}`,
+      key: `${resource}:${action}`,
+      resource,
+      action,
+      description,
+    })),
+    {
+      name: 'read:system:audit',
+      key: 'system:audit:read',
+      resource: 'system',
+      action: 'audit:read',
+      description: 'View the audit log',
+    },
     {
       name: 'approve:timesheet',
       key: 'timesheet:approve',

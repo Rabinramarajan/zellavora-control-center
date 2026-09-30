@@ -100,7 +100,8 @@ export function createListStore<T>(options: ListStoreOptions<T>): ListStore<T> {
       meta.set(list.meta);
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = (err as any)?.error?.error?.message ?? 'Failed to load items.';
+      const message =
+        (err as any)?.error?.error?.message ?? (err as any)?.message ?? 'Failed to load items.';
       error.set(message);
     } finally {
       loading.set(false);
