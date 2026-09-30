@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FormInputControl } from '@zellavoras/ui';
+import { AppDialogService } from '@shared/components/dialog';
 import { NotificationRepository } from '@core/repositories/notification.repository';
 import { firstValueFrom } from 'rxjs';
 
@@ -15,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class NotificationsComponent {
   readonly repository = inject(NotificationRepository);
+  private readonly dialog = inject(AppDialogService);
 
   readonly broadcastTitle = signal('');
   readonly broadcastBody = signal('');
@@ -29,7 +31,11 @@ export class NotificationsComponent {
 
   async sendBroadcast() {
     if (!this.broadcastBody().trim()) {
-      alert('Broadcast message body cannot be empty.');
+      this.dialog.alert({
+        title: 'Message required',
+        message: 'Broadcast message body cannot be empty.',
+        variant: 'warning',
+      });
       return;
     }
 
@@ -47,6 +53,6 @@ export class NotificationsComponent {
     );
     this.broadcastTitle.set('');
     this.broadcastBody.set('');
-    alert('Broadcast dispatched successfully!');
+    this.dialog.alert({ title: 'Broadcast sent', message: 'Broadcast dispatched successfully.' });
   }
 }

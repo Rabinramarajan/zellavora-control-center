@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 
 import { FormField, FormRoot, form, pattern, required } from '@angular/forms/signals';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
+import { AppDialogService } from '@shared/components/dialog';
 import { stringsToOptions } from '@shared/utils/select-options';
 import { PortfolioService } from '../../services/portfolio.service';
 import { firstValueFrom } from 'rxjs';
@@ -25,6 +26,7 @@ const emptySkill = () => ({
 })
 export class SkillsManagerComponent {
   readonly portfolio = inject(PortfolioService);
+  private readonly dialog = inject(AppDialogService);
 
   readonly categoryOptions: SelectControlOption[] = stringsToOptions([
     'Frontend',
@@ -74,7 +76,15 @@ export class SkillsManagerComponent {
   }
 
   async deleteSkill(id: string): Promise<void> {
-    if (confirm('Are you sure you want to delete this skill?')) {
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete skill?',
+        message: 'This skill will be removed from your portfolio.',
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (confirmed) {
       await firstValueFrom(this.portfolio.deleteSkill(id));
     }
   }

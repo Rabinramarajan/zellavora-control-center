@@ -9,20 +9,14 @@ import {
   DetailTab,
   StatusChipComponent,
   EmptyStateComponent,
-  ConfirmDialogComponent,
 } from '@shared/components/iam';
+import { AppDialogService } from '@shared/components/dialog';
 
 @Component({
   selector: 'zcc-resources-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [
-    RouterLink,
-    DetailTabsComponent,
-    StatusChipComponent,
-    EmptyStateComponent,
-    ConfirmDialogComponent,
-  ],
+  imports: [RouterLink, DetailTabsComponent, StatusChipComponent, EmptyStateComponent],
   template: `
     @if (resource()) {
       <div class="mb-6">
@@ -50,7 +44,7 @@ import {
             <button
               type="button"
               class="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-500/10"
-              (click)="confirmDelete.set(true)"
+              (click)="onDelete()"
             >
               <i class="pi pi-trash mr-1 text-xs" aria-hidden="true"></i>
               Delete
@@ -148,16 +142,6 @@ import {
           }
         }
       </div>
-
-      @if (confirmDelete()) {
-        <zcc-confirm-dialog
-          title="Delete resource?"
-          [message]="'This will remove the resource and its mapped permissions. This action cannot be undone.'"
-          confirmLabel="Delete"
-          (confirm)="onDelete()"
-          (cancel)="confirmDelete.set(false)"
-        />
-      }
     } @else if (loading()) {
       <div class="space-y-2">
         @for (_ of [1, 2, 3]; track $index) {
@@ -177,11 +161,11 @@ export class ResourcesDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(IamApiService);
+  private readonly dialog = inject(AppDialogService);
 
   readonly resource = signal<ResourceDetail | null>(null);
   readonly loading = signal(true);
   readonly activeTab = signal('overview');
-  readonly confirmDelete = signal(false);
 
   readonly tabs = (): DetailTab[] => [
     { key: 'overview', label: 'Overview', icon: 'pi pi-info-circle' },
@@ -206,7 +190,15 @@ export class ResourcesDetailComponent {
   }
 
   async onAddAction(): Promise<void> {
-    const name = window.prompt('Action name (lowercase, e.g. approve)');
+    const name = await firstValueFrom(
+      this.dialog.prompt({
+        title: 'Add action',
+        label: 'Action name',
+        placeholder: 'lowercase, e.g. approve',
+        required: true,
+        confirmText: 'Add',
+      })
+    );
     if (!name) return;
     try {
       await firstValueFrom(
@@ -219,8 +211,15 @@ export class ResourcesDetailComponent {
   }
 
   async onRemoveAction(action: ResourceAction): Promise<void> {
-    if (!window.confirm(`Remove action '${action.action}'? Its permission key will be deleted.`))
-      return;
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Remove action?',
+        message: `Remove action '${action.action}'? Its permission key will be deleted.`,
+        confirmText: 'Remove',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
     try {
       await firstValueFrom(this.api.removeResourceAction(this.resource()!.id, action.id));
       await this.load();
@@ -230,6 +229,16 @@ export class ResourcesDetailComponent {
   }
 
   async onDelete(): Promise<void> {
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete resource?',
+        message:
+          'This will remove the resource and its mapped permissions. This action cannot be undone.',
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
     try {
       await firstValueFrom(this.api.deleteResource(this.resource()!.id));
       await this.router.navigate(['/iam/resources']);

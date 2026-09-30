@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import { AppDialogService } from './dialog';
 
 @Component({
   selector: 'app-drag-drop-upload',
@@ -51,6 +52,7 @@ import { ChangeDetectionStrategy, Component, input, output, signal } from '@angu
 export class DragDropUploadComponent {
   accept = input<string>('image/png, image/jpeg, image/svg+xml');
   maxSizeMb = input<number>(2);
+  private readonly dialog = inject(AppDialogService);
   upload = output<string>();
 
   isDragOver = signal(false);
@@ -85,7 +87,11 @@ export class DragDropUploadComponent {
 
   private processFile(file: File) {
     if (file.size > this.maxSizeMb() * 1024 * 1024) {
-      alert(`File size exceeds limit of ${this.maxSizeMb()}MB.`);
+      this.dialog.alert({
+        title: 'File too large',
+        message: `File size exceeds limit of ${this.maxSizeMb()}MB.`,
+        variant: 'warning',
+      });
       return;
     }
 

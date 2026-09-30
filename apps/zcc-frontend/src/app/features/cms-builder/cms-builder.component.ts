@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { FormInputControl } from '@zellavoras/ui';
+import { AppDialogService } from '@shared/components/dialog';
 import { CmsBuilderRepository } from '@core/repositories/cms-builder.repository';
 import { CmsSection } from '@shared/models';
 import { firstValueFrom } from 'rxjs';
@@ -15,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class CmsBuilderComponent {
   readonly repository = inject(CmsBuilderRepository);
+  private readonly dialog = inject(AppDialogService);
 
   readonly pageTitle = signal('Landing Page');
   readonly pageSlug = signal('landing');
@@ -74,6 +76,9 @@ export class CmsBuilderComponent {
         sections: this.activeSections(),
       })
     );
-    alert('CMS Dynamic Page saved and published successfully!');
+    this.dialog.alert({
+      title: 'Page published',
+      message: 'CMS dynamic page saved and published successfully.',
+    });
   }
 }

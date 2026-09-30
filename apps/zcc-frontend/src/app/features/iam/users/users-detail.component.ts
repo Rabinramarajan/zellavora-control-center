@@ -9,20 +9,14 @@ import {
   DetailTab,
   StatusChipComponent,
   EmptyStateComponent,
-  ConfirmDialogComponent,
 } from '@shared/components/iam';
+import { AppDialogService } from '@shared/components/dialog';
 
 @Component({
   selector: 'zcc-users-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [
-    RouterLink,
-    DetailTabsComponent,
-    StatusChipComponent,
-    EmptyStateComponent,
-    ConfirmDialogComponent,
-  ],
+  imports: [RouterLink, DetailTabsComponent, StatusChipComponent, EmptyStateComponent],
   template: `
     @if (user()) {
       <div class="mb-6">
@@ -75,7 +69,7 @@ import {
             <button
               type="button"
               class="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-500/10"
-              (click)="confirmDelete.set(true)"
+              (click)="onDelete()"
             >
               <i class="pi pi-trash mr-1 text-xs" aria-hidden="true"></i>
               Delete
@@ -220,16 +214,6 @@ import {
           }
         }
       </div>
-
-      @if (confirmDelete()) {
-        <zcc-confirm-dialog
-          title="Delete user?"
-          [message]="'This will remove the user and their assignments. This action cannot be undone.'"
-          confirmLabel="Delete"
-          (confirm)="onDelete()"
-          (cancel)="confirmDelete.set(false)"
-        />
-      }
     } @else if (loading()) {
       <div class="space-y-2">
         @for (_ of [1, 2, 3]; track $index) {
@@ -249,11 +233,11 @@ export class UsersDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(IamApiService);
+  private readonly dialog = inject(AppDialogService);
 
   readonly user = signal<IamUserDetail | null>(null);
   readonly loading = signal(true);
   readonly activeTab = signal('roles');
-  readonly confirmDelete = signal(false);
 
   readonly tabs = (): DetailTab[] => [
     { key: 'roles', label: 'Roles', icon: 'pi pi-shield' },
@@ -308,7 +292,10 @@ export class UsersDetailComponent {
   }
 
   async onAddRole(): Promise<void> {
-    window.alert('Role picker arrives with the Roles integration.');
+    this.dialog.alert({
+      title: 'Coming soon',
+      message: 'Role picker arrives with the Roles integration.',
+    });
   }
 
   async onRemoveRole(roleId: string): Promise<void> {
@@ -325,7 +312,10 @@ export class UsersDetailComponent {
   }
 
   async onAddGroup(): Promise<void> {
-    window.alert('Group picker arrives with the Groups integration.');
+    this.dialog.alert({
+      title: 'Coming soon',
+      message: 'Group picker arrives with the Groups integration.',
+    });
   }
 
   async onRemoveGroup(groupId: string): Promise<void> {
@@ -342,6 +332,15 @@ export class UsersDetailComponent {
   }
 
   async onDelete(): Promise<void> {
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete user?',
+        message: 'This will remove the user and their assignments. This action cannot be undone.',
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
     try {
       await firstValueFrom(this.api.deleteIamUser(this.user()!.id));
       await this.router.navigate(['/iam/users']);

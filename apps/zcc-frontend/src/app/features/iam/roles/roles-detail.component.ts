@@ -9,8 +9,8 @@ import {
   DetailTab,
   StatusChipComponent,
   EmptyStateComponent,
-  ConfirmDialogComponent,
 } from '@shared/components/iam';
+import { AppDialogService } from '@shared/components/dialog';
 import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.component';
 
 @Component({
@@ -22,7 +22,6 @@ import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.co
     DetailTabsComponent,
     StatusChipComponent,
     EmptyStateComponent,
-    ConfirmDialogComponent,
     PermissionMatrixComponent,
   ],
   template: `
@@ -51,7 +50,7 @@ import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.co
             <button
               type="button"
               class="rounded-lg border border-indigo-500/30 px-3 py-1.5 text-sm font-medium text-indigo-500 hover:bg-indigo-500/10"
-              (click)="confirmCopy.set(true)"
+              (click)="onCopy()"
             >
               <i class="pi pi-copy mr-1 text-xs" aria-hidden="true"></i>
               Copy
@@ -60,7 +59,7 @@ import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.co
               type="button"
               [disabled]="role()!.isSystem"
               class="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-              (click)="confirmDelete.set(true)"
+              (click)="onDelete()"
             >
               <i class="pi pi-trash mr-1 text-xs" aria-hidden="true"></i>
               Delete
@@ -128,25 +127,6 @@ import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.co
           }
         }
       </div>
-
-      @if (confirmDelete()) {
-        <zcc-confirm-dialog
-          title="Delete role?"
-          [message]="'This will revoke the role from all users and groups. This action cannot be undone.'"
-          confirmLabel="Delete"
-          (confirm)="onDelete()"
-          (cancel)="confirmDelete.set(false)"
-        />
-      }
-      @if (confirmCopy()) {
-        <zcc-confirm-dialog
-          title="Copy role"
-          message="Create a new role with the same permissions under a new name?"
-          confirmLabel="Copy"
-          (confirm)="onCopy()"
-          (cancel)="confirmCopy.set(false)"
-        />
-      }
     } @else if (loading()) {
       <div class="space-y-2">
         @for (_ of [1, 2, 3]; track $index) {
@@ -166,12 +146,11 @@ export class RolesDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(IamApiService);
+  private readonly dialog = inject(AppDialogService);
 
   readonly role = signal<RoleDetail | null>(null);
   readonly loading = signal(true);
   readonly activeTab = signal('permissions');
-  readonly confirmDelete = signal(false);
-  readonly confirmCopy = signal(false);
   readonly matrixDirty = signal(false);
   readonly matrix = signal<PermissionRow[]>([]);
 
@@ -218,7 +197,16 @@ export class RolesDetailComponent {
   }
 
   async onCopy(): Promise<void> {
-    const name = window.prompt('Name for the copied role');
+    const name = await firstValueFrom(
+      this.dialog.prompt({
+        title: 'Copy role',
+        message: 'Create a new role with the same permissions under a new name.',
+        label: 'New role name',
+        initialValue: `${this.role()!.name} (copy)`,
+        required: true,
+        confirmText: 'Copy',
+      })
+    );
     if (!name) return;
     try {
       await firstValueFrom(
@@ -231,6 +219,16 @@ export class RolesDetailComponent {
   }
 
   async onDelete(): Promise<void> {
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete role?',
+        message:
+          'This will revoke the role from all users and groups. This action cannot be undone.',
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
     try {
       await firstValueFrom(this.api.deleteRole(this.role()!.id));
       await this.router.navigate(['/iam/roles']);

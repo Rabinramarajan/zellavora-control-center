@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { AppDialogService } from '@shared/components/dialog';
 import { Project, ProjectStatus } from '@shared/models';
 import {
   ColumnDef,
@@ -77,6 +78,7 @@ const PROJECT_COLUMNS: ColumnDef<Project>[] = [
 })
 export class ProjectsListComponent {
   public readonly projects = inject(ProjectsService);
+  private readonly dialog = inject(AppDialogService);
 
   public readonly columns = PROJECT_COLUMNS;
   public readonly statusTabs = STATUS_TABS;
@@ -111,7 +113,15 @@ export class ProjectsListComponent {
   }
 
   public async deleteProject(project: Project): Promise<void> {
-    if (!confirm(`Delete "${project.title}"? This cannot be undone.`)) return;
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete project?',
+        message: `"${project.title}" will be deleted. This cannot be undone.`,
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
 
     this.deleting.update((ids) => new Set(ids).add(project.id));
     try {

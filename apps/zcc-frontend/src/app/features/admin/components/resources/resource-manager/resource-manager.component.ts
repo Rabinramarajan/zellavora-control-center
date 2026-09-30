@@ -1,6 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { FormInputControl } from '@zellavoras/ui';
+import { AppDialogService } from '@shared/components/dialog';
 import { HasPermissionDirective } from '@core/rbac';
 import { AdminStoreService } from '../../../services';
 import { Resource, ResourceSearchCriteria } from '../../../models';
@@ -15,6 +24,7 @@ import { Resource, ResourceSearchCriteria } from '../../../models';
 })
 export class ResourceManagerComponent implements OnInit {
   private store = inject(AdminStoreService);
+  private dialog = inject(AppDialogService);
 
   readonly searchTerm = signal<string>('');
   readonly resources = this.store.resources;
@@ -69,7 +79,15 @@ export class ResourceManagerComponent implements OnInit {
   }
 
   async onDelete(resource: Resource): Promise<void> {
-    if (!confirm('Are you sure?')) return;
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete resource?',
+        message: `${resource.resourceName} and its mapped permissions will be removed.`,
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
     try {
       await this.store.deleteResource(resource.resourceId);
     } catch {

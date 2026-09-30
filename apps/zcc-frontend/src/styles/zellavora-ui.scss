@@ -2,6 +2,7 @@
 // The admin shell is dark-only, so the library's light defaults are replaced
 // with the same slate surfaces and indigo accent the rest of the app uses.
 @use '@zellavoras/ui/styles' as zv;
+@use '../app/shared/components/dialog/dialog';
 
 @include zv.core(
   (
@@ -84,4 +85,19 @@ app-form-input-control input.fic-input:focus {
   .login-password-control .fic-field {
     padding-right: 48px !important;
   }
+}
+
+// App dialogs share the dark admin palette; zv.core already ships the CDK overlay styles.
+:root {
+  --app-dialog-surface: #0f172a;
+  --app-dialog-on-surface: #f1f5f9;
+  --app-dialog-on-surface-variant: #94a3b8;
+  --app-dialog-primary: #6366f1;
+  --app-dialog-on-primary: #ffffff;
+  --app-dialog-error: #f43f5e;
+  --app-dialog-on-error: #ffffff;
+  --app-dialog-warning: #f59e0b;
+  --app-dialog-radius: 16px;
+  --app-dialog-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
+  --app-dialog-scrim: rgb(2 6 23 / 0.6);
 }

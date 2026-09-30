@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { FormField, FormRoot, apply, form } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -9,6 +10,7 @@ import {
   selectFieldSchema,
   textFieldSchema,
 } from '@zellavoras/ui';
+import { AppDialogService } from '@shared/components/dialog';
 import { AdminStoreService } from '../../../services';
 import { Role } from '../../../models';
 
@@ -26,6 +28,7 @@ export class RoleDetailComponent implements OnInit {
   private store = inject(AdminStoreService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private dialog = inject(AppDialogService);
 
   readonly role = signal<Role | null>(null);
   readonly loading = this.store.loading;
@@ -88,9 +91,19 @@ export class RoleDetailComponent implements OnInit {
   }
 
   async onDelete(): Promise<void> {
-    if (!this.role() || !confirm('Are you sure?')) return;
+    const role = this.role();
+    if (!role) return;
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete role?',
+        message: `${role.roleName} will be revoked from all users and groups.`,
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
     try {
-      await this.store.deleteRole(this.role()!.roleId);
+      await this.store.deleteRole(role.roleId);
       this.router.navigate(['/admin/roles']);
     } catch {
       // Error handling is done by the store

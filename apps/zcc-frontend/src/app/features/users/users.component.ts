@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { AppDialogService } from '@shared/components/dialog';
 import { IamApiService, unwrap } from '@core/api/iam.api';
 import { IamUserListItem, UserStatus } from '@shared/models/iam.model';
 import { createListStore } from '@shared/utils/create-list-store';
@@ -85,6 +86,7 @@ export class UsersComponent {
   private readonly api = inject(IamApiService);
   private readonly router = inject(Router);
   private readonly messages = inject(MessageService);
+  private readonly dialog = inject(AppDialogService);
 
   readonly pageSizes = [10, 25, 50, 100];
   readonly statusOptions = STATUS_OPTIONS;
@@ -104,18 +106,64 @@ export class UsersComponent {
     { key: 'createdAt', label: 'Created On' },
   ];
 
-  readonly textFields: Array<{ key: keyof UserFilters; label: string; icon: FieldIcon; placeholder: string; type: 'text' | 'email' | 'tel'; hint?: string }> = [
-    { key: 'q', label: 'Keyword', icon: 'search', placeholder: 'Name, email, username, title...', type: 'text', hint: 'Matches name, email, username, department or title' },
+  readonly textFields: Array<{
+    key: keyof UserFilters;
+    label: string;
+    icon: FieldIcon;
+    placeholder: string;
+    type: 'text' | 'email' | 'tel';
+    hint?: string;
+  }> = [
+    {
+      key: 'q',
+      label: 'Keyword',
+      icon: 'search',
+      placeholder: 'Name, email, username, title...',
+      type: 'text',
+      hint: 'Matches name, email, username, department or title',
+    },
     { key: 'name', label: 'Name', icon: 'user', placeholder: 'Enter name', type: 'text' },
     { key: 'email', label: 'Email', icon: 'email', placeholder: 'Enter email', type: 'text' },
-    { key: 'mobile', label: 'Mobile', icon: 'phone', placeholder: 'Enter mobile number', type: 'tel' },
-    { key: 'department', label: 'Department', icon: 'list', placeholder: 'Exact department name', type: 'text' },
+    {
+      key: 'mobile',
+      label: 'Mobile',
+      icon: 'phone',
+      placeholder: 'Enter mobile number',
+      type: 'tel',
+    },
+    {
+      key: 'department',
+      label: 'Department',
+      icon: 'list',
+      placeholder: 'Exact department name',
+      type: 'text',
+    },
   ];
 
-  readonly selectFields = computed<Array<{ key: keyof UserFilters; label: string; icon: 'user' | 'list' | 'building' | 'globe'; all: string; options: Option[] }>>(() => [
+  readonly selectFields = computed<
+    Array<{
+      key: keyof UserFilters;
+      label: string;
+      icon: 'user' | 'list' | 'building' | 'globe';
+      all: string;
+      options: Option[];
+    }>
+  >(() => [
     { key: 'roleId', label: 'Role', icon: 'user', all: 'All Roles', options: this.roleOptions() },
-    { key: 'groupId', label: 'Group', icon: 'building', all: 'All Groups', options: this.groupOptions() },
-    { key: 'status', label: 'Account Status', icon: 'list', all: 'All Status', options: STATUS_OPTIONS },
+    {
+      key: 'groupId',
+      label: 'Group',
+      icon: 'building',
+      all: 'All Groups',
+      options: this.groupOptions(),
+    },
+    {
+      key: 'status',
+      label: 'Account Status',
+      icon: 'list',
+      all: 'All Status',
+      options: STATUS_OPTIONS,
+    },
   ]);
 
   readonly dateRanges: Array<{ label: string; from: keyof UserFilters; to: keyof UserFilters }> = [
@@ -145,25 +193,40 @@ export class UsersComponent {
 
   readonly activeFilterCount = computed(() => {
     const f = this.applied();
-    const ranges = [f.createdFrom || f.createdTo, f.lastLoginFrom || f.lastLoginTo].filter(Boolean).length;
-    const plain = FILTER_KEYS.filter((k) => !this.dateRanges.some((r) => r.from === k || r.to === k) && f[k].trim()).length;
+    const ranges = [f.createdFrom || f.createdTo, f.lastLoginFrom || f.lastLoginTo].filter(
+      Boolean
+    ).length;
+    const plain = FILTER_KEYS.filter(
+      (k) => !this.dateRanges.some((r) => r.from === k || r.to === k) && f[k].trim()
+    ).length;
     return plain + ranges;
   });
 
   readonly activeChips = computed(() => {
     const f = { ...this.applied(), q: this.store.q() };
-    const optionLabel = (options: Option[], value: string) => options.find((o) => o.value === value)?.label ?? value;
+    const optionLabel = (options: Option[], value: string) =>
+      options.find((o) => o.value === value)?.label ?? value;
     const chips: Array<{ label: string; value: string; keys: Array<keyof UserFilters> }> = [];
     for (const field of this.textFields) {
       if (f[field.key]) chips.push({ label: field.label, value: f[field.key], keys: [field.key] });
     }
     for (const sel of this.selectFields()) {
-      if (f[sel.key]) chips.push({ label: sel.label, value: optionLabel(sel.options, f[sel.key]), keys: [sel.key] });
+      if (f[sel.key])
+        chips.push({
+          label: sel.label,
+          value: optionLabel(sel.options, f[sel.key]),
+          keys: [sel.key],
+        });
     }
     for (const range of this.dateRanges) {
       const from = f[range.from];
       const to = f[range.to];
-      if (from || to) chips.push({ label: range.label, value: `${from || '…'} → ${to || '…'}`, keys: [range.from, range.to] });
+      if (from || to)
+        chips.push({
+          label: range.label,
+          value: `${from || '…'} → ${to || '…'}`,
+          keys: [range.from, range.to],
+        });
     }
     return chips;
   });
@@ -193,7 +256,9 @@ export class UsersComponent {
     return rows.length > 0 && rows.every((u) => sel.has(u.id));
   });
 
-  readonly someOnPageSelected = computed(() => !this.allOnPageSelected() && this.store.items().some((u) => this.selected().has(u.id)));
+  readonly someOnPageSelected = computed(
+    () => !this.allOnPageSelected() && this.store.items().some((u) => this.selected().has(u.id))
+  );
 
   constructor() {
     void this.loadStats();
@@ -310,8 +375,14 @@ export class UsersComponent {
     this.busyId.set(user.id);
     const locking = !user.isAccountLocked;
     try {
-      await firstValueFrom(locking ? this.api.lockIamUser(user.id) : this.api.unlockIamUser(user.id));
-      this.notify(locking ? 'warn' : 'success', locking ? 'Account locked' : 'Account unlocked', user.fullName);
+      await firstValueFrom(
+        locking ? this.api.lockIamUser(user.id) : this.api.unlockIamUser(user.id)
+      );
+      this.notify(
+        locking ? 'warn' : 'success',
+        locking ? 'Account locked' : 'Account unlocked',
+        user.fullName
+      );
       await Promise.all([this.store.reload(), this.loadStats()]);
     } catch (err) {
       this.notify('error', 'Action failed', this.errorMessage(err));
@@ -322,7 +393,15 @@ export class UsersComponent {
 
   async removeUser(user: IamUserListItem): Promise<void> {
     this.openMenuId.set(null);
-    if (!confirm(`Remove ${user.fullName}? This cannot be undone.`)) return;
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Remove user?',
+        message: `${user.fullName} will be removed. This cannot be undone.`,
+        confirmText: 'Remove',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
     this.busyId.set(user.id);
     try {
       await firstValueFrom(this.api.deleteIamUser(user.id));
@@ -349,7 +428,20 @@ export class UsersComponent {
     }
     CsvExporter.export(
       'users',
-      ['User ID', 'Name', 'Email', 'Mobile', 'Department', 'Title', 'Role', 'Roles', 'Groups', 'Status', 'Last Login', 'Created On'],
+      [
+        'User ID',
+        'Name',
+        'Email',
+        'Mobile',
+        'Department',
+        'Title',
+        'Role',
+        'Roles',
+        'Groups',
+        'Status',
+        'Last Login',
+        'Created On',
+      ],
       rows.map((u) => [
         u.id,
         u.fullName,
@@ -363,7 +455,7 @@ export class UsersComponent {
         u.statusLabel,
         u.lastLoginDatetime ? this.formatDate(u.lastLoginDatetime) : 'Never',
         this.formatDate(u.createdAt),
-      ]),
+      ])
     );
     this.notify('success', 'Export complete', `${rows.length} users exported`);
   }
@@ -407,7 +499,11 @@ export class UsersComponent {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   }
 
   private pushFilters(): void {
@@ -422,7 +518,11 @@ export class UsersComponent {
   private async loadStats(): Promise<void> {
     try {
       const { total, byStatus } = unwrap(await firstValueFrom(this.api.getIamUserStats()));
-      this.statCounts.set(Object.fromEntries(STAT_CARDS.map((c) => [c.label, c.status ? (byStatus[c.status] ?? 0) : total])));
+      this.statCounts.set(
+        Object.fromEntries(
+          STAT_CARDS.map((c) => [c.label, c.status ? (byStatus[c.status] ?? 0) : total])
+        )
+      );
     } catch {
       this.statCounts.set(Object.fromEntries(STAT_CARDS.map((c) => [c.label, null])));
     }
@@ -436,7 +536,9 @@ export class UsersComponent {
         firstValueFrom(this.api.listRoles({ page: 1, pageSize: 100 })).then(unwrap),
         firstValueFrom(this.api.listGroups({ page: 1, pageSize: 100 })).then(unwrap),
       ]);
-      this.roleOptions.set(roles.data.map((r) => ({ value: r.id, label: r.name, description: r.key })));
+      this.roleOptions.set(
+        roles.data.map((r) => ({ value: r.id, label: r.name, description: r.key }))
+      );
       this.groupOptions.set(groups.data.map((g) => ({ value: g.id, label: g.name })));
     } catch {
       this.lookupsLoaded = false;
@@ -449,7 +551,11 @@ export class UsersComponent {
     return e?.error?.error?.message ?? 'Please try again.';
   }
 
-  private notify(severity: 'success' | 'info' | 'warn' | 'error', summary: string, detail: string): void {
+  private notify(
+    severity: 'success' | 'info' | 'warn' | 'error',
+    summary: string,
+    detail: string
+  ): void {
     this.messages.add({ severity, summary, detail, life: 3000 });
   }
 }

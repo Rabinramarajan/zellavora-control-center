@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 
 import { FormsModule } from '@angular/forms';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
+import { AppDialogService } from '@shared/components/dialog';
 import { stringsToOptions } from '@shared/utils/select-options';
 import { ThemeBuilderRepository } from '@core/repositories/theme-builder.repository';
 import { firstValueFrom } from 'rxjs';
@@ -16,6 +17,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class ThemeBuilderComponent {
   private readonly repository = inject(ThemeBuilderRepository);
+  private readonly dialog = inject(AppDialogService);
 
   readonly primaryColor = signal('#3b82f6');
   readonly secondaryColor = signal('#1e293b');
@@ -59,6 +61,6 @@ export class ThemeBuilderComponent {
 
   saveTheme() {
     this.applyChange();
-    alert('Theme branding saved successfully!');
+    this.dialog.alert({ title: 'Theme saved', message: 'Theme branding saved successfully.' });
   }
 }

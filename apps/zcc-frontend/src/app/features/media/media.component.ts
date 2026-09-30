@@ -15,7 +15,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { ConfirmDialogComponent } from '@shared/components/iam';
+import { AppDialogService } from '@shared/components/dialog';
+import {
+  DocumentUploadComponent,
+  DocumentUploadDialogData,
+  DocumentUploadHandler,
+} from '@shared/components/document-upload';
 import { MediaService } from './services/media.service';
 import { MediaItem, MediaKind } from './models/media.model';
 
@@ -44,7 +49,7 @@ interface Dimensions {
 @Component({
   selector: 'app-media',
   standalone: true,
-  imports: [CommonModule, ButtonModule, ToastModule, ConfirmDialogComponent],
+  imports: [CommonModule, ButtonModule, ToastModule],
   templateUrl: './media.component.html',
   styleUrl: './media.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,11 +63,16 @@ export class MediaComponent {
   private readonly messageService = inject(MessageService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dialog = inject(AppDialogService);
 
   readonly items = signal<MediaItem[]>([]);
   readonly loading = signal(true);
   readonly loadingMore = signal(false);
-  readonly uploading = signal(false);
+  readonly uploadDocument: DocumentUploadHandler = async (file) => {
+    const item = await firstValueFrom(this.mediaService.upload(file));
+    this.items.update((items) => [item, ...items]);
+    return { uploadedOn: item.uploadedAt };
+  };
   readonly maxUploadMb = MAX_UPLOAD_BYTES / (1024 * 1024);
   readonly error = signal<string | null>(null);
   readonly hasMore = signal(false);
@@ -93,7 +103,6 @@ export class MediaComponent {
   readonly privateObjectUrl = signal<string | null>(null);
   readonly previewLoading = signal(false);
 
-  readonly pendingDelete = signal<MediaItem[] | null>(null);
   readonly deleting = signal(false);
 
   readonly typeOptions: { label: string; value: MediaTab }[] = [
@@ -400,6 +409,7 @@ export class MediaComponent {
   }
 
   onKeydown(event: KeyboardEvent): void {
+    if (this.dialog.hasOpenDialogs()) return;
     if (event.key === 'Escape') this.openMenu.set(null);
     if (this.previewIndex() === null) return;
     if (event.key === 'Escape') this.closePreview();
@@ -438,20 +448,38 @@ export class MediaComponent {
     }
   }
 
-  requestDelete(items: MediaItem[]): void {
-    if (items.length) this.pendingDelete.set(items);
+  openUploadDialog(): void {
+    this.dialog.open<DocumentUploadComponent, DocumentUploadDialogData>(DocumentUploadComponent, {
+      data: { uploadFile: this.uploadDocument, maxSizeMb: this.maxUploadMb },
+      size: 'xl',
+      width: 'min(1080px, calc(100vw - 32px))',
+      maxHeight: 'min(860px, calc(100dvh - 32px))',
+    });
   }
 
-  deleteMessage(items: MediaItem[]): string {
+  requestDelete(items: MediaItem[]): void {
+    if (!items.length || this.deleting()) return;
+    this.dialog
+      .confirm({
+        title: items.length === 1 ? 'Delete file?' : `Delete ${items.length} files?`,
+        message: this.deleteMessage(items),
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((confirmed) => {
+        if (confirmed) this.deleteItems(items);
+      });
+  }
+
+  private deleteMessage(items: MediaItem[]): string {
     const subject = items.length === 1 ? items[0].name : `${items.length} files`;
     return `${subject} will be permanently removed from the Blob store. Any page linking to ${
       items.length === 1 ? 'it' : 'them'
     } will break.`;
   }
 
-  confirmDelete(): void {
-    const targets = this.pendingDelete();
-    if (!targets || this.deleting()) return;
+  private deleteItems(targets: MediaItem[]): void {
     this.deleting.set(true);
     const failed: MediaItem[] = [];
     let remaining = targets.length;
@@ -463,7 +491,6 @@ export class MediaComponent {
       if (preview && removed.has(preview.pathname)) this.closePreview();
       this.items.update((items) => items.filter((i) => !removed.has(i.pathname)));
       this.selected.update((keys) => new Set([...keys].filter((key) => !removed.has(key))));
-      this.pendingDelete.set(null);
       this.deleting.set(false);
       if (removed.size) {
         this.messageService.add({
@@ -533,41 +560,6 @@ export class MediaComponent {
     if (url) URL.revokeObjectURL(url);
     this.privateObjectUrl.set(null);
     this.previewLoading.set(false);
-  }
-
-  async uploadFiles(input: HTMLInputElement): Promise<void> {
-    const files = Array.from(input.files ?? []);
-    input.value = ''; // allow re-selecting the same file
-    if (!files.length) return;
-
-    const oversized = files.filter((file) => file.size > MAX_UPLOAD_BYTES);
-    if (oversized.length) {
-      this.toastError(
-        `${oversized.map((f) => f.name).join(', ')} exceed${oversized.length === 1 ? 's' : ''} the ${this.maxUploadMb} MB limit.`
-      );
-    }
-    const accepted = files.filter((file) => file.size <= MAX_UPLOAD_BYTES);
-    if (!accepted.length) return;
-
-    this.uploading.set(true);
-    const uploaded: MediaItem[] = [];
-    for (const file of accepted) {
-      try {
-        uploaded.push(await firstValueFrom(this.mediaService.upload(file)));
-      } catch (err) {
-        this.toastError(errorMessage(err, `Could not upload ${file.name}.`));
-      }
-    }
-    this.uploading.set(false);
-
-    if (uploaded.length) {
-      this.items.update((items) => [...uploaded.reverse(), ...items]);
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Uploaded',
-        detail: `${uploaded.length} file(s) added to the library.`,
-      });
-    }
   }
 
   private toastError(detail: string): void {

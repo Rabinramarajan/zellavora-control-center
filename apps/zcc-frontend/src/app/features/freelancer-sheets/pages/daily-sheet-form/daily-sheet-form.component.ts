@@ -20,8 +20,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { startWith } from 'rxjs';
+import { Observable, startWith } from 'rxjs';
 import { DateControl } from '@zellavoras/ui';
+import { AppDialogService } from '@shared/components/dialog';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { SheetsApi } from '../../sheets.api';
 import { SheetsStore } from '../../sheets.store';
@@ -98,6 +99,7 @@ export class DailySheetFormComponent implements OnInit {
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly dialog = inject(AppDialogService);
 
   /** Route param; absent when creating. */
   private readonly id = signal(this.route.snapshot.paramMap.get('id'));
@@ -336,9 +338,15 @@ export class DailySheetFormComponent implements OnInit {
   }
 
   /** Used by the route's canDeactivate guard. */
-  public canLeave(): boolean {
+  public canLeave(): boolean | Observable<boolean> {
     if (this.saved || this.readOnly() || !this.form.dirty) return true;
-    return window.confirm('You have unsaved changes. Leave this page and discard them?');
+    return this.dialog.confirm({
+      title: 'Discard changes?',
+      message: 'You have unsaved changes. Leave this page and discard them?',
+      confirmText: 'Discard',
+      cancelText: 'Keep editing',
+      variant: 'warning',
+    });
   }
 
   private lineItemGroup(item?: {

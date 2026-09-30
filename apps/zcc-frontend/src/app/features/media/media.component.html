@@ -38,24 +38,14 @@
         <i class="pi pi-refresh" [class.pi-spin]="loading()" aria-hidden="true"></i>
         Refresh
       </button>
-      <input
-        #fileInput
-        type="file"
-        multiple
-        class="sr-only"
-        tabindex="-1"
-        aria-hidden="true"
-        (change)="uploadFiles(fileInput)"
-      />
-      <button
+<button
         type="button"
         class="mg-btn mg-btn--primary"
-        [disabled]="uploading()"
         [attr.title]="'Max ' + maxUploadMb + ' MB per file'"
-        (click)="fileInput.click()"
+        (click)="openUploadDialog()"
       >
-        <i class="pi" [class.pi-upload]="!uploading()" [class.pi-spinner]="uploading()" [class.pi-spin]="uploading()" aria-hidden="true"></i>
-        {{ uploading() ? 'Uploading…' : 'Upload' }}
+        <i class="pi pi-upload" aria-hidden="true"></i>
+        Upload
       </button>
     </div>
   </header>
@@ -774,12 +764,3 @@
   </div>
 }
 
-@if (pendingDelete(); as targets) {
-  <zcc-confirm-dialog
-    [title]="targets.length === 1 ? 'Delete file?' : 'Delete ' + targets.length + ' files?'"
-    [message]="deleteMessage(targets)"
-    [confirmLabel]="deleting() ? 'Deleting…' : 'Delete'"
-    (confirm)="confirmDelete()"
-    (cancel)="pendingDelete.set(null)"
-  />
-}
