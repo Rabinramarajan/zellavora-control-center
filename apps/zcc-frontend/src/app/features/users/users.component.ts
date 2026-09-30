@@ -99,6 +99,22 @@ interface MenuItem {
   run: () => void;
 }
 
+interface OpenMenu {
+  user: IamUserListItem;
+  items: MenuItem[];
+  top: number;
+  left: number;
+  /** Opened above the trigger because there was no room below. */
+  above: boolean;
+  trigger: HTMLElement;
+}
+
+const MENU_WIDTH = 232;
+const MENU_ITEM_HEIGHT = 40;
+const MENU_CHROME = 44;
+const VIEWPORT_GAP = 8;
+const NAV_KEYS = ['view', 'edit', 'groups', 'roles', 'audit'];
+
 @Component({
   selector: 'app-users',
   standalone: true,
@@ -117,7 +133,9 @@ interface MenuItem {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown.escape)': 'onEscape()',
-    '(document:click)': 'menuFor.set(null)',
+    '(document:click)': 'closeMenu()',
+    '(window:resize)': 'closeMenu()',
+    '(window:scroll)': 'closeMenu()',
   },
 })
 export class UsersComponent {
@@ -236,7 +254,8 @@ export class UsersComponent {
   readonly sortDir = signal<'asc' | 'desc'>('desc');
   readonly selected = signal<ReadonlySet<string>>(new Set());
   readonly busyId = signal<string | null>(null);
-  readonly menuFor = signal<string | null>(null);
+  readonly menu = signal<OpenMenu | null>(null);
+  readonly menuFor = computed(() => this.menu()?.user.id ?? null);
 
   /** Filters behind "More Filters" that are currently applied. */
   readonly moreFilterCount = computed(() => {
@@ -387,7 +406,7 @@ export class UsersComponent {
   }
 
   onEscape(): void {
-    if (this.menuFor()) this.menuFor.set(null);
+    if (this.menu()) this.closeMenu(true);
     else if (this.filtersOpen()) this.closeFilters();
   }
 
@@ -475,9 +494,78 @@ export class UsersComponent {
   // Row actions
   // ---------------------------------------------------------------------------
 
-  toggleMenu(id: string, event: MouseEvent): void {
+  /**
+   * The menu is rendered once, outside the scrolling table, with fixed
+   * positioning, so neither the scroll container nor the animated rows can clip
+   * or cover it. It opens below the trigger and flips above when there is no room.
+   */
+  toggleMenu(user: IamUserListItem, event: MouseEvent): void {
     event.stopPropagation();
-    this.menuFor.set(this.menuFor() === id ? null : id);
+    if (this.menuFor() === user.id) {
+      this.closeMenu();
+      return;
+    }
+    const trigger = event.currentTarget as HTMLElement;
+    const rect = trigger.getBoundingClientRect();
+    const items = this.menuItems(user);
+    const dividers = new Set(items.map((i) => this.groupOf(i))).size - 1;
+    const height = items.length * MENU_ITEM_HEIGHT + MENU_CHROME + dividers * 9;
+    const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_GAP;
+    const spaceAbove = rect.top - VIEWPORT_GAP;
+    const above = spaceBelow < height && spaceAbove > spaceBelow;
+    const top = above
+      ? rect.top - height - 6
+      : Math.min(rect.bottom + 6, window.innerHeight - height - VIEWPORT_GAP);
+    const left = Math.min(
+      Math.max(VIEWPORT_GAP, rect.right - MENU_WIDTH),
+      window.innerWidth - MENU_WIDTH - VIEWPORT_GAP
+    );
+    this.menu.set({ user, items, top: Math.max(VIEWPORT_GAP, top), left, above, trigger });
+    queueMicrotask(() => this.focusMenuItem(0));
+  }
+
+  closeMenu(restoreFocus = false): void {
+    const open = this.menu();
+    if (!open) return;
+    this.menu.set(null);
+    if (restoreFocus) open.trigger.focus();
+  }
+
+  selectMenuItem(item: MenuItem): void {
+    this.closeMenu();
+    item.run();
+  }
+
+  /** Arrow keys, Home and End move through the items; Tab closes the menu. */
+  onMenuKeydown(event: KeyboardEvent): void {
+    const buttons = this.menuButtons();
+    const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const target: Record<string, number> = {
+      ArrowDown: index + 1,
+      ArrowUp: index - 1,
+      Home: 0,
+      End: buttons.length - 1,
+    };
+    if (event.key in target) {
+      event.preventDefault();
+      this.focusMenuItem((target[event.key] + buttons.length) % buttons.length);
+    } else if (event.key === 'Tab') {
+      this.closeMenu(true);
+    }
+  }
+
+  /** Items are grouped: navigation, state actions, then destructive actions. */
+  groupOf(item: MenuItem): number {
+    if (item.danger) return 2;
+    return NAV_KEYS.includes(item.key) ? 0 : 1;
+  }
+
+  private menuButtons(): HTMLButtonElement[] {
+    return Array.from(document.querySelectorAll<HTMLButtonElement>('.us-menu [role="menuitem"]'));
+  }
+
+  private focusMenuItem(index: number): void {
+    this.menuButtons()[index]?.focus();
   }
 
   menuItems(user: IamUserListItem): MenuItem[] {
@@ -505,11 +593,10 @@ export class UsersComponent {
       });
     }
     items.push({ key: 'audit', label: 'View Audit', icon: 'pi pi-shield', run: go('audit') });
-    return items;
+    return items.sort((a, b) => this.groupOf(a) - this.groupOf(b));
   }
 
   async runAction(action: StateAction, user: IamUserListItem): Promise<void> {
-    this.menuFor.set(null);
     this.busyId.set(user.id);
     try {
       if (await this.actions.run(action, user)) {

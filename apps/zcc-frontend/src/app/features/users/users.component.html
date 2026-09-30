@@ -118,7 +118,7 @@
   <!-- Results -->
   <div class="us-rise flex md:min-h-0 flex-1 flex-col" style="animation-delay: 300ms">
     <div class="us-panel flex md:min-h-0 flex-1 flex-col overflow-hidden">
-      <div class="us-table-scroll md:min-h-0 flex-1" [class.is-loading]="store.loading() && store.hasItems()">
+      <div class="us-table-scroll md:min-h-0 flex-1" (scroll)="closeMenu()" [class.is-loading]="store.loading() && store.hasItems()">
         <table class="us-table">
           <thead>
             <tr>
@@ -225,8 +225,7 @@
                   </td>
                   <td class="whitespace-nowrap text-slate-400">{{ formatDateTime(user.lastLoginDatetime) }}</td>
                   <td class="us-col-actions">
-                    <div class="relative inline-block">
-                      <button
+                    <button
                         type="button"
                         class="us-action"
                         data-tone="view"
@@ -234,7 +233,7 @@
                         aria-haspopup="menu"
                         [attr.aria-expanded]="menuFor() === user.id"
                         [disabled]="busyId() === user.id"
-                        (click)="toggleMenu(user.id, $event)"
+                        (click)="toggleMenu(user, $event)"
                       >
                         @if (busyId() === user.id) {
                           <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
@@ -242,17 +241,6 @@
                           <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
                         }
                       </button>
-                      @if (menuFor() === user.id) {
-                        <div class="us-menu" role="menu" [attr.aria-label]="'Actions for ' + user.fullName" (click)="$event.stopPropagation()">
-                          @for (item of menuItems(user); track item.key) {
-                            <button type="button" role="menuitem" class="us-menu-item" [class.is-danger]="item.danger" (click)="menuFor.set(null); item.run()">
-                              <i [class]="item.icon" aria-hidden="true"></i>
-                              {{ item.label }}
-                            </button>
-                          }
-                        </div>
-                      }
-                    </div>
                   </td>
                 </tr>
               } @empty {
@@ -295,6 +283,31 @@
     </div>
   </div>
 </section>
+
+<!-- Row action menu: one instance, fixed-positioned outside the scrolling table -->
+@if (menu(); as m) {
+  <div
+    class="us-menu"
+    role="menu"
+    [class.is-above]="m.above"
+    [style.top.px]="m.top"
+    [style.left.px]="m.left"
+    [attr.aria-label]="'Actions for ' + m.user.fullName"
+    (click)="$event.stopPropagation()"
+    (keydown)="onMenuKeydown($event)"
+  >
+    <p class="us-menu-title">{{ m.user.fullName }}</p>
+    @for (item of m.items; track item.key; let i = $index) {
+      @if (i > 0 && groupOf(item) !== groupOf(m.items[i - 1])) {
+        <div class="us-menu-divider" role="separator"></div>
+      }
+      <button type="button" role="menuitem" class="us-menu-item" [class.is-danger]="item.danger" (click)="selectMenuItem(item)">
+        <i [class]="item.icon" aria-hidden="true"></i>
+        {{ item.label }}
+      </button>
+    }
+  </div>
+}
 
 <!-- More filters dialog -->
 @if (filtersOpen()) {
