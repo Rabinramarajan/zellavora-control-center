@@ -25,16 +25,108 @@ async function main() {
 
   // 2. Create HQ Branch
   console.log('🏢 Creating branch...');
-  const branch = await prisma.branch.create({
-    data: {
-      organizationId: tenant.id,
-      name: 'Primary HQ Office',
-      code: 'HQ-001',
-    },
+  const existingBranch = await prisma.branch.findFirst({
+    where: { organizationId: tenant.id, code: 'HQ-001' },
   });
-  console.log(`✅ Branch created: ${branch.name}\n`);
+  let branch;
+  if (!existingBranch) {
+    branch = await prisma.branch.create({
+      data: {
+        organizationId: tenant.id,
+        name: 'Primary HQ Office',
+        code: 'HQ-001',
+      },
+    });
+    console.log(`✅ Branch created: ${branch.name}\n`);
+  } else {
+    branch = existingBranch;
+    console.log(`  ⏭️  Branch already exists: ${branch.name}\n`);
+  }
 
-  // 3. Create Super Admin User
+  // 3. Create Default Departments
+  console.log('🏢 Creating default departments...');
+  const departmentsData = [
+    { name: 'Engineering', code: 'ENG', description: 'Software development and engineering' },
+    { name: 'Product', code: 'PRD', description: 'Product management and design' },
+    { name: 'Marketing', code: 'MKT', description: 'Marketing and growth' },
+    { name: 'Sales', code: 'SAL', description: 'Sales and business development' },
+    { name: 'Operations', code: 'OPS', description: 'Operations and administration' },
+    { name: 'Human Resources', code: 'HR', description: 'Human resources and people operations' },
+    { name: 'Finance', code: 'FIN', description: 'Finance and accounting' },
+  ];
+  for (const dept of departmentsData) {
+    const existing = await prisma.department.findFirst({
+      where: { organizationId: tenant.id, code: dept.code },
+    });
+    if (!existing) {
+      await prisma.department.create({
+        data: {
+          organizationId: tenant.id,
+          ...dept,
+          status: 'active',
+        },
+      });
+      console.log(`  ✅ Department created: ${dept.name}`);
+    } else {
+      console.log(`  ⏭️  Department already exists: ${dept.name}`);
+    }
+  }
+  console.log();
+
+  // 4. Create Default Teams
+  console.log('👥 Creating default teams...');
+  const teamsData = [
+    { name: 'Frontend Team', description: 'Frontend development team' },
+    { name: 'Backend Team', description: 'Backend development team' },
+    { name: 'DevOps Team', description: 'DevOps and infrastructure team' },
+    { name: 'QA Team', description: 'Quality assurance team' },
+    { name: 'Design Team', description: 'UI/UX design team' },
+  ];
+  for (const team of teamsData) {
+    const existing = await prisma.team.findFirst({
+      where: { organizationId: tenant.id, name: team.name },
+    });
+    if (!existing) {
+      await prisma.team.create({
+        data: {
+          organizationId: tenant.id,
+          ...team,
+        },
+      });
+      console.log(`  ✅ Team created: ${team.name}`);
+    } else {
+      console.log(`  ⏭️  Team already exists: ${team.name}`);
+    }
+  }
+  console.log();
+
+  // 5. Create Default Groups
+  console.log('👥 Creating default groups...');
+  const groupsData = [
+    { name: 'All Employees', type: 'SECURITY', description: 'All organization employees' },
+    { name: 'Managers', type: 'SECURITY', description: 'People managers' },
+    { name: 'Contractors', type: 'SECURITY', description: 'External contractors and freelancers' },
+    { name: 'On-Call Engineers', type: 'SECURITY', description: 'On-call rotation engineers' },
+  ];
+  for (const group of groupsData) {
+    const slug = group.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const existing = await prisma.group.findUnique({ where: { slug } });
+    if (!existing) {
+      await prisma.group.create({
+        data: {
+          ...group,
+          slug,
+          status: 'ACTIVE',
+        },
+      });
+      console.log(`  ✅ Group created: ${group.name}`);
+    } else {
+      console.log(`  ⏭️  Group already exists: ${group.name}`);
+    }
+  }
+  console.log();
+
+  // 6. Create Super Admin User
   console.log('👤 Creating super admin user...');
   const passwordHash = await PasswordService.hash('AdminPassword123!');
   const adminUser = await prisma.user.upsert({
@@ -72,7 +164,7 @@ async function main() {
   });
   console.log('✅ User-tenant mapping created\n');
 
-  // 4. Create Roles
+  // 7. Create Roles
   console.log('👑 Creating roles...');
   let ownerRole = await prisma.role.findFirst({
     where: { name: 'Owner', organizationId: tenant.id },
@@ -126,7 +218,7 @@ async function main() {
   }
   console.log();
 
-  // 5. Create Permissions
+  // 8. Create Permissions
   console.log('🔐 Creating permissions...');
   const permissionsData = [
     {
@@ -221,7 +313,7 @@ async function main() {
   }
   console.log();
 
-  // 6. Map Permissions to Roles
+  // 9. Map Permissions to Roles
   console.log('🔗 Mapping permissions to roles...');
   for (const perm of permissionsList) {
     const existing = await prisma.rolePermission.findFirst({
@@ -264,7 +356,7 @@ async function main() {
   }
   console.log();
 
-  // 7. Assign Owner Role to Admin User
+  // 10. Assign Owner Role to Admin User
   console.log('👥 Assigning roles to admin user...');
   const existingAssignment = await prisma.userRoleAssignment.findFirst({
     where: {
@@ -289,7 +381,7 @@ async function main() {
   }
   console.log();
 
-  // 8. Seed DDL lists (countries, languages, genders, etc.)
+  // 11. Seed DDL lists (countries, languages, genders, etc.)
   console.log('📋 Seeding DDL data (countries, languages, etc.)...');
   const ddlRepo = new DdlRepository();
   let ddlCount = 0;

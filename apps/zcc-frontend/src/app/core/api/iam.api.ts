@@ -21,7 +21,7 @@ import {
   EntityStatus,
   ResourceType,
   RoleScope,
-  } from '@shared/models/iam.model';
+} from '@shared/models/iam.model';
 
 export interface IamListQuery {
   q?: string;
@@ -78,7 +78,10 @@ export class IamApiService {
   // ---------------------------------------------------------------------------
 
   listResources(query: IamListQuery): Observable<ApiEnvelope<PaginatedList<ResourceListItem>>> {
-    return this.apiData.getData<ApiEnvelope<PaginatedList<ResourceListItem>>>('/iam/resources', this.toParams(query));
+    return this.apiData.getData<ApiEnvelope<PaginatedList<ResourceListItem>>>(
+      '/iam/resources',
+      this.toParams(query)
+    );
   }
 
   getResource(id: string): Observable<ApiEnvelope<ResourceDetail>> {
@@ -94,7 +97,9 @@ export class IamApiService {
   }
 
   removeResourceAction(id: string, actionId: string): Observable<ApiEnvelope<unknown>> {
-    return this.apiData.deleteData<ApiEnvelope<unknown>>(`/iam/resources/${id}/actions/${actionId}`);
+    return this.apiData.deleteData<ApiEnvelope<unknown>>(
+      `/iam/resources/${id}/actions/${actionId}`
+    );
   }
 
   deleteResource(id: string): Observable<ApiEnvelope<{ success: boolean }>> {
@@ -106,7 +111,10 @@ export class IamApiService {
   // ---------------------------------------------------------------------------
 
   listRoles(query: IamListQuery): Observable<ApiEnvelope<PaginatedList<RoleListItem>>> {
-    return this.apiData.getData<ApiEnvelope<PaginatedList<RoleListItem>>>('/iam/roles', this.toParams(query));
+    return this.apiData.getData<ApiEnvelope<PaginatedList<RoleListItem>>>(
+      '/iam/roles',
+      this.toParams(query)
+    );
   }
 
   /** Every permission key in the system (for the role permission matrix). */
@@ -132,7 +140,10 @@ export class IamApiService {
     return this.apiData.postData<ApiEnvelope<RoleDetail>>('/iam/roles', body);
   }
 
-  setRolePermissions(id: string, body: SetRolePermissionsRequest): Observable<ApiEnvelope<unknown>> {
+  setRolePermissions(
+    id: string,
+    body: SetRolePermissionsRequest
+  ): Observable<ApiEnvelope<unknown>> {
     return this.apiData.putData<ApiEnvelope<unknown>>(`/iam/roles/${id}/permissions`, body);
   }
 
@@ -149,7 +160,10 @@ export class IamApiService {
   // ---------------------------------------------------------------------------
 
   listGroups(query: IamListQuery): Observable<ApiEnvelope<PaginatedList<GroupListItem>>> {
-    return this.apiData.getData<ApiEnvelope<PaginatedList<GroupListItem>>>('/iam/groups', this.toParams(query));
+    return this.apiData.getData<ApiEnvelope<PaginatedList<GroupListItem>>>(
+      '/iam/groups',
+      this.toParams(query)
+    );
   }
 
   getGroup(id: string): Observable<ApiEnvelope<GroupDetail>> {
@@ -157,7 +171,9 @@ export class IamApiService {
   }
 
   addGroupMembers(id: string, userIds: string[]): Observable<ApiEnvelope<GroupDetail>> {
-    return this.apiData.postData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}/members`, { userIds });
+    return this.apiData.postData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}/members`, {
+      userIds,
+    });
   }
 
   removeGroupMember(id: string, userId: string): Observable<ApiEnvelope<GroupDetail>> {
@@ -177,7 +193,10 @@ export class IamApiService {
   // ---------------------------------------------------------------------------
 
   listIamUsers(query: IamListQuery): Observable<ApiEnvelope<PaginatedList<IamUserListItem>>> {
-    return this.apiData.getData<ApiEnvelope<PaginatedList<IamUserListItem>>>('/iam/users', this.toParams(query));
+    return this.apiData.getData<ApiEnvelope<PaginatedList<IamUserListItem>>>(
+      '/iam/users',
+      this.toParams(query)
+    );
   }
 
   getIamUser(id: string): Observable<ApiEnvelope<IamUserDetail>> {
@@ -201,7 +220,9 @@ export class IamApiService {
   }
 
   getIamUserStats(): Observable<ApiEnvelope<{ total: number; byStatus: Record<string, number> }>> {
-    return this.apiData.getData<ApiEnvelope<{ total: number; byStatus: Record<string, number> }>>('/iam/users/stats');
+    return this.apiData.getData<ApiEnvelope<{ total: number; byStatus: Record<string, number> }>>(
+      '/iam/users/stats'
+    );
   }
 
   deleteIamUser(id: string): Observable<ApiEnvelope<{ success: boolean }>> {
@@ -222,14 +243,19 @@ export class IamApiService {
       'status',
       'type',
       'scope',
+      'resource',
+      'permission',
       'roleId',
       'groupId',
+      'createdBy',
       'department',
       'name',
       'email',
       'mobile',
       'createdFrom',
       'createdTo',
+      'updatedFrom',
+      'updatedTo',
       'lastLoginFrom',
       'lastLoginTo',
       'sort',

@@ -57,6 +57,14 @@ import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.co
             </button>
             <button
               type="button"
+              class="rounded-lg border border-indigo-500/30 px-3 py-1.5 text-sm font-medium text-indigo-500 hover:bg-indigo-500/10"
+              (click)="activeTab.set('permissions')"
+            >
+              <i class="pi pi-key mr-1 text-xs" aria-hidden="true"></i>
+              Manage Permissions
+            </button>
+            <button
+              type="button"
               [disabled]="role()!.isSystem"
               class="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
               (click)="onDelete()"
@@ -72,6 +80,52 @@ import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.co
 
       <div class="mt-5">
         @switch (activeTab()) {
+          @case ('overview') {
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Role ID</p>
+                <p class="mt-1 break-all font-mono text-sm text-gray-900 dark:text-white">
+                  {{ role()!.id }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Role Code</p>
+                <p class="mt-1 font-mono text-sm text-gray-900 dark:text-white">
+                  {{ role()!.key }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Role Type</p>
+                <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                  {{ role()!.isSystem ? 'System' : 'Custom' }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scope</p>
+                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ role()!.scope }}</p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Status</p>
+                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ role()!.status }}</p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Assignments
+                </p>
+                <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                  {{ role()!.permissionCount }} permissions · {{ role()!.userCount }} users
+                </p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10 md:col-span-3">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Description
+                </p>
+                <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                  {{ role()!.description ?? 'No description' }}
+                </p>
+              </div>
+            </div>
+          }
           @case ('permissions') {
             <div class="mb-4 flex items-center justify-end">
               <span class="mr-3 text-xs text-gray-400 tabular-nums">
@@ -91,39 +145,93 @@ import { PermissionMatrixComponent, PermissionRow } from './permission-matrix.co
               (change)="matrixDirty.set(true)"
             />
           }
+          @case ('resources') {
+            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
+              <table class="min-w-full divide-y divide-gray-100 text-sm dark:divide-white/10">
+                <thead
+                  class="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                >
+                  <tr>
+                    <th class="px-4 py-3">Resource</th>
+                    <th class="px-4 py-3">Permissions</th>
+                    <th class="px-4 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                  @for (resource of resources(); track resource.name) {
+                    <tr>
+                      <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                        {{ resource.name }}
+                      </td>
+                      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        {{ resource.count }}
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">
+                        {{ resource.actions }}
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">
+                        No resources attached.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+          @case ('groups') {
+            <zcc-empty-state
+              icon="pi pi-sitemap"
+              title="Group assignments need API support"
+              message="This section should list assigned groups, scope, assigned date, actor, and remove/view actions."
+            />
+          }
           @case ('users') {
             <div class="rounded-xl border border-gray-200 dark:border-white/10 p-6">
               <p class="text-sm text-gray-600 dark:text-gray-300">
                 <span class="font-semibold tabular-nums">{{ role()!.userCount }}</span>
                 user(s) currently hold this role.
               </p>
+              <p class="mt-2 text-xs text-gray-400">
+                Direct versus inherited assignments should be separated once role assignment APIs
+                expose the source.
+              </p>
             </div>
           }
-          @case ('overview') {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div class="rounded-xl border border-gray-200 dark:border-white/10 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Key</p>
-                <p class="mt-1 font-mono text-sm text-gray-900 dark:text-white">
-                  {{ role()!.key }}
-                </p>
-              </div>
-              <div class="rounded-xl border border-gray-200 dark:border-white/10 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                  Organization
-                </p>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                  {{ role()!.organizationId ?? 'Platform-wide' }}
-                </p>
-              </div>
-              <div class="rounded-xl border border-gray-200 dark:border-white/10 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                  Description
-                </p>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                  {{ role()!.description ?? 'No description' }}
-                </p>
-              </div>
+          @case ('scope') {
+            <div class="rounded-xl border border-gray-200 p-6 dark:border-white/10">
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scope Type</p>
+              <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                {{ role()!.scope }}
+              </p>
+              <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                Scope decides where the permissions apply. Branch, department, team and custom scope
+                targets need backend fields before they can be edited here.
+              </p>
             </div>
+          }
+          @case ('history') {
+            <zcc-empty-state
+              icon="pi pi-history"
+              title="No role change requests yet"
+              message="Role request history should link approval requests such as permission, scope and assignment changes."
+            />
+          }
+          @case ('status-history') {
+            <zcc-empty-state
+              icon="pi pi-clock"
+              title="Status history needs API support"
+              message="Store actor, timestamp, reason and correlation ID for created, activated, updated and deactivated events."
+            />
+          }
+          @case ('audit') {
+            <zcc-empty-state
+              icon="pi pi-shield"
+              title="Audit is read-only"
+              message="This section should show role creation, permission changes, assignment changes, scope changes and clone events."
+            />
           }
         }
       </div>
@@ -150,19 +258,41 @@ export class RolesDetailComponent {
 
   readonly role = signal<RoleDetail | null>(null);
   readonly loading = signal(true);
-  readonly activeTab = signal('permissions');
+  readonly activeTab = signal('overview');
   readonly matrixDirty = signal(false);
   readonly matrix = signal<PermissionRow[]>([]);
 
   readonly tabs = (): DetailTab[] => [
-    { key: 'permissions', label: 'Permissions', icon: 'pi pi-key' },
-    { key: 'users', label: 'Users', icon: 'pi pi-users' },
     { key: 'overview', label: 'Overview', icon: 'pi pi-info-circle' },
+    { key: 'permissions', label: 'Permissions', icon: 'pi pi-key' },
+    { key: 'resources', label: 'Resources', icon: 'pi pi-th-large' },
+    { key: 'groups', label: 'Groups', icon: 'pi pi-sitemap' },
+    { key: 'users', label: 'Users', icon: 'pi pi-users' },
+    { key: 'scope', label: 'Scope', icon: 'pi pi-map-marker' },
+    { key: 'history', label: 'Change History', icon: 'pi pi-history' },
+    { key: 'status-history', label: 'Status History', icon: 'pi pi-clock' },
+    { key: 'audit', label: 'Audit', icon: 'pi pi-shield' },
   ];
 
   readonly matrixCount = computed(() => this.matrix().filter((r) => r.effect !== null).length);
+  readonly resources = computed(() => {
+    const byResource = new Map<string, { name: string; count: number; actions: string[] }>();
+    for (const permission of this.role()?.permissions ?? []) {
+      const name = permission.resource ?? 'Ungrouped';
+      const row = byResource.get(name) ?? { name, count: 0, actions: [] };
+      row.count += 1;
+      if (permission.action) row.actions.push(permission.action);
+      byResource.set(name, row);
+    }
+    return [...byResource.values()].map((r) => ({
+      ...r,
+      actions: r.actions.length ? r.actions.join(', ') : '-',
+    }));
+  });
 
   constructor() {
+    const section = this.route.snapshot.queryParamMap.get('section');
+    if (section) this.activeTab.set(section);
     void this.load();
   }
 
