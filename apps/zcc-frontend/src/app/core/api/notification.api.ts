@@ -11,7 +11,11 @@ export class NotificationApiService {
     return this.apiData.getData<NotificationMessage[]>('/notifications', params);
   }
 
-  sendBroadcast(payload: { title: string; body: string; channels: string[] }): Observable<NotificationMessage> {
+  sendBroadcast(payload: {
+    title: string;
+    body: string;
+    channels: string[];
+  }): Observable<NotificationMessage> {
     return this.apiData.postData<NotificationMessage>('/notifications/broadcast', payload);
   }
 

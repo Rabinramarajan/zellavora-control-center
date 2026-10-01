@@ -17,7 +17,10 @@ import {
 
 jest.mock('../../services/auth', () => ({
   AuditService: { log: jest.fn(), logLoginFailure: jest.fn() },
-  EncryptionService: { encrypt: jest.fn((v: string) => `enc:${v}`), decrypt: jest.fn((v: string) => v.slice(4)) },
+  EncryptionService: {
+    encrypt: jest.fn((v: string) => `enc:${v}`),
+    decrypt: jest.fn((v: string) => v.slice(4)),
+  },
   MenuService: { loadForUserWithPerms: jest.fn() },
   MfaService: {
     verifyTotp: jest.fn(),
@@ -137,7 +140,11 @@ describe('AuthService', () => {
   describe('login', () => {
     it('issues tokens for valid credentials', async () => {
       const result = await new AuthService(makeRepo()).login(loginDto, meta);
-      expect(result).toMatchObject({ mfaRequired: false, accessToken: 'access', mfaSetupRequired: false });
+      expect(result).toMatchObject({
+        mfaRequired: false,
+        accessToken: 'access',
+        mfaSetupRequired: false,
+      });
       expect(RateLimitService.clearForEmail).toHaveBeenCalledWith(baseUser.email);
     });
 
@@ -160,7 +167,11 @@ describe('AuthService', () => {
       });
 
       it('allows sign-in from inside the allow-list and applies session caps', async () => {
-        withLoginPolicy({ allowedIpRanges: ['203.0.113.0/24'], sessionLifetimeDays: 3, maxConcurrentSessions: 2 });
+        withLoginPolicy({
+          allowedIpRanges: ['203.0.113.0/24'],
+          sessionLifetimeDays: 3,
+          maxConcurrentSessions: 2,
+        });
         await new AuthService(makeRepo()).login(loginDto, meta);
         expect(SessionService.create).toHaveBeenCalledWith(
           expect.objectContaining({ maxLifetimeDays: 3, maxConcurrentSessions: 2 })
@@ -310,7 +321,9 @@ describe('AuthService', () => {
       );
       expect(addQueueJob).toHaveBeenCalledWith(
         'send-password-reset',
-        expect.objectContaining({ resetLink: expect.stringMatching(/\/auth\/reset-password\?token=raw-token$/) })
+        expect.objectContaining({
+          resetLink: expect.stringMatching(/\/auth\/reset-password\?token=raw-token$/),
+        })
       );
     });
 
@@ -340,7 +353,13 @@ describe('AuthService', () => {
   });
 
   describe('sessions', () => {
-    const actor = { ...meta, userId: 'user-1', tenantId: 'org-1', sessionId: 'session-1', email: baseUser.email };
+    const actor = {
+      ...meta,
+      userId: 'user-1',
+      tenantId: 'org-1',
+      sessionId: 'session-1',
+      email: baseUser.email,
+    };
 
     it('does not let a user revoke a session they do not own', async () => {
       (SessionService.revokeOwned as jest.Mock).mockResolvedValue(false);

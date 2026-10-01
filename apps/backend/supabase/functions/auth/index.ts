@@ -35,11 +35,19 @@ const getClientMeta = (c: any) => {
 // Schemas
 // ----------------------------------------------------------------------------
 const ValidateClientSchema = z.object({
-  clientCode: z.string().min(2).max(16).regex(/^[A-Za-z0-9-]+$/),
+  clientCode: z
+    .string()
+    .min(2)
+    .max(16)
+    .regex(/^[A-Za-z0-9-]+$/),
 });
 
 const LoginSchema = z.object({
-  clientCode: z.string().min(2).max(16).regex(/^[A-Za-z0-9-]+$/),
+  clientCode: z
+    .string()
+    .min(2)
+    .max(16)
+    .regex(/^[A-Za-z0-9-]+$/),
   email: z.string().email().max(255),
   password: z.string().min(1).max(128),
   rememberMe: z.boolean().optional(),
@@ -81,7 +89,10 @@ const SwitchTenantSchema = z.object({
 
 // Short-lived in-memory MFA challenge stashing (matches Express)
 const MFA_CHALLENGE_TTL_MS = 5 * 60 * 1000;
-const mfaChallenges = new Map<string, { userId: string; organizationId: string; attempts: number; expiresAt: number }>();
+const mfaChallenges = new Map<
+  string,
+  { userId: string; organizationId: string; attempts: number; expiresAt: number }
+>();
 const pendingMfaSecrets = new Map<string, string>(); // userId -> secret
 
 // ----------------------------------------------------------------------------
@@ -106,7 +117,11 @@ app.post('/validate-client', async (c) => {
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -122,7 +137,9 @@ app.post('/login', async (c) => {
     const admin = getSupabaseAdmin();
     const { data: user, error } = await admin
       .from('users')
-      .select('id, email, full_name, role, password_hash, mfa_enabled, is_active, deleted_at, locked_until, failed_login_attempts')
+      .select(
+        'id, email, full_name, role, password_hash, mfa_enabled, is_active, deleted_at, locked_until, failed_login_attempts'
+      )
       .eq('email', data.email.toLowerCase())
       .eq('tenant_id', tenant.id)
       .maybeSingle();
@@ -157,7 +174,11 @@ app.post('/login', async (c) => {
     if (!ok) return invalid();
 
     if (tenant.enforce2fa && !user.mfa_enabled) {
-      throw new AppError('This organization requires two-factor authentication.', 403, 'MFA_REQUIRED_BY_ORG');
+      throw new AppError(
+        'This organization requires two-factor authentication.',
+        403,
+        'MFA_REQUIRED_BY_ORG'
+      );
     }
 
     if (user.mfa_enabled) {
@@ -213,13 +234,28 @@ app.post('/login', async (c) => {
 
     return jsonResponse({
       mfaRequired: false,
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, mfaEnabled: user.mfa_enabled },
-      tenant: { id: tenant.id, name: tenant.name, clientCode: tenant.clientCode, logoUrl: tenant.logoUrl },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        mfaEnabled: user.mfa_enabled,
+      },
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        clientCode: tenant.clientCode,
+        logoUrl: tenant.logoUrl,
+      },
       ...tokens,
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -232,7 +268,11 @@ app.post('/login/mfa', async (c) => {
     const challenge = mfaChallenges.get(data.mfaToken);
     if (!challenge || challenge.expiresAt < Date.now()) {
       mfaChallenges.delete(data.mfaToken);
-      throw new AppError('MFA challenge expired. Please log in again.', 401, 'MFA_CHALLENGE_EXPIRED');
+      throw new AppError(
+        'MFA challenge expired. Please log in again.',
+        401,
+        'MFA_CHALLENGE_EXPIRED'
+      );
     }
 
     if (challenge.attempts >= 5) {
@@ -284,10 +324,7 @@ app.post('/login/mfa', async (c) => {
       rememberMe: data.rememberMe,
     });
 
-    await admin
-      .from('users')
-      .update({ last_login_at: new Date().toISOString() })
-      .eq('id', user.id);
+    await admin.from('users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
 
     if (isRecovery) {
       await AuditService.log({
@@ -303,15 +340,28 @@ app.post('/login/mfa', async (c) => {
 
     return jsonResponse({
       mfaRequired: false,
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, mfaEnabled: user.mfa_enabled },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        mfaEnabled: user.mfa_enabled,
+      },
       tenant: tenant && {
-        id: tenant.id, name: tenant.name, clientCode: tenant.clientCode, logoUrl: tenant.logoUrl,
+        id: tenant.id,
+        name: tenant.name,
+        clientCode: tenant.clientCode,
+        logoUrl: tenant.logoUrl,
       },
       ...tokens,
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -354,7 +404,11 @@ app.post('/refresh', async (c) => {
     return jsonResponse(tokens);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -387,7 +441,11 @@ app.post('/logout', async (c) => {
     return jsonResponse({ ok: true });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -409,7 +467,11 @@ app.post('/logout-all', async (c) => {
     return jsonResponse({ ok: true });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -420,7 +482,9 @@ app.get('/me', async (c) => {
 
     const { data: user } = await admin
       .from('users')
-      .select('id, email, full_name, role, mfa_enabled, mfa_enrolled_at, avatar_url, last_login_at, created_at')
+      .select(
+        'id, email, full_name, role, mfa_enabled, mfa_enrolled_at, avatar_url, last_login_at, created_at'
+      )
       .eq('id', claims.sub)
       .single();
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
@@ -457,7 +521,11 @@ app.get('/me', async (c) => {
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -468,7 +536,11 @@ app.get('/tenants', async (c) => {
     return jsonResponse({ tenants });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -507,12 +579,21 @@ app.post('/switch-tenant', async (c) => {
     });
 
     return jsonResponse({
-      tenant: { id: tenant.id, name: tenant.name, clientCode: tenant.clientCode, logoUrl: tenant.logoUrl },
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        clientCode: tenant.clientCode,
+        logoUrl: tenant.logoUrl,
+      },
       ...tokens,
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -555,7 +636,11 @@ app.post('/change-password', async (c) => {
     return jsonResponse({ ok: true });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -578,7 +663,10 @@ app.post('/forgot-password', async (c) => {
     if (user) {
       const token = crypto.randomUUID();
       const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-      const resetExpiryMinutes = parseInt(Deno.env.get('PASSWORD_RESET_TOKEN_EXPIRY_MINUTES') ?? '15', 10);
+      const resetExpiryMinutes = parseInt(
+        Deno.env.get('PASSWORD_RESET_TOKEN_EXPIRY_MINUTES') ?? '15',
+        10
+      );
       await admin.from('password_reset_tokens').insert({
         user_id: user.id,
         token_hash: tokenHash,
@@ -600,7 +688,11 @@ app.post('/forgot-password', async (c) => {
     return jsonResponse({ ok: true, message: 'If an account exists, a reset link has been sent.' });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -637,7 +729,11 @@ app.post('/reset-password', async (c) => {
     return jsonResponse({ ok: true });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -648,11 +744,7 @@ app.post('/mfa/enroll', async (c) => {
     if (!tenant) throw new AppError('Tenant not found', 404, 'TENANT_NOT_FOUND');
 
     const admin = getSupabaseAdmin();
-    const { data: user } = await admin
-      .from('users')
-      .select('email')
-      .eq('id', claims.sub)
-      .single();
+    const { data: user } = await admin.from('users').select('email').eq('id', claims.sub).single();
 
     const enrollment = await MfaService.startEnrollment(claims.sub, user!.email, tenant.name);
     pendingMfaSecrets.set(claims.sub, enrollment.secret);
@@ -663,7 +755,11 @@ app.post('/mfa/enroll', async (c) => {
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -698,7 +794,11 @@ app.post('/mfa/confirm', async (c) => {
     return jsonResponse({ ok: true, recoveryCodes });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -732,7 +832,11 @@ app.post('/mfa/disable', async (c) => {
     return jsonResponse({ ok: true });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -743,7 +847,11 @@ app.post('/mfa/recovery-codes', async (c) => {
     return jsonResponse({ recoveryCodes: codes });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

@@ -35,12 +35,7 @@
           </a>
         }
         @if (r.actions.canSubmit) {
-          <button
-            type="button"
-            [class]="btn.primary"
-            [disabled]="busy()"
-            (click)="act('submit')"
-          >
+          <button type="button" [class]="btn.primary" [disabled]="busy()" (click)="act('submit')">
             <i class="pi pi-send text-xs" aria-hidden="true"></i>
             Submit
           </button>
@@ -63,12 +58,7 @@
           </button>
         }
         @if (r.actions.canReject) {
-          <button
-            type="button"
-            [class]="btn.danger"
-            [disabled]="busy()"
-            (click)="decide('reject')"
-          >
+          <button type="button" [class]="btn.danger" [disabled]="busy()" (click)="decide('reject')">
             <i class="pi pi-times text-xs" aria-hidden="true"></i>
             Reject
           </button>
@@ -101,10 +91,7 @@
       @for (f of summary(); track f.label) {
         <div class="min-w-0">
           <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ f.label }}</dt>
-          <dd
-            class="truncate font-medium text-gray-900 dark:text-white"
-            [title]="f.value ?? ''"
-          >
+          <dd class="truncate font-medium text-gray-900 dark:text-white" [title]="f.value ?? ''">
             {{ f.value || '—' }}
           </dd>
         </div>
@@ -155,10 +142,9 @@
                 >
               }
               @if (s.key === 'emails' && failedEmails()) {
-                <span
-                  class="ml-auto rounded-full bg-red-500/15 px-1.5 text-[11px] text-red-500"
-                  >{{ failedEmails() }}</span
-                >
+                <span class="ml-auto rounded-full bg-red-500/15 px-1.5 text-[11px] text-red-500">{{
+                  failedEmails()
+                }}</span>
               }
             </button>
           </li>
@@ -311,11 +297,7 @@
                 [(value)]="noteAttachment"
               />
             </div>
-            <button
-              type="submit"
-              [class]="btn.primary"
-              [disabled]="busy() || !noteBody().trim()"
-            >
+            <button type="submit" [class]="btn.primary" [disabled]="busy() || !noteBody().trim()">
               <i class="pi pi-plus text-xs" aria-hidden="true"></i>
               Add Note
             </button>
@@ -376,9 +358,7 @@
                 <p class="text-sm font-semibold text-gray-900 dark:text-white">
                   {{ e.toStatusLabel }}
                   @if (e.fromStatus && e.fromStatus !== e.toStatus) {
-                    <span class="font-normal text-gray-400"
-                      >from {{ humanize(e.fromStatus) }}</span
-                    >
+                    <span class="font-normal text-gray-400">from {{ humanize(e.fromStatus) }}</span>
                   }
                 </p>
                 <p class="text-xs text-gray-500">
@@ -497,12 +477,8 @@
                     [attr.aria-expanded]="openAudit() === a.id"
                     (click)="openAudit.set(openAudit() === a.id ? null : a.id)"
                   >
-                    <span class="font-mono text-xs text-gray-500">{{
-                      dateTime(a.timestamp)
-                    }}</span>
-                    <span class="font-medium text-gray-900 dark:text-white">{{
-                      a.action
-                    }}</span>
+                    <span class="font-mono text-xs text-gray-500">{{ dateTime(a.timestamp) }}</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{ a.action }}</span>
                     <span class="text-gray-600 dark:text-gray-300">{{ a.actor }}</span>
                     <span class="text-gray-500">{{ a.module }} · {{ a.target }}</span>
                     <zcc-status-chip
@@ -541,9 +517,7 @@
                 <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {{ f.label }}
                 </dt>
-                <dd
-                  class="mt-0.5 whitespace-pre-line break-words text-gray-900 dark:text-white"
-                >
+                <dd class="mt-0.5 whitespace-pre-line break-words text-gray-900 dark:text-white">
                   @if (f.label === 'Attachment' && f.value) {
                     <a
                       [href]="f.value"

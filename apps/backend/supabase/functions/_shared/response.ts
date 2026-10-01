@@ -13,14 +13,20 @@ export function jsonResponse<T>(data: T, status = 200, headers?: Record<string, 
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-tenant-id',
+      'Access-Control-Allow-Headers':
+        'authorization, x-client-info, apikey, content-type, x-tenant-id',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
       ...headers,
     },
   });
 }
 
-export function errorResponse(errorObj: { message: string; code: string; statusCode: number; details?: any }) {
+export function errorResponse(errorObj: {
+  message: string;
+  code: string;
+  statusCode: number;
+  details?: any;
+}) {
   const body = JSON.stringify({
     success: false,
     error: {
@@ -40,7 +46,8 @@ export function errorResponse(errorObj: { message: string; code: string; statusC
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-tenant-id',
+      'Access-Control-Allow-Headers':
+        'authorization, x-client-info, apikey, content-type, x-tenant-id',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
     },
   });
@@ -51,7 +58,8 @@ export function corsResponse() {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-tenant-id',
+      'Access-Control-Allow-Headers':
+        'authorization, x-client-info, apikey, content-type, x-tenant-id',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
     },
   });

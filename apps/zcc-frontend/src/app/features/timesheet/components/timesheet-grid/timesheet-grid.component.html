@@ -32,11 +32,7 @@
         [disabled]="!service.timesheet()"
         (onClick)="openExport('html')"
       />
-      <p-button
-        label="Submit for approval"
-        [disabled]="!canSubmit()"
-        (onClick)="submit()"
-      />
+      <p-button label="Submit for approval" [disabled]="!canSubmit()" (onClick)="submit()" />
     </div>
   </header>
 
@@ -53,10 +49,10 @@
   @if (service.isLoading()) {
     <p class="py-12 text-center text-gray-500">Loading timesheet…</p>
   } @else if (service.loadError()) {
-    <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
-      <p class="text-sm text-red-800 dark:text-red-300">
-        This timesheet could not be loaded.
-      </p>
+    <div
+      class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30"
+    >
+      <p class="text-sm text-red-800 dark:text-red-300">This timesheet could not be loaded.</p>
       <p-button
         class="mt-3 inline-block"
         label="Retry"
@@ -70,7 +66,10 @@
     >
       <table class="w-full min-w-[56rem] text-sm">
         <caption class="sr-only">
-          Daily entries for {{ periodLabel() }}
+          Daily entries for
+          {{
+            periodLabel()
+          }}
         </caption>
         <thead class="bg-gray-50 text-left dark:bg-gray-800/60">
           <tr>
@@ -85,10 +84,7 @@
         </thead>
         <tbody>
           @for (row of rows(); track row.entry.id) {
-            <tr
-              class="border-t border-gray-100 dark:border-gray-800"
-              [class]="rowClass(row)"
-            >
+            <tr class="border-t border-gray-100 dark:border-gray-800" [class]="rowClass(row)">
               <td class="px-3 py-1.5 tabular-nums">
                 {{ row.entry.entryDate | date: 'd MMM' : 'UTC' }}
               </td>
@@ -177,8 +173,7 @@
       class="sticky bottom-0 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95"
     >
       <span class="text-sm text-gray-600 dark:text-gray-400">
-        {{ service.totals().workingDays }} working days ·
-        {{ service.totals().leaveDays }} leave ·
+        {{ service.totals().workingDays }} working days · {{ service.totals().leaveDays }} leave ·
         {{ service.totals().holidayDays }} holidays
       </span>
       <span class="text-lg font-semibold tabular-nums">
@@ -219,7 +214,12 @@
     />
   </div>
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="autoFillOpen.set(false)" />
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      (onClick)="autoFillOpen.set(false)"
+    />
     <p-button label="Apply" [disabled]="blankWeekdayCount() === 0" (onClick)="applyAutoFill()" />
   </ng-template>
 </p-dialog>

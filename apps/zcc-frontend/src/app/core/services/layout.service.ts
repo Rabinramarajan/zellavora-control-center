@@ -18,5 +18,4 @@ export class LayoutService {
   closeSidebar(): void {
     this.isSidebarOpen.set(false);
   }
-
 }

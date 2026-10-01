@@ -17,11 +17,7 @@
     [message]="loadError()!"
   />
 } @else if (team(); as t) {
-  <zcc-iam-page-header
-    [title]="t.name"
-    icon="pi pi-sitemap"
-    [description]="t.description ?? ''"
-  >
+  <zcc-iam-page-header [title]="t.name" icon="pi pi-sitemap" [description]="t.description ?? ''">
     @if (canManage()) {
       <button type="button" [class]="btn.secondary" (click)="edit(t)">
         <i class="pi pi-pencil text-xs" aria-hidden="true"></i> Edit

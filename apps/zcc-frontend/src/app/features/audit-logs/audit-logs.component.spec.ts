@@ -16,15 +16,13 @@ describe('AuditLogsComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [FormsModule, AuditLogsComponent],
-      providers: [
-        { provide: AuditRepository, useValue: spy },
-      ],
+      providers: [{ provide: AuditRepository, useValue: spy }],
     });
 
     fixture = TestBed.createComponent(AuditLogsComponent);
     component = fixture.componentInstance;
     repoMock = TestBed.inject(AuditRepository) as jasmine.SpyObj<AuditRepository>;
-    
+
     // Workaround for getter properties in jasmine spy
     Object.defineProperty(repoMock, 'logs', { value: () => [] });
 

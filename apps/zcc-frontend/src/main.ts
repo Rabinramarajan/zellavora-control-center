@@ -8,7 +8,11 @@ if (window.location.hash.startsWith('#/')) {
   const target = new URL(`${window.location.origin}${route}`);
   if (!target.search) target.search = window.location.search;
   if (target.origin === window.location.origin) {
-    window.history.replaceState(window.history.state, '', target.pathname + target.search + target.hash);
+    window.history.replaceState(
+      window.history.state,
+      '',
+      target.pathname + target.search + target.hash
+    );
   }
 }
 

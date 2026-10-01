@@ -13,36 +13,36 @@ export const adminRoutes: Routes = [
     path: 'users',
     component: UserListComponent,
     // canActivate: [authGuard],
-    data: { title: 'Users' }
+    data: { title: 'Users' },
   },
   {
     path: 'users/:id',
     component: UserDetailComponent,
     canActivate: [authGuard],
-    data: { title: 'User Details' }
+    data: { title: 'User Details' },
   },
   {
     path: 'roles',
     component: RoleListComponent,
     canActivate: [authGuard],
-    data: { title: 'Roles' }
+    data: { title: 'Roles' },
   },
   {
     path: 'roles/:id',
     component: RoleDetailComponent,
     canActivate: [authGuard],
-    data: { title: 'Role Details' }
+    data: { title: 'Role Details' },
   },
   {
     path: 'resources',
     component: ResourceManagerComponent,
     canActivate: [authGuard],
-    data: { title: 'Resources' }
+    data: { title: 'Resources' },
   },
   {
     path: 'branches',
     component: BranchManagerComponent,
     canActivate: [authGuard],
-    data: { title: 'Branches' }
-  }
+    data: { title: 'Branches' },
+  },
 ];

@@ -27,7 +27,9 @@ export const authRoutes: Routes = [
         title: 'Accept invitation · ZCC',
         canActivate: [guestGuard],
         loadComponent: () =>
-          import('./pages/accept-invitation/accept-invitation.page').then((m) => m.AcceptInvitationPage),
+          import('./pages/accept-invitation/accept-invitation.page').then(
+            (m) => m.AcceptInvitationPage
+          ),
       },
       {
         path: 'verify-email',
@@ -69,7 +71,8 @@ export const authRoutes: Routes = [
         path: 'two-factor',
         title: 'Two-factor authentication · ZCC',
         canActivate: [guestGuard, mfaChallengeGuard],
-        loadComponent: () => import('./pages/two-factor/two-factor.page').then((m) => m.TwoFactorPage),
+        loadComponent: () =>
+          import('./pages/two-factor/two-factor.page').then((m) => m.TwoFactorPage),
       },
       {
         path: 'recovery-code',

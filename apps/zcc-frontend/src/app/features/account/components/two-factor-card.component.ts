@@ -15,7 +15,14 @@ type Step = 'idle' | 'reauth-enable' | 'scan' | 'codes' | 'reauth-disable' | 're
 @Component({
   selector: 'app-two-factor-card',
   standalone: true,
-  imports: [FormField, FormRoot, OtpInputComponent, AuthAlertComponent, ReauthFormComponent, RecoveryCodesComponent],
+  imports: [
+    FormField,
+    FormRoot,
+    OtpInputComponent,
+    AuthAlertComponent,
+    ReauthFormComponent,
+    RecoveryCodesComponent,
+  ],
   templateUrl: './two-factor-card.component.html',
   styleUrl: './account-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,11 +44,9 @@ export class TwoFactorCardComponent {
   protected readonly lowCodes = signal(this.auth.lowRecoveryCodes);
 
   private readonly codeModel = signal({ code: '' });
-  protected readonly codeForm = form(
-    this.codeModel,
-    (path) => otpRules(path.code),
-    { submission: { action: () => this.confirmEnrollment() } }
-  );
+  protected readonly codeForm = form(this.codeModel, (path) => otpRules(path.code), {
+    submission: { action: () => this.confirmEnrollment() },
+  });
 
   protected go(step: Step): void {
     this.error.set(null);
@@ -89,7 +94,10 @@ export class TwoFactorCardComponent {
     this.error.set(null);
     try {
       const res = await firstValueFrom(
-        this.auth.confirmMfaEnrollment(enrollment.enrollmentToken, normalizeOtp(this.codeModel().code))
+        this.auth.confirmMfaEnrollment(
+          enrollment.enrollmentToken,
+          normalizeOtp(this.codeModel().code)
+        )
       );
       this.enrollment.set(null);
       this.recoveryCodes.set(res.recoveryCodes);

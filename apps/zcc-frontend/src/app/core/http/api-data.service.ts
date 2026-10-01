@@ -24,10 +24,16 @@ export class ApiDataService {
     responseType: 'json',
   };
 
-  private request(method: string, path: string, body?: any, params?: any, options?: ApiOptions): Observable<any> {
+  private request(
+    method: string,
+    path: string,
+    body?: any,
+    params?: any,
+    options?: ApiOptions
+  ): Observable<any> {
     const opts = this.setOptions(options || {});
     let headers = new HttpHeaders();
-    
+
     if (opts.hideFullSpinner) {
       headers = headers.set('hideFullSpinner', 'true');
     }
@@ -51,7 +57,7 @@ export class ApiDataService {
       params,
       headers,
       responseType: responseType as any,
-      observe: observe as any
+      observe: observe as any,
     });
   }
 

@@ -3,12 +3,7 @@
   icon="pi pi-desktop"
   description="Everyone currently signed in to your organization. Revoking a session signs that device out on its next request."
 >
-  <button
-    type="button"
-    [class]="btn.secondary"
-    [disabled]="store.loading()"
-    (click)="refresh()"
-  >
+  <button type="button" [class]="btn.secondary" [disabled]="store.loading()" (click)="refresh()">
     <i class="pi pi-refresh text-xs" [class.pi-spin]="store.loading()" aria-hidden="true"></i>
     Refresh
   </button>
@@ -99,10 +94,7 @@
       <td class="px-4 py-3 text-gray-600 dark:text-gray-300" [title]="dateTime(s.createdAt)">
         {{ relative(s.createdAt) }}
       </td>
-      <td
-        class="px-4 py-3 text-gray-600 dark:text-gray-300"
-        [title]="dateTime(s.lastActivityAt)"
-      >
+      <td class="px-4 py-3 text-gray-600 dark:text-gray-300" [title]="dateTime(s.lastActivityAt)">
         {{ relative(s.lastActivityAt) }}
       </td>
       <td class="px-4 py-3 text-right">

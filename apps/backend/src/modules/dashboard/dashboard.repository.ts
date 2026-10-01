@@ -16,7 +16,20 @@ export interface DashboardRepository {
   orgSignupsSince(since: Date, tx?: TxClient): Promise<DashboardTrendPoint[]>;
   memberSignupsSince(since: Date, tx?: TxClient): Promise<DashboardTrendPoint[]>;
   auditTrendSince(since: Date, tx?: TxClient): Promise<DashboardTrendPoint[]>;
-  recentAuditEvents(limit: number, tx?: TxClient): Promise<Array<{ id: string; actorId: string | null; action: string; resource: string | null; severity: string; createdAt: Date; email?: string | null }>>;
+  recentAuditEvents(
+    limit: number,
+    tx?: TxClient
+  ): Promise<
+    Array<{
+      id: string;
+      actorId: string | null;
+      action: string;
+      resource: string | null;
+      severity: string;
+      createdAt: Date;
+      email?: string | null;
+    }>
+  >;
   recentAuditEventsPaginated(
     where: {
       createdAt?: { gte: Date };
@@ -26,7 +39,17 @@ export interface DashboardRepository {
     page: number,
     pageSize: number,
     tx?: TxClient
-  ): Promise<Array<{ id: string; actorId: string | null; action: string; resource: string | null; severity: string; createdAt: Date; email?: string | null }>>;
+  ): Promise<
+    Array<{
+      id: string;
+      actorId: string | null;
+      action: string;
+      resource: string | null;
+      severity: string;
+      createdAt: Date;
+      email?: string | null;
+    }>
+  >;
   countAuditEvents(
     where: {
       createdAt?: { gte: Date };
@@ -80,7 +103,10 @@ export class PrismaDashboardRepository implements DashboardRepository {
       _count: { _all: true },
       where: { createdAt: { gte: since }, isDeleted: false },
     });
-    return this.toDailyBuckets(rows.map((r) => ({ date: r.createdAt, count: r._count._all })), since);
+    return this.toDailyBuckets(
+      rows.map((r) => ({ date: r.createdAt, count: r._count._all })),
+      since
+    );
   }
 
   async memberSignupsSince(since: Date, tx?: TxClient): Promise<DashboardTrendPoint[]> {
@@ -90,7 +116,10 @@ export class PrismaDashboardRepository implements DashboardRepository {
       _count: { _all: true },
       where: { createdAt: { gte: since }, isDeleted: false },
     });
-    return this.toDailyBuckets(rows.map((r) => ({ date: r.createdAt, count: r._count._all })), since);
+    return this.toDailyBuckets(
+      rows.map((r) => ({ date: r.createdAt, count: r._count._all })),
+      since
+    );
   }
 
   async auditTrendSince(since: Date, tx?: TxClient): Promise<DashboardTrendPoint[]> {
@@ -100,13 +129,26 @@ export class PrismaDashboardRepository implements DashboardRepository {
       _count: { _all: true },
       where: { createdAt: { gte: since } },
     });
-    return this.toDailyBuckets(rows.map((r) => ({ date: r.createdAt, count: r._count._all })), since);
+    return this.toDailyBuckets(
+      rows.map((r) => ({ date: r.createdAt, count: r._count._all })),
+      since
+    );
   }
 
   async recentAuditEvents(
     limit: number,
     tx?: TxClient
-  ): Promise<Array<{ id: string; actorId: string | null; action: string; resource: string | null; severity: string; createdAt: Date; email?: string | null }>> {
+  ): Promise<
+    Array<{
+      id: string;
+      actorId: string | null;
+      action: string;
+      resource: string | null;
+      severity: string;
+      createdAt: Date;
+      email?: string | null;
+    }>
+  > {
     const db = tx ?? prisma;
     return db.auditLog.findMany({
       take: limit,
@@ -142,7 +184,17 @@ export class PrismaDashboardRepository implements DashboardRepository {
     page: number,
     pageSize: number,
     tx?: TxClient
-  ): Promise<Array<{ id: string; actorId: string | null; action: string; resource: string | null; severity: string; createdAt: Date; email?: string | null }>> {
+  ): Promise<
+    Array<{
+      id: string;
+      actorId: string | null;
+      action: string;
+      resource: string | null;
+      severity: string;
+      createdAt: Date;
+      email?: string | null;
+    }>
+  > {
     const db = tx ?? prisma;
     return db.auditLog.findMany({
       where,

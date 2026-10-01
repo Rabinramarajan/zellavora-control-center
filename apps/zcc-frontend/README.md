@@ -87,6 +87,7 @@ npm run type-check       # TypeScript check
 The dashboard includes full dark/light mode support using Tailwind CSS.
 
 ### Theme Colors
+
 - **Primary:** Blue (#0ea5e9)
 - **Secondary:** Purple (#a855f7)
 - **Accent:** Amber (#f59e0b)
@@ -94,6 +95,7 @@ The dashboard includes full dark/light mode support using Tailwind CSS.
 ### Customizing Theme
 
 Edit `tailwind.config.js`:
+
 ```javascript
 theme: {
   extend: {
@@ -110,10 +112,12 @@ theme: {
 The admin dashboard uses JWT-based authentication with automatic token refresh.
 
 ### Login
+
 - Email: `admin@zellavora.com`
 - Password: `password123`
 
 ### How it Works
+
 1. User logs in with email/password
 2. Backend returns JWT access token + refresh token
 3. Access token stored in localStorage
@@ -123,6 +127,7 @@ The admin dashboard uses JWT-based authentication with automatic token refresh.
 ## 🌐 API Integration
 
 ### API Client Service
+
 Located in `src/app/core/http/api-client.service.ts`
 
 ```typescript
@@ -152,16 +157,19 @@ this.api.delete<void>('/projects/123').subscribe(() => {
 ## 🧪 Testing
 
 ### Unit Tests
+
 ```bash
 npm run test
 ```
 
 ### E2E Tests
+
 ```bash
 npm run test:e2e
 ```
 
 ### Coverage Report
+
 ```bash
 npm run test -- --coverage
 ```
@@ -169,29 +177,35 @@ npm run test -- --coverage
 ## 📦 Dependencies
 
 ### Core
+
 - `@angular/core` - Angular framework
 - `@angular/router` - Routing
 - `@angular/forms` - Form handling
 - `rxjs` - Reactive programming
 
 ### Styling
+
 - `tailwindcss` - Utility-first CSS
 - `@tailwindcss/forms` - Form styling
 - `@tailwindcss/typography` - Typography
 
 ### Backend
+
 - `@supabase/supabase-js` - Supabase client
 
 ### Charts
+
 - `apexcharts` - Interactive charts
 
 ### Build
+
 - `@angular/cli` - Angular CLI
 - `vite` - Build tool (via Angular)
 
 ## 🚀 Deployment
 
 ### Vercel Deployment
+
 ```bash
 npm run build
 # Deploy the dist/ folder to Vercel
@@ -200,13 +214,16 @@ npm run build
 ## 🐛 Debugging
 
 ### Browser DevTools
+
 1. Open Chrome DevTools (F12)
 2. Go to Sources tab
 3. Set breakpoints in TypeScript files
 4. Step through code
 
 ### VS Code Debugging
+
 Add to `.vscode/launch.json`:
+
 ```json
 {
   "type": "chrome",
@@ -219,6 +236,7 @@ Add to `.vscode/launch.json`:
 ```
 
 ### Console Logging
+
 ```typescript
 import { LoggerService } from '@core/logger';
 

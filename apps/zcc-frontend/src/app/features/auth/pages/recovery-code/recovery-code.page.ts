@@ -23,11 +23,9 @@ export class RecoveryCodePage {
   protected readonly expired = signal(!this.auth.pendingMfaChallenge());
 
   private readonly model = signal({ code: '' });
-  protected readonly form = form(
-    this.model,
-    (path) => recoveryCodeRules(path.code),
-    { submission: { action: () => this.verify() } }
-  );
+  protected readonly form = form(this.model, (path) => recoveryCodeRules(path.code), {
+    submission: { action: () => this.verify() },
+  });
 
   private async verify() {
     this.formError.set(null);
@@ -42,7 +40,9 @@ export class RecoveryCodePage {
       }
       // Treat as a secret: never leave a rejected code in the field.
       this.model.set({ code: '' });
-      this.formError.set(apiErrorMessage(err, 'The recovery code is invalid or has already been used.'));
+      this.formError.set(
+        apiErrorMessage(err, 'The recovery code is invalid or has already been used.')
+      );
       return undefined;
     }
   }

@@ -3,7 +3,9 @@
     <div>
       <p class="eyebrow">Freelancer sheets</p>
       <h1>Approval Queue</h1>
-      <p class="lede">Review your team's daily and monthly sheets. Approve or send back for changes.</p>
+      <p class="lede">
+        Review your team's daily and monthly sheets. Approve or send back for changes.
+      </p>
     </div>
     <button class="ghost-btn" (click)="reload()" [disabled]="isLoading()">
       <i class="pi pi-refresh" [class.pi-spin]="isLoading()" aria-hidden="true"></i>
@@ -13,31 +15,45 @@
 
   <section class="metrics" aria-label="Approval overview">
     <article class="metric metric--violet">
-      <div class="metric-head"><span class="metric-icon"><i class="pi pi-file" aria-hidden="true"></i></span>Daily sheets pending</div>
+      <div class="metric-head">
+        <span class="metric-icon"><i class="pi pi-file" aria-hidden="true"></i></span>Daily sheets
+        pending
+      </div>
       <strong>{{ pendingDaily().length }}</strong>
       <p>submitted work logs</p>
     </article>
     <article class="metric metric--amber">
-      <div class="metric-head"><span class="metric-icon"><i class="pi pi-clock" aria-hidden="true"></i></span>Hours pending</div>
+      <div class="metric-head">
+        <span class="metric-icon"><i class="pi pi-clock" aria-hidden="true"></i></span>Hours pending
+      </div>
       <strong>{{ dailyHours() }}<span class="unit">h</span></strong>
-      <p>{{ dailyAmount() | currency:'USD' }} in value</p>
+      <p>{{ dailyAmount() | currency: 'USD' }} in value</p>
     </article>
     <article class="metric metric--green">
-      <div class="metric-head"><span class="metric-icon"><i class="pi pi-calendar" aria-hidden="true"></i></span>Monthly sheets pending</div>
+      <div class="metric-head">
+        <span class="metric-icon"><i class="pi pi-calendar" aria-hidden="true"></i></span>Monthly
+        sheets pending
+      </div>
       @if (loadedMonthly()) {
         <strong>{{ pendingMonthly() }}</strong>
         <p>{{ awaitingPayment() }} approved, awaiting payment</p>
       } @else {
         <strong class="muted">—</strong>
-        <button class="link-btn" (click)="selectTab('monthly')">Load monthly sheets <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+        <button class="link-btn" (click)="selectTab('monthly')">
+          Load monthly sheets <i class="pi pi-arrow-right" aria-hidden="true"></i>
+        </button>
       }
     </article>
     <article class="metric metric--blue">
-      <div class="metric-head"><span class="metric-icon"><i class="pi pi-users" aria-hidden="true"></i></span>Team members</div>
+      <div class="metric-head">
+        <span class="metric-icon"><i class="pi pi-users" aria-hidden="true"></i></span>Team members
+      </div>
       <div class="metric-row">
         <strong>{{ members().length }}</strong>
         <div class="avatar-stack" aria-hidden="true">
-          @for (member of members().slice(0, 4); track member[0]) {<span>{{ initials(member[1]) }}</span>}
+          @for (member of members().slice(0, 4); track member[0]) {
+            <span>{{ initials(member[1]) }}</span>
+          }
         </div>
       </div>
       <p>in the current queue</p>
@@ -55,16 +71,30 @@
   @if (rejection(); as pending) {
     <section class="rejection" aria-labelledby="reject-title">
       <div>
-        <h2 id="reject-title">Send {{ pending.ids.length }} sheet{{ pending.ids.length === 1 ? '' : 's' }} back</h2>
+        <h2 id="reject-title">
+          Send {{ pending.ids.length }} sheet{{ pending.ids.length === 1 ? '' : 's' }} back
+        </h2>
         <p>Explain what needs to change before approval.</p>
       </div>
       <label class="field">
         <span class="field__label">Reason for rejection</span>
-        <textarea class="field__input" maxlength="2000" rows="3" [value]="rejectionReason()" (input)="rejectionReason.set($any($event.target).value)"></textarea>
+        <textarea
+          class="field__input"
+          maxlength="2000"
+          rows="3"
+          [value]="rejectionReason()"
+          (input)="rejectionReason.set($any($event.target).value)"
+        ></textarea>
       </label>
       <div class="actions">
         <button class="ghost-btn" (click)="cancelRejection()">Cancel</button>
-        <button class="danger-btn" [disabled]="!rejectionReason().trim()" (click)="confirmRejection()">Send back</button>
+        <button
+          class="danger-btn"
+          [disabled]="!rejectionReason().trim()"
+          (click)="confirmRejection()"
+        >
+          Send back
+        </button>
       </div>
     </section>
   }
@@ -72,15 +102,28 @@
   <section class="panel" [attr.aria-busy]="isLoading()">
     <header class="panel-head">
       <nav class="segmented" aria-label="Approval type">
-        <button [class.active]="tab() === 'daily'" [attr.aria-pressed]="tab() === 'daily'" (click)="selectTab('daily')">
+        <button
+          [class.active]="tab() === 'daily'"
+          [attr.aria-pressed]="tab() === 'daily'"
+          (click)="selectTab('daily')"
+        >
           Daily sheets <span class="count">{{ pendingDaily().length }}</span>
         </button>
-        <button [class.active]="tab() === 'monthly'" [attr.aria-pressed]="tab() === 'monthly'" (click)="selectTab('monthly')">
+        <button
+          [class.active]="tab() === 'monthly'"
+          [attr.aria-pressed]="tab() === 'monthly'"
+          (click)="selectTab('monthly')"
+        >
           Monthly sheets <span class="count">{{ loadedMonthly() ? pendingMonthly() : '—' }}</span>
         </button>
       </nav>
       @if (tab() === 'daily') {
-        <select class="control" aria-label="Sort by date" [value]="newestFirst() ? 'newest' : 'oldest'" (change)="newestFirst.set($any($event.target).value === 'newest')">
+        <select
+          class="control"
+          aria-label="Sort by date"
+          [value]="newestFirst() ? 'newest' : 'oldest'"
+          (change)="newestFirst.set($any($event.target).value === 'newest')"
+        >
           <option value="oldest">Oldest first</option>
           <option value="newest">Newest first</option>
         </select>
@@ -90,25 +133,61 @@
     <div class="toolbar" role="search" aria-label="Filter sheets">
       <label class="search">
         <i class="pi pi-search" aria-hidden="true"></i>
-        <input aria-label="Search sheets" placeholder="Search project, task or employee" [value]="search()" (input)="search.set($any($event.target).value); page.set(1); selectedDaily.set([])" />
+        <input
+          aria-label="Search sheets"
+          placeholder="Search project, task or employee"
+          [value]="search()"
+          (input)="search.set($any($event.target).value); page.set(1); selectedDaily.set([])"
+        />
       </label>
       @if (tab() === 'daily') {
-        <select class="control" aria-label="Project" [class.set]="projectFilter()" [value]="projectFilter()" (change)="projectFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])">
+        <select
+          class="control"
+          aria-label="Project"
+          [class.set]="projectFilter()"
+          [value]="projectFilter()"
+          (change)="
+            projectFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])
+          "
+        >
           <option value="">All projects</option>
-          @for (project of projects(); track project) {<option [value]="project">{{ project }}</option>}
+          @for (project of projects(); track project) {
+            <option [value]="project">{{ project }}</option>
+          }
         </select>
       }
-      <select class="control" aria-label="Team member" [class.set]="memberFilter()" [value]="memberFilter()" (change)="memberFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])">
+      <select
+        class="control"
+        aria-label="Team member"
+        [class.set]="memberFilter()"
+        [value]="memberFilter()"
+        (change)="memberFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])"
+      >
         <option value="">All members</option>
-        @for (member of members(); track member[0]) {<option [value]="member[0]">{{ member[1] }}</option>}
+        @for (member of members(); track member[0]) {
+          <option [value]="member[0]">{{ member[1] }}</option>
+        }
       </select>
-      <select class="control" aria-label="Status" [class.set]="statusFilter()" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])">
+      <select
+        class="control"
+        aria-label="Status"
+        [class.set]="statusFilter()"
+        [value]="statusFilter()"
+        (change)="statusFilter.set($any($event.target).value); page.set(1); selectedDaily.set([])"
+      >
         <option value="">All statuses</option>
         <option value="submitted">Pending</option>
         <option value="approved">Approved</option>
-        @if (tab() === 'daily') {<option value="rejected">Rejected</option><option value="draft">Draft</option>}
+        @if (tab() === 'daily') {
+          <option value="rejected">Rejected</option>
+          <option value="draft">Draft</option>
+        }
       </select>
-      <app-date-range-picker [(from)]="dateFrom" [(to)]="dateTo" (rangeChange)="page.set(1); selectedDaily.set([])" />
+      <app-date-range-picker
+        [(from)]="dateFrom"
+        [(to)]="dateTo"
+        (rangeChange)="page.set(1); selectedDaily.set([])"
+      />
       @if (activeFilterCount()) {
         <button class="clear" (click)="clearFilters()">
           <i class="pi pi-filter-slash" aria-hidden="true"></i> Clear {{ activeFilterCount() }}
@@ -119,21 +198,37 @@
     @if (tab() === 'daily') {
       @if (selectedDaily().length) {
         <div class="bulk-bar" role="region" aria-label="Bulk actions">
-          <span><strong>{{ selectedDaily().length }}</strong> selected</span>
+          <span
+            ><strong>{{ selectedDaily().length }}</strong> selected</span
+          >
           <button class="link-btn" (click)="selectedDaily.set([])">Deselect</button>
           <div class="actions">
-            <button class="ghost-btn" [disabled]="selectionBusy()" (click)="rejectSelected()">Reject</button>
-            <button class="primary-btn" [disabled]="selectionBusy()" (click)="approveSelected()"><i class="pi pi-check" aria-hidden="true"></i> Approve {{ selectedDaily().length }}</button>
+            <button class="ghost-btn" [disabled]="selectionBusy()" (click)="rejectSelected()">
+              Reject
+            </button>
+            <button class="primary-btn" [disabled]="selectionBusy()" (click)="approveSelected()">
+              <i class="pi pi-check" aria-hidden="true"></i> Approve {{ selectedDaily().length }}
+            </button>
           </div>
         </div>
       }
 
       <div class="table-scroll">
         <table>
-          <caption class="sr-only">Daily sheets grouped by date</caption>
+          <caption class="sr-only">
+            Daily sheets grouped by date
+          </caption>
           <thead>
             <tr>
-              <th class="check"><input type="checkbox" aria-label="Select eligible sheets on this page" [checked]="allSelected()" [disabled]="isLoading() || !selectableCount()" (change)="toggleAll()" /></th>
+              <th class="check">
+                <input
+                  type="checkbox"
+                  aria-label="Select eligible sheets on this page"
+                  [checked]="allSelected()"
+                  [disabled]="isLoading() || !selectableCount()"
+                  (change)="toggleAll()"
+                />
+              </th>
               <th>Employee</th>
               <th>Project</th>
               <th>Task / description</th>
@@ -146,14 +241,23 @@
           <tbody>
             @if (isLoading()) {
               @for (skeleton of [1, 2, 3, 4]; track skeleton) {
-                <tr class="skeleton" aria-hidden="true"><td colspan="8"><span></span></td></tr>
+                <tr class="skeleton" aria-hidden="true">
+                  <td colspan="8"><span></span></td>
+                </tr>
               }
             } @else {
               @for (group of groups(); track group.date) {
                 <tr class="group">
                   <td colspan="8">
-                    <button (click)="toggleGroup(group.date)" [attr.aria-expanded]="!collapsed().has(group.date)">
-                      <i class="pi pi-chevron-down" [class.rotated]="collapsed().has(group.date)" aria-hidden="true"></i>
+                    <button
+                      (click)="toggleGroup(group.date)"
+                      [attr.aria-expanded]="!collapsed().has(group.date)"
+                    >
+                      <i
+                        class="pi pi-chevron-down"
+                        [class.rotated]="collapsed().has(group.date)"
+                        aria-hidden="true"
+                      ></i>
                       {{ group.label }}
                       <span class="count">{{ group.rows.length }}</span>
                     </button>
@@ -162,30 +266,80 @@
                 @if (!collapsed().has(group.date)) {
                   @for (row of group.rows; track row.id) {
                     <tr [class.selected]="isSelected(row.id)">
-                      <td class="check"><input type="checkbox" [attr.aria-label]="'Select ' + row.employee + ', ' + row.project" [checked]="isSelected(row.id)" [disabled]="row.status !== 'submitted' || !canReviewOwner(row.userId) || isBusy(row.id)" (change)="toggleRow(row)" /></td>
+                      <td class="check">
+                        <input
+                          type="checkbox"
+                          [attr.aria-label]="'Select ' + row.employee + ', ' + row.project"
+                          [checked]="isSelected(row.id)"
+                          [disabled]="
+                            row.status !== 'submitted' ||
+                            !canReviewOwner(row.userId) ||
+                            isBusy(row.id)
+                          "
+                          (change)="toggleRow(row)"
+                        />
+                      </td>
                       <td>
                         <div class="person">
                           <span class="avatar">{{ initials(row.employee) }}</span>
-                          <div>{{ row.employee }}<small>{{ row.date | date:'EEE, MMM d' }}</small></div>
+                          <div>
+                            {{ row.employee }}<small>{{ row.date | date: 'EEE, MMM d' }}</small>
+                          </div>
                         </div>
                       </td>
-                      <td><div class="project"><span [style.background]="row.projectColor">{{ row.projectInitials }}</span>{{ row.project }}</div></td>
+                      <td>
+                        <div class="project">
+                          <span [style.background]="row.projectColor">{{
+                            row.projectInitials
+                          }}</span
+                          >{{ row.project }}
+                        </div>
+                      </td>
                       <td class="task" [title]="row.task">{{ row.task }}</td>
                       <td class="num">{{ row.hours }}h</td>
-                      <td class="num">{{ row.amount | currency:'USD' }}</td>
+                      <td class="num">{{ row.amount | currency: 'USD' }}</td>
                       <td>
                         <span [class]="statusPill(row.status)">
-                          <i [class]="row.status === 'submitted' ? 'pi pi-clock' : row.status === 'approved' ? 'pi pi-check-circle' : 'pi pi-file'" aria-hidden="true"></i>
+                          <i
+                            [class]="
+                              row.status === 'submitted'
+                                ? 'pi pi-clock'
+                                : row.status === 'approved'
+                                  ? 'pi pi-check-circle'
+                                  : 'pi pi-file'
+                            "
+                            aria-hidden="true"
+                          ></i>
                           {{ statusLabel(row.status) }}
                         </span>
                       </td>
                       <td>
                         <div class="actions">
-                          <a class="icon-btn" [routerLink]="['/freelancer-sheets/daily', row.id]" [attr.aria-label]="'View sheet from ' + row.employee" title="View"><i class="pi pi-eye" aria-hidden="true"></i></a>
+                          <a
+                            class="icon-btn"
+                            [routerLink]="['/freelancer-sheets/daily', row.id]"
+                            [attr.aria-label]="'View sheet from ' + row.employee"
+                            title="View"
+                            ><i class="pi pi-eye" aria-hidden="true"></i
+                          ></a>
                           @if (row.status === 'submitted') {
                             @if (canReviewOwner(row.userId)) {
-                              <button class="icon-btn icon-btn--danger" [disabled]="isBusy(row.id)" (click)="startRejection('daily', [row.id])" [attr.aria-label]="'Reject sheet from ' + row.employee" title="Reject"><i class="pi pi-times" aria-hidden="true"></i></button>
-                              <button class="primary-btn" [disabled]="isBusy(row.id)" (click)="approveDaily([row.id])">{{ isBusy(row.id) ? 'Saving…' : 'Approve' }}</button>
+                              <button
+                                class="icon-btn icon-btn--danger"
+                                [disabled]="isBusy(row.id)"
+                                (click)="startRejection('daily', [row.id])"
+                                [attr.aria-label]="'Reject sheet from ' + row.employee"
+                                title="Reject"
+                              >
+                                <i class="pi pi-times" aria-hidden="true"></i>
+                              </button>
+                              <button
+                                class="primary-btn"
+                                [disabled]="isBusy(row.id)"
+                                (click)="approveDaily([row.id])"
+                              >
+                                {{ isBusy(row.id) ? 'Saving…' : 'Approve' }}
+                              </button>
                             } @else {
                               <span class="own-note">Awaiting another reviewer</span>
                             }
@@ -199,7 +353,10 @@
                 <tr>
                   <td colspan="8" class="empty">
                     <span class="empty-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
-                    @if (activeFilterCount() === 0 || (activeFilterCount() === 1 && statusFilter() === 'submitted')) {
+                    @if (
+                      activeFilterCount() === 0 ||
+                      (activeFilterCount() === 1 && statusFilter() === 'submitted')
+                    ) {
                       <h3>You're all caught up</h3>
                       <p>No daily sheets are waiting for review right now.</p>
                     } @else {
@@ -225,21 +382,60 @@
         (paginate)="page.set($event.page); selectedDaily.set([])"
       />
     } @else {
-      <app-smart-table [rows]="filteredMonthly()" [columns]="monthlyColumns" [loading]="isLoading()" [searchable]="false" [(pageSize)]="pageSize" [(sort)]="monthlySort" [pageSizeOptions]="pageSizeOptions" entityLabel="sheets">
-        <ng-template smartCell="employee" let-row><div class="person"><span class="avatar">{{ initials(row.employee) }}</span>{{ row.employee }}</div></ng-template>
-        <ng-template smartCell="status" let-row><span [class]="statusPill(row.status)">{{ statusLabel(row.status) }}</span></ng-template>
+      <app-smart-table
+        [rows]="filteredMonthly()"
+        [columns]="monthlyColumns"
+        [loading]="isLoading()"
+        [searchable]="false"
+        [(pageSize)]="pageSize"
+        [(sort)]="monthlySort"
+        [pageSizeOptions]="pageSizeOptions"
+        entityLabel="sheets"
+      >
+        <ng-template smartCell="employee" let-row
+          ><div class="person">
+            <span class="avatar">{{ initials(row.employee) }}</span
+            >{{ row.employee }}
+          </div></ng-template
+        >
+        <ng-template smartCell="status" let-row
+          ><span [class]="statusPill(row.status)">{{ statusLabel(row.status) }}</span></ng-template
+        >
         <ng-template smartCell="actions" let-row>
           <div class="actions">
-            <a class="icon-btn" routerLink="/freelancer-sheets/monthly/timesheet" [queryParams]="{ month: row.month, year: row.year, userId: row.userId }" [attr.aria-label]="'View timesheet for ' + row.employee" title="View"><i class="pi pi-eye" aria-hidden="true"></i></a>
+            <a
+              class="icon-btn"
+              routerLink="/freelancer-sheets/monthly/timesheet"
+              [queryParams]="{ month: row.month, year: row.year, userId: row.userId }"
+              [attr.aria-label]="'View timesheet for ' + row.employee"
+              title="View"
+              ><i class="pi pi-eye" aria-hidden="true"></i
+            ></a>
             @if (row.status === 'submitted') {
               @if (canReviewOwner(row.userId)) {
-                <button class="icon-btn icon-btn--danger" [disabled]="isBusy(row.id)" (click)="startRejection('monthly', [row.id])" [attr.aria-label]="'Reject timesheet for ' + row.employee" title="Reject"><i class="pi pi-times" aria-hidden="true"></i></button>
-                <button class="primary-btn" [disabled]="isBusy(row.id)" (click)="approveMonthly(row.id)">Approve</button>
+                <button
+                  class="icon-btn icon-btn--danger"
+                  [disabled]="isBusy(row.id)"
+                  (click)="startRejection('monthly', [row.id])"
+                  [attr.aria-label]="'Reject timesheet for ' + row.employee"
+                  title="Reject"
+                >
+                  <i class="pi pi-times" aria-hidden="true"></i>
+                </button>
+                <button
+                  class="primary-btn"
+                  [disabled]="isBusy(row.id)"
+                  (click)="approveMonthly(row.id)"
+                >
+                  Approve
+                </button>
               } @else {
                 <span class="own-note">Awaiting another reviewer</span>
               }
             } @else {
-              <button class="primary-btn" [disabled]="isBusy(row.id)" (click)="markPaid(row.id)">Mark paid</button>
+              <button class="primary-btn" [disabled]="isBusy(row.id)" (click)="markPaid(row.id)">
+                Mark paid
+              </button>
             }
           </div>
         </ng-template>

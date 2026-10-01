@@ -23,5 +23,4 @@ export class PermissionService {
   ) {
     return this.repo.assignToRole(roleId, permissionId, effect, organizationId);
   }
-
 }

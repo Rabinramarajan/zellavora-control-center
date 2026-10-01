@@ -1,9 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
-import { ConfigurationItem, UpsertConfigurationRequest } from '../../../shared/models/iam-admin.model';
+import {
+  ConfigurationItem,
+  UpsertConfigurationRequest,
+} from '../../../shared/models/iam-admin.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
-import { DataTableComponent, DataTableColumn, EmptyStateComponent } from '../../../shared/components/iam';
+import {
+  DataTableComponent,
+  DataTableColumn,
+  EmptyStateComponent,
+} from '../../../shared/components/iam';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_INPUT, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';

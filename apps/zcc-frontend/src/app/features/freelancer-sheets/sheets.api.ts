@@ -104,9 +104,14 @@ export class SheetsApi {
   }
 
   public reviewDailyBulk(ids: readonly string[], approved: boolean, rejectionReason?: string) {
-    return this.unwrap(this.http.post<Envelope<{
-      sheets: DailySheet[]; errors: { id: string; message: string }[];
-    }>>(`${this.base}/daily-sheets/bulk-approve`, { ids, approved, rejectionReason }));
+    return this.unwrap(
+      this.http.post<
+        Envelope<{
+          sheets: DailySheet[];
+          errors: { id: string; message: string }[];
+        }>
+      >(`${this.base}/daily-sheets/bulk-approve`, { ids, approved, rejectionReason })
+    );
   }
 
   public deleteDaily(id: string): Promise<{ id: string }> {

@@ -1,33 +1,45 @@
 <!doctype html>
 <html lang="en" class="dark" style="color-scheme: dark">
-<head>
-  <meta charset="utf-8">
-  <title>Zellavora Control Center | Enterprise CMS & Admin Dashboard</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Manage, monitor, and scale your digital products with Zellavora Control Center—an enterprise-grade CMS and secure administration platform.">
-  <meta name="theme-color" content="#03020c">
-  <script>
-    (function () {
-      var pref = 'dark';
-      try { pref = localStorage.getItem('zcc-theme') || 'dark'; } catch (e) {}
-      var onAuthPage = /^\/auth(\/|$)/.test(location.pathname);
-      var dark = onAuthPage || (pref === 'system' ? window.matchMedia('(prefers-color-scheme: dark)').matches : pref !== 'light');
-      var root = document.documentElement;
-      root.classList.toggle('dark', dark);
-      root.classList.toggle('light', !dark);
-      root.style.colorScheme = dark ? 'dark' : 'light';
-    })();
-  </script>
-  <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body>
-  <app-root></app-root>
-  <noscript>
-    <p>Zellavora Control Center requires JavaScript to be enabled.</p>
-  </noscript>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Zellavora Control Center | Enterprise CMS & Admin Dashboard</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Manage, monitor, and scale your digital products with Zellavora Control Center—an enterprise-grade CMS and secure administration platform."
+    />
+    <meta name="theme-color" content="#03020c" />
+    <script>
+      (function () {
+        var pref = 'dark';
+        try {
+          pref = localStorage.getItem('zcc-theme') || 'dark';
+        } catch (e) {}
+        var onAuthPage = /^\/auth(\/|$)/.test(location.pathname);
+        var dark =
+          onAuthPage ||
+          (pref === 'system'
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+            : pref !== 'light');
+        var root = document.documentElement;
+        root.classList.toggle('dark', dark);
+        root.classList.toggle('light', !dark);
+        root.style.colorScheme = dark ? 'dark' : 'light';
+      })();
+    </script>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <app-root></app-root>
+    <noscript>
+      <p>Zellavora Control Center requires JavaScript to be enabled.</p>
+    </noscript>
+  </body>
 </html>

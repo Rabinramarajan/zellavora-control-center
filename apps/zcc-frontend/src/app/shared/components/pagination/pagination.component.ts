@@ -67,12 +67,12 @@ export class PaginationComponent {
   readonly paginate = output<PageChangeEvent>();
 
   readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.totalItems() / Math.max(1, this.pageSize()))),
+    Math.max(1, Math.ceil(this.totalItems() / Math.max(1, this.pageSize())))
   );
 
   /** Page clamped into range — always safe to render. */
   readonly currentPage = computed(() =>
-    Math.min(Math.max(1, Math.trunc(this.page() || 1)), this.totalPages()),
+    Math.min(Math.max(1, Math.trunc(this.page() || 1)), this.totalPages())
   );
 
   readonly isFirst = computed(() => this.currentPage() <= 1);
@@ -80,18 +80,13 @@ export class PaginationComponent {
 
   readonly startIndex = computed(() => (this.currentPage() - 1) * this.pageSize());
   readonly endIndex = computed(() =>
-    Math.min(this.startIndex() + this.pageSize(), this.totalItems()),
+    Math.min(this.startIndex() + this.pageSize(), this.totalItems())
   );
   readonly rangeStart = computed(() => (this.totalItems() ? this.startIndex() + 1 : 0));
   readonly rangeEnd = computed(() => this.endIndex());
 
   readonly pages = computed<PageItem[]>(() =>
-    buildPageItems(
-      this.currentPage(),
-      this.totalPages(),
-      this.siblingCount(),
-      this.boundaryCount(),
-    ),
+    buildPageItems(this.currentPage(), this.totalPages(), this.siblingCount(), this.boundaryCount())
   );
 
   goTo(target: number): void {
@@ -132,7 +127,7 @@ export function buildPageItems(
   current: number,
   total: number,
   siblings = 1,
-  boundaries = 1,
+  boundaries = 1
 ): PageItem[] {
   const range = (a: number, b: number): number[] =>
     Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
@@ -144,21 +139,21 @@ export function buildPageItems(
 
   const sibStart = Math.max(
     Math.min(current - siblings, total - boundaries - siblings * 2 - 1),
-    boundaries + 2,
+    boundaries + 2
   );
   const sibEnd = Math.min(
     Math.max(current + siblings, boundaries + siblings * 2 + 2),
-    total - boundaries - 1,
+    total - boundaries - 1
   );
 
   const items: PageItem[] = range(1, boundaries).map(toPage);
 
   items.push(
-    sibStart > boundaries + 2 ? { type: 'ellipsis', key: 'start' } : toPage(boundaries + 1),
+    sibStart > boundaries + 2 ? { type: 'ellipsis', key: 'start' } : toPage(boundaries + 1)
   );
   items.push(...range(sibStart, sibEnd).map(toPage));
   items.push(
-    sibEnd < total - boundaries - 1 ? { type: 'ellipsis', key: 'end' } : toPage(total - boundaries),
+    sibEnd < total - boundaries - 1 ? { type: 'ellipsis', key: 'end' } : toPage(total - boundaries)
   );
   items.push(...range(total - boundaries + 1, total).map(toPage));
 

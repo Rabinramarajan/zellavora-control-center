@@ -43,13 +43,21 @@ export interface ResourceDetailDto extends ResourceListItemDto {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ResourceRow = Resource & {
-  actions?: Array<{ id: string; action: string; permissionId: string | null; permission?: { key: string } | null }>;
+  actions?: Array<{
+    id: string;
+    action: string;
+    permissionId: string | null;
+    permission?: { key: string } | null;
+  }>;
   children?: Array<{ id: string; name: string }>;
   _count?: { children: number };
 };
 
 export class ResourceMapper {
-  static toListItem(row: ResourceRow, parents: Array<{ id: string; name: string }> = []): ResourceListItemDto {
+  static toListItem(
+    row: ResourceRow,
+    parents: Array<{ id: string; name: string }> = []
+  ): ResourceListItemDto {
     return {
       id: row.id,
       name: row.name,
@@ -69,7 +77,10 @@ export class ResourceMapper {
     };
   }
 
-  static toDetail(row: ResourceRow, parents: Array<{ id: string; name: string }>): ResourceDetailDto {
+  static toDetail(
+    row: ResourceRow,
+    parents: Array<{ id: string; name: string }>
+  ): ResourceDetailDto {
     return {
       ...this.toListItem(row, parents),
       metadata: (row.metadata as Record<string, unknown>) ?? null,

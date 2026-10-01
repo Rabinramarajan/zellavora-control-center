@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom, map } from 'rxjs';
@@ -62,11 +56,11 @@ export class SettingsComponent {
   protected readonly tabs = SETTINGS_TABS;
 
   protected readonly activeTabId = toSignal(
-    this.route.paramMap.pipe(map(params => this.toTabId(params.get('tab')))),
+    this.route.paramMap.pipe(map((params) => this.toTabId(params.get('tab')))),
     { initialValue: this.toTabId(this.route.snapshot.paramMap.get('tab')) }
   );
   protected readonly activeTab = computed(
-    () => this.tabs.find(tab => tab.id === this.activeTabId()) ?? this.tabs[0]
+    () => this.tabs.find((tab) => tab.id === this.activeTabId()) ?? this.tabs[0]
   );
 
   protected readonly generalSettings = signal<GeneralSettings>(DEFAULT_GENERAL_SETTINGS);
@@ -109,7 +103,11 @@ export class SettingsComponent {
     this.avatarSaving.set(true);
     try {
       await firstValueFrom(this.auth.updateAvatar(avatar));
-      this.toast('success', 'Saved', avatar ? 'Profile picture updated' : 'Profile picture removed');
+      this.toast(
+        'success',
+        'Saved',
+        avatar ? 'Profile picture updated' : 'Profile picture removed'
+      );
     } catch (err) {
       this.toast('error', 'Error', apiErrorMessage(err, 'Failed to update profile picture'));
     } finally {
@@ -125,8 +123,8 @@ export class SettingsComponent {
     try {
       const response = await firstValueFrom(this.apiService.getSettings());
       const data = response?.data;
-      if (data?.general) this.generalSettings.update(s => ({ ...s, ...data.general }));
-      if (data?.profile) this.profileSettings.update(s => ({ ...s, ...data.profile }));
+      if (data?.general) this.generalSettings.update((s) => ({ ...s, ...data.general }));
+      if (data?.profile) this.profileSettings.update((s) => ({ ...s, ...data.profile }));
     } catch {
       this.toast('error', 'Error', 'Failed to load settings');
     }
@@ -155,6 +153,6 @@ export class SettingsComponent {
   }
 
   private toTabId(value: string | null): SettingsTabId {
-    return SETTINGS_TABS.some(tab => tab.id === value) ? (value as SettingsTabId) : 'general';
+    return SETTINGS_TABS.some((tab) => tab.id === value) ? (value as SettingsTabId) : 'general';
   }
 }

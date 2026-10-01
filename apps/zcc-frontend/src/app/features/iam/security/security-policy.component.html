@@ -131,8 +131,8 @@
             Network allow-list
           </legend>
           <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
-            Only allow sign-in from these IPv4 addresses or CIDR ranges. Leave empty to allow
-            any network.
+            Only allow sign-in from these IPv4 addresses or CIDR ranges. Leave empty to allow any
+            network.
             <strong class="font-medium text-amber-600 dark:text-amber-400"
               >Include your own network before saving, or you will lock yourself out of new
               sign-ins.</strong
@@ -157,9 +157,7 @@
           <p
             id="ip-ranges-hint"
             class="mt-1 text-xs"
-            [class]="
-              invalidRanges().length ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
-            "
+            [class]="invalidRanges().length ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'"
           >
             @if (invalidRanges().length) {
               Not a valid IPv4 address or range: {{ invalidRanges().join(', ') }}
@@ -197,8 +195,8 @@
               Require MFA for everyone
             </h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Members without MFA are sent to set it up right after signing in. Existing
-              sessions are not interrupted.
+              Members without MFA are sent to set it up right after signing in. Existing sessions
+              are not interrupted.
             </p>
           </div>
           <button
@@ -246,10 +244,7 @@
             role="img"
             [attr.aria-label]="enrolledPct() + '% of members enrolled'"
           >
-            <div
-              class="h-full rounded-full bg-emerald-500"
-              [style.width.%]="enrolledPct()"
-            ></div>
+            <div class="h-full rounded-full bg-emerald-500" [style.width.%]="enrolledPct()"></div>
           </div>
         }
       }

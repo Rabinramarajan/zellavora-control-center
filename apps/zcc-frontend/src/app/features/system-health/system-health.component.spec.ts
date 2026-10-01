@@ -26,9 +26,7 @@ describe('SystemHealthComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [SystemHealthComponent],
-      providers: [
-        { provide: SystemHealthRepository, useValue: spy },
-      ],
+      providers: [{ provide: SystemHealthRepository, useValue: spy }],
     });
 
     fixture = TestBed.createComponent(SystemHealthComponent);

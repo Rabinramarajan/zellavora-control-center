@@ -1,4 +1,8 @@
-<fieldset class="otp" [class.otp--invalid]="showError()" [attr.aria-describedby]="showError() ? id + '-error' : null">
+<fieldset
+  class="otp"
+  [class.otp--invalid]="showError()"
+  [attr.aria-describedby]="showError() ? id + '-error' : null"
+>
   <legend class="otp__legend">{{ label() }}</legend>
   <div class="otp__boxes">
     @for (i of slots; track i) {

@@ -55,7 +55,9 @@ const name = await firstValueFrom(
 ## 2. Custom dialog component
 
 ```ts
-export interface EditUserData { user: User }
+export interface EditUserData {
+  user: User;
+}
 
 @Component({
   selector: 'app-edit-user-dialog',
@@ -67,10 +69,21 @@ export interface EditUserData { user: User }
         <label>Name <input formControlName="name" /></label>
       </form>
 
-      <button dialogActions type="button" class="app-dialog-btn app-dialog-btn--ghost" (click)="ref.close()">
+      <button
+        dialogActions
+        type="button"
+        class="app-dialog-btn app-dialog-btn--ghost"
+        (click)="ref.close()"
+      >
         Cancel
       </button>
-      <button dialogActions type="submit" form="edit-user-form" class="app-dialog-btn" [disabled]="saving()">
+      <button
+        dialogActions
+        type="submit"
+        form="edit-user-form"
+        class="app-dialog-btn"
+        [disabled]="saving()"
+      >
         Save
       </button>
     </app-dialog-shell>
@@ -86,10 +99,13 @@ export class EditUserDialogComponent {
 
   save() {
     this.saving.set(true);
-    this.ref.disableClose = true;               // lock while saving
+    this.ref.disableClose = true; // lock while saving
     this.#api.update(this.data.user.id, this.form.getRawValue()).subscribe({
       next: (u) => this.ref.close(u),
-      error: () => { this.saving.set(false); this.ref.disableClose = false; },
+      error: () => {
+        this.saving.set(false);
+        this.ref.disableClose = false;
+      },
     });
   }
 }
@@ -110,36 +126,36 @@ this.#dialog
 
 ```ts
 this.#dialog.open(FiltersPanelComponent, { position: 'right', size: 'sm' }); // side drawer
-this.#dialog.open(ShareSheetComponent, { position: 'bottom' });              // bottom sheet
-this.#dialog.open(ReportViewerComponent, { size: 'full' });                  // full screen
+this.#dialog.open(ShareSheetComponent, { position: 'bottom' }); // bottom sheet
+this.#dialog.open(ReportViewerComponent, { size: 'full' }); // full screen
 ```
 
 ## Config reference (`AppDialogConfig<D>`)
 
-| Option | Default | Notes |
-|---|---|---|
-| `data` | — | Read with `injectDialogData<D>()` |
-| `size` | `'md'` | `sm` 400 · `md` 560 · `lg` 800 · `xl` 1140 · `full` |
-| `position` | `'center'` | `center` · `right` · `left` · `bottom` |
-| `width` / `height` / `maxHeight` | from preset | Override the preset |
-| `disableClose` | `false` | Blocks Escape + backdrop click |
-| `hasBackdrop` | `true` | |
-| `panelClass` / `backdropClass` | — | Added to the defaults |
-| `ariaLabel` | — | Only if you don't use `<app-dialog-shell>` |
-| `autoFocus` | `'first-tabbable'` | Honors `cdkFocusInitial` |
-| `restoreFocus` | `true` | |
-| `closeOnNavigation` | `true` | |
+| Option                           | Default            | Notes                                               |
+| -------------------------------- | ------------------ | --------------------------------------------------- |
+| `data`                           | —                  | Read with `injectDialogData<D>()`                   |
+| `size`                           | `'md'`             | `sm` 400 · `md` 560 · `lg` 800 · `xl` 1140 · `full` |
+| `position`                       | `'center'`         | `center` · `right` · `left` · `bottom`              |
+| `width` / `height` / `maxHeight` | from preset        | Override the preset                                 |
+| `disableClose`                   | `false`            | Blocks Escape + backdrop click                      |
+| `hasBackdrop`                    | `true`             |                                                     |
+| `panelClass` / `backdropClass`   | —                  | Added to the defaults                               |
+| `ariaLabel`                      | —                  | Only if you don't use `<app-dialog-shell>`          |
+| `autoFocus`                      | `'first-tabbable'` | Honors `cdkFocusInitial`                            |
+| `restoreFocus`                   | `true`             |                                                     |
+| `closeOnNavigation`              | `true`             |                                                     |
 
 ## Shell inputs (`<app-dialog-shell>`)
 
-| Input | Default | |
-|---|---|---|
-| `title` | `''` | Or project `[dialogTitle]` content |
-| `subtitle` | — | |
-| `showClose` | `true` | X button |
-| `busy` | `false` | Progress bar + disables X |
-| `closeResult` | `undefined` | Value emitted when X is clicked |
-| `actionsAlign` | `'end'` | `end` · `start` · `between` |
+| Input          | Default     |                                    |
+| -------------- | ----------- | ---------------------------------- |
+| `title`        | `''`        | Or project `[dialogTitle]` content |
+| `subtitle`     | —           |                                    |
+| `showClose`    | `true`      | X button                           |
+| `busy`         | `false`     | Progress bar + disables X          |
+| `closeResult`  | `undefined` | Value emitted when X is clicked    |
+| `actionsAlign` | `'end'`     | `end` · `start` · `between`        |
 
 Slots: default = body (scrolls), `[dialogActions]` = footer (hidden when empty).
 

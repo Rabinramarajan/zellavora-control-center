@@ -1,11 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  TemplateRef,
-  input,
-  output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, TemplateRef, input, output } from '@angular/core';
 
 /** Minimal column contract for the shared data table. */
 export interface DataTableColumn {

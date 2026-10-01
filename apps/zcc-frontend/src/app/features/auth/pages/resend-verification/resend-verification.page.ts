@@ -23,11 +23,9 @@ export class ResendVerificationPage {
   protected readonly formError = signal<string | null>(null);
   protected readonly model = signal({ email: this.auth.pendingVerificationEmail });
 
-  protected readonly form = form(
-    this.model,
-    (path) => emailRules(path.email),
-    { submission: { action: () => this.submit() } }
-  );
+  protected readonly form = form(this.model, (path) => emailRules(path.email), {
+    submission: { action: () => this.submit() },
+  });
 
   private async submit() {
     this.formError.set(null);

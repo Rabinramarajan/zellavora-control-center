@@ -17,20 +17,29 @@ const CreateRole = z.object({
   label: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   level: z.number().int().min(0).max(100).default(0),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
   inheritsFrom: z.array(z.string().uuid()).default([]),
-  permissions: z.array(z.object({
-    key: z.string().min(3).max(200),
-    effect: z.enum(['allow', 'deny']).default('allow')
-  })).default([])
+  permissions: z
+    .array(
+      z.object({
+        key: z.string().min(3).max(200),
+        effect: z.enum(['allow', 'deny']).default('allow'),
+      })
+    )
+    .default([]),
 });
 
 const UpdateRole = CreateRole.partial();
 
-const PermissionsSet = z.array(z.object({
-  key: z.string(),
-  effect: z.enum(['allow', 'deny'])
-}));
+const PermissionsSet = z.array(
+  z.object({
+    key: z.string(),
+    effect: z.enum(['allow', 'deny']),
+  })
+);
 
 const InheritanceSet = z.array(z.string().uuid());
 
@@ -38,29 +47,36 @@ const AssignRole = z.object({
   roleId: z.string().uuid(),
   resourceType: z.string().max(50).optional(),
   resourceId: z.string().uuid().optional(),
-  validUntil: z.string().datetime().optional()
+  validUntil: z.string().datetime().optional(),
 });
 
 const CheckBody = z.object({
-  checks: z.array(z.string()).min(1).max(100)
+  checks: z.array(z.string()).min(1).max(100),
 });
 
 // Helper for DAG graph role expansion
 async function expandRoleGraph(db: any, seedRoleIds: string[]) {
   if (seedRoleIds.length === 0) return [];
   const visited = new Set<string>(seedRoleIds);
-  const queue = seedRoleIds.map(id => ({ id, depth: 0 }));
+  const queue = seedRoleIds.map((id) => ({ id, depth: 0 }));
   const collected = [];
 
   while (queue.length > 0) {
     const { id, depth } = queue.shift()!;
     if (depth > 8) throw new Error('Role inheritance depth exceeds 8');
 
-    const { data: role } = await db.from('roles').select('id, key, label, organization_id, level').eq('id', id).single();
+    const { data: role } = await db
+      .from('roles')
+      .select('id, key, label, organization_id, level')
+      .eq('id', id)
+      .single();
     if (!role) continue;
     collected.push(role);
 
-    const { data: parents } = await db.from('role_inheritance').select('parent_role_id').eq('role_id', id);
+    const { data: parents } = await db
+      .from('role_inheritance')
+      .select('parent_role_id')
+      .eq('role_id', id);
     for (const p of parents ?? []) {
       if (!visited.has(p.parent_role_id)) {
         visited.add(p.parent_role_id);
@@ -94,7 +110,11 @@ app.get('/permissions', async (c) => {
     return jsonResponse({ data: data || [] });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -106,7 +126,11 @@ app.get('/permissions/groups', async (c) => {
     return jsonResponse({ data: data || [] });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -126,7 +150,11 @@ app.get('/roles', async (c) => {
     return jsonResponse({ data: data || [] });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -141,9 +169,18 @@ app.get('/roles/:id', async (c) => {
     if (error || !role) throw new AppError('Role not found', 404, 'ROLE_NOT_FOUND');
 
     const [{ data: perms }, { data: parents }, { data: children }] = await Promise.all([
-      db.from('role_permissions').select('effect, permissions!inner(key, label, type)').eq('role_id', id),
-      db.from('role_inheritance').select('parent_role_id, roles!role_inheritance_parent_role_id_fkey(id, key, label, level)').eq('role_id', id),
-      db.from('role_inheritance').select('role_id, roles!role_inheritance_role_id_fkey(id, key, label, level)').eq('parent_role_id', id)
+      db
+        .from('role_permissions')
+        .select('effect, permissions!inner(key, label, type)')
+        .eq('role_id', id),
+      db
+        .from('role_inheritance')
+        .select('parent_role_id, roles!role_inheritance_parent_role_id_fkey(id, key, label, level)')
+        .eq('role_id', id),
+      db
+        .from('role_inheritance')
+        .select('role_id, roles!role_inheritance_role_id_fkey(id, key, label, level)')
+        .eq('parent_role_id', id),
     ]);
 
     return jsonResponse({
@@ -153,15 +190,19 @@ app.get('/roles/:id', async (c) => {
           key: p.permissions.key,
           label: p.permissions.label,
           type: p.permissions.type,
-          effect: p.effect
+          effect: p.effect,
         })),
         inheritsFrom: (parents ?? []).map((p: any) => p.roles),
-        inheritedBy: (children ?? []).map((c: any) => c.roles)
-      }
+        inheritedBy: (children ?? []).map((c: any) => c.roles),
+      },
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -183,7 +224,7 @@ app.post('/roles', async (c) => {
         description: input.description,
         level: input.level,
         color: input.color,
-        is_system: false
+        is_system: false,
       })
       .select()
       .single();
@@ -193,14 +234,20 @@ app.post('/roles', async (c) => {
     // Insert permissions
     if (input.permissions.length > 0) {
       // Find permission IDs by keys
-      const { data: pRows } = await db.from('permissions').select('id, key').in('key', input.permissions.map(p => p.key));
+      const { data: pRows } = await db
+        .from('permissions')
+        .select('id, key')
+        .in(
+          'key',
+          input.permissions.map((p) => p.key)
+        );
       const keyToId = new Map((pRows ?? []).map((r: any) => [r.key, r.id]));
       const permInserts = input.permissions
-        .filter(p => keyToId.has(p.key))
-        .map(p => ({
+        .filter((p) => keyToId.has(p.key))
+        .map((p) => ({
           role_id: role.id,
           permission_id: keyToId.get(p.key),
-          effect: p.effect
+          effect: p.effect,
         }));
       if (permInserts.length > 0) {
         await db.from('role_permissions').insert(permInserts);
@@ -209,9 +256,9 @@ app.post('/roles', async (c) => {
 
     // Insert inheritance
     if (input.inheritsFrom.length > 0) {
-      const inhInserts = input.inheritsFrom.map(pId => ({
+      const inhInserts = input.inheritsFrom.map((pId) => ({
         role_id: role.id,
-        parent_role_id: pId
+        parent_role_id: pId,
       }));
       await db.from('role_inheritance').insert(inhInserts);
     }
@@ -219,7 +266,11 @@ app.post('/roles', async (c) => {
     return jsonResponse({ data: role }, 201);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -240,7 +291,7 @@ app.patch('/roles/:id', async (c) => {
         label: patch.label,
         description: patch.description,
         level: patch.level,
-        color: patch.color
+        color: patch.color,
       })
       .eq('id', id)
       .select()
@@ -250,7 +301,11 @@ app.patch('/roles/:id', async (c) => {
     return jsonResponse({ data: role });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -267,7 +322,11 @@ app.delete('/roles/:id', async (c) => {
     return jsonResponse({ data: { ok: true } });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -284,14 +343,20 @@ app.put('/roles/:id/permissions', async (c) => {
     await db.from('role_permissions').delete().eq('role_id', id);
 
     if (perms.length > 0) {
-      const { data: pRows } = await db.from('permissions').select('id, key').in('key', perms.map(p => p.key));
+      const { data: pRows } = await db
+        .from('permissions')
+        .select('id, key')
+        .in(
+          'key',
+          perms.map((p) => p.key)
+        );
       const keyToId = new Map((pRows ?? []).map((r: any) => [r.key, r.id]));
       const inserts = perms
-        .filter(p => keyToId.has(p.key))
-        .map(p => ({
+        .filter((p) => keyToId.has(p.key))
+        .map((p) => ({
           role_id: id,
           permission_id: keyToId.get(p.key),
-          effect: p.effect
+          effect: p.effect,
         }));
       if (inserts.length > 0) {
         await db.from('role_permissions').insert(inserts);
@@ -301,7 +366,11 @@ app.put('/roles/:id/permissions', async (c) => {
     return jsonResponse({ data: { ok: true } });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -318,9 +387,9 @@ app.put('/roles/:id/inheritance', async (c) => {
     await db.from('role_inheritance').delete().eq('role_id', id);
 
     if (parents.length > 0) {
-      const inserts = parents.map(pId => ({
+      const inserts = parents.map((pId) => ({
         role_id: id,
-        parent_role_id: pId
+        parent_role_id: pId,
       }));
       await db.from('role_inheritance').insert(inserts);
     }
@@ -328,7 +397,11 @@ app.put('/roles/:id/inheritance', async (c) => {
     return jsonResponse({ data: { ok: true } });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -349,7 +422,11 @@ app.get('/users/:userId/roles', async (c) => {
     return jsonResponse({ data: data || [] });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -364,7 +441,11 @@ app.post('/users/:userId/roles', async (c) => {
 
     const db = getSupabaseAdmin();
     // Validate role
-    const { data: role } = await db.from('roles').select('id, organization_id').eq('id', input.roleId).single();
+    const { data: role } = await db
+      .from('roles')
+      .select('id, organization_id')
+      .eq('id', input.roleId)
+      .single();
     if (!role) throw new AppError('Role not found', 404, 'ROLE_NOT_FOUND');
     if (role.organization_id && role.organization_id !== claims.tid) {
       throw new AppError('Role does not belong to this organization', 400, 'ROLE_ORG_MISMATCH');
@@ -381,7 +462,7 @@ app.post('/users/:userId/roles', async (c) => {
         status: 'active',
         valid_from: new Date().toISOString(),
         valid_until: input.validUntil,
-        assigned_by: claims.sub
+        assigned_by: claims.sub,
       })
       .select()
       .single();
@@ -390,7 +471,11 @@ app.post('/users/:userId/roles', async (c) => {
     return jsonResponse({ data }, 201);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -406,7 +491,7 @@ app.delete('/users/:userId/roles/:assignmentId', async (c) => {
       .update({
         status: 'suspended',
         revoked_at: new Date().toISOString(),
-        revoked_by: claims.sub
+        revoked_by: claims.sub,
       })
       .eq('id', assignmentId);
 
@@ -414,7 +499,11 @@ app.delete('/users/:userId/roles/:assignmentId', async (c) => {
     return jsonResponse({ data: { ok: true } });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -435,10 +524,16 @@ app.get('/me/policy', async (c) => {
     const effectiveRoles = seedRoles.length > 0 ? await expandRoleGraph(db, seedRoles) : [];
 
     // 2. Resolve permissions
-    const { data: rolePerms } = effectiveRoles.length > 0 ? await db
-      .from('role_permissions')
-      .select('effect, permissions!inner(key)')
-      .in('role_id', effectiveRoles.map(r => r.id)) : { data: [] };
+    const { data: rolePerms } =
+      effectiveRoles.length > 0
+        ? await db
+            .from('role_permissions')
+            .select('effect, permissions!inner(key)')
+            .in(
+              'role_id',
+              effectiveRoles.map((r) => r.id)
+            )
+        : { data: [] };
 
     const { data: userOverrides } = await db
       .from('user_permissions')
@@ -465,14 +560,18 @@ app.get('/me/policy', async (c) => {
       version: 1,
       allowed: Array.from(allowed),
       denied: Array.from(denied),
-      roles: effectiveRoles.map(r => ({ id: r.id, key: r.key, label: r.label, level: r.level })),
-      resolvedAt: Date.now()
+      roles: effectiveRoles.map((r) => ({ id: r.id, key: r.key, label: r.label, level: r.level })),
+      resolvedAt: Date.now(),
     };
 
     return jsonResponse({ data: policy });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -494,10 +593,16 @@ app.post('/check', async (c) => {
     const seedRoles = (assignments ?? []).map((a: any) => a.role_id);
     const effectiveRoles = seedRoles.length > 0 ? await expandRoleGraph(db, seedRoles) : [];
 
-    const { data: rolePerms } = effectiveRoles.length > 0 ? await db
-      .from('role_permissions')
-      .select('effect, permissions!inner(key)')
-      .in('role_id', effectiveRoles.map(r => r.id)) : { data: [] };
+    const { data: rolePerms } =
+      effectiveRoles.length > 0
+        ? await db
+            .from('role_permissions')
+            .select('effect, permissions!inner(key)')
+            .in(
+              'role_id',
+              effectiveRoles.map((r) => r.id)
+            )
+        : { data: [] };
 
     const { data: userOverrides } = await db
       .from('user_permissions')
@@ -526,7 +631,11 @@ app.post('/check', async (c) => {
     return jsonResponse({ data: { results, version: 1 } });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

@@ -31,12 +31,7 @@ const controller = new DashboardController();
  *       403:
  *         description: Insufficient permission
  */
-router.get(
-  '/overview',
-  authenticate,
-  requirePermission('dashboard:read'),
-  controller.overview
-);
+router.get('/overview', authenticate, requirePermission('dashboard:read'), controller.overview);
 
 /**
  * @swagger
@@ -80,11 +75,6 @@ router.get(
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
-router.get(
-  '/activity',
-  authenticate,
-  requirePermission('dashboard:read'),
-  controller.activity
-);
+router.get('/activity', authenticate, requirePermission('dashboard:read'), controller.activity);
 
 export default router;

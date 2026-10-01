@@ -6,7 +6,9 @@
 
   <ol class="codes__grid" aria-label="Recovery codes">
     @for (code of codes(); track code) {
-      <li><code>{{ code }}</code></li>
+      <li>
+        <code>{{ code }}</code>
+      </li>
     }
   </ol>
 
@@ -14,14 +16,22 @@
     <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="copy()">
       {{ copied() ? 'Copied' : 'Copy codes' }}
     </button>
-    <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="download()">
+    <button
+      type="button"
+      class="auth-btn auth-btn--secondary auth-btn--inline"
+      (click)="download()"
+    >
       Download .txt
     </button>
   </div>
   <p class="sr-only" role="status">{{ copied() ? 'Recovery codes copied to clipboard.' : '' }}</p>
 
   <label class="auth-check">
-    <input type="checkbox" [checked]="acknowledged()" (change)="acknowledged.set(!acknowledged())" />
+    <input
+      type="checkbox"
+      [checked]="acknowledged()"
+      (change)="acknowledged.set(!acknowledged())"
+    />
     <span>I've saved my recovery codes somewhere safe.</span>
   </label>
   <button

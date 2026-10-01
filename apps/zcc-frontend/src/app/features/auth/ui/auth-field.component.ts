@@ -9,7 +9,11 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
+import type {
+  FormValueControl,
+  ValidationError,
+  WithOptionalFieldTree,
+} from '@angular/forms/signals';
 
 let nextId = 0;
 
@@ -59,8 +63,12 @@ export class AuthFieldComponent implements FormValueControl<string> {
   protected readonly inputType = computed(() =>
     this.type() === 'password' && this.revealed() ? 'text' : this.type()
   );
-  protected readonly showError = computed(() => this.touched() && this.invalid() && this.errors().length > 0);
-  protected readonly errorText = computed(() => this.errors()[0]?.message ?? 'This field is invalid.');
+  protected readonly showError = computed(
+    () => this.touched() && this.invalid() && this.errors().length > 0
+  );
+  protected readonly errorText = computed(
+    () => this.errors()[0]?.message ?? 'This field is invalid.'
+  );
   protected readonly describedBy = computed(() => {
     const ids: string[] = [];
     if (this.showError()) ids.push(`${this.id}-error`);
@@ -78,6 +86,7 @@ export class AuthFieldComponent implements FormValueControl<string> {
   }
 
   protected onKeyup(event: KeyboardEvent): void {
-    if (this.type() === 'password') this.capsLock.set(event.getModifierState?.('CapsLock') ?? false);
+    if (this.type() === 'password')
+      this.capsLock.set(event.getModifierState?.('CapsLock') ?? false);
   }
 }

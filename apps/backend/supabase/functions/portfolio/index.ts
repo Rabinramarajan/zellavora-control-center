@@ -28,7 +28,11 @@ const registerPortfolioCrud = (resourceName: string, tableName: string) => {
       return jsonResponse(data || []);
     } catch (e) {
       const err = handleError(e);
-      return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+      return errorResponse({
+        message: err.error.message,
+        code: err.error.code,
+        statusCode: err.status,
+      });
     }
   });
 
@@ -51,7 +55,11 @@ const registerPortfolioCrud = (resourceName: string, tableName: string) => {
       return jsonResponse(data, 201);
     } catch (e) {
       const err = handleError(e);
-      return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+      return errorResponse({
+        message: err.error.message,
+        code: err.error.code,
+        statusCode: err.status,
+      });
     }
   });
 
@@ -74,7 +82,11 @@ const registerPortfolioCrud = (resourceName: string, tableName: string) => {
       return jsonResponse(data);
     } catch (e) {
       const err = handleError(e);
-      return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+      return errorResponse({
+        message: err.error.message,
+        code: err.error.code,
+        statusCode: err.status,
+      });
     }
   });
 
@@ -84,24 +96,25 @@ const registerPortfolioCrud = (resourceName: string, tableName: string) => {
       const id = c.req.param('id');
       const claims = await authenticate(c.req.raw);
       const db = getSupabaseAdmin();
-      const { error } = await db
-        .from(tableName)
-        .delete()
-        .eq('id', id)
-        .eq('user_id', claims.sub);
+      const { error } = await db.from(tableName).delete().eq('id', id).eq('user_id', claims.sub);
 
       if (error) throw error;
       return new Response(null, {
         status: 204,
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-tenant-id',
+          'Access-Control-Allow-Headers':
+            'authorization, x-client-info, apikey, content-type, x-tenant-id',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
         },
       });
     } catch (e) {
       const err = handleError(e);
-      return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+      return errorResponse({
+        message: err.error.message,
+        code: err.error.code,
+        statusCode: err.status,
+      });
     }
   });
 };
@@ -111,11 +124,7 @@ app.get('/profile', async (c) => {
   try {
     const userId = c.req.query('userId');
     const db = getSupabaseAdmin();
-    const { data, error } = await db
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    const { data, error } = await db.from('profiles').select('*').eq('user_id', userId).single();
 
     if (error || !data) {
       throw new AppError('Profile not found', 404, 'PROFILE_NOT_FOUND');
@@ -123,7 +132,11 @@ app.get('/profile', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -144,7 +157,11 @@ app.put('/profile', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

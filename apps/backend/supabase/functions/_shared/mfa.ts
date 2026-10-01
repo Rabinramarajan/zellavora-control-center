@@ -48,9 +48,7 @@ export class MfaService {
       })
       .eq('id', opts.userId);
 
-    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () =>
-      this.generateRecoveryCode()
-    );
+    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () => this.generateRecoveryCode());
     const rows = await Promise.all(
       plain.map(async (code) => ({
         id: crypto.randomUUID(),
@@ -128,9 +126,7 @@ export class MfaService {
   static async regenerateRecoveryCodes(userId: string): Promise<string[]> {
     const admin = getSupabaseAdmin();
     await admin.from('mfa_recovery_codes').delete().eq('user_id', userId);
-    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () =>
-      this.generateRecoveryCode()
-    );
+    const plain = Array.from({ length: RECOVERY_CODE_COUNT }, () => this.generateRecoveryCode());
     const rows = await Promise.all(
       plain.map(async (code) => ({
         id: crypto.randomUUID(),

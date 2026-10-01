@@ -10,23 +10,26 @@ describe('ThemeBuilderComponent', () => {
   let repoMock: jasmine.SpyObj<ThemeBuilderRepository>;
 
   beforeEach(() => {
-    const spy = jasmine.createSpyObj('ThemeBuilderRepository', ['loadThemeConfig', 'saveThemeConfig']);
-    spy.loadThemeConfig.and.returnValue(of({
-      logoUrl: null,
-      faviconUrl: null,
-      primaryColor: '#3b82f6',
-      secondaryColor: '#1e293b',
-      fontFamily: 'Inter',
-      borderRadius: 8,
-      spacing: 4,
-      isDarkMode: false,
-    }));
+    const spy = jasmine.createSpyObj('ThemeBuilderRepository', [
+      'loadThemeConfig',
+      'saveThemeConfig',
+    ]);
+    spy.loadThemeConfig.and.returnValue(
+      of({
+        logoUrl: null,
+        faviconUrl: null,
+        primaryColor: '#3b82f6',
+        secondaryColor: '#1e293b',
+        fontFamily: 'Inter',
+        borderRadius: 8,
+        spacing: 4,
+        isDarkMode: false,
+      })
+    );
 
     TestBed.configureTestingModule({
       imports: [FormsModule, ThemeBuilderComponent],
-      providers: [
-        { provide: ThemeBuilderRepository, useValue: spy },
-      ],
+      providers: [{ provide: ThemeBuilderRepository, useValue: spy }],
     });
 
     fixture = TestBed.createComponent(ThemeBuilderComponent);

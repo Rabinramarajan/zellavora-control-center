@@ -5,15 +5,7 @@
     "types": [],
     "noUnusedLocals": true
   },
-  "files": [
-    "src/main.ts"
-  ],
-  "include": [
-    "src/**/*.d.ts"
-  ],
-  "exclude": [
-    "src/**/*.spec.ts",
-    "jest.config.ts",
-    "src/**/*.test.ts"
-  ]
+  "files": ["src/main.ts"],
+  "include": ["src/**/*.d.ts"],
+  "exclude": ["src/**/*.spec.ts", "jest.config.ts", "src/**/*.test.ts"]
 }

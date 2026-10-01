@@ -13,12 +13,20 @@ app.options('*', () => corsResponse());
 app.get('/plans', async (c) => {
   try {
     const db = getSupabaseAdmin();
-    const { data, error } = await db.from('license_plans').select('*').eq('active', true).order('price');
+    const { data, error } = await db
+      .from('license_plans')
+      .select('*')
+      .eq('active', true)
+      .order('price');
     if (error) throw error;
     return jsonResponse(data || []);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -32,7 +40,11 @@ app.get('/plans/:planId', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -52,7 +64,11 @@ app.get('/:orgId/license', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -62,15 +78,26 @@ app.post('/:orgId/license/activate-trial', async (c) => {
     const orgId = c.req.param('orgId');
     const claims = await authenticate(c.req.raw);
     const body = await c.req.json();
-    const { planId, trialDays } = z.object({
-      planId: z.string().uuid(),
-      trialDays: z.number().int().min(1).max(365).optional().default(14),
-    }).parse(body);
+    const { planId, trialDays } = z
+      .object({
+        planId: z.string().uuid(),
+        trialDays: z.number().int().min(1).max(365).optional().default(14),
+      })
+      .parse(body);
 
     const db = getSupabaseAdmin();
     // Check if already has license
-    const { data: existing } = await db.from('organization_licenses').select('id').eq('organization_id', orgId).maybeSingle();
-    if (existing) throw new AppError('Organization already has an active or past license', 400, 'LICENSE_ALREADY_EXISTS');
+    const { data: existing } = await db
+      .from('organization_licenses')
+      .select('id')
+      .eq('organization_id', orgId)
+      .maybeSingle();
+    if (existing)
+      throw new AppError(
+        'Organization already has an active or past license',
+        400,
+        'LICENSE_ALREADY_EXISTS'
+      );
 
     const expiresAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await db
@@ -91,7 +118,11 @@ app.post('/:orgId/license/activate-trial', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -101,17 +132,25 @@ app.post('/:orgId/license/change-plan', async (c) => {
     const orgId = c.req.param('orgId');
     const claims = await authenticate(c.req.raw);
     const body = await c.req.json();
-    const { newPlanId, billingCycle } = z.object({
-      newPlanId: z.string().uuid(),
-      billingCycle: z.enum(['monthly', 'quarterly', 'annual']).optional().default('monthly'),
-    }).parse(body);
+    const { newPlanId, billingCycle } = z
+      .object({
+        newPlanId: z.string().uuid(),
+        billingCycle: z.enum(['monthly', 'quarterly', 'annual']).optional().default('monthly'),
+      })
+      .parse(body);
 
     const db = getSupabaseAdmin();
     // Deactivate current active licenses
-    await db.from('organization_licenses').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('organization_id', orgId).eq('status', 'active');
+    await db
+      .from('organization_licenses')
+      .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+      .eq('organization_id', orgId)
+      .eq('status', 'active');
 
     // Create new license
-    const expiresAt = new Date(Date.now() + (billingCycle === 'annual' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(
+      Date.now() + (billingCycle === 'annual' ? 365 : 30) * 24 * 60 * 60 * 1000
+    ).toISOString();
     const { data, error } = await db
       .from('organization_licenses')
       .insert({
@@ -129,7 +168,11 @@ app.post('/:orgId/license/change-plan', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -138,16 +181,17 @@ app.get('/:orgId/license/usage', async (c) => {
   try {
     const orgId = c.req.param('orgId');
     const db = getSupabaseAdmin();
-    const { data, error } = await db
-      .from('license_usage')
-      .select('*')
-      .eq('organization_id', orgId);
+    const { data, error } = await db.from('license_usage').select('*').eq('organization_id', orgId);
 
     if (error) throw error;
     return jsonResponse(data || []);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -157,12 +201,14 @@ app.post('/:orgId/license/usage/track', async (c) => {
     const orgId = c.req.param('orgId');
     const claims = await authenticate(c.req.raw);
     const body = await c.req.json();
-    const { eventType, quantity, resourceType, resourceId } = z.object({
-      eventType: z.string(),
-      quantity: z.number().int().positive().default(1),
-      resourceType: z.string().optional(),
-      resourceId: z.string().optional(),
-    }).parse(body);
+    const { eventType, quantity, resourceType, resourceId } = z
+      .object({
+        eventType: z.string(),
+        quantity: z.number().int().positive().default(1),
+        resourceType: z.string().optional(),
+        resourceId: z.string().optional(),
+      })
+      .parse(body);
 
     const db = getSupabaseAdmin();
     const { error } = await db.from('license_usage_events').insert({
@@ -178,7 +224,11 @@ app.post('/:orgId/license/usage/track', async (c) => {
     return jsonResponse({ success: true });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -202,7 +252,11 @@ app.get('/:orgId/license/check-limits', async (c) => {
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -222,7 +276,11 @@ app.get('/:orgId/license/features', async (c) => {
     return jsonResponse(license.license_plans.features || {});
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -242,7 +300,11 @@ app.get('/:orgId/license/modules', async (c) => {
     return jsonResponse(license.license_plans.features?.modules || {});
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

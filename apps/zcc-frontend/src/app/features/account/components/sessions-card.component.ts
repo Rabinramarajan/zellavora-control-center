@@ -25,7 +25,9 @@ export class SessionsCardComponent {
   protected readonly reauthError = signal<string | null>(null);
   protected readonly busyId = signal<string | null>(null);
   protected readonly confirmingAll = signal(false);
-  protected readonly otherCount = computed(() => this.sessions().filter((s) => !s.isCurrent).length);
+  protected readonly otherCount = computed(
+    () => this.sessions().filter((s) => !s.isCurrent).length
+  );
 
   constructor() {
     void this.load();

@@ -47,10 +47,7 @@
         >
           <div class="flex items-center justify-between gap-2">
             <span class="font-semibold">{{ label(row.period) }}</span>
-            <span
-              class="rounded px-2 py-0.5 text-xs font-medium"
-              [class]="badgeClass(row.status)"
-            >
+            <span class="rounded px-2 py-0.5 text-xs font-medium" [class]="badgeClass(row.status)">
               {{ row.status }}
             </span>
           </div>

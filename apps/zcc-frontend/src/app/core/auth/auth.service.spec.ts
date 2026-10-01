@@ -24,7 +24,13 @@ describe('AuthService', () => {
     sessionStorage.setItem('zcc.refresh', tokens.refreshToken);
     sessionStorage.setItem('zcc.tokens', JSON.stringify(tokens));
   };
-  const meBody = { user: { id: 'user' }, tenant: { id: 'tenant' }, permissions: [], menu: [], mfaSetupRequired: false };
+  const meBody = {
+    user: { id: 'user' },
+    tenant: { id: 'tenant' },
+    permissions: [],
+    menu: [],
+    mfaSetupRequired: false,
+  };
   const finishMe = () => http.expectOne('/api/v1/auth/me').flush(meBody);
   const success = (extra: object = {}) => ({
     ...pair(),
@@ -95,7 +101,12 @@ describe('AuthService', () => {
   });
 
   describe('sign in', () => {
-    const credentials = { clientCode: 'acme', email: ' Ada@Acme.test ', password: 'pw', rememberMe: false };
+    const credentials = {
+      clientCode: 'acme',
+      email: ' Ada@Acme.test ',
+      password: 'pw',
+      rememberMe: false,
+    };
 
     it('normalizes the email and never sends a bearer token to /login', () => {
       store.updateTokens(pair());
@@ -123,7 +134,11 @@ describe('AuthService', () => {
     it('completes the challenge, clears it and stores the session', () => {
       sessionStorage.setItem(
         'zcc.mfaChallenge',
-        JSON.stringify({ mfaToken: 'challenge-token', mfaMethod: 'totp', expiresAt: new Date(Date.now() + 60_000).toISOString() })
+        JSON.stringify({
+          mfaToken: 'challenge-token',
+          mfaMethod: 'totp',
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        })
       );
       auth.verifyTwoFactor('123456').subscribe();
       const req = http.expectOne('/api/v1/auth/login/mfa');
@@ -144,11 +159,15 @@ describe('AuthService', () => {
 
     it('routes locked accounts to the safe status page', () => {
       auth.login(credentials).subscribe({ error: () => undefined });
-      http.expectOne('/api/v1/auth/login').flush(
-        { error: { code: 'ACCOUNT_LOCKED', message: 'This account is locked.', status: 423 } },
-        { status: 423, statusText: 'Locked' }
-      );
-      expect(router.navigate).toHaveBeenCalledWith(['/auth/account-locked'], { queryParams: { reason: 'locked' } });
+      http
+        .expectOne('/api/v1/auth/login')
+        .flush(
+          { error: { code: 'ACCOUNT_LOCKED', message: 'This account is locked.', status: 423 } },
+          { status: 423, statusText: 'Locked' }
+        );
+      expect(router.navigate).toHaveBeenCalledWith(['/auth/account-locked'], {
+        queryParams: { reason: 'locked' },
+      });
     });
 
     it('sends users with unfinished 2FA setup to account security', () => {
@@ -191,7 +210,9 @@ describe('AuthService', () => {
       seed();
       store.updateTokens(pair());
       let failed = false;
-      TestBed.inject(HttpClient).get('/api/v1/test').subscribe({ error: () => (failed = true) });
+      TestBed.inject(HttpClient)
+        .get('/api/v1/test')
+        .subscribe({ error: () => (failed = true) });
       http.expectOne('/api/v1/test').flush({}, { status: 401, statusText: 'Unauthorized' });
       http.expectOne('/api/v1/auth/refresh').flush({}, { status: 401, statusText: 'Unauthorized' });
       expect(failed).toBeTrue();

@@ -3,10 +3,7 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
 import { DialogShellComponent, injectDialogData } from '../../../shared/components/dialog';
-import {
-  CatalogPermission,
-  CatalogPermissionDetail,
-} from '../../../shared/models/iam-admin.model';
+import { CatalogPermission, CatalogPermissionDetail } from '../../../shared/models/iam-admin.model';
 import { StatusChipComponent } from '../../../shared/components/iam';
 import { errorMessage } from '../shared/iam-feedback.service';
 

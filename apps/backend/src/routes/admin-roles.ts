@@ -525,20 +525,28 @@ router.post(['/roles/delete', '/role/delete'], authenticate, async (req, res, ne
   }
 });
 
-router.post(['/roles/resource-mappings/details', '/role/role-resource/load'], authenticate, async (req, res, next) => {
-  try {
-    res.json(wrapResponse([]));
-  } catch (error) {
-    next(error);
+router.post(
+  ['/roles/resource-mappings/details', '/role/role-resource/load'],
+  authenticate,
+  async (req, res, next) => {
+    try {
+      res.json(wrapResponse([]));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-router.post(['/roles/resource-mappings/save', '/role/role-resource/save'], authenticate, async (req, res, next) => {
-  try {
-    res.json(wrapResponse({ ok: true }));
-  } catch (error) {
-    next(error);
+router.post(
+  ['/roles/resource-mappings/save', '/role/role-resource/save'],
+  authenticate,
+  async (req, res, next) => {
+    try {
+      res.json(wrapResponse({ ok: true }));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;

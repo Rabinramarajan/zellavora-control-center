@@ -29,7 +29,11 @@ const makeRepo = (row = perm()) =>
 describe('PermissionCatalogService', () => {
   it('builds the key as resource:action', async () => {
     const repo = makeRepo();
-    await new PermissionCatalogService(repo).create({ resource: 'invoices', action: 'approve' }, 'actor', 'org');
+    await new PermissionCatalogService(repo).create(
+      { resource: 'invoices', action: 'approve' },
+      'actor',
+      'org'
+    );
     expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ key: 'invoices:approve' }));
   });
 
@@ -37,13 +41,19 @@ describe('PermissionCatalogService', () => {
     const repo = makeRepo();
     repo.findByKey.mockResolvedValue(perm() as never);
     await expect(
-      new PermissionCatalogService(repo).create({ resource: 'invoices', action: 'approve' }, 'actor', 'org')
+      new PermissionCatalogService(repo).create(
+        { resource: 'invoices', action: 'approve' },
+        'actor',
+        'org'
+      )
     ).rejects.toMatchObject({ status: 409 });
   });
 
   it('refuses to delete a permission granted by a role', async () => {
     const repo = makeRepo(perm({ _count: { rolePermissions: 2, resourceActions: 0 } }));
-    await expect(new PermissionCatalogService(repo).remove('p1', 'actor', 'org')).rejects.toMatchObject({
+    await expect(
+      new PermissionCatalogService(repo).remove('p1', 'actor', 'org')
+    ).rejects.toMatchObject({
       code: 'PERMISSION_IN_USE',
     });
     expect(repo.delete).not.toHaveBeenCalled();
@@ -51,7 +61,9 @@ describe('PermissionCatalogService', () => {
 
   it('refuses to delete wildcard permissions', async () => {
     const repo = makeRepo(perm({ key: '*:*' }));
-    await expect(new PermissionCatalogService(repo).remove('p1', 'actor', 'org')).rejects.toMatchObject({
+    await expect(
+      new PermissionCatalogService(repo).remove('p1', 'actor', 'org')
+    ).rejects.toMatchObject({
       code: 'PERMISSION_PROTECTED',
     });
   });

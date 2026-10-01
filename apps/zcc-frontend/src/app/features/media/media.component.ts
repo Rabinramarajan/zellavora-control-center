@@ -100,7 +100,6 @@ export class MediaComponent {
 
   readonly deleting = signal(false);
 
-
   readonly stats = computed(() => {
     const items = this.items();
     const count = (kind: MediaKind): number => items.filter((item) => item.type === kind).length;

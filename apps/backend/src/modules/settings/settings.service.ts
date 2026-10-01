@@ -19,5 +19,4 @@ export class SettingsService {
   async saveSetting(orgId: string, key: string, value: string, category?: string | null) {
     return this.repo.set(orgId, key, value, category);
   }
-
 }

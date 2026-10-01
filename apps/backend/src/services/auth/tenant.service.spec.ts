@@ -17,15 +17,18 @@ describe('membership checks during refresh', () => {
 
   it('uses the current membership role instead of the user role', async () => {
     membershipQuery.mockResolvedValue({ role: 'member' });
-    await expect(TenantService.assertMembership('user-1', 'tenant-1', Promise.resolve(legacyUser)))
-      .resolves.toBe('member');
+    await expect(
+      TenantService.assertMembership('user-1', 'tenant-1', Promise.resolve(legacyUser))
+    ).resolves.toBe('member');
     expect(userQuery).not.toHaveBeenCalled();
   });
 
   it('starts the membership lookup before the pending user read completes', async () => {
     membershipQuery.mockResolvedValue(null);
     let resolveUser!: (user: typeof legacyUser) => void;
-    const pendingUser = new Promise<typeof legacyUser>((resolve) => { resolveUser = resolve; });
+    const pendingUser = new Promise<typeof legacyUser>((resolve) => {
+      resolveUser = resolve;
+    });
     const result = TenantService.assertMembership('user-1', 'tenant-1', pendingUser);
     expect(membershipQuery).toHaveBeenCalledWith({
       where: { userId_tenantId: { userId: 'user-1', tenantId: 'tenant-1' } },
@@ -42,8 +45,9 @@ describe('membership checks during refresh', () => {
     { ...legacyUser, tenantId: 'different-tenant' },
   ])('rejects unauthorized legacy users without another user query: %j', async (user) => {
     membershipQuery.mockResolvedValue(null);
-    await expect(TenantService.assertMembership('user-1', 'tenant-1', Promise.resolve(user)))
-      .rejects.toMatchObject({ status: 403, code: 'NOT_A_MEMBER' });
+    await expect(
+      TenantService.assertMembership('user-1', 'tenant-1', Promise.resolve(user))
+    ).rejects.toMatchObject({ status: 403, code: 'NOT_A_MEMBER' });
     expect(userQuery).not.toHaveBeenCalled();
   });
 

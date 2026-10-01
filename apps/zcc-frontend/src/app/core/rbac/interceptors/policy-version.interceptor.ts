@@ -7,7 +7,13 @@
  * changes without requiring the user to reload.
  */
 import { Injectable, inject } from '@angular/core';
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http';
+import {
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
+  HttpResponse,
+} from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { PolicyStore } from '../store/policy.store';
 import { PermissionService } from '../services/permission.service';
@@ -19,7 +25,7 @@ export class PolicyVersionInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
-      tap(event => {
+      tap((event) => {
         if (event instanceof HttpResponse) {
           const serverHeader = event.headers.get('X-Policy-Version');
           if (!serverHeader) return;

@@ -45,10 +45,7 @@ export class AdminApiService {
 
   async searchUsers(criteria: UserSearchCriteria): Promise<UserSearchResult> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<UserSearchResult>>(
-        `${this.baseUrl}/users/search`,
-        criteria
-      )
+      this.http.post<ApiResponse<UserSearchResult>>(`${this.baseUrl}/users/search`, criteria)
     );
     return this.unwrap(res);
   }
@@ -80,10 +77,7 @@ export class AdminApiService {
 
   async searchRoles(criteria: RoleSearchCriteria): Promise<RoleSearchResult> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<RoleSearchResult>>(
-        `${this.baseUrl}/roles/search`,
-        criteria
-      )
+      this.http.post<ApiResponse<RoleSearchResult>>(`${this.baseUrl}/roles/search`, criteria)
     );
     return this.unwrap(res);
   }
@@ -122,9 +116,7 @@ export class AdminApiService {
 
   // ==================== RESOURCE ENDPOINTS ====================
 
-  async searchResources(
-    criteria: ResourceSearchCriteria
-  ): Promise<ResourceSearchResult> {
+  async searchResources(criteria: ResourceSearchCriteria): Promise<ResourceSearchResult> {
     const res = await lastValueFrom(
       this.http.post<ApiResponse<ResourceSearchResult>>(
         `${this.baseUrl}/resources/search`,
@@ -143,22 +135,16 @@ export class AdminApiService {
 
   async saveResource(resource: Resource): Promise<Resource> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Resource>>(
-        `${this.baseUrl}/resources/save`,
-        resource
-      )
+      this.http.post<ApiResponse<Resource>>(`${this.baseUrl}/resources/save`, resource)
     );
     return this.unwrap(res);
   }
 
   async deleteResource(resourceId: number): Promise<Resource> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Resource>>(
-        `${this.baseUrl}/resources/delete`,
-        {
-          data: resourceId,
-        }
-      )
+      this.http.post<ApiResponse<Resource>>(`${this.baseUrl}/resources/delete`, {
+        data: resourceId,
+      })
     );
     return this.unwrap(res);
   }
@@ -167,10 +153,7 @@ export class AdminApiService {
 
   async searchBranches(criteria: BranchSearchCriteria): Promise<BranchSearchResult> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<BranchSearchResult>>(
-        `${this.baseUrl}/branches/search`,
-        criteria
-      )
+      this.http.post<ApiResponse<BranchSearchResult>>(`${this.baseUrl}/branches/search`, criteria)
     );
     return this.unwrap(res);
   }
@@ -186,22 +169,16 @@ export class AdminApiService {
 
   async saveBranch(branch: Branch): Promise<Branch> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Branch>>(
-        `${this.baseUrl}/branches/save`,
-        branch
-      )
+      this.http.post<ApiResponse<Branch>>(`${this.baseUrl}/branches/save`, branch)
     );
     return this.unwrap(res);
   }
 
   async deleteBranch(branchId: number): Promise<Branch> {
     const res = await lastValueFrom(
-      this.http.post<ApiResponse<Branch>>(
-        `${this.baseUrl}/branches/delete`,
-        {
-          admBranchId: branchId,
-        }
-      )
+      this.http.post<ApiResponse<Branch>>(`${this.baseUrl}/branches/delete`, {
+        admBranchId: branchId,
+      })
     );
     return this.unwrap(res);
   }

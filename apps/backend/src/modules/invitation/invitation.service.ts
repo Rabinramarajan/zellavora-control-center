@@ -31,7 +31,11 @@ export class InvitationService {
     const email = input.email.trim().toLowerCase();
     const existing = await this.repo.findUserByEmail(email);
     if (existing && existing.status !== 'PENDING') {
-      throw new AppError('A user with this email already has an active account.', 409, 'USER_EMAIL_EXISTS');
+      throw new AppError(
+        'A user with this email already has an active account.',
+        409,
+        'USER_EMAIL_EXISTS'
+      );
     }
     if (existing && existing.tenantId && existing.tenantId !== actor.organizationId) {
       throw new AppError('A user with this email already exists.', 409, 'USER_EMAIL_EXISTS');
@@ -110,7 +114,12 @@ export class InvitationService {
 
   async list(
     organizationId: string,
-    query: { q?: string; status?: 'pending' | 'accepted' | 'revoked' | 'expired'; page: number; pageSize: number }
+    query: {
+      q?: string;
+      status?: 'pending' | 'accepted' | 'revoked' | 'expired';
+      page: number;
+      pageSize: number;
+    }
   ) {
     const [{ data, total }, counts] = await Promise.all([
       this.repo.list(organizationId, query),
@@ -143,7 +152,8 @@ export class InvitationService {
 
   async resend(invitationId: string, actor: InviteActor) {
     const invitation = await this.repo.findById(invitationId, actor.organizationId);
-    if (!invitation?.userId) throw new AppError('Invitation not found', 404, 'INVITATION_NOT_FOUND');
+    if (!invitation?.userId)
+      throw new AppError('Invitation not found', 404, 'INVITATION_NOT_FOUND');
     if (invitation.status === 'accepted') {
       throw new AppError('This invitation has already been accepted.', 409, 'INVITATION_USED');
     }

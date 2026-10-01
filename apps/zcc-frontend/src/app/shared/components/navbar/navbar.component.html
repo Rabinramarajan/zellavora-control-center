@@ -23,7 +23,10 @@
     <nav class="flex items-center gap-2 text-xs font-semibold select-none ml-2">
       @for (seg of getBreadcrumbs(); track seg; let last = $last) {
         @if (seg.route) {
-          <a [routerLink]="seg.route" class="text-slate-500 hover:text-slate-900 dark:text-[#a3a1b8] dark:hover:text-white transition">
+          <a
+            [routerLink]="seg.route"
+            class="text-slate-500 hover:text-slate-900 dark:text-[#a3a1b8] dark:hover:text-white transition"
+          >
             {{ seg.label }}
           </a>
         }
@@ -112,7 +115,9 @@
         </span>
 
         <span class="text-left hidden sm:block leading-none">
-          <span class="block text-[13px] font-semibold text-slate-900 dark:text-white">{{ displayName() }}</span>
+          <span class="block text-[13px] font-semibold text-slate-900 dark:text-white">{{
+            displayName()
+          }}</span>
           <span class="block text-[11px] text-slate-500 dark:text-[#9b98b8] mt-1 capitalize">{{
             displayRole()
           }}</span>
@@ -219,9 +224,7 @@
               </span>
               <span class="flex-1 min-w-0">
                 <span class="block text-[13px] font-medium text-white">Settings</span>
-                <span class="block text-[11px] text-[#8f8cb3] truncate"
-                  >Account preferences</span
-                >
+                <span class="block text-[11px] text-[#8f8cb3] truncate">Account preferences</span>
               </span>
               <svg
                 class="w-3.5 h-3.5 text-[#8f8cb3] group-hover:text-white group-hover:translate-x-0.5 transition"
@@ -258,7 +261,9 @@
               </span>
               <span class="flex-1 min-w-0">
                 <span class="block text-[13px] font-medium text-white">Security</span>
-                <span class="block text-[11px] text-[#8f8cb3] truncate">Password, 2FA &amp; sessions</span>
+                <span class="block text-[11px] text-[#8f8cb3] truncate"
+                  >Password, 2FA &amp; sessions</span
+                >
               </span>
               <svg
                 class="w-3.5 h-3.5 text-[#8f8cb3] group-hover:text-white group-hover:translate-x-0.5 transition"

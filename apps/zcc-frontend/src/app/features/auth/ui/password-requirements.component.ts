@@ -14,7 +14,9 @@ export class PasswordRequirementsComponent {
   readonly password = input('');
   readonly policy = input<PasswordPolicy>(DEFAULT_PASSWORD_POLICY);
 
-  protected readonly requirements = computed(() => passwordRequirements(this.password(), this.policy()));
+  protected readonly requirements = computed(() =>
+    passwordRequirements(this.password(), this.policy())
+  );
   protected readonly segments = [0, 1, 2, 3];
 
   /** Policy coverage plus extra length; a hint, not a guarantee — the server decides. */

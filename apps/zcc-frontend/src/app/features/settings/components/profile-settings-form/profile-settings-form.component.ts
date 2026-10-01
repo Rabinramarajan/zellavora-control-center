@@ -34,6 +34,6 @@ export class ProfileSettingsFormComponent {
   );
 
   protected patch(changes: Partial<ProfileSettings>): void {
-    this.draft.update(current => ({ ...current, ...changes }));
+    this.draft.update((current) => ({ ...current, ...changes }));
   }
 }

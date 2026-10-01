@@ -10,19 +10,21 @@ describe('NotificationsComponent', () => {
   let fixture: ComponentFixture<NotificationsComponent>;
 
   beforeEach(() => {
-    const spy = jasmine.createSpyObj('NotificationRepository', ['loadNotifications', 'loadTemplates', 'sendBroadcast'], {
-      templates: signal([]),
-      notifications: signal([]),
-    });
+    const spy = jasmine.createSpyObj(
+      'NotificationRepository',
+      ['loadNotifications', 'loadTemplates', 'sendBroadcast'],
+      {
+        templates: signal([]),
+        notifications: signal([]),
+      }
+    );
     spy.loadNotifications.and.returnValue(of([]));
     spy.loadTemplates.and.returnValue(of([]));
     spy.sendBroadcast.and.returnValue(of({} as any));
 
     TestBed.configureTestingModule({
       imports: [FormsModule, NotificationsComponent],
-      providers: [
-        { provide: NotificationRepository, useValue: spy },
-      ],
+      providers: [{ provide: NotificationRepository, useValue: spy }],
     });
 
     fixture = TestBed.createComponent(NotificationsComponent);

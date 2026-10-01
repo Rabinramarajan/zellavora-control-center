@@ -17,11 +17,7 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
     <aside class="lg:col-span-3 lg:sticky lg:top-6">
-      <app-settings-nav
-        [tabs]="tabs"
-        [activeTab]="activeTabId()"
-        (tabSelect)="selectTab($event)"
-      />
+      <app-settings-nav [tabs]="tabs" [activeTab]="activeTabId()" (tabSelect)="selectTab($event)" />
     </aside>
 
     <main class="lg:col-span-6 xl:col-span-6 min-w-0 space-y-6 settings-panel">

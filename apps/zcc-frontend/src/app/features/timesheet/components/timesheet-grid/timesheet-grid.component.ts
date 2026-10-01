@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -141,7 +148,13 @@ export class TimesheetGridComponent {
 
   protected patch(
     entry: TimesheetEntry,
-    patch: { startTime?: string | null; endTime?: string | null; hours?: number | null; status?: EntryStatus; notes?: string | null }
+    patch: {
+      startTime?: string | null;
+      endTime?: string | null;
+      hours?: number | null;
+      status?: EntryStatus;
+      notes?: string | null;
+    }
   ): void {
     this.service.updateEntry(entry.id, patch);
   }

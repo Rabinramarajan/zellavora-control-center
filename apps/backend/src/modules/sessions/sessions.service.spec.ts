@@ -15,7 +15,9 @@ const makeRepo = () =>
 describe('SessionsService', () => {
   it('will not revoke the caller’s current session', async () => {
     const repo = makeRepo();
-    await expect(new SessionsService(repo).revoke(ORG, 'mine', 'admin', 'mine')).rejects.toMatchObject({
+    await expect(
+      new SessionsService(repo).revoke(ORG, 'mine', 'admin', 'mine')
+    ).rejects.toMatchObject({
       code: 'CURRENT_SESSION',
     });
     expect(repo.revoke).not.toHaveBeenCalled();
@@ -24,7 +26,9 @@ describe('SessionsService', () => {
   it('404s for sessions outside the organization', async () => {
     const repo = makeRepo();
     repo.findLive.mockResolvedValue(null as never);
-    await expect(new SessionsService(repo).revoke(ORG, 'other', 'admin', 'mine')).rejects.toMatchObject({
+    await expect(
+      new SessionsService(repo).revoke(ORG, 'other', 'admin', 'mine')
+    ).rejects.toMatchObject({
       status: 404,
     });
   });

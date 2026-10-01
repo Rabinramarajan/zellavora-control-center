@@ -211,15 +211,19 @@ router.post(['/audit-logs/search', '/auditlog/search'], authenticate, async (req
   }
 });
 
-router.post(['/audit-logs/details', '/auditlog/LoadAuditLogDetails'], authenticate, async (req, res, next) => {
-  try {
-    const id = req.body.data;
-    const log = mockAuditLogs.find((l) => l.auditLogId === id);
-    res.json(wrapResponse(log || mockAuditLogs[0]));
-  } catch (error) {
-    next(error);
+router.post(
+  ['/audit-logs/details', '/auditlog/LoadAuditLogDetails'],
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const id = req.body.data;
+      const log = mockAuditLogs.find((l) => l.auditLogId === id);
+      res.json(wrapResponse(log || mockAuditLogs[0]));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 type AuditSeverity = 'info' | 'warn' | 'critical';
 
@@ -231,7 +235,10 @@ const toUiSeverity = (severity: string): AuditSeverity => {
 };
 
 async function loadAuditRecords(req: AuthRequest) {
-  const limit = Math.min(Math.max(parseInt((req.query.limit as string) || '200', 10) || 200, 1), 1000);
+  const limit = Math.min(
+    Math.max(parseInt((req.query.limit as string) || '200', 10) || 200, 1),
+    1000
+  );
   const rows = await prisma.auditLog.findMany({
     where: req.tenantId ? { organizationId: req.tenantId } : {},
     orderBy: { createdAt: 'desc' },

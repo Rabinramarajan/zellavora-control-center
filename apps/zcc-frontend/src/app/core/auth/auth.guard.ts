@@ -40,12 +40,16 @@ export const registrationGuard: CanActivateFn = () => {
   return inject(AuthService)
     .config()
     .pipe(
-      map((config) => (config.selfRegistrationEnabled ? true : router.createUrlTree(['/auth/login']))),
+      map((config) =>
+        config.selfRegistrationEnabled ? true : router.createUrlTree(['/auth/login'])
+      ),
       catchError(() => of(router.createUrlTree(['/auth/login'])))
     );
 };
 
-const authenticatedAndAllowed = (permission: string): boolean | UrlTree | Promise<boolean | UrlTree> => {
+const authenticatedAndAllowed = (
+  permission: string
+): boolean | UrlTree | Promise<boolean | UrlTree> => {
   const router = inject(Router);
   const permissions = inject(PermissionService);
   if (!inject(AuthStore).isAuthenticated()) return router.createUrlTree(['/auth/login']);

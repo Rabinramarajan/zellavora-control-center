@@ -20,9 +20,7 @@
     </h2>
 
     <fieldset>
-      <legend class="mb-2 text-sm font-medium text-gray-800 dark:text-gray-200">
-        Recipients
-      </legend>
+      <legend class="mb-2 text-sm font-medium text-gray-800 dark:text-gray-200">Recipients</legend>
       <div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Audience">
         @for (a of audiences; track a.type) {
           <button
@@ -113,9 +111,7 @@
         (input)="subject.set($any($event.target).value)"
       />
       @if (submitted() && !subject().trim()) {
-        <p class="mt-1 text-xs text-red-500">
-          {{ isEmail() ? 'Subject' : 'Title' }} is required.
-        </p>
+        <p class="mt-1 text-xs text-red-500">{{ isEmail() ? 'Subject' : 'Title' }} is required.</p>
       }
     </div>
 

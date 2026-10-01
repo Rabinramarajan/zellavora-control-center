@@ -18,10 +18,7 @@ describe('ProjectRepository', () => {
     ]);
 
     TestBed.configureTestingModule({
-      providers: [
-        ProjectRepository,
-        { provide: ProjectApiService, useValue: spy },
-      ],
+      providers: [ProjectRepository, { provide: ProjectApiService, useValue: spy }],
     });
 
     repository = TestBed.inject(ProjectRepository);

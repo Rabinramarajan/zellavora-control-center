@@ -15,9 +15,7 @@ describe('CmsBuilderComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [FormsModule, CmsBuilderComponent],
-      providers: [
-        { provide: CmsBuilderRepository, useValue: spy },
-      ],
+      providers: [{ provide: CmsBuilderRepository, useValue: spy }],
     });
 
     fixture = TestBed.createComponent(CmsBuilderComponent);

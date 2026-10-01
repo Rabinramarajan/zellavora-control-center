@@ -79,21 +79,24 @@ export class AcceptInvitationPage {
       case 'already-active':
         return {
           title: 'Account already active',
-          message: 'This invitation has already been used. Sign in, or reset your password if you forgot it.',
+          message:
+            'This invitation has already been used. Sign in, or reset your password if you forgot it.',
           tone: 'info' as const,
           signIn: true,
         };
       case 'revoked':
         return {
           title: 'Invitation revoked',
-          message: 'This invitation is no longer valid. Contact your administrator if you still need access.',
+          message:
+            'This invitation is no longer valid. Contact your administrator if you still need access.',
           tone: 'error' as const,
           signIn: false,
         };
       default:
         return {
           title: 'Invitation not found',
-          message: 'This invitation link is invalid. Check that you opened the full link from your email.',
+          message:
+            'This invitation link is invalid. Check that you opened the full link from your email.',
           tone: 'error' as const,
           signIn: false,
         };
@@ -146,7 +149,11 @@ export class AcceptInvitationPage {
       }
       const { fieldErrors, message } = mapServerErrors(
         err,
-        { firstName: this.form.firstName, lastName: this.form.lastName, password: this.form.password },
+        {
+          firstName: this.form.firstName,
+          lastName: this.form.lastName,
+          password: this.form.password,
+        },
         "We couldn't activate your account. Please try again."
       );
       this.formError.set(message);

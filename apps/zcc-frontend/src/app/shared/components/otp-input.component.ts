@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChildren } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  input,
+  output,
+  viewChildren,
+} from '@angular/core';
 
 @Component({
   selector: 'app-otp-input',
@@ -73,7 +80,9 @@ export class OtpInputComponent {
   }
 
   private emitValue() {
-    const code = this.inputBoxes().map((ref) => ref.nativeElement.value).join('');
+    const code = this.inputBoxes()
+      .map((ref) => ref.nativeElement.value)
+      .join('');
     this.otpChange.emit(code);
   }
 }

@@ -164,60 +164,113 @@ export class ApprovalQueueComponent implements OnInit {
   public readonly collapsed = signal<ReadonlySet<string>>(new Set());
   public readonly initials = initialsOf;
   public readonly loadedMonthly = signal(false);
-  public readonly projects = computed(() => [...new Set(this.dailyRows().map(row => row.project))].sort());
+  public readonly projects = computed(() =>
+    [...new Set(this.dailyRows().map((row) => row.project))].sort()
+  );
   public readonly members = computed(() => {
     const rows = this.tab() === 'daily' ? this.dailyRows() : this.monthlyRows();
-    return [...new Map(rows.map(row => [row.userId, row.employee])).entries()];
+    return [...new Map(rows.map((row) => [row.userId, row.employee])).entries()];
   });
-  public readonly pendingDaily = computed(() => this.dailyRows().filter(row => row.status === 'submitted'));
-  public readonly filteredDaily = computed(() => this.dailyRows().filter(row =>
-    (!this.search() || `${row.employee} ${row.project} ${row.task}`.toLowerCase().includes(this.search().toLowerCase())) &&
-    (!this.projectFilter() || row.project === this.projectFilter()) &&
-    (!this.memberFilter() || row.userId === this.memberFilter()) &&
-    (!this.statusFilter() || row.status === this.statusFilter()) &&
-    (!this.dateFrom() || row.date >= this.dateFrom()) &&
-    (!this.dateTo() || row.date <= this.dateTo())
-  ).sort((a, b) => this.newestFirst() ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
-  public readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredDaily().length / this.pageSize())));
+  public readonly pendingDaily = computed(() =>
+    this.dailyRows().filter((row) => row.status === 'submitted')
+  );
+  public readonly filteredDaily = computed(() =>
+    this.dailyRows()
+      .filter(
+        (row) =>
+          (!this.search() ||
+            `${row.employee} ${row.project} ${row.task}`
+              .toLowerCase()
+              .includes(this.search().toLowerCase())) &&
+          (!this.projectFilter() || row.project === this.projectFilter()) &&
+          (!this.memberFilter() || row.userId === this.memberFilter()) &&
+          (!this.statusFilter() || row.status === this.statusFilter()) &&
+          (!this.dateFrom() || row.date >= this.dateFrom()) &&
+          (!this.dateTo() || row.date <= this.dateTo())
+      )
+      .sort((a, b) =>
+        this.newestFirst() ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
+      )
+  );
+  public readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredDaily().length / this.pageSize()))
+  );
   public readonly currentPage = computed(() => Math.min(this.page(), this.totalPages()));
-  public readonly visibleDaily = computed(() => this.filteredDaily().slice((this.currentPage() - 1) * this.pageSize(), this.currentPage() * this.pageSize()));
+  public readonly visibleDaily = computed(() =>
+    this.filteredDaily().slice(
+      (this.currentPage() - 1) * this.pageSize(),
+      this.currentPage() * this.pageSize()
+    )
+  );
   public readonly groups = computed(() => {
     const groups = new Map<string, DailyRow[]>();
-    for (const row of this.visibleDaily()) groups.set(row.date, [...(groups.get(row.date) ?? []), row]);
+    for (const row of this.visibleDaily())
+      groups.set(row.date, [...(groups.get(row.date) ?? []), row]);
     return [...groups.entries()].map(([date, rows]) => ({ date, label: rows[0].dateLabel, rows }));
   });
-  public readonly filteredMonthly = computed(() => this.monthlyRows().filter(row =>
-    (!this.search() || `${row.employee} ${row.period}`.toLowerCase().includes(this.search().toLowerCase())) &&
-    (!this.memberFilter() || row.userId === this.memberFilter()) &&
-    (!this.statusFilter() || row.status === this.statusFilter()) &&
-    (!this.dateFrom() || row.period >= this.dateFrom().slice(0, 7)) &&
-    (!this.dateTo() || row.period <= this.dateTo().slice(0, 7))
-  ));
-  public isSelected(id: string): boolean { return this.selectedDaily().some(row => row.id === id); }
+  public readonly filteredMonthly = computed(() =>
+    this.monthlyRows().filter(
+      (row) =>
+        (!this.search() ||
+          `${row.employee} ${row.period}`.toLowerCase().includes(this.search().toLowerCase())) &&
+        (!this.memberFilter() || row.userId === this.memberFilter()) &&
+        (!this.statusFilter() || row.status === this.statusFilter()) &&
+        (!this.dateFrom() || row.period >= this.dateFrom().slice(0, 7)) &&
+        (!this.dateTo() || row.period <= this.dateTo().slice(0, 7))
+    )
+  );
+  public isSelected(id: string): boolean {
+    return this.selectedDaily().some((row) => row.id === id);
+  }
   public readonly allSelected = computed(() => {
-    const rows = this.visibleDaily().filter(row => row.status === 'submitted' && this.canReviewOwner(row.userId));
-    return rows.length > 0 && rows.every(row => this.isSelected(row.id));
+    const rows = this.visibleDaily().filter(
+      (row) => row.status === 'submitted' && this.canReviewOwner(row.userId)
+    );
+    return rows.length > 0 && rows.every((row) => this.isSelected(row.id));
   });
   public toggleRow(row: DailyRow): void {
-    this.selectedDaily.update(rows => this.isSelected(row.id) ? rows.filter(item => item.id !== row.id) : [...rows, row]);
+    this.selectedDaily.update((rows) =>
+      this.isSelected(row.id) ? rows.filter((item) => item.id !== row.id) : [...rows, row]
+    );
   }
   public toggleAll(): void {
-    const rows = this.visibleDaily().filter(row => row.status === 'submitted' && this.canReviewOwner(row.userId));
+    const rows = this.visibleDaily().filter(
+      (row) => row.status === 'submitted' && this.canReviewOwner(row.userId)
+    );
     this.selectedDaily.set(this.allSelected() ? [] : rows);
   }
   public toggleGroup(date: string): void {
-    this.collapsed.update(value => { const next = new Set(value); next.has(date) ? next.delete(date) : next.add(date); return next; });
+    this.collapsed.update((value) => {
+      const next = new Set(value);
+      next.has(date) ? next.delete(date) : next.add(date);
+      return next;
+    });
   }
-  public readonly activeFilterCount = computed(() =>
-    [this.search(), this.projectFilter(), this.memberFilter(), this.statusFilter(), this.dateFrom() || this.dateTo()]
-      .filter(Boolean).length
+  public readonly activeFilterCount = computed(
+    () =>
+      [
+        this.search(),
+        this.projectFilter(),
+        this.memberFilter(),
+        this.statusFilter(),
+        this.dateFrom() || this.dateTo(),
+      ].filter(Boolean).length
   );
-  public readonly selectableCount = computed(() =>
-    this.visibleDaily().filter(row => row.status === 'submitted' && this.canReviewOwner(row.userId)).length
+  public readonly selectableCount = computed(
+    () =>
+      this.visibleDaily().filter(
+        (row) => row.status === 'submitted' && this.canReviewOwner(row.userId)
+      ).length
   );
   public clearFilters(): void {
-    this.search.set(''); this.projectFilter.set(''); this.memberFilter.set(''); this.statusFilter.set('');
-    this.dateFrom.set(''); this.dateTo.set(''); this.page.set(1); this.selectedDaily.set([]);
+    this.search.set('');
+    this.projectFilter.set('');
+    this.memberFilter.set('');
+    this.statusFilter.set('');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.page.set(1);
+    this.selectedDaily.set([]);
   }
   public readonly dailyColumns = DAILY_COLUMNS;
   public readonly monthlyColumns = MONTHLY_COLUMNS;
@@ -234,17 +287,13 @@ export class ApprovalQueueComponent implements OnInit {
   public readonly rejectionReason = signal('');
 
   public readonly dailyRows = computed<DailyRow[]>(() =>
-    this.store
-      .dailySheets()
-      .map((sheet) => this.toDailyRow(sheet))
+    this.store.dailySheets().map((sheet) => this.toDailyRow(sheet))
   );
 
   public readonly monthlyRows = computed<MonthlyRow[]>(() =>
     this.store
       .monthlySheets()
-      .filter((sheet) =>
-        sheet.status === 'submitted' || sheet.status === 'approved'
-      )
+      .filter((sheet) => sheet.status === 'submitted' || sheet.status === 'approved')
       .map((sheet) => this.toMonthlyRow(sheet))
   );
 
@@ -264,9 +313,10 @@ export class ApprovalQueueComponent implements OnInit {
     this.pendingDaily().reduce((total, row) => total + row.amount, 0)
   );
 
-  public readonly selectionBusy = computed(() =>
-    this.selectedDaily().some((row) => this.busyIds().has(row.id)) ||
-    !this.selectedDaily().some((row) => this.canReviewOwner(row.userId))
+  public readonly selectionBusy = computed(
+    () =>
+      this.selectedDaily().some((row) => this.busyIds().has(row.id)) ||
+      !this.selectedDaily().some((row) => this.canReviewOwner(row.userId))
   );
 
   public readonly statusLabel = statusLabel;
@@ -288,7 +338,9 @@ export class ApprovalQueueComponent implements OnInit {
 
   public reload(): void {
     if (this.tab() === 'monthly') {
-      void this.store.loadMonthlySheets({ scope: 'team', pageSize: 200 }).then(() => this.loadedMonthly.set(true));
+      void this.store
+        .loadMonthlySheets({ scope: 'team', pageSize: 200 })
+        .then(() => this.loadedMonthly.set(true));
     } else {
       void this.store.loadDailySheets({ scope: 'team' });
     }
@@ -302,9 +354,18 @@ export class ApprovalQueueComponent implements OnInit {
     void this.reviewDailyBatch(ids, true);
   }
 
-  private async reviewDailyBatch(ids: readonly string[], approved: boolean, reason?: string): Promise<void> {
-    const eligible = [...new Set(ids)].filter((id) => !this.isBusy(id) &&
-      this.dailyRows().some((row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)));
+  private async reviewDailyBatch(
+    ids: readonly string[],
+    approved: boolean,
+    reason?: string
+  ): Promise<void> {
+    const eligible = [...new Set(ids)].filter(
+      (id) =>
+        !this.isBusy(id) &&
+        this.dailyRows().some(
+          (row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)
+        )
+    );
     if (!eligible.length) return;
     this.busyIds.update((busy) => new Set([...busy, ...eligible]));
     try {
@@ -329,7 +390,12 @@ export class ApprovalQueueComponent implements OnInit {
   }
 
   public approveMonthly(id: string): void {
-    if (!this.monthlyRows().some((row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId))) return;
+    if (
+      !this.monthlyRows().some(
+        (row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)
+      )
+    )
+      return;
     void this.decide(id, () => this.store.reviewMonthlySheet(id, true));
   }
 
@@ -340,7 +406,11 @@ export class ApprovalQueueComponent implements OnInit {
   /** Rejecting always asks why: the freelancer needs to know what to fix. */
   public startRejection(kind: QueueTab, ids: readonly string[]): void {
     const rows = kind === 'daily' ? this.dailyRows() : this.monthlyRows();
-    ids = ids.filter((id) => rows.some((row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)));
+    ids = ids.filter((id) =>
+      rows.some(
+        (row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)
+      )
+    );
     if (!ids.length) return;
     this.rejectionReason.set('');
     this.rejection.set({ kind, ids: [...ids] });

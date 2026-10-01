@@ -10,7 +10,14 @@ describe('UserListComponent', () => {
   let fixture: ComponentFixture<UserListComponent>;
   let storeService: jasmine.SpyObj<AdminStoreService>;
 
-  const makeUser = (userSerialId: number, userLoginId: string, firstName: string, lastName: string, emailId: string, statusValue: string): User => ({
+  const makeUser = (
+    userSerialId: number,
+    userLoginId: string,
+    firstName: string,
+    lastName: string,
+    emailId: string,
+    statusValue: string
+  ): User => ({
     userSerialId,
     userLoginId,
     firstName,
@@ -42,19 +49,15 @@ describe('UserListComponent', () => {
   ];
 
   beforeEach(async () => {
-    const storeServiceSpy = jasmine.createSpyObj(
-      'AdminStoreService',
-      ['loadUsers'],
-      {
-        users: signal(mockUsers),
-        loading: signal(false),
-        error: signal(null),
-      }
-    );
+    const storeServiceSpy = jasmine.createSpyObj('AdminStoreService', ['loadUsers'], {
+      users: signal(mockUsers),
+      loading: signal(false),
+      error: signal(null),
+    });
 
     await TestBed.configureTestingModule({
       imports: [UserListComponent],
-      providers: [provideRouter([]), { provide: AdminStoreService, useValue: storeServiceSpy }]
+      providers: [provideRouter([]), { provide: AdminStoreService, useValue: storeServiceSpy }],
     }).compileComponents();
 
     storeService = TestBed.inject(AdminStoreService) as jasmine.SpyObj<AdminStoreService>;
@@ -97,10 +100,10 @@ describe('UserListComponent', () => {
 
   it('should define searchable table columns', () => {
     expect(component.columns.length).toBeGreaterThan(0);
-    expect(component.columns.map(c => c.key)).toContain('userLoginId');
-    expect(component.columns.map(c => c.key)).toContain('fullName');
-    expect(component.columns.map(c => c.key)).toContain('status');
-    expect(component.columns.map(c => c.key)).toContain('actions');
+    expect(component.columns.map((c) => c.key)).toContain('userLoginId');
+    expect(component.columns.map((c) => c.key)).toContain('fullName');
+    expect(component.columns.map((c) => c.key)).toContain('status');
+    expect(component.columns.map((c) => c.key)).toContain('actions');
   });
 
   it('should render the app-table', () => {

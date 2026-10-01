@@ -11,9 +11,7 @@
     @for (group of groups(); track group.resource) {
       <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
         <div class="flex items-center justify-between bg-gray-50/80 dark:bg-white/5 px-4 py-2">
-          <p
-            class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
-          >
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             {{ group.resource || 'ungrouped' }}
           </p>
           <span class="text-[11px] text-gray-400 tabular-nums">{{ group.rows.length }}</span>

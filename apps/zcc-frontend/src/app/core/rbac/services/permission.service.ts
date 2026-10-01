@@ -49,20 +49,20 @@ export class PermissionService {
   }
 
   canAll(permissions: string[]): boolean {
-    return permissions.every(p => this.canSync(p));
+    return permissions.every((p) => this.canSync(p));
   }
 
   canAny(permissions: string[]): boolean {
-    return permissions.some(p => this.canSync(p));
+    return permissions.some((p) => this.canSync(p));
   }
 
   hasRole(roleKey: string): boolean {
-    return this.store.roles().some(r => r.key === roleKey);
+    return this.store.roles().some((r) => r.key === roleKey);
   }
 
   hasAnyRole(roleKeys: string[]): boolean {
-    const assigned = new Set(this.store.roles().map(r => r.key));
-    return roleKeys.some(k => assigned.has(k));
+    const assigned = new Set(this.store.roles().map((r) => r.key));
+    return roleKeys.some((k) => assigned.has(k));
   }
 
   maxRoleLevel(): number {
@@ -141,9 +141,7 @@ export class PermissionService {
     if (!re) {
       const trailingWildcard = pattern.endsWith(':*');
       const body = trailingWildcard ? pattern.slice(0, -2) : pattern;
-      const escaped = body
-        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-        .replace(/\*/g, '[^:]*');
+      const escaped = body.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^:]*');
       re = new RegExp('^' + escaped + (trailingWildcard ? '(?::.*)?' : '') + '$');
       this.globReCache.set(pattern, re);
     }

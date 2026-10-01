@@ -19,11 +19,7 @@
     />
     <div>
       <label for="role-status" [class]="labelClass">Status</label>
-      <zcc-multi-select
-        inputId="role-status"
-        [options]="statusOptions"
-        [(value)]="form.status"
-      />
+      <zcc-multi-select inputId="role-status" [options]="statusOptions" [(value)]="form.status" />
     </div>
     <div>
       <label for="role-type" [class]="labelClass">Type</label>
@@ -49,11 +45,7 @@
       </div>
       <div>
         <label for="role-scope" [class]="labelClass">Scope</label>
-        <zcc-multi-select
-          inputId="role-scope"
-          [options]="scopeOptions"
-          [(value)]="form.scope"
-        />
+        <zcc-multi-select inputId="role-scope" [options]="scopeOptions" [(value)]="form.scope" />
       </div>
       <div>
         <label for="role-group" [class]="labelClass">Group</label>

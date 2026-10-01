@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 
 import { FormField, FormRoot, email, form, pattern, required } from '@angular/forms/signals';
 import { FormInputControl } from '@zellavoras/ui';

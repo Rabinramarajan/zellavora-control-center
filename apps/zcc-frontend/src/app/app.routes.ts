@@ -9,84 +9,65 @@ export const appRoutes: Routes = [
   },
   {
     path: 'auth',
-    loadChildren: () =>
-      import('./features/auth/auth.routes').then((m) => m.authRoutes),
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.authRoutes),
   },
   {
     path: 'account',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/account/account.routes').then((m) => m.accountRoutes),
+    loadChildren: () => import('./features/account/account.routes').then((m) => m.accountRoutes),
   },
   {
     path: 'dashboard',
     canActivate: [authGuard],
     loadChildren: () =>
-      import('./features/dashboard/dashboard.routes').then(
-        (m) => m.dashboardRoutes
-      ),
+      import('./features/dashboard/dashboard.routes').then((m) => m.dashboardRoutes),
   },
   {
     path: 'portfolio',
     canActivate: [authGuard],
     loadChildren: () =>
-      import('./features/portfolio/portfolio.routes').then(
-        (m) => m.portfolioRoutes
-      ),
+      import('./features/portfolio/portfolio.routes').then((m) => m.portfolioRoutes),
   },
   {
     path: 'projects',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/projects/projects.routes').then(
-        (m) => m.projectsRoutes
-      ),
+    loadChildren: () => import('./features/projects/projects.routes').then((m) => m.projectsRoutes),
   },
   {
     path: 'blog',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/blog/blog.routes').then((m) => m.blogRoutes),
+    loadChildren: () => import('./features/blog/blog.routes').then((m) => m.blogRoutes),
   },
   {
     path: 'media',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/media/media.routes').then((m) => m.mediaRoutes),
+    loadChildren: () => import('./features/media/media.routes').then((m) => m.mediaRoutes),
   },
   {
     path: 'analytics',
     canActivate: [authGuard],
     loadChildren: () =>
-      import('./features/analytics/analytics.routes').then(
-        (m) => m.analyticsRoutes
-      ),
+      import('./features/analytics/analytics.routes').then((m) => m.analyticsRoutes),
   },
   {
     path: 'users',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/users/users.routes').then((m) => m.usersRoutes),
+    loadChildren: () => import('./features/users/users.routes').then((m) => m.usersRoutes),
   },
   {
     path: 'settings',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/settings/settings.routes').then(
-        (m) => m.settingsRoutes
-      ),
+    loadChildren: () => import('./features/settings/settings.routes').then((m) => m.settingsRoutes),
   },
   {
     path: 'admin',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/admin/admin.routes').then((m) => m.adminRoutes),
+    loadChildren: () => import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
   {
     path: 'iam',
     canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/iam/iam.routes').then((m) => m.iamRoutes),
+    loadChildren: () => import('./features/iam/iam.routes').then((m) => m.iamRoutes),
   },
   {
     path: 'theme-builder',
@@ -108,9 +89,7 @@ export const appRoutes: Routes = [
     path: 'audit-logs',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/audit-logs/audit-logs.component').then(
-        (m) => m.AuditLogsComponent
-      ),
+      import('./features/audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),
   },
   {
     path: 'system-health',
@@ -124,9 +103,7 @@ export const appRoutes: Routes = [
     path: 'cms-builder',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/cms-builder/cms-builder.component').then(
-        (m) => m.CmsBuilderComponent
-      ),
+      import('./features/cms-builder/cms-builder.component').then((m) => m.CmsBuilderComponent),
   },
   {
     path: 'freelancer-sheets',
@@ -147,4 +124,3 @@ export const appRoutes: Routes = [
     redirectTo: 'dashboard',
   },
 ];
-

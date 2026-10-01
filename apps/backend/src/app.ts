@@ -140,7 +140,11 @@ app.get('/health', (_req, res) => {
  */
 type ServiceState = 'healthy' | 'degraded' | 'failed';
 
-async function probeDatabase(): Promise<{ status: ServiceState; latencyMs: number; message?: string }> {
+async function probeDatabase(): Promise<{
+  status: ServiceState;
+  latencyMs: number;
+  message?: string;
+}> {
   const started = Date.now();
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -160,13 +164,27 @@ app.get('/api/v1/health', async (_req, res) => {
   const cpuCount = os.cpus().length || 1;
   const load = Math.min(os.loadavg()[0], cpuCount);
   const database = await probeDatabase();
-  const blobConfigured = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_OIDC_TOKEN);
-  const redisState: ServiceState = !config.redisUrl ? 'failed' : rbacFailure ? 'degraded' : 'healthy';
+  const blobConfigured = Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_OIDC_TOKEN
+  );
+  const redisState: ServiceState = !config.redisUrl
+    ? 'failed'
+    : rbacFailure
+      ? 'degraded'
+      : 'healthy';
   const gb = (bytes: number) => Math.round((bytes / 1024 ** 3) * 10) / 10;
 
   res.json({
-    cpu: { used: Math.round(load * 10) / 10, total: cpuCount, percentage: Math.round((load / cpuCount) * 100) },
-    ram: { used: gb(usedRam), total: gb(totalRam), percentage: Math.round((usedRam / totalRam) * 100) },
+    cpu: {
+      used: Math.round(load * 10) / 10,
+      total: cpuCount,
+      percentage: Math.round((load / cpuCount) * 100),
+    },
+    ram: {
+      used: gb(usedRam),
+      total: gb(totalRam),
+      percentage: Math.round((usedRam / totalRam) * 100),
+    },
     database,
     storage: blobConfigured
       ? { status: 'healthy', latencyMs: 0 }

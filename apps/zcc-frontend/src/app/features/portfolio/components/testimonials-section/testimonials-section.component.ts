@@ -73,7 +73,14 @@ export class TestimonialsSectionComponent {
   addTestimonial() {
     this.testimonials.update((testimonials) => [
       ...testimonials,
-      { id: Date.now().toString(), clientName: '', position: '', company: '', message: '', rating: 5 },
+      {
+        id: Date.now().toString(),
+        clientName: '',
+        position: '',
+        company: '',
+        message: '',
+        rating: 5,
+      },
     ]);
   }
 

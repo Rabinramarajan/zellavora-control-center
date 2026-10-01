@@ -103,12 +103,7 @@
                 </button>
               }
               @if (can('manageAccess')) {
-                <button
-                  type="button"
-                  role="menuitem"
-                  [class]="menuItem"
-                  (click)="requestChange()"
-                >
+                <button type="button" role="menuitem" [class]="menuItem" (click)="requestChange()">
                   <i class="pi pi-inbox text-xs" aria-hidden="true"></i>
                   Request Access Change
                 </button>
@@ -144,10 +139,7 @@
       @for (f of summary(); track f.label) {
         <div class="min-w-0">
           <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ f.label }}</dt>
-          <dd
-            class="truncate font-medium text-gray-900 dark:text-white"
-            [title]="f.value ?? ''"
-          >
+          <dd class="truncate font-medium text-gray-900 dark:text-white" [title]="f.value ?? ''">
             {{ f.value || '—' }}
           </dd>
         </div>
@@ -333,14 +325,7 @@
                 <thead>
                   <tr [class]="theadRow">
                     @for (
-                      h of [
-                        'Role',
-                        'Assignment Source',
-                        'Scope',
-                        'Assigned By',
-                        'Assigned On',
-                        '',
-                      ];
+                      h of ['Role', 'Assignment Source', 'Scope', 'Assigned By', 'Assigned On', ''];
                       track $index
                     ) {
                       <th scope="col" [class]="th">{{ h }}</th>
@@ -351,12 +336,8 @@
                   @for (r of access()!.roles; track r.roleId + r.source) {
                     <tr>
                       <td [class]="td">
-                        <span class="font-medium text-gray-900 dark:text-white">{{
-                          r.name
-                        }}</span>
-                        <span class="block font-mono text-[11px] text-gray-400">{{
-                          r.key
-                        }}</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ r.name }}</span>
+                        <span class="block font-mono text-[11px] text-gray-400">{{ r.key }}</span>
                       </td>
                       <td [class]="td">
                         <zcc-status-chip
@@ -453,8 +434,8 @@
             }
           </dl>
           <p class="mb-3 text-xs text-gray-400">
-            Password hashes, MFA secrets, reset tokens, session tokens and recovery codes are
-            never shown.
+            Password hashes, MFA secrets, reset tokens, session tokens and recovery codes are never
+            shown.
           </p>
           @if (securityActions().length) {
             <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
@@ -483,12 +464,7 @@
               information only.
             </p>
             @if (can('revokeSessions') && sessions().length) {
-              <button
-                type="button"
-                [class]="btn.danger"
-                [disabled]="busy()"
-                (click)="revokeAll()"
-              >
+              <button type="button" [class]="btn.danger" [disabled]="busy()" (click)="revokeAll()">
                 <i class="pi pi-sign-out text-xs" aria-hidden="true"></i>
                 {{ hasCurrentSession() ? 'Revoke All Other Sessions' : 'Revoke All Sessions' }}
               </button>
@@ -596,11 +572,7 @@
                   [(value)]="noteAttachment"
                 />
               </div>
-              <button
-                type="submit"
-                [class]="btn.primary"
-                [disabled]="busy() || !noteBody().trim()"
-              >
+              <button type="submit" [class]="btn.primary" [disabled]="busy() || !noteBody().trim()">
                 <i class="pi pi-plus text-xs" aria-hidden="true"></i>
                 Add Note
               </button>
@@ -659,10 +631,7 @@
               <table class="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr [class]="theadRow">
-                    @for (
-                      h of ['Request Ref', 'Type', 'Requested By', 'Date', 'Status'];
-                      track h
-                    ) {
+                    @for (h of ['Request Ref', 'Type', 'Requested By', 'Date', 'Status']; track h) {
                       <th scope="col" [class]="th">{{ h }}</th>
                     }
                   </tr>
@@ -767,9 +736,7 @@
                       <td [class]="td">
                         {{ m.trigger }}
                         @if (m.requestRef) {
-                          <span class="block text-[11px] text-gray-400">{{
-                            m.requestRef
-                          }}</span>
+                          <span class="block text-[11px] text-gray-400">{{ m.requestRef }}</span>
                         }
                       </td>
                       <td [class]="td">{{ dateTime(m.sentOn) }}</td>
@@ -815,9 +782,7 @@
                   [attr.aria-expanded]="openAudit() === a.id"
                   (click)="openAudit.set(openAudit() === a.id ? null : a.id)"
                 >
-                  <span class="font-mono text-xs text-gray-500">{{
-                    dateTime(a.timestamp)
-                  }}</span>
+                  <span class="font-mono text-xs text-gray-500">{{ dateTime(a.timestamp) }}</span>
                   <span class="font-medium text-gray-900 dark:text-white">{{
                     auditLabel(a.action)
                   }}</span>
@@ -835,8 +800,8 @@
                     class="space-y-2 border-t border-gray-100 px-3 py-3 text-xs dark:border-white/5"
                   >
                     <p class="text-gray-500">
-                      Correlation: <span class="font-mono">{{ a.correlationId ?? '—' }}</span> ·
-                      IP: {{ a.ipAddress ?? '—' }}
+                      Correlation: <span class="font-mono">{{ a.correlationId ?? '—' }}</span> · IP:
+                      {{ a.ipAddress ?? '—' }}
                     </p>
                     @if (a.before || a.after) {
                       <zcc-json-diff-viewer [before]="a.before" [after]="a.after" />

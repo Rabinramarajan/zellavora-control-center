@@ -25,8 +25,7 @@ describe('Table', () => {
     { id: 2, name: 'Bravo', active: true },
   ];
 
-  const setInput = (key: string, value: unknown) =>
-    fixture.componentRef.setInput(key, value);
+  const setInput = (key: string, value: unknown) => fixture.componentRef.setInput(key, value);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -147,7 +146,12 @@ describe('Table', () => {
     c.beginEdit(rows[0], COLUMNS[1]);
     c.commitEdit(rows[0], COLUMNS[1], 'NewName');
 
-    expect(spy).toHaveBeenCalledWith({ row: rows[0], key: 'name', value: 'NewName', previous: 'Charlie' });
+    expect(spy).toHaveBeenCalledWith({
+      row: rows[0],
+      key: 'name',
+      value: 'NewName',
+      previous: 'Charlie',
+    });
     sub.unsubscribe();
   });
 });

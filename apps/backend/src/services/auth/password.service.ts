@@ -59,5 +59,4 @@ export class PasswordService {
       return false;
     }
   }
-
 }

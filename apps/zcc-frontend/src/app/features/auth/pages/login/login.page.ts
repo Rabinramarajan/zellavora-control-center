@@ -35,9 +35,24 @@ export class LoginPage {
 
   protected readonly year = new Date().getFullYear();
   protected readonly highlights: readonly Highlight[] = [
-    { icon: 'shield', tone: 'cyan', title: 'Enterprise grade', copy: 'Secure, compliant and audit ready' },
-    { icon: 'chart', tone: 'violet', title: 'Built for scale', copy: 'Grow your business without limits' },
-    { icon: 'layers', tone: 'emerald', title: 'Unified control', copy: 'Everything you need in one place' },
+    {
+      icon: 'shield',
+      tone: 'cyan',
+      title: 'Enterprise grade',
+      copy: 'Secure, compliant and audit ready',
+    },
+    {
+      icon: 'chart',
+      tone: 'violet',
+      title: 'Built for scale',
+      copy: 'Grow your business without limits',
+    },
+    {
+      icon: 'layers',
+      tone: 'emerald',
+      title: 'Unified control',
+      copy: 'Everything you need in one place',
+    },
   ];
 
   protected readonly formError = signal<string | null>(null);

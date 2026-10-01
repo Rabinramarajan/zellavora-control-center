@@ -107,8 +107,6 @@
   <zcc-empty-state
     icon="pi pi-cog"
     title="No configuration entries"
-    [message]="
-      store.q() ? 'Nothing matches your search.' : 'Add a key/value entry to get started.'
-    "
+    [message]="store.q() ? 'Nothing matches your search.' : 'Add a key/value entry to get started.'"
   />
 }

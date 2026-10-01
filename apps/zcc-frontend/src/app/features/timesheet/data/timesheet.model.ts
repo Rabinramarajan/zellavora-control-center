@@ -110,11 +110,9 @@ export interface ApiEnvelope<T> {
   data: T;
 }
 
-export const isEditable = (status: TimesheetStatus): boolean =>
-  EDITABLE_STATUSES.includes(status);
+export const isEditable = (status: TimesheetStatus): boolean => EDITABLE_STATUSES.includes(status);
 
-export const isNonWorking = (status: EntryStatus): boolean =>
-  NON_WORKING_STATUSES.includes(status);
+export const isNonWorking = (status: EntryStatus): boolean => NON_WORKING_STATUSES.includes(status);
 
 /** "2026-08" → "August 2026". */
 export const formatPeriod = (period: string): string => {

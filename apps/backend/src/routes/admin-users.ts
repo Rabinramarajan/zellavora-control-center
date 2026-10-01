@@ -471,40 +471,44 @@ router.get(['/users/search', '/user/search'], authenticate, async (req, res, nex
   }
 });
 
-router.post(['/users/search', '/user/search'], authenticate, async (req: AuthRequest, res, next) => {
-  try {
-    const { data: dbUsers, error } = await supabase.from('users').select('*');
-    if (error) throw error;
+router.post(
+  ['/users/search', '/user/search'],
+  authenticate,
+  async (req: AuthRequest, res, next) => {
+    try {
+      const { data: dbUsers, error } = await supabase.from('users').select('*');
+      if (error) throw error;
 
-    const searchResult = (dbUsers || []).map((user: any) => {
-      const serial = getOrAddUserSerial(user.id);
-      return {
-        userSerialId: serial,
-        userLoginId: user.email,
-        firstName: user.full_name.split(' ')[0] || '',
-        lastName: user.full_name.split(' ').slice(1).join(' ') || '',
-        emailId: user.email_id || user.email,
-        userName: user.username,
-        contactNumber: '+1 555-0100',
-        employeeCode: `EMP-${1000 + serial}`,
-        statusDescription: user.is_active ? 'Active' : 'Inactive',
-        beginDateFrom: user.created_at,
-        endDateFrom: null,
-      };
-    });
+      const searchResult = (dbUsers || []).map((user: any) => {
+        const serial = getOrAddUserSerial(user.id);
+        return {
+          userSerialId: serial,
+          userLoginId: user.email,
+          firstName: user.full_name.split(' ')[0] || '',
+          lastName: user.full_name.split(' ').slice(1).join(' ') || '',
+          emailId: user.email_id || user.email,
+          userName: user.username,
+          contactNumber: '+1 555-0100',
+          employeeCode: `EMP-${1000 + serial}`,
+          statusDescription: user.is_active ? 'Active' : 'Inactive',
+          beginDateFrom: user.created_at,
+          endDateFrom: null,
+        };
+      });
 
-    res.json(
-      wrapResponse({
-        searchResult,
-        totalCount: searchResult.length,
-        pageSize: req.body.pageSize || 10,
-        pageNumber: req.body.pageNumber || 1,
-      })
-    );
-  } catch (error) {
-    next(error);
+      res.json(
+        wrapResponse({
+          searchResult,
+          totalCount: searchResult.length,
+          pageSize: req.body.pageSize || 10,
+          pageNumber: req.body.pageNumber || 1,
+        })
+      );
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 router.get(['/users/template', '/user/new'], authenticate, async (req, res, next) => {
   try {
@@ -676,20 +680,28 @@ router.get(['/users/assignable-roles', '/user/role/get'], authenticate, async (r
   }
 });
 
-router.post(['/users/team-members/search', '/user/team/user/get'], authenticate, async (req, res, next) => {
-  try {
-    res.json(wrapResponse([]));
-  } catch (error) {
-    next(error);
+router.post(
+  ['/users/team-members/search', '/user/team/user/get'],
+  authenticate,
+  async (req, res, next) => {
+    try {
+      res.json(wrapResponse([]));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-router.post(['/users/branch-options', '/user/LoadBranchDDLByUserLoginId'], authenticate, async (req, res, next) => {
-  try {
-    res.json(wrapResponse(mockBranches));
-  } catch (error) {
-    next(error);
+router.post(
+  ['/users/branch-options', '/user/LoadBranchDDLByUserLoginId'],
+  authenticate,
+  async (req, res, next) => {
+    try {
+      res.json(wrapResponse(mockBranches));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;

@@ -34,12 +34,33 @@ export class CmsBuilderRepository {
             metaTitle: 'Welcome to Zellavora',
             metaDescription: 'Multi-Product Portal',
             sections: [
-              { id: '101', type: 'header', title: 'Site Header', content: { logo: 'Zellavora', links: 'Home, Products' }, orderIndex: 0 },
-              { id: '102', type: 'hero', title: 'Main Banner', content: { headline: 'Innovating Future Products', subheadline: 'ZellCredit and Galaxy Sofas custom builders.' }, orderIndex: 1 },
-              { id: '103', type: 'cta', title: 'Contact Action', content: { actionText: 'Join the Beta' }, orderIndex: 2 }
+              {
+                id: '101',
+                type: 'header',
+                title: 'Site Header',
+                content: { logo: 'Zellavora', links: 'Home, Products' },
+                orderIndex: 0,
+              },
+              {
+                id: '102',
+                type: 'hero',
+                title: 'Main Banner',
+                content: {
+                  headline: 'Innovating Future Products',
+                  subheadline: 'ZellCredit and Galaxy Sofas custom builders.',
+                },
+                orderIndex: 1,
+              },
+              {
+                id: '103',
+                type: 'cta',
+                title: 'Contact Action',
+                content: { actionText: 'Join the Beta' },
+                orderIndex: 2,
+              },
             ],
-            createdAt: new Date().toISOString()
-          }
+            createdAt: new Date().toISOString(),
+          },
         ];
         this._pages.set(mockPages);
         return of(mockPages);

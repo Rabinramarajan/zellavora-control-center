@@ -14,10 +14,12 @@ app.post('/check', async (c) => {
   try {
     const claims = await authenticate(c.req.raw);
     const body = await c.req.json();
-    const { permissions, mode } = z.object({
-      permissions: z.union([z.string(), z.array(z.string())]),
-      mode: z.enum(['any', 'all']).optional().default('any'),
-    }).parse(body);
+    const { permissions, mode } = z
+      .object({
+        permissions: z.union([z.string(), z.array(z.string())]),
+        mode: z.enum(['any', 'all']).optional().default('any'),
+      })
+      .parse(body);
 
     const checks = Array.isArray(permissions) ? permissions : [permissions];
 
@@ -30,7 +32,7 @@ app.post('/check', async (c) => {
       .eq('organization_id', claims.tid);
 
     const userPermSet = new Set((data ?? []).map((r: any) => r.permission_code));
-    
+
     // Helper check
     const has = (code: string) => {
       if (userPermSet.has(code)) return true;
@@ -40,9 +42,9 @@ app.post('/check', async (c) => {
 
     let allowed = false;
     if (mode === 'all') {
-      allowed = checks.every(p => has(p));
+      allowed = checks.every((p) => has(p));
     } else {
-      allowed = checks.some(p => has(p));
+      allowed = checks.some((p) => has(p));
     }
 
     return jsonResponse({
@@ -51,7 +53,11 @@ app.post('/check', async (c) => {
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -60,12 +66,14 @@ app.post('/grant', async (c) => {
   try {
     const claims = await authenticate(c.req.raw);
     const body = await c.req.json();
-    const { userId, permissionId, reason, expiresAt } = z.object({
-      userId: z.string().uuid(),
-      permissionId: z.string().uuid(),
-      reason: z.string().optional(),
-      expiresAt: z.string().datetime().optional(),
-    }).parse(body);
+    const { userId, permissionId, reason, expiresAt } = z
+      .object({
+        userId: z.string().uuid(),
+        permissionId: z.string().uuid(),
+        reason: z.string().optional(),
+        expiresAt: z.string().datetime().optional(),
+      })
+      .parse(body);
 
     const db = getSupabaseAdmin();
     const { data, error } = await db
@@ -85,7 +93,11 @@ app.post('/grant', async (c) => {
     return jsonResponse(data, 201);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -94,11 +106,13 @@ app.post('/deny', async (c) => {
   try {
     const claims = await authenticate(c.req.raw);
     const body = await c.req.json();
-    const { userId, permissionId, reason } = z.object({
-      userId: z.string().uuid(),
-      permissionId: z.string().uuid(),
-      reason: z.string().optional(),
-    }).parse(body);
+    const { userId, permissionId, reason } = z
+      .object({
+        userId: z.string().uuid(),
+        permissionId: z.string().uuid(),
+        reason: z.string().optional(),
+      })
+      .parse(body);
 
     const db = getSupabaseAdmin();
     const { data, error } = await db
@@ -117,7 +131,11 @@ app.post('/deny', async (c) => {
     return jsonResponse(data, 201);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

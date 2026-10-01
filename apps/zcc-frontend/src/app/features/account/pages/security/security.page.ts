@@ -28,7 +28,13 @@ const EVENT_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-security-page',
   standalone: true,
-  imports: [DatePipe, RouterLink, AuthAlertComponent, TwoFactorCardComponent, SessionsCardComponent],
+  imports: [
+    DatePipe,
+    RouterLink,
+    AuthAlertComponent,
+    TwoFactorCardComponent,
+    SessionsCardComponent,
+  ],
   templateUrl: './security.page.html',
   styleUrl: './security.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

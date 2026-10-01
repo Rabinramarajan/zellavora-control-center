@@ -393,13 +393,17 @@ let mockResources = [
  *                   type: boolean
  */
 
-router.get(['/resources/metadata', '/resource/initialize'], authenticate, async (req, res, next) => {
-  try {
-    res.json(wrapResponse({ status: 'initialized' }));
-  } catch (error) {
-    next(error);
+router.get(
+  ['/resources/metadata', '/resource/initialize'],
+  authenticate,
+  async (req, res, next) => {
+    try {
+      res.json(wrapResponse({ status: 'initialized' }));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 router.get(['/resources/search', '/resource/search'], authenticate, async (req, res, next) => {
   try {
@@ -479,21 +483,25 @@ router.post(['/resources/delete', '/resource/delete'], authenticate, async (req,
   }
 });
 
-router.post(['/resources/bulk-save', '/resource/SaveListResource'], authenticate, async (req, res, next) => {
-  try {
-    const list = req.body.lstentResource || [];
-    list.forEach((resrc: any) => {
-      if (resrc.resourceId > 0) {
-        mockResources = mockResources.map((r) => (r.resourceId === resrc.resourceId ? resrc : r));
-      } else {
-        resrc.resourceId = mockResources.length + 1;
-        mockResources.push(resrc);
-      }
-    });
-    res.json(wrapResponse(list));
-  } catch (error) {
-    next(error);
+router.post(
+  ['/resources/bulk-save', '/resource/SaveListResource'],
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const list = req.body.lstentResource || [];
+      list.forEach((resrc: any) => {
+        if (resrc.resourceId > 0) {
+          mockResources = mockResources.map((r) => (r.resourceId === resrc.resourceId ? resrc : r));
+        } else {
+          resrc.resourceId = mockResources.length + 1;
+          mockResources.push(resrc);
+        }
+      });
+      res.json(wrapResponse(list));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;

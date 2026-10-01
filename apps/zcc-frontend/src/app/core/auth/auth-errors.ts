@@ -15,13 +15,17 @@ export function apiErrorCode(err: unknown): string | null {
 }
 
 /** A user-facing message that never exposes transport or security internals. */
-export function apiErrorMessage(err: unknown, fallback = 'Something went wrong. Please try again.'): string {
+export function apiErrorMessage(
+  err: unknown,
+  fallback = 'Something went wrong. Please try again.'
+): string {
   if (err instanceof HttpErrorResponse) {
     if (err.status === 0) return 'Cannot reach the server. Check your connection and try again.';
     if (err.status === 429) return 'Too many attempts. Please try again later.';
     const body = apiError(err);
     if (body?.message && err.status < 500) return body.message;
-    if (err.status >= 500) return 'The service is temporarily unavailable. Please try again shortly.';
+    if (err.status >= 500)
+      return 'The service is temporarily unavailable. Please try again shortly.';
   }
   return fallback;
 }

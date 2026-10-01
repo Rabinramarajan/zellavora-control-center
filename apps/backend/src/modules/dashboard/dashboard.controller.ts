@@ -18,7 +18,14 @@ export class DashboardController {
 
   constructor() {
     const redis =
-      config.redisEnabled && config.redisUrl ? new Redis(config.redisUrl, { lazyConnect: true, maxRetriesPerRequest: 2, connectTimeout: 5000, enableOfflineQueue: false }) : null;
+      config.redisEnabled && config.redisUrl
+        ? new Redis(config.redisUrl, {
+            lazyConnect: true,
+            maxRetriesPerRequest: 2,
+            connectTimeout: 5000,
+            enableOfflineQueue: false,
+          })
+        : null;
     if (redis) {
       redis.on('error', () => {
         // best-effort: cache falls back to L1-only on Redis failure
@@ -43,12 +50,10 @@ export class DashboardController {
   activity = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const parsed = ActivityQuerySchema.parse(req.query);
-      const data = await this.service.getActivityFeed(
-        parsed.range,
-        parsed.page,
-        parsed.pageSize,
-        { action: parsed.action, severity: parsed.severity }
-      );
+      const data = await this.service.getActivityFeed(parsed.range, parsed.page, parsed.pageSize, {
+        action: parsed.action,
+        severity: parsed.severity,
+      });
       res.json({ success: true, data });
     } catch (err) {
       next(err);

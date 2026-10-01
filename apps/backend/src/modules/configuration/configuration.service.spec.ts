@@ -23,7 +23,9 @@ const row = (overrides: Record<string, unknown> = {}) => ({
 const makeRepo = (existing: ReturnType<typeof row> | null = null) =>
   ({
     find: jest.fn(async () => existing),
-    upsert: jest.fn(async (_org: string, key: string, data: Record<string, unknown>) => row({ key, ...data })),
+    upsert: jest.fn(async (_org: string, key: string, data: Record<string, unknown>) =>
+      row({ key, ...data })
+    ),
     delete: jest.fn(),
   }) as unknown as jest.Mocked<ConfigurationRepository>;
 
@@ -37,15 +39,27 @@ describe('ConfigurationService', () => {
       { key: 'api.key', value: 's3cret', isEncrypted: true },
       'actor'
     );
-    expect(repo.upsert).toHaveBeenCalledWith(ORG, 'api.key', expect.objectContaining({ value: 'enc(s3cret)' }));
+    expect(repo.upsert).toHaveBeenCalledWith(
+      ORG,
+      'api.key',
+      expect.objectContaining({ value: 'enc(s3cret)' })
+    );
     expect(saved.value).not.toContain('s3cret');
     expect(JSON.stringify((AuditService.log as jest.Mock).mock.calls)).not.toContain('s3cret');
   });
 
   it('keeps the stored secret when the value is omitted', async () => {
     const repo = makeRepo(row({ value: 'enc(old)', isEncrypted: true }));
-    await new ConfigurationService(repo).upsert(ORG, { key: 'api.key', isEncrypted: true }, 'actor');
-    expect(repo.upsert).toHaveBeenCalledWith(ORG, 'api.key', expect.objectContaining({ value: 'enc(old)' }));
+    await new ConfigurationService(repo).upsert(
+      ORG,
+      { key: 'api.key', isEncrypted: true },
+      'actor'
+    );
+    expect(repo.upsert).toHaveBeenCalledWith(
+      ORG,
+      'api.key',
+      expect.objectContaining({ value: 'enc(old)' })
+    );
   });
 
   it('requires a value for new entries and for decrypting a secret', async () => {
@@ -62,7 +76,9 @@ describe('ConfigurationService', () => {
   });
 
   it('404s when deleting a missing key', async () => {
-    await expect(new ConfigurationService(makeRepo()).remove(ORG, 'nope', 'actor')).rejects.toMatchObject({
+    await expect(
+      new ConfigurationService(makeRepo()).remove(ORG, 'nope', 'actor')
+    ).rejects.toMatchObject({
       status: 404,
     });
   });

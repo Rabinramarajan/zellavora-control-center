@@ -190,7 +190,12 @@ router.patch('/:id', authenticate, requirePermission('resources:manage'), contro
  *       201:
  *         description: Action added
  */
-router.post('/:id/actions', authenticate, requirePermission('resources:manage'), controller.addAction);
+router.post(
+  '/:id/actions',
+  authenticate,
+  requirePermission('resources:manage'),
+  controller.addAction
+);
 
 /**
  * @swagger

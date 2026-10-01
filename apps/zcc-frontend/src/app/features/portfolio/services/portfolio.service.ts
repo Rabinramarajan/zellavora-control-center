@@ -3,7 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 
-import { Profile, Skill, Experience, Education, Service, Testimonial } from '../../../shared/models';
+import {
+  Profile,
+  Skill,
+  Experience,
+  Education,
+  Service,
+  Testimonial,
+} from '../../../shared/models';
 
 interface PortfolioState {
   profile: Profile | null;

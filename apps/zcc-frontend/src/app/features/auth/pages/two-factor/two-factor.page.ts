@@ -25,11 +25,9 @@ export class TwoFactorPage {
   protected readonly expired = signal(!this.challenge);
 
   private readonly model = signal({ code: '' });
-  protected readonly form = form(
-    this.model,
-    (path) => otpRules(path.code),
-    { submission: { action: () => this.verify() } }
-  );
+  protected readonly form = form(this.model, (path) => otpRules(path.code), {
+    submission: { action: () => this.verify() },
+  });
 
   protected autoSubmit(): void {
     if (!this.form().submitting()) void submit(this.form);

@@ -9,11 +9,41 @@ const PASSWORD = process.env.FREELANCER_PASSWORD ?? 'Rabin@12345678';
 // navigation:restricted limits the sidebar to nodes explicitly granted via
 // navigation:<menu-key>; children of a granted node are shown automatically.
 const FREELANCER_PERMISSIONS = [
-  { name: 'read:dashboard', key: 'dashboard:read', resource: 'dashboard', action: 'read', description: 'View workspace monitoring metrics' },
-  { name: 'approve:timesheet', key: 'timesheet:approve', resource: 'timesheet', action: 'approve', description: "Review, approve, reject and mark paid other people's timesheets and sheets" },
-  { name: 'navigation:restricted', key: 'navigation:restricted', resource: 'navigation', action: 'restricted', description: 'Only show explicitly granted menu entries' },
-  { name: 'navigation:dashboard', key: 'navigation:dashboard', resource: 'navigation', action: 'dashboard', description: 'Show the Dashboard menu entry' },
-  { name: 'navigation:freelancer-sheets', key: 'navigation:freelancer-sheets', resource: 'navigation', action: 'freelancer-sheets', description: 'Show the Freelancer Sheets menu entry' },
+  {
+    name: 'read:dashboard',
+    key: 'dashboard:read',
+    resource: 'dashboard',
+    action: 'read',
+    description: 'View workspace monitoring metrics',
+  },
+  {
+    name: 'approve:timesheet',
+    key: 'timesheet:approve',
+    resource: 'timesheet',
+    action: 'approve',
+    description: "Review, approve, reject and mark paid other people's timesheets and sheets",
+  },
+  {
+    name: 'navigation:restricted',
+    key: 'navigation:restricted',
+    resource: 'navigation',
+    action: 'restricted',
+    description: 'Only show explicitly granted menu entries',
+  },
+  {
+    name: 'navigation:dashboard',
+    key: 'navigation:dashboard',
+    resource: 'navigation',
+    action: 'dashboard',
+    description: 'Show the Dashboard menu entry',
+  },
+  {
+    name: 'navigation:freelancer-sheets',
+    key: 'navigation:freelancer-sheets',
+    resource: 'navigation',
+    action: 'freelancer-sheets',
+    description: 'Show the Freelancer Sheets menu entry',
+  },
 ];
 
 async function main() {

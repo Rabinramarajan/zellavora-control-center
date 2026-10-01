@@ -1,5 +1,7 @@
 jest.mock('../../infrastructure/audit', () => ({ AuditService: { log: jest.fn() } }));
-jest.mock('../../infrastructure/logger', () => ({ logger: { warn: jest.fn(), info: jest.fn(), error: jest.fn() } }));
+jest.mock('../../infrastructure/logger', () => ({
+  logger: { warn: jest.fn(), info: jest.fn(), error: jest.fn() },
+}));
 jest.mock('../../services/email.service', () => ({ emailService: { sendEmail: jest.fn() } }));
 
 import { emailService } from '../../services/email.service';
@@ -8,7 +10,11 @@ import type { CommunicationsRepository } from './communications.repository';
 
 const ORG = 'org';
 const users = (n: number) =>
-  Array.from({ length: n }, (_, i) => ({ id: `u${i}`, email: `u${i}@corp.com`, fullName: `User ${i}` }));
+  Array.from({ length: n }, (_, i) => ({
+    id: `u${i}`,
+    email: `u${i}@corp.com`,
+    fullName: `User ${i}`,
+  }));
 
 const makeRepo = (recipients = users(2)) =>
   ({
@@ -54,7 +60,9 @@ describe('CommunicationsService', () => {
   });
 
   it('emails each recipient individually with escaped HTML and counts failures', async () => {
-    sendEmail.mockResolvedValueOnce({ success: true }).mockResolvedValueOnce({ success: false, error: 'bounce' });
+    sendEmail
+      .mockResolvedValueOnce({ success: true })
+      .mockResolvedValueOnce({ success: false, error: 'bounce' });
     const repo = makeRepo();
     const summary = await new CommunicationsService(repo).sendEmail(
       ORG,

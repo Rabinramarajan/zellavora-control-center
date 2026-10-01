@@ -1,10 +1,9 @@
 /* PrimeIcons for PrimeNG. Must precede the Tailwind imports: Tailwind inlines
  * its layers here, and a CSS @import after any rule is invalid. */
-@import "primeicons/primeicons.css";
+@import 'primeicons/primeicons.css';
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-
 
 :root {
   --p-primary-50: #faf5ff;
@@ -44,7 +43,12 @@ html {
 
 body {
   @apply bg-slate-50 text-slate-900 dark:bg-[#030712] dark:text-slate-100 transition-colors;
-  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Outfit',
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   overflow-x: hidden;
 }
 
@@ -137,8 +141,12 @@ html.light {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInUp {
@@ -184,8 +192,7 @@ html.light {
   border: 1px solid rgb(var(--toast-accent) / 0.28);
   outline: none;
   background:
-    linear-gradient(90deg, rgb(var(--toast-accent) / 0.12), transparent 60%),
-    var(--toast-surface);
+    linear-gradient(90deg, rgb(var(--toast-accent) / 0.12), transparent 60%), var(--toast-surface);
   backdrop-filter: blur(14px);
   box-shadow: var(--toast-shadow);
   color: var(--toast-title);
@@ -199,10 +206,18 @@ html.light {
   background: rgb(var(--toast-accent));
 }
 
-.p-toast .p-toast-message-success { --toast-accent: 52 211 153; }
-.p-toast .p-toast-message-error { --toast-accent: 248 113 113; }
-.p-toast .p-toast-message-warn { --toast-accent: 251 191 36; }
-.p-toast .p-toast-message-info { --toast-accent: 96 165 250; }
+.p-toast .p-toast-message-success {
+  --toast-accent: 52 211 153;
+}
+.p-toast .p-toast-message-error {
+  --toast-accent: 248 113 113;
+}
+.p-toast .p-toast-message-warn {
+  --toast-accent: 251 191 36;
+}
+.p-toast .p-toast-message-info {
+  --toast-accent: 96 165 250;
+}
 
 .p-toast .p-toast-message-content {
   display: flex;
@@ -265,7 +280,9 @@ html.light {
   background: transparent;
   color: var(--toast-close);
   cursor: pointer;
-  transition: background-color 150ms, color 150ms;
+  transition:
+    background-color 150ms,
+    color 150ms;
 }
 
 .p-toast .p-toast-close-button:hover {

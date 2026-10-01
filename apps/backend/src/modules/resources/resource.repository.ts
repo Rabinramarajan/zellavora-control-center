@@ -16,7 +16,10 @@ export class ResourceRepository extends BaseRepository {
   async findById(id: string, tx?: TxClient) {
     return this.getDb(tx).resource.findUnique({
       where: { id },
-      include: { actions: { include: { permission: true } }, children: { select: { id: true, name: true } } },
+      include: {
+        actions: { include: { permission: true } },
+        children: { select: { id: true, name: true } },
+      },
     });
   }
 
@@ -29,7 +32,11 @@ export class ResourceRepository extends BaseRepository {
 
     if (query.q) {
       const term = `%${query.q}%`;
-      where.OR = [{ name: { contains: query.q, mode: 'insensitive' } }, { key: { contains: query.q, mode: 'insensitive' } }, { description: { contains: query.q, mode: 'insensitive' } }];
+      where.OR = [
+        { name: { contains: query.q, mode: 'insensitive' } },
+        { key: { contains: query.q, mode: 'insensitive' } },
+        { description: { contains: query.q, mode: 'insensitive' } },
+      ];
       void term;
     }
     if (query.type?.length) where.type = { in: query.type };

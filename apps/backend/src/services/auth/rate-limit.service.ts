@@ -80,19 +80,11 @@ export class RateLimitService {
       // Lock expires lockoutMinutes after the first failure in the window.
       const earliest = failures?.[0]?.attemptedAt ? new Date(failures[0].attemptedAt) : new Date();
       const lockedUntil = new Date(earliest.getTime() + lockoutMs);
-      const retryAfterSeconds = Math.max(
-        Math.ceil((lockedUntil.getTime() - Date.now()) / 1000),
-        1
-      );
-      throw new AppError(
-        'Account temporarily locked. Try again later.',
-        423,
-        'ACCOUNT_LOCKED',
-        {
-          lockedUntil: lockedUntil.toISOString(),
-          retryAfterSeconds,
-        }
-      );
+      const retryAfterSeconds = Math.max(Math.ceil((lockedUntil.getTime() - Date.now()) / 1000), 1);
+      throw new AppError('Account temporarily locked. Try again later.', 423, 'ACCOUNT_LOCKED', {
+        lockedUntil: lockedUntil.toISOString(),
+        retryAfterSeconds,
+      });
     }
     return { lockedUntil: null, failedAttempts };
   }

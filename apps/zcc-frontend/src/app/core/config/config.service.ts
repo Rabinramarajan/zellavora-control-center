@@ -17,7 +17,10 @@ export class ConfigService {
         this.config = config;
       }),
       catchError((error) => {
-        console.warn(`Failed to load environment configuration: ${configFile}. Falling back to default appsettings.json`, error);
+        console.warn(
+          `Failed to load environment configuration: ${configFile}. Falling back to default appsettings.json`,
+          error
+        );
         return this.http.get('/assets/appsettings.json').pipe(
           tap((fallbackConfig) => {
             this.config = fallbackConfig;

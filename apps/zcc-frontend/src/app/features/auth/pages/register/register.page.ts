@@ -1,7 +1,22 @@
-import { ChangeDetectionStrategy, Component, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { FormField, FormRoot, form, required, validate, type FieldTree } from '@angular/forms/signals';
+import {
+  FormField,
+  FormRoot,
+  form,
+  required,
+  validate,
+  type FieldTree,
+} from '@angular/forms/signals';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { SelectControl, type SelectControlOption } from '@zellavoras/ui';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -49,9 +64,24 @@ export class RegisterPage {
 
   protected readonly year = new Date().getFullYear();
   protected readonly highlights: readonly Highlight[] = [
-    { icon: 'shield', tone: 'violet', title: 'Enterprise grade', copy: 'Secure, compliant and audit ready' },
-    { icon: 'chart', tone: 'cyan', title: 'Built for scale', copy: 'Grow your business without limits' },
-    { icon: 'layers', tone: 'emerald', title: 'Unified control', copy: 'Everything you need in one place' },
+    {
+      icon: 'shield',
+      tone: 'violet',
+      title: 'Enterprise grade',
+      copy: 'Secure, compliant and audit ready',
+    },
+    {
+      icon: 'chart',
+      tone: 'cyan',
+      title: 'Built for scale',
+      copy: 'Grow your business without limits',
+    },
+    {
+      icon: 'layers',
+      tone: 'emerald',
+      title: 'Unified control',
+      copy: 'Everything you need in one place',
+    },
   ];
 
   protected readonly policy = injectPasswordPolicy();

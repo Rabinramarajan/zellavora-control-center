@@ -67,12 +67,22 @@ export interface SystemInfoItem {
 export const SETTINGS_TABS: readonly SettingsTab[] = [
   { id: 'general', label: 'General', description: 'Basic application settings', icon: 'cog' },
   { id: 'profile', label: 'Profile', description: 'Personal information', icon: 'user' },
-  { id: 'notifications', label: 'Notifications', description: 'Email & system alerts', icon: 'bell' },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    description: 'Email & system alerts',
+    icon: 'bell',
+  },
   { id: 'appearance', label: 'Appearance', description: 'Theme & display', icon: 'palette' },
   { id: 'localization', label: 'Localization', description: 'Language & timezone', icon: 'globe' },
   { id: 'integrations', label: 'Integrations', description: 'Third-party services', icon: 'plug' },
   { id: 'storage', label: 'Storage', description: 'Media & file settings', icon: 'folder' },
-  { id: 'backup', label: 'Backup & Restore', description: 'Data backup preferences', icon: 'database' },
+  {
+    id: 'backup',
+    label: 'Backup & Restore',
+    description: 'Data backup preferences',
+    icon: 'database',
+  },
   { id: 'advanced', label: 'Advanced', description: 'Developer & system', icon: 'wrench' },
 ];
 

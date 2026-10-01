@@ -1,7 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { DdlService } from './ddl.service';
 
-const KNOWN_TYPES = ['country', 'language', 'gender', 'industry', 'organization_size', 'timezone', 'use_case'];
+const KNOWN_TYPES = [
+  'country',
+  'language',
+  'gender',
+  'industry',
+  'organization_size',
+  'timezone',
+  'use_case',
+];
 
 export class DdlController {
   private readonly service = new DdlService();

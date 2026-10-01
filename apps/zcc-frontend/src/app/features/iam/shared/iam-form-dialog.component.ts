@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { DialogShellComponent, injectDialogData, injectDialogRef } from '../../../shared/components/dialog';
+import {
+  DialogShellComponent,
+  injectDialogData,
+  injectDialogRef,
+} from '../../../shared/components/dialog';
 import { errorMessage } from './iam-feedback.service';
 import { IAM_INPUT } from './iam-page-header.component';
 

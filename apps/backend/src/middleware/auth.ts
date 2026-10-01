@@ -11,11 +11,7 @@
  */
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import {
-  TokenService,
-  type AccessTokenClaims,
-  SessionService,
-  } from '../services/auth';
+import { TokenService, type AccessTokenClaims, SessionService } from '../services/auth';
 import { SecurityPolicyService } from '../modules/security-policy/security-policy.service';
 import { AppError } from './error';
 

@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { FormsModule } from '@angular/forms';

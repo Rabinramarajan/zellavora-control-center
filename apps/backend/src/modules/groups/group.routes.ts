@@ -195,7 +195,12 @@ router.delete('/:id', authenticate, requirePermission('groups:manage'), controll
  *       201:
  *         description: Members added
  */
-router.post('/:id/members', authenticate, requirePermission('groups:manage'), controller.addMembers);
+router.post(
+  '/:id/members',
+  authenticate,
+  requirePermission('groups:manage'),
+  controller.addMembers
+);
 
 /**
  * @swagger
@@ -220,7 +225,12 @@ router.post('/:id/members', authenticate, requirePermission('groups:manage'), co
  *       200:
  *         description: Member removed
  */
-router.delete('/:id/members/:userId', authenticate, requirePermission('groups:manage'), controller.removeMember);
+router.delete(
+  '/:id/members/:userId',
+  authenticate,
+  requirePermission('groups:manage'),
+  controller.removeMember
+);
 
 /**
  * @swagger

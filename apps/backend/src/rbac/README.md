@@ -45,7 +45,7 @@ src/rbac/
 
 ## Performance
 
-- `resolve()` (warm L1):  < 1 ms
-- `resolve()` (warm L2):  < 5 ms
-- `resolve()` (cold DB):  < 50 ms
-- `checkMany(10)`:        < 10 ms
+- `resolve()` (warm L1): < 1 ms
+- `resolve()` (warm L2): < 5 ms
+- `resolve()` (cold DB): < 50 ms
+- `checkMany(10)`: < 10 ms

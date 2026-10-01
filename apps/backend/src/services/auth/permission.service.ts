@@ -67,16 +67,16 @@ export class PermissionService {
    */
   static has(set: Set<string>, code: string): boolean {
     if (set.has(code)) return true;
-    if (set.has("*:*")) return true;
+    if (set.has('*:*')) return true;
 
-    const segments = code.split(":");
+    const segments = code.split(':');
     const action = segments[segments.length - 1];
     if (action && set.has(`*:${action}`)) return true;
 
     // Prefix wildcards, so `system:*` covers `system:audit:read` and
     // `users:*` covers both `users:read` and `users:role:assign`.
     for (let i = 1; i < segments.length; i++) {
-      if (set.has(`${segments.slice(0, i).join(":")}:*`)) return true;
+      if (set.has(`${segments.slice(0, i).join(':')}:*`)) return true;
     }
 
     return false;

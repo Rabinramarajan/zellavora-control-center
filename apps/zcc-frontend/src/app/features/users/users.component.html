@@ -6,15 +6,21 @@
   <!-- Header -->
   <header class="us-rise flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div class="min-w-0">
-      <nav aria-label="Breadcrumb" class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
-        <a routerLink="/" class="cursor-pointer transition-colors duration-200 hover:text-slate-200">Home</a>
+      <nav
+        aria-label="Breadcrumb"
+        class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500"
+      >
+        <a routerLink="/" class="cursor-pointer transition-colors duration-200 hover:text-slate-200"
+          >Home</a
+        >
         <i class="pi pi-angle-right text-[0.6rem]" aria-hidden="true"></i>
         <span class="text-slate-300" aria-current="page">Users</span>
       </nav>
       <h1 class="text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">User Search</h1>
       <p class="mt-1 text-sm text-slate-400">
         Provisioned accounts: profile, access and security. New accounts are created through
-        <a routerLink="/iam/user-requests" class="text-violet-300 hover:underline">User Requests</a>.
+        <a routerLink="/iam/user-requests" class="text-violet-300 hover:underline">User Requests</a
+        >.
       </p>
     </div>
     @if (canManage()) {
@@ -26,7 +32,12 @@
   </header>
 
   <!-- Quick search -->
-  <form class="us-rise us-quickbar" role="search" aria-label="Search users" (ngSubmit)="runSearch()">
+  <form
+    class="us-rise us-quickbar"
+    role="search"
+    aria-label="Search users"
+    (ngSubmit)="runSearch()"
+  >
     <div class="us-quick-search">
       <app-form-input-control
         label="Search"
@@ -38,19 +49,43 @@
     </div>
     <div class="us-quick-field">
       <label class="us-quick-label" for="qs-status-btn">Status</label>
-      <zcc-multi-select inputId="qs-status-btn" placeholder="Any status" [options]="statusOptions" [value]="applied().status" (valueChange)="setQuick('status', $event)" />
+      <zcc-multi-select
+        inputId="qs-status-btn"
+        placeholder="Any status"
+        [options]="statusOptions"
+        [value]="applied().status"
+        (valueChange)="setQuick('status', $event)"
+      />
     </div>
     <div class="us-quick-field">
       <label class="us-quick-label" for="qs-role-btn">Role</label>
-      <zcc-multi-select inputId="qs-role-btn" placeholder="Any role" [options]="roleOptions()" [value]="applied().roleId" (valueChange)="setQuick('roleId', $event)" />
+      <zcc-multi-select
+        inputId="qs-role-btn"
+        placeholder="Any role"
+        [options]="roleOptions()"
+        [value]="applied().roleId"
+        (valueChange)="setQuick('roleId', $event)"
+      />
     </div>
     <div class="us-quick-field">
       <label class="us-quick-label" for="qs-group-btn">Group</label>
-      <zcc-multi-select inputId="qs-group-btn" placeholder="Any group" [options]="groupOptions()" [value]="applied().groupId" (valueChange)="setQuick('groupId', $event)" />
+      <zcc-multi-select
+        inputId="qs-group-btn"
+        placeholder="Any group"
+        [options]="groupOptions()"
+        [value]="applied().groupId"
+        (valueChange)="setQuick('groupId', $event)"
+      />
     </div>
     <div class="us-quick-field">
       <label class="us-quick-label" for="qs-branch-btn">Branch</label>
-      <zcc-multi-select inputId="qs-branch-btn" placeholder="Any branch" [options]="branchOptions()" [value]="applied().branchId" (valueChange)="setQuick('branchId', $event)" />
+      <zcc-multi-select
+        inputId="qs-branch-btn"
+        placeholder="Any branch"
+        [options]="branchOptions()"
+        [value]="applied().branchId"
+        (valueChange)="setQuick('branchId', $event)"
+      />
     </div>
     <div class="us-quick-actions">
       <button type="submit" class="us-btn us-btn-primary h-11 px-4">
@@ -68,14 +103,20 @@
         <i class="pi pi-sliders-h text-sm" aria-hidden="true"></i>
         More Filters
         @if (moreFilterCount() > 0) {
-          <span class="us-badge" [attr.aria-label]="moreFilterCount() + ' more filters active'">{{ moreFilterCount() }}</span>
+          <span class="us-badge" [attr.aria-label]="moreFilterCount() + ' more filters active'">{{
+            moreFilterCount()
+          }}</span>
         }
       </button>
     </div>
   </form>
 
   <!-- Status chips -->
-  <div class="us-rise -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="Filter by account status">
+  <div
+    class="us-rise -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible"
+    role="group"
+    aria-label="Filter by account status"
+  >
     @for (card of stats; track card.label; let i = $index) {
       <button
         type="button"
@@ -91,7 +132,9 @@
         @if (statCounts()[card.label] === undefined) {
           <span class="us-skeleton h-5 w-7"></span>
         } @else {
-          <span class="us-stat-count">{{ statCounts()[card.label] === null ? '—' : statCounts()[card.label]!.toLocaleString() }}</span>
+          <span class="us-stat-count">{{
+            statCounts()[card.label] === null ? '—' : statCounts()[card.label]!.toLocaleString()
+          }}</span>
         }
       </button>
     }
@@ -104,12 +147,21 @@
         <span class="us-chip">
           <span class="text-slate-400">{{ chip.label }}:</span>
           <span class="font-medium text-white">{{ chip.value }}</span>
-          <button type="button" class="us-chip-x" [attr.aria-label]="'Remove ' + chip.label + ' filter'" (click)="removeChip(chip.keys)">
+          <button
+            type="button"
+            class="us-chip-x"
+            [attr.aria-label]="'Remove ' + chip.label + ' filter'"
+            (click)="removeChip(chip.keys)"
+          >
             <i class="pi pi-times" aria-hidden="true"></i>
           </button>
         </span>
       }
-      <button type="button" class="ml-1 cursor-pointer text-xs font-semibold text-violet-300 transition-colors duration-200 hover:text-violet-200" (click)="resetAll()">
+      <button
+        type="button"
+        class="ml-1 cursor-pointer text-xs font-semibold text-violet-300 transition-colors duration-200 hover:text-violet-200"
+        (click)="resetAll()"
+      >
         Clear all
       </button>
     </div>
@@ -118,7 +170,11 @@
   <!-- Results -->
   <div class="us-rise flex md:min-h-0 flex-1 flex-col" style="animation-delay: 300ms">
     <div class="us-panel flex md:min-h-0 flex-1 flex-col overflow-hidden">
-      <div class="us-table-scroll md:min-h-0 flex-1" (scroll)="closeMenu()" [class.is-loading]="store.loading() && store.hasItems()">
+      <div
+        class="us-table-scroll md:min-h-0 flex-1"
+        (scroll)="closeMenu()"
+        [class.is-loading]="store.loading() && store.hasItems()"
+      >
         <table class="us-table">
           <thead>
             <tr>
@@ -135,7 +191,12 @@
               @for (col of columns; track col.label) {
                 <th [attr.aria-sort]="ariaSort(col.key)" [class.us-col-wide]="col.wide">
                   @if (col.key; as key) {
-                    <button type="button" class="us-sort" [class.is-sorted]="sortKey() === key" (click)="sortBy(key)">
+                    <button
+                      type="button"
+                      class="us-sort"
+                      [class.is-sorted]="sortKey() === key"
+                      (click)="sortBy(key)"
+                    >
                       {{ col.label }}
                       <i
                         class="pi text-[0.6rem]"
@@ -163,10 +224,18 @@
               <tr>
                 <td colspan="12">
                   <div class="flex flex-col items-center gap-3 py-16 text-center">
-                    <span class="us-stat-icon" data-tone="rose"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i></span>
+                    <span class="us-stat-icon" data-tone="rose"
+                      ><i class="pi pi-exclamation-triangle" aria-hidden="true"></i
+                    ></span>
                     <p class="font-semibold text-white">Failed to load users</p>
                     <p class="text-sm text-slate-400">{{ store.error() }}</p>
-                    <button type="button" class="us-btn us-btn-outline mt-1 h-10 px-4" (click)="store.reload()">Try again</button>
+                    <button
+                      type="button"
+                      class="us-btn us-btn-outline mt-1 h-10 px-4"
+                      (click)="store.reload()"
+                    >
+                      Try again
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -187,21 +256,45 @@
                       (change)="toggleRow(user.id)"
                     />
                   </td>
-                  <td class="whitespace-nowrap font-mono text-xs font-medium text-slate-200" [title]="user.id">{{ user.userCode ?? '—' }}</td>
+                  <td
+                    class="whitespace-nowrap font-mono text-xs font-medium text-slate-200"
+                    [title]="user.id"
+                  >
+                    {{ user.userCode ?? '—' }}
+                  </td>
                   <td>
                     <a [routerLink]="['/iam/users', user.id]" class="group flex items-center gap-3">
                       @if (user.avatarUrl) {
-                        <img [src]="user.avatarUrl" alt="" class="us-avatar object-cover" width="34" height="34" loading="lazy" />
+                        <img
+                          [src]="user.avatarUrl"
+                          alt=""
+                          class="us-avatar object-cover"
+                          width="34"
+                          height="34"
+                          loading="lazy"
+                        />
                       } @else {
-                        <span class="us-avatar" [style.background]="avatarColor(user)" aria-hidden="true">{{ initials(user.fullName) }}</span>
+                        <span
+                          class="us-avatar"
+                          [style.background]="avatarColor(user)"
+                          aria-hidden="true"
+                          >{{ initials(user.fullName) }}</span
+                        >
                       }
-                      <span class="whitespace-nowrap font-medium text-white group-hover:text-violet-300">{{ user.fullName }}</span>
+                      <span
+                        class="whitespace-nowrap font-medium text-white group-hover:text-violet-300"
+                        >{{ user.fullName }}</span
+                      >
                     </a>
                   </td>
-                  <td class="whitespace-nowrap font-mono text-xs text-slate-300">{{ user.employeeCode ?? '—' }}</td>
+                  <td class="whitespace-nowrap font-mono text-xs text-slate-300">
+                    {{ user.employeeCode ?? '—' }}
+                  </td>
                   <td class="text-slate-300">{{ user.email }}</td>
                   <td class="whitespace-nowrap text-slate-200">{{ user.branchName ?? '—' }}</td>
-                  <td class="us-col-wide whitespace-nowrap text-slate-200">{{ user.teamName ?? '—' }}</td>
+                  <td class="us-col-wide whitespace-nowrap text-slate-200">
+                    {{ user.teamName ?? '—' }}
+                  </td>
                   <td class="us-col-wide whitespace-nowrap text-slate-200">
                     {{ user.primaryGroup ?? '—' }}
                     @if (user.groupCount > 1) {
@@ -221,36 +314,50 @@
                     }
                   </td>
                   <td>
-                    <span class="us-status" [attr.data-status]="user.accountStatus">{{ user.statusLabel }}</span>
+                    <span class="us-status" [attr.data-status]="user.accountStatus">{{
+                      user.statusLabel
+                    }}</span>
                   </td>
-                  <td class="whitespace-nowrap text-slate-400">{{ formatDateTime(user.lastLoginDatetime) }}</td>
+                  <td class="whitespace-nowrap text-slate-400">
+                    {{ formatDateTime(user.lastLoginDatetime) }}
+                  </td>
                   <td class="us-col-actions">
                     <button
-                        type="button"
-                        class="us-action"
-                        data-tone="view"
-                        [attr.aria-label]="'Actions for ' + user.fullName"
-                        aria-haspopup="menu"
-                        [attr.aria-expanded]="menuFor() === user.id"
-                        [disabled]="busyId() === user.id"
-                        (click)="toggleMenu(user, $event)"
-                      >
-                        @if (busyId() === user.id) {
-                          <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-                        } @else {
-                          <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
-                        }
-                      </button>
+                      type="button"
+                      class="us-action"
+                      data-tone="view"
+                      [attr.aria-label]="'Actions for ' + user.fullName"
+                      aria-haspopup="menu"
+                      [attr.aria-expanded]="menuFor() === user.id"
+                      [disabled]="busyId() === user.id"
+                      (click)="toggleMenu(user, $event)"
+                    >
+                      @if (busyId() === user.id) {
+                        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                      } @else {
+                        <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+                      }
+                    </button>
                   </td>
                 </tr>
               } @empty {
                 <tr>
                   <td colspan="12">
                     <div class="flex flex-col items-center gap-3 py-16 text-center">
-                      <span class="us-stat-icon" data-tone="violet"><i class="pi pi-search" aria-hidden="true"></i></span>
+                      <span class="us-stat-icon" data-tone="violet"
+                        ><i class="pi pi-search" aria-hidden="true"></i
+                      ></span>
                       <p class="font-semibold text-white">No users match your search</p>
-                      <p class="text-sm text-slate-400">Try adjusting filters or clearing the search.</p>
-                      <button type="button" class="us-btn us-btn-outline mt-1 h-10 px-4" (click)="resetAll()">Clear everything</button>
+                      <p class="text-sm text-slate-400">
+                        Try adjusting filters or clearing the search.
+                      </p>
+                      <button
+                        type="button"
+                        class="us-btn us-btn-outline mt-1 h-10 px-4"
+                        (click)="resetAll()"
+                      >
+                        Clear everything
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -301,7 +408,13 @@
       @if (i > 0 && groupOf(item) !== groupOf(m.items[i - 1])) {
         <div class="us-menu-divider" role="separator"></div>
       }
-      <button type="button" role="menuitem" class="us-menu-item" [class.is-danger]="item.danger" (click)="selectMenuItem(item)">
+      <button
+        type="button"
+        role="menuitem"
+        class="us-menu-item"
+        [class.is-danger]="item.danger"
+        (click)="selectMenuItem(item)"
+      >
         <i [class]="item.icon" aria-hidden="true"></i>
         {{ item.label }}
       </button>
@@ -318,7 +431,9 @@
         <span class="us-dialog-icon"><i class="pi pi-filter" aria-hidden="true"></i></span>
         <div>
           <h2 id="us-filter-title" class="text-lg font-semibold text-white">More Filters</h2>
-          <p class="text-sm text-slate-400">Narrow the search by identity, organization, access and activity</p>
+          <p class="text-sm text-slate-400">
+            Narrow the search by identity, organization, access and activity
+          </p>
         </div>
       </div>
       <button type="button" class="us-icon-btn" aria-label="Close filters" (click)="closeFilters()">
@@ -328,7 +443,9 @@
 
     <form class="us-dialog-body" (ngSubmit)="applyFilters()" id="us-filter-form">
       <fieldset class="us-section">
-        <legend class="us-section-title"><i class="pi pi-id-card" aria-hidden="true"></i>Identity</legend>
+        <legend class="us-section-title">
+          <i class="pi pi-id-card" aria-hidden="true"></i>Identity
+        </legend>
         <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           @for (field of identityFields; track field.key) {
             <app-form-input-control
@@ -344,7 +461,9 @@
       </fieldset>
 
       <fieldset class="us-section">
-        <legend class="us-section-title"><i class="pi pi-shield" aria-hidden="true"></i>Organization &amp; Access</legend>
+        <legend class="us-section-title">
+          <i class="pi pi-shield" aria-hidden="true"></i>Organization &amp; Access
+        </legend>
         <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           @for (field of accessFields(); track field.key) {
             <div>
@@ -377,7 +496,9 @@
       </fieldset>
 
       <fieldset class="us-section">
-        <legend class="us-section-title"><i class="pi pi-clock" aria-hidden="true"></i>Activity</legend>
+        <legend class="us-section-title">
+          <i class="pi pi-clock" aria-hidden="true"></i>Activity
+        </legend>
         <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
           @for (range of dateRanges; track range.label) {
             <div class="us-range-group">
@@ -404,14 +525,26 @@
       </fieldset>
     </form>
 
-    <div class="flex flex-col-reverse gap-3 border-t border-white/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div
+      class="flex flex-col-reverse gap-3 border-t border-white/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+    >
       <button type="button" class="us-btn us-btn-outline h-11 px-4" (click)="resetDraft()">
         <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
         Reset Filters
       </button>
       <div class="flex gap-3">
-        <button type="button" class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none" (click)="closeFilters()">Cancel</button>
-        <button type="submit" form="us-filter-form" class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none">
+        <button
+          type="button"
+          class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none"
+          (click)="closeFilters()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          form="us-filter-form"
+          class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none"
+        >
           <i class="pi pi-filter text-sm" aria-hidden="true"></i>
           Apply Filters
         </button>

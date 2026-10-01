@@ -9,7 +9,9 @@
         <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
       </div>
       @if (document(); as doc) {
-        <span class="ts-badge" [class.ts-badge--preview]="doc.status === 'preview'">{{ statusText() }}</span>
+        <span class="ts-badge" [class.ts-badge--preview]="doc.status === 'preview'">{{
+          statusText()
+        }}</span>
       }
     </div>
     <button type="button" class="ts-print" (click)="print()" [disabled]="!document()">
@@ -22,7 +24,8 @@
       <p class="ts-hint" role="status">
         Preview built from your current daily sheets.
         @if (doc.pendingDailyCount > 0) {
-          {{ doc.pendingDailyCount }} {{ doc.pendingDailyCount === 1 ? 'entry is' : 'entries are' }} not approved yet.
+          {{ doc.pendingDailyCount }}
+          {{ doc.pendingDailyCount === 1 ? 'entry is' : 'entries are' }} not approved yet.
         }
         Generate and submit the monthly sheet to make it official.
       </p>
@@ -87,7 +90,12 @@
                   <td>{{ row.startTime ?? '-' }}</td>
                   <td>{{ row.endTime ?? '-' }}</td>
                   <td>{{ formatHours(row.hours ?? 0) }}</td>
-                  <td>{{ row.statusLabel }}@if (row.notes) {<span class="ts-doc__note"> — {{ row.notes }}</span>}</td>
+                  <td>
+                    {{ row.statusLabel }}
+                    @if (row.notes) {
+                      <span class="ts-doc__note"> — {{ row.notes }}</span>
+                    }
+                  </td>
                 }
               }
             </tr>
@@ -104,13 +112,20 @@
         <tr>
           <th scope="row">Total Leave Days</th>
           <td>
-            {{ doc.summary.leaveDays }} {{ doc.summary.leaveDays === 1 ? 'day' : 'days' }}@if (doc.summary.leaveDays) { ({{ doc.summary.leaveDates.join(', ') }})}
+            {{ doc.summary.leaveDays }} {{ doc.summary.leaveDays === 1 ? 'day' : 'days' }}
+            @if (doc.summary.leaveDays) {
+              ({{ doc.summary.leaveDates.join(', ') }})
+            }
           </td>
         </tr>
         @if (doc.summary.holidayDays) {
           <tr>
             <th scope="row">Total Holidays</th>
-            <td>{{ doc.summary.holidayDays }} {{ doc.summary.holidayDays === 1 ? 'day' : 'days' }} ({{ doc.summary.holidayDates.join(', ') }})</td>
+            <td>
+              {{ doc.summary.holidayDays }} {{ doc.summary.holidayDays === 1 ? 'day' : 'days' }} ({{
+                doc.summary.holidayDates.join(', ')
+              }})
+            </td>
           </tr>
         }
         <tr>

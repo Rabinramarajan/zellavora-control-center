@@ -171,7 +171,11 @@ export class RoleService {
       throw new AppError('Role not found', 404, 'ROLE_NOT_FOUND');
     }
     if (role.isSystem && dto.mode === 'replace') {
-      throw new AppError('System role permissions must be merged, not replaced', 403, 'SYSTEM_ROLE');
+      throw new AppError(
+        'System role permissions must be merged, not replaced',
+        403,
+        'SYSTEM_ROLE'
+      );
     }
 
     const orgId = role.organizationId ?? 'platform';
@@ -240,7 +244,11 @@ export class RoleService {
       resource: 'role',
       resourceId: copy.id,
       severity: 'info',
-      metadata: { sourceKey: source.key, targetKey: key, includePermissions: dto.includePermissions },
+      metadata: {
+        sourceKey: source.key,
+        targetKey: key,
+        includePermissions: dto.includePermissions,
+      },
     });
 
     this.invalidate();

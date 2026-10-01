@@ -1,4 +1,3 @@
-
 // Shared User UUID/Serial Mapping
 export const userUuidToSerial = new Map<string, number>();
 export const userSerialToUuid = new Map<number, string>();

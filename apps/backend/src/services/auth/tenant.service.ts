@@ -139,10 +139,13 @@ export class TenantService {
     // what login authorizes against (users.tenant_id + users.role). Many users
     // predate organization_members and only have this link.
     // Refresh already reads this user in parallel with the membership query.
-    const user = loadedUser !== undefined ? await loadedUser : await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true, tenantId: true, isDeleted: true },
-    });
+    const user =
+      loadedUser !== undefined
+        ? await loadedUser
+        : await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true, tenantId: true, isDeleted: true },
+          });
     if (!user || user.isDeleted || user.tenantId !== orgId) {
       throw new AppError('User is not a member of this organization', 403, 'NOT_A_MEMBER');
     }

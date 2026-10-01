@@ -258,4 +258,3 @@ export function assertConfigValid(): void {
     throw new Error(`Invalid configuration:\n  - ${configErrors.join('\n  - ')}`);
   }
 }
-

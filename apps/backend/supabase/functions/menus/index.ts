@@ -15,7 +15,7 @@ app.get('/', async (c) => {
   try {
     const claims = await authenticate(c.req.raw);
     const roots = await MenuService.loadForUser(claims.sub, claims.tid);
-    
+
     // Also fetch categories
     const db = getSupabaseAdmin();
     const { data: categories } = await db
@@ -31,7 +31,11 @@ app.get('/', async (c) => {
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -54,7 +58,11 @@ app.post('/', async (c) => {
     return jsonResponse(data, 201);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -78,7 +86,11 @@ app.put('/:menuId', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -99,7 +111,11 @@ app.delete('/:menuId', async (c) => {
     return jsonResponse({ success: true });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

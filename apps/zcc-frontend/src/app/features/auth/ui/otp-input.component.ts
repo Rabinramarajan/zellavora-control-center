@@ -8,7 +8,11 @@ import {
   output,
   viewChildren,
 } from '@angular/core';
-import type { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
+import type {
+  FormValueControl,
+  ValidationError,
+  WithOptionalFieldTree,
+} from '@angular/forms/signals';
 
 let nextId = 0;
 const LENGTH = 6;
@@ -43,7 +47,9 @@ export class OtpInputComponent implements FormValueControl<string> {
   protected readonly digits = computed(() =>
     Array.from({ length: LENGTH }, (_, i) => this.value()[i] ?? '')
   );
-  protected readonly showError = computed(() => this.touched() && this.invalid() && this.errors().length > 0);
+  protected readonly showError = computed(
+    () => this.touched() && this.invalid() && this.errors().length > 0
+  );
   private readonly boxes = viewChildren<ElementRef<HTMLInputElement>>('box');
 
   focus(): void {

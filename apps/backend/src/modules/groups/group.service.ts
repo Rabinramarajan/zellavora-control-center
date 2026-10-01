@@ -54,7 +54,9 @@ export class GroupService {
       list.push(node);
       byParent.set(node.parentId, list);
     }
-    const attach = (parentId: string | null): Array<(typeof mapped)[number] & { children: unknown[] }> =>
+    const attach = (
+      parentId: string | null
+    ): Array<(typeof mapped)[number] & { children: unknown[] }> =>
       (byParent.get(parentId) ?? []).map((node) => ({
         ...node,
         children: attach(node.id),
@@ -121,7 +123,13 @@ export class GroupService {
       resource: 'group',
       resourceId: created.id,
       severity: 'info',
-      metadata: { slug, name: dto.name, type: dto.type, members: dto.memberIds.length, roles: dto.roleIds.length },
+      metadata: {
+        slug,
+        name: dto.name,
+        type: dto.type,
+        members: dto.memberIds.length,
+        roles: dto.roleIds.length,
+      },
     });
 
     this.invalidate();

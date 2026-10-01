@@ -406,7 +406,12 @@ router.post('/switch-tenant', authenticate, asyncHandler(controller.switchTenant
  *       400:
  *         description: Wrong current password, reuse, or policy failure
  */
-router.post('/change-password', authenticate, sensitiveLimiter, asyncHandler(controller.changePassword));
+router.post(
+  '/change-password',
+  authenticate,
+  sensitiveLimiter,
+  asyncHandler(controller.changePassword)
+);
 
 /**
  * @swagger
@@ -437,7 +442,12 @@ router.get('/security', authenticate, asyncHandler(controller.security));
  *       200:
  *         description: Enrollment token, QR code and manual-entry secret
  */
-router.post('/mfa/enroll', authenticate, sensitiveLimiter, asyncHandler(controller.startMfaEnrollment));
+router.post(
+  '/mfa/enroll',
+  authenticate,
+  sensitiveLimiter,
+  asyncHandler(controller.startMfaEnrollment)
+);
 
 /**
  * @swagger
@@ -452,7 +462,12 @@ router.post('/mfa/enroll', authenticate, sensitiveLimiter, asyncHandler(controll
  *       200:
  *         description: 2FA enabled; recovery codes returned once
  */
-router.post('/mfa/confirm', authenticate, sensitiveLimiter, asyncHandler(controller.confirmMfaEnrollment));
+router.post(
+  '/mfa/confirm',
+  authenticate,
+  sensitiveLimiter,
+  asyncHandler(controller.confirmMfaEnrollment)
+);
 
 /**
  * @swagger
@@ -484,7 +499,12 @@ router.post('/mfa/disable', authenticate, sensitiveLimiter, asyncHandler(control
  *       200:
  *         description: New recovery codes (shown once)
  */
-router.post('/mfa/recovery-codes', authenticate, sensitiveLimiter, asyncHandler(controller.regenerateRecoveryCodes));
+router.post(
+  '/mfa/recovery-codes',
+  authenticate,
+  sensitiveLimiter,
+  asyncHandler(controller.regenerateRecoveryCodes)
+);
 
 /**
  * @swagger

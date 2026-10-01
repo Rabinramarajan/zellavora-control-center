@@ -15,12 +15,11 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
   const configService = inject(ConfigService);
   const supabaseFunctionsUrl =
     configService.get('apiUrls.supabaseFunctions') || 'https://zcc-backend.vercel.app/api/v1';
-  const adminApiUrl =
-    configService.get('apiUrls.adminApi') || 'https://zcc-backend.vercel.app';
+  const adminApiUrl = configService.get('apiUrls.adminApi') || 'https://zcc-backend.vercel.app';
 
   let rewrittenUrl = req.url;
 
-  const isAdminRequest = 
+  const isAdminRequest =
     rewrittenUrl.startsWith('/api/v1/admin') ||
     rewrittenUrl.startsWith('/api/user') ||
     rewrittenUrl.startsWith('/api/role') ||
@@ -50,7 +49,7 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
     rewrittenUrl = `${adminApiUrl}${normalizedPath}`;
   } else if (rewrittenUrl.startsWith('/api/v1')) {
     const rest = rewrittenUrl.slice('/api/v1'.length); // e.g. "/auth/login", "/projects/123/gallery"
-    
+
     // Perform routing mapping to individual Edge Functions
     if (rest.startsWith('/auth')) {
       rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
@@ -96,4 +95,3 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req);
 };
-

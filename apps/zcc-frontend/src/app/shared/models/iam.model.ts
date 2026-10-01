@@ -29,13 +29,7 @@ export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'PENDING' | 'SUSPEND
 
 /** Account lifecycle shown to admins; INVITED / PENDING_VERIFICATION are both stored as PENDING. */
 export type AccountStatus =
-  | 'INVITED'
-  | 'PENDING_VERIFICATION'
-  | 'ACTIVE'
-  | 'INACTIVE'
-  | 'LOCKED'
-  | 'SUSPENDED'
-  | 'DISABLED';
+  'INVITED' | 'PENDING_VERIFICATION' | 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'SUSPENDED' | 'DISABLED';
 export type GroupType = 'SECURITY' | 'ORG' | 'DISTRIBUTION' | 'PROJECT' | 'DYNAMIC';
 export type ResourceType = 'API' | 'FEATURE' | 'DATA' | 'MENU' | 'REPORT' | 'INTEGRATION';
 export type RoleScope = 'GLOBAL' | 'ORG' | 'RESOURCE';

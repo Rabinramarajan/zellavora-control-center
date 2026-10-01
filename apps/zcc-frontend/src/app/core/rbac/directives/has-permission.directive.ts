@@ -10,15 +10,21 @@
  * Reactive: re-evaluates on every policy change.
  */
 import {
-  Directive, input, computed, TemplateRef, ViewContainerRef, effect,
-  inject, OnDestroy
+  Directive,
+  input,
+  computed,
+  TemplateRef,
+  ViewContainerRef,
+  effect,
+  inject,
+  OnDestroy,
 } from '@angular/core';
 import { PermissionService } from '../services/permission.service';
 import { PolicyStore } from '../store/policy.store';
 
 @Directive({
   selector: '[hasPermission]',
-  standalone: true
+  standalone: true,
 })
 export class HasPermissionDirective implements OnDestroy {
   private tpl = inject(TemplateRef);
@@ -39,7 +45,7 @@ export class HasPermissionDirective implements OnDestroy {
   constructor() {
     // Re-evaluate on every policy change (signal effect)
     effect(() => {
-      this.store.version();   // dependency tracking
+      this.store.version(); // dependency tracking
       this.evaluate();
     });
   }
@@ -51,9 +57,8 @@ export class HasPermissionDirective implements OnDestroy {
 
   private evaluate(): void {
     const perms = this.required();
-    const ok = this.hasPermissionMode() === 'all'
-      ? this.perms.canAll(perms)
-      : this.perms.canAny(perms);
+    const ok =
+      this.hasPermissionMode() === 'all' ? this.perms.canAll(perms) : this.perms.canAny(perms);
 
     if (ok && !this.viewRef) {
       this.viewRef = this.vcr.createEmbeddedView(this.tpl);

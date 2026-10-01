@@ -62,7 +62,10 @@
             }
           </span>
           @if (opt.badge) {
-            <span class="shrink-0 rounded-full bg-gray-500/10 px-2 py-0.5 text-[11px] font-medium text-gray-400 ring-1 ring-inset ring-gray-500/20">{{ opt.badge }}</span>
+            <span
+              class="shrink-0 rounded-full bg-gray-500/10 px-2 py-0.5 text-[11px] font-medium text-gray-400 ring-1 ring-inset ring-gray-500/20"
+              >{{ opt.badge }}</span
+            >
           }
           @if (isExcluded(opt.id)) {
             <span class="shrink-0 text-xs text-gray-400">Already added</span>

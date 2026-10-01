@@ -28,9 +28,36 @@ export class AuditRepository {
         this._loading.set(false);
         // Dev fallback
         const mockLogs: AuditRecord[] = [
-          { id: '1', actorId: '101', actorName: 'Jane Doe', action: 'User login succeeded', severity: 'info', ipAddress: '127.0.0.1', userAgent: 'Chrome', createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
-          { id: '2', actorId: '102', actorName: 'Admin Bob', action: 'Modified project settings', severity: 'warn', ipAddress: '10.0.0.2', userAgent: 'Safari', createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
-          { id: '3', actorId: null, actorName: 'System', action: 'MFA Disabled for user_id=402', severity: 'critical', ipAddress: null, userAgent: null, createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString() }
+          {
+            id: '1',
+            actorId: '101',
+            actorName: 'Jane Doe',
+            action: 'User login succeeded',
+            severity: 'info',
+            ipAddress: '127.0.0.1',
+            userAgent: 'Chrome',
+            createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+          },
+          {
+            id: '2',
+            actorId: '102',
+            actorName: 'Admin Bob',
+            action: 'Modified project settings',
+            severity: 'warn',
+            ipAddress: '10.0.0.2',
+            userAgent: 'Safari',
+            createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          },
+          {
+            id: '3',
+            actorId: null,
+            actorName: 'System',
+            action: 'MFA Disabled for user_id=402',
+            severity: 'critical',
+            ipAddress: null,
+            userAgent: null,
+            createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+          },
         ];
         this._logs.set(mockLogs);
         return of(mockLogs);
@@ -42,7 +69,8 @@ export class AuditRepository {
     return this.api.exportAuditLogs(params).pipe(
       catchError(() => {
         // Fallback mock CSV download
-        const csvContent = 'id,actorName,action,severity,ipAddress,createdAt\n1,Jane Doe,User login succeeded,info,127.0.0.1,2026-07-27T12:00:00Z\n';
+        const csvContent =
+          'id,actorName,action,severity,ipAddress,createdAt\n1,Jane Doe,User login succeeded,info,127.0.0.1,2026-07-27T12:00:00Z\n';
         const blob = new Blob([csvContent], { type: 'text/csv' });
         return of(blob);
       })

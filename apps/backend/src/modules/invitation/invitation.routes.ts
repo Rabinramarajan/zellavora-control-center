@@ -59,7 +59,7 @@ router.get(
   requirePermission('users:read', 'users:manage'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = actorOf(req);
-    const query = ListSchema.parse(req.query) as Parameters<InvitationService["list"]>[1];
+    const query = ListSchema.parse(req.query) as Parameters<InvitationService['list']>[1];
     res.json({ success: true, data: await service.list(organizationId, query) });
   })
 );

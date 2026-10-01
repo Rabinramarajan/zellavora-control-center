@@ -62,11 +62,7 @@
       </div>
       <div>
         <label for="ur-group" [class]="labelClass">Group</label>
-        <zcc-multi-select
-          inputId="ur-group"
-          [options]="groupOptions()"
-          [(value)]="form.groupId"
-        />
+        <zcc-multi-select inputId="ur-group" [options]="groupOptions()" [(value)]="form.groupId" />
       </div>
       <div>
         <label for="ur-role" [class]="labelClass">Role</label>

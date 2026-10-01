@@ -21,7 +21,9 @@ export const UploadMediaSchema = z.object({
     .max(255)
     .default('')
     .refine(
-      (folder) => !/[\\?#%:]/.test(folder) && !folder.split('/').some((part) => part === '..' || part === '.'),
+      (folder) =>
+        !/[\\?#%:]/.test(folder) &&
+        !folder.split('/').some((part) => part === '..' || part === '.'),
       'Folder contains invalid characters'
     )
     .transform((folder) => folder.replace(/^\/+|\/+$/g, '')),

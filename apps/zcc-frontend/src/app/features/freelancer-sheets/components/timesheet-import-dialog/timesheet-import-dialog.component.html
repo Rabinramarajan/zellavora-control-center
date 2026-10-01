@@ -36,7 +36,9 @@
 
     @case ('error') {
       <div class="state state--error" role="alert">
-        <span class="state-icon"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i></span>
+        <span class="state-icon"
+          ><i class="pi pi-exclamation-triangle" aria-hidden="true"></i
+        ></span>
         <h3>Couldn't import this file</h3>
         <p>{{ errorMessage() }}</p>
       </div>
@@ -55,23 +57,41 @@
       <div class="dialog-body">
         @if (sheet(); as parsed) {
           <dl class="meta">
-            @if (parsed.employee) {<div><dt>Employee</dt><dd>{{ parsed.employee }}</dd></div>}
-            @if (parsed.department) {<div><dt>Department</dt><dd>{{ parsed.department }}</dd></div>}
-            @if (parsed.period) {<div><dt>Period</dt><dd>{{ parsed.period }}</dd></div>}
+            @if (parsed.employee) {
+              <div>
+                <dt>Employee</dt>
+                <dd>{{ parsed.employee }}</dd>
+              </div>
+            }
+            @if (parsed.department) {
+              <div>
+                <dt>Department</dt>
+                <dd>{{ parsed.department }}</dd>
+              </div>
+            }
+            @if (parsed.period) {
+              <div>
+                <dt>Period</dt>
+                <dd>{{ parsed.period }}</dd>
+              </div>
+            }
           </dl>
 
           <div class="stats">
             <div class="stat stat--work">
-              <strong>{{ workDays().length }}</strong><span>work days</span>
+              <strong>{{ workDays().length }}</strong
+              ><span>work days</span>
             </div>
             <div class="stat stat--hours">
               <strong>{{ totalHours() }}h</strong><span>total hours</span>
             </div>
             <div class="stat stat--leave">
-              <strong>{{ absenceDays().length }}</strong><span>leave / holiday</span>
+              <strong>{{ absenceDays().length }}</strong
+              ><span>leave / holiday</span>
             </div>
             <div class="stat">
-              <strong>{{ parsed.blankRows }}</strong><span>blank rows skipped</span>
+              <strong>{{ parsed.blankRows }}</strong
+              ><span>blank rows skipped</span>
             </div>
           </div>
 
@@ -116,7 +136,11 @@
               <span class="suffix" aria-hidden="true">/ hr</span>
             </div>
             <small id="rate-help">
-              {{ rateInvalid() ? 'Enter a rate to import work days.' : 'Applied to every imported work day.' }}
+              {{
+                rateInvalid()
+                  ? 'Enter a rate to import work days.'
+                  : 'Applied to every imported work day.'
+              }}
             </small>
           </label>
           <label class="input-field">
@@ -137,7 +161,9 @@
 
         <div class="table-wrap">
           <table>
-            <caption class="sr-only">Days found in the PDF</caption>
+            <caption class="sr-only">
+              Days found in the PDF
+            </caption>
             <thead>
               <tr>
                 <th class="check">
@@ -173,7 +199,9 @@
                   </td>
                   <td>
                     <span [class]="'tag tag--' + day.kind">
-                      {{ day.kind === 'work' ? 'Work' : day.kind === 'leave' ? 'Leave' : 'Holiday' }}
+                      {{
+                        day.kind === 'work' ? 'Work' : day.kind === 'leave' ? 'Leave' : 'Holiday'
+                      }}
                     </span>
                   </td>
                   <td class="time">
@@ -192,7 +220,9 @@
                   </td>
                   <td class="note">
                     @if (logged().has(day.date)) {
-                      <span class="logged"><i class="pi pi-history" aria-hidden="true"></i> Already logged</span>
+                      <span class="logged"
+                        ><i class="pi pi-history" aria-hidden="true"></i> Already logged</span
+                      >
                     }
                   </td>
                 </tr>
@@ -206,7 +236,9 @@
         <p class="summary">
           <strong>{{ chosen().length }}</strong> of {{ days().length }} days ·
           <strong>{{ chosenHours() }}h</strong>
-          @if (rate() && chosenHours()) {· <strong>{{ chosenAmount() | currency: 'USD' }}</strong>}
+          @if (rate() && chosenHours()) {
+            · <strong>{{ chosenAmount() | currency: 'USD' }}</strong>
+          }
           <span class="draft-note">Saved as drafts for you to review and submit.</span>
         </p>
         <div class="foot-actions">
@@ -239,18 +271,29 @@
     @case ('done') {
       <div class="state" [class.state--partial]="failures().length" role="status">
         <span class="state-icon">
-          <i [class]="failures().length ? 'pi pi-exclamation-circle' : 'pi pi-check'" aria-hidden="true"></i>
+          <i
+            [class]="failures().length ? 'pi pi-exclamation-circle' : 'pi pi-check'"
+            aria-hidden="true"
+          ></i>
         </span>
         <h3>
-          {{ succeeded() }} of {{ results().length }} {{ results().length === 1 ? 'day' : 'days' }} imported
+          {{ succeeded() }} of {{ results().length }}
+          {{ results().length === 1 ? 'day' : 'days' }} imported
         </h3>
         <p>
-          {{ succeeded() ? 'They are saved as drafts — submit them when you are ready.' : 'Nothing was saved.' }}
+          {{
+            succeeded()
+              ? 'They are saved as drafts — submit them when you are ready.'
+              : 'Nothing was saved.'
+          }}
         </p>
         @if (failures().length) {
           <ul class="failures">
             @for (failure of failures(); track failure.date) {
-              <li><strong>{{ failure.date | date: 'EEE, MMM d' }}</strong><span>{{ failure.message }}</span></li>
+              <li>
+                <strong>{{ failure.date | date: 'EEE, MMM d' }}</strong
+                ><span>{{ failure.message }}</span>
+              </li>
             }
           </ul>
         }

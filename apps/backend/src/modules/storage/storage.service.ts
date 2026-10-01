@@ -57,7 +57,11 @@ export class StorageService {
     return { url, name: uniqueName };
   }
 
-  async listMedia(query: ListMediaQuery, tenantId: string, publicBaseUrl: string): Promise<MediaPage> {
+  async listMedia(
+    query: ListMediaQuery,
+    tenantId: string,
+    publicBaseUrl: string
+  ): Promise<MediaPage> {
     const offset = query.cursor ? Number(query.cursor) : 0;
     const rows = await this.repo.listMedia(requireTenant(tenantId), {
       prefix: query.prefix,
@@ -126,12 +130,20 @@ export class StorageService {
   }
 
   /** Appends " (n)" before the extension until the pathname is free, like a desktop file manager. */
-  private async availableName(organizationId: string, folder: string, fileName: string): Promise<string> {
+  private async availableName(
+    organizationId: string,
+    folder: string,
+    fileName: string
+  ): Promise<string> {
     const dot = fileName.lastIndexOf('.');
     const stem = dot > 0 ? fileName.slice(0, dot) : fileName;
     const extension = dot > 0 ? fileName.slice(dot) : '';
     let candidate = fileName;
-    for (let n = 1; await this.repo.pathnameExists(organizationId, joinPath(folder, candidate)); n++) {
+    for (
+      let n = 1;
+      await this.repo.pathnameExists(organizationId, joinPath(folder, candidate));
+      n++
+    ) {
       candidate = `${stem} (${n})${extension}`;
     }
     return candidate;

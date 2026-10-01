@@ -55,20 +55,28 @@ describe('SecurityPolicyService', () => {
     const policy = { minLength: 16, historyDepth: 5, disallowEmailInPassword: true };
 
     it('rejects passwords shorter than the org minimum', () => {
-      expect(() => SecurityPolicyService.assertPasswordAllowed(policy, 'Short-Pass-1!', 'a@b.co')).toThrow(
-        /at least 16/
-      );
+      expect(() =>
+        SecurityPolicyService.assertPasswordAllowed(policy, 'Short-Pass-1!', 'a@b.co')
+      ).toThrow(/at least 16/);
     });
 
     it('rejects passwords containing the email local part', () => {
       expect(() =>
-        SecurityPolicyService.assertPasswordAllowed(policy, 'Jane.Doe-Rocks-2026!', 'jane.doe@corp.com')
+        SecurityPolicyService.assertPasswordAllowed(
+          policy,
+          'Jane.Doe-Rocks-2026!',
+          'jane.doe@corp.com'
+        )
       ).toThrow(/email/);
     });
 
     it('accepts compliant passwords', () => {
       expect(() =>
-        SecurityPolicyService.assertPasswordAllowed(policy, 'Correct-Horse-Battery-9', 'jane.doe@corp.com')
+        SecurityPolicyService.assertPasswordAllowed(
+          policy,
+          'Correct-Horse-Battery-9',
+          'jane.doe@corp.com'
+        )
       ).not.toThrow();
     });
   });
@@ -109,7 +117,11 @@ describe('SecurityPolicyService', () => {
 
     await new SecurityPolicyService().updateLogin(ORG, next, 'actor');
 
-    expect(repo.upsertSetting).toHaveBeenCalledWith(ORG, 'security.login_policy', JSON.stringify(next));
+    expect(repo.upsertSetting).toHaveBeenCalledWith(
+      ORG,
+      'security.login_policy',
+      JSON.stringify(next)
+    );
     expect(store.size).toBe(0);
     expect(AuditService.log).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'security.login_policy.updated', after: next })
@@ -119,12 +131,19 @@ describe('SecurityPolicyService', () => {
 
 describe('LoginPolicySchema', () => {
   it('accepts an idle timeout of 0 (off) but not 1–4 minutes', () => {
-    expect(LoginPolicySchema.safeParse({ ...DEFAULT_LOGIN_POLICY, sessionIdleMinutes: 0 }).success).toBe(true);
-    expect(LoginPolicySchema.safeParse({ ...DEFAULT_LOGIN_POLICY, sessionIdleMinutes: 3 }).success).toBe(false);
+    expect(
+      LoginPolicySchema.safeParse({ ...DEFAULT_LOGIN_POLICY, sessionIdleMinutes: 0 }).success
+    ).toBe(true);
+    expect(
+      LoginPolicySchema.safeParse({ ...DEFAULT_LOGIN_POLICY, sessionIdleMinutes: 3 }).success
+    ).toBe(false);
   });
 
   it('rejects malformed IP ranges', () => {
-    const result = LoginPolicySchema.safeParse({ ...DEFAULT_LOGIN_POLICY, allowedIpRanges: ['10.0.0.0/33'] });
+    const result = LoginPolicySchema.safeParse({
+      ...DEFAULT_LOGIN_POLICY,
+      allowedIpRanges: ['10.0.0.0/33'],
+    });
     expect(result.success).toBe(false);
   });
 });

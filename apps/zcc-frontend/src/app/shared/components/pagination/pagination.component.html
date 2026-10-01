@@ -13,15 +13,25 @@
   <ul class="pg-list">
     @if (showFirstLast()) {
       <li>
-        <button type="button" class="pg-btn" aria-label="First page"
-                [disabled]="disabled() || isFirst()" (click)="goTo(1)">
+        <button
+          type="button"
+          class="pg-btn"
+          aria-label="First page"
+          [disabled]="disabled() || isFirst()"
+          (click)="goTo(1)"
+        >
           <i class="pi pi-angle-double-left" aria-hidden="true"></i>
         </button>
       </li>
     }
     <li>
-      <button type="button" class="pg-btn" aria-label="Previous page"
-              [disabled]="disabled() || isFirst()" (click)="prev()">
+      <button
+        type="button"
+        class="pg-btn"
+        aria-label="Previous page"
+        [disabled]="disabled() || isFirst()"
+        (click)="prev()"
+      >
         <i class="pi pi-angle-left" aria-hidden="true"></i>
       </button>
     </li>
@@ -29,12 +39,17 @@
     @for (item of pages(); track item.type === 'page' ? item.value : item.key) {
       <li>
         @if (item.type === 'page') {
-          <button type="button" class="pg-btn"
-                  [class.active]="item.value === currentPage()"
-                  [attr.aria-current]="item.value === currentPage() ? 'page' : null"
-                  [attr.aria-label]="'Page ' + item.value"
-                  [disabled]="disabled()"
-                  (click)="goTo(item.value)">{{ item.value }}</button>
+          <button
+            type="button"
+            class="pg-btn"
+            [class.active]="item.value === currentPage()"
+            [attr.aria-current]="item.value === currentPage() ? 'page' : null"
+            [attr.aria-label]="'Page ' + item.value"
+            [disabled]="disabled()"
+            (click)="goTo(item.value)"
+          >
+            {{ item.value }}
+          </button>
         } @else {
           <span class="pg-ellipsis" aria-hidden="true">…</span>
         }
@@ -42,15 +57,25 @@
     }
 
     <li>
-      <button type="button" class="pg-btn" aria-label="Next page"
-              [disabled]="disabled() || isLast()" (click)="next()">
+      <button
+        type="button"
+        class="pg-btn"
+        aria-label="Next page"
+        [disabled]="disabled() || isLast()"
+        (click)="next()"
+      >
         <i class="pi pi-angle-right" aria-hidden="true"></i>
       </button>
     </li>
     @if (showFirstLast()) {
       <li>
-        <button type="button" class="pg-btn" aria-label="Last page"
-                [disabled]="disabled() || isLast()" (click)="goTo(totalPages())">
+        <button
+          type="button"
+          class="pg-btn"
+          aria-label="Last page"
+          [disabled]="disabled() || isLast()"
+          (click)="goTo(totalPages())"
+        >
           <i class="pi pi-angle-double-right" aria-hidden="true"></i>
         </button>
       </li>

@@ -72,11 +72,7 @@ export class TenantService {
 
   static async getById(orgId: string): Promise<Tenant | null> {
     const admin = getSupabaseAdmin();
-    const { data } = await admin
-      .from('organizations')
-      .select('*')
-      .eq('id', orgId)
-      .maybeSingle();
+    const { data } = await admin.from('organizations').select('*').eq('id', orgId).maybeSingle();
     return data ? toTenant(data as OrgRow) : null;
   }
 
@@ -84,10 +80,12 @@ export class TenantService {
     const admin = getSupabaseAdmin();
     const { data, error } = await admin
       .from('organization_members')
-      .select(`
+      .select(
+        `
         role,
         organization:organizations(*)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .is('deleted_at', null);
 
@@ -147,9 +145,7 @@ export class SessionService {
   static async create(input: CreateSessionInput): Promise<{ sessionId: string }> {
     const sessionId = crypto.randomUUID();
     const sessionToken = `sess_${crypto.randomUUID().replace(/-/g, '')}`;
-    const expiresAt = new Date(
-      Date.now() + (input.rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000
-    );
+    const expiresAt = new Date(Date.now() + (input.rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000);
 
     const admin = getSupabaseAdmin();
     const { error } = await admin.from('sessions').insert({
@@ -236,15 +232,31 @@ export class SessionService {
 // ============================================================================
 export type AuditSeverity = 'info' | 'warn' | 'critical';
 export type AuditAction =
-  | 'login' | 'logout' | 'login_failed' | 'lockout'
-  | 'password_change' | 'password_reset_requested' | 'password_reset_completed'
-  | 'email_verified' | 'mfa_enrolled' | 'mfa_disabled' | 'mfa_recovery_used'
-  | 'user_created' | 'user_updated' | 'user_deleted' | 'user_invited'
-  | 'permission_updated' | 'role_changed'
-  | 'api_key_created' | 'api_key_revoked'
-  | 'session_revoked' | 'all_sessions_revoked'
+  | 'login'
+  | 'logout'
+  | 'login_failed'
+  | 'lockout'
+  | 'password_change'
+  | 'password_reset_requested'
+  | 'password_reset_completed'
+  | 'email_verified'
+  | 'mfa_enrolled'
+  | 'mfa_disabled'
+  | 'mfa_recovery_used'
+  | 'user_created'
+  | 'user_updated'
+  | 'user_deleted'
+  | 'user_invited'
+  | 'permission_updated'
+  | 'role_changed'
+  | 'api_key_created'
+  | 'api_key_revoked'
+  | 'session_revoked'
+  | 'all_sessions_revoked'
   | 'tenant_switched'
-  | 'resource_created' | 'resource_updated' | 'resource_deleted';
+  | 'resource_created'
+  | 'resource_updated'
+  | 'resource_deleted';
 
 export interface AuditEvent {
   organizationId: string;
@@ -346,11 +358,17 @@ export class RateLimitService {
       throw new Error(`Failed to check IP rate limit: ${error.message}`);
     }
     if ((count ?? 0) >= IP_LIMIT) {
-      throw new AppError('Too many failed attempts. Try again in 15 minutes.', 429, 'RATE_LIMITED_IP');
+      throw new AppError(
+        'Too many failed attempts. Try again in 15 minutes.',
+        429,
+        'RATE_LIMITED_IP'
+      );
     }
   }
 
-  static async assertAccountAllowed(email: string): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
+  static async assertAccountAllowed(
+    email: string
+  ): Promise<{ lockedUntil: Date | null; failedAttempts: number }> {
     const admin = getSupabaseAdmin();
     const since = new Date(Date.now() - WINDOW_MS).toISOString();
     const { count } = await admin
@@ -369,9 +387,6 @@ export class RateLimitService {
 
   static async clearForEmail(email: string): Promise<void> {
     const admin = getSupabaseAdmin();
-    await admin
-      .from('login_attempts')
-      .delete()
-      .eq('email', email.toLowerCase());
+    await admin.from('login_attempts').delete().eq('email', email.toLowerCase());
   }
 }

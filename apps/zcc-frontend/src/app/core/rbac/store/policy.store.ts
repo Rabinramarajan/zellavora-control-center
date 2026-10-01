@@ -19,14 +19,10 @@ export class PolicyStore {
   readonly lastRefresh = this._lastRefresh.asReadonly();
 
   /** Allowed permission keys as a Set — O(1) lookup in directives. */
-  readonly allowedSet = computed<Set<string>>(
-    () => new Set(this._policy()?.allowed ?? [])
-  );
+  readonly allowedSet = computed<Set<string>>(() => new Set(this._policy()?.allowed ?? []));
 
   /** Denied permission keys as a Set. */
-  readonly deniedSet = computed<Set<string>>(
-    () => new Set(this._policy()?.denied ?? [])
-  );
+  readonly deniedSet = computed<Set<string>>(() => new Set(this._policy()?.denied ?? []));
 
   /** Current policy version. Bumps invalidate cached UI decisions. */
   readonly version = computed<number>(() => this._policy()?.version ?? 0);

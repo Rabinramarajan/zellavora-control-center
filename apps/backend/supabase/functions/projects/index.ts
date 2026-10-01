@@ -34,7 +34,7 @@ app.get('/', async (c) => {
       // Filter for featured if requested
       query = query.eq('featured', true);
     }
-    
+
     query = query.eq('status', status);
 
     const pageNum = parseInt(page) || 1;
@@ -56,7 +56,11 @@ app.get('/', async (c) => {
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -75,7 +79,11 @@ app.get('/search', async (c) => {
     return jsonResponse(data || []);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -84,11 +92,7 @@ app.get('/slug/:slug', async (c) => {
   try {
     const slug = c.req.param('slug');
     const db = getSupabaseAdmin();
-    const { data, error } = await db
-      .from('projects')
-      .select('*')
-      .eq('slug', slug)
-      .single();
+    const { data, error } = await db.from('projects').select('*').eq('slug', slug).single();
 
     if (error || !data) {
       throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
@@ -97,7 +101,11 @@ app.get('/slug/:slug', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -106,11 +114,7 @@ app.get('/:id', async (c) => {
   try {
     const id = c.req.param('id');
     const db = getSupabaseAdmin();
-    const { data, error } = await db
-      .from('projects')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await db.from('projects').select('*').eq('id', id).single();
 
     if (error || !data) {
       throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
@@ -119,7 +123,11 @@ app.get('/:id', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -144,7 +152,11 @@ app.post('/', async (c) => {
     return jsonResponse(data, 201);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -183,7 +195,11 @@ app.put('/:id', async (c) => {
     return jsonResponse(updated);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -216,13 +232,18 @@ app.delete('/:id', async (c) => {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-tenant-id',
+        'Access-Control-Allow-Headers':
+          'authorization, x-client-info, apikey, content-type, x-tenant-id',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
       },
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -245,7 +266,11 @@ app.post('/:id/publish', async (c) => {
     return jsonResponse(project);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -265,7 +290,11 @@ app.post('/:id/archive', async (c) => {
     return jsonResponse(project);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

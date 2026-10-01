@@ -32,7 +32,9 @@ export interface ListQuery {
 export interface ListStoreOptions<T> {
   /** Async loader returning the paginated page. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  loader: (query: ListQuery) => Promise<PaginatedList<T>> | import('rxjs').Observable<PaginatedList<T>>;
+  loader: (
+    query: ListQuery
+  ) => Promise<PaginatedList<T>> | import('rxjs').Observable<PaginatedList<T>>;
   initialPageSize?: number;
   /** Keys copied from filter state into the loader query. */
   filterKeys?: string[];
@@ -64,12 +66,7 @@ export interface ListStore<T> {
 }
 
 export function createListStore<T>(options: ListStoreOptions<T>): ListStore<T> {
-  const {
-    loader,
-    initialPageSize = 20,
-    filterKeys = [],
-    autoLoad = true,
-  } = options;
+  const { loader, initialPageSize = 20, filterKeys = [], autoLoad = true } = options;
 
   const q = signal('');
   const filters = signal<Record<string, unknown>>({});
@@ -92,10 +89,7 @@ export function createListStore<T>(options: ListStoreOptions<T>): ListStore<T> {
         }
       }
       const result = loader(query);
-      const list =
-        result instanceof Promise
-          ? await result
-          : await firstValueFrom(result);
+      const list = result instanceof Promise ? await result : await firstValueFrom(result);
       items.set(list.data);
       meta.set(list.meta);
     } catch (err) {

@@ -45,12 +45,17 @@ describe('DepartmentsService', () => {
   it('allows moving under an unrelated department', async () => {
     const repo = makeRepo();
     await new DepartmentsService(repo).update(ORG, 'grandchild', { parentId: 'root' }, 'actor');
-    expect(repo.update).toHaveBeenCalledWith('grandchild', expect.objectContaining({ parentId: 'root' }));
+    expect(repo.update).toHaveBeenCalledWith(
+      'grandchild',
+      expect.objectContaining({ parentId: 'root' })
+    );
   });
 
   it('refuses to delete a department that still has sub-departments', async () => {
     const repo = makeRepo();
-    repo.findById.mockResolvedValue(dept('root', { _count: { userTenants: 2, children: 1 } }) as never);
+    repo.findById.mockResolvedValue(
+      dept('root', { _count: { userTenants: 2, children: 1 } }) as never
+    );
     await expect(new DepartmentsService(repo).remove(ORG, 'root', 'actor')).rejects.toMatchObject({
       status: 409,
       code: 'DEPARTMENT_HAS_CHILDREN',
@@ -69,6 +74,8 @@ describe('DepartmentsService', () => {
   it('returns 404 for a department outside the organization', async () => {
     const repo = makeRepo();
     repo.findById.mockResolvedValue(null as never);
-    await expect(new DepartmentsService(repo).get(ORG, 'missing')).rejects.toMatchObject({ status: 404 });
+    await expect(new DepartmentsService(repo).get(ORG, 'missing')).rejects.toMatchObject({
+      status: 404,
+    });
   });
 });

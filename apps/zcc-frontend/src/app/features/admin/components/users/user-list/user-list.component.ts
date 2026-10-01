@@ -1,7 +1,14 @@
 /**
  * User List Component - Displays users with search, filter, and pagination
  */
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 
 import { Router, RouterLink } from '@angular/router';
 import { SelectControl, SelectControlOption } from '@zellavoras/ui';

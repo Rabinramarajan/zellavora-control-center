@@ -7,7 +7,8 @@
       <div class="min-w-0">
         <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Media Gallery</h1>
         <p class="text-sm sm:text-base text-slate-400 mt-1">
-          Files stored in your organization's media library. Upload, organize and share your media files.
+          Files stored in your organization's media library. Upload, organize and share your media
+          files.
         </p>
       </div>
     </div>
@@ -38,7 +39,7 @@
         <i class="pi pi-refresh" [class.pi-spin]="loading()" aria-hidden="true"></i>
         Refresh
       </button>
-<button
+      <button
         type="button"
         class="mg-btn mg-btn--primary"
         [attr.title]="'Max ' + maxUploadMb + ' MB per file'"
@@ -51,13 +52,35 @@
   </header>
 
   <!-- Stats -->
-  <section class="flex flex-wrap items-center gap-2.5 mg-rise" style="--d: 60ms" aria-label="Storage summary">
+  <section
+    class="flex flex-wrap items-center gap-2.5 mg-rise"
+    style="--d: 60ms"
+    aria-label="Storage summary"
+  >
     @for (
       chip of [
-        { tab: 'all', label: 'All files', value: stats().total, icon: 'pi pi-th-large', tone: 'violet' },
-        { tab: 'image', label: 'Images', value: stats().images, icon: 'pi pi-image', tone: 'emerald' },
+        {
+          tab: 'all',
+          label: 'All files',
+          value: stats().total,
+          icon: 'pi pi-th-large',
+          tone: 'violet',
+        },
+        {
+          tab: 'image',
+          label: 'Images',
+          value: stats().images,
+          icon: 'pi pi-image',
+          tone: 'emerald',
+        },
         { tab: 'video', label: 'Videos', value: stats().videos, icon: 'pi pi-play', tone: 'rose' },
-        { tab: 'document', label: 'Documents', value: stats().documents, icon: 'pi pi-file', tone: 'blue' },
+        {
+          tab: 'document',
+          label: 'Documents',
+          value: stats().documents,
+          icon: 'pi pi-file',
+          tone: 'blue',
+        },
       ];
       track chip.tab
     ) {
@@ -615,4 +638,3 @@
     </footer>
   </div>
 }
-

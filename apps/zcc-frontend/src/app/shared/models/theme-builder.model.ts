@@ -5,6 +5,6 @@ export interface ThemeConfig {
   secondaryColor: string;
   fontFamily: string;
   borderRadius: number; // in pixels
-  spacing: number;      // base spacing multiplier
+  spacing: number; // base spacing multiplier
   isDarkMode: boolean;
 }

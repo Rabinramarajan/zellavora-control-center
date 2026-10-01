@@ -105,11 +105,22 @@ async function main() {
   const groupsData = [
     { name: 'All Employees', type: GroupType.SECURITY, description: 'All organization employees' },
     { name: 'Managers', type: GroupType.SECURITY, description: 'People managers' },
-    { name: 'Contractors', type: GroupType.SECURITY, description: 'External contractors and freelancers' },
-    { name: 'On-Call Engineers', type: GroupType.SECURITY, description: 'On-call rotation engineers' },
+    {
+      name: 'Contractors',
+      type: GroupType.SECURITY,
+      description: 'External contractors and freelancers',
+    },
+    {
+      name: 'On-Call Engineers',
+      type: GroupType.SECURITY,
+      description: 'On-call rotation engineers',
+    },
   ];
   for (const group of groupsData) {
-    const slug = group.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const slug = group.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
     const existing = await prisma.group.findUnique({ where: { slug } });
     if (!existing) {
       await prisma.group.create({

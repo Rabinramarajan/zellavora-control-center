@@ -87,9 +87,7 @@
     icon="pi pi-sitemap"
     title="No teams"
     [message]="
-      store.q()
-        ? 'No teams match your search.'
-        : 'Create a team to group people who work together.'
+      store.q() ? 'No teams match your search.' : 'Create a team to group people who work together.'
     "
   />
 }

@@ -1,45 +1,54 @@
 <section class="auth-page" aria-labelledby="recovery-title">
   <div class="auth-page__icon" aria-hidden="true">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="8" cy="15" r="4" /><path d="m10.8 12.2 8.7-8.7M17 6l2.5 2.5M14.5 8.5 16 10" />
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="8" cy="15" r="4" />
+      <path d="m10.8 12.2 8.7-8.7M17 6l2.5 2.5M14.5 8.5 16 10" />
     </svg>
   </div>
   <header>
     <h1 id="recovery-title" class="auth-title">Use a recovery code</h1>
     <p class="auth-lead">
-      Enter one of the recovery codes you saved when you set up two-factor authentication.
-      Each code works once.
+      Enter one of the recovery codes you saved when you set up two-factor authentication. Each code
+      works once.
     </p>
   </header>
 
   @if (expired()) {
-    <app-auth-alert tone="warning" heading="Sign-in attempt expired">
-      For your security, please sign in again.
-    </app-auth-alert>
-    <a class="auth-btn auth-btn--primary" routerLink="/auth/login" replaceUrl>Back to sign in</a>
-  } @else {
-    @if (formError()) {
-      <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
-    }
-    <form class="auth-form" [formRoot]="form" aria-labelledby="recovery-title">
-      <app-auth-field
-        class="auth-code-input auth-code-input--recovery"
-        [formField]="form.code"
-        label="Recovery code"
-        autocomplete="off"
-        placeholder="ABCDE-FGHJK"
-      />
-      <button type="submit" class="auth-btn auth-btn--primary" [disabled]="form().submitting()">
-        @if (form().submitting()) {
-          <span class="auth-spinner" aria-hidden="true"></span><span>Verifying…</span>
-        } @else {
-          <span>Verify recovery code</span>
-        }
-      </button>
-    </form>
+  <app-auth-alert tone="warning" heading="Sign-in attempt expired">
+    For your security, please sign in again.
+  </app-auth-alert>
+  <a class="auth-btn auth-btn--primary" routerLink="/auth/login" replaceUrl>Back to sign in</a>
+  } @else { @if (formError()) {
+  <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
+  }
+  <form class="auth-form" [formRoot]="form" aria-labelledby="recovery-title">
+    <app-auth-field
+      class="auth-code-input auth-code-input--recovery"
+      [formField]="form.code"
+      label="Recovery code"
+      autocomplete="off"
+      placeholder="ABCDE-FGHJK"
+    />
+    <button type="submit" class="auth-btn auth-btn--primary" [disabled]="form().submitting()">
+      @if (form().submitting()) {
+      <span class="auth-spinner" aria-hidden="true"></span><span>Verifying…</span>
+      } @else {
+      <span>Verify recovery code</span>
+      }
+    </button>
+  </form>
 
-    <p class="auth-footer-note">
-      <a class="auth-link" routerLink="/auth/two-factor">Back to authenticator code</a>
-    </p>
+  <p class="auth-footer-note">
+    <a class="auth-link" routerLink="/auth/two-factor">Back to authenticator code</a>
+  </p>
   }
 </section>

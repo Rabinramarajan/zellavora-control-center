@@ -3,11 +3,11 @@ import { getSupabaseAdmin } from './db.ts';
 import { AppError } from './errors.ts';
 
 export interface AccessTokenClaims {
-  sub: string;            // userId
-  tid: string;            // tenantId (organization)
-  role: string;           // 'owner' | 'admin' | 'member'
-  sid: string;            // sessionId
-  jti: string;            // unique token id
+  sub: string; // userId
+  tid: string; // tenantId (organization)
+  role: string; // 'owner' | 'admin' | 'member'
+  sid: string; // sessionId
+  jti: string; // unique token id
   email: string;
   iat: number;
   exp: number;

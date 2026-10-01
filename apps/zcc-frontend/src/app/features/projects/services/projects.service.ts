@@ -37,15 +37,9 @@ export class ProjectsService {
   currentPage = computed(() => this.state().currentPage);
 
   // Computed totals
-  draftCount = computed(() =>
-    this.projects().filter((p) => p.status === 'draft').length
-  );
-  publishedCount = computed(() =>
-    this.projects().filter((p) => p.status === 'published').length
-  );
-  archivedCount = computed(() =>
-    this.projects().filter((p) => p.status === 'archived').length
-  );
+  draftCount = computed(() => this.projects().filter((p) => p.status === 'draft').length);
+  publishedCount = computed(() => this.projects().filter((p) => p.status === 'published').length);
+  archivedCount = computed(() => this.projects().filter((p) => p.status === 'archived').length);
 
   constructor() {
     this.loadProjects();
@@ -79,7 +73,16 @@ export class ProjectsService {
   }
 
   createProject(
-    data: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt' | 'archivedAt' | 'viewCount' | 'downloadCount'>
+    data: Omit<
+      Project,
+      | 'id'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'publishedAt'
+      | 'archivedAt'
+      | 'viewCount'
+      | 'downloadCount'
+    >
   ): Observable<Project> {
     this.state.update((s) => ({ ...s, isLoading: true, error: null }));
     return this.projectRepo.createProject(data).pipe(

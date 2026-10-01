@@ -1,7 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiDataService } from '../http/api-data.service';
-import { ApiEnvelope, IamUserListItem, PaginatedList, UserStatus } from '../../shared/models/iam.model';
+import {
+  ApiEnvelope,
+  IamUserListItem,
+  PaginatedList,
+  UserStatus,
+} from '../../shared/models/iam.model';
 import {
   UpdateUserProfile,
   UserAccess,

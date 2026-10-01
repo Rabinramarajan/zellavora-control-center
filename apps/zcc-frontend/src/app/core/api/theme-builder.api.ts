@@ -14,5 +14,4 @@ export class ThemeBuilderApiService {
   updateThemeConfig(config: Partial<ThemeConfig>): Observable<ThemeConfig> {
     return this.apiData.putData<ThemeConfig>('/theme/config', config);
   }
-
 }

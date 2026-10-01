@@ -55,7 +55,7 @@ describe('AdminApiService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [AdminApiService]
+      providers: [AdminApiService],
     });
     service = TestBed.inject(AdminApiService);
     httpMock = TestBed.inject(HttpTestingController);

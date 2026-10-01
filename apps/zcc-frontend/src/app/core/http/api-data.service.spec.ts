@@ -10,9 +10,14 @@ describe('ApiDataService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-    imports: [],
-    providers: [ApiDataService, AuthStore, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
-});
+      imports: [],
+      providers: [
+        ApiDataService,
+        AuthStore,
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+      ],
+    });
     service = TestBed.inject(ApiDataService);
     httpMock = TestBed.inject(HttpTestingController);
   });
@@ -32,7 +37,9 @@ describe('ApiDataService', () => {
   });
 
   it('should set spinner control headers from options', () => {
-    service.getData('/test', undefined, { hideFullSpinner: true, hideJwt: true, hideErrorMethod: true }).subscribe();
+    service
+      .getData('/test', undefined, { hideFullSpinner: true, hideJwt: true, hideErrorMethod: true })
+      .subscribe();
     const req = httpMock.expectOne('/api/v1/test');
     expect(req.request.headers.get('hideFullSpinner')).toBe('true');
     expect(req.request.headers.get('hideJwt')).toBe('true');
@@ -41,7 +48,9 @@ describe('ApiDataService', () => {
 
   it('should pass query params and custom headers', () => {
     service.getData('/test', { range: '30' }, { headers: { 'X-Tenant': 'acme' } }).subscribe();
-    const req = httpMock.expectOne((r) => r.url === '/api/v1/test' && r.params.get('range') === '30');
+    const req = httpMock.expectOne(
+      (r) => r.url === '/api/v1/test' && r.params.get('range') === '30'
+    );
     expect(req.request.headers.get('X-Tenant')).toBe('acme');
   });
 });

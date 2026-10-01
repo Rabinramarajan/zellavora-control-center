@@ -79,7 +79,10 @@ export class TimesheetService {
   /** Null means "the signed-in user"; the server fills that in. */
   readonly employeeId = signal<string | null>(null);
 
-  readonly timesheetResource = resource<Timesheet | undefined, { employeeId: string | null; period: string }>({
+  readonly timesheetResource = resource<
+    Timesheet | undefined,
+    { employeeId: string | null; period: string }
+  >({
     params: () => ({ employeeId: this.employeeId(), period: this.period() }),
     loader: ({ params }) => this.fetchTimesheet(params.employeeId, params.period),
   });
@@ -105,9 +108,9 @@ export class TimesheetService {
   private fetchTimesheet(employeeId: string | null, period: string): Promise<Timesheet> {
     const params: Record<string, string> = { period };
     if (employeeId) params['employeeId'] = employeeId;
-    return firstValueFrom(
-      this.api.getData<ApiEnvelope<Timesheet>>('/timesheets', params)
-    ).then((response) => response.data);
+    return firstValueFrom(this.api.getData<ApiEnvelope<Timesheet>>('/timesheets', params)).then(
+      (response) => response.data
+    );
   }
 
   /**

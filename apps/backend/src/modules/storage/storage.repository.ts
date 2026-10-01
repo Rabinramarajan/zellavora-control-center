@@ -76,7 +76,9 @@ export class StorageRepository extends BaseRepository {
   }
 
   async deleteByPathname(organizationId: string, pathname: string, tx?: TxClient): Promise<number> {
-    const result = await this.getDb(tx).mediaFile.deleteMany({ where: { organizationId, pathname } });
+    const result = await this.getDb(tx).mediaFile.deleteMany({
+      where: { organizationId, pathname },
+    });
     return result.count;
   }
 }

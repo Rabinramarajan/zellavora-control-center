@@ -23,7 +23,11 @@ app.get('/projects/:projectId', async (c) => {
     return jsonResponse(data || []);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -79,7 +83,11 @@ app.post('/projects/:projectId', async (c) => {
     return jsonResponse(data, 201);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -118,7 +126,11 @@ app.put('/projects/:projectId/:imageId', async (c) => {
     return jsonResponse(data);
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 
@@ -156,13 +168,18 @@ app.delete('/projects/:projectId/:imageId', async (c) => {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-tenant-id',
+        'Access-Control-Allow-Headers':
+          'authorization, x-client-info, apikey, content-type, x-tenant-id',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
       },
     });
   } catch (e) {
     const err = handleError(e);
-    return errorResponse({ message: err.error.message, code: err.error.code, statusCode: err.status });
+    return errorResponse({
+      message: err.error.message,
+      code: err.error.code,
+      statusCode: err.status,
+    });
   }
 });
 

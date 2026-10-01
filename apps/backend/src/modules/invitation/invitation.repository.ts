@@ -88,13 +88,20 @@ export class InvitationRepository extends BaseRepository {
   /** `expired` is derived: a pending invitation past its expiry. */
   async list(
     organizationId: string,
-    query: { q?: string; status?: 'pending' | 'accepted' | 'revoked' | 'expired'; page: number; pageSize: number },
+    query: {
+      q?: string;
+      status?: 'pending' | 'accepted' | 'revoked' | 'expired';
+      page: number;
+      pageSize: number;
+    },
     tx?: TxClient
   ) {
     const now = new Date();
     const where: Prisma.InvitationWhereInput = { organizationId, isDeleted: false };
-    if (query.status === 'pending') Object.assign(where, { status: 'pending', expiresAt: { gt: now } });
-    else if (query.status === 'expired') Object.assign(where, { status: 'pending', expiresAt: { lte: now } });
+    if (query.status === 'pending')
+      Object.assign(where, { status: 'pending', expiresAt: { gt: now } });
+    else if (query.status === 'expired')
+      Object.assign(where, { status: 'pending', expiresAt: { lte: now } });
     else if (query.status) where.status = query.status;
     if (query.q) {
       where.OR = [

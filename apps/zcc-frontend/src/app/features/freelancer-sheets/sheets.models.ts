@@ -200,5 +200,4 @@ export interface MonthlyDocument {
 
 /** Outcome of one day in a bulk import. */
 export type DailyImportResult =
-  | { date: string; ok: true }
-  | { date: string; ok: false; message: string };
+  { date: string; ok: true } | { date: string; ok: false; message: string };

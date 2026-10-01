@@ -305,12 +305,10 @@ export class AuthService {
 
   /** Pass a PNG/JPEG/WebP data URL, or null to remove the avatar. */
   updateAvatar(avatar: string | null): Observable<void> {
-    return this.http
-      .put<{ avatarUrl: string | null }>(`${AUTH_API}/me/avatar`, { avatar })
-      .pipe(
-        tap(({ avatarUrl }) => this.store.patchUser({ avatarUrl })),
-        map(() => undefined)
-      );
+    return this.http.put<{ avatarUrl: string | null }>(`${AUTH_API}/me/avatar`, { avatar }).pipe(
+      tap(({ avatarUrl }) => this.store.patchUser({ avatarUrl })),
+      map(() => undefined)
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -334,9 +332,9 @@ export class AuthService {
   }
 
   verifyEmail(token: string): Observable<VerifyEmailResponse> {
-    return this.http.post<VerifyEmailResponse>(`${AUTH_API}/verify-email`, { token }).pipe(
-      tap(() => sessionStorage.removeItem(STORAGE.pendingEmail))
-    );
+    return this.http
+      .post<VerifyEmailResponse>(`${AUTH_API}/verify-email`, { token })
+      .pipe(tap(() => sessionStorage.removeItem(STORAGE.pendingEmail)));
   }
 
   resendVerification(email: string): Observable<GenericMessageResponse> {
@@ -377,7 +375,10 @@ export class AuthService {
     return this.http.post<MfaEnrollStartResponse>(`${AUTH_API}/mfa/enroll`, { password });
   }
 
-  confirmMfaEnrollment(enrollmentToken: string, code: string): Observable<MfaEnrollConfirmResponse> {
+  confirmMfaEnrollment(
+    enrollmentToken: string,
+    code: string
+  ): Observable<MfaEnrollConfirmResponse> {
     return this.http
       .post<MfaEnrollConfirmResponse>(`${AUTH_API}/mfa/confirm`, { enrollmentToken, code })
       .pipe(
@@ -530,7 +531,9 @@ export class AuthService {
 
   private restoreAccessToken(refreshToken: string): boolean {
     try {
-      const tokens = JSON.parse(sessionStorage.getItem(STORAGE.tokens) ?? 'null') as RefreshResponse | null;
+      const tokens = JSON.parse(
+        sessionStorage.getItem(STORAGE.tokens) ?? 'null'
+      ) as RefreshResponse | null;
       if (
         !tokens ||
         tokens.refreshToken !== refreshToken ||

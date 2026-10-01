@@ -25,7 +25,10 @@ export class DailySheetsController {
       try {
         sheets.push(await this.service.approve(id, dto, organizationId, viewer));
       } catch (error) {
-        errors.push({ id, message: error instanceof AppError ? error.message : 'Could not review sheet' });
+        errors.push({
+          id,
+          message: error instanceof AppError ? error.message : 'Could not review sheet',
+        });
       }
     }
     res.json({ success: true, data: { sheets, errors } });

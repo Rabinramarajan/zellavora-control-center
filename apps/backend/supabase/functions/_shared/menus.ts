@@ -14,10 +14,18 @@ export interface MenuNode {
 
 export class MenuService {
   static async loadForUser(userId: string, orgId: string): Promise<MenuNode[]> {
-    return this.loadForUserWithPerms(userId, orgId, await PermissionService.loadForUser(userId, orgId));
+    return this.loadForUserWithPerms(
+      userId,
+      orgId,
+      await PermissionService.loadForUser(userId, orgId)
+    );
   }
 
-  static async loadForUserWithPerms(userId: string, orgId: string, perms: Set<string>): Promise<MenuNode[]> {
+  static async loadForUserWithPerms(
+    userId: string,
+    orgId: string,
+    perms: Set<string>
+  ): Promise<MenuNode[]> {
     const admin = getSupabaseAdmin();
 
     const { data, error } = await admin
@@ -40,8 +48,8 @@ export class MenuService {
       order_index: number;
     };
 
-    const visible = (data ?? []).filter((r: Row) =>
-      !r.required_permission || PermissionService.has(perms, r.required_permission)
+    const visible = (data ?? []).filter(
+      (r: Row) => !r.required_permission || PermissionService.has(perms, r.required_permission)
     ) as Row[];
 
     const byId = new Map<string, MenuNode>();

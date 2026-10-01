@@ -55,6 +55,6 @@ export class GeneralSettingsFormComponent {
   );
 
   protected patch(changes: Partial<GeneralSettings>): void {
-    this.draft.update(current => ({ ...current, ...changes }));
+    this.draft.update((current) => ({ ...current, ...changes }));
   }
 }

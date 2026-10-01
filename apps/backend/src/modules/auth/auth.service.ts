@@ -29,10 +29,7 @@ import {
   type AuditAction,
   type Tenant,
 } from '../../services/auth';
-import {
-  SecurityPolicyService,
-  ipInRanges,
-} from '../security-policy/security-policy.service';
+import { SecurityPolicyService, ipInRanges } from '../security-policy/security-policy.service';
 import { UserRequestService } from '../user-requests/user-request.service';
 import { recordStatusChange } from '../users/account-status';
 import type { LoginPolicy } from '../security-policy/security-policy.dto';
@@ -170,25 +167,42 @@ export class AuthService {
     return this.finishMfaChallenge(challenge, meta);
   }
 
-  async verifyRecoveryCode(mfaToken: string, code: string, meta: RequestMeta): Promise<LoginSuccess> {
+  async verifyRecoveryCode(
+    mfaToken: string,
+    code: string,
+    meta: RequestMeta
+  ): Promise<LoginSuccess> {
     const challenge = await this.loadMfaChallenge(mfaToken);
     const remaining = await MfaService.consumeRecoveryCode(challenge.userId, code);
     if (remaining === null) {
       await this.audit('login_failed', challenge.organizationId, challenge.userId, meta, 'warn', {
         reason: 'recovery_code_failed',
       });
-      throw new AppError('The recovery code is invalid or has already been used.', 401, 'RECOVERY_CODE_INVALID');
+      throw new AppError(
+        'The recovery code is invalid or has already been used.',
+        401,
+        'RECOVERY_CODE_INVALID'
+      );
     }
-    await this.audit('mfa_recovery_used', challenge.organizationId, challenge.userId, meta, 'warn', {
-      remaining,
-    });
+    await this.audit(
+      'mfa_recovery_used',
+      challenge.organizationId,
+      challenge.userId,
+      meta,
+      'warn',
+      {
+        remaining,
+      }
+    );
     const result = await this.finishMfaChallenge(challenge, meta);
     return { ...result, recoveryCodesRemaining: remaining };
   }
 
   async refresh(refreshToken: string) {
     const claims = TokenService.verifyRefresh(refreshToken);
-    const session = await SessionService.findByRefreshTokenHash(TokenService.hashRefresh(refreshToken));
+    const session = await SessionService.findByRefreshTokenHash(
+      TokenService.hashRefresh(refreshToken)
+    );
 
     if (session.id !== claims.sid || new Date(session.expires_at) <= new Date()) {
       await SessionService.revoke(session.id);
@@ -415,7 +429,10 @@ export class AuthService {
       };
       const user = existing
         ? await this.repo.updateUser(existing.id, profile, tx)
-        : await this.repo.createUser({ email: invitation.email, emailId: invitation.email, ...profile }, tx);
+        : await this.repo.createUser(
+            { email: invitation.email, emailId: invitation.email, ...profile },
+            tx
+          );
 
       await this.repo.ensureMembership(user.id, organizationId, tx);
       await this.repo.addPasswordHistory(user.id, passwordHash, tx);
@@ -442,15 +459,27 @@ export class AuthService {
   async verifyEmail(token: string, meta: RequestMeta) {
     const row = await this.repo.findEmailVerification(OneTimeTokenService.hash(token));
     if (!row?.userId) {
-      throw new AppError('This verification link is invalid or has expired.', 400, 'INVALID_VERIFICATION_TOKEN');
+      throw new AppError(
+        'This verification link is invalid or has expired.',
+        400,
+        'INVALID_VERIFICATION_TOKEN'
+      );
     }
     const user = await this.repo.findUserById(row.userId);
     if (!user || user.isDeleted) {
-      throw new AppError('This verification link is invalid or has expired.', 400, 'INVALID_VERIFICATION_TOKEN');
+      throw new AppError(
+        'This verification link is invalid or has expired.',
+        400,
+        'INVALID_VERIFICATION_TOKEN'
+      );
     }
     if (user.emailVerified) return { ok: true, alreadyVerified: true };
     if (row.verified || row.expiresAt <= new Date()) {
-      throw new AppError('This verification link is invalid or has expired.', 400, 'VERIFICATION_TOKEN_EXPIRED');
+      throw new AppError(
+        'This verification link is invalid or has expired.',
+        400,
+        'VERIFICATION_TOKEN_EXPIRED'
+      );
     }
 
     await this.repo.transaction(async (tx) => {
@@ -499,7 +528,8 @@ export class AuthService {
           resetLink: appLink('/auth/reset-password', token),
           expiryMinutes: config.passwordResetTokenExpiryMinutes,
         });
-        if (user.tenantId) await this.audit('password_reset_requested', user.tenantId, user.id, meta);
+        if (user.tenantId)
+          await this.audit('password_reset_requested', user.tenantId, user.id, meta);
       }
     }
     return { ok: true, message: 'If an account is eligible, reset instructions will be sent.' };
@@ -512,7 +542,11 @@ export class AuthService {
 
   async resetPassword(token: string, newPassword: string, meta: RequestMeta) {
     const invalid = () =>
-      new AppError('This reset link is invalid or has expired. Request a new one.', 400, 'INVALID_RESET_TOKEN');
+      new AppError(
+        'This reset link is invalid or has expired. Request a new one.',
+        400,
+        'INVALID_RESET_TOKEN'
+      );
 
     const row = await this.repo.findLivePasswordReset(OneTimeTokenService.hash(token));
     if (!row?.userId) throw invalid();
@@ -539,7 +573,8 @@ export class AuthService {
 
     await RateLimitService.clearForEmail(user.email);
     if (config.revokeSessionsOnPasswordChange) await TokenService.revokeAllForUser(user.id);
-    if (user.tenantId) await this.audit('password_reset_completed', user.tenantId, user.id, meta, 'warn');
+    if (user.tenantId)
+      await this.audit('password_reset_completed', user.tenantId, user.id, meta, 'warn');
     await this.sendSecurityAlert(user.email, 'Password reset');
     return { ok: true };
   }
@@ -566,7 +601,9 @@ export class AuthService {
     const revokedSessions = config.revokeSessionsOnPasswordChange
       ? await SessionService.revokeAllExcept(user.id, actor.sessionId)
       : 0;
-    await this.audit('password_change', actor.tenantId, actor.userId, actor, 'warn', { revokedSessions });
+    await this.audit('password_change', actor.tenantId, actor.userId, actor, 'warn', {
+      revokedSessions,
+    });
     await this.sendSecurityAlert(user.email, 'Password changed');
     return { ok: true, revokedSessions };
   }
@@ -603,7 +640,11 @@ export class AuthService {
   async startMfaEnrollment(actor: AuthenticatedActor, password: string) {
     const user = await this.assertPassword(actor.userId, password);
     if (user.mfaEnabled) {
-      throw new AppError('Two-factor authentication is already enabled.', 409, 'MFA_ALREADY_ENABLED');
+      throw new AppError(
+        'Two-factor authentication is already enabled.',
+        409,
+        'MFA_ALREADY_ENABLED'
+      );
     }
     const tenant = await TenantService.getById(actor.tenantId);
     const enrollment = await MfaService.startEnrollment(user.email, tenant?.name ?? 'ZCC');
@@ -632,7 +673,11 @@ export class AuthService {
       'mfa_enrollment'
     );
     if (!challenge || challenge.userId !== actor.userId || !challenge.payload) {
-      throw new AppError('Setup session expired. Please start again.', 400, 'MFA_ENROLLMENT_EXPIRED');
+      throw new AppError(
+        'Setup session expired. Please start again.',
+        400,
+        'MFA_ENROLLMENT_EXPIRED'
+      );
     }
     if (!(await this.repo.recordChallengeAttempt(challenge.id, config.mfaMaxAttempts))) {
       await this.repo.consumeChallenge(challenge.id);
@@ -836,7 +881,11 @@ export class AuthService {
     };
   }
 
-  private async issueMfaChallenge(user: User, tenant: Tenant, rememberMe: boolean): Promise<MfaChallenge> {
+  private async issueMfaChallenge(
+    user: User,
+    tenant: Tenant,
+    rememberMe: boolean
+  ): Promise<MfaChallenge> {
     const method: MfaChallenge['mfaMethod'] = user.mfaMethod === 'email_otp' ? 'email_otp' : 'totp';
     const { token, hash } = OneTimeTokenService.generate();
     const expiresAt = new Date(Date.now() + config.mfaChallengeTtlMinutes * 60 * 1000);
@@ -867,9 +916,16 @@ export class AuthService {
   }
 
   private async loadMfaChallenge(mfaToken: string) {
-    const challenge = await this.repo.findLiveChallenge(OneTimeTokenService.hash(mfaToken), 'mfa_login');
+    const challenge = await this.repo.findLiveChallenge(
+      OneTimeTokenService.hash(mfaToken),
+      'mfa_login'
+    );
     if (!challenge?.organizationId) {
-      throw new AppError('Your sign-in attempt has expired. Please sign in again.', 401, 'MFA_CHALLENGE_EXPIRED');
+      throw new AppError(
+        'Your sign-in attempt has expired. Please sign in again.',
+        401,
+        'MFA_CHALLENGE_EXPIRED'
+      );
     }
     if (!(await this.repo.recordChallengeAttempt(challenge.id, config.mfaMaxAttempts))) {
       await this.repo.consumeChallenge(challenge.id);
@@ -883,7 +939,11 @@ export class AuthService {
     meta: RequestMeta
   ): Promise<LoginSuccess> {
     if (!(await this.repo.consumeChallenge(challenge.id))) {
-      throw new AppError('Your sign-in attempt has expired. Please sign in again.', 401, 'MFA_CHALLENGE_EXPIRED');
+      throw new AppError(
+        'Your sign-in attempt has expired. Please sign in again.',
+        401,
+        'MFA_CHALLENGE_EXPIRED'
+      );
     }
     const [user, tenant] = await Promise.all([
       this.repo.findUserById(challenge.userId),
@@ -954,7 +1014,8 @@ export class AuthService {
     if (!invitation || invitation.isDeleted) state = 'invalid';
     else if (invitation.status === 'revoked') state = 'revoked';
     else if (invitation.used || invitation.status === 'accepted') state = 'used';
-    else if (invitation.status === 'expired' || invitation.expiresAt <= new Date()) state = 'expired';
+    else if (invitation.status === 'expired' || invitation.expiresAt <= new Date())
+      state = 'expired';
     return { state, invitation: state === 'valid' ? invitation : null };
   }
 
@@ -962,7 +1023,10 @@ export class AuthService {
     const map: Record<InvitationState, [string, string]> = {
       valid: ['This invitation cannot be used.', 'INVITATION_INVALID'],
       invalid: ['This invitation link is invalid.', 'INVITATION_INVALID'],
-      expired: ['This invitation has expired. Ask your administrator for a new one.', 'INVITATION_EXPIRED'],
+      expired: [
+        'This invitation has expired. Ask your administrator for a new one.',
+        'INVITATION_EXPIRED',
+      ],
       used: ['This invitation has already been used. Sign in instead.', 'INVITATION_USED'],
       revoked: ['This invitation has been revoked.', 'INVITATION_REVOKED'],
     };

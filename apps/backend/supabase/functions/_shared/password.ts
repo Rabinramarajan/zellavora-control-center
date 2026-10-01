@@ -12,7 +12,15 @@ export const PasswordPolicySchema = z
   .refine((v) => /[^A-Za-z0-9]/.test(v), 'Password must contain a symbol');
 
 const COMMON_PASSWORDS = new Set<string>([
-  'password', 'password1', '12345678', 'qwerty', 'letmein', 'welcome', 'admin', 'admin123', 'iloveyou',
+  'password',
+  'password1',
+  '12345678',
+  'qwerty',
+  'letmein',
+  'welcome',
+  'admin',
+  'admin123',
+  'iloveyou',
 ]);
 
 export class PasswordService {

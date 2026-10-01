@@ -51,7 +51,9 @@ export class ResourceService {
       list.push(node);
       byParent.set(node.parentId, list);
     }
-    const attach = (parentId: string | null): Array<(typeof mapped)[number] & { children: unknown[] }> =>
+    const attach = (
+      parentId: string | null
+    ): Array<(typeof mapped)[number] & { children: unknown[] }> =>
       (byParent.get(parentId) ?? []).map((node) => ({
         ...node,
         children: attach(node.id),

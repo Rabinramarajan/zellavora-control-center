@@ -2,13 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
-import {
-  AppDialogService,
-} from '../../../shared/components/dialog';
-import {
-  CatalogPermission,
-  PermissionGroupItem,
-} from '../../../shared/models/iam-admin.model';
+import { AppDialogService } from '../../../shared/components/dialog';
+import { CatalogPermission, PermissionGroupItem } from '../../../shared/models/iam-admin.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
 import {
   DataTableComponent,

@@ -15,11 +15,19 @@ const publicBaseUrl = (req: Request): string =>
   `${req.protocol}://${req.get('host')}${req.baseUrl}/media/public`;
 
 // SVG can carry script; the sandbox CSP neutralises it when opened directly.
-const sendContent = (res: Response, content: MediaContent, download: boolean, cacheControl: string) => {
+const sendContent = (
+  res: Response,
+  content: MediaContent,
+  download: boolean,
+  cacheControl: string
+) => {
   res.setHeader('Content-Type', content.mimeType);
   res.setHeader('Content-Length', String(content.size));
   res.setHeader('Cache-Control', cacheControl);
-  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+  );
   res.setHeader(
     'Content-Disposition',
     `${download ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(content.name)}`

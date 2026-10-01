@@ -26,7 +26,13 @@
   (detach)="close()"
   (overlayKeydown)="onKeydown($event)"
 >
-  <div class="panel" role="dialog" aria-label="Choose date range" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+  <div
+    class="panel"
+    role="dialog"
+    aria-label="Choose date range"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+  >
     <p class="section-label">Quick select</p>
     <div class="presets">
       @for (preset of presets(); track preset.id) {
@@ -38,7 +44,9 @@
           (click)="applyPreset(preset)"
         >
           {{ preset.label }}
-          @if (activePreset() === preset.id) {<i class="pi pi-check" aria-hidden="true"></i>}
+          @if (activePreset() === preset.id) {
+            <i class="pi pi-check" aria-hidden="true"></i>
+          }
         </button>
       }
     </div>
@@ -73,12 +81,22 @@
     }
 
     <footer class="panel-foot">
-      <button type="button" class="text-btn" [disabled]="!isSet() && !draftFrom() && !draftTo()" (click)="clear()">
+      <button
+        type="button"
+        class="text-btn"
+        [disabled]="!isSet() && !draftFrom() && !draftTo()"
+        (click)="clear()"
+      >
         Clear
       </button>
       <div class="foot-actions">
         <button type="button" class="text-btn" (click)="close()">Cancel</button>
-        <button type="button" class="apply-btn" [disabled]="draftInvalid() || !draftChanged()" (click)="apply()">
+        <button
+          type="button"
+          class="apply-btn"
+          [disabled]="draftInvalid() || !draftChanged()"
+          (click)="apply()"
+        >
           Apply
         </button>
       </div>

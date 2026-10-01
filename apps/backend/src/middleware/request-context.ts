@@ -14,7 +14,8 @@ import type { AuthRequest } from './auth';
 
 export const requestContext = (req: Request, res: Response, next: NextFunction): void => {
   const authReq = req as AuthRequest;
-  const requestId = authReq.requestId ?? (req.headers['x-request-id'] as string) ?? crypto.randomUUID();
+  const requestId =
+    authReq.requestId ?? (req.headers['x-request-id'] as string) ?? crypto.randomUUID();
 
   // Echo the request id so clients can correlate failures.
   res.setHeader('x-request-id', requestId);

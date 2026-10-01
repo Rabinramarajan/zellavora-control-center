@@ -42,10 +42,13 @@ export function passwordRequirements(value: string, policy: PasswordPolicy): Pas
       met: value.length >= policy.minLength && value.length <= policy.maxLength,
     },
   ];
-  if (policy.requireUppercase) list.push({ id: 'upper', label: 'An uppercase letter', met: /[A-Z]/.test(value) });
-  if (policy.requireLowercase) list.push({ id: 'lower', label: 'A lowercase letter', met: /[a-z]/.test(value) });
+  if (policy.requireUppercase)
+    list.push({ id: 'upper', label: 'An uppercase letter', met: /[A-Z]/.test(value) });
+  if (policy.requireLowercase)
+    list.push({ id: 'lower', label: 'A lowercase letter', met: /[a-z]/.test(value) });
   if (policy.requireDigit) list.push({ id: 'digit', label: 'A number', met: /[0-9]/.test(value) });
-  if (policy.requireSymbol) list.push({ id: 'symbol', label: 'A symbol', met: /[^A-Za-z0-9]/.test(value) });
+  if (policy.requireSymbol)
+    list.push({ id: 'symbol', label: 'A symbol', met: /[^A-Za-z0-9]/.test(value) });
   return list;
 }
 
@@ -60,8 +63,10 @@ export function nameRules(path: StringPath, label: string): void {
   maxLength(path, 100, { message: `${label} must be 100 characters or fewer.` });
   validate(path, ({ value }) => {
     const trimmed = value().trim();
-    if (trimmed && trimmed.length < 2) return { kind: 'minLength', message: `${label} must be at least 2 characters.` };
-    if (CONTROL_CHARS.test(value())) return { kind: 'pattern', message: `${label} contains characters that aren't allowed.` };
+    if (trimmed && trimmed.length < 2)
+      return { kind: 'minLength', message: `${label} must be at least 2 characters.` };
+    if (CONTROL_CHARS.test(value()))
+      return { kind: 'pattern', message: `${label} contains characters that aren't allowed.` };
     return null;
   });
 }
@@ -88,7 +93,9 @@ export function confirmPasswordRules(path: StringPath, password: () => string): 
   required(path, { message: 'Confirm your password.' });
   maxLength(path, 128, { message: 'Password must be 128 characters or fewer.' });
   validate(path, ({ value }) =>
-    value() && value() !== password() ? { kind: 'mismatch', message: "Passwords don't match." } : null
+    value() && value() !== password()
+      ? { kind: 'mismatch', message: "Passwords don't match." }
+      : null
   );
 }
 

@@ -25,12 +25,7 @@
       ></textarea>
 
       <div class="flex flex-wrap gap-2">
-        <p-button
-          label="Approve"
-          severity="success"
-          [disabled]="busy()"
-          (onClick)="approve()"
-        />
+        <p-button label="Approve" severity="success" [disabled]="busy()" (onClick)="approve()" />
         <p-button
           label="Reject"
           severity="danger"

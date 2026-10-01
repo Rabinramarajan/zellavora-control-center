@@ -201,7 +201,8 @@ export class UserRequestFormComponent {
   /** `?type=ACCESS_CHANGE&userId=…` from the Users pages preselects the type and user. */
   private async prefill(): Promise<void> {
     const type = this.route.queryParamMap.get('type');
-    if (type && REQUEST_TYPE_OPTIONS.some((o) => o.value === type)) this.setType(type as UserRequestType);
+    if (type && REQUEST_TYPE_OPTIONS.some((o) => o.value === type))
+      this.setType(type as UserRequestType);
     const userId = this.route.queryParamMap.get('userId');
     if (!userId || this.isNew()) return;
     try {

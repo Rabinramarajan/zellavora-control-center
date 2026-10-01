@@ -36,7 +36,11 @@ export class NotificationRepository {
     );
   }
 
-  sendBroadcast(payload: { title: string; body: string; channels: string[] }): Observable<NotificationMessage> {
+  sendBroadcast(payload: {
+    title: string;
+    body: string;
+    channels: string[];
+  }): Observable<NotificationMessage> {
     this._loading.set(true);
     return this.api.sendBroadcast(payload).pipe(
       tap((newMsg) => {
@@ -71,8 +75,24 @@ export class NotificationRepository {
         this._loading.set(false);
         // Local dev template mocks
         const mocks: NotificationTemplate[] = [
-          { id: '1', key: 'welcome_email', name: 'Welcome Email', subject: 'Welcome to ZCC', body: 'Hi {{name}}, ...', channels: ['email'], createdAt: new Date().toISOString() },
-          { id: '2', key: 'mfa_alert', name: 'MFA Security Alert', subject: 'MFA Enabled', body: 'Your MFA setting has changed.', channels: ['email', 'push'], createdAt: new Date().toISOString() },
+          {
+            id: '1',
+            key: 'welcome_email',
+            name: 'Welcome Email',
+            subject: 'Welcome to ZCC',
+            body: 'Hi {{name}}, ...',
+            channels: ['email'],
+            createdAt: new Date().toISOString(),
+          },
+          {
+            id: '2',
+            key: 'mfa_alert',
+            name: 'MFA Security Alert',
+            subject: 'MFA Enabled',
+            body: 'Your MFA setting has changed.',
+            channels: ['email', 'push'],
+            createdAt: new Date().toISOString(),
+          },
         ];
         this._templates.set(mocks);
         return of(mocks);

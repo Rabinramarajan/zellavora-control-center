@@ -19,7 +19,9 @@ import { AuthService } from '../../../../core/auth/auth.service';
 export class AccountLockedPage {
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly disabled = computed(() => this.route.snapshot.queryParamMap.get('reason') === 'disabled');
+  protected readonly disabled = computed(
+    () => this.route.snapshot.queryParamMap.get('reason') === 'disabled'
+  );
   protected readonly supportEmail = toSignal(
     inject(AuthService)
       .config()

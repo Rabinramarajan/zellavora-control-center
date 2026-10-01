@@ -24,24 +24,35 @@
       }
       @if (enabled() && lowCodes() !== null) {
         <app-auth-alert tone="warning" heading="Running low on recovery codes">
-          You have {{ lowCodes() }} recovery code{{ lowCodes() === 1 ? '' : 's' }} left. Generate a new set.
+          You have {{ lowCodes() }} recovery code{{ lowCodes() === 1 ? '' : 's' }} left. Generate a
+          new set.
         </app-auth-alert>
       }
       <div class="card-actions">
         @if (enabled()) {
-          <p class="card-meta">
-            {{ recoveryCodesRemaining() }} of 10 recovery codes remaining.
-          </p>
-          <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="go('reauth-regenerate')">
+          <p class="card-meta">{{ recoveryCodesRemaining() }} of 10 recovery codes remaining.</p>
+          <button
+            type="button"
+            class="auth-btn auth-btn--secondary auth-btn--inline"
+            (click)="go('reauth-regenerate')"
+          >
             Regenerate recovery codes
           </button>
           @if (!requiredByOrg()) {
-            <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline danger-text" (click)="go('reauth-disable')">
+            <button
+              type="button"
+              class="auth-btn auth-btn--secondary auth-btn--inline danger-text"
+              (click)="go('reauth-disable')"
+            >
               Turn off
             </button>
           }
         } @else {
-          <button type="button" class="auth-btn auth-btn--primary auth-btn--inline" (click)="go('reauth-enable')">
+          <button
+            type="button"
+            class="auth-btn auth-btn--primary auth-btn--inline"
+            (click)="go('reauth-enable')"
+          >
             Set up two-factor authentication
           </button>
         }
@@ -64,7 +75,13 @@
         <ol class="steps">
           <li>
             <p class="step-title">Scan this QR code with your authenticator app</p>
-            <img class="qr" [src]="e.qrCodeDataUrl" width="176" height="176" alt="QR code for adding ZCC to your authenticator app" />
+            <img
+              class="qr"
+              [src]="e.qrCodeDataUrl"
+              width="176"
+              height="176"
+              alt="QR code for adding ZCC to your authenticator app"
+            />
             <details class="manual">
               <summary>Can't scan? Enter the key manually</summary>
               <code class="secret">{{ e.secret }}</code>
@@ -78,8 +95,18 @@
             <form class="auth-form" [formRoot]="codeForm" aria-label="Verify authenticator code">
               <app-otp-input [formField]="codeForm.code" />
               <div class="card-actions card-actions--end">
-                <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="go('idle')">Cancel</button>
-                <button type="submit" class="auth-btn auth-btn--primary auth-btn--inline" [disabled]="codeForm().submitting()">
+                <button
+                  type="button"
+                  class="auth-btn auth-btn--secondary auth-btn--inline"
+                  (click)="go('idle')"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="auth-btn auth-btn--primary auth-btn--inline"
+                  [disabled]="codeForm().submitting()"
+                >
                   @if (codeForm().submitting()) {
                     <span class="auth-spinner" aria-hidden="true"></span>
                   }

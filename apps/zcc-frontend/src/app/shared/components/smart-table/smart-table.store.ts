@@ -103,7 +103,6 @@ export class SmartTableStore<T> {
 
   readonly rangeEnd = computed(() => Math.min(this.currentPage() * this.pageSize(), this.total()));
 
-
   // ---- selection ---------------------------------------------------------
 
   /** Selected rows that still exist in the current data set. */

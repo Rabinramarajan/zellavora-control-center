@@ -1,89 +1,102 @@
 <section class="auth-page" aria-labelledby="invite-title" [attr.aria-busy]="state() === 'loading'">
-  @switch (state()) {
-    @case ('loading') {
-      <header>
-        <h1 id="invite-title" class="auth-title">Accept your invitation</h1>
-        <p class="auth-lead" role="status">Checking your invitation…</p>
-      </header>
-    }
-    @case ('valid') {
-      <header>
-        <h1 id="invite-title" class="auth-title">Set up your account</h1>
-        <p class="auth-lead">
-          @if (organization()) {
-            You've been invited to join <strong>{{ organization() }}</strong>.
-          } @else {
-            You've been invited to Zellavora Control Center.
-          }
-          Choose a password to activate your account.
-        </p>
-      </header>
+  @switch (state()) { @case ('loading') {
+  <header>
+    <h1 id="invite-title" class="auth-title">Accept your invitation</h1>
+    <p class="auth-lead" role="status">Checking your invitation…</p>
+  </header>
+  } @case ('valid') {
+  <header>
+    <h1 id="invite-title" class="auth-title">Set up your account</h1>
+    <p class="auth-lead">
+      @if (organization()) { You've been invited to join <strong>{{ organization() }}</strong>. }
+      @else { You've been invited to Zellavora Control Center. } Choose a password to activate your
+      account.
+    </p>
+  </header>
 
-      @if (formError()) {
-        <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
-      }
-
-      <form class="auth-form" [formRoot]="form" aria-labelledby="invite-title">
-        <app-auth-field
-          [formField]="form.email"
-          label="Email"
-          type="email"
-          autocomplete="username"
-          hint="Invitations are tied to this address and can't be changed."
-        />
-        <div class="auth-row">
-          <app-auth-field [formField]="form.firstName" label="First name" autocomplete="given-name" />
-          <app-auth-field [formField]="form.lastName" label="Last name" autocomplete="family-name" />
-        </div>
-        <div>
-          <app-auth-field
-            [formField]="form.password"
-            label="Password"
-            type="password"
-            autocomplete="new-password"
-          />
-          <app-password-requirements [password]="model().password" [policy]="policy()" />
-        </div>
-        <app-auth-field
-          [formField]="form.confirmPassword"
-          label="Confirm password"
-          type="password"
-          autocomplete="new-password"
-        />
-        <button type="submit" class="auth-btn auth-btn--primary" [disabled]="form().submitting()">
-          @if (form().submitting()) {
-            <span class="auth-spinner" aria-hidden="true"></span><span>Activating…</span>
-          } @else {
-            <span>Accept invitation</span>
-          }
-        </button>
-      </form>
-      <p class="auth-footer-note"><a class="auth-link" routerLink="/auth/login">Back to sign in</a></p>
-    }
-    @case ('accepted') {
-      <div class="auth-page__icon auth-page__icon--success" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
-      </div>
-      <header>
-        <h1 id="invite-title" class="auth-title">You're all set</h1>
-        <p class="auth-lead" role="status">Your account is active. Sign in with your new password.</p>
-      </header>
-      <a class="auth-btn auth-btn--primary" routerLink="/auth/login" replaceUrl>Go to sign in</a>
-    }
-    @default {
-      <div class="auth-page__icon auth-page__icon--warning" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5m0 3h.01" /><circle cx="12" cy="12" r="9" /></svg>
-      </div>
-      <header>
-        <h1 id="invite-title" class="auth-title">{{ problem().title }}</h1>
-      </header>
-      <app-auth-alert [tone]="problem().tone">{{ problem().message }}</app-auth-alert>
-      @if (problem().signIn) {
-        <a class="auth-btn auth-btn--primary" routerLink="/auth/login">Go to sign in</a>
-        <a class="auth-btn auth-btn--secondary" routerLink="/auth/forgot-password">Forgot password?</a>
-      } @else {
-        <a class="auth-btn auth-btn--secondary" routerLink="/auth/login">Back to sign in</a>
-      }
-    }
+  @if (formError()) {
+  <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
   }
+
+  <form class="auth-form" [formRoot]="form" aria-labelledby="invite-title">
+    <app-auth-field
+      [formField]="form.email"
+      label="Email"
+      type="email"
+      autocomplete="username"
+      hint="Invitations are tied to this address and can't be changed."
+    />
+    <div class="auth-row">
+      <app-auth-field [formField]="form.firstName" label="First name" autocomplete="given-name" />
+      <app-auth-field [formField]="form.lastName" label="Last name" autocomplete="family-name" />
+    </div>
+    <div>
+      <app-auth-field
+        [formField]="form.password"
+        label="Password"
+        type="password"
+        autocomplete="new-password"
+      />
+      <app-password-requirements [password]="model().password" [policy]="policy()" />
+    </div>
+    <app-auth-field
+      [formField]="form.confirmPassword"
+      label="Confirm password"
+      type="password"
+      autocomplete="new-password"
+    />
+    <button type="submit" class="auth-btn auth-btn--primary" [disabled]="form().submitting()">
+      @if (form().submitting()) {
+      <span class="auth-spinner" aria-hidden="true"></span><span>Activating…</span>
+      } @else {
+      <span>Accept invitation</span>
+      }
+    </button>
+  </form>
+  <p class="auth-footer-note"><a class="auth-link" routerLink="/auth/login">Back to sign in</a></p>
+  } @case ('accepted') {
+  <div class="auth-page__icon auth-page__icon--success" aria-hidden="true">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  </div>
+  <header>
+    <h1 id="invite-title" class="auth-title">You're all set</h1>
+    <p class="auth-lead" role="status">Your account is active. Sign in with your new password.</p>
+  </header>
+  <a class="auth-btn auth-btn--primary" routerLink="/auth/login" replaceUrl>Go to sign in</a>
+  } @default {
+  <div class="auth-page__icon auth-page__icon--warning" aria-hidden="true">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    >
+      <path d="M12 8v5m0 3h.01" />
+      <circle cx="12" cy="12" r="9" />
+    </svg>
+  </div>
+  <header>
+    <h1 id="invite-title" class="auth-title">{{ problem().title }}</h1>
+  </header>
+  <app-auth-alert [tone]="problem().tone">{{ problem().message }}</app-auth-alert>
+  @if (problem().signIn) {
+  <a class="auth-btn auth-btn--primary" routerLink="/auth/login">Go to sign in</a>
+  <a class="auth-btn auth-btn--secondary" routerLink="/auth/forgot-password">Forgot password?</a>
+  } @else {
+  <a class="auth-btn auth-btn--secondary" routerLink="/auth/login">Back to sign in</a>
+  } } }
 </section>

@@ -25,12 +25,7 @@
           (input)="filter.set($any($event.target).value)"
         />
       }
-      <ul
-        [id]="listId"
-        role="listbox"
-        aria-multiselectable="true"
-        class="max-h-60 overflow-y-auto"
-      >
+      <ul [id]="listId" role="listbox" aria-multiselectable="true" class="max-h-60 overflow-y-auto">
         @for (opt of filtered(); track opt.value) {
           <li>
             <label

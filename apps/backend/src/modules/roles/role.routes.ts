@@ -94,7 +94,12 @@ router.get('/:id', authenticate, requirePermission('roles:read'), controller.get
  *       200:
  *         description: Permission list
  */
-router.get('/:id/permissions', authenticate, requirePermission('roles:read'), controller.listPermissions);
+router.get(
+  '/:id/permissions',
+  authenticate,
+  requirePermission('roles:read'),
+  controller.listPermissions
+);
 
 /**
  * @swagger
@@ -212,7 +217,12 @@ router.delete('/:id', authenticate, requirePermission('roles:manage'), controlle
  *       200:
  *         description: Updated permission matrix
  */
-router.put('/:id/permissions', authenticate, requirePermission('roles:manage'), controller.setPermissions);
+router.put(
+  '/:id/permissions',
+  authenticate,
+  requirePermission('roles:manage'),
+  controller.setPermissions
+);
 
 /**
  * @swagger
