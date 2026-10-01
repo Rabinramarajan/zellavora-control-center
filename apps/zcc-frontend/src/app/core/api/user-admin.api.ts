@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ApiDataService } from '@core/http/api-data.service';
-import { ApiEnvelope, IamUserListItem, PaginatedList, UserStatus } from '@shared/models/iam.model';
+import { ApiDataService } from '../http/api-data.service';
+import { ApiEnvelope, IamUserListItem, PaginatedList, UserStatus } from '../../shared/models/iam.model';
 import {
   UpdateUserProfile,
   UserAccess,
@@ -12,7 +12,7 @@ import {
   UserRequestHistoryItem,
   UserSession,
   UserStatusHistoryItem,
-} from '@shared/models/user-admin.model';
+} from '../../shared/models/user-admin.model';
 
 export type UserSearchQuery = Record<string, string | number | string[] | null | undefined>;
 

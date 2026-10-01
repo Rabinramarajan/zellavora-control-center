@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiDataService } from '../http/api-data.service';
-import { PaginationParams, Project } from '@shared/models';
+import { PaginationParams, Project } from '../../shared/models';
 
 interface ProjectListResponse {
   data: Project[];

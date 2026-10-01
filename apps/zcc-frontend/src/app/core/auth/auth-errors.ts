@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ApiError } from '@shared/models';
+import type { ApiError } from '../../shared/models';
 
 export type ApiErrorBody = ApiError['error'];
 

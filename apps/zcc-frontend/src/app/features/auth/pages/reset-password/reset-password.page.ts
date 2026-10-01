@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { FormField, FormRoot, form } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorCode } from '@core/auth/auth-errors';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { apiErrorCode } from '../../../../core/auth/auth-errors';
 import { AuthFieldComponent } from '../../ui/auth-field.component';
 import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { PasswordRequirementsComponent } from '../../ui/password-requirements.component';

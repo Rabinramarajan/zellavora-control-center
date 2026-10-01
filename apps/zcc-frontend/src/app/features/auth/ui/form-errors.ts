@@ -2,9 +2,9 @@ import { inject, type Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import { catchError, map, of } from 'rxjs';
-import type { PasswordPolicy } from '@shared/models';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorMessage, apiFieldErrors } from '@core/auth/auth-errors';
+import type { PasswordPolicy } from '../../../shared/models';
+import { AuthService } from '../../../core/auth/auth.service';
+import { apiErrorMessage, apiFieldErrors } from '../../../core/auth/auth-errors';
 import { DEFAULT_PASSWORD_POLICY } from './auth-validation';
 
 export interface ServerErrorResult {

@@ -10,18 +10,18 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
-import { UserRequestsApiService } from '@core/api/user-requests.api';
+import { UserRequestsApiService } from '../../../core/api/user-requests.api';
 import {
   AccessPreview,
   UserRequestAuditEntry,
   UserRequestDetail,
   UserRequestEmail,
-} from '@shared/models/user-request.model';
+} from '../../../shared/models/user-request.model';
 import {
   EmptyStateComponent,
   JsonDiffViewerComponent,
   StatusChipComponent,
-} from '@shared/components/iam';
+} from '../../../shared/components/iam';
 import { IAM_BTN, IAM_CARD, IAM_INPUT } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';

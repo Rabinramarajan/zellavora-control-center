@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '@core/auth/auth.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { takeQueryToken } from '../../ui/form-errors';
 

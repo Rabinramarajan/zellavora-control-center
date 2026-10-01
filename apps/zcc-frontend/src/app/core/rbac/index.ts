@@ -1,6 +1,6 @@
 /**
  * Public entry point for the RBAC module.
- * Import via `import { HasPermissionDirective, ... } from '@core/rbac';`
+ * Import via `import { HasPermissionDirective, ... } from './';`
  */
 
 export * from './models/policy.model';

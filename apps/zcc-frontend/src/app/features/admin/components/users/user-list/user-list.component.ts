@@ -5,8 +5,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } 
 
 import { Router, RouterLink } from '@angular/router';
 import { SelectControl, SelectControlOption } from '@zellavoras/ui';
-import { HasPermissionDirective } from '@core/rbac';
-import { Table, ColumnDef, CellDirective } from '@shared/components/table/table';
+import { HasPermissionDirective } from '../../../../../core/rbac';
+import { Table, ColumnDef, CellDirective } from '../../../../../shared/components/table/table';
 import { AdminStoreService } from '../../../services';
 import { User, UserSearchCriteria } from '../../../models';
 

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiDataService } from '../http/api-data.service';
-import { CmsPage } from '@shared/models';
+import { CmsPage } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class CmsBuilderApiService {

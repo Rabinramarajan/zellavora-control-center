@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { GroupType, PrismaClient } from '@prisma/client';
 import { PasswordService } from '../services/auth/password.service';
 import { DDL_SEED } from '../modules/ddl/ddl.data';
 import { DdlRepository } from '../modules/ddl/ddl.repository';
@@ -103,10 +103,10 @@ async function main() {
   // 5. Create Default Groups
   console.log('👥 Creating default groups...');
   const groupsData = [
-    { name: 'All Employees', type: 'SECURITY', description: 'All organization employees' },
-    { name: 'Managers', type: 'SECURITY', description: 'People managers' },
-    { name: 'Contractors', type: 'SECURITY', description: 'External contractors and freelancers' },
-    { name: 'On-Call Engineers', type: 'SECURITY', description: 'On-call rotation engineers' },
+    { name: 'All Employees', type: GroupType.SECURITY, description: 'All organization employees' },
+    { name: 'Managers', type: GroupType.SECURITY, description: 'People managers' },
+    { name: 'Contractors', type: GroupType.SECURITY, description: 'External contractors and freelancers' },
+    { name: 'On-Call Engineers', type: GroupType.SECURITY, description: 'On-call rotation engineers' },
   ];
   for (const group of groupsData) {
     const slug = group.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');

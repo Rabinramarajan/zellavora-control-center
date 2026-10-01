@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { PasswordPolicy } from '@shared/models';
+import type { PasswordPolicy } from '../../../shared/models';
 import { DEFAULT_PASSWORD_POLICY, passwordRequirements } from './auth-validation';
 
 /** Live checklist of the password policy. Each item states met/unmet in text, not only color. */

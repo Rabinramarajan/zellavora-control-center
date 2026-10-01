@@ -1,6 +1,6 @@
 /**
  * Shared IAM Admin Console UI primitives.
- * Import via `import { DataTableComponent, ... } from '@shared/components/iam';`
+ * Import via `import { DataTableComponent, ... } from './';`
  */
 
 export * from './status-chip.component';

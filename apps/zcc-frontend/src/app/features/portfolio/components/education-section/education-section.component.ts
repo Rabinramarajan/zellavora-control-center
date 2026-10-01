@@ -7,7 +7,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { PortfolioService } from '../../services/portfolio.service';
-import { Education } from '@shared/models';
+import { Education } from '../../../../shared/models';
 import { firstValueFrom } from 'rxjs';
 
 interface RichEducation {

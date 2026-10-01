@@ -15,14 +15,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { AuthStore } from '@core/auth/auth.store';
-import { AppDialogService } from '@shared/components/dialog';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
+import { AuthStore } from '../../core/auth/auth.store';
+import { AppDialogService } from '../../shared/components/dialog';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import {
   DocumentUploadComponent,
   DocumentUploadDialogData,
   DocumentUploadHandler,
-} from '@shared/components/document-upload';
+} from '../../shared/components/document-upload';
 import { MediaService } from './services/media.service';
 import { MediaItem, MediaKind } from './models/media.model';
 

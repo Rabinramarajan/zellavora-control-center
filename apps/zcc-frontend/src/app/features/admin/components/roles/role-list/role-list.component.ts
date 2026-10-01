@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { HasPermissionDirective } from '@core/rbac';
-import { Table, ColumnDef, CellDirective } from '@shared/components/table/table';
+import { HasPermissionDirective } from '../../../../../core/rbac';
+import { Table, ColumnDef, CellDirective } from '../../../../../shared/components/table/table';
 import { AdminStoreService } from '../../../services';
 import { Role, RoleSearchCriteria } from '../../../models';
 

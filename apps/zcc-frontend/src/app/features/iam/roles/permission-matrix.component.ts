@@ -11,8 +11,8 @@ import {
 
 import { FormInputControl } from '@zellavoras/ui';
 import { firstValueFrom } from 'rxjs';
-import { IamApiService } from '@core/api/iam.api';
-import { PermissionEffect, RolePermission } from '@shared/models/iam.model';
+import { IamApiService } from '../../../core/api/iam.api';
+import { PermissionEffect, RolePermission } from '../../../shared/models/iam.model';
 
 export interface PermissionRow {
   permissionId: string;

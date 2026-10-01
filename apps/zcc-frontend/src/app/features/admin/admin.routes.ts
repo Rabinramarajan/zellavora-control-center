@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '@core/auth/auth.guard';
+import { authGuard } from '../../core/auth/auth.guard';
 import { UserListComponent } from './components/users/user-list/user-list.component';
 import { UserDetailComponent } from './components/users/user-detail/user-detail.component';
 import { RoleListComponent } from './components/roles/role-list/role-list.component';

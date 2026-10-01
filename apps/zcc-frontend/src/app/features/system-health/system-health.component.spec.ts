@@ -1,6 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { SystemHealthComponent } from './system-health.component';
-import { SystemHealthRepository } from '@core/repositories/system-health.repository';
+import { SystemHealthRepository } from '../../core/repositories/system-health.repository';
 import { of } from 'rxjs';
 import { signal } from '@angular/core';
 

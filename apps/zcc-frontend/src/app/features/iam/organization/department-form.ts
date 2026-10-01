@@ -1,4 +1,4 @@
-import { DepartmentItem, SaveDepartmentRequest } from '@shared/models/iam-admin.model';
+import { DepartmentItem, SaveDepartmentRequest } from '../../../shared/models/iam-admin.model';
 import { FormField, FormFieldOption, FormValues } from '../shared/iam-form-dialog.component';
 
 /** Create/edit form for a department; `parents` excludes the department being edited. */

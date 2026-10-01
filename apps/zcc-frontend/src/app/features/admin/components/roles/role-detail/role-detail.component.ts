@@ -10,7 +10,7 @@ import {
   selectFieldSchema,
   textFieldSchema,
 } from '@zellavoras/ui';
-import { AppDialogService } from '@shared/components/dialog';
+import { AppDialogService } from '../../../../../shared/components/dialog';
 import { AdminStoreService } from '../../../services';
 import { Role } from '../../../models';
 

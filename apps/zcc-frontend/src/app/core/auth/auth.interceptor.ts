@@ -17,7 +17,7 @@ import { catchError, switchMap } from 'rxjs/operators';
 
 import { AuthStore } from './auth.store';
 import { AuthService } from './auth.service';
-import { ErrorBus } from '@core/error/error-bus';
+import { ErrorBus } from '../error/error-bus';
 
 /** Public auth endpoints: never carry a bearer token and never trigger refresh. */
 const PUBLIC_AUTH_PATHS = [

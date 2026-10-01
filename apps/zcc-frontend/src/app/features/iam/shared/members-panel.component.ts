@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { OrgMember } from '@shared/models/iam-admin.model';
-import { StatusChipComponent } from '@shared/components/iam';
+import { OrgMember } from '../../../shared/models/iam-admin.model';
+import { StatusChipComponent } from '../../../shared/components/iam';
 import { IAM_BTN, IAM_CARD, IAM_INPUT } from './iam-page-header.component';
 import { initials } from './iam-format';
 

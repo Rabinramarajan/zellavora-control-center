@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ThemePreference, ThemeService } from '@core/services/theme.service';
+import { ThemePreference, ThemeService } from '../../../../core/services/theme.service';
 import { SettingsCardComponent } from '../settings-card/settings-card.component';
 
 interface ThemeOption {

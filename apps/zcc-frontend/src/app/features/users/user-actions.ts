@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { UserAdminApiService } from '@core/api/user-admin.api';
-import { AccountStatus } from '@shared/models/iam.model';
-import { UserAction } from '@shared/models/user-admin.model';
+import { UserAdminApiService } from '../../core/api/user-admin.api';
+import { AccountStatus } from '../../shared/models/iam.model';
+import { UserAction } from '../../shared/models/user-admin.model';
 import { IamDialogsService } from '../iam/shared/iam-dialogs.service';
 import { IamFeedbackService } from '../iam/shared/iam-feedback.service';
 

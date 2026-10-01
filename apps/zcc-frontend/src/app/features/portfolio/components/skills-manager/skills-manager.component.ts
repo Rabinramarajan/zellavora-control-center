@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 
 import { FormField, FormRoot, form, pattern, required } from '@angular/forms/signals';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
-import { AppDialogService } from '@shared/components/dialog';
-import { stringsToOptions } from '@shared/utils/select-options';
+import { AppDialogService } from '../../../../shared/components/dialog';
+import { stringsToOptions } from '../../../../shared/utils/select-options';
 import { PortfolioService } from '../../services/portfolio.service';
 import { firstValueFrom } from 'rxjs';
 

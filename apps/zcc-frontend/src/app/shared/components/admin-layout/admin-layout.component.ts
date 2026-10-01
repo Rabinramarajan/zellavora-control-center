@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { LayoutService } from '@core/services/layout.service';
+import { LayoutService } from '../../../core/services/layout.service';
 
 @Component({
   selector: 'app-admin-layout',

@@ -10,9 +10,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom, map } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { ApiIntegrationService } from '@core/services/api-integration.service';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorMessage } from '@core/auth/auth-errors';
+import { ApiIntegrationService } from '../../core/services/api-integration.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { apiErrorMessage } from '../../core/auth/auth-errors';
 import {
   DEFAULT_GENERAL_SETTINGS,
   DEFAULT_PROFILE_SETTINGS,

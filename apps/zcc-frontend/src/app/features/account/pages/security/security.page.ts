@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import type { SecurityEvent, SecurityOverview } from '@shared/models';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorMessage } from '@core/auth/auth-errors';
+import type { SecurityEvent, SecurityOverview } from '../../../../shared/models';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { apiErrorMessage } from '../../../../core/auth/auth-errors';
 import { AuthAlertComponent } from '../../../auth/ui/auth-alert.component';
 import { TwoFactorCardComponent } from '../../components/two-factor-card.component';
 import { SessionsCardComponent } from '../../components/sessions-card.component';

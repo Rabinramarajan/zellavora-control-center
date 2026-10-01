@@ -1,26 +1,26 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { IamAdminApiService } from '@core/api/iam-admin.api';
-import { PermissionService } from '@core/rbac/services/permission.service';
+import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
 import {
   AppDialogService,
   DialogShellComponent,
   injectDialogData,
-} from '@shared/components/dialog';
+} from '../../../shared/components/dialog';
 import {
   CatalogPermission,
   CatalogPermissionDetail,
   PermissionGroupItem,
-} from '@shared/models/iam-admin.model';
-import { createListStore } from '@shared/utils/create-list-store';
+} from '../../../shared/models/iam-admin.model';
+import { createListStore } from '../../../shared/utils/create-list-store';
 import {
   DataTableComponent,
   DataTableColumn,
   EmptyStateComponent,
   StatusChipComponent,
-} from '@shared/components/iam';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
+} from '../../../shared/components/iam';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_INPUT, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';

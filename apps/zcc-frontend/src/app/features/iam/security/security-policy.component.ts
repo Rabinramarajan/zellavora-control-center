@@ -2,16 +2,16 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
-import { IamAdminApiService } from '@core/api/iam-admin.api';
+import { IamAdminApiService } from '../../../core/api/iam-admin.api';
 import {
   LoginPolicy,
   MfaComplianceUser,
   MfaCompliance,
   PasswordPolicy,
   SecurityPolicies,
-} from '@shared/models/iam-admin.model';
-import { EmptyStateComponent, StatusChipComponent } from '@shared/components/iam';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
+} from '../../../shared/models/iam-admin.model';
+import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import {
   IAM_BTN,
   IAM_CARD,

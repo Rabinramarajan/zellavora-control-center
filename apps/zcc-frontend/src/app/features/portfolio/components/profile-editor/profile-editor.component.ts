@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked }
 
 import { FormField, FormRoot, email, form, pattern, required } from '@angular/forms/signals';
 import { FormInputControl } from '@zellavoras/ui';
-import { Profile } from '@shared/models';
+import { Profile } from '../../../../shared/models';
 import { PortfolioService } from '../../services/portfolio.service';
 import { firstValueFrom } from 'rxjs';
 

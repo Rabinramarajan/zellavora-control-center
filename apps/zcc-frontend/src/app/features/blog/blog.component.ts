@@ -12,7 +12,7 @@ import { FormInputControl, SelectControl, SelectControlOption } from '@zellavora
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 interface BlogPost {
   id: string;

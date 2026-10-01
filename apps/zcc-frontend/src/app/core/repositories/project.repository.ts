@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { ProjectApiService } from '@core/api/project.api';
-import { Project } from '@shared/models';
+import { ProjectApiService } from '../api/project.api';
+import { Project } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectRepository {

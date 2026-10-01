@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { FormField, FormRoot, form, readonly } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
-import type { InvitationState } from '@shared/models';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorCode } from '@core/auth/auth-errors';
+import type { InvitationState } from '../../../../shared/models';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { apiErrorCode } from '../../../../core/auth/auth-errors';
 import { AuthFieldComponent } from '../../ui/auth-field.component';
 import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { PasswordRequirementsComponent } from '../../ui/password-requirements.component';

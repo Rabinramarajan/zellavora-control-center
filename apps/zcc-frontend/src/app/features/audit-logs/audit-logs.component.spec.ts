@@ -1,6 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { AuditLogsComponent } from './audit-logs.component';
-import { AuditRepository } from '@core/repositories/audit.repository';
+import { AuditRepository } from '../../core/repositories/audit.repository';
 import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 

@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { IamAdminApiService } from '@core/api/iam-admin.api';
-import { PermissionService } from '@core/rbac/services/permission.service';
-import { TeamItem } from '@shared/models/iam-admin.model';
-import { createListStore } from '@shared/utils/create-list-store';
-import { EmptyStateComponent } from '@shared/components/iam';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
+import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
+import { TeamItem } from '../../../shared/models/iam-admin.model';
+import { createListStore } from '../../../shared/utils/create-list-store';
+import { EmptyStateComponent } from '../../../shared/components/iam';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_INPUT, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService } from '../shared/iam-feedback.service';

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
-import type { ActiveSession } from '@shared/models';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorMessage } from '@core/auth/auth-errors';
+import type { ActiveSession } from '../../../shared/models';
+import { AuthService } from '../../../core/auth/auth.service';
+import { apiErrorMessage } from '../../../core/auth/auth-errors';
 import { AuthAlertComponent } from '../../auth/ui/auth-alert.component';
 import { ReauthFormComponent, type ReauthSubmission } from './reauth-form.component';
 

@@ -13,7 +13,7 @@ import { Injectable, computed, inject, Signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { PolicyStore } from '../store/policy.store';
-import { AuthStore } from '@core/auth/auth.store';
+import { AuthStore } from '../../auth/auth.store';
 import type { CheckResponse } from '../models/check.model';
 import type { EffectivePolicy } from '../models/policy.model';
 

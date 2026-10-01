@@ -4,9 +4,9 @@ import { FormField, FormRoot, form, maxLength, pattern, required } from '@angula
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { firstValueFrom } from 'rxjs';
-import { Project, ProjectStatus } from '@shared/models';
-import { FORM_PATTERNS } from '@shared/utils/form-patterns';
-import { stringsToOptions } from '@shared/utils/select-options';
+import { Project, ProjectStatus } from '../../../../shared/models';
+import { FORM_PATTERNS } from '../../../../shared/utils/form-patterns';
+import { stringsToOptions } from '../../../../shared/utils/select-options';
 import { ProjectsService } from '../../services/projects.service';
 
 const URL_FIELDS = [

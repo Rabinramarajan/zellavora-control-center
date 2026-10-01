@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 
 import { FormsModule } from '@angular/forms';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
-import { AppDialogService } from '@shared/components/dialog';
-import { stringsToOptions } from '@shared/utils/select-options';
-import { ThemeBuilderRepository } from '@core/repositories/theme-builder.repository';
+import { AppDialogService } from '../../shared/components/dialog';
+import { stringsToOptions } from '../../shared/utils/select-options';
+import { ThemeBuilderRepository } from '../../core/repositories/theme-builder.repository';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

@@ -1,4 +1,4 @@
-import { SaveTeamRequest, TeamDetail } from '@shared/models/iam-admin.model';
+import { SaveTeamRequest, TeamDetail } from '../../../shared/models/iam-admin.model';
 import { FormField, FormValues } from '../shared/iam-form-dialog.component';
 
 export const teamFields = (current?: TeamDetail): FormField[] => [

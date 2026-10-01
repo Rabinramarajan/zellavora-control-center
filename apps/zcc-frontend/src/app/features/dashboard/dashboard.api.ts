@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiDataService } from '@core/http/api-data.service';
+import { ApiDataService } from '../../core/http/api-data.service';
 import {
   ActivityFeedPage,
   ActivityFeedFilters,

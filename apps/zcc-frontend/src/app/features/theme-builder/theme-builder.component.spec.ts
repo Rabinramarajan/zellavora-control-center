@@ -1,6 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { ThemeBuilderComponent } from './theme-builder.component';
-import { ThemeBuilderRepository } from '@core/repositories/theme-builder.repository';
+import { ThemeBuilderRepository } from '../../core/repositories/theme-builder.repository';
 import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 

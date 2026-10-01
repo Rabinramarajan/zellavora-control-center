@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { FormField, FormRoot, form, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorCode, apiErrorMessage } from '@core/auth/auth-errors';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { apiErrorCode, apiErrorMessage } from '../../../../core/auth/auth-errors';
 import { OtpInputComponent } from '../../ui/otp-input.component';
 import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { normalizeOtp, otpRules } from '../../ui/auth-validation';

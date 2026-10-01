@@ -1,10 +1,10 @@
-import { ChipTone } from '@shared/components/iam';
+import { ChipTone } from '../../../shared/components/iam';
 import {
   UserRequestPayload,
   UserRequestPriority,
   UserRequestStatus,
   UserRequestType,
-} from '@shared/models/user-request.model';
+} from '../../../shared/models/user-request.model';
 
 export interface Option<T extends string = string> {
   value: T;

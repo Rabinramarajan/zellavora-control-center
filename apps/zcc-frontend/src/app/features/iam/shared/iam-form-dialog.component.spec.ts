@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { APP_DIALOG_TITLE_ID } from '@shared/components/dialog';
+import { APP_DIALOG_TITLE_ID } from '../../../shared/components/dialog';
 import { FormDialogData, IamFormDialogComponent } from './iam-form-dialog.component';
 
 describe('IamFormDialogComponent', () => {

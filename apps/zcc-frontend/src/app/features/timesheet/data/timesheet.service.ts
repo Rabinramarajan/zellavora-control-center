@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, resource, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { MessageService } from 'primeng/api';
-import { ApiDataService } from '@core/http/api-data.service';
+import { ApiDataService } from '../../../core/http/api-data.service';
 import {
   ApiEnvelope,
   BulkEntryPatch,

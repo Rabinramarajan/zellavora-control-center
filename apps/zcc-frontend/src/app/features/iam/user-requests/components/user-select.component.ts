@@ -10,7 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { IamApiService } from '@core/api/iam.api';
+import { IamApiService } from '../../../../core/api/iam.api';
 import { IAM_INPUT } from '../../shared/iam-page-header.component';
 
 export interface SelectedUser {

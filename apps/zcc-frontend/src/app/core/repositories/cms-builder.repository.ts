@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { CmsBuilderApiService } from '@core/api/cms-builder.api';
-import { CmsPage } from '@shared/models';
+import { CmsBuilderApiService } from '../api/cms-builder.api';
+import { CmsPage } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class CmsBuilderRepository {

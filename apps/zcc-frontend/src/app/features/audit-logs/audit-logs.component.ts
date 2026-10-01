@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
-import { AuditRepository } from '@core/repositories/audit.repository';
-import { AuditRecord } from '@shared/models';
+import { AuditRepository } from '../../core/repositories/audit.repository';
+import { AuditRecord } from '../../shared/models';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

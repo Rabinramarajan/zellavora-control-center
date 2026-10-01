@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { TextareaModule } from 'primeng/textarea';
-import { HasPermissionDirective } from '@core/rbac';
+import { HasPermissionDirective } from '../../../../core/rbac';
 import { TimesheetService } from '../../data/timesheet.service';
 import { formatPeriod } from '../../data/timesheet.model';
 

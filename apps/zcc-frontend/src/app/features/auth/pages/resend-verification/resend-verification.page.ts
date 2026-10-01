@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { FormField, FormRoot, form } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '@core/auth/auth.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { AuthFieldComponent } from '../../ui/auth-field.component';
 import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { emailRules } from '../../ui/auth-validation';

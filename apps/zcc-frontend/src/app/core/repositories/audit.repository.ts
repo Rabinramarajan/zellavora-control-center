@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { AuditApiService } from '@core/api/audit.api';
-import { AuditRecord } from '@shared/models';
+import { AuditApiService } from '../api/audit.api';
+import { AuditRecord } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class AuditRepository {

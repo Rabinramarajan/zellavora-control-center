@@ -3,16 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DateControl, FormInputControl } from '@zellavoras/ui';
 import { firstValueFrom } from 'rxjs';
-import { IamApiService, unwrap } from '@core/api/iam.api';
-import { RoleListItem } from '@shared/models/iam.model';
-import { createListStore } from '@shared/utils/create-list-store';
+import { IamApiService, unwrap } from '../../../core/api/iam.api';
+import { RoleListItem } from '../../../shared/models/iam.model';
+import { createListStore } from '../../../shared/utils/create-list-store';
 import {
   DataTableColumn,
   DataTableComponent,
   EmptyStateComponent,
   StatusChipComponent,
-} from '@shared/components/iam';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
+} from '../../../shared/components/iam';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { formatDate } from '../shared/iam-format';
 import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';

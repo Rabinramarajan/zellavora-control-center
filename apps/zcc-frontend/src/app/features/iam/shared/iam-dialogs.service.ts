@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { AppDialogService } from '@shared/components/dialog';
-import { IamApiService, unwrap } from '@core/api/iam.api';
-import { GroupTreeNode } from '@shared/models/iam.model';
-import { IamAdminApiService } from '@core/api/iam-admin.api';
+import { AppDialogService } from '../../../shared/components/dialog';
+import { IamApiService, unwrap } from '../../../core/api/iam.api';
+import { GroupTreeNode } from '../../../shared/models/iam.model';
+import { IamAdminApiService } from '../../../core/api/iam-admin.api';
 import { FormDialogData, FormValues, IamFormDialogComponent } from './iam-form-dialog.component';
 import {
   EntityPickerData,

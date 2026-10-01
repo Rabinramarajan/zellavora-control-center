@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
-import { AuthService } from '@core/auth/auth.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 /**
  * Safe explanation for a locked or disabled account. Deliberately omits

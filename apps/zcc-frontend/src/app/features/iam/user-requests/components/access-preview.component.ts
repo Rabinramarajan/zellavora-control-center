@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { AccessPreview } from '@shared/models/user-request.model';
+import { AccessPreview } from '../../../../shared/models/user-request.model';
 
 /**
  * Current-vs-requested access comparison plus the calculated permissions the

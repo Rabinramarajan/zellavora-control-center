@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@ang
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
-import { IamAdminApiService } from '@core/api/iam-admin.api';
-import { PermissionService } from '@core/rbac/services/permission.service';
-import { OrgMember, TeamDetail } from '@shared/models/iam-admin.model';
-import { EmptyStateComponent } from '@shared/components/iam';
+import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
+import { OrgMember, TeamDetail } from '../../../shared/models/iam-admin.model';
+import { EmptyStateComponent } from '../../../shared/components/iam';
 import { IAM_BTN, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';

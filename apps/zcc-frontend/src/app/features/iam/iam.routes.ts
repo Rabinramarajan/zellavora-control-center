@@ -1,5 +1,5 @@
 import { Route, Routes } from '@angular/router';
-import { authGuard, canMatchPermission } from '@core/auth/auth.guard';
+import { authGuard, canMatchPermission } from '../../core/auth/auth.guard';
 import { IamLayoutComponent } from './iam-layout.component';
 import { ResourcesListComponent } from './resources/resources-list.component';
 import { ResourcesDetailComponent } from './resources/resources-detail.component';

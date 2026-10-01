@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { LayoutService } from '@core/services/layout.service';
-
-import { AuthStore } from '@core/auth/auth.store';
+import { LayoutService } from '../../../core/services/layout.service';
+import { AuthStore } from '../../../core/auth/auth.store';
 import { SidebarNavNodeComponent } from './sidebar-nav-node.component';
 
 @Component({

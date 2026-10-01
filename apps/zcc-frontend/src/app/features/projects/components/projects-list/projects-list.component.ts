@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AppDialogService } from '@shared/components/dialog';
-import { Project, ProjectStatus } from '@shared/models';
+import { AppDialogService } from '../../../../shared/components/dialog';
+import { Project, ProjectStatus } from '../../../../shared/models';
 import {
   ColumnDef,
   FilterState,

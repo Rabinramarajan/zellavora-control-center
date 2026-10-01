@@ -9,8 +9,8 @@ import {
 import { firstValueFrom } from 'rxjs';
 
 import { FormInputControl } from '@zellavoras/ui';
-import { AppDialogService } from '@shared/components/dialog';
-import { HasPermissionDirective } from '@core/rbac';
+import { AppDialogService } from '../../../../../shared/components/dialog';
+import { HasPermissionDirective } from '../../../../../core/rbac';
 import { AdminStoreService } from '../../../services';
 import { Resource, ResourceSearchCriteria } from '../../../models';
 

@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ProjectRepository } from './project.repository';
-import { ProjectApiService } from '@core/api/project.api';
+import { ProjectApiService } from '../api/project.api';
 import { of } from 'rxjs';
-import { Project } from '@shared/models';
+import { Project } from '../../shared/models';
 
 describe('ProjectRepository', () => {
   let repository: ProjectRepository;

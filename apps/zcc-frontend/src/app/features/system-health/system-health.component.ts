@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
-import { SystemHealthRepository } from '@core/repositories/system-health.repository';
+import { SystemHealthRepository } from '../../core/repositories/system-health.repository';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

@@ -11,7 +11,7 @@ import {
   type SchemaPath,
   type SchemaPathRules,
 } from '@angular/forms/signals';
-import type { PasswordPolicy } from '@shared/models';
+import type { PasswordPolicy } from '../../../shared/models';
 
 type StringPath = SchemaPath<string, SchemaPathRules.Supported>;
 

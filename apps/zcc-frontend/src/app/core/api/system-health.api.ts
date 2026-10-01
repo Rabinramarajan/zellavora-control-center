@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiDataService } from '../http/api-data.service';
-import { SystemMetrics } from '@shared/models';
+import { SystemMetrics } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class SystemHealthApiService {

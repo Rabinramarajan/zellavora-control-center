@@ -3,8 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { DateControl, FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
-import { IamApiService } from '@core/api/iam.api';
-import { UserRequestsApiService } from '@core/api/user-requests.api';
+import { IamApiService } from '../../../core/api/iam.api';
+import { UserRequestsApiService } from '../../../core/api/user-requests.api';
 import {
   AccessPreview,
   SaveUserRequest,
@@ -12,8 +12,8 @@ import {
   UserRequestLookups,
   UserRequestPriority,
   UserRequestType,
-} from '@shared/models/user-request.model';
-import { EmptyStateComponent } from '@shared/components/iam';
+} from '../../../shared/models/user-request.model';
+import { EmptyStateComponent } from '../../../shared/components/iam';
 import { IAM_BTN, IAM_CARD, IAM_INPUT } from '../shared/iam-page-header.component';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { AccessPreviewComponent } from './components/access-preview.component';

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormField, FormRoot, form } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
-import type { MfaEnrollStartResponse } from '@shared/models';
-import { AuthService } from '@core/auth/auth.service';
-import { apiErrorMessage } from '@core/auth/auth-errors';
+import type { MfaEnrollStartResponse } from '../../../shared/models';
+import { AuthService } from '../../../core/auth/auth.service';
+import { apiErrorMessage } from '../../../core/auth/auth-errors';
 import { OtpInputComponent } from '../../auth/ui/otp-input.component';
 import { AuthAlertComponent } from '../../auth/ui/auth-alert.component';
 import { normalizeOtp, otpRules } from '../../auth/ui/auth-validation';

@@ -8,13 +8,13 @@ import { DateControl, FormInputControl, SelectControl, SelectControlOption } fro
 import {
   PageChangeEvent,
   PaginationComponent,
-} from '@shared/components/pagination/pagination.component';
-import { UserAdminApiService } from '@core/api/user-admin.api';
-import { UserRequestsApiService } from '@core/api/user-requests.api';
-import { PermissionService } from '@core/rbac/services/permission.service';
-import { AccountStatus, IamUserListItem } from '@shared/models/iam.model';
-import { UserRequestLookups } from '@shared/models/user-request.model';
-import { createListStore } from '@shared/utils/create-list-store';
+} from '../../shared/components/pagination/pagination.component';
+import { UserAdminApiService } from '../../core/api/user-admin.api';
+import { UserRequestsApiService } from '../../core/api/user-requests.api';
+import { PermissionService } from '../../core/rbac/services/permission.service';
+import { AccountStatus, IamUserListItem } from '../../shared/models/iam.model';
+import { UserRequestLookups } from '../../shared/models/user-request.model';
+import { createListStore } from '../../shared/utils/create-list-store';
 import { MultiSelectComponent, MultiSelectOption } from '../iam/shared/multi-select.component';
 import { CsvExporter } from '../../shared/utils/csv-exporter';
 import { ACTION_META, StateAction, UserActionsService, rowActions } from './user-actions';

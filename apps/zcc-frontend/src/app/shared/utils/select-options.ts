@@ -3,7 +3,7 @@
  * that `@zellavoras/ui` select controls take.
  */
 import type { SelectControlOption } from '@zellavoras/ui';
-import type { DdlItem } from '@core/api/ddl.api';
+import type { DdlItem } from '../../core/api/ddl.api';
 
 /** DDL rows keep the stored key in `key` and the display text in `value`. */
 export function ddlToOptions(items: readonly DdlItem[]): SelectControlOption[] {

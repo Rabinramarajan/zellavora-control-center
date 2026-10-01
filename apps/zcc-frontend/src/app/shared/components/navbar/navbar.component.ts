@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { AuthService } from '@core/auth/auth.service';
-import { LayoutService } from '@core/services/layout.service';
-import { AppDialogService } from '@shared/components/dialog';
-import { ThemeToggleComponent } from '@shared/components/theme-toggle/theme-toggle.component';
+import { AuthService } from '../../../core/auth/auth.service';
+import { LayoutService } from '../../../core/services/layout.service';
+import { AppDialogService } from '../dialog';
+import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { firstValueFrom } from 'rxjs';
 
 interface BreadcrumbSegment {

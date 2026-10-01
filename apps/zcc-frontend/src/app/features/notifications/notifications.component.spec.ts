@@ -1,6 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { NotificationsComponent } from './notifications.component';
-import { NotificationRepository } from '@core/repositories/notification.repository';
+import { NotificationRepository } from '../../core/repositories/notification.repository';
 import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';

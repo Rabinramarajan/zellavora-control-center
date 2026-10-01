@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { MenuNode } from '@shared/models';
-import { LayoutService } from '@core/services/layout.service';
+import { MenuNode } from '../../models';
+import { LayoutService } from '../../../core/services/layout.service';
 
 /**
  * Recursive sidebar menu node. Renders a backend-driven menu tree:

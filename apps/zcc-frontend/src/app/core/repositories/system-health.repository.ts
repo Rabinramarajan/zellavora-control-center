@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { SystemHealthApiService } from '@core/api/system-health.api';
-import { SystemMetrics } from '@shared/models';
+import { SystemHealthApiService } from '../api/system-health.api';
+import { SystemMetrics } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class SystemHealthRepository {

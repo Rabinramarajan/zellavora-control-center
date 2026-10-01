@@ -2,15 +2,15 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { IamApiService } from '@core/api/iam.api';
-import { ResourceAction, ResourceDetail } from '@shared/models/iam.model';
+import { IamApiService } from '../../../core/api/iam.api';
+import { ResourceAction, ResourceDetail } from '../../../shared/models/iam.model';
 import {
   DetailTabsComponent,
   DetailTab,
   StatusChipComponent,
   EmptyStateComponent,
-} from '@shared/components/iam';
-import { AppDialogService } from '@shared/components/dialog';
+} from '../../../shared/components/iam';
+import { AppDialogService } from '../../../shared/components/dialog';
 
 @Component({
   selector: 'zcc-resources-detail',

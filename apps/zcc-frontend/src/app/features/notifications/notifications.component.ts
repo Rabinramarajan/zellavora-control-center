@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FormInputControl } from '@zellavoras/ui';
-import { AppDialogService } from '@shared/components/dialog';
-import { NotificationRepository } from '@core/repositories/notification.repository';
+import { AppDialogService } from '../../shared/components/dialog';
+import { NotificationRepository } from '../../core/repositories/notification.repository';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

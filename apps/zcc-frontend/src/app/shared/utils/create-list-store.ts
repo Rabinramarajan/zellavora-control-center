@@ -19,7 +19,7 @@
  */
 import { computed, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { PaginatedList } from '@shared/models/iam.model';
+import { PaginatedList } from '../models/iam.model';
 
 export interface ListQuery {
   q?: string;

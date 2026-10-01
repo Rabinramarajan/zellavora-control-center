@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { ErrorBus } from '@core/error/error-bus';
+import { ErrorBus } from '../../../core/error/error-bus';
 
 /** Message from a normalized HTTP error (see error.interceptor) or any thrown value. */
 export const errorMessage = (err: unknown, fallback = 'Something went wrong.'): string => {

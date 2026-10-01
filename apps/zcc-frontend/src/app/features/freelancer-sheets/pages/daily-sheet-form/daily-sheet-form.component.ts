@@ -22,7 +22,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, startWith } from 'rxjs';
 import { DateControl } from '@zellavoras/ui';
-import { AppDialogService } from '@shared/components/dialog';
+import { AppDialogService } from '../../../../shared/components/dialog';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { SheetsApi } from '../../sheets.api';
 import { SheetsStore } from '../../sheets.store';

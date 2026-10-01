@@ -5,8 +5,8 @@
  * Form-level loading and error state lives in the components that own the form.
  */
 import { Injectable, computed, signal } from '@angular/core';
-import type { AuthUser, MenuNode, TenantSummary } from '@shared/models';
-import { UserRole } from '@shared/models';
+import type { AuthUser, MenuNode, TenantSummary } from '../../shared/models';
+import { UserRole } from '../../shared/models';
 
 export interface AuthStoreState {
   user: AuthUser | null;

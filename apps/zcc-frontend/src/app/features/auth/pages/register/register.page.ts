@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormField, FormRoot, form, required, validate, type FieldTree } from '@angular/forms/signals';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { SelectControl, type SelectControlOption } from '@zellavoras/ui';
-import { AuthService } from '@core/auth/auth.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { AuthFieldComponent } from '../../ui/auth-field.component';
 import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { PasswordRequirementsComponent } from '../../ui/password-requirements.component';

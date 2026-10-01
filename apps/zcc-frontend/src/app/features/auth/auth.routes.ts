@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { guestGuard, mfaChallengeGuard, registrationGuard } from '@core/auth/auth.guard';
+import { guestGuard, mfaChallengeGuard, registrationGuard } from '../../core/auth/auth.guard';
 import { AuthLayoutComponent } from './layout/auth-layout.component';
 
 /** Public / auth pages. They render in the auth layout, never in the app shell. */

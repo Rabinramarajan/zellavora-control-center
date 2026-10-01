@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { FormInputControl } from '@zellavoras/ui';
-import { AppDialogService } from '@shared/components/dialog';
-import { CmsBuilderRepository } from '@core/repositories/cms-builder.repository';
-import { CmsSection } from '@shared/models';
+import { AppDialogService } from '../../shared/components/dialog';
+import { CmsBuilderRepository } from '../../core/repositories/cms-builder.repository';
+import { CmsSection } from '../../shared/models';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

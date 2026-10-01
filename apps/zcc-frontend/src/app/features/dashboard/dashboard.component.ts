@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@a
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SelectControl } from '@zellavoras/ui';
-import { AuthStore } from '@core/auth/auth.store';
-import { PageChangeEvent, PaginationComponent } from '@shared/components/pagination/pagination.component';
-import { CsvExporter } from '@shared/utils/csv-exporter';
+import { AuthStore } from '../../core/auth/auth.store';
+import { PageChangeEvent, PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { CsvExporter } from '../../shared/utils/csv-exporter';
 import { DashboardStore } from './dashboard.store';
 import { ActivityEvent, AuditSeverity, DashboardRange, TrendPoint } from './dashboard.models';
 import { KpiCardComponent, KpiTone } from './components/kpi-card.component';

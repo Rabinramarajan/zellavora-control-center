@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { ThemeBuilderApiService } from '@core/api/theme-builder.api';
-import { ThemeConfig } from '@shared/models';
+import { ThemeBuilderApiService } from '../api/theme-builder.api';
+import { ThemeConfig } from '../../shared/models';
 
 const DEFAULT_THEME: ThemeConfig = {
   logoUrl: null,

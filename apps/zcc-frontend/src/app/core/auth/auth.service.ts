@@ -46,7 +46,7 @@ import type {
   SecurityOverview,
   TenantSummary,
   VerifyEmailResponse,
-} from '@shared/models';
+} from '../../shared/models';
 
 const STORAGE = {
   refresh: 'zcc.refresh',

@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { Project, PaginationParams } from '@shared/models';
-import { ProjectRepository } from '@core/repositories/project.repository';
+import { Project, PaginationParams } from '../../../shared/models';
+import { ProjectRepository } from '../../../core/repositories/project.repository';
 
 interface ProjectsState {
   projects: Project[];

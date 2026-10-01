@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ApiDataService } from '@core/http/api-data.service';
-import { ApiEnvelope, PaginatedList } from '@shared/models/iam.model';
+import { ApiDataService } from '../http/api-data.service';
+import { ApiEnvelope, PaginatedList } from '../../shared/models/iam.model';
 import {
   CatalogPermission,
   CatalogPermissionDetail,
@@ -28,7 +28,7 @@ import {
   TeamDetail,
   TeamItem,
   UpsertConfigurationRequest,
-} from '@shared/models/iam-admin.model';
+} from '../../shared/models/iam-admin.model';
 
 export type QueryParams = Record<string, string | number | boolean | null | undefined>;
 

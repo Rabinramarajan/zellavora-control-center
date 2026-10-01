@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { Observable, from, map, switchMap } from 'rxjs';
-import { ApiDataService } from '@core/http/api-data.service';
+import { ApiDataService } from '../../../core/http/api-data.service';
 import { MediaItem, MediaListParams, MediaPage } from '../models/media.model';
 
 interface ApiEnvelope<T> {

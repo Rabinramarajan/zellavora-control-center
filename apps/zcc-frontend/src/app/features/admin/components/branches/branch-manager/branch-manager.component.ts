@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
-import { HasPermissionDirective } from '@core/rbac';
-import { Table, ColumnDef, CellDirective } from '@shared/components/table/table';
+import { HasPermissionDirective } from '../../../../../core/rbac';
+import { Table, ColumnDef, CellDirective } from '../../../../../shared/components/table/table';
 import { AdminStoreService } from '../../../services';
 import { Branch, BranchSearchCriteria } from '../../../models';
 

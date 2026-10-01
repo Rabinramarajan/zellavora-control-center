@@ -1,6 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { CmsBuilderComponent } from './cms-builder.component';
-import { CmsBuilderRepository } from '@core/repositories/cms-builder.repository';
+import { CmsBuilderRepository } from '../../core/repositories/cms-builder.repository';
 import { of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 

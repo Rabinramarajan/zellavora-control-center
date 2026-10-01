@@ -2,17 +2,17 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { IamApiService, unwrap } from '@core/api/iam.api';
-import { GroupListItem } from '@shared/models/iam.model';
-import { createListStore } from '@shared/utils/create-list-store';
+import { IamApiService, unwrap } from '../../../core/api/iam.api';
+import { GroupListItem } from '../../../shared/models/iam.model';
+import { createListStore } from '../../../shared/utils/create-list-store';
 import {
   DataTableComponent,
   DataTableColumn,
   FilterBarComponent,
   StatusChipComponent,
   EmptyStateComponent,
-} from '@shared/components/iam';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
+} from '../../../shared/components/iam';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   { label: 'Security', value: 'SECURITY' },

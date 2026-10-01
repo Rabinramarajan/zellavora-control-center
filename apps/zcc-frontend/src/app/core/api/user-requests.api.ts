@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ApiDataService } from '@core/http/api-data.service';
-import { ApiEnvelope } from '@shared/models/iam.model';
+import { ApiDataService } from '../http/api-data.service';
+import { ApiEnvelope } from '../../shared/models/iam.model';
 import {
   AccessPreview,
   SaveUserRequest,
@@ -11,7 +11,7 @@ import {
   UserRequestLookups,
   UserRequestPayload,
   UserRequestType,
-} from '@shared/models/user-request.model';
+} from '../../shared/models/user-request.model';
 
 export type UserRequestQuery = Record<string, string | number | string[] | null | undefined>;
 

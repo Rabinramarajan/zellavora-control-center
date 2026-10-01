@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiDataService } from '@core/http/api-data.service';
+import { ApiDataService } from '../http/api-data.service';
 import {
   ApiEnvelope,
   CopyRoleRequest,
@@ -21,7 +21,7 @@ import {
   EntityStatus,
   ResourceType,
   RoleScope,
-} from '@shared/models/iam.model';
+} from '../../shared/models/iam.model';
 
 export interface IamListQuery {
   q?: string;
