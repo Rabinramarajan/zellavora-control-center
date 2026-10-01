@@ -1,0 +1,136 @@
+<app-dialog-shell [title]="data.title" [closeResult]="null" [busy]="saving()">
+  <form [id]="formId" class="space-y-4" novalidate (submit)="onSubmit($event)">
+    @if (data.description) {
+      <p class="text-sm text-gray-500 dark:text-gray-400">{{ data.description }}</p>
+    }
+    @for (field of visibleFields(); track field.key) {
+      <div>
+        @if (field.type === 'toggle') {
+          <label class="flex min-h-[44px] cursor-pointer items-center justify-between gap-4">
+            <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+              {{ field.label }}
+              @if (field.hint) {
+                <span
+                  class="mt-0.5 block text-xs font-normal text-gray-500 dark:text-gray-400"
+                  >{{ field.hint }}</span
+                >
+              }
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              class="size-5 shrink-0 accent-indigo-500"
+              [checked]="!!values()[field.key]"
+              [disabled]="field.disabled || saving()"
+              (change)="set(field.key, $any($event.target).checked)"
+            />
+          </label>
+        } @else {
+          <label
+            [for]="inputId(field)"
+            class="mb-1.5 block text-sm font-medium text-gray-800 dark:text-gray-200"
+          >
+            {{ field.label }}
+            @if (field.required) {
+              <span class="text-red-500" aria-hidden="true">*</span>
+            }
+          </label>
+          @switch (field.type) {
+            @case ('textarea') {
+              <textarea
+                rows="4"
+                [id]="inputId(field)"
+                [class]="inputClass"
+                [placeholder]="field.placeholder ?? ''"
+                [attr.maxlength]="field.maxLength ?? null"
+                [attr.aria-invalid]="!!visibleError(field.key)"
+                [attr.aria-describedby]="describedBy(field)"
+                [disabled]="field.disabled || saving()"
+                [value]="values()[field.key] ?? ''"
+                (input)="set(field.key, $any($event.target).value)"
+                (blur)="touch(field.key)"
+              ></textarea>
+            }
+            @case ('select') {
+              <select
+                [id]="inputId(field)"
+                [class]="inputClass + ' min-h-[42px]'"
+                [attr.aria-invalid]="!!visibleError(field.key)"
+                [attr.aria-describedby]="describedBy(field)"
+                [disabled]="field.disabled || saving()"
+                (change)="set(field.key, $any($event.target).value || null)"
+                (blur)="touch(field.key)"
+              >
+                @if (!field.required) {
+                  <option value="" [selected]="!values()[field.key]">
+                    {{ field.placeholder ?? 'None' }}
+                  </option>
+                }
+                @for (opt of field.options ?? []; track opt.value) {
+                  <option [value]="opt.value" [selected]="values()[field.key] === opt.value">
+                    {{ opt.label }}
+                  </option>
+                }
+              </select>
+            }
+            @default {
+              <input
+                [id]="inputId(field)"
+                [type]="field.type"
+                [class]="inputClass + ' min-h-[42px]'"
+                [placeholder]="field.placeholder ?? ''"
+                [attr.min]="field.min ?? null"
+                [attr.max]="field.max ?? null"
+                [attr.maxlength]="field.maxLength ?? null"
+                [attr.autocomplete]="field.type === 'password' ? 'new-password' : 'off'"
+                [attr.aria-invalid]="!!visibleError(field.key)"
+                [attr.aria-describedby]="describedBy(field)"
+                [disabled]="field.disabled || saving()"
+                [value]="values()[field.key] ?? ''"
+                (input)="setInput(field, $any($event.target).value)"
+                (blur)="touch(field.key)"
+              />
+            }
+          }
+          @if (visibleError(field.key); as err) {
+            <p [id]="inputId(field) + '-err'" class="mt-1 text-xs text-red-500">{{ err }}</p>
+          } @else if (field.hint) {
+            <p
+              [id]="inputId(field) + '-hint'"
+              class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+            >
+              {{ field.hint }}
+            </p>
+          }
+        }
+      </div>
+    }
+    @if (serverError()) {
+      <div
+        role="alert"
+        class="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-500"
+      >
+        {{ serverError() }}
+      </div>
+    }
+  </form>
+
+  <button
+    dialogActions
+    type="button"
+    class="app-dialog-btn app-dialog-btn--ghost"
+    [disabled]="saving()"
+    (click)="ref.close(null)"
+  >
+    Cancel
+  </button>
+  <button
+    dialogActions
+    type="submit"
+    [attr.form]="formId"
+    [class]="'app-dialog-btn app-dialog-btn--' + (data.variant ?? 'primary')"
+    [disabled]="saving()"
+  >
+    {{ saving() ? 'Saving…' : (data.submitText ?? 'Save') }}
+  </button>
+</app-dialog-shell>

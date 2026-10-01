@@ -20,7 +20,7 @@ import { MessageService } from 'primeng/api';
     FormInputControl,
   ],
   templateUrl: './hero-section.component.html',
-  styleUrl: './hero-section.component.css',
+  styleUrl: './hero-section.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroSectionComponent {

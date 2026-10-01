@@ -1,0 +1,31 @@
+:host { display: block; }
+.otp { border: 0; margin: 0; padding: 0; min-width: 0; }
+.otp__legend { font-size: 0.8125rem; font-weight: 600; color: var(--auth-text-strong); margin-bottom: 0.55rem; }
+.otp__boxes { display: flex; gap: 0.5rem; }
+.otp__box {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 3.25rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--auth-border);
+  background: var(--auth-input-bg);
+  color: var(--auth-text-strong);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  caret-color: var(--auth-accent);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.otp__box--gap { margin-left: 0.5rem; }
+.otp__box--filled { border-color: var(--auth-border-strong); background: var(--auth-input-bg-focus); }
+.otp__box:focus-visible { border-color: var(--auth-accent); box-shadow: 0 0 0 3px var(--auth-accent-ring); }
+.otp--invalid .otp__box { border-color: var(--auth-danger); }
+.otp__error { margin-top: 0.5rem; font-size: 0.78rem; color: var(--auth-danger-text); }
+@media (max-width: 380px) {
+  .otp__boxes { gap: 0.35rem; }
+  .otp__box--gap { margin-left: 0.25rem; }
+  .otp__box { height: 3rem; font-size: 1.25rem; }
+}

@@ -11,7 +11,7 @@ import { ToastModule } from 'primeng/toast';
   standalone: true,
   imports: [CommonModule, ButtonModule, SelectControl, CardModule, ToastModule],
   templateUrl: './analytics.component.html',
-  styleUrl: './analytics.component.css',
+  styleUrl: './analytics.component.scss',
 })
 export class AnalyticsComponent {
   selectedDateRange = 'week';

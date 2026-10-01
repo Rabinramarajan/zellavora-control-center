@@ -1,0 +1,30 @@
+<fieldset class="otp" [class.otp--invalid]="showError()" [attr.aria-describedby]="showError() ? id + '-error' : null">
+  <legend class="otp__legend">{{ label() }}</legend>
+  <div class="otp__boxes">
+    @for (i of slots; track i) {
+      <input
+        #box
+        class="otp__box"
+        [class.otp__box--filled]="digits()[i]"
+        [class.otp__box--gap]="i === 3"
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        [attr.autocomplete]="i === 0 ? 'one-time-code' : 'off'"
+        [attr.maxlength]="i === 0 ? length : 1"
+        [attr.aria-label]="'Digit ' + (i + 1) + ' of ' + length"
+        [attr.aria-invalid]="showError()"
+        [value]="digits()[i]"
+        [disabled]="disabled()"
+        (input)="onInput(i, $event)"
+        (keydown)="onKeydown(i, $event)"
+        (paste)="onPaste(i, $event)"
+        (focus)="select($event)"
+        (blur)="touch.emit()"
+      />
+    }
+  </div>
+  @if (showError()) {
+    <p class="otp__error" [id]="id + '-error'">{{ errors()[0]?.message }}</p>
+  }
+</fieldset>

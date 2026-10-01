@@ -38,7 +38,7 @@ interface RichEducation {
   ],
   providers: [MessageService],
   templateUrl: './education-section.component.html',
-  styleUrl: './education-section.component.css',
+  styleUrl: './education-section.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EducationSectionComponent implements OnInit {

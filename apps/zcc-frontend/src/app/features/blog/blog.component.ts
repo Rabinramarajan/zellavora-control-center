@@ -40,7 +40,7 @@ interface BlogPost {
     PaginationComponent,
   ],
   templateUrl: './blog.component.html',
-  styleUrl: './blog.component.css',
+  styleUrl: './blog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BlogComponent {

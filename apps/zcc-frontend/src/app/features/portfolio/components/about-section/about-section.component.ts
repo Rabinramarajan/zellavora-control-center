@@ -21,7 +21,7 @@ import { FileUploadModule } from 'primeng/fileupload';
     FormInputControl,
   ],
   templateUrl: './about-section.component.html',
-  styleUrl: './about-section.component.css',
+  styleUrl: './about-section.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AboutSectionComponent {

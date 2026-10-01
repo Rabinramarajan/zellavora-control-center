@@ -12,7 +12,7 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [FormsModule, FormInputControl, SelectControl],
   templateUrl: './theme-builder.component.html',
-  styleUrl: './theme-builder.component.css',
+  styleUrl: './theme-builder.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ThemeBuilderComponent {

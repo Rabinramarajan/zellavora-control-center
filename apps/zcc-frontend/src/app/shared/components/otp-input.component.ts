@@ -5,21 +5,8 @@ import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChil
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [],
-  template: `
-    <div class="flex items-center gap-2 md:gap-4 justify-center" (paste)="onPaste($event)">
-      @for (box of boxes; track $index) {
-        <input
-          #inputBox
-          type="text"
-          maxLength="1"
-          class="w-12 h-14 text-center text-xl font-bold rounded-lg border bg-white/10 dark:bg-black/20 border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-          [attr.aria-label]="'OTP digit ' + ($index + 1)"
-          (keydown)="onKeyDown($event, $index)"
-          (input)="onInput($event, $index)"
-        />
-      }
-    </div>
-  `,
+  templateUrl: './otp-input.component.html',
+  styleUrl: './otp-input.component.scss',
 })
 export class OtpInputComponent {
   length = input<number>(6);

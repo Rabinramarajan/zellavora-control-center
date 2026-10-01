@@ -40,7 +40,7 @@ interface Highlight {
     PasswordRequirementsComponent,
   ],
   templateUrl: './register.page.html',
-  styleUrls: ['../../ui/auth-showcase.css', './register.page.css'],
+  styleUrls: ['../../ui/auth-showcase.scss', './register.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterPage {

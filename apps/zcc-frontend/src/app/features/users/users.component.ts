@@ -129,7 +129,7 @@ const NAV_KEYS = ['view', 'edit', 'groups', 'roles', 'audit'];
     PaginationComponent,
   ],
   templateUrl: './users.component.html',
-  styleUrl: './users.component.css',
+  styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown.escape)': 'onEscape()',

@@ -73,7 +73,7 @@ const PROJECT_COLUMNS: ColumnDef<Project>[] = [
   standalone: true,
   imports: [RouterLink, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
   templateUrl: './projects-list.component.html',
-  styleUrl: './projects-list.component.css',
+  styleUrl: './projects-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectsListComponent {

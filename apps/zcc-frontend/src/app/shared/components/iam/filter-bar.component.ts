@@ -22,39 +22,8 @@ export interface FilterDescriptor {
   standalone: true,
   imports: [FormInputControl, SelectControl],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="flex flex-wrap items-center gap-3">
-      <app-form-input-control
-        class="min-w-56 flex-1"
-        icon="search"
-        [placeholder]="searchPlaceholder()"
-        [value]="query()"
-        (valueChange)="onSearchInput($event)"
-      />
-
-      @for (filter of selectFilters(); track filter.key) {
-        <app-select-control
-          class="w-48"
-          [label]="filter.label"
-          [placeholder]="filter.allLabel"
-          [options]="filter.options"
-          [value]="selected()[filter.key] || ''"
-          (valueChange)="onFilterChange(filter.key, $event)"
-        />
-      }
-
-      @if (canReset()) {
-        <button
-          type="button"
-          class="rounded-lg px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-          (click)="reset()"
-        >
-          <i class="pi pi-refresh mr-1 text-xs" aria-hidden="true"></i>
-          Reset
-        </button>
-      }
-    </div>
-  `,
+  templateUrl: './filter-bar.component.html',
+  styleUrl: './filter-bar.component.scss',
 })
 export class FilterBarComponent {
   readonly query = input('');

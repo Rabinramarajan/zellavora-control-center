@@ -56,15 +56,8 @@ const STATUS_TONE: Record<string, ChipTone> = {
   standalone: true,
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <span
-      [class]="classes()"
-      class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-    >
-      <span class="size-1.5 rounded-full" [class]="dotClass()" aria-hidden="true"></span>
-      {{ label() }}
-    </span>
-  `,
+  templateUrl: './status-chip.component.html',
+  styleUrl: './status-chip.component.scss',
 })
 export class StatusChipComponent {
   readonly value = input.required<string>();

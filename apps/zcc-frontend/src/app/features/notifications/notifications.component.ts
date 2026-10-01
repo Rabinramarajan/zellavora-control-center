@@ -11,7 +11,7 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [CommonModule, FormsModule, FormInputControl],
   templateUrl: './notifications.component.html',
-  styleUrl: './notifications.component.css',
+  styleUrl: './notifications.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationsComponent {

@@ -20,7 +20,7 @@ import { Resource, ResourceSearchCriteria } from '../../../models';
   standalone: true,
   imports: [FormInputControl, HasPermissionDirective],
   templateUrl: './resource-manager.component.html',
-  styleUrl: './resource-manager.component.css',
+  styleUrl: './resource-manager.component.scss',
 })
 export class ResourceManagerComponent implements OnInit {
   private store = inject(AdminStoreService);

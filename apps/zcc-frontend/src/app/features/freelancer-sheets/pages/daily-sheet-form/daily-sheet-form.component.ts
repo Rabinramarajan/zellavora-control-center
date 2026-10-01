@@ -89,7 +89,7 @@ type LineItemGroup = FormGroup<{
   imports: [CommonModule, ReactiveFormsModule, RouterLink, DateControl],
   providers: [SheetsStore],
   templateUrl: './daily-sheet-form.component.html',
-  styleUrls: ['../../styles/sheets-theme.css', './daily-sheet-form.component.css'],
+  styleUrls: ['../../styles/sheets-theme.scss', './daily-sheet-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DailySheetFormComponent implements OnInit {

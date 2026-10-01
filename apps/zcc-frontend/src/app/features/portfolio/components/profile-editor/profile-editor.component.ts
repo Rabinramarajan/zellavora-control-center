@@ -30,7 +30,7 @@ type ProfileDraft = ReturnType<typeof emptyProfile>;
   standalone: true,
   imports: [FormField, FormRoot, FormInputControl],
   templateUrl: './profile-editor.component.html',
-  styleUrl: './profile-editor.component.css',
+  styleUrl: './profile-editor.component.scss',
 })
 export class ProfileEditorComponent {
   readonly portfolio = inject(PortfolioService);

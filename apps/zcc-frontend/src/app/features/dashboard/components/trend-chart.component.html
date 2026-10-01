@@ -1,0 +1,94 @@
+<div class="flex gap-3 h-full">
+  <div
+    class="flex flex-col justify-between text-[11px] text-slate-400 tabular-nums text-right pb-7 -mt-1.5"
+    aria-hidden="true"
+  >
+    @for (t of yTicks(); track $index) {
+      <span class="leading-none">{{ t }}</span>
+    }
+  </div>
+
+  <div class="relative flex-1 min-w-0">
+    <div
+      class="chart-plot"
+      tabindex="0"
+      role="img"
+      [attr.aria-label]="ariaLabel()"
+      (mousemove)="onPointer($event)"
+      (mouseleave)="active.set(null)"
+      (blur)="active.set(null)"
+      (keydown)="onKey($event)"
+    >
+      <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+        @for (t of yTicks(); track $index) {
+          <span class="block h-px bg-white/[0.05]"></span>
+        }
+      </div>
+
+      <svg
+        class="absolute inset-0 w-full h-full overflow-visible"
+        [attr.viewBox]="'0 0 ' + W + ' ' + H"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          @for (s of paths(); track s.name) {
+            <linearGradient [attr.id]="gradientId(s.name)" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" [attr.stop-color]="s.color" stop-opacity="0.45" />
+              <stop offset="100%" [attr.stop-color]="s.color" stop-opacity="0" />
+            </linearGradient>
+          }
+        </defs>
+        @for (s of paths(); track s.name) {
+          <path
+            class="chart-area"
+            [attr.d]="s.area"
+            [attr.fill]="'url(#' + gradientId(s.name) + ')'"
+          />
+          <path
+            class="chart-line"
+            [attr.d]="s.line"
+            fill="none"
+            [attr.stroke]="s.color"
+            stroke-width="2.5"
+            vector-effect="non-scaling-stroke"
+            [style.filter]="'drop-shadow(0 0 6px ' + s.color + ')'"
+          />
+        }
+      </svg>
+
+      @if (activePoint(); as a) {
+        <div class="chart-guide" [style.left.%]="a.leftPct"></div>
+        @for (dot of a.dots; track dot.name) {
+          <span
+            class="chart-dot"
+            [style.left.%]="a.leftPct"
+            [style.top.%]="dot.topPct"
+            [style.--dot]="dot.color"
+          ></span>
+        }
+        <div
+          class="chart-tooltip"
+          [style.left.%]="a.leftPct"
+          [class.chart-tooltip--flip]="a.leftPct > 75"
+          [class.chart-tooltip--start]="a.leftPct < 12"
+        >
+          <p class="text-[12px] font-semibold text-white mb-1.5">{{ a.label }}</p>
+          @for (dot of a.dots; track dot.name) {
+            <p class="flex items-center gap-2 text-[12px] text-slate-300">
+              <span class="w-2 h-2 rounded-full" [style.background]="dot.color"></span>
+              <span class="flex-1">{{ dot.name }}</span>
+              <span class="font-semibold text-white tabular-nums pl-4">{{ dot.value }}</span>
+            </p>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="relative h-7 mt-2 text-[11px] text-slate-400" aria-hidden="true">
+      @for (l of xLabels(); track l.index) {
+        <span class="chart-xlabel" [style.left.%]="l.leftPct">{{ l.text }}</span>
+      }
+    </div>
+  </div>
+</div>

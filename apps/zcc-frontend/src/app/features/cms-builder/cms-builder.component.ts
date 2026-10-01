@@ -11,7 +11,7 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [FormInputControl],
   templateUrl: './cms-builder.component.html',
-  styleUrl: './cms-builder.component.css',
+  styleUrl: './cms-builder.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmsBuilderComponent {

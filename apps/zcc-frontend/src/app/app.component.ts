@@ -11,20 +11,8 @@ import { AdminLayoutComponent } from './shared/components/admin-layout/admin-lay
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [RouterOutlet, AdminLayoutComponent],
-  template: `
-    <div class="min-h-screen bg-slate-50 dark:bg-[#03020c]">
-      <!-- Auth pages render in their own layout, outside the app shell and sidebar -->
-      @if (showAdminLayout()) {
-        <app-admin-layout></app-admin-layout>
-      }
-
-      <!-- Show router outlet directly for auth pages -->
-      @if (!showAdminLayout()) {
-        <router-outlet></router-outlet>
-      }
-    </div>
-  `,
-  styles: [],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
 })
 export class AppComponent {
   private readonly router = inject(Router);

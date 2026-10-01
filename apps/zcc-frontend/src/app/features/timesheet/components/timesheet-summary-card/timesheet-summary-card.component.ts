@@ -5,21 +5,8 @@ import { TimesheetTotals } from '../../data/timesheet.model';
 @Component({
   selector: 'app-timesheet-summary-card',
   standalone: true,
-  template: `
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      @for (metric of metrics(); track metric.label) {
-        <div
-          class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
-        >
-          <div class="text-sm font-medium text-gray-600 dark:text-gray-400">
-            {{ metric.label }}
-          </div>
-          <div class="mt-1 text-2xl font-bold tabular-nums">{{ metric.value }}</div>
-          <p class="mt-1 text-xs text-gray-500">{{ metric.hint }}</p>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './timesheet-summary-card.component.html',
+  styleUrl: './timesheet-summary-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimesheetSummaryCardComponent {

@@ -9,65 +9,8 @@ import { AuthAlertComponent } from '../../auth/ui/auth-alert.component';
   selector: 'app-recovery-codes',
   standalone: true,
   imports: [AuthAlertComponent],
-  template: `
-    <div class="codes">
-      <app-auth-alert tone="warning" heading="Save these codes now">
-        Each code signs you in once if you lose your authenticator. They won't be shown again, and
-        generating new codes invalidates this set.
-      </app-auth-alert>
-
-      <ol class="codes__grid" aria-label="Recovery codes">
-        @for (code of codes(); track code) {
-          <li><code>{{ code }}</code></li>
-        }
-      </ol>
-
-      <div class="codes__actions">
-        <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="copy()">
-          {{ copied() ? 'Copied' : 'Copy codes' }}
-        </button>
-        <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="download()">
-          Download .txt
-        </button>
-      </div>
-      <p class="sr-only" role="status">{{ copied() ? 'Recovery codes copied to clipboard.' : '' }}</p>
-
-      <label class="auth-check">
-        <input type="checkbox" [checked]="acknowledged()" (change)="acknowledged.set(!acknowledged())" />
-        <span>I've saved my recovery codes somewhere safe.</span>
-      </label>
-      <button
-        type="button"
-        class="auth-btn auth-btn--primary"
-        [disabled]="!acknowledged()"
-        (click)="done.emit()"
-      >
-        Done
-      </button>
-    </div>
-  `,
-  styles: `
-    :host { display: block; }
-    .codes { display: flex; flex-direction: column; gap: 1rem; }
-    .codes__grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.5rem;
-      margin: 0;
-      padding: 1rem;
-      list-style: none;
-      border-radius: 0.8rem;
-      border: 1px dashed var(--auth-border-strong);
-      background: rgba(0, 0, 0, 0.25);
-    }
-    .codes__grid code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.95rem;
-      letter-spacing: 0.06em;
-      color: var(--auth-text-strong);
-    }
-    .codes__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-  `,
+  templateUrl: './recovery-codes.component.html',
+  styleUrl: './recovery-codes.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecoveryCodesComponent {

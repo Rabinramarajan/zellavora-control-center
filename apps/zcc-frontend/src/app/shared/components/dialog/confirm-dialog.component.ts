@@ -8,40 +8,8 @@ import { ConfirmDialogData } from './dialog.types';
   selector: 'app-confirm-dialog',
   imports: [DialogShellComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <app-dialog-shell [title]="data.title" [showClose]="false" [closeResult]="false">
-      <p class="app-confirm__message">{{ data.message }}</p>
-
-      @if (!data.hideCancel) {
-        <button
-          dialogActions
-          type="button"
-          class="app-dialog-btn app-dialog-btn--ghost"
-          [attr.cdkFocusInitial]="isDestructive ? '' : null"
-          (click)="ref.close(false)"
-        >
-          {{ data.cancelText ?? 'Cancel' }}
-        </button>
-      }
-
-      <button
-        dialogActions
-        type="button"
-        class="app-dialog-btn"
-        [class]="'app-dialog-btn app-dialog-btn--' + (data.variant ?? 'primary')"
-        [attr.cdkFocusInitial]="isDestructive ? null : ''"
-        (click)="ref.close(true)"
-      >
-        {{ data.confirmText ?? 'Confirm' }}
-      </button>
-    </app-dialog-shell>
-  `,
-  styles: `
-    .app-confirm__message {
-      margin: 0;
-      white-space: pre-line;
-    }
-  `,
+  templateUrl: './confirm-dialog.component.html',
+  styleUrl: './confirm-dialog.component.scss',
 })
 export class ConfirmDialogComponent {
   protected readonly data = injectDialogData<ConfirmDialogData>();

@@ -1,0 +1,36 @@
+<app-dialog-shell [title]="data.title" [closeResult]="null">
+  <form [id]="formId" (submit)="submit($event)">
+    @if (data.message) {
+      <p class="app-prompt__message">{{ data.message }}</p>
+    }
+    <label class="app-prompt__label" [for]="inputId">{{ data.label ?? data.title }}</label>
+    <input
+      class="app-prompt__input"
+      cdkFocusInitial
+      autocomplete="off"
+      [id]="inputId"
+      [type]="data.inputType ?? 'text'"
+      [placeholder]="data.placeholder ?? ''"
+      [value]="value()"
+      (input)="value.set($any($event.target).value)"
+    />
+  </form>
+
+  <button
+    dialogActions
+    type="button"
+    class="app-dialog-btn app-dialog-btn--ghost"
+    (click)="ref.close(null)"
+  >
+    {{ data.cancelText ?? 'Cancel' }}
+  </button>
+  <button
+    dialogActions
+    type="submit"
+    [attr.form]="formId"
+    [class]="'app-dialog-btn app-dialog-btn--' + (data.variant ?? 'primary')"
+    [disabled]="!canSubmit()"
+  >
+    {{ data.confirmText ?? 'OK' }}
+  </button>
+</app-dialog-shell>

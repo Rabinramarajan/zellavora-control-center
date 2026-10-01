@@ -16,7 +16,7 @@ import {
   standalone: true,
   imports: [DatePipe, DocumentDropzoneComponent],
   templateUrl: './document-upload.component.html',
-  styleUrl: './document-upload.component.css',
+  styleUrl: './document-upload.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentUploadComponent {

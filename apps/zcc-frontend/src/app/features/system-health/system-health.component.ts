@@ -9,7 +9,7 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [],
   templateUrl: './system-health.component.html',
-  styleUrl: './system-health.component.css',
+  styleUrl: './system-health.component.scss',
 })
 export class SystemHealthComponent {
   readonly repository = inject(SystemHealthRepository);

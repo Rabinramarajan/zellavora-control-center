@@ -24,85 +24,8 @@ import { departmentFields, toDepartmentRequest } from './department-form';
     EmptyStateComponent,
     RouterLink,
   ],
-  template: `
-    <a
-      routerLink="/iam/organization/departments"
-      class="mb-4 inline-flex min-h-[36px] items-center gap-1 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-    >
-      <i class="pi pi-arrow-left text-xs" aria-hidden="true"></i> Departments
-    </a>
-
-    @if (loading() && !dept()) {
-      <div class="space-y-3">
-        <div class="h-8 w-64 animate-pulse rounded-lg bg-gray-100 dark:bg-white/5"></div>
-        <div class="h-40 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
-      </div>
-    } @else if (loadError()) {
-      <zcc-empty-state
-        icon="pi pi-exclamation-triangle"
-        title="Department unavailable"
-        [message]="loadError()!"
-      />
-    } @else if (dept(); as d) {
-      <zcc-iam-page-header
-        [title]="d.name"
-        icon="pi pi-briefcase"
-        [description]="d.description ?? ''"
-      >
-        @if (canManage()) {
-          <button type="button" [class]="btn.secondary" (click)="edit(d)">
-            <i class="pi pi-pencil text-xs" aria-hidden="true"></i> Edit
-          </button>
-          <button type="button" [class]="btn.danger" (click)="remove(d)">
-            <i class="pi pi-trash text-xs" aria-hidden="true"></i> Delete
-          </button>
-        }
-      </zcc-iam-page-header>
-
-      <dl [class]="card + ' mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4'">
-        <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-500">Status</dt>
-          <dd class="mt-1">
-            <zcc-status-chip
-              [value]="d.status"
-              [label]="d.status === 'active' ? 'Active' : 'Inactive'"
-            />
-          </dd>
-        </div>
-        <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-500">Code</dt>
-          <dd class="mt-1 font-mono text-sm text-gray-900 dark:text-white">{{ d.code ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-500">Parent</dt>
-          <dd class="mt-1 text-sm">
-            @if (d.parentId) {
-              <a
-                [routerLink]="['/iam/organization/departments', d.parentId]"
-                class="text-indigo-600 hover:underline dark:text-indigo-400"
-                >{{ d.parentName }}</a
-              >
-            } @else {
-              <span class="text-gray-900 dark:text-white">Top level</span>
-            }
-          </dd>
-        </div>
-        <div>
-          <dt class="text-xs uppercase tracking-wide text-gray-500">Created</dt>
-          <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ date(d.createdAt) }}</dd>
-        </div>
-      </dl>
-
-      <zcc-members-panel
-        [members]="d.members"
-        [canManage]="canManage()"
-        [busyUserId]="busyUserId()"
-        emptyMessage="No one is assigned to this department yet."
-        (add)="addMembers(d)"
-        (remove)="removeMember(d, $event)"
-      />
-    }
-  `,
+  templateUrl: './department-detail.component.html',
+  styleUrl: './department-detail.component.scss',
 })
 export class DepartmentDetailComponent {
   private readonly id = toSignal(

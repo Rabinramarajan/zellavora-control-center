@@ -10,37 +10,8 @@ import { LayoutService } from '../../../core/services/layout.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [RouterOutlet, NavbarComponent, SidebarComponent],
-  template: `
-    <div class="h-screen w-screen overflow-hidden flex bg-[#03020c] text-slate-100 font-sans">
-      <!-- Sidebar (left side, fixed) -->
-      <div
-        class="hidden md:block shrink-0 bg-[#05040e] transition-all duration-300"
-        [class.w-64]="!layoutService.isSidebarCollapsed()"
-        [class.w-20]="layoutService.isSidebarCollapsed()"
-      >
-        <app-sidebar></app-sidebar>
-      </div>
-
-      <!-- Main Column Container (Header + Content area, right side) -->
-      <div class="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
-        <!-- Top Header / Navbar -->
-        <app-navbar class="shrink-0"></app-navbar>
-
-        <!-- Main Content (Scrolls vertically) -->
-        <main class="flex flex-1 flex-col overflow-y-auto bg-[#03020c]">
-          <div class="flex flex-1 flex-col p-6">
-            <router-outlet></router-outlet>
-          </div>
-        </main>
-      </div>
-
-      <!-- Mobile Sidebar overlay -->
-      <div class="md:hidden">
-        <app-sidebar></app-sidebar>
-      </div>
-    </div>
-  `,
-  styles: [],
+  templateUrl: './admin-layout.component.html',
+  styleUrl: './admin-layout.component.scss',
 })
 export class AdminLayoutComponent {
   layoutService = inject(LayoutService);

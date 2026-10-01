@@ -1,0 +1,101 @@
+<zcc-iam-page-header
+  title="Departments"
+  icon="pi pi-briefcase"
+  description="Departments within your organization. Nest them to mirror your structure."
+>
+  @if (canManage()) {
+    <button type="button" [class]="btn.primary" (click)="create()">
+      <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+      New department
+    </button>
+  }
+</zcc-iam-page-header>
+
+<div class="mb-4 grid gap-3 sm:grid-cols-[1fr_180px]">
+  <div>
+    <label for="dept-search" class="sr-only">Search departments</label>
+    <input
+      id="dept-search"
+      type="search"
+      placeholder="Search by name or code…"
+      [class]="inputClass + ' min-h-[40px]'"
+      [value]="store.q()"
+      (input)="onSearch($any($event.target).value)"
+    />
+  </div>
+  <div>
+    <label for="dept-status" class="sr-only">Filter by status</label>
+    <select
+      id="dept-status"
+      [class]="inputClass + ' min-h-[40px]'"
+      (change)="onStatus($any($event.target).value)"
+    >
+      <option value="">All statuses</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+</div>
+
+@if (store.loading() && !store.hasItems()) {
+  <div class="space-y-2">
+    @for (_ of [1, 2, 3, 4]; track $index) {
+      <div class="h-12 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+    }
+  </div>
+} @else if (store.error()) {
+  <zcc-empty-state
+    icon="pi pi-exclamation-triangle"
+    title="Failed to load departments"
+    [message]="store.error()!"
+  />
+} @else if (store.hasItems()) {
+  <zcc-data-table
+    [columns]="columns"
+    [rows]="store.items()"
+    [rowTemplate]="rowTpl"
+    [rowClickable]="true"
+    (rowClick)="open($event)"
+  >
+    <ng-template #rowTpl let-d>
+      <td class="px-4 py-3">
+        <a
+          [routerLink]="['/iam/organization/departments', d.id]"
+          class="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          (click)="$event.stopPropagation()"
+          >{{ d.name }}</a
+        >
+        @if (d.code) {
+          <span class="ml-2 font-mono text-xs text-gray-400">{{ d.code }}</span>
+        }
+      </td>
+      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ d.parentName ?? '—' }}</td>
+      <td class="px-4 py-3 tabular-nums text-gray-600 dark:text-gray-300">
+        {{ d.memberCount }}
+      </td>
+      <td class="px-4 py-3 tabular-nums text-gray-600 dark:text-gray-300">
+        {{ d.childCount }}
+      </td>
+      <td class="px-4 py-3">
+        <zcc-status-chip
+          [value]="d.status"
+          [label]="d.status === 'active' ? 'Active' : 'Inactive'"
+        />
+      </td>
+    </ng-template>
+  </zcc-data-table>
+  <app-pagination
+    class="px-1 py-3"
+    entityLabel="departments"
+    [totalItems]="store.total()"
+    [page]="store.page()"
+    [pageSize]="store.pageSize()"
+    (pageChange)="store.setPage($event)"
+  />
+} @else {
+  <zcc-empty-state
+    icon="pi pi-briefcase"
+    title="No departments"
+    message="Create your first department to organise people."
+  />
+}

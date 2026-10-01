@@ -1,0 +1,42 @@
+<section class="auth-page" aria-labelledby="verify-title" [attr.aria-busy]="state() === 'verifying'">
+  @switch (state()) {
+    @case ('verifying') {
+      <div class="auth-page__icon" aria-hidden="true"><span class="auth-spinner"></span></div>
+      <header>
+        <h1 id="verify-title" class="auth-title">Verifying your email</h1>
+        <p class="auth-lead" role="status">This only takes a moment…</p>
+      </header>
+    }
+    @case ('invalid') {
+      <div class="auth-page__icon auth-page__icon--danger" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5m0 3h.01" /><circle cx="12" cy="12" r="9" /></svg>
+      </div>
+      <header>
+        <h1 id="verify-title" class="auth-title">Link invalid or expired</h1>
+      </header>
+      <app-auth-alert tone="error">
+        This verification link is invalid or has expired. Request a new one below.
+      </app-auth-alert>
+      <a class="auth-btn auth-btn--primary" routerLink="/auth/resend-verification">Send a new link</a>
+      <a class="auth-btn auth-btn--secondary" routerLink="/auth/login">Go to sign in</a>
+    }
+    @default {
+      <div class="auth-page__icon auth-page__icon--success" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+      </div>
+      <header>
+        <h1 id="verify-title" class="auth-title">
+          {{ state() === 'already-verified' ? 'Email already verified' : 'Email verified' }}
+        </h1>
+        <p class="auth-lead" role="status">
+          {{
+            state() === 'already-verified'
+              ? 'This email address was already confirmed. You can sign in.'
+              : 'Thanks for confirming your email address. You can now sign in.'
+          }}
+        </p>
+      </header>
+      <a class="auth-btn auth-btn--primary" routerLink="/auth/login" replaceUrl>Go to sign in</a>
+    }
+  }
+</section>

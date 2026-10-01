@@ -13,7 +13,7 @@ import { Role, RoleSearchCriteria } from '../../../models';
   standalone: true,
   imports: [RouterLink, FormsModule, HasPermissionDirective, Table, CellDirective],
   templateUrl: './role-list.component.html',
-  styleUrl: './role-list.component.css',
+  styleUrl: './role-list.component.scss',
 })
 export class RoleListComponent implements OnInit {
   private store = inject(AdminStoreService);

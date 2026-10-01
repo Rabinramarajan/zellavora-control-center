@@ -16,7 +16,7 @@ import { User, UserSearchCriteria } from '../../../models';
   standalone: true,
   imports: [RouterLink, SelectControl, HasPermissionDirective, Table, CellDirective],
   templateUrl: './user-list.component.html',
-  styleUrl: './user-list.component.css',
+  styleUrl: './user-list.component.scss',
 })
 export class UserListComponent implements OnInit {
   private store = inject(AdminStoreService);

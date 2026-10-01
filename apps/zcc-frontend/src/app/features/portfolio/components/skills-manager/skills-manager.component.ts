@@ -22,7 +22,7 @@ const emptySkill = () => ({
   standalone: true,
   imports: [FormField, FormRoot, FormInputControl, SelectControl],
   templateUrl: './skills-manager.component.html',
-  styleUrl: './skills-manager.component.css',
+  styleUrl: './skills-manager.component.scss',
 })
 export class SkillsManagerComponent {
   readonly portfolio = inject(PortfolioService);

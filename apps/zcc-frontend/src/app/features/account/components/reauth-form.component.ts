@@ -18,50 +18,8 @@ export interface ReauthSubmission {
   selector: 'app-reauth-form',
   standalone: true,
   imports: [FormField, FormRoot, AuthFieldComponent, AuthAlertComponent],
-  template: `
-    <form class="auth-form" [formRoot]="form" [attr.aria-label]="submitLabel()">
-      <p class="reauth-prompt">{{ prompt() }}</p>
-      @if (error()) {
-        <app-auth-alert tone="error">{{ error() }}</app-auth-alert>
-      }
-      <app-auth-field
-        [formField]="form.password"
-        label="Current password"
-        type="password"
-        autocomplete="current-password"
-      />
-      @if (requireCode()) {
-        <app-auth-field
-          [formField]="form.code"
-          label="Authenticator or recovery code"
-          autocomplete="one-time-code"
-          hint="The 6-digit code from your app, or one of your recovery codes."
-        />
-      }
-      <div class="reauth-actions">
-        <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="cancelled.emit()">
-          Cancel
-        </button>
-        <button
-          type="submit"
-          class="auth-btn auth-btn--inline"
-          [class.auth-btn--danger]="danger()"
-          [class.auth-btn--primary]="!danger()"
-          [disabled]="busy()"
-        >
-          @if (busy()) {
-            <span class="auth-spinner" aria-hidden="true"></span>
-          }
-          <span>{{ submitLabel() }}</span>
-        </button>
-      </div>
-    </form>
-  `,
-  styles: `
-    :host { display: block; }
-    .reauth-prompt { font-size: 0.875rem; color: var(--auth-text-muted); }
-    .reauth-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; }
-  `,
+  templateUrl: './reauth-form.component.html',
+  styleUrl: './reauth-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReauthFormComponent {

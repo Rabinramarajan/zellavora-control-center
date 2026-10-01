@@ -24,74 +24,8 @@ import { injectPasswordPolicy, mapServerErrors } from '../../../auth/ui/form-err
     AuthAlertComponent,
     PasswordRequirementsComponent,
   ],
-  template: `
-    <div class="change-pw">
-      <nav aria-label="Breadcrumb">
-        <a class="auth-link auth-link--small" routerLink="/account/security">← Security</a>
-      </nav>
-      <header>
-        <h1 id="cp-title" class="auth-title">Change password</h1>
-        <p class="auth-lead">You'll stay signed in here. Other devices are signed out for your protection.</p>
-      </header>
-
-      <section class="auth-card-panel">
-        @if (done()) {
-          <app-auth-alert tone="success" heading="Password updated">
-            @if (revoked() > 0) {
-              Signed out {{ revoked() }} other session{{ revoked() === 1 ? '' : 's' }}.
-            } @else {
-              Your new password is active.
-            }
-          </app-auth-alert>
-          <div class="mt-4">
-            <a class="auth-btn auth-btn--secondary auth-btn--inline" routerLink="/account/security">Back to security</a>
-          </div>
-        } @else {
-          @if (formError()) {
-            <app-auth-alert tone="error" class="mb-4">{{ formError() }}</app-auth-alert>
-          }
-          <form class="auth-form" [formRoot]="form" aria-labelledby="cp-title">
-            <app-auth-field
-              [formField]="form.currentPassword"
-              label="Current password"
-              type="password"
-              autocomplete="current-password"
-            />
-            <div>
-              <app-auth-field
-                [formField]="form.newPassword"
-                label="New password"
-                type="password"
-                autocomplete="new-password"
-              />
-              <app-password-requirements [password]="model().newPassword" [policy]="policy()" />
-            </div>
-            <app-auth-field
-              [formField]="form.confirmPassword"
-              label="Confirm new password"
-              type="password"
-              autocomplete="new-password"
-            />
-            <div class="actions">
-              <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="cancel()">Cancel</button>
-              <button type="submit" class="auth-btn auth-btn--primary auth-btn--inline" [disabled]="form().submitting()">
-                @if (form().submitting()) {
-                  <span class="auth-spinner" aria-hidden="true"></span><span>Updating…</span>
-                } @else {
-                  <span>Update password</span>
-                }
-              </button>
-            </div>
-          </form>
-        }
-      </section>
-    </div>
-  `,
-  styles: `
-    :host { display: block; }
-    .change-pw { display: flex; flex-direction: column; gap: 1.25rem; max-width: 34rem; margin: 0 auto; padding-bottom: 2rem; }
-    .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; }
-  `,
+  templateUrl: './change-password.page.html',
+  styleUrl: './change-password.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChangePasswordPage {

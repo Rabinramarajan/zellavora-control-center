@@ -124,7 +124,7 @@ function halfOverHalf(points: TrendPoint[] | undefined): number | null {
     PaginationComponent,
   ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css',
+  styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
   readonly store = inject(DashboardStore);

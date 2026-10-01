@@ -45,7 +45,7 @@ type ProjectDraft = ReturnType<typeof emptyProject>;
   standalone: true,
   imports: [FormField, FormRoot, FormInputControl, SelectControl, RouterLink],
   templateUrl: './project-editor.component.html',
-  styleUrl: './project-editor.component.css',
+  styleUrl: './project-editor.component.scss',
 })
 export class ProjectEditorComponent implements OnInit {
   readonly projects = inject(ProjectsService);

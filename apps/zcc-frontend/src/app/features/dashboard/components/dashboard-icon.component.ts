@@ -109,22 +109,8 @@ const PATHS: Record<DashboardIconName, string[]> = {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'inline-flex shrink-0', 'aria-hidden': 'true' },
-  template: `
-    <svg
-      [attr.width]="size()"
-      [attr.height]="size()"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      [attr.stroke-width]="strokeWidth()"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      @for (d of paths(); track $index) {
-        <path [attr.d]="d" />
-      }
-    </svg>
-  `,
+  templateUrl: './dashboard-icon.component.html',
+  styleUrl: './dashboard-icon.component.scss',
 })
 export class DashboardIconComponent {
   readonly name = input.required<DashboardIconName>();

@@ -52,7 +52,7 @@ interface Dimensions {
   standalone: true,
   imports: [CommonModule, ButtonModule, ToastModule, PaginationComponent],
   templateUrl: './media.component.html',
-  styleUrl: './media.component.css',
+  styleUrl: './media.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown)': 'onKeydown($event)',

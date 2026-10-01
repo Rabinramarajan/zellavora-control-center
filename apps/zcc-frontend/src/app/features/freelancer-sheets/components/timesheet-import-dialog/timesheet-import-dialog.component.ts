@@ -45,7 +45,7 @@ const formatClock = (clock: string): string => {
   standalone: true,
   imports: [CurrencyPipe, DatePipe, CdkTrapFocus],
   templateUrl: './timesheet-import-dialog.component.html',
-  styleUrl: './timesheet-import-dialog.component.css',
+  styleUrl: './timesheet-import-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:keydown.escape)': 'onEscape()' },
 })

@@ -1,0 +1,30 @@
+.sessions { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.session {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--auth-border);
+}
+.session:first-child { border-top: 0; padding-top: 0; }
+.session__icon {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex-shrink: 0;
+  border-radius: 0.7rem;
+  background: var(--auth-surface-raised);
+  color: var(--auth-text-muted);
+}
+.session__body { flex: 1; min-width: 0; }
+.session__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--auth-text-strong);
+}
+.session__meta { margin-top: 0.15rem; font-size: 0.8rem; color: var(--auth-text-muted); overflow-wrap: anywhere; }

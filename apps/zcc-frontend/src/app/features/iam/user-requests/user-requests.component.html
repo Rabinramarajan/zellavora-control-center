@@ -1,0 +1,213 @@
+<zcc-iam-page-header
+  title="User Requests"
+  icon="pi pi-inbox"
+  description="Request, approve and track new accounts and access changes. Every change is provisioned only after approval."
+>
+  <a routerLink="create" [class]="btn.primary">
+    <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+    New Request
+  </a>
+</zcc-iam-page-header>
+
+<form [class]="card + ' mb-4'" (ngSubmit)="search()" aria-label="Search user requests">
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <app-form-input-control
+      label="Request Ref No"
+      icon="search"
+      placeholder="UR-2026-…"
+      [(value)]="form.refNo"
+    />
+    <div>
+      <label for="ur-type" [class]="labelClass">Request Type</label>
+      <zcc-multi-select inputId="ur-type" [options]="typeOptions" [(value)]="form.type" />
+    </div>
+    <app-form-input-control label="User Name" icon="user" [(value)]="form.name" />
+    <div>
+      <label for="ur-status" [class]="labelClass">Status</label>
+      <zcc-multi-select inputId="ur-status" [options]="statusOptions" [(value)]="form.status" />
+    </div>
+    <app-date-control label="Requested Date From" [(value)]="form.from" />
+    <app-date-control
+      label="Requested Date To"
+      [minDate]="form.from || undefined"
+      [(value)]="form.to"
+    />
+
+    @if (moreFilters()) {
+      <app-form-input-control label="Employee Code" [(value)]="form.employeeCode" />
+      <app-form-input-control label="Email ID" icon="email" [(value)]="form.email" />
+      <div>
+        <label for="ur-by" [class]="labelClass">Requested By</label>
+        <zcc-user-select inputId="ur-by" [(value)]="form.requestedById" />
+      </div>
+      <div>
+        <label for="ur-branch" [class]="labelClass">Branch</label>
+        <zcc-multi-select
+          inputId="ur-branch"
+          [options]="branchOptions()"
+          [(value)]="form.branchId"
+        />
+      </div>
+      <div>
+        <label for="ur-dept" [class]="labelClass">Department</label>
+        <zcc-multi-select
+          inputId="ur-dept"
+          [options]="departmentOptions()"
+          [(value)]="form.departmentId"
+        />
+      </div>
+      <div>
+        <label for="ur-team" [class]="labelClass">Team</label>
+        <zcc-multi-select inputId="ur-team" [options]="teamOptions()" [(value)]="form.teamId" />
+      </div>
+      <div>
+        <label for="ur-group" [class]="labelClass">Group</label>
+        <zcc-multi-select
+          inputId="ur-group"
+          [options]="groupOptions()"
+          [(value)]="form.groupId"
+        />
+      </div>
+      <div>
+        <label for="ur-role" [class]="labelClass">Role</label>
+        <zcc-multi-select inputId="ur-role" [options]="roleOptions()" [(value)]="form.roleId" />
+      </div>
+    }
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-2">
+    <button type="submit" [class]="btn.primary">
+      <i class="pi pi-search text-xs" aria-hidden="true"></i>
+      Search
+    </button>
+    <button type="button" [class]="btn.secondary" (click)="clear()">Clear</button>
+    <button
+      type="button"
+      [class]="btn.secondary"
+      [attr.aria-expanded]="moreFilters()"
+      (click)="moreFilters.set(!moreFilters())"
+    >
+      <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+      {{ moreFilters() ? 'Fewer Filters' : 'More Filters' }}
+    </button>
+  </div>
+</form>
+
+@if (counts()) {
+  <div class="mb-4 flex flex-wrap gap-2" aria-label="Requests by status">
+    @for (s of quickStatuses; track s) {
+      <button
+        type="button"
+        class="inline-flex min-h-[36px] items-center gap-2 rounded-full border px-3 text-xs font-medium transition-colors"
+        [class]="
+          isOnlyStatus(s)
+            ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
+            : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'
+        "
+        [attr.aria-pressed]="isOnlyStatus(s)"
+        (click)="quickStatus(s)"
+      >
+        {{ statusLabel(s) }}
+        <span class="tabular-nums text-gray-400">{{ counts()![s] }}</span>
+      </button>
+    }
+  </div>
+}
+
+@if (store.loading() && !store.hasItems()) {
+  <div class="space-y-2">
+    @for (_ of [1, 2, 3, 4, 5]; track $index) {
+      <div class="h-12 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+    }
+  </div>
+} @else if (store.error()) {
+  <zcc-empty-state
+    icon="pi pi-exclamation-triangle"
+    title="Failed to load requests"
+    [message]="store.error()!"
+  />
+} @else if (store.hasItems()) {
+  <zcc-data-table [columns]="columns" [rows]="store.items()" [rowTemplate]="rowTpl">
+    <ng-template #rowTpl let-r>
+      <td class="px-4 py-3">
+        <a
+          [routerLink]="[r.id]"
+          class="font-mono text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+          >{{ r.refNo }}</a
+        >
+      </td>
+      <td class="px-4 py-3 text-gray-700 dark:text-gray-200">{{ r.typeLabel }}</td>
+      <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ r.name ?? '—' }}</td>
+      <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">
+        {{ r.employeeCode ?? '—' }}
+      </td>
+      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ r.email ?? '—' }}</td>
+      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+        {{ r.requestedBy?.name ?? '—' }}
+      </td>
+      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ date(r.createdAt) }}</td>
+      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ r.branchName ?? '—' }}</td>
+      <td class="px-4 py-3">
+        <zcc-status-chip [value]="r.status" [label]="r.statusLabel" [tone]="tone(r)" />
+      </td>
+      <td class="px-4 py-3">
+        <div class="relative flex items-center justify-end gap-1">
+          <a
+            [routerLink]="[r.id]"
+            [class]="btn.icon"
+            [attr.aria-label]="'View ' + r.refNo"
+            title="View"
+          >
+            <i class="pi pi-eye" aria-hidden="true"></i>
+          </a>
+          <button
+            type="button"
+            [class]="btn.icon"
+            [attr.aria-label]="'More actions for ' + r.refNo"
+            [attr.aria-expanded]="menuFor() === r.id"
+            title="More"
+            (click)="toggleMenu(r.id, $event)"
+          >
+            <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+          </button>
+          @if (menuFor() === r.id) {
+            <div
+              role="menu"
+              class="absolute right-0 top-10 z-20 w-48 rounded-lg border border-gray-200 bg-white p-1 text-left shadow-lg dark:border-white/10 dark:bg-gray-900"
+            >
+              @for (item of menuItems; track item.section) {
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="flex min-h-[40px] w-full items-center gap-2 rounded-md px-3 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
+                  (click)="openSection(r, item.section)"
+                >
+                  <i [class]="item.icon + ' text-xs'" aria-hidden="true"></i>
+                  {{ item.label }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </td>
+    </ng-template>
+  </zcc-data-table>
+  <app-pagination
+    class="px-1 py-3"
+    entityLabel="requests"
+    [totalItems]="store.total()"
+    [page]="store.page()"
+    [pageSize]="store.pageSize()"
+    (pageChange)="store.setPage($event)"
+  />
+} @else {
+  <zcc-empty-state
+    icon="pi pi-inbox"
+    title="No user requests"
+    [message]="
+      filtersActive()
+        ? 'Nothing matches the current filters.'
+        : 'Raise a new request to get started.'
+    "
+  />
+}

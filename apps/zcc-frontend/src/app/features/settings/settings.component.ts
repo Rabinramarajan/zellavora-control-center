@@ -49,7 +49,7 @@ type SavingSection = 'general' | 'profile' | null;
   ],
   providers: [MessageService],
   templateUrl: './settings.component.html',
-  styleUrl: './settings.component.css',
+  styleUrl: './settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent {

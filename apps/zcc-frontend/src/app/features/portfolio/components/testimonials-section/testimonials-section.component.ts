@@ -22,7 +22,7 @@ interface Testimonial {
   standalone: true,
   imports: [FormsModule, ButtonModule, TextareaModule, ToastModule, FormInputControl],
   templateUrl: './testimonials-section.component.html',
-  styleUrl: './testimonials-section.component.css',
+  styleUrl: './testimonials-section.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TestimonialsSectionComponent {

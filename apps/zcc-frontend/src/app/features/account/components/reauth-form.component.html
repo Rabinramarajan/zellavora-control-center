@@ -1,0 +1,37 @@
+<form class="auth-form" [formRoot]="form" [attr.aria-label]="submitLabel()">
+  <p class="reauth-prompt">{{ prompt() }}</p>
+  @if (error()) {
+    <app-auth-alert tone="error">{{ error() }}</app-auth-alert>
+  }
+  <app-auth-field
+    [formField]="form.password"
+    label="Current password"
+    type="password"
+    autocomplete="current-password"
+  />
+  @if (requireCode()) {
+    <app-auth-field
+      [formField]="form.code"
+      label="Authenticator or recovery code"
+      autocomplete="one-time-code"
+      hint="The 6-digit code from your app, or one of your recovery codes."
+    />
+  }
+  <div class="reauth-actions">
+    <button type="button" class="auth-btn auth-btn--secondary auth-btn--inline" (click)="cancelled.emit()">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="auth-btn auth-btn--inline"
+      [class.auth-btn--danger]="danger()"
+      [class.auth-btn--primary]="!danger()"
+      [disabled]="busy()"
+    >
+      @if (busy()) {
+        <span class="auth-spinner" aria-hidden="true"></span>
+      }
+      <span>{{ submitLabel() }}</span>
+    </button>
+  </div>
+</form>

@@ -17,9 +17,8 @@ import { EducationSectionComponent } from './components/education-section/educat
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [],
-  template: `<div class="p-6">
-    <p class="text-slate-600">Experience Section coming soon...</p>
-  </div>`,
+  templateUrl: './portfolio.routes.html',
+  styleUrl: './portfolio.routes.scss',
 })
 class ExperienceSectionComponent {}
 

@@ -1,0 +1,31 @@
+<section
+  class="dropzone"
+  [class.over]="dragDepth() > 0"
+  [attr.aria-disabled]="disabled()"
+  (dragover)="$event.preventDefault()"
+  (dragenter)="enter($event)"
+  (dragleave)="leave($event)"
+  (drop)="drop($event)"
+>
+  <span class="cloud"><i class="pi pi-cloud-upload" aria-hidden="true"></i></span>
+  <strong>Drag &amp; Drop your documents here</strong>
+  <div class="browse">
+    <span>or</span>
+    <button type="button" [disabled]="disabled()" (click)="picker.click()">
+      <i class="pi pi-folder" aria-hidden="true"></i> Browse Files
+    </button>
+  </div>
+  <input
+    #picker
+    type="file"
+    hidden
+    multiple
+    [accept]="accept()"
+    [disabled]="disabled()"
+    (change)="select($event)"
+  />
+  <small
+    >Supports {{ label() }} <span aria-hidden="true"> | </span> Max file size:
+    {{ maxSizeMb() }} MB per file</small
+  >
+</section>

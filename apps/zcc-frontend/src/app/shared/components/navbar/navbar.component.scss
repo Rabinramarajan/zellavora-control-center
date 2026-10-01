@@ -1,0 +1,15 @@
+.user-menu-enter {
+  animation: user-menu-in 180ms ease-out;
+  transform-origin: top right;
+}
+@keyframes user-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .user-menu-enter {
+    animation: none;
+  }
+}

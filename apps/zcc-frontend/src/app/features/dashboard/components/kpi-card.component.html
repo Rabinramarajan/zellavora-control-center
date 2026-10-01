@@ -1,0 +1,47 @@
+<article
+  class="kpi-card group"
+  [class.kpi-card--active]="highlighted()"
+  [style.--tone]="toneRgb()"
+  [attr.aria-label]="label() + ': ' + value()"
+>
+  <header class="flex items-center gap-3">
+    <span class="kpi-icon">
+      <app-dashboard-icon [name]="icon()" [size]="18" />
+    </span>
+    <h3 class="text-[13px] font-semibold text-white/90 truncate">{{ label() }}</h3>
+  </header>
+
+  <div class="mt-4 flex items-end justify-between gap-3">
+    <div class="min-w-0">
+      <p class="text-[28px] leading-none font-bold text-white tabular-nums">{{ value() }}</p>
+      @if (delta() !== null) {
+        <p
+          class="mt-2 flex items-center gap-0.5 text-[11px] font-semibold tabular-nums"
+          [class.text-emerald-400]="deltaPositive()"
+          [class.text-rose-400]="!deltaPositive()"
+        >
+          <app-dashboard-icon
+            [name]="deltaPositive() ? 'arrow-up' : 'arrow-down'"
+            [size]="11"
+            [strokeWidth]="2.5"
+          />
+          {{ deltaLabel() }}
+        </p>
+      }
+      <p class="mt-1 text-[11px] text-slate-400 truncate">{{ hint() }}</p>
+    </div>
+
+    @if (bars().length) {
+      <div class="kpi-bars" aria-hidden="true">
+        @for (h of bars(); track $index) {
+          <span [style.height.%]="h" [style.animation-delay.ms]="$index * 60"></span>
+        }
+      </div>
+    } @else {
+      <div class="kpi-flat" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </div>
+    }
+  </div>
+</article>

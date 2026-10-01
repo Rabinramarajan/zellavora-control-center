@@ -59,20 +59,8 @@ const ICON_PATHS: Record<SettingsIconName, string[]> = {
 @Component({
   selector: 'app-settings-icon',
   standalone: true,
-  template: `
-    <svg
-      [attr.class]="sizeClass()"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      @for (d of paths(); track d) {
-        <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="d" />
-      }
-    </svg>
-  `,
+  templateUrl: './settings-icon.component.html',
+  styleUrl: './settings-icon.component.scss',
   host: { class: 'inline-flex shrink-0' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

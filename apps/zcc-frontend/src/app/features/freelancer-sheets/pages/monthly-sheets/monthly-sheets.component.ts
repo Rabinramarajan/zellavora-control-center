@@ -115,7 +115,7 @@ const CALENDAR_LEGEND: { label: string; status: CellStatus }[] = [
   imports: [CommonModule, RouterLink, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
   providers: [SheetsStore],
   templateUrl: './monthly-sheets.component.html',
-  styleUrls: ['../../styles/sheets-theme.css', './monthly-sheets.component.css'],
+  styleUrls: ['../../styles/sheets-theme.scss', './monthly-sheets.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MonthlySheetsComponent implements OnInit {

@@ -113,7 +113,7 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
   ],
   providers: [SheetsStore],
   templateUrl: './daily-sheets.component.html',
-  styleUrls: ['../../styles/sheets-theme.css', './daily-sheets.component.css'],
+  styleUrls: ['../../styles/sheets-theme.scss', './daily-sheets.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DailySheetsComponent implements OnInit {

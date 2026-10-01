@@ -1,0 +1,46 @@
+<header class="app-dialog__header">
+  <div class="app-dialog__heading">
+    <h2 class="app-dialog__title" [id]="titleId">
+      {{ title() }}<ng-content select="[dialogTitle]" />
+    </h2>
+    @if (subtitle()) {
+      <p class="app-dialog__subtitle">{{ subtitle() }}</p>
+    }
+  </div>
+
+  @if (showClose()) {
+    <button
+      type="button"
+      class="app-dialog__close"
+      aria-label="Close dialog"
+      [disabled]="busy()"
+      (click)="close()"
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path
+          d="M6 6l12 12M18 6L6 18"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          fill="none"
+        />
+      </svg>
+    </button>
+  }
+</header>
+
+@if (busy()) {
+  <div class="app-dialog__progress" role="progressbar" aria-label="Loading"></div>
+}
+
+<div class="app-dialog__body">
+  <ng-content />
+</div>
+
+<footer
+  class="app-dialog__actions"
+  [class.app-dialog__actions--start]="actionsAlign() === 'start'"
+  [class.app-dialog__actions--between]="actionsAlign() === 'between'"
+>
+  <ng-content select="[dialogActions]" />
+</footer>

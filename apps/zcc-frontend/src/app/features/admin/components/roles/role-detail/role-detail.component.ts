@@ -22,7 +22,7 @@ type RoleDraft = Pick<Role, 'roleName' | 'moduleValue' | 'statusValue'>;
   standalone: true,
   imports: [FormField, FormRoot, FormInputControl, SelectControl, RouterLink],
   templateUrl: './role-detail.component.html',
-  styleUrl: './role-detail.component.css',
+  styleUrl: './role-detail.component.scss',
 })
 export class RoleDetailComponent implements OnInit {
   private store = inject(AdminStoreService);

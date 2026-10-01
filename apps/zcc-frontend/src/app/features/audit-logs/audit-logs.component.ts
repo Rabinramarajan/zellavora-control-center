@@ -11,7 +11,7 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [CommonModule, FormInputControl, SelectControl],
   templateUrl: './audit-logs.component.html',
-  styleUrl: './audit-logs.component.css',
+  styleUrl: './audit-logs.component.scss',
 })
 export class AuditLogsComponent {
   readonly repository = inject(AuditRepository);

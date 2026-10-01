@@ -32,68 +32,8 @@ export interface PermissionRow {
   selector: 'zcc-permission-matrix',
   standalone: true,
   imports: [FormInputControl],
-  template: `
-    <div class="space-y-4">
-      <app-form-input-control icon="search" placeholder="Filter permissions…" [(value)]="query" />
-
-      @if (loading()) {
-        <div class="space-y-2">
-          @for (_ of [1, 2, 3, 4]; track $index) {
-            <div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-white/5"></div>
-          }
-        </div>
-      } @else {
-        @for (group of groups(); track group.resource) {
-          <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
-            <div class="flex items-center justify-between bg-gray-50/80 dark:bg-white/5 px-4 py-2">
-              <p
-                class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
-              >
-                {{ group.resource || 'ungrouped' }}
-              </p>
-              <span class="text-[11px] text-gray-400 tabular-nums">{{ group.rows.length }}</span>
-            </div>
-            <div class="divide-y divide-gray-100 dark:divide-white/5">
-              @for (row of group.rows; track row.permissionId) {
-                <div class="flex items-center justify-between px-4 py-2.5">
-                  <div class="min-w-0">
-                    <p class="font-mono text-xs text-gray-900 dark:text-white">{{ row.key }}</p>
-                    <p class="truncate text-xs text-gray-400">{{ row.name }}</p>
-                  </div>
-                  <div class="flex shrink-0 items-center gap-1">
-                    <button
-                      type="button"
-                      [class]="
-                        row.effect === 'allow'
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'
-                      "
-                      class="rounded-l-lg px-2.5 py-1 text-xs font-medium transition-colors"
-                      (click)="toggle(row, 'allow')"
-                    >
-                      Allow
-                    </button>
-                    <button
-                      type="button"
-                      [class]="
-                        row.effect === 'deny'
-                          ? 'bg-red-500 text-white'
-                          : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'
-                      "
-                      class="rounded-r-lg px-2.5 py-1 text-xs font-medium transition-colors"
-                      (click)="toggle(row, 'deny')"
-                    >
-                      Deny
-                    </button>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-      }
-    </div>
-  `,
+  templateUrl: './permission-matrix.component.html',
+  styleUrl: './permission-matrix.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PermissionMatrixComponent {

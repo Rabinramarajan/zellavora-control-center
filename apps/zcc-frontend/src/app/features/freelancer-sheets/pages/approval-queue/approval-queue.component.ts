@@ -137,7 +137,7 @@ const MONTHLY_COLUMNS: ColumnDef<MonthlyRow>[] = [
   ],
   providers: [SheetsStore],
   templateUrl: './approval-queue.component.html',
-  styleUrls: ['../../styles/sheets-theme.css', './approval-queue.component.css'],
+  styleUrls: ['../../styles/sheets-theme.scss', './approval-queue.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApprovalQueueComponent implements OnInit {

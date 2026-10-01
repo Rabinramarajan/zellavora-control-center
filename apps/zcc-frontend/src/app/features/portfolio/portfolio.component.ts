@@ -9,7 +9,7 @@ import { PortfolioService } from './services/portfolio.service';
   standalone: true,
   imports: [RouterLink, RouterOutlet],
   templateUrl: './portfolio.component.html',
-  styleUrl: './portfolio.component.css',
+  styleUrl: './portfolio.component.scss',
 })
 export class PortfolioComponent {
   portfolio = inject(PortfolioService);

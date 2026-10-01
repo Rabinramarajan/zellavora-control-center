@@ -114,7 +114,7 @@ export class EmptyDirective {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'dt-host' },
   templateUrl: './table.html',
-  styleUrl: './table.css',
+  styleUrl: './table.scss',
 })
 export class Table<T extends object> {
   /* ---- inputs ---- */

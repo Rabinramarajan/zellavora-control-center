@@ -12,7 +12,7 @@ import { Branch, BranchSearchCriteria } from '../../../models';
   standalone: true,
   imports: [FormsModule, HasPermissionDirective, Table, CellDirective],
   templateUrl: './branch-manager.component.html',
-  styleUrl: './branch-manager.component.css',
+  styleUrl: './branch-manager.component.scss',
 })
 export class BranchManagerComponent implements OnInit {
   private store = inject(AdminStoreService);

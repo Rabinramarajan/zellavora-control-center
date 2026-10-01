@@ -34,52 +34,8 @@ export interface DataTableColumn {
   standalone: true,
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-      <table class="w-full min-w-max text-sm">
-        <thead>
-          <tr
-            class="border-b border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-white/5 text-left"
-          >
-            @for (column of columns(); track column.key) {
-              <th
-                [style.width]="column.width"
-                class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300"
-              >
-                <span class="inline-flex items-center gap-1">{{ column.label }}</span>
-              </th>
-            }
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-          @for (row of rows(); track rowKey()(row)) {
-            <tr
-              class="transition-colors"
-              [class.cursor-pointer]="rowClickable()"
-              [class.hover:bg-gray-50]="rowClickable()"
-              [class.dark:hover:bg-white/5]="rowClickable()"
-              (click)="rowClickable() && rowClick.emit(row)"
-            >
-              <ng-container
-                *ngTemplateOutlet="rowTemplate() || null; context: { $implicit: row }"
-              ></ng-container>
-            </tr>
-          } @empty {
-            @if (emptyMessage()) {
-              <tr>
-                <td [attr.colspan]="columns().length" class="px-4 py-12 text-center">
-                  <div class="flex flex-col items-center gap-2 text-gray-400">
-                    <i class="pi pi-inbox text-3xl" aria-hidden="true"></i>
-                    <p class="text-sm">{{ emptyMessage() }}</p>
-                  </div>
-                </td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-  `,
+  templateUrl: './data-table.component.html',
+  styleUrl: './data-table.component.scss',
 })
 export class DataTableComponent<T> {
   readonly columns = input<DataTableColumn[]>([]);

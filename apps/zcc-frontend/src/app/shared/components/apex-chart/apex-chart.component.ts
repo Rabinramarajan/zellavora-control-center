@@ -28,7 +28,8 @@ import type { ApexOptions } from 'apexcharts';
   selector: 'app-apex-chart',
   standalone: true,
   imports: [],
-  template: `<div #chartHost class="w-full h-full min-h-[180px]"></div>`,
+  templateUrl: './apex-chart.component.html',
+  styleUrl: './apex-chart.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApexChartComponent implements OnInit, OnDestroy {

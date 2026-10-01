@@ -64,7 +64,7 @@ const formatDay = (iso: string, withYear: boolean): string =>
   standalone: true,
   imports: [CdkConnectedOverlay, CdkOverlayOrigin, CdkTrapFocus],
   templateUrl: './date-range-picker.component.html',
-  styleUrl: './date-range-picker.component.css',
+  styleUrl: './date-range-picker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DateRangePickerComponent {

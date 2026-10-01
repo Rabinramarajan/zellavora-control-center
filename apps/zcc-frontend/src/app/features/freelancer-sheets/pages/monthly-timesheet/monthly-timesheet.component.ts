@@ -50,7 +50,7 @@ const formatHours = (hours: number): string =>
   standalone: true,
   imports: [RouterLink],
   templateUrl: './monthly-timesheet.component.html',
-  styleUrls: ['./monthly-timesheet.component.css'],
+  styleUrl: './monthly-timesheet.component.scss',
   // Print rules must reach <body> to hide the app shell, so styles are not
   // encapsulated; every selector is namespaced under .ts-page / .ts-doc.
   encapsulation: ViewEncapsulation.None,

@@ -22,7 +22,7 @@ import { ColumnDef, FilterState, SelectionMode, SortState, TrackByFn } from './s
   standalone: true,
   imports: [NgTemplateOutlet, FormInputControl, PaginationComponent],
   templateUrl: './smart-table.component.html',
-  styleUrl: './smart-table.component.css',
+  styleUrl: './smart-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SmartTableComponent<T> {

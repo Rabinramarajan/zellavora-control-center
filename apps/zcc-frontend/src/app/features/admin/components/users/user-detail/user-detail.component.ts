@@ -30,7 +30,7 @@ const STATUS_OPTIONS: SelectControlOption[] = [
   standalone: true,
   imports: [FormField, FormRoot, FormInputControl, SelectControl, RouterLink],
   templateUrl: './user-detail.component.html',
-  styleUrl: './user-detail.component.css',
+  styleUrl: './user-detail.component.scss',
 })
 export class UserDetailComponent implements OnInit {
   private store = inject(AdminStoreService);

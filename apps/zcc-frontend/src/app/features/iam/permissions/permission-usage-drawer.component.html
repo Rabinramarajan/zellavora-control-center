@@ -1,0 +1,35 @@
+<app-dialog-shell [title]="data.key" subtitle="Roles using this permission">
+  @if (loading()) {
+    <div class="space-y-2">
+      @for (_ of [1, 2, 3]; track $index) {
+        <div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-white/5"></div>
+      }
+    </div>
+  } @else if (error()) {
+    <p class="text-sm text-red-500">{{ error() }}</p>
+  } @else if (detail(); as d) {
+    @if (d.description) {
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-300">{{ d.description }}</p>
+    }
+    @if (!d.roles.length) {
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        No role grants this permission yet.
+      </p>
+    } @else {
+      <ul class="divide-y divide-gray-100 dark:divide-white/5">
+        @for (role of d.roles; track role.roleId) {
+          <li class="flex min-h-[48px] items-center justify-between gap-3 py-2">
+            <a
+              [routerLink]="['/iam/roles', role.roleId]"
+              class="min-w-0 truncate font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              {{ role.roleName }}
+              <span class="ml-1 font-mono text-xs text-gray-400">{{ role.roleKey }}</span>
+            </a>
+            <zcc-status-chip [value]="role.effect" [label]="role.effect" />
+          </li>
+        }
+      </ul>
+    }
+  }
+</app-dialog-shell>

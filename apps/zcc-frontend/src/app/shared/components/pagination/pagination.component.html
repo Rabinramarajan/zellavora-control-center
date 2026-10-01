@@ -1,0 +1,74 @@
+@if (showSummary()) {
+  <span class="pg-summary" aria-live="polite">
+    @if (totalItems() > 0) {
+      Showing <strong>{{ rangeStart() }}–{{ rangeEnd() }}</strong> of
+      <strong>{{ totalItems() }}</strong> {{ entityLabel() }}
+    } @else {
+      No {{ entityLabel() || 'results' }}
+    }
+  </span>
+}
+
+<div class="pg-controls">
+  <ul class="pg-list">
+    @if (showFirstLast()) {
+      <li>
+        <button type="button" class="pg-btn" aria-label="First page"
+                [disabled]="disabled() || isFirst()" (click)="goTo(1)">
+          <i class="pi pi-angle-double-left" aria-hidden="true"></i>
+        </button>
+      </li>
+    }
+    <li>
+      <button type="button" class="pg-btn" aria-label="Previous page"
+              [disabled]="disabled() || isFirst()" (click)="prev()">
+        <i class="pi pi-angle-left" aria-hidden="true"></i>
+      </button>
+    </li>
+
+    @for (item of pages(); track item.type === 'page' ? item.value : item.key) {
+      <li>
+        @if (item.type === 'page') {
+          <button type="button" class="pg-btn"
+                  [class.active]="item.value === currentPage()"
+                  [attr.aria-current]="item.value === currentPage() ? 'page' : null"
+                  [attr.aria-label]="'Page ' + item.value"
+                  [disabled]="disabled()"
+                  (click)="goTo(item.value)">{{ item.value }}</button>
+        } @else {
+          <span class="pg-ellipsis" aria-hidden="true">…</span>
+        }
+      </li>
+    }
+
+    <li>
+      <button type="button" class="pg-btn" aria-label="Next page"
+              [disabled]="disabled() || isLast()" (click)="next()">
+        <i class="pi pi-angle-right" aria-hidden="true"></i>
+      </button>
+    </li>
+    @if (showFirstLast()) {
+      <li>
+        <button type="button" class="pg-btn" aria-label="Last page"
+                [disabled]="disabled() || isLast()" (click)="goTo(totalPages())">
+          <i class="pi pi-angle-double-right" aria-hidden="true"></i>
+        </button>
+      </li>
+    }
+  </ul>
+
+  @if (pageSizeOptions().length > 1) {
+    <label class="pg-size">
+      <span>Rows</span>
+      <select
+        aria-label="Rows per page"
+        [disabled]="disabled()"
+        (change)="setPageSize(+$any($event.target).value)"
+      >
+        @for (size of pageSizeOptions(); track size) {
+          <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
+        }
+      </select>
+    </label>
+  }
+</div>

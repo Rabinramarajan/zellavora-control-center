@@ -23,71 +23,8 @@ let nextId = 0;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:click)': 'onDocumentClick($event)', '(keydown.escape)': 'open.set(false)' },
-  template: `
-    <div class="relative">
-      <button
-        type="button"
-        [id]="inputId()"
-        [class]="inputClass + ' flex min-h-[40px] items-center justify-between gap-2 text-left'"
-        [attr.aria-expanded]="open()"
-        [attr.aria-controls]="listId"
-        [disabled]="disabled()"
-        (click)="open.set(!open())"
-      >
-        <span class="truncate" [class.text-gray-400]="!value().length">{{ summary() }}</span>
-        <i class="pi pi-chevron-down text-xs text-gray-400" aria-hidden="true"></i>
-      </button>
-      @if (open()) {
-        <div
-          class="absolute z-30 mt-1 w-full min-w-[220px] rounded-lg border border-gray-200 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-gray-900"
-        >
-          @if (options().length > 6) {
-            <input
-              type="search"
-              [class]="inputClass + ' mb-2'"
-              placeholder="Filter…"
-              [attr.aria-label]="'Filter ' + placeholder()"
-              [value]="filter()"
-              (input)="filter.set($any($event.target).value)"
-            />
-          }
-          <ul
-            [id]="listId"
-            role="listbox"
-            aria-multiselectable="true"
-            class="max-h-60 overflow-y-auto"
-          >
-            @for (opt of filtered(); track opt.value) {
-              <li>
-                <label
-                  class="flex min-h-[36px] cursor-pointer items-center gap-2 rounded-md px-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
-                >
-                  <input
-                    type="checkbox"
-                    class="size-4 rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
-                    [checked]="value().includes(opt.value)"
-                    (change)="toggle(opt.value)"
-                  />
-                  {{ opt.label }}
-                </label>
-              </li>
-            } @empty {
-              <li class="px-2 py-3 text-center text-xs text-gray-400">No options</li>
-            }
-          </ul>
-          @if (value().length) {
-            <button
-              type="button"
-              class="mt-1 w-full rounded-md px-2 py-1.5 text-left text-xs font-medium text-indigo-500 hover:bg-indigo-500/10"
-              (click)="value.set([])"
-            >
-              Clear selection
-            </button>
-          }
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './multi-select.component.html',
+  styleUrl: './multi-select.component.scss',
 })
 export class MultiSelectComponent {
   private readonly host = inject(ElementRef<HTMLElement>);

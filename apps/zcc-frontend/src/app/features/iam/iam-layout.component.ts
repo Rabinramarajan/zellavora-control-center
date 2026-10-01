@@ -12,10 +12,7 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet],
   host: { class: 'flex flex-1 flex-col md:min-h-0' },
-  template: `
-    <main class="flex min-w-0 flex-1 flex-col md:min-h-0">
-      <router-outlet />
-    </main>
-  `,
+  templateUrl: './iam-layout.component.html',
+  styleUrl: './iam-layout.component.scss',
 })
 export class IamLayoutComponent {}

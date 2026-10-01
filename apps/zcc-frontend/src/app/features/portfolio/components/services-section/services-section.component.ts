@@ -19,7 +19,7 @@ interface Service {
   standalone: true,
   imports: [FormsModule, ButtonModule, TextareaModule, ToastModule, FormInputControl],
   templateUrl: './services-section.component.html',
-  styleUrl: './services-section.component.css',
+  styleUrl: './services-section.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ServicesSectionComponent {

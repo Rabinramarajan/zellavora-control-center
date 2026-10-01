@@ -27,7 +27,7 @@ interface Highlight {
   standalone: true,
   imports: [FormField, FormRoot, RouterLink, SelectControl, AuthFieldComponent, AuthAlertComponent],
   templateUrl: './login.page.html',
-  styleUrl: '../../ui/auth-showcase.css',
+  styleUrl: '../../ui/auth-showcase.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginPage {

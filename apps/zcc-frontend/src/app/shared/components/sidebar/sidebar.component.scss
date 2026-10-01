@@ -1,0 +1,16 @@
+.active-sub {
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%) !important;
+}
+.active-sub .sub-path {
+  color: #c084fc !important;
+}
+.custom-sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: #13112b;
+  border-radius: 2px;
+}
