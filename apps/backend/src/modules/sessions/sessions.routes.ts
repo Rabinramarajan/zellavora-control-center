@@ -9,10 +9,15 @@ import { SessionIdParamSchema, SessionListQuerySchema, UserIdParamSchema } from 
 const router = Router();
 const service = new SessionsService();
 
-/** The caller's session scope: everyone for the owner (super admin), else their people. */
-const scopeOf = async (organizationId: string, actorId: string) => {
-  const role = await TenantService.assertMembership(actorId, organizationId);
-  return service.resolveScope(organizationId, actorId, role === 'owner');
+/**
+ * The caller's session scope. The super admin (organization owner, or anyone holding the
+ * full-access `*:*` grant) sees everyone; other holders of sessions:view see their people.
+ */
+const scopeOf = async (req: AuthRequest, organizationId: string, actorId: string) => {
+  const fullAccess = req.permissions?.has('*:*') ?? false;
+  const isSuperAdmin =
+    fullAccess || (await TenantService.assertMembership(actorId, organizationId)) === 'owner';
+  return service.resolveScope(organizationId, actorId, isSuperAdmin);
 };
 
 /**
@@ -58,7 +63,7 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const query = SessionListQuerySchema.parse(req.query);
-    const scope = await scopeOf(organizationId, actorId);
+    const scope = await scopeOf(req, organizationId, actorId);
     res.json({
       success: true,
       data: await service.list(organizationId, query, scope, req.sessionId),
@@ -85,7 +90,7 @@ router.get(
   requirePermission('sessions:view'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
-    const scope = await scopeOf(organizationId, actorId);
+    const scope = await scopeOf(req, organizationId, actorId);
     res.json({ success: true, data: await service.stats(organizationId, scope) });
   })
 );
@@ -122,7 +127,7 @@ router.delete(
         organizationId,
         userId,
         actorId,
-        await scopeOf(organizationId, actorId),
+        await scopeOf(req, organizationId, actorId),
         req.sessionId
       ),
     });
@@ -160,7 +165,7 @@ router.delete(
         organizationId,
         id,
         actorId,
-        await scopeOf(organizationId, actorId),
+        await scopeOf(req, organizationId, actorId),
         req.sessionId
       ),
     });
