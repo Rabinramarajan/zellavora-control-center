@@ -1,96 +1,195 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
-import { DepartmentItem } from '../../../shared/models/iam-admin.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
+import { AppDialogService } from '../../../shared/components/dialog';
+import { FormDialogMode, FormDialogService } from '../../../shared/components/form-dialog';
+import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
 import {
-  DataTableComponent,
-  DataTableColumn,
-  EmptyStateComponent,
-  StatusChipComponent,
-} from '../../../shared/components/iam';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { IAM_BTN, IAM_INPUT, IamPageHeaderComponent } from '../shared/iam-page-header.component';
-import { IamDialogsService } from '../shared/iam-dialogs.service';
-import { IamFeedbackService } from '../shared/iam-feedback.service';
-import { departmentFields, toDepartmentRequest } from './department-form';
+  ColumnDef,
+  FilterState,
+  SmartCellDirective,
+  SmartTableComponent,
+} from '../../../shared/components/smart-table';
+import { DepartmentItem } from '../../../shared/models/iam-admin.model';
+import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
+import { departmentDialogConfig, toDepartmentRequest } from './department-dialog.config';
+
+/** Upper bound the API accepts per page; departments are few enough to filter client-side. */
+const LOAD_PAGE_SIZE = 200;
 
 @Component({
   selector: 'zcc-departments-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'filterOpen.set(false)',
+  },
   imports: [
-    IamPageHeaderComponent,
-    DataTableComponent,
-    EmptyStateComponent,
-    StatusChipComponent,
-    PaginationComponent,
+    DatePipe,
     RouterLink,
+    SmartTableComponent,
+    SmartCellDirective,
+    StatusChipComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './departments-list.component.html',
   styleUrl: './departments-list.component.scss',
 })
-export class DepartmentsListComponent {
+export class DepartmentsListComponent implements OnInit {
   private readonly api = inject(IamAdminApiService);
-  private readonly dialogs = inject(IamDialogsService);
+  private readonly dialog = inject(AppDialogService);
+  private readonly formDialog = inject(FormDialogService);
   private readonly feedback = inject(IamFeedbackService);
-  private readonly router = inject(Router);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  protected readonly btn = IAM_BTN;
-  protected readonly inputClass = IAM_INPUT;
-  protected readonly canManage = inject(PermissionService).can('users:manage');
-  private searchTimer: ReturnType<typeof setTimeout> | undefined;
+  readonly canManage = inject(PermissionService).can('users:manage');
 
-  protected readonly columns: DataTableColumn[] = [
-    { key: 'name', label: 'Department' },
-    { key: 'parent', label: 'Parent' },
-    { key: 'members', label: 'Members' },
-    { key: 'children', label: 'Sub-departments' },
-    { key: 'status', label: 'Status' },
+  readonly departments = signal<DepartmentItem[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+
+  readonly filters = signal<FilterState>({ status: '' });
+  readonly pageSize = signal(10);
+  readonly pageSizeOptions = [10, 25, 50, 100] as const;
+
+  readonly trackBy = (d: DepartmentItem) => d.id;
+
+  readonly columns: ColumnDef<DepartmentItem>[] = [
+    { key: 'code', header: 'Code', sortable: true, width: '8rem', value: (d) => d.code ?? '' },
+    { key: 'name', header: 'Department', sortable: true },
+    { key: 'parentName', header: 'Parent', sortable: true, value: (d) => d.parentName ?? '' },
+    { key: 'memberCount', header: 'Members', sortable: true, align: 'right', width: '7rem' },
+    { key: 'childCount', header: 'Sub-depts', sortable: true, align: 'right', width: '7rem' },
+    { key: 'status', header: 'Status', sortable: true, width: '8rem' },
+    { key: 'updatedAt', header: 'Last Updated', sortable: true, width: '9rem' },
+    { key: 'actions', header: '', align: 'right', width: '8.5rem', exportable: false },
   ];
 
-  readonly store = createListStore<DepartmentItem>({
-    initialPageSize: 50,
-    filterKeys: ['status'],
-    loader: (query) => firstValueFrom(this.api.listDepartments(query)),
-  });
+  readonly statusOptions = [
+    { value: '', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ] as const;
 
-  protected onSearch(q: string): void {
-    clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.store.setQ(q.trim()), 300);
+  readonly filterOpen = signal(false);
+  readonly draftStatus = signal('');
+  readonly activeFilterCount = computed(
+    () => Object.values(this.filters()).filter((value) => value !== '').length
+  );
+
+  ngOnInit(): void {
+    void this.load();
   }
 
-  protected onStatus(status: string): void {
-    this.store.setFilters(status ? { status } : {});
-  }
-
-  protected open(d: DepartmentItem): void {
-    void this.router.navigate(['/iam/organization/departments', d.id]);
-  }
-
-  protected async create(): Promise<void> {
-    const parents = await this.parentOptions();
-    await this.dialogs.form({
-      title: 'New department',
-      submitText: 'Create',
-      fields: departmentFields(parents),
-      submit: async (v) => {
-        const created = await firstValueFrom(this.api.createDepartment(toDepartmentRequest(v)));
-        this.feedback.success(`${created.name} created.`);
-        void this.router.navigate(['/iam/organization/departments', created.id]);
-      },
-    });
-  }
-
-  private async parentOptions() {
+  async load(): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
     try {
-      const all = await firstValueFrom(this.api.listDepartments({ page: 1, pageSize: 200 }));
-      return all.data.map((d) => ({ label: d.name, value: d.id }));
+      const page = await firstValueFrom(
+        this.api.listDepartments({ page: 1, pageSize: LOAD_PAGE_SIZE })
+      );
+      this.departments.set(page.data);
     } catch (err) {
-      this.feedback.error(err, 'Could not load departments.');
-      return [];
+      this.error.set(errorMessage(err, 'Could not load departments.'));
+    } finally {
+      this.loading.set(false);
     }
+  }
+
+  async onCreate(): Promise<void> {
+    if (await this.openDialog('create')) {
+      this.feedback.success('Department created.');
+      await this.load();
+    }
+  }
+
+  async onView(d: DepartmentItem): Promise<void> {
+    if (await this.openDialog('view', d)) {
+      this.feedback.success('Department updated.');
+      await this.load();
+    }
+  }
+
+  async onEdit(d: DepartmentItem): Promise<void> {
+    if (await this.openDialog('edit', d)) {
+      this.feedback.success('Department updated.');
+      await this.load();
+    }
+  }
+
+  async onDelete(d: DepartmentItem): Promise<void> {
+    const confirmed = await firstValueFrom(
+      this.dialog.confirm({
+        title: 'Delete department?',
+        message: d.memberCount
+          ? `${d.name} has ${d.memberCount} member(s). They will be unassigned from this department. This cannot be undone.`
+          : `${d.name} will be deleted. This cannot be undone.`,
+        confirmText: 'Delete',
+        variant: 'danger',
+      })
+    );
+    if (!confirmed) return;
+    try {
+      await firstValueFrom(this.api.deleteDepartment(d.id));
+      this.feedback.success(`${d.name} deleted.`);
+      await this.load();
+    } catch (err) {
+      this.feedback.error(err, 'Could not delete the department.');
+    }
+  }
+
+  toggleFilter(): void {
+    if (!this.filterOpen()) this.draftStatus.set(this.filters()['status'] ?? '');
+    this.filterOpen.update((open) => !open);
+  }
+
+  applyFilter(): void {
+    this.filters.update((filters) => ({ ...filters, status: this.draftStatus() }));
+    this.filterOpen.set(false);
+  }
+
+  resetFilter(): void {
+    this.draftStatus.set('');
+    this.filters.set({ status: '' });
+    this.filterOpen.set(false);
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.filterOpen()) return;
+    const popupRoot = this.host.nativeElement.querySelector('[toolbar-end]');
+    if (popupRoot && !popupRoot.contains(event.target as Node)) this.filterOpen.set(false);
+  }
+
+  /** Resolves true when the department was saved, false when the dialog was dismissed. */
+  private async openDialog(mode: FormDialogMode, department?: DepartmentItem): Promise<boolean> {
+    // A department cannot be its own parent; the server also rejects deeper cycles.
+    const parents = this.departments()
+      .filter((p) => p.id !== department?.id)
+      .map((p) => ({ label: p.name, value: p.id }));
+    const config = departmentDialogConfig(
+      mode,
+      parents,
+      (values, action) =>
+        firstValueFrom(
+          action === 'edit' && department
+            ? this.api.updateDepartment(department.id, toDepartmentRequest(values))
+            : this.api.createDepartment(toDepartmentRequest(values))
+        ),
+      department,
+      this.canManage()
+    );
+    return (await this.formDialog.open(config)) !== null;
   }
 }

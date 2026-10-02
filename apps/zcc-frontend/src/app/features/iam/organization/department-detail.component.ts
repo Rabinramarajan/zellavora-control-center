@@ -11,7 +11,8 @@ import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { MembersPanelComponent } from '../shared/members-panel.component';
 import { formatDate } from '../shared/iam-format';
-import { departmentFields, toDepartmentRequest } from './department-form';
+import { FormDialogService } from '../../../shared/components/form-dialog';
+import { departmentDialogConfig, toDepartmentRequest } from './department-dialog.config';
 
 @Component({
   selector: 'zcc-department-detail',
@@ -35,6 +36,7 @@ export class DepartmentDetailComponent {
 
   private readonly api = inject(IamAdminApiService);
   private readonly dialogs = inject(IamDialogsService);
+  private readonly formDialog = inject(FormDialogService);
   private readonly feedback = inject(IamFeedbackService);
   private readonly router = inject(Router);
 
@@ -74,16 +76,21 @@ export class DepartmentDetailComponent {
     } catch (err) {
       this.feedback.error(err, 'Could not load departments.');
     }
-    await this.dialogs.form({
-      title: `Edit ${d.name}`,
-      fields: departmentFields(parents, d),
-      submit: async (v) => {
-        this.dept.set(
-          await firstValueFrom(this.api.updateDepartment(d.id, toDepartmentRequest(v)))
-        );
-        this.feedback.success('Department updated.');
-      },
-    });
+    const saved = await this.formDialog.open(
+      departmentDialogConfig(
+        'edit',
+        parents,
+        async (values) => {
+          const updated = await firstValueFrom(
+            this.api.updateDepartment(d.id, toDepartmentRequest(values))
+          );
+          this.dept.set(updated);
+          return updated;
+        },
+        d
+      )
+    );
+    if (saved) this.feedback.success('Department updated.');
   }
 
   protected async remove(d: DepartmentDetail): Promise<void> {
