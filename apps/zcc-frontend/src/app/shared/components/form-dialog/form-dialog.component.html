@@ -1,0 +1,332 @@
+<header class="fd-header">
+  <span class="fd-header__icon" aria-hidden="true"><i [class]="headerIcon()"></i></span>
+  <div class="fd-header__text">
+    <h2 class="fd-header__title" [id]="titleId">
+      {{ title() }}
+      @if (config.badge) {
+        <span class="fd-badge">{{ config.badge }}</span>
+      }
+    </h2>
+    @if (subtitle()) {
+      <p class="fd-header__subtitle">{{ subtitle() }}</p>
+    }
+  </div>
+  <button
+    type="button"
+    class="fd-close"
+    aria-label="Close dialog"
+    [disabled]="saving()"
+    (click)="requestClose()"
+  >
+    <i class="pi pi-times" aria-hidden="true"></i>
+  </button>
+</header>
+
+@if (saving()) {
+  <div class="fd-progress" role="progressbar" aria-label="Saving"></div>
+}
+
+<form [id]="formId" class="fd-body" novalidate (submit)="onSubmit($event)">
+  @for (section of config.sections; track section.title) {
+    <section class="fd-section" [attr.aria-labelledby]="formId + '-s' + $index">
+      <h3 class="fd-section__title" [id]="formId + '-s' + $index">{{ section.title }}</h3>
+      <div class="fd-grid">
+        @for (field of section.fields; track field.key) {
+          <div
+            class="fd-field"
+            [class.fd-field--full]="field.span === 2 || field.type === 'textarea'"
+          >
+            @if (field.type !== 'checkbox') {
+              <label class="fd-label" [for]="fieldId(field)" [id]="fieldId(field) + '-label'">
+                {{ field.label }}
+                @if (field.required && !isLocked(field)) {
+                  <span class="fd-required" aria-hidden="true">*</span>
+                }
+              </label>
+            }
+
+            @if (isLocked(field)) {
+              <!-- Read-only presentation -->
+              @switch (field.type) {
+                @case ('multiselect') {
+                  <div class="fd-readonly fd-readonly--chips" [id]="fieldId(field)">
+                    @for (v of list(field); track v) {
+                      <span class="fd-chip">{{ optionLabel(field, v) }}</span>
+                    } @empty {
+                      —
+                    }
+                  </div>
+                }
+                @case ('textarea') {
+                  <div class="fd-readonly fd-readonly--area" [id]="fieldId(field)">
+                    {{ display(field) }}
+                  </div>
+                }
+                @default {
+                  <div class="fd-readonly" [id]="fieldId(field)">
+                    @if (field.displayAs === 'status' && text(field)) {
+                      <span
+                        class="fd-status"
+                        [class.fd-status--on]="text(field) === 'active' || text(field) === 'ACTIVE'"
+                      >
+                        <span class="fd-status__dot" aria-hidden="true"></span>
+                        {{ display(field) }}
+                      </span>
+                    } @else if (field.type === 'toggle') {
+                      <span class="fd-status" [class.fd-status--on]="!!values()[field.key]">
+                        <span class="fd-status__dot" aria-hidden="true"></span>
+                        {{ values()[field.key] ? (field.inlineLabel ?? 'Enabled') : 'Disabled' }}
+                      </span>
+                    } @else {
+                      {{ display(field) }}
+                    }
+                  </div>
+                }
+              }
+            } @else {
+              <!-- Editable controls -->
+              @switch (field.type) {
+                @case ('textarea') {
+                  <textarea
+                    class="fd-input fd-input--area"
+                    [id]="fieldId(field)"
+                    [rows]="field.rows ?? 3"
+                    [placeholder]="field.placeholder ?? ''"
+                    [attr.maxlength]="field.maxLength ?? null"
+                    [attr.aria-required]="field.required || null"
+                    [attr.aria-invalid]="!!visibleError(field)"
+                    [attr.aria-describedby]="describedBy(field)"
+                    [disabled]="saving()"
+                    [value]="text(field)"
+                    (input)="set(field, $any($event.target).value)"
+                    (blur)="touch(field)"
+                  ></textarea>
+                }
+                @case ('select') {
+                  <div class="fd-control">
+                    <select
+                      class="fd-input fd-input--select"
+                      [id]="fieldId(field)"
+                      [attr.aria-required]="field.required || null"
+                      [attr.aria-invalid]="!!visibleError(field)"
+                      [attr.aria-describedby]="describedBy(field)"
+                      [disabled]="saving()"
+                      (change)="set(field, $any($event.target).value || null)"
+                      (blur)="touch(field)"
+                    >
+                      <option value="" [selected]="!text(field)" [disabled]="field.required">
+                        {{ field.placeholder ?? 'Select ' + field.label.toLowerCase() }}
+                      </option>
+                      @for (opt of field.options ?? []; track opt.value) {
+                        <option [value]="opt.value" [selected]="text(field) === opt.value">
+                          {{ opt.label }}
+                        </option>
+                      }
+                    </select>
+                    <i class="pi pi-chevron-down fd-control__trail" aria-hidden="true"></i>
+                  </div>
+                }
+                @case ('multiselect') {
+                  <div class="fd-multi">
+                    <button
+                      type="button"
+                      class="fd-input fd-multi__trigger"
+                      aria-haspopup="listbox"
+                      [id]="fieldId(field)"
+                      [attr.aria-expanded]="openMulti() === field.key"
+                      [attr.aria-invalid]="!!visibleError(field)"
+                      [attr.aria-describedby]="describedBy(field)"
+                      [disabled]="saving()"
+                      (click)="toggleMulti(field, $event)"
+                      (blur)="touch(field)"
+                    >
+                      @for (v of list(field); track v) {
+                        <span class="fd-chip fd-chip--removable">
+                          {{ optionLabel(field, v) }}
+                          <span
+                            class="fd-chip__remove"
+                            role="button"
+                            tabindex="-1"
+                            [attr.aria-label]="'Remove ' + optionLabel(field, v)"
+                            (click)="toggleOption(field, v); $event.stopPropagation()"
+                          >
+                            <i class="pi pi-times" aria-hidden="true"></i>
+                          </span>
+                        </span>
+                      } @empty {
+                        <span class="fd-placeholder">{{
+                          field.placeholder ?? 'Select options'
+                        }}</span>
+                      }
+                      <i class="pi pi-chevron-down fd-multi__caret" aria-hidden="true"></i>
+                    </button>
+                    @if (openMulti() === field.key) {
+                      <ul
+                        class="fd-multi__panel"
+                        role="listbox"
+                        aria-multiselectable="true"
+                        [attr.aria-labelledby]="fieldId(field) + '-label'"
+                      >
+                        @for (opt of field.options ?? []; track opt.value) {
+                          <li>
+                            <label class="fd-multi__option">
+                              <input
+                                type="checkbox"
+                                class="fd-checkbox"
+                                [checked]="list(field).includes(opt.value)"
+                                (change)="toggleOption(field, opt.value)"
+                              />
+                              {{ opt.label }}
+                            </label>
+                          </li>
+                        } @empty {
+                          <li class="fd-multi__empty">No options available</li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                }
+                @case ('toggle') {
+                  <label class="fd-toggle">
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      class="fd-switch"
+                      [id]="fieldId(field)"
+                      [attr.aria-describedby]="describedBy(field)"
+                      [checked]="!!values()[field.key]"
+                      [disabled]="saving()"
+                      (change)="set(field, $any($event.target).checked)"
+                    />
+                    <span>{{
+                      values()[field.key] ? (field.inlineLabel ?? 'Enabled') : 'Disabled'
+                    }}</span>
+                  </label>
+                }
+                @case ('checkbox') {
+                  <label class="fd-check-row" [for]="fieldId(field)">
+                    <input
+                      type="checkbox"
+                      class="fd-checkbox"
+                      [id]="fieldId(field)"
+                      [attr.aria-required]="field.required || null"
+                      [attr.aria-invalid]="!!visibleError(field)"
+                      [attr.aria-describedby]="describedBy(field)"
+                      [checked]="!!values()[field.key]"
+                      [disabled]="saving()"
+                      (change)="set(field, $any($event.target).checked); touch(field)"
+                    />
+                    <span>
+                      {{ field.inlineLabel ?? field.label }}
+                      @if (field.required) {
+                        <span class="fd-required" aria-hidden="true">*</span>
+                      }
+                    </span>
+                  </label>
+                }
+                @default {
+                  <div
+                    class="fd-control"
+                    [class.fd-control--lead]="iconFor(field)"
+                    [class.fd-control--error]="!!visibleError(field)"
+                  >
+                    @if (iconFor(field); as icon) {
+                      <i [class]="icon + ' fd-control__lead'" aria-hidden="true"></i>
+                    }
+                    <input
+                      class="fd-input"
+                      [id]="fieldId(field)"
+                      [type]="
+                        field.type === 'password' && revealed().has(field.key) ? 'text' : field.type
+                      "
+                      [attr.inputmode]="field.type === 'tel' ? 'tel' : null"
+                      [attr.autocomplete]="field.type === 'password' ? 'new-password' : 'off'"
+                      [placeholder]="field.placeholder ?? ''"
+                      [attr.min]="field.min ?? null"
+                      [attr.max]="field.max ?? null"
+                      [attr.maxlength]="field.maxLength ?? null"
+                      [attr.aria-required]="field.required || null"
+                      [attr.aria-invalid]="!!visibleError(field)"
+                      [attr.aria-describedby]="describedBy(field)"
+                      [disabled]="saving()"
+                      [value]="text(field)"
+                      (input)="set(field, $any($event.target).value)"
+                      (blur)="touch(field)"
+                    />
+                    @if (field.type === 'password') {
+                      <button
+                        type="button"
+                        class="fd-control__action"
+                        [attr.aria-label]="
+                          revealed().has(field.key) ? 'Hide password' : 'Show password'
+                        "
+                        (click)="toggleReveal(field)"
+                      >
+                        <i
+                          [class]="revealed().has(field.key) ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                          aria-hidden="true"
+                        ></i>
+                      </button>
+                    } @else if (visibleError(field)) {
+                      <i
+                        class="pi pi-exclamation-circle fd-control__trail fd-control__trail--error"
+                        aria-hidden="true"
+                      ></i>
+                    }
+                  </div>
+                }
+              }
+            }
+
+            @if (visibleError(field); as err) {
+              <p class="fd-message fd-message--error" [id]="fieldId(field) + '-err'">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i>{{ err }}
+              </p>
+            } @else if (field.hint && !readOnly()) {
+              <p class="fd-message" [id]="fieldId(field) + '-hint'">
+                <i class="pi pi-info-circle" aria-hidden="true"></i>{{ field.hint }}
+              </p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  @if (serverError()) {
+    <div role="alert" class="fd-alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <span>{{ serverError() }}</span>
+    </div>
+  }
+</form>
+
+<footer class="fd-footer">
+  @if (readOnly()) {
+    <button type="button" class="fd-btn fd-btn--ghost" (click)="requestClose()">Close</button>
+    @if (config.canEdit) {
+      <button type="button" class="fd-btn fd-btn--primary" (click)="startEditing()">
+        <i class="pi pi-pencil" aria-hidden="true"></i>
+        Edit
+      </button>
+    }
+  } @else {
+    <button
+      type="button"
+      class="fd-btn fd-btn--ghost"
+      [disabled]="saving()"
+      (click)="requestClose()"
+    >
+      Cancel
+    </button>
+    <button type="submit" class="fd-btn fd-btn--primary" [attr.form]="formId" [disabled]="saving()">
+      @if (saving()) {
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+        Saving…
+      } @else {
+        <i [class]="mode() === 'create' ? 'pi pi-plus' : 'pi pi-save'" aria-hidden="true"></i>
+        {{ submitText() }}
+      }
+    </button>
+  }
+</footer>

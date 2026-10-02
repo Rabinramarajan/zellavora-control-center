@@ -20,13 +20,9 @@ import {
   SmartTableComponent,
 } from '../../../../../shared/components/smart-table';
 import { BranchItem } from '../../../../../shared/models/iam-admin.model';
-import {
-  FormDialogData,
-  FormValues,
-  IamFormDialogComponent,
-} from '../../../../iam/shared/iam-form-dialog.component';
 import { IamFeedbackService, errorMessage } from '../../../../iam/shared/iam-feedback.service';
-import { branchFields, toBranchRequest } from './branch-form';
+import { FormDialogMode, FormDialogService } from '../../../../../shared/components/form-dialog';
+import { branchDialogConfig, toBranchRequest } from './branch-dialog.config';
 
 /** Upper bound the API accepts per page; branches are few enough to filter client-side. */
 const LOAD_PAGE_SIZE = 200;
@@ -52,6 +48,7 @@ const LOAD_PAGE_SIZE = 200;
 export class BranchManagerComponent implements OnInit {
   private readonly api = inject(IamAdminApiService);
   private readonly dialog = inject(AppDialogService);
+  private readonly formDialog = inject(FormDialogService);
   private readonly feedback = inject(IamFeedbackService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -116,42 +113,21 @@ export class BranchManagerComponent implements OnInit {
   }
 
   async onCreate(): Promise<void> {
-    const saved = await this.openForm({
-      title: 'New branch',
-      description: 'The branch code is generated automatically when you save.',
-      submitText: 'Create branch',
-      fields: branchFields(),
-      submit: (v) => firstValueFrom(this.api.createBranch(toBranchRequest(v))),
-    });
-    if (saved) {
+    if (await this.openBranchDialog('create')) {
       this.feedback.success('Branch created.');
       await this.load();
     }
   }
 
   async onView(branch: BranchItem): Promise<void> {
-    await this.openForm({
-      title: branch.name,
-      description: branch.code ? `Branch code ${branch.code}` : undefined,
-      submitText: 'Close',
-      fields: branchFields(branch, true),
-      submit: async () => undefined,
-    });
+    if (await this.openBranchDialog('view', branch)) {
+      this.feedback.success('Branch updated.');
+      await this.load();
+    }
   }
 
   async onEdit(branch: BranchItem): Promise<void> {
-    const saved = await this.openForm({
-      title: `Edit ${branch.name}`,
-      submitText: 'Save changes',
-      fields: branchFields(branch),
-      submit: (v) => {
-        const body = toBranchRequest(v);
-        // The toggle is locked on the head office; never send a demotion from here.
-        if (branch.isHeadOffice) delete body.isHeadOffice;
-        return firstValueFrom(this.api.updateBranch(branch.id, body));
-      },
-    });
-    if (saved) {
+    if (await this.openBranchDialog('edit', branch)) {
       this.feedback.success('Branch updated.');
       await this.load();
     }
@@ -200,12 +176,19 @@ export class BranchManagerComponent implements OnInit {
     if (popupRoot && !popupRoot.contains(event.target as Node)) this.filterOpen.set(false);
   }
 
-  /** Resolves true when the form was submitted successfully, false when cancelled. */
-  private async openForm(data: FormDialogData): Promise<boolean> {
-    const ref = this.dialog.open<IamFormDialogComponent, FormDialogData, FormValues | null>(
-      IamFormDialogComponent,
-      { data, size: 'md', disableClose: true }
+  /** Resolves true when the branch was saved, false when the dialog was dismissed. */
+  private async openBranchDialog(mode: FormDialogMode, branch?: BranchItem): Promise<boolean> {
+    const config = branchDialogConfig(
+      mode,
+      (values, action) =>
+        firstValueFrom(
+          action === 'edit' && branch
+            ? this.api.updateBranch(branch.id, toBranchRequest(values))
+            : this.api.createBranch(toBranchRequest(values))
+        ),
+      branch,
+      this.canManage()
     );
-    return (await firstValueFrom(ref.closed)) != null;
+    return (await this.formDialog.open(config)) !== null;
   }
 }
