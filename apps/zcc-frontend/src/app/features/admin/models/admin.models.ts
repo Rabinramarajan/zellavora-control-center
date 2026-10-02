@@ -276,8 +276,11 @@ export interface BranchSearchResult extends PaginatedResult<BranchSearchResultSe
 
 export interface BranchSearchResultSet {
   admBranchId: string;
+  branchCode?: string;
   branchName: string;
   effectiveDate: string;
+  statusId?: number;
+  statusValue?: string;
   statusDescription: string;
 }
 

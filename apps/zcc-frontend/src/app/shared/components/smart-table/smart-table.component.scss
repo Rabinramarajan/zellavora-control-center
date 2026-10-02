@@ -52,6 +52,11 @@
   display: none;
 }
 
+// Keep end controls pinned right even when the start slot is empty and hidden.
+.st-toolbar__end {
+  margin-left: auto;
+}
+
 .st-search {
   --zv-control-height: 36px;
   width: 12rem;
@@ -94,8 +99,21 @@
 /* ---------- table ---------- */
 
 .st-scroll {
+  display: flex;
+  flex-direction: column;
   flex: var(--st-body-flex, 0 1 auto);
   overflow-x: auto;
+}
+
+// Lives outside the table so it can grow and centre within a full-height body.
+.st-empty-state {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 10rem;
+  border-bottom: 1px solid var(--st-line);
 }
 
 .st-table {
@@ -188,9 +206,6 @@
   color: var(--st-accent);
 }
 
-.st-td--empty {
-  padding: 0;
-}
 
 .st-empty {
   padding: 2.5rem 1rem;

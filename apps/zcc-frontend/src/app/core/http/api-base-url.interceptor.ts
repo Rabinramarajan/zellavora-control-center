@@ -13,9 +13,12 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const configService = inject(ConfigService);
-  const supabaseFunctionsUrl =
-    configService.get('apiUrls.supabaseFunctions') || 'https://zcc-backend.vercel.app/api/v1';
-  const adminApiUrl = configService.get('apiUrls.adminApi') || 'https://zcc-backend.vercel.app';
+  const supabaseFunctionsUrl = (
+    configService.get('apiUrls.supabaseFunctions') || 'https://api.zellavora.com/api/v1'
+  ).replace(/\/+$/, '');
+  const adminApiUrl = (
+    configService.get('apiUrls.adminApi') || 'https://api.zellavora.com/api/v1/admin'
+  ).replace(/\/+$/, '');
 
   let rewrittenUrl = req.url;
 

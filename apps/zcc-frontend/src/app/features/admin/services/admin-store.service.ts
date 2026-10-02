@@ -226,13 +226,25 @@ export class AdminStoreService {
   async loadBranches(criteria: BranchSearchCriteria): Promise<Branch[]> {
     return this.runOperation(async () => {
       const result = await this.api.searchBranches(criteria);
-      const branches = (result.searchResultSet || []) as any[];
+      const branches = (result.searchResultSet || []).map(
+        (r): Branch => ({
+          admBranchId: Number(r.admBranchId),
+          actCompanyId: 0,
+          admLocationId: 0,
+          admRegionId: 0,
+          branchCode: r.branchCode ?? '',
+          branchName: r.branchName,
+          effectiveDate: r.effectiveDate,
+          statusId: r.statusId ?? 0,
+          statusValue: r.statusValue ?? r.statusDescription ?? '',
+        })
+      );
       this.state.update((s) => ({
         ...s,
-        branches: branches as Branch[],
+        branches,
         lastUpdated: new Date(),
       }));
-      return branches as Branch[];
+      return branches;
     }, 'Failed to load branches');
   }
 

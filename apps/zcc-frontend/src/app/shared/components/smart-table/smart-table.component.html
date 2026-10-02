@@ -132,20 +132,20 @@
               </td>
             }
           </tr>
-        } @empty {
-          <tr>
-            <td class="st-td st-td--empty" [attr.colspan]="columnSpan()">
-              @if (emptyTemplate(); as empty) {
-                <ng-container [ngTemplateOutlet]="empty.template" />
-              } @else {
-                <p class="st-empty">{{ emptyMessage() }}</p>
-              }
-            </td>
-          </tr>
         }
       }
     </tbody>
   </table>
+
+  @if (!showSkeleton() && store.pageRows().length === 0) {
+    <div class="st-empty-state">
+      @if (emptyTemplate(); as empty) {
+        <ng-container [ngTemplateOutlet]="empty.template" />
+      } @else {
+        <p class="st-empty">{{ emptyMessage() }}</p>
+      }
+    </div>
+  }
 </div>
 
 @if (paginated()) {

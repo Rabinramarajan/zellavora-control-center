@@ -614,8 +614,11 @@ router.post(['/branches/search', '/Branch/Branch/Search'], authenticate, async (
   try {
     const searchResultSet = currentBranches.map((b) => ({
       admBranchId: String(b.admBranchId),
+      branchCode: b.branchCode,
       branchName: b.branchName,
       effectiveDate: b.effectiveDate,
+      statusId: b.statusId,
+      statusValue: b.statusValue,
       statusDescription: b.statusValue,
     }));
     res.json(

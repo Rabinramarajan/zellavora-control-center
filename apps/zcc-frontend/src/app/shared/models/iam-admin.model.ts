@@ -82,6 +82,41 @@ export interface SaveDepartmentRequest {
   status?: DepartmentStatus;
 }
 
+export type BranchStatus = 'active' | 'inactive';
+
+export interface BranchItem {
+  id: string;
+  /** Server-generated and immutable, e.g. BR-0001. */
+  code: string | null;
+  name: string;
+  isHeadOffice: boolean;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  pincode: string | null;
+  phone: string | null;
+  email: string | null;
+  status: BranchStatus;
+  userCount: number;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveBranchRequest {
+  name: string;
+  isHeadOffice?: boolean;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  pincode?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  status?: BranchStatus;
+}
+
 export interface TeamItem {
   id: string;
   name: string;

@@ -159,6 +159,7 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | POST   | `/api/v1/branches`      | createBranch | `postBranches`    |
 | GET    | `/api/v1/branches/{id}` | getBranchById | `getBranchesById` |
 | PUT    | `/api/v1/branches/{id}` | updateBranch | `putBranchesById` |
+| DELETE | `/api/v1/branches/{id}` | deleteBranch | `deleteBranchesById` |
 
 ## dailySheets
 

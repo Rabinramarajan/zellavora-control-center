@@ -11,6 +11,7 @@ import {
   ConfigurationList,
   CreateCatalogPermissionRequest,
   DeliverySummary,
+  BranchItem,
   DepartmentDetail,
   DepartmentItem,
   LoginPolicy,
@@ -18,6 +19,7 @@ import {
   MfaPolicy,
   PasswordPolicy,
   PermissionGroupItem,
+  SaveBranchRequest,
   SaveDepartmentRequest,
   SaveTeamRequest,
   SecurityPolicies,
@@ -112,6 +114,20 @@ export class IamAdminApiService {
   }
   removeDepartmentMember(id: string, userId: string): Observable<DepartmentDetail> {
     return this.delete(`/iam/departments/${id}/members/${userId}`);
+  }
+
+  // Branches ------------------------------------------------------------------
+  listBranches(params: QueryParams): Observable<PaginatedList<BranchItem>> {
+    return this.get('/branches', params);
+  }
+  createBranch(body: SaveBranchRequest): Observable<BranchItem> {
+    return this.post('/branches', body);
+  }
+  updateBranch(id: string, body: Partial<SaveBranchRequest>): Observable<BranchItem> {
+    return this.put(`/branches/${id}`, body);
+  }
+  deleteBranch(id: string): Observable<unknown> {
+    return this.delete(`/branches/${id}`);
   }
 
   // Teams ---------------------------------------------------------------------
