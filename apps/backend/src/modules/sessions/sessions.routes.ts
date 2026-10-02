@@ -2,17 +2,26 @@ import { Router, type Response } from 'express';
 import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { orgContextOf } from '../../middleware/org-context';
+import { TenantService } from '../../services/auth';
 import { SessionsService } from './sessions.service';
 import { SessionIdParamSchema, SessionListQuerySchema, UserIdParamSchema } from './sessions.dto';
 
 const router = Router();
 const service = new SessionsService();
 
+/** The caller's session scope: everyone for the owner (super admin), else their people. */
+const scopeOf = async (organizationId: string, actorId: string) => {
+  const role = await TenantService.assertMembership(actorId, organizationId);
+  return service.resolveScope(organizationId, actorId, role === 'owner');
+};
+
 /**
  * @swagger
  * tags:
  *   name: iamSessions
- *   description: Live sign-in sessions across the organization.
+ *   description: >-
+ *     Live sign-in sessions. The organization owner sees everyone; callers granted
+ *     sessions:view see themselves, their reporting chain and their teams.
  */
 
 /**
@@ -45,11 +54,15 @@ const service = new SessionsService();
 router.get(
   '/',
   authenticate,
-  requirePermission('users:manage'),
+  requirePermission('sessions:view'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { organizationId } = orgContextOf(req);
+    const { organizationId, actorId } = orgContextOf(req);
     const query = SessionListQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.list(organizationId, query, req.sessionId) });
+    const scope = await scopeOf(organizationId, actorId);
+    res.json({
+      success: true,
+      data: await service.list(organizationId, query, scope, req.sessionId),
+    });
   })
 );
 
@@ -69,10 +82,11 @@ router.get(
 router.get(
   '/stats',
   authenticate,
-  requirePermission('users:manage'),
+  requirePermission('sessions:view'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { organizationId } = orgContextOf(req);
-    res.json({ success: true, data: await service.stats(organizationId) });
+    const { organizationId, actorId } = orgContextOf(req);
+    const scope = await scopeOf(organizationId, actorId);
+    res.json({ success: true, data: await service.stats(organizationId, scope) });
   })
 );
 
@@ -98,13 +112,19 @@ router.get(
 router.delete(
   '/users/:userId',
   authenticate,
-  requirePermission('users:manage'),
+  requirePermission('sessions:revoke'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const { userId } = UserIdParamSchema.parse(req.params);
     res.json({
       success: true,
-      data: await service.revokeAllForUser(organizationId, userId, actorId, req.sessionId),
+      data: await service.revokeAllForUser(
+        organizationId,
+        userId,
+        actorId,
+        await scopeOf(organizationId, actorId),
+        req.sessionId
+      ),
     });
   })
 );
@@ -130,13 +150,19 @@ router.delete(
 router.delete(
   '/:id',
   authenticate,
-  requirePermission('users:manage'),
+  requirePermission('sessions:revoke'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const { id } = SessionIdParamSchema.parse(req.params);
     res.json({
       success: true,
-      data: await service.revoke(organizationId, id, actorId, req.sessionId),
+      data: await service.revoke(
+        organizationId,
+        id,
+        actorId,
+        await scopeOf(organizationId, actorId),
+        req.sessionId
+      ),
     });
   })
 );

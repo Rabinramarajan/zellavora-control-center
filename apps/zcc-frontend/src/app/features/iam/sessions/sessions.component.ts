@@ -10,6 +10,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
 import { AppDialogService } from '../../../shared/components/dialog';
 import { FormDialogService } from '../../../shared/components/form-dialog';
 import { EmptyStateComponent } from '../../../shared/components/iam';
@@ -45,6 +46,9 @@ export class SessionsComponent implements OnInit {
   private readonly formDialog = inject(FormDialogService);
   private readonly feedback = inject(IamFeedbackService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Delegated holders may view without revoking; the owner (`*:*`) can always revoke. */
+  readonly canRevoke = inject(PermissionService).can('sessions:revoke');
 
   readonly initialsOf = initials;
   readonly relative = relativeTime;

@@ -46,8 +46,11 @@ export class SessionsRepository extends BaseRepository {
     });
   }
 
-  async stats(organizationId: string, tx?: TxClient) {
-    const where = this.liveWhere(organizationId);
+  async stats(organizationId: string, userIds?: string[], tx?: TxClient) {
+    const where: Prisma.SessionWhereInput = {
+      ...this.liveWhere(organizationId),
+      ...(userIds && { userId: { in: userIds } }),
+    };
     const [active, users] = await Promise.all([
       this.getDb(tx).session.count({ where }),
       this.getDb(tx).session.groupBy({ by: ['userId'], where }),
@@ -72,6 +75,29 @@ export class SessionsRepository extends BaseRepository {
         ...(exceptId ? { id: { not: exceptId } } : {}),
       },
       data: { isActive: false },
+    });
+  }
+
+  /** Users of the organization whose reporting manager is one of `managerIds`. */
+  directReports(organizationId: string, managerIds: string[], tx?: TxClient) {
+    return this.getDb(tx).user.findMany({
+      where: {
+        reportingManagerId: { in: managerIds },
+        userTenants: { some: { tenantId: organizationId } },
+      },
+      select: { id: true },
+    });
+  }
+
+  /** Everyone who shares a live team with `userId` in the organization. */
+  teammates(organizationId: string, userId: string, tx?: TxClient) {
+    return this.getDb(tx).user.findMany({
+      where: {
+        teams: {
+          some: { organizationId, deletedAt: null, members: { some: { id: userId } } },
+        },
+      },
+      select: { id: true },
     });
   }
 }

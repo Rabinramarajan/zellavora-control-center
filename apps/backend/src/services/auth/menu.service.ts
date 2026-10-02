@@ -331,7 +331,8 @@ const DEFAULT_MENU: MenuDef[] = [
         icon: '🔒',
         route: '/iam/sessions',
         orderIndex: 8,
-        requiredPermission: 'users:manage',
+        // Owner (`*:*`) sees everyone; delegated holders see only their people.
+        requiredPermission: 'sessions:view',
       },
       {
         id: 'iam-security',

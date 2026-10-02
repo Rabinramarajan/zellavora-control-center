@@ -2,7 +2,8 @@
   <div>
     <h1 class="text-xl font-bold text-gray-900 dark:text-white">Sessions</h1>
     <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-      Everyone currently signed in. Revoking a session signs that device out on its next request.
+      Signed-in sessions you oversee: everyone for the super admin, otherwise the people who report
+      to you and your teams. Revoking signs that device out on its next request.
     </p>
   </div>
   <button
@@ -198,26 +199,28 @@
         >
           <i class="pi pi-eye text-sm" aria-hidden="true"></i>
         </button>
-        <button
-          type="button"
-          class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-          [attr.aria-label]="'Revoke this session for ' + s.userName"
-          [attr.title]="s.isCurrent ? 'You cannot revoke your current session' : 'Revoke session'"
-          [disabled]="s.isCurrent || busy()"
-          (click)="onRevoke(s)"
-        >
-          <i class="pi pi-sign-out text-sm" aria-hidden="true"></i>
-        </button>
-        <button
-          type="button"
-          class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-          [attr.aria-label]="'Sign ' + s.userName + ' out everywhere'"
-          title="Sign out everywhere"
-          [disabled]="busy()"
-          (click)="onRevokeAll(s)"
-        >
-          <i class="pi pi-power-off text-sm" aria-hidden="true"></i>
-        </button>
+        @if (canRevoke()) {
+          <button
+            type="button"
+            class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            [attr.aria-label]="'Revoke this session for ' + s.userName"
+            [attr.title]="s.isCurrent ? 'You cannot revoke your current session' : 'Revoke session'"
+            [disabled]="s.isCurrent || busy()"
+            (click)="onRevoke(s)"
+          >
+            <i class="pi pi-sign-out text-sm" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            [attr.aria-label]="'Sign ' + s.userName + ' out everywhere'"
+            title="Sign out everywhere"
+            [disabled]="busy()"
+            (click)="onRevokeAll(s)"
+          >
+            <i class="pi pi-power-off text-sm" aria-hidden="true"></i>
+          </button>
+        }
       </div>
     </ng-template>
   </app-smart-table>

@@ -6,7 +6,11 @@ import { sendPasswordResetEmail } from '../../infrastructure/queue';
 import { AppError } from '../../middleware/error';
 import { OneTimeTokenService } from '../../services/auth';
 import { InvitationService } from '../invitation/invitation.service';
-import { SessionsService, describeUserAgent } from '../sessions/sessions.service';
+import {
+  ORG_WIDE_SESSION_SCOPE,
+  SessionsService,
+  describeUserAgent,
+} from '../sessions/sessions.service';
 import {
   STATUS_LABELS,
   TYPE_LABELS,
@@ -493,6 +497,7 @@ export class UserAdminService {
       actor.organizationId,
       sessionId,
       actor.userId,
+      ORG_WIDE_SESSION_SCOPE,
       actor.sessionId
     );
     return this.sessions(id, actor);
@@ -506,6 +511,7 @@ export class UserAdminService {
       actor.organizationId,
       id,
       actor.userId,
+      ORG_WIDE_SESSION_SCOPE,
       actor.sessionId
     );
     return { ...result, sessions: await this.sessions(id, actor) };
@@ -561,6 +567,7 @@ export class UserAdminService {
       actor.organizationId,
       id,
       actor.userId,
+      ORG_WIDE_SESSION_SCOPE,
       actor.sessionId
     );
     await this.issuePasswordReset(user, 'Admin: require password change');

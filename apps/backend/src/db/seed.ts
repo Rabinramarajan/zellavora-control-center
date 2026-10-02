@@ -274,6 +274,8 @@ async function main() {
         ['resources', 'read', 'View protected resources'],
         ['resources', 'manage', 'Create, edit and delete protected resources'],
         ['settings', 'manage', 'Manage security policies, configuration and communications'],
+        ['sessions', 'view', 'View live sign-in sessions of the people you manage or lead'],
+        ['sessions', 'revoke', 'Sign out sessions of the people you manage or lead'],
       ] as const
     ).map(([resource, action, description]) => ({
       name: `${action}:${resource}`,

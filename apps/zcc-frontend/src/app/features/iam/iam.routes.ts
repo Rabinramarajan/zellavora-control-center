@@ -103,7 +103,8 @@ export const iamRoutes: Routes = [
       },
       {
         path: 'sessions',
-        canMatch: [canMatchPermission('users:manage')],
+        // Owner sees everyone; delegated managers / team leads see only their people.
+        canMatch: [canMatchPermission('sessions:view')],
         loadComponent: () =>
           import('./sessions/sessions.component').then((m) => m.SessionsComponent),
         data: { title: 'Sessions' },

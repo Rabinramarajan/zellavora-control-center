@@ -78,4 +78,12 @@ describe('selected menu access', () => {
       'system-email',
     ]);
   });
+  it('shows Sessions only with the delegated sessions:view permission', async () => {
+    const iamKeys = async (perms: string[]) =>
+      (await MenuService.loadForUserWithPerms('u', 'org', new Set(perms)))
+        .find((menu) => menu.key === 'iam')!
+        .children.map((menu) => menu.key);
+    expect(await iamKeys(['users:read', 'users:manage'])).not.toContain('iam-sessions');
+    expect(await iamKeys(['users:read', 'sessions:view'])).toContain('iam-sessions');
+  });
 });
