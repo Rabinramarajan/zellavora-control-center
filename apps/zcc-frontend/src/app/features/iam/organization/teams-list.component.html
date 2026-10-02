@@ -1,93 +1,195 @@
-<zcc-iam-page-header
-  title="Teams"
-  icon="pi pi-sitemap"
-  description="Cross-functional teams and their members."
->
+<div class="mb-6 flex shrink-0 items-center justify-between gap-4">
+  <div>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Teams</h1>
+    <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+      Cross-functional groups of people who work together.
+    </p>
+  </div>
   @if (canManage()) {
-    <button type="button" [class]="btn.primary" (click)="create()">
+    <button
+      type="button"
+      class="btn-37 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+      (click)="onCreate()"
+    >
       <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-      New team
+      New Team
     </button>
   }
-</zcc-iam-page-header>
-
-<div class="mb-4 sm:max-w-sm">
-  <label for="team-search" class="sr-only">Search teams</label>
-  <input
-    id="team-search"
-    type="search"
-    placeholder="Search teams…"
-    [class]="inputClass + ' min-h-[40px]'"
-    [value]="store.q()"
-    (input)="onSearch($any($event.target).value)"
-  />
 </div>
-
-@if (store.loading() && !store.hasItems()) {
-  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-    @for (_ of [1, 2, 3]; track $index) {
-      <div class="h-36 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
-    }
-  </div>
-} @else if (store.error()) {
+@if (error()) {
   <zcc-empty-state
     icon="pi pi-exclamation-triangle"
     title="Failed to load teams"
-    [message]="store.error()!"
-  />
-} @else if (store.hasItems()) {
-  <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-    @for (t of store.items(); track t.id) {
-      <li>
-        <a
-          [routerLink]="['/iam/organization/teams', t.id]"
-          class="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-indigo-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-white/10 dark:bg-white/[0.03]"
-        >
-          <h2 class="truncate text-base font-semibold text-gray-900 dark:text-white">
-            {{ t.name }}
-          </h2>
-          <p class="mt-1 line-clamp-2 min-h-[2.5rem] text-sm text-gray-500 dark:text-gray-400">
-            {{ t.description || 'No description' }}
-          </p>
-          <div class="mt-4 flex items-center justify-between">
-            <div class="flex -space-x-2" aria-hidden="true">
-              @for (m of t.memberPreview; track m.userId) {
-                @if (m.avatarUrl) {
-                  <img
-                    [src]="m.avatarUrl"
-                    alt=""
-                    class="size-8 rounded-full object-cover ring-2 ring-white dark:ring-gray-900"
-                  />
-                } @else {
-                  <span
-                    class="flex size-8 items-center justify-center rounded-full bg-indigo-500/15 text-[11px] font-semibold text-indigo-500 ring-2 ring-white dark:ring-gray-900"
-                    >{{ initialsOf(m.fullName) }}</span
-                  >
-                }
-              }
-            </div>
-            <span class="text-sm tabular-nums text-gray-500 dark:text-gray-400"
-              >{{ t.memberCount }} {{ t.memberCount === 1 ? 'member' : 'members' }}</span
-            >
-          </div>
-        </a>
-      </li>
-    }
-  </ul>
-  <app-pagination
-    class="px-1 py-3"
-    entityLabel="teams"
-    [totalItems]="store.total()"
-    [page]="store.page()"
-    [pageSize]="store.pageSize()"
-    (pageChange)="store.setPage($event)"
+    [message]="error()!"
   />
 } @else {
-  <zcc-empty-state
-    icon="pi pi-sitemap"
-    title="No teams"
-    [message]="
-      store.q() ? 'No teams match your search.' : 'Create a team to group people who work together.'
-    "
-  />
+  <app-smart-table
+    [rows]="teams()"
+    [columns]="columns"
+    [trackBy]="trackBy"
+    [loading]="loading()"
+    [searchable]="false"
+    [(filters)]="filters"
+    [(pageSize)]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    entityLabel="teams"
+    emptyMessage="No teams found. Create a new team to get started."
+  >
+    <div toolbar-end class="relative">
+      <button
+        type="button"
+        class="btn-37 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3.5 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
+        aria-haspopup="dialog"
+        aria-controls="team-filter-popup"
+        [attr.aria-expanded]="filterOpen()"
+        (click)="toggleFilter()"
+      >
+        <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+        Filter
+        @if (activeFilterCount()) {
+          <span
+            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white"
+          >
+            {{ activeFilterCount() }}
+          </span>
+        }
+      </button>
+
+      @if (filterOpen()) {
+        <div
+          id="team-filter-popup"
+          role="dialog"
+          aria-label="Filter teams"
+          class="absolute right-0 top-full z-20 mt-2 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-[#0d0c1a]"
+        >
+          <p class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Filters</p>
+
+          <fieldset>
+            <legend
+              class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+            >
+              Members
+            </legend>
+            <div class="flex flex-wrap gap-2">
+              @for (option of membershipOptions; track option.value) {
+                <button
+                  type="button"
+                  class="btn-37 cursor-pointer rounded-lg border px-3 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                  [class]="
+                    draftMembership() === option.value
+                      ? 'border-indigo-500 bg-indigo-500/15 text-indigo-600 dark:text-indigo-300'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'
+                  "
+                  [attr.aria-pressed]="draftMembership() === option.value"
+                  (click)="draftMembership.set(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+          </fieldset>
+
+          <div
+            class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-3 dark:border-white/10"
+          >
+            <button
+              type="button"
+              class="btn-37 cursor-pointer rounded-lg px-3 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-gray-300 dark:hover:bg-white/10"
+              (click)="resetFilter()"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              class="btn-37 cursor-pointer rounded-lg bg-indigo-500 px-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              (click)="applyFilter()"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <ng-template smartCell="name" let-t>
+      <a
+        class="inline-flex items-center gap-2.5 font-medium text-indigo-600 hover:underline focus-visible:underline dark:text-indigo-400"
+        [routerLink]="['/iam/organization/teams', t.id]"
+        [attr.aria-label]="'Open ' + t.name + ' and manage members'"
+      >
+        <span
+          class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-xs font-semibold text-indigo-600 dark:text-indigo-300"
+          aria-hidden="true"
+          >{{ initialsOf(t.name) }}</span
+        >
+        {{ t.name }}
+      </a>
+    </ng-template>
+    <ng-template smartCell="description" let-t>
+      <span
+        class="block max-w-md truncate text-gray-600 dark:text-gray-300"
+        [attr.title]="t.description"
+      >
+        {{ t.description || '—' }}
+      </span>
+    </ng-template>
+    <ng-template smartCell="memberCount" let-t>
+      <div class="flex items-center gap-2">
+        @if (t.memberPreview.length) {
+          <div class="flex -space-x-2" aria-hidden="true">
+            @for (m of t.memberPreview.slice(0, 4); track m.userId) {
+              @if (m.avatarUrl) {
+                <img
+                  [src]="m.avatarUrl"
+                  alt=""
+                  class="size-7 rounded-full object-cover ring-2 ring-white dark:ring-[#05040e]"
+                />
+              } @else {
+                <span
+                  class="flex size-7 items-center justify-center rounded-full bg-indigo-500/15 text-[10px] font-semibold text-indigo-500 ring-2 ring-white dark:ring-[#05040e]"
+                  >{{ initialsOf(m.fullName) }}</span
+                >
+              }
+            }
+          </div>
+        }
+        <span class="tabular-nums text-gray-600 dark:text-gray-300">{{ t.memberCount }}</span>
+      </div>
+    </ng-template>
+    <ng-template smartCell="updatedAt" let-t>
+      <span class="tabular-nums text-gray-600 dark:text-gray-300">{{
+        t.updatedAt | date: 'mediumDate'
+      }}</span>
+    </ng-template>
+    <ng-template smartCell="actions" let-t>
+      <div class="flex justify-end gap-1">
+        <button
+          type="button"
+          class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-indigo-400"
+          [attr.aria-label]="'View ' + t.name"
+          (click)="onView(t)"
+        >
+          <i class="pi pi-eye text-sm" aria-hidden="true"></i>
+        </button>
+        @if (canManage()) {
+          <button
+            type="button"
+            class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-indigo-400"
+            [attr.aria-label]="'Edit ' + t.name"
+            (click)="onEdit(t)"
+          >
+            <i class="pi pi-pencil text-sm" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            [attr.aria-label]="'Delete ' + t.name"
+            (click)="onDelete(t)"
+          >
+            <i class="pi pi-trash text-sm" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+    </ng-template>
+  </app-smart-table>
 }

@@ -10,7 +10,8 @@ import { IAM_BTN, IamPageHeaderComponent } from '../shared/iam-page-header.compo
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { MembersPanelComponent } from '../shared/members-panel.component';
-import { teamFields, toTeamRequest } from './team-form';
+import { FormDialogService } from '../../../shared/components/form-dialog';
+import { teamDialogConfig, toTeamRequest } from './team-dialog.config';
 
 @Component({
   selector: 'zcc-team-detail',
@@ -23,6 +24,7 @@ import { teamFields, toTeamRequest } from './team-form';
 export class TeamDetailComponent {
   private readonly api = inject(IamAdminApiService);
   private readonly dialogs = inject(IamDialogsService);
+  private readonly formDialog = inject(FormDialogService);
   private readonly feedback = inject(IamFeedbackService);
   private readonly router = inject(Router);
   private readonly id = toSignal(
@@ -57,14 +59,18 @@ export class TeamDetailComponent {
   }
 
   protected async edit(t: TeamDetail): Promise<void> {
-    await this.dialogs.form({
-      title: `Edit ${t.name}`,
-      fields: teamFields(t),
-      submit: async (v) => {
-        this.team.set(await firstValueFrom(this.api.updateTeam(t.id, toTeamRequest(v))));
-        this.feedback.success('Team updated.');
-      },
-    });
+    const saved = await this.formDialog.open(
+      teamDialogConfig<TeamDetail>(
+        'edit',
+        async (values) => {
+          const updated = await firstValueFrom(this.api.updateTeam(t.id, toTeamRequest(values)));
+          this.team.set(updated);
+          return updated;
+        },
+        t
+      )
+    );
+    if (saved) this.feedback.success('Team updated.');
   }
 
   protected async remove(t: TeamDetail): Promise<void> {
