@@ -180,6 +180,9 @@
         </div>
       </div>
     </ng-template>
+    <ng-template smartCell="organizationName" let-s>
+      <span class="text-gray-600 dark:text-gray-300">{{ s.organizationName ?? '—' }}</span>
+    </ng-template>
     <ng-template smartCell="device" let-s>
       <span
         class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300"

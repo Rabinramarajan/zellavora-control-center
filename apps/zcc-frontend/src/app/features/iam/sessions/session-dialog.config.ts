@@ -12,6 +12,7 @@ export const sessionDialogConfig = (s: SessionItem): FormDialogConfig<never> => 
   value: {
     userName: s.userName,
     userEmail: s.userEmail ?? '',
+    organizationName: s.organizationName ?? '',
     status: s.status,
     device: s.isMobile ? 'Mobile' : 'Desktop',
     browser: s.browser ?? 'Unknown browser',
@@ -28,6 +29,7 @@ export const sessionDialogConfig = (s: SessionItem): FormDialogConfig<never> => 
       fields: [
         { key: 'userName', label: 'Name', type: 'text' },
         { key: 'userEmail', label: 'Email Address', type: 'email' },
+        { key: 'organizationName', label: 'Organization', type: 'text' },
       ],
     },
     {

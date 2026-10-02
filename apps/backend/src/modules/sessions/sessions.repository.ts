@@ -2,16 +2,25 @@ import { Prisma } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 import { SessionListQuery } from './sessions.dto';
 
+/**
+ * Every query takes `organizationId`; `null` means "all organizations" and is only
+ * passed for the platform super admin.
+ */
+type OrgFilter = string | null;
+
+const orgWhere = (organizationId: OrgFilter): Prisma.SessionWhereInput =>
+  organizationId ? { organizationId } : {};
+
 export class SessionsRepository extends BaseRepository {
-  private liveWhere(organizationId: string): Prisma.SessionWhereInput {
-    return { organizationId, isActive: true, expiresAt: { gt: new Date() } };
+  private liveWhere(organizationId: OrgFilter): Prisma.SessionWhereInput {
+    return { ...orgWhere(organizationId), isActive: true, expiresAt: { gt: new Date() } };
   }
 
   /** Users matching a free-text query, used to filter sessions (sessions have no user relation). */
-  findUserIds(organizationId: string, q: string, tx?: TxClient) {
+  findUserIds(organizationId: OrgFilter, q: string, tx?: TxClient) {
     return this.getDb(tx).user.findMany({
       where: {
-        userTenants: { some: { tenantId: organizationId } },
+        ...(organizationId && { userTenants: { some: { tenantId: organizationId } } }),
         OR: [
           { fullName: { contains: q, mode: 'insensitive' } },
           { email: { contains: q, mode: 'insensitive' } },
@@ -22,9 +31,14 @@ export class SessionsRepository extends BaseRepository {
     });
   }
 
-  async list(organizationId: string, query: SessionListQuery, userIds?: string[], tx?: TxClient) {
+  async list(
+    organizationId: OrgFilter,
+    query: SessionListQuery,
+    userIds?: string[],
+    tx?: TxClient
+  ) {
     const where: Prisma.SessionWhereInput =
-      query.status === 'all' ? { organizationId } : { ...this.liveWhere(organizationId) };
+      query.status === 'all' ? orgWhere(organizationId) : this.liveWhere(organizationId);
     if (query.userId) where.userId = query.userId;
     if (userIds) where.userId = { in: userIds };
 
@@ -47,7 +61,14 @@ export class SessionsRepository extends BaseRepository {
     });
   }
 
-  async stats(organizationId: string, userIds?: string[], tx?: TxClient) {
+  findOrganizations(ids: string[], tx?: TxClient) {
+    return this.getDb(tx).organization.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true },
+    });
+  }
+
+  async stats(organizationId: OrgFilter, userIds?: string[], tx?: TxClient) {
     const where: Prisma.SessionWhereInput = {
       ...this.liveWhere(organizationId),
       ...(userIds && { userId: { in: userIds } }),
@@ -59,7 +80,7 @@ export class SessionsRepository extends BaseRepository {
     return { activeSessions: active, activeUsers: users.length };
   }
 
-  findLive(id: string, organizationId: string, tx?: TxClient) {
+  findLive(id: string, organizationId: OrgFilter, tx?: TxClient) {
     return this.getDb(tx).session.findFirst({ where: { id, ...this.liveWhere(organizationId) } });
   }
 
@@ -67,16 +88,25 @@ export class SessionsRepository extends BaseRepository {
     return this.getDb(tx).session.update({ where: { id }, data: { isActive: false } });
   }
 
-  revokeAllForUser(organizationId: string, userId: string, exceptId?: string, tx?: TxClient) {
+  revokeAllForUser(organizationId: OrgFilter, userId: string, exceptId?: string, tx?: TxClient) {
     return this.getDb(tx).session.updateMany({
       where: {
-        organizationId,
+        ...orgWhere(organizationId),
         userId,
         isActive: true,
         ...(exceptId ? { id: { not: exceptId } } : {}),
       },
       data: { isActive: false },
     });
+  }
+
+  /** Whether the user is a platform-level super admin (oversees every organization). */
+  async isPlatformAdmin(userId: string, tx?: TxClient): Promise<boolean> {
+    const user = await this.getDb(tx).user.findUnique({
+      where: { id: userId },
+      select: { isPlatformAdmin: true, isDeleted: true },
+    });
+    return !!user && user.isPlatformAdmin && !user.isDeleted;
   }
 
   /** Users of the organization whose reporting manager is one of `managerIds`. */

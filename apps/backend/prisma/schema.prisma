@@ -164,6 +164,8 @@ model User {
   passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
   role           String       @default("user")
   tenantId       String?      @map("tenant_id") @db.Uuid
+  /// Platform-level super admin: may oversee data across every organization (e.g. sessions).
+  isPlatformAdmin Boolean     @default(false) @map("is_platform_admin")
   
   // MFA
   enable2fa      Boolean      @default(false) @map("enable_two_factor_authentication")

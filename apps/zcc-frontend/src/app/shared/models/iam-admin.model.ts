@@ -148,6 +148,8 @@ export interface SessionItem {
   userName: string;
   userEmail: string | null;
   userAvatarUrl: string | null;
+  organizationId: string;
+  organizationName: string | null;
   ipAddress: string | null;
   userAgent: string | null;
   browser: string | null;

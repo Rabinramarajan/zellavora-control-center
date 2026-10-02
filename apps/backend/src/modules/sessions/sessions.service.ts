@@ -28,11 +28,14 @@ export const describeUserAgent = (ua: string | null) => ({
 });
 
 /**
- * Whose sessions a viewer may see and revoke. The organization owner (super admin) sees
- * everyone; anyone else granted `sessions:view` sees themselves, everyone below them in the
- * reporting-manager chain, and the members of teams they belong to (team leads).
+ * Whose sessions a viewer may see and revoke:
+ * - `platform`: the platform super admin (users.is_platform_admin) sees every organization.
+ * - `all`: the organization owner sees everyone in their organization.
+ * - `users`: anyone else granted `sessions:view` sees themselves, everyone below them in the
+ *   reporting-manager chain, and the members of teams they belong to (team leads).
  */
-export type SessionScope = { kind: 'all' } | { kind: 'users'; userIds: ReadonlySet<string> };
+export type SessionScope =
+  { kind: 'platform' } | { kind: 'all' } | { kind: 'users'; userIds: ReadonlySet<string> };
 
 /** For callers that are already authorized organization-wide, e.g. user administration. */
 export const ORG_WIDE_SESSION_SCOPE: SessionScope = { kind: 'all' };
@@ -49,7 +52,11 @@ export const sessionState = (s: { isActive: boolean; expiresAt: Date }, now = ne
       : ('active' as const);
 
 const inScope = (scope: SessionScope, userId: string) =>
-  scope.kind === 'all' || scope.userIds.has(userId);
+  scope.kind !== 'users' || scope.userIds.has(userId);
+
+/** Organization filter for queries: none for the platform super admin. */
+const orgFilter = (scope: SessionScope, organizationId: string): string | null =>
+  scope.kind === 'platform' ? null : organizationId;
 
 /** View and control of live sign-in sessions, limited to the viewer's scope. */
 export class SessionsService {
@@ -60,6 +67,7 @@ export class SessionsService {
     actorId: string,
     isOwner: boolean
   ): Promise<SessionScope> {
+    if (await this.repo.isPlatformAdmin(actorId)) return { kind: 'platform' };
     if (isOwner) return { kind: 'all' };
     const people = new Set<string>([actorId]);
     let frontier = [actorId];
@@ -79,14 +87,18 @@ export class SessionsService {
     currentSessionId?: string
   ) {
     let userIds = query.q
-      ? (await this.repo.findUserIds(organizationId, query.q)).map((u) => u.id)
+      ? (await this.repo.findUserIds(orgFilter(scope, organizationId), query.q)).map((u) => u.id)
       : undefined;
     if (scope.kind === 'users') {
       userIds = (userIds ?? [...scope.userIds]).filter((id) => scope.userIds.has(id));
     }
-    const { data, total } = await this.repo.list(organizationId, query, userIds);
-    const users = await this.repo.findUsers([...new Set(data.map((s) => s.userId))]);
+    const { data, total } = await this.repo.list(orgFilter(scope, organizationId), query, userIds);
+    const [users, orgs] = await Promise.all([
+      this.repo.findUsers([...new Set(data.map((s) => s.userId))]),
+      this.repo.findOrganizations([...new Set(data.map((s) => s.organizationId))]),
+    ]);
     const byId = new Map(users.map((u) => [u.id, u]));
+    const orgName = new Map(orgs.map((o) => [o.id, o.name]));
 
     return {
       data: data.map((s) => {
@@ -97,6 +109,8 @@ export class SessionsService {
           userName: user?.fullName ?? 'Unknown user',
           userEmail: user?.email ?? null,
           userAvatarUrl: user?.avatarUrl ?? null,
+          organizationId: s.organizationId,
+          organizationName: orgName.get(s.organizationId) ?? null,
           ipAddress: s.ipAddress,
           userAgent: s.userAgent,
           ...describeUserAgent(s.userAgent),
@@ -117,7 +131,10 @@ export class SessionsService {
   }
 
   stats(organizationId: string, scope: SessionScope) {
-    return this.repo.stats(organizationId, scope.kind === 'all' ? undefined : [...scope.userIds]);
+    return this.repo.stats(
+      orgFilter(scope, organizationId),
+      scope.kind === 'users' ? [...scope.userIds] : undefined
+    );
   }
 
   async revoke(
@@ -130,14 +147,15 @@ export class SessionsService {
     if (id === currentSessionId) {
       throw new AppError('Use sign out to end your current session.', 400, 'CURRENT_SESSION');
     }
-    const session = await this.repo.findLive(id, organizationId);
+    const session = await this.repo.findLive(id, orgFilter(scope, organizationId));
     // Out-of-scope sessions look missing so their existence is not disclosed.
     if (!session || !inScope(scope, session.userId)) {
       throw new AppError('Session not found', 404, 'SESSION_NOT_FOUND');
     }
     await this.repo.revoke(id);
     await AuditService.log({
-      organizationId,
+      // Logged in the session's own organization so its audit trail shows the revocation.
+      organizationId: session.organizationId,
       actorId,
       action: 'session.revoked',
       resource: 'session',
@@ -157,7 +175,7 @@ export class SessionsService {
   ) {
     if (!inScope(scope, userId)) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     const { count } = await this.repo.revokeAllForUser(
-      organizationId,
+      orgFilter(scope, organizationId),
       userId,
       userId === actorId ? currentSessionId : undefined
     );

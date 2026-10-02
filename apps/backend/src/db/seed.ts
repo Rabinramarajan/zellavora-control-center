@@ -142,7 +142,7 @@ async function main() {
   const passwordHash = await PasswordService.hash('AdminPassword123!');
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@zellavora.com' },
-    update: {},
+    update: { isPlatformAdmin: true },
     create: {
       email: 'admin@zellavora.com',
       emailId: 'admin@zellavora.com',
@@ -150,6 +150,7 @@ async function main() {
       fullName: 'Super Administrator',
       passwordHash,
       role: 'owner',
+      isPlatformAdmin: true,
       tenantId: tenant.id,
       emailVerified: true,
       emailVerifiedAt: new Date(),

@@ -1,11 +1,6 @@
 jest.mock('../../infrastructure/audit', () => ({ AuditService: { log: jest.fn() } }));
 
-import {
-  SessionScope,
-  SessionsService,
-  describeUserAgent,
-  sessionState,
-} from './sessions.service';
+import { SessionScope, SessionsService, describeUserAgent, sessionState } from './sessions.service';
 import type { SessionsRepository } from './sessions.repository';
 
 const ORG = 'org';
@@ -28,6 +23,8 @@ const makeRepo = () =>
     findUserIds: jest.fn(async () => [{ id: 'dev' }, { id: 'stranger' }]),
     list: jest.fn(async () => ({ data: [], total: 0 })),
     findUsers: jest.fn(async () => []),
+    findOrganizations: jest.fn(async () => []),
+    isPlatformAdmin: jest.fn(async (userId: string) => userId === 'platform'),
     stats: jest.fn(async () => ({ activeSessions: 0, activeUsers: 0 })),
     directReports: jest.fn(async (_org: string, managers: string[]) =>
       managers.flatMap((m) => REPORTS[m] ?? []).map((id) => ({ id }))
@@ -37,9 +34,29 @@ const makeRepo = () =>
     ),
   }) as unknown as jest.Mocked<SessionsRepository>;
 
-const ids = (scope: SessionScope) => (scope.kind === 'all' ? 'all' : [...scope.userIds].sort());
+const ids = (scope: SessionScope) =>
+  scope.kind === 'users' ? [...scope.userIds].sort() : scope.kind;
 
 describe('SessionsService scope', () => {
+  it('gives the platform super admin every organization', async () => {
+    const scope = await new SessionsService(makeRepo()).resolveScope(ORG, 'platform', false);
+    expect(scope).toEqual({ kind: 'platform' });
+  });
+
+  it('lists across organizations only for the platform super admin', async () => {
+    const repo = makeRepo();
+    const query = { page: 1, pageSize: 20 } as never;
+    await new SessionsService(repo).list(ORG, query, { kind: 'platform' });
+    expect(repo.list).toHaveBeenCalledWith(null, query, undefined);
+    await new SessionsService(repo).list(ORG, query, ALL);
+    expect(repo.list).toHaveBeenLastCalledWith(ORG, query, undefined);
+  });
+
+  it('keeps an organization owner inside their organization', async () => {
+    const scope = await new SessionsService(makeRepo()).resolveScope(ORG, 'owner', true);
+    expect(scope).toEqual(ALL);
+  });
+
   it('gives the organization owner (super admin) every session', async () => {
     const repo = makeRepo();
     expect(await new SessionsService(repo).resolveScope(ORG, 'owner', true)).toEqual(ALL);

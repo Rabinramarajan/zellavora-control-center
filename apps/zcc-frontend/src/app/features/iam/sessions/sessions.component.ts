@@ -67,7 +67,13 @@ export class SessionsComponent implements OnInit {
   readonly trackBy = (s: SessionItem) => s.id;
 
   readonly columns: ColumnDef<SessionItem>[] = [
-    { key: 'userName', header: 'User', sortable: true, width: '26%' },
+    { key: 'userName', header: 'User', sortable: true, width: '24%' },
+    {
+      key: 'organizationName',
+      header: 'Organization',
+      sortable: true,
+      value: (s) => s.organizationName ?? '',
+    },
     {
       key: 'device',
       header: 'Device',
