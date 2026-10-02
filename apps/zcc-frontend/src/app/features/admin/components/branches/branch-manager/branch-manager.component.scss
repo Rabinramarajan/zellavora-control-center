@@ -1,4 +1,3 @@
-// Fill the admin layout's flex column so the table stretches to the bottom of the page.
 :host {
   display: flex;
   flex: 1 1 auto;
@@ -6,11 +5,13 @@
   min-height: 0;
 }
 
+// Fixed-height card: only the table body scrolls; the page header and pagination stay put.
 app-smart-table {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 18rem;
   display: flex;
   flex-direction: column;
-  --st-body-flex: 1 0 auto;
+  --st-body-flex: 1 1 0;
   border: 1px solid rgb(255 255 255 / 0.1);
   border-radius: 0.75rem;
 }

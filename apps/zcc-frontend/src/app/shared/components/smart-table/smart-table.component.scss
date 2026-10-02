@@ -10,6 +10,8 @@
   --st-accent-soft: rgba(139, 92, 246, 0.16);
   --st-row-hover: rgba(139, 92, 246, 0.07);
   --st-head-bg: rgba(255, 255, 255, 0.02);
+  // Opaque base under the header tint so rows never show through the sticky header.
+  --st-head-solid: #0b0a16;
   --st-control-bg: rgba(255, 255, 255, 0.03);
 
   display: block;
@@ -100,9 +102,11 @@
 
 .st-scroll {
   display: flex;
+  min-height: 0;
   flex-direction: column;
   flex: var(--st-body-flex, 0 1 auto);
-  overflow-x: auto;
+  // Scrolls on its own when the host gives it a bounded height (--st-body-flex: 1 1 0).
+  overflow: auto;
 }
 
 // Lives outside the table so it can grow and centre within a full-height body.
@@ -136,7 +140,10 @@
   letter-spacing: 0.06em;
   color: var(--st-muted);
   border-bottom: 1px solid var(--st-line);
-  background: var(--st-head-bg);
+  background: linear-gradient(var(--st-head-bg), var(--st-head-bg)), var(--st-head-solid);
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .st-td {
@@ -268,6 +275,7 @@
 
 /* ---- Light theme (generated from the dark rules above) ---- */
 :host-context(html.light) {
+  --st-head-solid: #f8fafc;
   --st-line: rgba(15, 23, 42, 0.088);
   --st-line-soft: rgba(15, 23, 42, 0.055);
   --st-fg: #0f172a;
