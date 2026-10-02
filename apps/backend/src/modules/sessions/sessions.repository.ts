@@ -23,7 +23,8 @@ export class SessionsRepository extends BaseRepository {
   }
 
   async list(organizationId: string, query: SessionListQuery, userIds?: string[], tx?: TxClient) {
-    const where: Prisma.SessionWhereInput = { ...this.liveWhere(organizationId) };
+    const where: Prisma.SessionWhereInput =
+      query.status === 'all' ? { organizationId } : { ...this.liveWhere(organizationId) };
     if (query.userId) where.userId = query.userId;
     if (userIds) where.userId = { in: userIds };
 

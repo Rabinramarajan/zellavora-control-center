@@ -140,6 +140,8 @@ export interface SaveTeamRequest {
 // SESSIONS
 // ============================================================================
 
+export type SessionStatus = 'active' | 'signed_out' | 'expired';
+
 export interface SessionItem {
   id: string;
   userId: string;
@@ -154,6 +156,8 @@ export interface SessionItem {
   createdAt: string;
   lastActivityAt: string;
   expiresAt: string;
+  /** active = live; signed_out = ended by sign-out or revocation; expired = past expiresAt. */
+  status: SessionStatus;
   isCurrent: boolean;
 }
 

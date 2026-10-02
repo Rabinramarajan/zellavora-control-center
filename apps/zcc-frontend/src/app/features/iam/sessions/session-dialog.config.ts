@@ -12,6 +12,7 @@ export const sessionDialogConfig = (s: SessionItem): FormDialogConfig<never> => 
   value: {
     userName: s.userName,
     userEmail: s.userEmail ?? '',
+    status: s.status,
     device: s.isMobile ? 'Mobile' : 'Desktop',
     browser: s.browser ?? 'Unknown browser',
     platform: s.platform ?? 'Unknown OS',
@@ -42,6 +43,17 @@ export const sessionDialogConfig = (s: SessionItem): FormDialogConfig<never> => 
     {
       title: 'Activity',
       fields: [
+        {
+          key: 'status',
+          label: 'Status',
+          type: 'select',
+          displayAs: 'status',
+          options: [
+            { label: 'Active', value: 'active' },
+            { label: 'Signed out', value: 'signed_out' },
+            { label: 'Expired', value: 'expired' },
+          ],
+        },
         { key: 'createdAt', label: 'Signed In', type: 'text' },
         { key: 'lastActivityAt', label: 'Last Active', type: 'text' },
         { key: 'expiresAt', label: 'Expires', type: 'text' },

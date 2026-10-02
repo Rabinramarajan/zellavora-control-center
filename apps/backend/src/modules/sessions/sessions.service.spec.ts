@@ -1,6 +1,11 @@
 jest.mock('../../infrastructure/audit', () => ({ AuditService: { log: jest.fn() } }));
 
-import { SessionScope, SessionsService, describeUserAgent } from './sessions.service';
+import {
+  SessionScope,
+  SessionsService,
+  describeUserAgent,
+  sessionState,
+} from './sessions.service';
 import type { SessionsRepository } from './sessions.repository';
 
 const ORG = 'org';
@@ -136,6 +141,18 @@ describe('SessionsService revoke', () => {
     );
     expect(repo.revokeAllForUser).toHaveBeenCalledWith(ORG, 'target', undefined);
     expect(result).toEqual({ revoked: 3 });
+  });
+});
+
+describe('sessionState', () => {
+  const now = new Date('2026-10-03T00:00:00Z');
+  const later = new Date('2026-10-04T00:00:00Z');
+  const earlier = new Date('2026-10-02T00:00:00Z');
+
+  it('distinguishes active, expired and signed-out sessions', () => {
+    expect(sessionState({ isActive: true, expiresAt: later }, now)).toBe('active');
+    expect(sessionState({ isActive: true, expiresAt: earlier }, now)).toBe('expired');
+    expect(sessionState({ isActive: false, expiresAt: later }, now)).toBe('signed_out');
   });
 });
 

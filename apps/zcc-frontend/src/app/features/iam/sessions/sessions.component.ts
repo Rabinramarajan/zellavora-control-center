@@ -20,7 +20,7 @@ import {
   SmartCellDirective,
   SmartTableComponent,
 } from '../../../shared/components/smart-table';
-import { SessionItem, SessionStats } from '../../../shared/models/iam-admin.model';
+import { SessionItem, SessionStats, SessionStatus } from '../../../shared/models/iam-admin.model';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { formatDateTime, initials, relativeTime } from '../shared/iam-format';
 import { sessionDialogConfig } from './session-dialog.config';
@@ -60,7 +60,7 @@ export class SessionsComponent implements OnInit {
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly filters = signal<FilterState>({ deviceType: '' });
+  readonly filters = signal<FilterState>({ status: '', deviceType: '' });
   readonly pageSize = signal(10);
   readonly pageSizeOptions = [10, 25, 50, 100] as const;
 
@@ -77,6 +77,7 @@ export class SessionsComponent implements OnInit {
     { key: 'ipAddress', header: 'IP Address', sortable: true, width: '10rem' },
     { key: 'createdAt', header: 'Signed In', sortable: true, width: '9rem' },
     { key: 'lastActivityAt', header: 'Last Active', sortable: true, width: '9rem' },
+    { key: 'status', header: 'Status', sortable: true, width: '8rem' },
     // Hidden: only drives the device filter.
     {
       key: 'deviceType',
@@ -94,7 +95,35 @@ export class SessionsComponent implements OnInit {
     { value: 'mobile', label: 'Mobile' },
   ] as const;
 
+  readonly statusOptions = [
+    { value: '', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'signed_out', label: 'Signed out' },
+    { value: 'expired', label: 'Expired' },
+  ] as const;
+
+  private readonly statusLabel: Record<SessionStatus, string> = {
+    active: 'Active',
+    signed_out: 'Signed out',
+    expired: 'Expired',
+  };
+
+  private readonly statusChip: Record<SessionStatus, string> = {
+    active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    signed_out: 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
+    expired: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  };
+
+  statusLabelOf(s: SessionItem): string {
+    return this.statusLabel[s.status];
+  }
+
+  statusChipOf(s: SessionItem): string {
+    return this.statusChip[s.status];
+  }
+
   readonly filterOpen = signal(false);
+  readonly draftStatus = signal('');
   readonly draftDevice = signal('');
   readonly activeFilterCount = computed(
     () => Object.values(this.filters()).filter((value) => value !== '').length
@@ -115,7 +144,7 @@ export class SessionsComponent implements OnInit {
       const all: SessionItem[] = [];
       for (let page = 1, totalPages = 1; page <= totalPages; page++) {
         const result = await firstValueFrom(
-          this.api.listSessions({ page, pageSize: LOAD_PAGE_SIZE })
+          this.api.listSessions({ page, pageSize: LOAD_PAGE_SIZE, status: 'all' })
         );
         all.push(...result.data);
         totalPages = result.meta.totalPages;
@@ -160,18 +189,22 @@ export class SessionsComponent implements OnInit {
   }
 
   toggleFilter(): void {
-    if (!this.filterOpen()) this.draftDevice.set(this.filters()['deviceType'] ?? '');
+    if (!this.filterOpen()) {
+      this.draftStatus.set(this.filters()['status'] ?? '');
+      this.draftDevice.set(this.filters()['deviceType'] ?? '');
+    }
     this.filterOpen.update((open) => !open);
   }
 
   applyFilter(): void {
-    this.filters.update((filters) => ({ ...filters, deviceType: this.draftDevice() }));
+    this.filters.set({ status: this.draftStatus(), deviceType: this.draftDevice() });
     this.filterOpen.set(false);
   }
 
   resetFilter(): void {
+    this.draftStatus.set('');
     this.draftDevice.set('');
-    this.filters.set({ deviceType: '' });
+    this.filters.set({ status: '', deviceType: '' });
     this.filterOpen.set(false);
   }
 

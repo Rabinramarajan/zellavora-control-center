@@ -2,8 +2,9 @@
   <div>
     <h1 class="text-xl font-bold text-gray-900 dark:text-white">Sessions</h1>
     <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-      Signed-in sessions you oversee: everyone for the super admin, otherwise the people who report
-      to you and your teams. Revoking signs that device out on its next request.
+      Sign-in history you oversee, newest first: everyone for the super admin, otherwise the people
+      who report to you and your teams. Revoking an active session signs that device out on its next
+      request.
     </p>
   </div>
   <button
@@ -53,7 +54,7 @@
     [(pageSize)]="pageSize"
     [pageSizeOptions]="pageSizeOptions"
     entityLabel="sessions"
-    emptyMessage="Nobody is signed in right now."
+    emptyMessage="No sessions match the selected filters."
   >
     <div toolbar-end class="relative">
       <button
@@ -84,7 +85,32 @@
         >
           <p class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Filters</p>
 
-          <fieldset>
+          <fieldset class="mt-4">
+            <legend
+              class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+            >
+              Status
+            </legend>
+            <div class="flex flex-wrap gap-2">
+              @for (option of statusOptions; track option.value) {
+                <button
+                  type="button"
+                  class="btn-37 cursor-pointer rounded-lg border px-3 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                  [class]="
+                    draftStatus() === option.value
+                      ? 'border-indigo-500 bg-indigo-500/15 text-indigo-600 dark:text-indigo-300'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'
+                  "
+                  [attr.aria-pressed]="draftStatus() === option.value"
+                  (click)="draftStatus.set(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+          </fieldset>
+
+          <fieldset class="mt-4">
             <legend
               class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
             >
@@ -188,6 +214,15 @@
         relative(s.lastActivityAt)
       }}</span>
     </ng-template>
+    <ng-template smartCell="status" let-s>
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium"
+        [class]="statusChipOf(s)"
+      >
+        <span class="size-1.5 rounded-full bg-current" aria-hidden="true"></span>
+        {{ statusLabelOf(s) }}
+      </span>
+    </ng-template>
     <ng-template smartCell="actions" let-s>
       <div class="flex justify-end gap-1">
         <button
@@ -199,7 +234,7 @@
         >
           <i class="pi pi-eye text-sm" aria-hidden="true"></i>
         </button>
-        @if (canRevoke()) {
+        @if (canRevoke() && s.status === 'active') {
           <button
             type="button"
             class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"

@@ -47,6 +47,10 @@ const scopeOf = async (req: AuthRequest, organizationId: string, actorId: string
  *         name: userId
  *         schema: { type: string, format: uuid }
  *       - in: query
+ *         name: status
+ *         description: active (default) for live sessions, all to include signed-out and expired history
+ *         schema: { type: string, enum: [active, all], default: active }
+ *       - in: query
  *         name: page
  *         schema: { type: integer, default: 1 }
  *       - in: query

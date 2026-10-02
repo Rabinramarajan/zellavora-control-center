@@ -40,6 +40,14 @@ export const ORG_WIDE_SESSION_SCOPE: SessionScope = { kind: 'all' };
 /** Guards against reporting-manager cycles in bad data. */
 const MAX_REPORTING_DEPTH = 20;
 
+/** Live, ended by sign-out / revocation, or past its expiry. */
+export const sessionState = (s: { isActive: boolean; expiresAt: Date }, now = new Date()) =>
+  !s.isActive
+    ? ('signed_out' as const)
+    : s.expiresAt <= now
+      ? ('expired' as const)
+      : ('active' as const);
+
 const inScope = (scope: SessionScope, userId: string) =>
   scope.kind === 'all' || scope.userIds.has(userId);
 
@@ -95,6 +103,7 @@ export class SessionsService {
           createdAt: s.createdAt.toISOString(),
           lastActivityAt: s.lastActivityAt.toISOString(),
           expiresAt: s.expiresAt.toISOString(),
+          status: sessionState(s),
           isCurrent: s.id === currentSessionId,
         };
       }),
