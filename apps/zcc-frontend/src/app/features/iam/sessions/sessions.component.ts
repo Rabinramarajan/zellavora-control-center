@@ -1,112 +1,193 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { AppDialogService } from '../../../shared/components/dialog';
+import { FormDialogService } from '../../../shared/components/form-dialog';
+import { EmptyStateComponent } from '../../../shared/components/iam';
+import {
+  ColumnDef,
+  FilterState,
+  SmartCellDirective,
+  SmartTableComponent,
+} from '../../../shared/components/smart-table';
 import { SessionItem, SessionStats } from '../../../shared/models/iam-admin.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
-import {
-  DataTableComponent,
-  DataTableColumn,
-  EmptyStateComponent,
-} from '../../../shared/components/iam';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import {
-  IAM_BTN,
-  IAM_CARD,
-  IAM_INPUT,
-  IamPageHeaderComponent,
-} from '../shared/iam-page-header.component';
-import { IamDialogsService } from '../shared/iam-dialogs.service';
-import { IamFeedbackService } from '../shared/iam-feedback.service';
+import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { formatDateTime, initials, relativeTime } from '../shared/iam-format';
+import { sessionDialogConfig } from './session-dialog.config';
+
+/** The sessions API caps pageSize at 100; load every page so filtering stays client-side. */
+const LOAD_PAGE_SIZE = 100;
 
 @Component({
   selector: 'zcc-sessions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    IamPageHeaderComponent,
-    DataTableComponent,
-    EmptyStateComponent,
-    PaginationComponent,
-    RouterLink,
-  ],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'filterOpen.set(false)',
+  },
+  imports: [RouterLink, SmartTableComponent, SmartCellDirective, EmptyStateComponent],
   templateUrl: './sessions.component.html',
   styleUrl: './sessions.component.scss',
 })
-export class SessionsComponent {
+export class SessionsComponent implements OnInit {
   private readonly api = inject(IamAdminApiService);
-  private readonly dialogs = inject(IamDialogsService);
+  private readonly dialog = inject(AppDialogService);
+  private readonly formDialog = inject(FormDialogService);
   private readonly feedback = inject(IamFeedbackService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  protected readonly btn = IAM_BTN;
-  protected readonly card = IAM_CARD;
-  protected readonly inputClass = IAM_INPUT;
-  protected readonly initialsOf = initials;
-  protected readonly relative = relativeTime;
-  protected readonly dateTime = formatDateTime;
-  protected readonly stats = signal<SessionStats | null>(null);
-  protected readonly busy = signal(false);
-  private searchTimer: ReturnType<typeof setTimeout> | undefined;
+  readonly initialsOf = initials;
+  readonly relative = relativeTime;
+  readonly dateTime = formatDateTime;
 
-  protected readonly columns: DataTableColumn[] = [
-    { key: 'user', label: 'User' },
-    { key: 'device', label: 'Device' },
-    { key: 'ip', label: 'IP address' },
-    { key: 'signedIn', label: 'Signed in' },
-    { key: 'lastActive', label: 'Last active' },
-    { key: 'actions', label: '' },
+  readonly sessions = signal<SessionItem[]>([]);
+  readonly stats = signal<SessionStats | null>(null);
+  readonly loading = signal(false);
+  readonly busy = signal(false);
+  readonly error = signal<string | null>(null);
+
+  readonly filters = signal<FilterState>({ deviceType: '' });
+  readonly pageSize = signal(10);
+  readonly pageSizeOptions = [10, 25, 50, 100] as const;
+
+  readonly trackBy = (s: SessionItem) => s.id;
+
+  readonly columns: ColumnDef<SessionItem>[] = [
+    { key: 'userName', header: 'User', sortable: true, width: '26%' },
+    {
+      key: 'device',
+      header: 'Device',
+      sortable: true,
+      value: (s) => `${s.browser ?? ''} ${s.platform ?? ''}`.trim(),
+    },
+    { key: 'ipAddress', header: 'IP Address', sortable: true, width: '10rem' },
+    { key: 'createdAt', header: 'Signed In', sortable: true, width: '9rem' },
+    { key: 'lastActivityAt', header: 'Last Active', sortable: true, width: '9rem' },
+    // Hidden: only drives the device filter.
+    {
+      key: 'deviceType',
+      header: 'Device Type',
+      hidden: true,
+      exportable: false,
+      value: (s) => (s.isMobile ? 'mobile' : 'desktop'),
+    },
+    { key: 'actions', header: '', align: 'right', width: '8.5rem', exportable: false },
   ];
 
-  readonly store = createListStore<SessionItem>({
-    loader: (query) => firstValueFrom(this.api.listSessions(query)),
-  });
+  readonly deviceOptions = [
+    { value: '', label: 'All' },
+    { value: 'desktop', label: 'Desktop' },
+    { value: 'mobile', label: 'Mobile' },
+  ] as const;
 
-  constructor() {
-    void this.loadStats();
+  readonly filterOpen = signal(false);
+  readonly draftDevice = signal('');
+  readonly activeFilterCount = computed(
+    () => Object.values(this.filters()).filter((value) => value !== '').length
+  );
+
+  ngOnInit(): void {
+    void this.refresh();
   }
 
-  protected refresh(): void {
-    void this.store.reload();
-    void this.loadStats();
+  async refresh(): Promise<void> {
+    await Promise.all([this.load(), this.loadStats()]);
   }
 
-  protected onSearch(q: string): void {
-    clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.store.setQ(q.trim()), 300);
+  async load(): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const all: SessionItem[] = [];
+      for (let page = 1, totalPages = 1; page <= totalPages; page++) {
+        const result = await firstValueFrom(
+          this.api.listSessions({ page, pageSize: LOAD_PAGE_SIZE })
+        );
+        all.push(...result.data);
+        totalPages = result.meta.totalPages;
+      }
+      this.sessions.set(all);
+    } catch (err) {
+      this.error.set(errorMessage(err, 'Could not load sessions.'));
+    } finally {
+      this.loading.set(false);
+    }
   }
 
-  protected async revoke(s: SessionItem): Promise<void> {
+  async onView(s: SessionItem): Promise<void> {
+    await this.formDialog.open(sessionDialogConfig(s), { size: 'lg' });
+  }
+
+  async onRevoke(s: SessionItem): Promise<void> {
     const device = `${s.browser ?? 'Unknown browser'} on ${s.platform ?? 'unknown OS'}`;
-    const ok = await this.dialogs.confirm(
+    const confirmed = await this.confirm(
       'Revoke session?',
-      `${s.userName} will be signed out of ${device}.`,
+      `${s.userName} will be signed out of ${device} on their next request.`,
       'Revoke'
     );
-    if (ok) await this.run(() => firstValueFrom(this.api.revokeSession(s.id)), 'Session revoked.');
+    if (!confirmed) return;
+    await this.run(async () => {
+      await firstValueFrom(this.api.revokeSession(s.id));
+      return 'Session revoked.';
+    });
   }
 
-  protected async revokeAll(s: SessionItem): Promise<void> {
-    const ok = await this.dialogs.confirm(
+  async onRevokeAll(s: SessionItem): Promise<void> {
+    const confirmed = await this.confirm(
       'Sign out everywhere?',
       `${s.userName} will be signed out of every device${s.isCurrent ? ' except this one' : ''}.`,
       'Sign out'
     );
-    if (!ok) return;
+    if (!confirmed) return;
     await this.run(async () => {
       const { revoked } = await firstValueFrom(this.api.revokeUserSessions(s.userId));
       return `${revoked} session(s) revoked for ${s.userName}.`;
     });
   }
 
-  private async run(action: () => Promise<unknown>, message?: string): Promise<void> {
+  toggleFilter(): void {
+    if (!this.filterOpen()) this.draftDevice.set(this.filters()['deviceType'] ?? '');
+    this.filterOpen.update((open) => !open);
+  }
+
+  applyFilter(): void {
+    this.filters.update((filters) => ({ ...filters, deviceType: this.draftDevice() }));
+    this.filterOpen.set(false);
+  }
+
+  resetFilter(): void {
+    this.draftDevice.set('');
+    this.filters.set({ deviceType: '' });
+    this.filterOpen.set(false);
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.filterOpen()) return;
+    const popupRoot = this.host.nativeElement.querySelector('[toolbar-end]');
+    if (popupRoot && !popupRoot.contains(event.target as Node)) this.filterOpen.set(false);
+  }
+
+  private confirm(title: string, message: string, confirmText: string): Promise<boolean> {
+    return firstValueFrom(this.dialog.confirm({ title, message, confirmText, variant: 'danger' }));
+  }
+
+  private async run(action: () => Promise<string>): Promise<void> {
     this.busy.set(true);
     try {
-      const result = await action();
-      this.feedback.success(message ?? String(result));
-      this.refresh();
+      this.feedback.success(await action());
+      await this.refresh();
     } catch (err) {
-      this.feedback.error(err);
+      this.feedback.error(err, 'Could not revoke the session.');
     } finally {
       this.busy.set(false);
     }
