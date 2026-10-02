@@ -105,6 +105,11 @@ export class NavbarComponent {
       'audit-logs': 'Audit Logs',
       'system-health': 'System Health',
       'cms-builder': 'CMS Builder',
+      iam: 'Identity & Access',
+      system: 'System',
+      configuration: 'Common Configuration',
+      'notification-management': 'Notification Management',
+      email: 'Email Communication',
       new: 'New',
     };
 

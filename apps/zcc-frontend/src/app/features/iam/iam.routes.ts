@@ -15,14 +15,6 @@ const securityPolicy = (
   data: { title, section },
 });
 
-const communications = (path: string, channel: 'in_app' | 'email', title: string): Route => ({
-  path,
-  canMatch: [canMatchPermission('settings:manage')],
-  loadComponent: () =>
-    import('./communications/communications.component').then((m) => m.CommunicationsComponent),
-  data: { title, channel },
-});
-
 export const iamRoutes: Routes = [
   {
     path: '',
@@ -126,21 +118,11 @@ export const iamRoutes: Routes = [
           securityPolicy('login-policy', 'login', 'Login Policy'),
         ],
       },
-      {
-        path: 'configuration',
-        canMatch: [canMatchPermission('settings:manage')],
-        loadComponent: () =>
-          import('./configuration/configuration.component').then((m) => m.ConfigurationComponent),
-        data: { title: 'Common Configuration' },
-      },
-      communications('messages', 'in_app', 'Messages'),
-      communications('email', 'email', 'Email Communication'),
-      {
-        path: 'audit-logs',
-        loadComponent: () =>
-          import('../audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),
-        data: { title: 'Audit Logs' },
-      },
+      // Kept so bookmarks from before System/Operations owned these screens still resolve.
+      { path: 'configuration', redirectTo: '/system/configuration', pathMatch: 'full' },
+      { path: 'messages', redirectTo: '/system/notification-management', pathMatch: 'full' },
+      { path: 'email', redirectTo: '/system/email', pathMatch: 'full' },
+      { path: 'audit-logs', redirectTo: '/audit-logs', pathMatch: 'full' },
     ],
   },
 ];

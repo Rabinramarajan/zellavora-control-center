@@ -53,18 +53,29 @@ describe('selected menu access', () => {
       'analytics',
       'freelancer',
       'iam',
-      'organization',
       'notifications',
       'operations',
       'system',
     ]);
-    const iam = menus.find((menu) => menu.key === 'iam');
-    expect(iam?.children.map((menu) => menu.key)).toEqual([
+    const childKeys = (key: string) =>
+      menus.find((menu) => menu.key === key)?.children.map((menu) => menu.key);
+    expect(childKeys('iam')).toEqual([
       'iam-users',
+      'iam-user-requests',
+      'iam-groups',
       'iam-roles',
       'iam-permissions',
-      'iam-groups',
       'iam-resources',
+      'iam-organization',
+      'iam-sessions',
+      'iam-security',
+    ]);
+    expect(childKeys('operations')).toEqual(['system-health', 'audit-logs']);
+    expect(childKeys('system')).toEqual([
+      'settings',
+      'system-configuration',
+      'system-notification-management',
+      'system-email',
     ]);
   });
 });
