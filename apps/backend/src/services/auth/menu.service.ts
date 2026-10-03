@@ -170,6 +170,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Theme Builder',
         icon: '🎛️',
         route: '/theme-builder',
+        requiredPermission: 'themes:read',
         orderIndex: 1,
       },
     ],

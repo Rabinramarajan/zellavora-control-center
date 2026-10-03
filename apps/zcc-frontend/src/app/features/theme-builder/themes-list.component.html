@@ -1,0 +1,146 @@
+<section class="relative flex flex-1 flex-col md:min-h-0">
+  <zcc-iam-page-header
+    title="Theme Builder"
+    icon="pi pi-palette"
+    description="Brand colours, typography and shape for your organization. The active theme applies to everyone."
+  >
+    <div class="filter-anchor relative">
+      <button
+        type="button"
+        [class]="btn.secondary"
+        aria-haspopup="dialog"
+        aria-controls="tl-filter-popup"
+        [attr.aria-expanded]="filtersOpen()"
+        (click)="toggleFilters()"
+      >
+        <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+        Filter
+        @if (activeFilterCount() > 0) {
+          <span
+            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white"
+            [attr.aria-label]="activeFilterCount() + ' filters active'"
+            >{{ activeFilterCount() }}</span
+          >
+        }
+      </button>
+
+      @if (filtersOpen()) {
+        <form
+          id="tl-filter-popup"
+          role="dialog"
+          aria-labelledby="tl-filter-title"
+          class="gl-popup"
+          (click)="$event.stopPropagation()"
+          (submit)="$event.preventDefault(); search()"
+        >
+          <div class="gl-popup-head">
+            <h2 id="tl-filter-title">Filter</h2>
+            <button
+              type="button"
+              [class]="btn.icon"
+              aria-label="Close filter"
+              (click)="filtersOpen.set(false)"
+            >
+              <i class="pi pi-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="gl-popup-body">
+            <app-form-input-control
+              class="sm:col-span-2"
+              label="Theme Name / Description"
+              icon="search"
+              placeholder="Search themes…"
+              [value]="draft().q"
+              (valueChange)="patch('q', $event)"
+            />
+            <app-select-control
+              label="Default Mode"
+              [searchable]="false"
+              [options]="modeOptions"
+              [value]="draft().mode"
+              (valueChange)="patch('mode', $event)"
+            />
+          </div>
+          <div class="gl-popup-foot">
+            <button type="button" [class]="btn.secondary" (click)="clear()">Clear</button>
+            <button type="submit" [class]="btn.primary">Search</button>
+          </div>
+        </form>
+      }
+    </div>
+
+    @if (canManage()) {
+      <a routerLink="new" [class]="btn.primary">
+        <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+        New Theme
+      </a>
+    }
+  </zcc-iam-page-header>
+
+  @if (usingDefault()) {
+    <p
+      class="mb-4 flex items-center gap-2 rounded-lg bg-indigo-500/10 px-4 py-3 text-sm text-indigo-700 dark:text-indigo-300"
+    >
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Your organization uses the built-in Zellavora theme. Create a theme and activate it to
+      apply your brand.
+    </p>
+  }
+
+  <app-data-table
+    entityLabel="themes"
+    errorTitle="Failed to load themes"
+    [rows]="store.items()"
+    [columns]="columns"
+    [trackBy]="themeId"
+    [rowLabel]="themeName"
+    minWidth="900px"
+    [loading]="store.loading()"
+    [error]="store.error()"
+    [total]="store.total()"
+    [page]="store.page()"
+    [pageSize]="store.pageSize()"
+    [pageSizeOptions]="pageSizes"
+    [sort]="sort()"
+    (sortChange)="onSort($event)"
+    (paginate)="onPaginate($event)"
+    (retry)="store.reload()"
+  >
+    <ng-template dtCell="name" let-t>
+      <a [routerLink]="[t.id]" class="gl-link">{{ t.name }}</a>
+      @if (t.description) {
+        <p class="max-w-[28ch] truncate text-xs text-gray-500 dark:text-gray-400">
+          {{ t.description }}
+        </p>
+      }
+    </ng-template>
+
+    <ng-template dtCell="colors" let-t>
+      <span class="inline-flex items-center" role="img" [attr.aria-label]="'Primary ' + t.primaryColor + ', secondary ' + t.secondaryColor + ', accent ' + t.accentColor">
+        <span class="tl-swatch" [style.background]="t.primaryColor" [title]="t.primaryColor"></span>
+        <span class="tl-swatch" [style.background]="t.secondaryColor" [title]="t.secondaryColor"></span>
+        <span class="tl-swatch" [style.background]="t.accentColor" [title]="t.accentColor"></span>
+      </span>
+    </ng-template>
+
+    <ng-template dtCell="status" let-t>
+      <zcc-status-chip
+        [value]="t.isActive ? 'ACTIVE' : 'INACTIVE'"
+        [label]="t.isActive ? 'Active' : 'Inactive'"
+        [tone]="t.isActive ? 'green' : 'gray'"
+      />
+    </ng-template>
+
+    <ng-template dtEmpty>
+      <div class="flex flex-col items-center gap-3 py-16 text-center">
+        <i class="pi pi-palette text-2xl text-indigo-400" aria-hidden="true"></i>
+        <p class="font-semibold text-gray-900 dark:text-white">No themes found</p>
+        @if (activeFilterCount() > 0) {
+          <button type="button" [class]="btn.secondary" (click)="clear()">Clear filters</button>
+        } @else if (canManage()) {
+          <a routerLink="new" [class]="btn.primary">Create your first theme</a>
+        }
+      </div>
+    </ng-template>
+  </app-data-table>
+</section>

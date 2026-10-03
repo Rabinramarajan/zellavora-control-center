@@ -78,10 +78,9 @@ export const appRoutes: Routes = [
   {
     path: 'theme-builder',
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/theme-builder/theme-builder.component').then(
-        (m) => m.ThemeBuilderComponent
-      ),
+    canMatch: [canMatchPermission('themes:read')],
+    loadChildren: () =>
+      import('./features/theme-builder/theme-builder.routes').then((m) => m.themeBuilderRoutes),
   },
   {
     path: 'notifications',

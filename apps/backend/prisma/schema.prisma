@@ -942,17 +942,30 @@ model CommonConfiguration {
 
 model Theme {
   id             String   @id @default(uuid()) @db.Uuid
-  name           String   @unique
+  organizationId String?  @map("organization_id") @db.Uuid   // null: legacy global rows
+  name           String
+  description    String?
   primaryColor   String?  @map("primary_color")
   secondaryColor String?  @map("secondary_color")
   accentColor    String?  @map("accent_color")
   backgroundColor String? @map("background_color")
   textColor      String?  @map("text_color")
-  mode           String   @default("light") @map("mode") // light, dark
-  isDefault      Boolean  @default(false) @map("is_default")
+  fontFamily     String   @default("Outfit") @map("font_family")
+  borderRadius   Int      @default(10) @map("border_radius")    // px, applied to controls and cards
+  logoUrl        String?  @map("logo_url")
+  faviconUrl     String?  @map("favicon_url")
+  mode           String   @default("light") @map("mode") // default appearance: light, dark
+  isDefault      Boolean  @default(false) @map("is_default") // the organization's active theme
+  isDeleted      Boolean  @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?  @map("created_by") @db.Uuid
+  updatedBy      String?  @map("updated_by") @db.Uuid
+  version        Int      @default(1)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@unique([organizationId, name])
+  @@index([organizationId, isDeleted])
   @@map("themes")
 }
 

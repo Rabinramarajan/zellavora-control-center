@@ -6,7 +6,20 @@ module.exports = {
   ],
   theme: {
     extend: {
+      borderRadius: {
+        // Scales with the theme's corner radius; defaults equal Tailwind's 0.5rem / 0.75rem / 1rem.
+        lg: 'calc(var(--app-radius, 10px) * 0.8)',
+        xl: 'calc(var(--app-radius, 10px) * 1.2)',
+        '2xl': 'calc(var(--app-radius, 10px) * 1.6)',
+      },
       colors: {
+        // Indigo is the app's brand colour; it reads the active organization theme (see brand-palette.ts).
+        indigo: Object.fromEntries(
+          [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((s) => [
+            s,
+            `rgb(var(--brand-${s}) / <alpha-value>)`,
+          ])
+        ),
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',

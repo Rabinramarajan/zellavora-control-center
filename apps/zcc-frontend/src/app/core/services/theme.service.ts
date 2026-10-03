@@ -56,6 +56,14 @@ export class ThemeService {
     }
   }
 
+  /**
+   * The organization theme's default appearance; applied only to people who have never
+   * picked light or dark themselves, and never saved as their own choice.
+   */
+  applyOrganizationDefault(mode: ResolvedTheme): void {
+    if (!this.hasStoredPreference()) this.preference.set(mode);
+  }
+
   toggle(): void {
     this.setPreference(this.isDark() ? 'light' : 'dark');
   }
@@ -71,6 +79,14 @@ export class ThemeService {
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', THEME_COLOR[theme]);
     this.window?.requestAnimationFrame(() => root.classList.remove('theme-switching'));
+  }
+
+  private hasStoredPreference(): boolean {
+    try {
+      return !!this.window?.localStorage.getItem(THEME_STORAGE_KEY);
+    } catch {
+      return false;
+    }
   }
 
   private readStoredPreference(): ThemePreference {
