@@ -5,11 +5,11 @@
 
 const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-export const isClock = (value: string | null | undefined): value is string =>
+const isClock = (value: string | null | undefined): value is string =>
   !!value && CLOCK.test(value);
 
 /** Minutes since midnight for "HH:mm". */
-export const clockToMinutes = (value: string): number => {
+const clockToMinutes = (value: string): number => {
   const [hours, minutes] = value.split(':').map(Number);
   return hours * 60 + minutes;
 };

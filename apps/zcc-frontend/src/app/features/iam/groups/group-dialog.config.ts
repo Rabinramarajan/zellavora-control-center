@@ -26,7 +26,7 @@ export const GROUP_STATUS_OPTIONS: Array<{ value: EntityStatus; label: string }>
   { value: 'INACTIVE', label: 'Inactive' },
 ];
 
-export const GROUP_TYPE_TONES: Record<GroupType, ChipTone> = {
+const GROUP_TYPE_TONES: Record<GroupType, ChipTone> = {
   SECURITY: 'purple',
   ORG: 'blue',
   DISTRIBUTION: 'amber',

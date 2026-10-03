@@ -5,7 +5,7 @@
  * numeric and date fields here are narrower than their Prisma counterparts.
  */
 
-export const TIMESHEET_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'] as const;
+const TIMESHEET_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'] as const;
 export type TimesheetStatus = (typeof TIMESHEET_STATUSES)[number];
 
 export const ENTRY_STATUSES = [
@@ -19,10 +19,10 @@ export const ENTRY_STATUSES = [
 export type EntryStatus = (typeof ENTRY_STATUSES)[number];
 
 /** Statuses that carry no hours — the grid blanks and disables their inputs. */
-export const NON_WORKING_STATUSES: readonly EntryStatus[] = ['LEAVE', 'HOLIDAY'];
+const NON_WORKING_STATUSES: readonly EntryStatus[] = ['LEAVE', 'HOLIDAY'];
 
 /** Statuses in which the owning employee may still edit entries. */
-export const EDITABLE_STATUSES: readonly TimesheetStatus[] = ['DRAFT', 'REJECTED'];
+const EDITABLE_STATUSES: readonly TimesheetStatus[] = ['DRAFT', 'REJECTED'];
 
 export interface TimesheetEntry {
   id: string;

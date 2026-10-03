@@ -1,10 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ApiError } from '../../shared/models';
 
-export type ApiErrorBody = ApiError['error'];
+type ApiErrorBody = ApiError['error'];
 
 /** The API error envelope, or null for network / non-API failures. */
-export function apiError(err: unknown): ApiErrorBody | null {
+function apiError(err: unknown): ApiErrorBody | null {
   if (!(err instanceof HttpErrorResponse)) return null;
   const body = (err.error as ApiError | null)?.error;
   return body && typeof body.code === 'string' ? body : null;

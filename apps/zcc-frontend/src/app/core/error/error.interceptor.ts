@@ -16,7 +16,7 @@ import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ErrorBus } from './error-bus';
 
-export interface NormalizedError {
+interface NormalizedError {
   status: number;
   code: string;
   message: string;
@@ -55,7 +55,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-export const normalize = (err: unknown): NormalizedError => {
+const normalize = (err: unknown): NormalizedError => {
   if (err instanceof HttpErrorResponse) {
     const api = err.error as { error?: { code?: string; message?: string } } | null;
     return {

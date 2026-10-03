@@ -5,7 +5,7 @@ export type ThemePreference = 'light' | 'dark' | 'system';
 export type ResolvedTheme = 'light' | 'dark';
 
 /** Must match the key read by the pre-bootstrap script in index.html. */
-export const THEME_STORAGE_KEY = 'zcc-theme';
+const THEME_STORAGE_KEY = 'zcc-theme';
 
 const THEME_COLOR: Record<ResolvedTheme, string> = {
   light: '#f8fafc',

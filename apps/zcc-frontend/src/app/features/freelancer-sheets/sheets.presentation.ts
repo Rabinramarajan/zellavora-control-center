@@ -3,7 +3,7 @@
 export type SheetStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'paid';
 
 /** Brand-adjacent hues, cycled so a project keeps the same colour everywhere. */
-export const PROJECT_PALETTE = [
+const PROJECT_PALETTE = [
   '#8b5cf6',
   '#38bdf8',
   '#22c55e',

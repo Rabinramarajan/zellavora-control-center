@@ -3,7 +3,7 @@ import { FormFieldDef, FormFieldValue } from './form-dialog.types';
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^[0-9+()\s-]*$/;
 
-export const isEmptyValue = (value: FormFieldValue | undefined): boolean =>
+const isEmptyValue = (value: FormFieldValue | undefined): boolean =>
   value === null ||
   value === undefined ||
   value === false ||
