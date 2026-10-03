@@ -354,3 +354,12 @@
     background: #f4f4f7;
   }
 }
+
+/* With no rows, the table fills the scroll area so the empty state sits in the middle. */
+.dt-table.is-empty {
+  height: 100%;
+}
+
+.dt-empty-row {
+  height: 100%;
+}

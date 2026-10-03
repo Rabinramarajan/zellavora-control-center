@@ -149,6 +149,7 @@ export interface GroupTreeNode extends GroupListItem {
 export interface GroupMember {
   id: string;
   userId: string;
+  employeeCode: string | null;
   email: string | null;
   username: string | null;
   fullName: string | null;
@@ -166,9 +167,23 @@ export interface GroupRole {
 }
 
 export interface GroupDetail extends GroupListItem {
-  children: Array<{ id: string; name: string; type: string }>;
+  children: Array<{ id: string; name: string; type: GroupType; status: EntityStatus }>;
   members: GroupMember[];
   roles: GroupRole[];
+}
+
+export interface GroupStats {
+  total: number;
+  byStatus: Partial<Record<EntityStatus, number>>;
+  byType: Partial<Record<GroupType, number>>;
+}
+
+export interface SaveGroupRequest {
+  name: string;
+  type: GroupType;
+  status: EntityStatus;
+  description: string | null;
+  parentId: string | null;
 }
 
 export interface SetGroupRolesRequest {

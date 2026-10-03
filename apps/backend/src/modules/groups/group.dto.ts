@@ -5,7 +5,7 @@ export const EntityStatusSchema = z.enum(['ACTIVE', 'INACTIVE']);
 
 export const CreateGroupSchema = z
   .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
+    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120),
     description: z.string().max(500).nullable().optional(),
     type: GroupTypeSchema.default('SECURITY'),
     status: EntityStatusSchema.default('ACTIVE'),
@@ -18,7 +18,8 @@ export const CreateGroupSchema = z
 
 export const UpdateGroupSchema = z
   .object({
-    name: z.string().min(2).optional(),
+    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120).optional(),
+    type: GroupTypeSchema.optional(),
     description: z.string().max(500).nullable().optional(),
     status: EntityStatusSchema.optional(),
     parentId: z.string().uuid('Invalid parent id').nullable().optional(),

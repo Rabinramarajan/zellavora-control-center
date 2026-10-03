@@ -87,16 +87,16 @@ export class UsersComponent {
   private readonly requestsApi = inject(UserRequestsApiService);
 
   protected readonly btn = IAM_BTN;
-  readonly pageSizes = [10, 25, 50, 100];
-  readonly statusOptions = STATUS_OPTIONS;
+  protected readonly pageSizes = [10, 25, 50, 100];
+  protected readonly statusOptions = STATUS_OPTIONS;
 
   private readonly groups = signal<Array<{ id: string; name: string }>>([]);
-  readonly groupOptions = computed<SelectControlOption[]>(() => [
+  protected readonly groupOptions = computed<SelectControlOption[]>(() => [
     { value: '', label: '--Select--' },
     ...this.groups().map((g) => ({ value: g.id, label: g.name })),
   ]);
 
-  readonly columns: DataTableColumn<IamUserListItem>[] = [
+  protected readonly columns: DataTableColumn<IamUserListItem>[] = [
     { id: 'fullName', label: 'Employee Name', sortKey: 'fullName' },
     {
       id: 'employeeCode',
@@ -122,10 +122,10 @@ export class UsersComponent {
     { id: 'status', label: 'Status', sortKey: 'status', value: (u) => u.statusLabel },
   ];
 
-  readonly userId = (u: IamUserListItem): string => u.id;
-  readonly userName = (u: IamUserListItem): string => u.fullName;
+  protected readonly userId = (u: IamUserListItem): string => u.id;
+  protected readonly userName = (u: IamUserListItem): string => u.fullName;
 
-  readonly store = createListStore<IamUserListItem>({
+  protected readonly store = createListStore<IamUserListItem>({
     initialPageSize: 10,
     // The constructor's pushFilters() issues the first load with the default sort.
     autoLoad: false,
@@ -133,56 +133,56 @@ export class UsersComponent {
     loader: (query) => firstValueFrom(this.api.search(query)),
   });
 
-  readonly filtersOpen = signal(false);
-  readonly draft = signal<UserFilters>({ ...EMPTY_FILTERS });
-  readonly applied = signal<UserFilters>({ ...EMPTY_FILTERS });
-  readonly sort = signal<DataTableSort<SortKey>>({ key: 'joiningDate', dir: 'desc' });
+  protected readonly filtersOpen = signal(false);
+  protected readonly draft = signal<UserFilters>({ ...EMPTY_FILTERS });
+  protected readonly applied = signal<UserFilters>({ ...EMPTY_FILTERS });
+  protected readonly sort = signal<DataTableSort<SortKey>>({ key: 'joiningDate', dir: 'desc' });
 
-  readonly activeFilterCount = computed(
+  protected readonly activeFilterCount = computed(
     () => FILTER_KEYS.filter((k) => this.applied()[k].trim()).length
   );
 
-  constructor() {
+  public constructor() {
     firstValueFrom(this.requestsApi.lookups())
       .then((l) => this.groups.set(l.groups ?? []))
       .catch(() => this.groups.set([]));
     this.pushFilters();
   }
 
-  patch(key: keyof UserFilters, value: string | null): void {
+  protected patch(key: keyof UserFilters, value: string | null): void {
     this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
   }
 
   /** Opens the filter popup on a copy of the applied filters; closing discards edits. */
-  toggleFilters(): void {
+  protected toggleFilters(): void {
     if (!this.filtersOpen()) this.draft.set({ ...this.applied() });
     this.filtersOpen.update((open) => !open);
   }
 
-  onDocumentClick(event: MouseEvent): void {
+  protected onDocumentClick(event: MouseEvent): void {
     if (!(event.target as HTMLElement | null)?.closest('.filter-anchor'))
       this.filtersOpen.set(false);
   }
 
-  search(): void {
+  protected search(): void {
     this.applied.set({ ...this.draft() });
     this.filtersOpen.set(false);
     this.pushFilters();
   }
 
-  clear(): void {
+  protected clear(): void {
     this.draft.set({ ...EMPTY_FILTERS });
     this.applied.set({ ...EMPTY_FILTERS });
     this.pushFilters();
   }
 
-  onSort(sort: DataTableSort | null): void {
+  protected onSort(sort: DataTableSort | null): void {
     if (!sort) return;
     this.sort.set(sort as DataTableSort<SortKey>);
     this.pushFilters();
   }
 
-  onPaginate({ page, pageSize }: PageChangeEvent): void {
+  protected onPaginate({ page, pageSize }: PageChangeEvent): void {
     if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
     else this.store.setPage(page);
   }

@@ -16,7 +16,7 @@ import { EmptyStateComponent } from '../../../shared/components/iam';
 import { IAM_BTN } from '../shared/iam-page-header.component';
 import { errorMessage } from '../shared/iam-feedback.service';
 import { formatDate } from '../shared/iam-format';
-import { REQUEST_CHANGE_META, RequestChangeType } from '../../users/user-actions';
+import { ActionMeta, REQUEST_CHANGE_META, RequestChangeType } from '../../users/user-actions';
 
 type SectionKey = 'user' | 'employment' | 'groups' | 'branches' | 'teams';
 
@@ -124,7 +124,7 @@ export class UsersDetailComponent {
     return [...buckets.entries()].map(([type, groups]) => ({ type, groups }));
   });
 
-  constructor() {
+  public constructor() {
     effect(() => {
       const id = this.userId();
       if (id) void this.load(id);
@@ -169,7 +169,7 @@ export class UsersDetailComponent {
     });
   }
 
-  protected changeMeta(type: RequestChangeType) {
+  protected changeMeta(type: RequestChangeType): ActionMeta {
     return REQUEST_CHANGE_META[type];
   }
 

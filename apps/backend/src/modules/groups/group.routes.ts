@@ -56,6 +56,22 @@ router.get('/tree', authenticate, requirePermission('groups:read'), controller.t
 
 /**
  * @swagger
+ * /api/v1/iam/groups/stats:
+ *   get:
+ *     summary: getGroupStats
+ *     operationId: getIamGroupsStats
+ *     description: Group counts by status and type for the list quick filters.
+ *     tags: [iamGroups]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "{ total, byStatus, byType }"
+ */
+router.get('/stats', authenticate, requirePermission('groups:read'), controller.stats);
+
+/**
+ * @swagger
  * /api/v1/iam/groups/{id}:
  *   get:
  *     summary: getGroupById

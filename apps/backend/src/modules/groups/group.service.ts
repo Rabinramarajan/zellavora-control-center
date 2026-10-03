@@ -64,6 +64,24 @@ export class GroupService {
     return attach(null);
   }
 
+  /** Group counts per status and type, for the list screen's quick filters. */
+  async stats() {
+    const [byStatus, byType] = await Promise.all([
+      this.repo.countBy('status'),
+      this.repo.countBy('type'),
+    ]);
+    const toMap = (
+      rows: Array<Record<string, unknown> & { _count: { _all: number } }>,
+      key: string
+    ) => Object.fromEntries(rows.map((r) => [String(r[key]), r._count._all]));
+    const status = toMap(byStatus as never, 'status');
+    return {
+      total: Object.values(status).reduce((sum, n) => sum + n, 0),
+      byStatus: status,
+      byType: toMap(byType as never, 'type'),
+    };
+  }
+
   async getById(id: string) {
     const row = await this.repo.findByIdDetail(id);
     if (!row) {
@@ -81,19 +99,15 @@ export class GroupService {
     if (existingName) {
       throw new AppError(`A group named '${dto.name}' already exists`, 409, 'GROUP_NAME_EXISTS');
     }
-    const slug = slugify(dto.name);
+    const slug = await this.uniqueSlug(dto.name);
     if (dto.parentId) {
       const parent = await this.repo.findById(dto.parentId);
       if (!parent) {
         throw new AppError('Parent group not found', 404, 'PARENT_GROUP_NOT_FOUND');
       }
     }
-    if (dto.memberIds.length) {
-      const existing = await this.repo.countWhere({ id: { in: dto.memberIds } });
-      if (existing !== dto.memberIds.length) {
-        throw new AppError('One or more member users do not exist', 400, 'INVALID_MEMBER');
-      }
-    }
+    await this.assertUsersExist(dto.memberIds);
+    await this.assertRolesExist(dto.roleIds);
 
     const created = await this.repo.transaction(async (tx) => {
       const group = await this.repo.create(
@@ -110,7 +124,7 @@ export class GroupService {
         tx
       );
       if (dto.memberIds.length) {
-        await this.repo.addMembers(group.id, dto.memberIds, tx);
+        await this.repo.addMembers(group.id, dto.memberIds, tx, actorId);
       }
       if (dto.roleIds.length) {
         await this.repo.replaceRoles(group.id, dto.roleIds, tx);
@@ -158,10 +172,12 @@ export class GroupService {
       if (!parent) {
         throw new AppError('Parent group not found', 404, 'PARENT_GROUP_NOT_FOUND');
       }
+      await this.assertNotDescendant(id, dto.parentId);
     }
 
     const updated = await this.repo.update(id, {
       ...(dto.name !== undefined ? { name: dto.name } : {}),
+      ...(dto.type !== undefined ? { type: dto.type } : {}),
       ...(dto.description !== undefined ? { description: dto.description } : {}),
       ...(dto.status !== undefined ? { status: dto.status } : {}),
       ...(dto.parentId !== undefined ? { parentId: dto.parentId } : {}),
@@ -216,8 +232,9 @@ export class GroupService {
     if (!group) {
       throw new AppError('Group not found', 404, 'GROUP_NOT_FOUND');
     }
+    await this.assertUsersExist(dto.userIds);
     await this.repo.transaction(async (tx) => {
-      await this.repo.addMembers(id, dto.userIds, tx);
+      await this.repo.addMembers(id, dto.userIds, tx, actorId);
       await tx.group.update({ where: { id }, data: { updatedBy: actorId ?? null } });
     });
 
@@ -260,6 +277,7 @@ export class GroupService {
     if (!group) {
       throw new AppError('Group not found', 404, 'GROUP_NOT_FOUND');
     }
+    await this.assertRolesExist(dto.roleIds);
     await this.repo.transaction(async (tx) => {
       if (dto.mode === 'replace') {
         await this.repo.replaceRoles(id, dto.roleIds, tx);
@@ -279,6 +297,40 @@ export class GroupService {
 
     this.invalidate();
     return this.getById(id);
+  }
+
+  /** Slugs stay unique even when different names slugify alike (e.g. "IT Team" / "IT-Team"). */
+  private async uniqueSlug(name: string): Promise<string> {
+    const base = slugify(name) || 'group';
+    let slug = base;
+    for (let n = 2; await this.repo.slugExists(slug); n++) slug = `${base}-${n}`;
+    return slug;
+  }
+
+  /** Rejects a parent that sits below the group, which would create a cycle. */
+  private async assertNotDescendant(id: string, parentId: string): Promise<void> {
+    const seen = new Set<string>();
+    for (let cur: string | null = parentId; cur; cur = await this.repo.parentIdOf(cur)) {
+      if (cur === id) {
+        throw new AppError('A group cannot be moved under its own subgroup', 400, 'INVALID_PARENT');
+      }
+      if (seen.has(cur)) break;
+      seen.add(cur);
+    }
+  }
+
+  private async assertUsersExist(ids: string[]): Promise<void> {
+    const unique = [...new Set(ids)];
+    if (unique.length && (await this.repo.countUsers(unique)) !== unique.length) {
+      throw new AppError('One or more users do not exist', 400, 'INVALID_MEMBER');
+    }
+  }
+
+  private async assertRolesExist(ids: string[]): Promise<void> {
+    const unique = [...new Set(ids)];
+    if (unique.length && (await this.repo.countRoles(unique)) !== unique.length) {
+      throw new AppError('One or more roles do not exist', 400, 'INVALID_ROLE');
+    }
   }
 
   private invalidate() {

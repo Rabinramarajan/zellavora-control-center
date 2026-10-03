@@ -204,38 +204,15 @@
     }
   </zcc-iam-page-header>
 
-  <div class="mb-4 flex flex-wrap gap-2" role="group" aria-label="Requests by status">
-    <button
-      type="button"
-      class="inline-flex min-h-[36px] cursor-pointer items-center gap-2 rounded-full border px-3 text-xs font-medium transition-colors"
-      [class]="
-        noStatusFilter()
-          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
-          : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'
-      "
-      [attr.aria-pressed]="noStatusFilter()"
-      (click)="allStatuses()"
-    >
-      All Requests
-      <span class="tabular-nums text-gray-400">{{ totalCount() ?? '…' }}</span>
-    </button>
-    @for (s of quickStatuses; track s) {
-      <button
-        type="button"
-        class="inline-flex min-h-[36px] cursor-pointer items-center gap-2 rounded-full border px-3 text-xs font-medium transition-colors"
-        [class]="
-          isOnlyStatus(s)
-            ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
-            : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'
-        "
-        [attr.aria-pressed]="isOnlyStatus(s)"
-        (click)="quickStatus(s)"
-      >
-        {{ statusLabel(s) }}
-        <span class="tabular-nums text-gray-400">{{ counts()?.[s] ?? '…' }}</span>
-      </button>
-    }
-  </div>
+  <app-filter-chips
+    class="mb-4"
+    ariaLabel="Requests by status"
+    allLabel="All Requests"
+    [allCount]="totalCount()"
+    [options]="statusChips()"
+    [selected]="activeStatus()"
+    (selectedChange)="onStatusChip($event)"
+  />
 
   <app-data-table
     entityLabel="requests"

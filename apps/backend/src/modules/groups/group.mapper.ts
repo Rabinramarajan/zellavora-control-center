@@ -30,6 +30,7 @@ export interface GroupListItemDto {
 export interface GroupMemberDto {
   id: string;
   userId: string;
+  employeeCode: string | null;
   email: string | null;
   username: string | null;
   fullName: string | null;
@@ -47,7 +48,7 @@ export interface GroupRoleDto {
 }
 
 export interface GroupDetailDto extends GroupListItemDto {
-  children: Array<{ id: string; name: string; type: string }>;
+  children: Array<{ id: string; name: string; type: string; status: string }>;
   members: GroupMemberDto[];
   roles: GroupRoleDto[];
 }
@@ -55,7 +56,7 @@ export interface GroupDetailDto extends GroupListItemDto {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GroupRow = Group & {
   parent?: { id: string; name: string } | null;
-  children?: Array<{ id: string; name: string; type: string }>;
+  children?: Array<{ id: string; name: string; type: string; status: string }>;
   members?: Array<{
     id: string;
     userId: string;
@@ -69,6 +70,7 @@ type GroupRow = Group & {
       firstName: string | null;
       lastName: string | null;
       fullName: string;
+      employeeCode: string | null;
     };
   }>;
   groupRoles?: Array<{
@@ -109,6 +111,7 @@ export class GroupMapper {
       members: (row.members ?? []).map((m) => ({
         id: m.id,
         userId: m.userId,
+        employeeCode: m.user.employeeCode ?? null,
         email: m.user.email ?? null,
         username: m.user.username ?? null,
         fullName: m.user.fullName ?? null,

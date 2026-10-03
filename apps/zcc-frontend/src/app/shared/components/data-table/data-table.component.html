@@ -20,7 +20,12 @@
     (scroll)="scrolled.emit()"
     [class.is-loading]="loading() && hasRows()"
   >
-    <table class="dt-table" [style.min-width]="minWidth()" [attr.aria-busy]="loading()">
+    <table
+      class="dt-table"
+      [class.is-empty]="!hasRows()"
+      [style.min-width]="minWidth()"
+      [attr.aria-busy]="loading()"
+    >
       @if (caption()) {
         <caption class="sr-only">
           {{
@@ -147,7 +152,7 @@
               }
             </tr>
           } @empty {
-            <tr>
+            <tr class="dt-empty-row">
               <td [attr.colspan]="colspan()">
                 @if (emptyTemplate(); as empty) {
                   <ng-container [ngTemplateOutlet]="empty.template" />

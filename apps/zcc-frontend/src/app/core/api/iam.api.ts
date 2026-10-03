@@ -5,6 +5,8 @@ import {
   ApiEnvelope,
   CopyRoleRequest,
   GroupDetail,
+  GroupStats,
+  SaveGroupRequest,
   GroupListItem,
   GroupTreeNode,
   IamUserDetail,
@@ -166,6 +168,18 @@ export class IamApiService {
     );
   }
 
+  groupStats(): Observable<ApiEnvelope<GroupStats>> {
+    return this.apiData.getData<ApiEnvelope<GroupStats>>('/iam/groups/stats');
+  }
+
+  createGroup(body: SaveGroupRequest): Observable<ApiEnvelope<GroupDetail>> {
+    return this.apiData.postData<ApiEnvelope<GroupDetail>>('/iam/groups', body);
+  }
+
+  updateGroup(id: string, body: SaveGroupRequest): Observable<ApiEnvelope<GroupDetail>> {
+    return this.apiData.patchData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}`, body);
+  }
+
   getGroup(id: string): Observable<ApiEnvelope<GroupDetail>> {
     return this.apiData.getData<ApiEnvelope<GroupDetail>>(`/iam/groups/${id}`);
   }
@@ -247,6 +261,7 @@ export class IamApiService {
       'permission',
       'roleId',
       'groupId',
+      'parentId',
       'createdBy',
       'department',
       'name',

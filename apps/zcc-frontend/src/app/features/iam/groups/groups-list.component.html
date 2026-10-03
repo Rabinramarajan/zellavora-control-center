@@ -1,95 +1,156 @@
-<div class="mb-6 flex items-center justify-between">
-  <div>
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Groups</h1>
-    <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-      Users inherit roles through group membership and hierarchy.
-    </p>
-  </div>
-  <a
-    routerLink="/iam/groups/new"
-    class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-600"
+<section class="relative flex flex-1 flex-col md:min-h-0">
+  <zcc-iam-page-header
+    title="Groups"
+    icon="pi pi-sitemap"
+    description="Users inherit every role attached to their groups, including roles from parent groups."
   >
-    <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-    New Group
-  </a>
-</div>
-
-<div class="mb-4">
-  <zcc-filter-bar
-    [query]="store.q()"
-    [filters]="filters()"
-    [selected]="selectedFilters()"
-    (search)="onSearch($event)"
-    (filtersChange)="onFiltersChange($event)"
-    (resetClicked)="onReset()"
-  />
-</div>
-
-@if (store.loading()) {
-  <div class="space-y-2">
-    @for (_ of [1, 2, 3, 4, 5]; track $index) {
-      <div class="h-12 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
-    }
-  </div>
-} @else if (store.error()) {
-  <zcc-empty-state
-    icon="pi pi-exclamation-triangle"
-    title="Failed to load groups"
-    [message]="store.error()!"
-  />
-} @else if (store.hasItems()) {
-  <app-data-table
-    [columns]="columns"
-    [rows]="store.items()"
-    [rowClickable]="true"
-    (rowClick)="onRowClick($event)"
-    [paginated]="false"
-  >
-    <ng-template dtCell="name" let-r>
-      <a
-        [routerLink]="['/iam/groups', r.id]"
-        class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
-        (click)="$event.stopPropagation()"
+    <div class="filter-anchor relative">
+      <button
+        type="button"
+        [class]="btn.secondary"
+        aria-haspopup="dialog"
+        aria-controls="gl-filter-popup"
+        [attr.aria-expanded]="filtersOpen()"
+        (click)="toggleFilters()"
       >
-        {{ r.name }}
-      </a>
-      @if (r.parentName) {
-        <p class="text-xs text-gray-400">in {{ r.parentName }}</p>
+        <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+        Filter
+        @if (activeFilterCount() > 0) {
+          <span
+            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white"
+            [attr.aria-label]="activeFilterCount() + ' filters active'"
+            >{{ activeFilterCount() }}</span
+          >
+        }
+      </button>
+
+      @if (filtersOpen()) {
+        <form
+          id="gl-filter-popup"
+          role="dialog"
+          aria-labelledby="gl-filter-title"
+          class="gl-popup"
+          (click)="$event.stopPropagation()"
+          (submit)="$event.preventDefault(); search()"
+        >
+          <div class="gl-popup-head">
+            <h2 id="gl-filter-title">Filter</h2>
+            <button
+              type="button"
+              [class]="btn.icon"
+              aria-label="Close filter"
+              (click)="filtersOpen.set(false)"
+            >
+              <i class="pi pi-times" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="gl-popup-body">
+            <app-form-input-control
+              class="sm:col-span-2"
+              label="Group Name / Description"
+              icon="search"
+              placeholder="Search groups…"
+              [value]="draft().q"
+              (valueChange)="patch('q', $event)"
+            />
+            <app-select-control
+              label="Group Type"
+              [searchable]="false"
+              [options]="typeOptions"
+              [value]="draft().type"
+              (valueChange)="patch('type', $event)"
+            />
+            <app-select-control
+              label="Status"
+              [searchable]="false"
+              [options]="statusOptions"
+              [value]="draft().status"
+              (valueChange)="patch('status', $event)"
+            />
+            <app-select-control
+              class="sm:col-span-2"
+              label="Parent Group"
+              [options]="parentOptions()"
+              [value]="draft().parentId"
+              (valueChange)="patch('parentId', $event)"
+            />
+          </div>
+
+          <div class="gl-popup-foot">
+            <button type="button" [class]="btn.secondary" (click)="clear()">Clear</button>
+            <button type="submit" [class]="btn.primary">Search</button>
+          </div>
+        </form>
+      }
+    </div>
+
+    @if (canManage()) {
+      <button type="button" [class]="btn.primary" (click)="createGroup()">
+        <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+        New Group
+      </button>
+    }
+  </zcc-iam-page-header>
+
+  <app-filter-chips
+    class="mb-4"
+    ariaLabel="Groups by status"
+    allLabel="All Groups"
+    [allCount]="totalCount()"
+    [options]="statusChips()"
+    [selected]="activeStatus()"
+    (selectedChange)="onStatusChip($event)"
+  />
+
+  <app-data-table
+    entityLabel="groups"
+    errorTitle="Failed to load groups"
+    [rows]="store.items()"
+    [columns]="columns"
+    [trackBy]="groupId"
+    [rowLabel]="groupName"
+    minWidth="960px"
+    [loading]="store.loading()"
+    [error]="store.error()"
+    [total]="store.total()"
+    [page]="store.page()"
+    [pageSize]="store.pageSize()"
+    [pageSizeOptions]="pageSizes"
+    [sort]="sort()"
+    (sortChange)="onSort($event)"
+    (paginate)="onPaginate($event)"
+    (retry)="store.reload()"
+  >
+    <ng-template dtCell="name" let-g>
+      <a [routerLink]="['/iam/groups', g.id]" class="gl-link">{{ g.name }}</a>
+      @if (g.isSystem) {
+        <span class="ms-2 text-xs text-gray-400">System</span>
       }
     </ng-template>
 
-    <ng-template dtCell="type" let-r>
-      <zcc-status-chip [value]="r.type" [label]="r.typeLabel" />
+    <ng-template dtCell="type" let-g>
+      <zcc-status-chip [value]="g.type" [label]="g.typeLabel" [tone]="typeTone(g.type)" />
     </ng-template>
 
-    <ng-template dtCell="memberCount" let-r>
-      <div class="text-gray-600 dark:text-gray-300">
-        <span class="tabular-nums">{{ r.memberCount }}</span>
+    <ng-template dtCell="status" let-g>
+      <zcc-status-chip
+        [value]="g.status"
+        [label]="statusLabel(g.status)"
+        [tone]="g.status === 'ACTIVE' ? 'green' : 'gray'"
+      />
+    </ng-template>
+
+    <ng-template dtEmpty>
+      <div class="flex flex-col items-center gap-3 py-16 text-center">
+        <i class="pi pi-sitemap text-2xl text-indigo-400" aria-hidden="true"></i>
+        <p class="font-semibold text-gray-900 dark:text-white">No groups found</p>
+        @if (activeFilterCount() > 0) {
+          <button type="button" [class]="btn.secondary" (click)="clear()">Clear filters</button>
+        } @else if (canManage()) {
+          <p class="text-sm text-gray-500 dark:text-gray-400">Create a group to get started.</p>
+        }
       </div>
-    </ng-template>
-
-    <ng-template dtCell="roleCount" let-r>
-      <div class="text-gray-600 dark:text-gray-300">
-        <span class="tabular-nums">{{ r.roleCount }}</span>
-      </div>
-    </ng-template>
-
-    <ng-template dtCell="status" let-r>
-      <zcc-status-chip [value]="r.status" [label]="r.status === 'ACTIVE' ? 'Active' : 'Inactive'" />
     </ng-template>
   </app-data-table>
-
-  <app-pagination
-    class="px-1 py-3"
-    [totalItems]="store.total()"
-    [page]="store.page()"
-    [pageSize]="store.pageSize()"
-    (pageChange)="store.setPage($event)"
-  />
-} @else {
-  <zcc-empty-state
-    icon="pi pi-sitemap"
-    title="No groups found"
-    message="Try adjusting your search or create a new group."
-  />
-}
+</section>

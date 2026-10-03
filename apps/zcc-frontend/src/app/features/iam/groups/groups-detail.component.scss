@@ -1,0 +1,256 @@
+:host {
+  display: block;
+  --ud-surface: #fff;
+  --ud-muted: #f3f4f6;
+  --ud-accent: #e8f3fd;
+  --ud-ink: #0f3d64;
+  --ud-label: #6b7280;
+  --ud-border: #e5e7eb;
+}
+
+:host-context(.dark) {
+  --ud-surface: rgb(255 255 255 / 0.03);
+  --ud-muted: rgb(255 255 255 / 0.05);
+  --ud-accent: rgb(99 102 241 / 0.12);
+  --ud-ink: #bfdbfe;
+  --ud-label: #9ca3af;
+  --ud-border: rgb(255 255 255 / 0.1);
+}
+
+.ud-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--ud-surface);
+  border: 1px solid var(--ud-border);
+}
+
+.ud-title {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--ud-ink);
+}
+
+.ud-menu {
+  position: absolute;
+  right: 0;
+  z-index: 30;
+  margin-top: 4px;
+  width: 16rem;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--ud-border);
+  background: #fff;
+  box-shadow: 0 10px 25px rgb(0 0 0 / 0.12);
+
+  :host-context(.dark) & {
+    background: #111827;
+  }
+}
+
+.ud-menu-item {
+  display: flex;
+  min-height: 40px;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 0 12px;
+  text-align: left;
+  font-size: 0.875rem;
+
+  &:hover {
+    background: var(--ud-muted);
+  }
+}
+
+.ud-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+  margin-bottom: 10px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: var(--ud-muted);
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 2fr 1fr 1fr 2fr 1fr;
+  }
+
+  dt {
+    font-size: 0.75rem;
+    color: var(--ud-label);
+  }
+
+  dd {
+    margin-top: 2px;
+    font-weight: 500;
+    color: var(--ud-ink);
+  }
+}
+
+.ud-section {
+  margin-bottom: 10px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--ud-border);
+  background: var(--ud-surface);
+}
+
+.ud-section-head {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--ud-accent);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ud-ink);
+}
+
+.ud-body {
+  padding: 16px 20px 24px;
+}
+
+.ud-sub {
+  margin-bottom: 14px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--ud-accent);
+  text-align: center;
+  font-weight: 600;
+  color: var(--ud-ink);
+}
+
+.ud-field {
+  margin-bottom: 14px;
+}
+
+.ud-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8125rem;
+  color: var(--ud-label);
+}
+
+.ud-value {
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--ud-border);
+  background: var(--ud-muted);
+  font-size: 0.9rem;
+  color: var(--ud-ink);
+  overflow-wrap: anywhere;
+}
+
+.ud-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th {
+    padding: 10px 16px;
+    background: var(--ud-accent);
+    text-align: left;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--ud-border);
+  }
+}
+
+.ud-group-row td {
+  background: var(--ud-accent);
+  font-weight: 600;
+}
+
+.ud-empty {
+  padding: 32px 16px !important;
+  text-align: center;
+  color: var(--ud-label);
+}
+
+.ud-section-row {
+  display: flex;
+  align-items: stretch;
+  background: var(--ud-accent);
+
+  .ud-section-head {
+    flex: 1;
+    background: transparent;
+  }
+}
+
+.ud-section-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 12px 8px 0;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #4f46e5;
+
+  &:hover {
+    background: rgb(99 102 241 / 0.12);
+  }
+
+  :host-context(.dark) & {
+    color: #a5b4fc;
+  }
+}
+
+.ud-link {
+  color: #4f46e5;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  :host-context(.dark) & {
+    color: #a5b4fc;
+  }
+}
+
+.ud-remove {
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #ef4444;
+
+  &:hover {
+    background: rgb(239 68 68 / 0.1);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
+.ud-table td.ud-actions,
+.ud-table th.ud-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.gd-summary {
+  @media (min-width: 1024px) {
+    grid-template-columns: 2fr repeat(5, 1fr);
+  }
+}

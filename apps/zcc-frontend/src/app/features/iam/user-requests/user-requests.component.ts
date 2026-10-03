@@ -12,6 +12,7 @@ import {
 } from '../../../shared/models/user-request.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
 import { StatusChipComponent } from '../../../shared/components/iam';
+import { FilterChipOption, FilterChipsComponent } from '../../../shared/components/filter-chips';
 import { PageChangeEvent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { formatDate } from '../shared/iam-format';
@@ -65,13 +66,19 @@ const FILTER_KEYS = [...Object.keys(EMPTY_FORM), 'sort', 'order'];
 
 /** Columns the API can sort by (user-request.dto `sort`). */
 type SortKey = 'refNo' | 'subjectName' | 'createdAt' | 'status' | 'priority';
+/** Every request status gets a quick-filter chip, in workflow order. */
 const QUICK_STATUSES: UserRequestStatus[] = [
   'DRAFT',
+  'SUBMITTED',
+  'PENDING_VERIFICATION',
   'PENDING_APPROVAL',
-  'SENT_BACK',
+  'APPROVED',
   'PROVISIONING',
-  'FAILED',
   'COMPLETED',
+  'SENT_BACK',
+  'REJECTED',
+  'CANCELLED',
+  'FAILED',
 ];
 
 const toOptions = (items: Array<{ id: string; name: string }>): MultiSelectOption[] =>
@@ -94,6 +101,7 @@ const toOptions = (items: Array<{ id: string; name: string }>): MultiSelectOptio
     StatusChipComponent,
     MultiSelectComponent,
     UserSelectComponent,
+    FilterChipsComponent,
   ],
   templateUrl: './user-requests.component.html',
   styleUrl: './user-requests.component.scss',
@@ -113,7 +121,6 @@ export class UserRequestsComponent {
     'mb-2 block ps-0.5 text-[13px] font-medium leading-tight text-gray-600 dark:text-gray-400';
   protected readonly typeOptions = REQUEST_TYPE_OPTIONS;
   protected readonly statusOptions = STATUS_OPTIONS;
-  protected readonly quickStatuses = QUICK_STATUSES;
   protected readonly date = formatDate;
   protected readonly menuItems = [
     { section: 'approval', label: 'Approval', icon: 'pi pi-check-square' },
@@ -159,9 +166,19 @@ export class UserRequestsComponent {
     const c = this.counts();
     return c ? Object.values(c).reduce((sum, n) => sum + n, 0) : null;
   });
-  protected readonly noStatusFilter = computed(
-    () => !((this.store.filters()['status'] as string[] | undefined) ?? []).length
+  protected readonly statusChips = computed<FilterChipOption<UserRequestStatus>[]>(() =>
+    QUICK_STATUSES.map((value) => ({
+      value,
+      label: this.statusLabel(value),
+      count: this.counts()?.[value] ?? null,
+    }))
   );
+  /** `null` = no status filter; `undefined` = a multi-status filter no chip represents. */
+  protected readonly activeStatus = computed<UserRequestStatus | null | undefined>(() => {
+    const current = (this.store.filters()['status'] as UserRequestStatus[] | undefined) ?? [];
+    if (!current.length) return null;
+    return current.length === 1 ? current[0] : undefined;
+  });
 
   readonly store = createListStore<UserRequestListItem>({
     filterKeys: FILTER_KEYS,
@@ -241,11 +258,6 @@ export class UserRequestsComponent {
     if (!(event.target as HTMLElement | null)?.closest('.filter-anchor')) this.cancelFilters();
   }
 
-  protected allStatuses(): void {
-    this.form = { ...this.form, status: [] };
-    this.search();
-  }
-
   protected onSort(sort: DataTableSort | null): void {
     if (!sort) return;
     this.sort.set(sort as DataTableSort<SortKey>);
@@ -261,14 +273,9 @@ export class UserRequestsComponent {
     return { sort: this.sort().key, order: this.sort().dir };
   }
 
-  protected quickStatus(status: UserRequestStatus): void {
-    this.form = { ...this.form, status: this.isOnlyStatus(status) ? [] : [status] };
+  protected onStatusChip(status: UserRequestStatus | null | undefined): void {
+    this.form = { ...this.form, status: status ? [status] : [] };
     this.search();
-  }
-
-  protected isOnlyStatus(status: UserRequestStatus): boolean {
-    const current = (this.store.filters()['status'] as string[] | undefined) ?? [];
-    return current.length === 1 && current[0] === status;
   }
 
   protected statusLabel(status: UserRequestStatus): string {
