@@ -1,9 +1,25 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Request, type Response } from 'express';
 import { IamUserController } from './iam-user.controller';
 import { UserAdminController } from './user-admin.controller';
 import { authenticate, requirePermission } from '../../middleware/auth';
+import { AppError } from '../../middleware/error';
 
 const router = Router();
+
+/**
+ * Users are read-only. Account and access changes (profile, status, roles, groups,
+ * unlock, MFA reset, create/delete) must go through a User Request so every change
+ * is requested, approved, provisioned and audited. Only emergency actions (lock,
+ * revoke sessions) and messages (password-reset email, resend invitation) stay direct.
+ */
+const changeViaUserRequest = (_req: Request, _res: Response, next: NextFunction): void =>
+  next(
+    new AppError(
+      'Changes to users go through User Requests. Raise a request from Request Change on the user.',
+      409,
+      'CHANGE_REQUIRES_REQUEST'
+    )
+  );
 const controller = new IamUserController();
 const admin = new UserAdminController();
 const read = [authenticate, requirePermission('users:read')];
@@ -125,7 +141,7 @@ router.get('/:id', authenticate, requirePermission('users:read'), controller.get
  *       201:
  *         description: User created
  */
-router.post('/', authenticate, requirePermission('users:manage'), controller.create);
+router.post('/', authenticate, changeViaUserRequest);
 
 /**
  * @swagger
@@ -162,7 +178,7 @@ router.post('/', authenticate, requirePermission('users:manage'), controller.cre
  *       200:
  *         description: User updated
  */
-router.patch('/:id', authenticate, requirePermission('users:manage'), controller.update);
+router.patch('/:id', authenticate, changeViaUserRequest);
 
 /**
  * @swagger
@@ -193,7 +209,7 @@ router.patch('/:id', authenticate, requirePermission('users:manage'), controller
  *       200:
  *         description: User status updated
  */
-router.put('/:id/status', authenticate, requirePermission('users:manage'), controller.setStatus);
+router.put('/:id/status', authenticate, changeViaUserRequest);
 
 /**
  * @swagger
@@ -242,7 +258,7 @@ router.post('/:id/lock', authenticate, requirePermission('users:manage'), contro
  *       200:
  *         description: User unlocked
  */
-router.post('/:id/unlock', authenticate, requirePermission('users:manage'), controller.unlock);
+router.post('/:id/unlock', authenticate, changeViaUserRequest);
 
 /**
  * @swagger
@@ -275,7 +291,7 @@ router.post('/:id/unlock', authenticate, requirePermission('users:manage'), cont
  *       200:
  *         description: User roles updated
  */
-router.put('/:id/roles', authenticate, requirePermission('users:manage'), controller.setRoles);
+router.put('/:id/roles', authenticate, changeViaUserRequest);
 
 /**
  * @swagger
@@ -307,7 +323,7 @@ router.put('/:id/roles', authenticate, requirePermission('users:manage'), contro
  *       200:
  *         description: User groups updated
  */
-router.put('/:id/groups', authenticate, requirePermission('users:manage'), controller.setGroups);
+router.put('/:id/groups', authenticate, changeViaUserRequest);
 
 /**
  * @swagger
@@ -328,7 +344,7 @@ router.put('/:id/groups', authenticate, requirePermission('users:manage'), contr
  *       200:
  *         description: User deleted
  */
-router.delete('/:id', authenticate, requirePermission('users:manage'), controller.delete);
+router.delete('/:id', authenticate, changeViaUserRequest);
 
 /**
  * @swagger
@@ -420,7 +436,7 @@ router.delete('/:id', authenticate, requirePermission('users:manage'), controlle
  *       200: { description: Updated profile }
  */
 router.get('/:id/profile', ...read, admin.profile);
-router.patch('/:id/profile', ...manage, admin.updateProfile);
+router.patch('/:id/profile', authenticate, changeViaUserRequest);
 router.get('/:id/access', ...read, admin.access);
 router.get('/:id/sessions', ...read, admin.sessions);
 router.delete('/:id/sessions', ...manage, admin.revokeAllSessions);
@@ -432,9 +448,9 @@ router.get('/:id/status-history', ...read, admin.statusHistory);
 router.get('/:id/emails', ...read, admin.emails);
 router.get('/:id/audit', ...read, admin.audit);
 router.post('/:id/password-reset', ...manage, admin.sendPasswordReset);
-router.post('/:id/require-password-change', ...manage, admin.requirePasswordChange);
-router.post('/:id/reset-mfa', ...manage, admin.resetMfa);
+router.post('/:id/require-password-change', authenticate, changeViaUserRequest);
+router.post('/:id/reset-mfa', authenticate, changeViaUserRequest);
 router.post('/:id/resend-invitation', ...manage, admin.resendInvitation);
-router.post('/:id/cancel-invitation', ...manage, admin.cancelInvitation);
+router.post('/:id/cancel-invitation', authenticate, changeViaUserRequest);
 
 export default router;

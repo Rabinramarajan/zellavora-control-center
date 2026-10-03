@@ -60,17 +60,43 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        @if (can('edit')) {
-          <button type="button" [class]="btn.secondary" (click)="startEdit('personal')">
-            <i class="pi pi-pencil text-xs" aria-hidden="true"></i>
-            Edit
-          </button>
-        }
-        @if (can('manageAccess')) {
-          <button type="button" [class]="btn.primary" (click)="go('groups')">
-            <i class="pi pi-key text-xs" aria-hidden="true"></i>
-            Manage Access
-          </button>
+        @if (changes().length) {
+          <div class="relative">
+            <button
+              type="button"
+              [class]="btn.primary"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="changeOpen()"
+              (click)="$event.stopPropagation(); changeOpen.set(!changeOpen()); moreOpen.set(false)"
+            >
+              <i class="pi pi-inbox text-xs" aria-hidden="true"></i>
+              Request Change
+              <i class="pi pi-chevron-down text-xs" aria-hidden="true"></i>
+            </button>
+            @if (changeOpen()) {
+              <div
+                role="menu"
+                aria-label="Request a change"
+                class="absolute right-0 z-30 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-gray-900"
+                (click)="$event.stopPropagation()"
+              >
+                <p class="px-3 pb-1 pt-2 text-xs text-gray-500 dark:text-gray-400">
+                  Changes are applied after approval.
+                </p>
+                @for (c of changes(); track c) {
+                  <button
+                    type="button"
+                    role="menuitem"
+                    [class]="menuItem"
+                    (click)="requestChange(c)"
+                  >
+                    <i [class]="changeMeta(c).icon + ' text-xs'" aria-hidden="true"></i>
+                    {{ changeMeta(c).label }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
         }
         <div class="relative">
           <button
@@ -100,12 +126,6 @@
                 >
                   <i [class]="meta(a).icon + ' text-xs'" aria-hidden="true"></i>
                   {{ meta(a).label }}
-                </button>
-              }
-              @if (can('manageAccess')) {
-                <button type="button" role="menuitem" [class]="menuItem" (click)="requestChange()">
-                  <i class="pi pi-inbox text-xs" aria-hidden="true"></i>
-                  Request Access Change
                 </button>
               }
               @if (u.latestRequest) {
@@ -194,12 +214,6 @@
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           {{ sectionLabel() }}
         </h2>
-        @if (isEditable(section()) && can('edit') && editing() !== section()) {
-          <button type="button" [class]="btn.secondary" (click)="startEdit($any(section()))">
-            <i class="pi pi-pencil text-xs" aria-hidden="true"></i>
-            Edit
-          </button>
-        }
       </div>
 
       @switch (section()) {
@@ -230,15 +244,10 @@
             <p class="text-sm text-gray-500 dark:text-gray-400">
               Prefer User → Group → Role → Permission over direct role assignments.
             </p>
-            @if (can('manageAccess')) {
-              <button
-                type="button"
-                [class]="btn.primary"
-                [disabled]="busy()"
-                (click)="assignGroups()"
-              >
+            @if (canRequest('ADD_GROUP')) {
+              <button type="button" [class]="btn.primary" (click)="requestChange('ADD_GROUP')">
                 <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-                Assign Group
+                Request Group
               </button>
             }
           </div>
@@ -275,14 +284,14 @@
                       <td [class]="td">{{ date(g.assignedOn) }}</td>
                       <td [class]="td">{{ g.assignedBy }}</td>
                       <td [class]="td + ' text-right'">
-                        @if (can('manageAccess')) {
+                        @if (canRequest('REMOVE_GROUP')) {
                           <button
                             type="button"
                             [class]="linkDanger"
-                            [disabled]="busy()"
-                            (click)="removeGroup(g.groupId, g.name)"
+                            [attr.aria-label]="'Request removal of ' + g.name"
+                            (click)="requestChange('REMOVE_GROUP')"
                           >
-                            Remove
+                            Request removal
                           </button>
                         }
                       </td>
@@ -300,19 +309,10 @@
           <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Assigned Roles</h3>
             <div class="flex gap-2">
-              @if (can('manageAccess')) {
-                <button type="button" [class]="btn.secondary" (click)="requestChange()">
-                  <i class="pi pi-inbox text-xs" aria-hidden="true"></i>
-                  Request Change
-                </button>
-                <button
-                  type="button"
-                  [class]="btn.primary"
-                  [disabled]="busy()"
-                  (click)="assignRoles()"
-                >
+              @if (canRequest('ADD_ROLE')) {
+                <button type="button" [class]="btn.primary" (click)="requestChange('ADD_ROLE')">
                   <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-                  Assign Role
+                  Request Role
                 </button>
               }
             </div>
@@ -350,14 +350,14 @@
                       <td [class]="td">{{ r.assignedBy }}</td>
                       <td [class]="td">{{ date(r.assignedOn) }}</td>
                       <td [class]="td + ' text-right'">
-                        @if (can('manageAccess') && r.sourceType === 'DIRECT') {
+                        @if (canRequest('REMOVE_ROLE') && r.sourceType === 'DIRECT') {
                           <button
                             type="button"
                             [class]="linkDanger"
-                            [disabled]="busy()"
-                            (click)="removeRole(r.roleId, r.name)"
+                            [attr.aria-label]="'Request removal of ' + r.name"
+                            (click)="requestChange('REMOVE_ROLE')"
                           >
-                            Remove
+                            Request removal
                           </button>
                         } @else if (r.sourceType === 'GROUP') {
                           <span
@@ -816,100 +816,18 @@
         }
 
         @default {
-          @if (editing() === section()) {
-            <form (submit)="$event.preventDefault(); saveEdit()" novalidate>
-              @if (editErrors().length) {
-                <div
-                  role="alert"
-                  class="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300"
-                >
-                  <ul class="list-inside list-disc">
-                    @for (e of editErrors(); track e) {
-                      <li>{{ e }}</li>
-                    }
-                  </ul>
-                </div>
-              }
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                @for (f of editFields(); track f.key) {
-                  @switch (f.kind) {
-                    @case ('select') {
-                      <app-select-control
-                        [label]="f.label"
-                        [required]="!!f.required"
-                        [hint]="f.hint ?? ''"
-                        [options]="f.options!()"
-                        [value]="draft()[f.key]"
-                        (valueChange)="patchDraft(f.key, $event)"
-                      />
-                    }
-                    @case ('user') {
-                      <div>
-                        <label
-                          [for]="'edit-' + f.key"
-                          class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                          >{{ f.label }}</label
-                        >
-                        <zcc-user-select
-                          [inputId]="'edit-' + f.key"
-                          [initialLabel]="personName(draft()[f.key])"
-                          [value]="draft()[f.key] || null"
-                          (valueChange)="patchDraft(f.key, $event ?? '')"
-                        />
-                      </div>
-                    }
-                    @case ('date') {
-                      <app-date-control
-                        [label]="f.label"
-                        [value]="draft()[f.key]"
-                        (valueChange)="patchDraft(f.key, $event)"
-                      />
-                    }
-                    @default {
-                      <app-form-input-control
-                        [label]="f.label"
-                        [type]="f.kind"
-                        [required]="!!f.required"
-                        [hint]="f.hint ?? ''"
-                        [maxLength]="f.maxLength"
-                        [value]="draft()[f.key]"
-                        (valueChange)="patchDraft(f.key, $event)"
-                      />
-                    }
-                  }
-                }
+          <dl class="grid grid-cols-1 gap-x-6 gap-y-4 text-sm md:grid-cols-2">
+            @for (f of viewFields(); track f.label) {
+              <div class="border-b border-gray-100 pb-2 dark:border-white/5">
+                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {{ f.label }}
+                </dt>
+                <dd class="mt-0.5 break-words text-gray-900 dark:text-white">
+                  {{ f.value || '—' }}
+                </dd>
               </div>
-              <div
-                class="mt-5 flex justify-end gap-2 border-t border-gray-100 pt-4 dark:border-white/5"
-              >
-                <button
-                  type="button"
-                  [class]="btn.secondary"
-                  [disabled]="busy()"
-                  (click)="cancelEdit()"
-                >
-                  Cancel
-                </button>
-                <button type="submit" [class]="btn.primary" [disabled]="busy()">
-                  <i class="pi pi-check text-xs" aria-hidden="true"></i>
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          } @else {
-            <dl class="grid grid-cols-1 gap-x-6 gap-y-4 text-sm md:grid-cols-2">
-              @for (f of viewFields(); track f.label) {
-                <div class="border-b border-gray-100 pb-2 dark:border-white/5">
-                  <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                    {{ f.label }}
-                  </dt>
-                  <dd class="mt-0.5 break-words text-gray-900 dark:text-white">
-                    {{ f.value || '—' }}
-                  </dd>
-                </div>
-              }
-            </dl>
-          }
+            }
+          </dl>
         }
       }
     </section>

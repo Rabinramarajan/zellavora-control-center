@@ -1,7 +1,7 @@
 import { accountStatusOf } from './account-status';
 import { parseUserNo } from './iam-user.repository';
 import { formatUserCode } from './iam-user.mapper';
-import { allowedUserActions } from './user-actions';
+import { allowedUserActions, requestableChanges } from './user-actions';
 
 const state = (
   accountStatus: Parameters<typeof allowedUserActions>[0]['accountStatus'],
@@ -10,7 +10,6 @@ const state = (
   accountStatus,
   mfaEnabled: false,
   activeSessions: 0,
-  passwordResetRequired: false,
   ...extra,
 });
 
@@ -29,48 +28,46 @@ describe('accountStatusOf', () => {
   });
 });
 
-describe('allowedUserActions', () => {
+describe('allowedUserActions (direct actions)', () => {
   it('offers nothing without users:manage', () => {
     expect(allowedUserActions(state('ACTIVE', { activeSessions: 2 }), false)).toEqual([]);
   });
 
-  it('offers invitation actions only to invited users', () => {
-    const actions = allowedUserActions(state('INVITED'), true);
-    expect(actions).toEqual(expect.arrayContaining(['resendInvitation', 'cancelInvitation']));
-    expect(actions).not.toContain('lock');
-    expect(actions).not.toContain('sendPasswordReset');
+  it('keeps only emergency actions and messages direct', () => {
+    expect(allowedUserActions(state('ACTIVE', { activeSessions: 1 }), true)).toEqual([
+      'sendPasswordReset',
+      'lock',
+      'revokeSessions',
+    ]);
+    expect(allowedUserActions(state('INVITED'), true)).toEqual(['resendInvitation']);
   });
 
-  it('never offers impossible actions', () => {
-    const locked = allowedUserActions(state('LOCKED'), true);
-    expect(locked).toContain('unlock');
-    expect(locked).not.toContain('lock');
+  it('never offers account or access changes directly', () => {
+    for (const status of ['ACTIVE', 'LOCKED', 'INACTIVE', 'DISABLED'] as const) {
+      const actions: string[] = allowedUserActions(state(status, { mfaEnabled: true }), true);
+      for (const change of ['edit', 'activate', 'deactivate', 'unlock', 'resetMfa']) {
+        expect(actions).not.toContain(change);
+      }
+    }
+  });
+});
 
-    const active = allowedUserActions(state('ACTIVE'), true);
-    expect(active).toContain('lock');
-    expect(active).not.toContain('unlock');
-    expect(active).not.toContain('resetMfa');
-    expect(active).not.toContain('revokeSessions');
-    expect(active).not.toContain('activate');
+describe('requestableChanges', () => {
+  it('offers nothing without user-requests:create', () => {
+    expect(requestableChanges(state('ACTIVE'), false)).toEqual([]);
   });
 
-  it('adds MFA reset and session revocation only when there is something to reset', () => {
-    const actions = allowedUserActions(
-      state('ACTIVE', { mfaEnabled: true, activeSessions: 1 }),
-      true
-    );
-    expect(actions).toEqual(expect.arrayContaining(['resetMfa', 'revokeSessions']));
+  it('matches each change to the account state', () => {
+    expect(requestableChanges(state('LOCKED'), true)).toContain('UNLOCK_ACCOUNT');
+    expect(requestableChanges(state('ACTIVE'), true)).not.toContain('UNLOCK_ACCOUNT');
+    expect(requestableChanges(state('ACTIVE'), true)).toContain('DEACTIVATE_USER');
+    expect(requestableChanges(state('INACTIVE'), true)).toContain('ACTIVATE_USER');
+    expect(requestableChanges(state('DISABLED'), true)).toEqual(['ACTIVATE_USER']);
   });
 
-  it('lets inactive and disabled accounts be activated', () => {
-    expect(allowedUserActions(state('INACTIVE'), true)).toContain('activate');
-    expect(allowedUserActions(state('DISABLED'), true)).toEqual(['activate']);
-  });
-
-  it('hides Require Password Change once it is already required', () => {
-    expect(
-      allowedUserActions(state('ACTIVE', { passwordResetRequired: true }), true)
-    ).not.toContain('requirePasswordChange');
+  it('offers MFA reset only when MFA is enrolled', () => {
+    expect(requestableChanges(state('ACTIVE'), true)).not.toContain('RESET_MFA');
+    expect(requestableChanges(state('ACTIVE', { mfaEnabled: true }), true)).toContain('RESET_MFA');
   });
 });
 

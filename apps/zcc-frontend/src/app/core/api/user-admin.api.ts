@@ -1,14 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiDataService } from '../http/api-data.service';
+import { ApiEnvelope, IamUserListItem, PaginatedList } from '../../shared/models/iam.model';
 import {
-  ApiEnvelope,
-  IamUserListItem,
-  PaginatedList,
-  UserStatus,
-} from '../../shared/models/iam.model';
-import {
-  UpdateUserProfile,
   UserAccess,
   UserAuditItem,
   UserEmailItem,
@@ -30,12 +24,8 @@ const clean = (params: UserSearchQuery): Record<string, string> =>
       .map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
   );
 
-export type UserSecurityAction =
-  | 'password-reset'
-  | 'require-password-change'
-  | 'reset-mfa'
-  | 'resend-invitation'
-  | 'cancel-invitation';
+/** Direct user actions that change no account data; all other changes are User Requests. */
+export type UserSecurityAction = 'password-reset' | 'resend-invitation';
 
 /** User Search and User Details endpoints (`/iam/users`). Every method returns the unwrapped data. */
 @Injectable({ providedIn: 'root' })
@@ -54,11 +44,6 @@ export class UserAdminApiService {
   }
   profile(id: string): Observable<UserProfile> {
     return this.get(`/${id}/profile`);
-  }
-  updateProfile(id: string, body: UpdateUserProfile): Observable<UserProfile> {
-    return this.api
-      .patchData<ApiEnvelope<UserProfile>>(`/iam/users/${id}/profile`, body)
-      .pipe(map((r) => r.data));
   }
   access(id: string): Observable<UserAccess> {
     return this.get(`/${id}/access`);
@@ -110,19 +95,7 @@ export class UserAdminApiService {
       .postData<ApiEnvelope<UserProfile>>(`/iam/users/${id}/${action}`, reason ? { reason } : {})
       .pipe(map((r) => r.data));
   }
-  setStatus(id: string, status: UserStatus, reason?: string | null): Observable<unknown> {
-    return this.api.putData(`/iam/users/${id}/status`, { status, reason: reason || null });
-  }
   lock(id: string, reason?: string | null): Observable<unknown> {
     return this.api.postData(`/iam/users/${id}/lock`, { reason: reason || null });
-  }
-  unlock(id: string): Observable<unknown> {
-    return this.api.postData(`/iam/users/${id}/unlock`, {});
-  }
-  setRoles(id: string, roleIds: string[], mode: 'replace' | 'merge'): Observable<unknown> {
-    return this.api.putData(`/iam/users/${id}/roles`, { roleIds, mode });
-  }
-  setGroups(id: string, groupIds: string[], mode: 'replace' | 'merge'): Observable<unknown> {
-    return this.api.putData(`/iam/users/${id}/groups`, { groupIds, mode });
   }
 }

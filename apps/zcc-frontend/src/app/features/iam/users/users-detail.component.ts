@@ -9,12 +9,10 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
-import { DateControl, FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
+import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { UserAdminApiService } from '../../../core/api/user-admin.api';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
-import { UserRequestsApiService } from '../../../core/api/user-requests.api';
 import {
-  UpdateUserProfile,
   UserAccess,
   UserAction,
   UserAuditItem,
@@ -25,7 +23,6 @@ import {
   UserSession,
   UserStatusHistoryItem,
 } from '../../../shared/models/user-admin.model';
-import { UserRequestLookups } from '../../../shared/models/user-request.model';
 import {
   ChipTone,
   EmptyStateComponent,
@@ -36,8 +33,13 @@ import { IAM_BTN, IAM_CARD, IAM_INPUT } from '../shared/iam-page-header.componen
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { formatDate, formatDateTime, initials } from '../shared/iam-format';
-import { ACTION_META, StateAction, UserActionsService } from '../../users/user-actions';
-import { UserSelectComponent } from '../user-requests/components/user-select.component';
+import {
+  ACTION_META,
+  REQUEST_CHANGE_META,
+  RequestChangeType,
+  StateAction,
+  UserActionsService,
+} from '../../users/user-actions';
 
 type SectionKey =
   | 'overview'
@@ -54,8 +56,6 @@ type SectionKey =
   | 'status'
   | 'emails'
   | 'audit';
-
-type EditableSection = 'personal' | 'employee' | 'contact' | 'organization';
 
 const SECTIONS: Array<{ key: SectionKey; label: string; icon: string }> = [
   { key: 'overview', label: 'Overview', icon: 'pi pi-th-large' },
@@ -134,17 +134,6 @@ interface Field {
   value: string | null | undefined;
 }
 
-/** Field definitions for the editable sections; `key` is the PATCH field name. */
-interface EditField {
-  key: string;
-  label: string;
-  kind: 'text' | 'email' | 'tel' | 'date' | 'select' | 'user';
-  options?: () => SelectControlOption[];
-  required?: boolean;
-  maxLength?: number;
-  hint?: string;
-}
-
 @Component({
   selector: 'zcc-users-detail',
   standalone: true,
@@ -153,19 +142,16 @@ interface EditField {
     RouterLink,
     FormInputControl,
     SelectControl,
-    DateControl,
     StatusChipComponent,
     EmptyStateComponent,
     JsonDiffViewerComponent,
-    UserSelectComponent,
   ],
-  host: { '(document:click)': 'moreOpen.set(false)' },
+  host: { '(document:click)': 'moreOpen.set(false); changeOpen.set(false)' },
   templateUrl: './users-detail.component.html',
   styleUrl: './users-detail.component.scss',
 })
 export class UsersDetailComponent {
   private readonly api = inject(UserAdminApiService);
-  private readonly requestsApi = inject(UserRequestsApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dialogs = inject(IamDialogsService);
@@ -210,11 +196,6 @@ export class UsersDetailComponent {
   protected readonly audit = signal<UserAuditItem[]>([]);
   protected readonly openAudit = signal<string | null>(null);
   protected readonly permissionFilter = signal('');
-  protected readonly lookups = signal<UserRequestLookups | null>(null);
-
-  protected readonly editing = signal<EditableSection | null>(null);
-  protected readonly draft = signal<Record<string, string>>({});
-  protected readonly editErrors = signal<string[]>([]);
 
   protected readonly noteBody = signal('');
   protected noteType = 'GENERAL';
@@ -230,24 +211,19 @@ export class UsersDetailComponent {
   );
   protected readonly hasCurrentSession = computed(() => this.sessions().some((s) => s.isCurrent));
 
-  /** Actions shown in the More menu / Security tab (navigation ones have their own buttons). */
-  protected readonly stateActions = computed(() =>
-    (this.user()?.actions ?? []).filter(
-      (a): a is StateAction => a !== 'edit' && a !== 'manageAccess'
-    )
-  );
+  /**
+   * Direct actions the server allows: emergency responses and messages only. Every other
+   * change is raised as a User Request from the Request Change menu.
+   */
+  protected readonly stateActions = computed(() => this.user()?.actions ?? []);
   protected readonly securityActions = computed(() =>
-    this.stateActions().filter((a) =>
-      [
-        'sendPasswordReset',
-        'requirePasswordChange',
-        'lock',
-        'unlock',
-        'resetMfa',
-        'revokeSessions',
-      ].includes(a)
+    this.stateActions().filter(
+      (a) => a === 'sendPasswordReset' || a === 'lock' || a === 'revokeSessions'
     )
   );
+  /** User Request types the server says can be raised for this account right now. */
+  protected readonly changes = computed(() => this.user()?.requestableChanges ?? []);
+  protected readonly changeOpen = signal(false);
 
   protected readonly summary = computed<Field[]>(() => {
     const u = this.user();
@@ -405,127 +381,6 @@ export class UsersDetailComponent {
       : perms;
   });
 
-  private readonly lookupOptions =
-    (key: 'branches' | 'departments' | 'teams', empty: string) => (): SelectControlOption[] => [
-      { value: '', label: empty },
-      ...(this.lookups()?.[key] ?? []).map((i) => ({ value: i.id, label: i.name })),
-    ];
-
-  /** Label for a person already on the profile (the typeahead shows it until changed). */
-  protected personName(id: string | undefined): string | null {
-    const o = this.user()?.organization;
-    return [o?.reportingManager, o?.assignedOfficer].find((p) => p && p.id === id)?.name ?? null;
-  }
-
-  private readonly EDIT_FIELDS: Record<EditableSection, EditField[]> = {
-    personal: [
-      {
-        key: 'username',
-        label: 'Username',
-        kind: 'text',
-        required: true,
-        maxLength: 50,
-        hint: 'Unique; lowercase letters, digits, dot, dash, underscore.',
-      },
-      { key: 'firstName', label: 'First Name', kind: 'text', required: true, maxLength: 100 },
-      { key: 'middleName', label: 'Middle Name', kind: 'text', maxLength: 100 },
-      { key: 'lastName', label: 'Last Name', kind: 'text', required: true, maxLength: 100 },
-      {
-        key: 'displayName',
-        label: 'Display Name',
-        kind: 'text',
-        maxLength: 200,
-        hint: 'Derived from the name when blank.',
-      },
-      { key: 'userType', label: 'User Type', kind: 'select', options: () => USER_TYPES },
-      {
-        key: 'avatarUrl',
-        label: 'Profile Image URL',
-        kind: 'text',
-        maxLength: 1000,
-        hint: 'PNG, JPG, WEBP, GIF or SVG link.',
-      },
-      { key: 'language', label: 'Preferred Language', kind: 'select', options: () => LANGUAGES },
-      {
-        key: 'timezone',
-        label: 'Time Zone',
-        kind: 'text',
-        maxLength: 64,
-        hint: 'IANA name, e.g. Asia/Kolkata.',
-      },
-    ],
-    employee: [
-      { key: 'employeeCode', label: 'Employee Code', kind: 'text', required: true, maxLength: 50 },
-      {
-        key: 'employmentType',
-        label: 'Employment Type',
-        kind: 'select',
-        required: true,
-        options: () => EMPLOYMENT_TYPES,
-      },
-      { key: 'designation', label: 'Designation', kind: 'text', maxLength: 150 },
-      { key: 'joiningDate', label: 'Joining Date', kind: 'date' },
-      {
-        key: 'company',
-        label: 'Company / Organization',
-        kind: 'text',
-        required: true,
-        maxLength: 200,
-      },
-      { key: 'workLocation', label: 'Work Location', kind: 'text', maxLength: 200 },
-      { key: 'costCenter', label: 'Cost Center', kind: 'text', maxLength: 50 },
-    ],
-    contact: [
-      {
-        key: 'workEmail',
-        label: 'Work Email',
-        kind: 'email',
-        required: true,
-        maxLength: 254,
-        hint: 'The sign-in identity.',
-      },
-      { key: 'mobile', label: 'Primary Contact Number', kind: 'tel' },
-      { key: 'alternateEmail', label: 'Alternate Email', kind: 'email', maxLength: 254 },
-      { key: 'alternateMobile', label: 'Alternate Contact Number', kind: 'tel' },
-      { key: 'addressLine1', label: 'Address Line 1', kind: 'text', maxLength: 200 },
-      { key: 'addressLine2', label: 'Address Line 2', kind: 'text', maxLength: 200 },
-      { key: 'city', label: 'City', kind: 'text', maxLength: 100 },
-      { key: 'state', label: 'State', kind: 'text', maxLength: 100 },
-      { key: 'country', label: 'Country', kind: 'text', maxLength: 100 },
-      { key: 'postalCode', label: 'Postal Code', kind: 'text', maxLength: 20 },
-    ],
-    organization: [
-      {
-        key: 'branchId',
-        label: 'Branch',
-        kind: 'select',
-        required: true,
-        options: this.lookupOptions('branches', 'Select…'),
-      },
-      {
-        key: 'departmentId',
-        label: 'Department',
-        kind: 'select',
-        required: true,
-        options: this.lookupOptions('departments', 'Select…'),
-      },
-      {
-        key: 'teamId',
-        label: 'Team',
-        kind: 'select',
-        options: this.lookupOptions('teams', 'None'),
-      },
-      { key: 'reportingManagerId', label: 'Reporting Manager', kind: 'user' },
-      { key: 'assignedOfficerId', label: 'Assigned Officer', kind: 'user' },
-      { key: 'accessScope', label: 'Access Scope', kind: 'select', options: () => ACCESS_SCOPES },
-    ],
-  };
-
-  protected readonly editFields = computed(() => {
-    const s = this.editing();
-    return s ? this.EDIT_FIELDS[s] : [];
-  });
-
   constructor() {
     effect(() => {
       const id = this.userId();
@@ -538,13 +393,7 @@ export class UsersDetailComponent {
         this.section.set(section as SectionKey);
         void this.loadSection(section as SectionKey);
       }
-      if (q?.get('edit') === '1' && this.isEditable(section ?? '') && this.user()) {
-        this.startEdit(section as EditableSection);
-      }
     });
-    firstValueFrom(this.requestsApi.lookups())
-      .then((l) => this.lookups.set(l))
-      .catch(() => this.lookups.set(null));
   }
 
   private async load(id: string): Promise<void> {
@@ -552,10 +401,6 @@ export class UsersDetailComponent {
       this.user.set(await firstValueFrom(this.api.profile(id)));
       this.loadError.set(null);
       await Promise.all([this.loadAccess(), this.loadSection(this.section())]);
-      const q = this.query();
-      if (q?.get('edit') === '1' && this.isEditable(this.section())) {
-        this.startEdit(this.section() as EditableSection);
-      }
     } catch (err) {
       this.loadError.set(errorMessage(err, 'User not found.'));
     }
@@ -563,7 +408,6 @@ export class UsersDetailComponent {
 
   protected go(key: SectionKey): void {
     this.moreOpen.set(false);
-    if (this.editing() && this.editing() !== key) this.cancelEdit();
     this.section.set(key);
     void this.router.navigate([], { queryParams: { section: key }, replaceUrl: true });
   }
@@ -643,83 +487,21 @@ export class UsersDetailComponent {
     }
   }
 
-  protected requestChange(): void {
+  /** Opens a User Request for this user, prefilled with the chosen change type. */
+  protected requestChange(type: RequestChangeType): void {
+    this.changeOpen.set(false);
     this.moreOpen.set(false);
     void this.router.navigate(['/iam/user-requests/create'], {
-      queryParams: { type: 'ACCESS_CHANGE', userId: this.user()!.id },
+      queryParams: { type, userId: this.user()!.id },
     });
   }
 
-  protected async assignGroups(): Promise<void> {
-    const u = this.user()!;
-    const current = this.access()?.groups.map((g) => g.groupId) ?? [];
-    await this.dialogs.pick({
-      title: 'Assign groups',
-      description: `Roles attached to the groups are inherited by ${u.personal.fullName}.`,
-      confirmText: 'Assign',
-      searchPlaceholder: 'Search groups…',
-      excludeIds: current,
-      search: async (q) => this.searchLookup('groups', q),
-      submit: async (ids) => {
-        await firstValueFrom(this.api.setGroups(u.id, ids, 'merge'));
-        this.feedback.success(`${ids.length} group(s) assigned.`);
-        await this.refresh();
-      },
-    });
+  protected canRequest(type: RequestChangeType): boolean {
+    return this.changes().includes(type);
   }
 
-  protected async removeGroup(groupId: string, name: string): Promise<void> {
-    const u = this.user()!;
-    const ok = await this.dialogs.confirm(
-      `Remove ${name}?`,
-      `${u.personal.fullName} loses every role inherited from this group.`,
-      'Remove'
-    );
-    if (!ok) return;
-    const remaining = (this.access()?.groups ?? [])
-      .map((g) => g.groupId)
-      .filter((id) => id !== groupId);
-    await this.mutate(
-      () => firstValueFrom(this.api.setGroups(u.id, remaining, 'replace')),
-      'Group removed.'
-    );
-  }
-
-  protected async assignRoles(): Promise<void> {
-    const u = this.user()!;
-    const direct = (this.access()?.roles ?? [])
-      .filter((r) => r.sourceType === 'DIRECT')
-      .map((r) => r.roleId);
-    await this.dialogs.pick({
-      title: 'Assign roles',
-      description: 'Direct assignments bypass groups; prefer group membership where possible.',
-      confirmText: 'Assign',
-      searchPlaceholder: 'Search roles…',
-      excludeIds: direct,
-      search: async (q) => this.searchLookup('roles', q),
-      submit: async (ids) => {
-        await firstValueFrom(this.api.setRoles(u.id, ids, 'merge'));
-        this.feedback.success(`${ids.length} role(s) assigned.`);
-        await this.refresh();
-      },
-    });
-  }
-
-  protected async removeRole(roleId: string, name: string): Promise<void> {
-    const u = this.user()!;
-    const ok = await this.dialogs.confirm(
-      `Remove ${name}?`,
-      `The direct assignment is removed from ${u.personal.fullName}.`,
-      'Remove'
-    );
-    if (!ok) return;
-    const remaining = (this.access()?.roles ?? [])
-      .filter((r) => r.sourceType === 'DIRECT' && r.roleId !== roleId)
-      .map((r) => r.roleId);
-    await this.mutate(
-      () => firstValueFrom(this.api.setRoles(u.id, remaining, 'replace')),
-      'Role removed.'
-    );
+  protected changeMeta(type: RequestChangeType) {
+    return REQUEST_CHANGE_META[type];
   }
 
   protected async revokeOne(session: UserSession): Promise<void> {
@@ -773,128 +555,6 @@ export class UsersDetailComponent {
     } finally {
       this.busy.set(false);
     }
-  }
-
-  private searchLookup(kind: 'groups' | 'roles', q: string) {
-    const needle = q.trim().toLowerCase();
-    const items = this.lookups()?.[kind] ?? [];
-    return items
-      .filter((i) => !needle || i.name.toLowerCase().includes(needle))
-      .map((i) => ({ id: i.id, label: i.name, sublabel: i.key ?? null }));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Editing
-  // ---------------------------------------------------------------------------
-
-  protected isEditable(key: string): key is EditableSection {
-    return key === 'personal' || key === 'employee' || key === 'contact' || key === 'organization';
-  }
-
-  protected startEdit(section: EditableSection): void {
-    const u = this.user();
-    if (!u || !this.can('edit')) return;
-    const { personal: p, employee: e, contact: c, organization: o } = u;
-    const values: Record<EditableSection, Record<string, string | null>> = {
-      personal: { ...p, avatarUrl: u.avatarUrl },
-      employee: { ...e, joiningDate: e.joiningDate?.slice(0, 10) ?? null },
-      contact: { ...c },
-      organization: {
-        branchId: o.branch?.id ?? null,
-        departmentId: o.department?.id ?? null,
-        teamId: o.team?.id ?? null,
-        reportingManagerId: o.reportingManager?.id ?? null,
-        assignedOfficerId: o.assignedOfficer?.id ?? null,
-        accessScope: o.accessScope,
-      },
-    };
-    this.draft.set(
-      Object.fromEntries(
-        this.EDIT_FIELDS[section].map((f) => [f.key, values[section][f.key] ?? ''])
-      )
-    );
-    this.editErrors.set([]);
-    this.editing.set(section);
-    if (this.section() !== section) this.go(section);
-  }
-
-  protected patchDraft(key: string, value: string): void {
-    this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
-  }
-
-  protected cancelEdit(): void {
-    this.editing.set(null);
-    this.editErrors.set([]);
-    void this.router.navigate([], { queryParams: { section: this.section() }, replaceUrl: true });
-  }
-
-  protected async saveEdit(): Promise<void> {
-    const section = this.editing();
-    if (!section) return;
-    const d = this.draft();
-    const errors = this.validate(section, d);
-    this.editErrors.set(errors);
-    if (errors.length) return;
-
-    const lowercase = new Set(['username', 'workEmail']);
-    const fields: Record<string, string | null> = {};
-    for (const f of this.EDIT_FIELDS[section]) {
-      const v = (d[f.key] ?? '').trim();
-      fields[f.key] = lowercase.has(f.key) ? v.toLowerCase() : v || null;
-    }
-    const body: UpdateUserProfile = { [section]: fields };
-    this.busy.set(true);
-    try {
-      this.user.set(await firstValueFrom(this.api.updateProfile(this.user()!.id, body)));
-      this.feedback.success('Changes saved.');
-      this.editing.set(null);
-      void this.router.navigate([], { queryParams: { section }, replaceUrl: true });
-      await this.loadAccess();
-    } catch (err) {
-      this.editErrors.set([errorMessage(err, 'Could not save changes.')]);
-    } finally {
-      this.busy.set(false);
-    }
-  }
-
-  private validate(section: EditableSection, d: Record<string, string>): string[] {
-    const e: string[] = [];
-    const v = (k: string) => (d[k] ?? '').trim();
-    for (const f of this.EDIT_FIELDS[section]) {
-      if (f.required && !v(f.key)) e.push(`${f.label} is required`);
-    }
-    if (section === 'personal') {
-      if (v('username') && !/^[a-z0-9_.-]{3,50}$/i.test(v('username'))) {
-        e.push('Username: 3–50 letters, digits, dot, dash or underscore');
-      }
-      for (const k of ['firstName', 'lastName']) {
-        if (v(k) && (v(k).length < 2 || v(k).length > 100))
-          e.push(`${k === 'firstName' ? 'First' : 'Last'} Name must be 2–100 characters`);
-      }
-      if (
-        v('avatarUrl') &&
-        !/^https?:\/\/\S+\.(png|jpe?g|webp|gif|svg)(\?\S*)?$/i.test(v('avatarUrl'))
-      ) {
-        e.push('Profile image must be a PNG, JPG, WEBP, GIF or SVG link');
-      }
-    }
-    if (section === 'contact') {
-      for (const [k, label] of [
-        ['workEmail', 'Work Email'],
-        ['alternateEmail', 'Alternate Email'],
-      ]) {
-        if (v(k) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v(k)))
-          e.push(`${label} is not a valid email`);
-      }
-      for (const [k, label] of [
-        ['mobile', 'Primary Contact Number'],
-        ['alternateMobile', 'Alternate Contact Number'],
-      ]) {
-        if (v(k) && !/^[+0-9 ()-]{6,20}$/.test(v(k)))
-          e.push(`${label} is not a valid phone number`);
-      }
-    }
-    return e;
   }
 
   // ---------------------------------------------------------------------------

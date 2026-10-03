@@ -1,7 +1,5 @@
-import { Prisma } from '@prisma/client';
 import { config } from '../../config/env';
 import { AuditService } from '../../infrastructure/audit';
-import { cacheDelPattern } from '../../infrastructure/cache';
 import { sendPasswordResetEmail } from '../../infrastructure/queue';
 import { AppError } from '../../middleware/error';
 import { OneTimeTokenService } from '../../services/auth';
@@ -17,15 +15,10 @@ import {
   RequestStatus,
   RequestType,
 } from '../user-requests/user-request.types';
-import {
-  ACCOUNT_STATUS_LABELS,
-  AccountStatus,
-  accountStatusOf,
-  recordStatusChange,
-} from './account-status';
+import { ACCOUNT_STATUS_LABELS, AccountStatus, accountStatusOf } from './account-status';
 import { formatUserCode } from './iam-user.mapper';
-import { allowedUserActions } from './user-actions';
-import { AddUserNoteDto, UpdateUserProfileDto } from './user-admin.dto';
+import { allowedUserActions, requestableChanges } from './user-actions';
+import { AddUserNoteDto } from './user-admin.dto';
 import { UserAdminNotifier } from './user-admin.notifier';
 import { UserAdminRepository } from './user-admin.repository';
 
@@ -33,6 +26,8 @@ export interface AdminActor {
   userId: string;
   organizationId: string;
   canManage: boolean;
+  /** May raise User Requests (`user-requests:create`); gates the Request Change menu. */
+  canRequest: boolean;
   sessionId?: string;
 }
 
@@ -178,198 +173,14 @@ export class UserAdminService {
         : null,
       latestRequest: requests[0] ? { id: requests[0].id, refNo: requests[0].refNo } : null,
       actions: allowedUserActions(
-        {
-          accountStatus,
-          mfaEnabled: user.mfaEnabled,
-          activeSessions,
-          passwordResetRequired: user.passwordResetFlag,
-        },
+        { accountStatus, mfaEnabled: user.mfaEnabled, activeSessions },
         actor.canManage
       ),
+      requestableChanges: requestableChanges(
+        { accountStatus, mfaEnabled: user.mfaEnabled, activeSessions },
+        actor.canRequest
+      ),
     };
-  }
-
-  async updateProfile(id: string, dto: UpdateUserProfileDto, actor: AdminActor) {
-    const user = await this.load(id);
-    const { personal, employee, contact, organization: org } = dto;
-
-    const conflicts = await this.repo.findConflicts(id, {
-      email: contact?.workEmail,
-      username: personal?.username,
-      employeeCode: employee?.employeeCode,
-    });
-    for (const c of conflicts) {
-      if (contact?.workEmail && c.email.toLowerCase() === contact.workEmail) {
-        throw new AppError(
-          'Work Email is already used by another account',
-          409,
-          'USER_EMAIL_EXISTS'
-        );
-      }
-      if (personal?.username && c.username === personal.username) {
-        throw new AppError('Username is already taken', 409, 'USERNAME_TAKEN');
-      }
-      if (
-        employee?.employeeCode &&
-        c.employeeCode?.toLowerCase() === employee.employeeCode.toLowerCase()
-      ) {
-        throw new AppError('Employee Code is already in use', 409, 'EMPLOYEE_CODE_EXISTS');
-      }
-    }
-    const refs: Array<
-      ['branch' | 'department' | 'team' | 'user', string | null | undefined, string]
-    > = [
-      ['branch', org?.branchId, 'Branch'],
-      ['department', org?.departmentId, 'Department'],
-      ['team', org?.teamId, 'Team'],
-      ['user', org?.reportingManagerId, 'Reporting Manager'],
-      ['user', org?.assignedOfficerId, 'Assigned Officer'],
-    ];
-    for (const [model, refId, label] of refs) {
-      if (refId && !(await this.repo.countExisting(model, refId))) {
-        throw new AppError(`${label} not found`, 400, 'INVALID_REFERENCE');
-      }
-    }
-    if (org?.reportingManagerId === id) {
-      throw new AppError('A user cannot report to themselves', 400, 'INVALID_REFERENCE');
-    }
-
-    const changes: Record<string, unknown> = {
-      username: personal?.username,
-      firstName: personal?.firstName,
-      middleName: personal?.middleName,
-      lastName: personal?.lastName,
-      displayName: personal?.displayName,
-      userType: personal?.userType,
-      avatarUrl: personal?.avatarUrl,
-      language: personal?.language,
-      timezone: personal?.timezone,
-      employeeCode: employee?.employeeCode,
-      employmentType: employee?.employmentType,
-      jobTitle: employee?.designation,
-      joiningDate: employee?.joiningDate,
-      company: employee?.company,
-      workLocation: employee?.workLocation,
-      costCenter: employee?.costCenter,
-      email: contact?.workEmail,
-      mobile: contact?.mobile,
-      alternateEmail: contact?.alternateEmail,
-      alternateMobile: contact?.alternateMobile,
-      addressLine1: contact?.addressLine1,
-      addressLine2: contact?.addressLine2,
-      city: contact?.city,
-      state: contact?.state,
-      country: contact?.country,
-      postalCode: contact?.postalCode,
-      branchId: org?.branchId,
-      reportingManagerId: org?.reportingManagerId,
-      assignedOfficerId: org?.assignedOfficerId,
-      accessScope: org?.accessScope,
-    };
-    const before: Record<string, unknown> = {};
-    const after: Record<string, unknown> = {};
-    const data: Prisma.UserUncheckedUpdateInput = { updatedBy: actor.userId };
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === undefined) continue;
-      const current = (user as Record<string, unknown>)[key];
-      const same =
-        current instanceof Date && value instanceof Date
-          ? current.getTime() === value.getTime()
-          : current === value;
-      if (same) continue;
-      before[key] = current ?? null;
-      after[key] = value;
-      (data as Record<string, unknown>)[key] = value;
-    }
-    if (
-      personal &&
-      ('firstName' in after ||
-        'middleName' in after ||
-        'lastName' in after ||
-        'displayName' in after)
-    ) {
-      const first = (after['firstName'] as string | undefined) ?? user.firstName;
-      const middle =
-        'middleName' in after ? (after['middleName'] as string | null) : user.middleName;
-      const last = (after['lastName'] as string | undefined) ?? user.lastName;
-      const display =
-        'displayName' in after ? (after['displayName'] as string | null) : user.displayName;
-      data.fullName = display || [first, middle, last].filter(Boolean).join(' ') || user.fullName;
-    }
-    if ('email' in after) data.emailId = after['email'] as string;
-
-    const membership = user.userTenants.find((t) => t.tenantId === actor.organizationId);
-    const departmentChanged =
-      org &&
-      org.departmentId !== undefined &&
-      org.departmentId !== (membership?.departmentId ?? null);
-    const currentTeam = user.teams[0]?.id ?? null;
-    const teamChanged = org && org.teamId !== undefined && org.teamId !== currentTeam;
-    if (departmentChanged) {
-      before['departmentId'] = membership?.departmentId ?? null;
-      after['departmentId'] = org!.departmentId;
-    }
-    if (teamChanged) {
-      before['teamId'] = currentTeam;
-      after['teamId'] = org!.teamId;
-    }
-    if (!Object.keys(after).length) return this.profile(id, actor);
-
-    await this.repo.transaction(async (tx) => {
-      if (departmentChanged) {
-        const dept = org!.departmentId
-          ? await tx.department.findUnique({
-              where: { id: org!.departmentId },
-              select: { name: true },
-            })
-          : null;
-        data.department = dept?.name ?? null;
-        await tx.userTenant.upsert({
-          where: { userId_tenantId: { userId: id, tenantId: actor.organizationId } },
-          create: {
-            userId: id,
-            tenantId: actor.organizationId,
-            departmentId: org!.departmentId ?? null,
-          },
-          update: { departmentId: org!.departmentId ?? null },
-        });
-      }
-      await tx.user.update({ where: { id }, data });
-      if (teamChanged) {
-        await tx.user.update({
-          where: { id },
-          data: {
-            teams: {
-              disconnect: user.teams.map((t) => ({ id: t.id })),
-              ...(org!.teamId ? { connect: [{ id: org!.teamId }] } : {}),
-            },
-          },
-        });
-        for (const teamId of [currentTeam, org!.teamId].filter((v): v is string => !!v)) {
-          const count = await tx.user.count({ where: { teams: { some: { id: teamId } } } });
-          await tx.team.update({ where: { id: teamId }, data: { memberCount: count } });
-        }
-      }
-    });
-
-    const sections = Object.entries({ personal, employee, contact, organization: org })
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    await AuditService.log({
-      action:
-        org && (departmentChanged || teamChanged || 'branchId' in after)
-          ? 'user.organization_changed'
-          : 'user.profile_updated',
-      resource: 'user',
-      resourceId: id,
-      organizationId: actor.organizationId,
-      actorId: actor.userId,
-      before,
-      after,
-      metadata: { sections },
-    });
-    void cacheDelPattern('iam:users:*');
-    return this.profile(id, actor);
   }
 
   // ---------------------------------------------------------------------------
@@ -544,86 +355,6 @@ export class UserAdminService {
     return this.profile(id, actor);
   }
 
-  /** Blocks sign-in until the password is changed through a reset link, which is sent now. */
-  async requirePasswordChange(id: string, actor: AdminActor) {
-    this.assertManage(actor);
-    const user = await this.load(id);
-    if (accountStatusOf(user) !== 'ACTIVE' || !user.passwordHash) {
-      throw new AppError(
-        'Only active accounts can be required to change password',
-        409,
-        'RESET_NOT_ALLOWED'
-      );
-    }
-    if (user.passwordResetFlag)
-      throw new AppError('A password change is already required', 409, 'ALREADY_REQUIRED');
-    await this.repo.transaction(async (tx) => {
-      await tx.user.update({
-        where: { id },
-        data: { passwordResetFlag: true, updatedBy: actor.userId },
-      });
-    });
-    await new SessionsService().revokeAllForUser(
-      actor.organizationId,
-      id,
-      actor.userId,
-      ORG_WIDE_SESSION_SCOPE,
-      actor.sessionId
-    );
-    await this.issuePasswordReset(user, 'Admin: require password change');
-    await AuditService.log({
-      action: 'user.password_change_required',
-      resource: 'user',
-      resourceId: id,
-      organizationId: actor.organizationId,
-      actorId: actor.userId,
-      severity: 'warning',
-      before: { passwordResetRequired: false },
-      after: { passwordResetRequired: true },
-    });
-    return this.profile(id, actor);
-  }
-
-  async resetMfa(id: string, actor: AdminActor) {
-    this.assertManage(actor);
-    const user = await this.load(id);
-    if (!user.mfaEnabled)
-      throw new AppError('MFA is not enabled for this user', 409, 'MFA_NOT_ENABLED');
-    await this.repo.transaction(async (tx) => {
-      await tx.user.update({
-        where: { id },
-        data: {
-          mfaEnabled: false,
-          enable2fa: false,
-          mfaMethod: null,
-          mfaSecret: null,
-          mfaEnrolledAt: null,
-          mfaLastUsedCounter: null,
-          recoveryCodes: Prisma.DbNull,
-          updatedBy: actor.userId,
-        },
-      });
-    });
-    await AuditService.log({
-      action: 'user.mfa_reset',
-      resource: 'user',
-      resourceId: id,
-      organizationId: actor.organizationId,
-      actorId: actor.userId,
-      severity: 'warning',
-      before: { mfaEnabled: true, mfaMethod: user.mfaMethod },
-      after: { mfaEnabled: false, mfaMethod: null },
-    });
-    await this.notifier.send(
-      user,
-      'MFA_CHANGED',
-      'Your multi-factor authentication was reset',
-      'An administrator reset multi-factor authentication on your account. You will be asked to enrol again the next time MFA is required.',
-      'Admin: reset MFA'
-    );
-    return this.profile(id, actor);
-  }
-
   async resendInvitation(id: string, actor: AdminActor) {
     this.assertManage(actor);
     const user = await this.load(id);
@@ -656,46 +387,6 @@ export class UserAdminService {
       organizationId: actor.organizationId,
       actorId: actor.userId,
     });
-    return this.profile(id, actor);
-  }
-
-  async cancelInvitation(id: string, reason: string | null, actor: AdminActor) {
-    this.assertManage(actor);
-    const user = await this.load(id);
-    const status = accountStatusOf(user);
-    if (status !== 'INVITED' && status !== 'PENDING_VERIFICATION') {
-      throw new AppError('Only pending invitations can be cancelled', 409, 'NOT_INVITED');
-    }
-    await this.repo.transaction(async (tx) => {
-      await this.repo.revokePendingInvitations(user.email, actor.organizationId, actor.userId, tx);
-      await tx.user.update({
-        where: { id },
-        data: { status: 'DISABLED', updatedBy: actor.userId },
-      });
-      await recordStatusChange(
-        {
-          userId: id,
-          organizationId: actor.organizationId,
-          from: status,
-          to: 'DISABLED',
-          reason: reason ?? 'Invitation cancelled',
-          actorId: actor.userId,
-        },
-        tx
-      );
-    });
-    await AuditService.log({
-      action: 'user.invitation_cancelled',
-      resource: 'user',
-      resourceId: id,
-      organizationId: actor.organizationId,
-      actorId: actor.userId,
-      severity: 'warning',
-      before: { status: user.status },
-      after: { status: 'DISABLED' },
-      metadata: { reason },
-    });
-    void cacheDelPattern('iam:users:*');
     return this.profile(id, actor);
   }
 

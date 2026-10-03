@@ -24,7 +24,14 @@ import { createListStore } from '../../shared/utils/create-list-store';
 import { MultiSelectComponent, MultiSelectOption } from '../iam/shared/multi-select.component';
 import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../iam/shared/iam-page-header.component';
 import { CsvExporter } from '../../shared/utils/csv-exporter';
-import { ACTION_META, StateAction, UserActionsService, rowActions } from './user-actions';
+import {
+  ACTION_META,
+  REQUEST_CHANGE_META,
+  StateAction,
+  UserActionsService,
+  rowActions,
+  rowChanges,
+} from './user-actions';
 
 type SortKey =
   'userNo' | 'fullName' | 'email' | 'employeeCode' | 'status' | 'createdAt' | 'lastLoginDatetime';
@@ -120,7 +127,7 @@ const MENU_WIDTH = 232;
 const MENU_ITEM_HEIGHT = 40;
 const MENU_CHROME = 44;
 const VIEWPORT_GAP = 8;
-const NAV_KEYS = ['view', 'edit', 'groups', 'roles', 'audit'];
+const NAV_KEYS = ['view', 'audit'];
 
 @Component({
   selector: 'app-users',
@@ -157,6 +164,7 @@ export class UsersComponent {
   private readonly messages = inject(MessageService);
   private readonly actions = inject(UserActionsService);
   protected readonly canManage = inject(PermissionService).can('users:manage');
+  protected readonly canRequest = inject(PermissionService).can('user-requests:create');
 
   readonly pageSizes = [10, 25, 50, 100];
   readonly statusOptions = STATUS_OPTIONS;
@@ -494,8 +502,9 @@ export class UsersComponent {
 
   /** Items are grouped: navigation, state actions, then destructive actions. */
   groupOf(item: MenuItem): number {
-    if (item.danger) return 2;
-    return NAV_KEYS.includes(item.key) ? 0 : 1;
+    if (item.danger) return 3;
+    if (NAV_KEYS.includes(item.key)) return 0;
+    return item.key.startsWith('request:') ? 1 : 2;
   }
 
   private menuButtons(): HTMLButtonElement[] {
@@ -507,23 +516,25 @@ export class UsersComponent {
   }
 
   menuItems(user: IamUserListItem): MenuItem[] {
-    const go =
-      (section: string, extra: Record<string, string> = {}) =>
-      () =>
-        void this.router.navigate(['/iam/users', user.id], { queryParams: { section, ...extra } });
-    const allowed = rowActions(user, this.canManage());
+    const go = (section: string) => () =>
+      void this.router.navigate(['/iam/users', user.id], { queryParams: { section } });
     const items: MenuItem[] = [
       { key: 'view', label: 'View Details', icon: 'pi pi-eye', run: go('overview') },
     ];
-    if (allowed.includes('edit'))
-      items.push({ key: 'edit', ...ACTION_META.edit, run: go('personal', { edit: '1' }) });
-    if (allowed.includes('manageAccess')) {
-      items.push({ key: 'groups', label: 'Manage Groups', icon: 'pi pi-users', run: go('groups') });
-      items.push({ key: 'roles', label: 'Manage Roles', icon: 'pi pi-key', run: go('roles') });
+    // Changes are raised as User Requests (request → approval → provisioning).
+    for (const change of rowChanges(user, this.canRequest())) {
+      items.push({
+        key: 'request:' + change,
+        label: 'Request: ' + REQUEST_CHANGE_META[change].label,
+        icon: REQUEST_CHANGE_META[change].icon,
+        run: () =>
+          void this.router.navigate(['/iam/user-requests/create'], {
+            queryParams: { type: change, userId: user.id },
+          }),
+      });
     }
-    for (const action of allowed.filter(
-      (a): a is StateAction => a !== 'edit' && a !== 'manageAccess'
-    )) {
+    // Emergency actions and messages stay direct (confirmed and audited).
+    for (const action of rowActions(user, this.canManage())) {
       items.push({
         key: action,
         ...ACTION_META[action],

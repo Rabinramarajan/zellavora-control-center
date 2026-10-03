@@ -1,19 +1,23 @@
 import { AccountStatus } from './iam.model';
 
-export type UserAction =
-  | 'edit'
-  | 'manageAccess'
-  | 'activate'
-  | 'deactivate'
-  | 'disable'
-  | 'lock'
-  | 'unlock'
-  | 'sendPasswordReset'
-  | 'requirePasswordChange'
-  | 'resendInvitation'
-  | 'cancelInvitation'
-  | 'resetMfa'
-  | 'revokeSessions';
+/**
+ * Direct actions on a user: emergency responses (lock, revoke sessions) and messages
+ * (password reset, resend invitation). Every other change is a User Request.
+ */
+export type UserAction = 'lock' | 'sendPasswordReset' | 'resendInvitation' | 'revokeSessions';
+
+/** User Request types that can be raised from a user's profile. */
+export type RequestChangeType =
+  | 'UPDATE_USER'
+  | 'ADD_ROLE'
+  | 'REMOVE_ROLE'
+  | 'ADD_GROUP'
+  | 'REMOVE_GROUP'
+  | 'TRANSFER'
+  | 'ACTIVATE_USER'
+  | 'DEACTIVATE_USER'
+  | 'UNLOCK_ACCOUNT'
+  | 'RESET_MFA';
 
 export interface NamedRef {
   id: string;
@@ -98,50 +102,8 @@ export interface UserProfile {
   pendingInvitation: { id: string; sentAt: string; expiresAt: string } | null;
   latestRequest: { id: string; refNo: string } | null;
   actions: UserAction[];
-}
-
-/** PATCH body: only the sections (and fields) being changed. */
-export interface UpdateUserProfile {
-  personal?: Partial<{
-    username: string;
-    firstName: string;
-    middleName: string | null;
-    lastName: string;
-    displayName: string | null;
-    userType: string | null;
-    avatarUrl: string | null;
-    language: string;
-    timezone: string | null;
-  }>;
-  employee?: Partial<{
-    employeeCode: string;
-    employmentType: string;
-    designation: string | null;
-    joiningDate: string | null;
-    company: string | null;
-    workLocation: string | null;
-    costCenter: string | null;
-  }>;
-  contact?: Partial<{
-    workEmail: string;
-    mobile: string | null;
-    alternateEmail: string | null;
-    alternateMobile: string | null;
-    addressLine1: string | null;
-    addressLine2: string | null;
-    city: string | null;
-    state: string | null;
-    country: string | null;
-    postalCode: string | null;
-  }>;
-  organization?: Partial<{
-    branchId: string | null;
-    departmentId: string | null;
-    teamId: string | null;
-    reportingManagerId: string | null;
-    assignedOfficerId: string | null;
-    accessScope: string | null;
-  }>;
+  /** Changes that can be requested for this account in its current state. */
+  requestableChanges: RequestChangeType[];
 }
 
 export interface UserAccessGroup {

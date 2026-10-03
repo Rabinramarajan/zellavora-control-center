@@ -1,14 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { IamUserService } from './iam-user.service';
-import {
-  CreateIamUserSchema,
-  IamUserListQuerySchema,
-  LockUserSchema,
-  SetUserGroupsSchema,
-  SetUserRolesSchema,
-  SetUserStatusSchema,
-  UpdateIamUserSchema,
-} from './iam-user.dto';
+import { IamUserListQuerySchema, LockUserSchema } from './iam-user.dto';
 import type { AuthRequest } from '../../middleware/auth';
 
 export class IamUserController {
@@ -46,92 +38,10 @@ export class IamUserController {
     }
   };
 
-  create = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const dto = CreateIamUserSchema.parse(req.body);
-      const inviter =
-        req.userId && req.tenantId
-          ? {
-              userId: req.userId,
-              organizationId: req.tenantId,
-              ipAddress: req.ip,
-              userAgent: req.get('user-agent'),
-            }
-          : undefined;
-      const data = await this.service.create(dto, req.userId, inviter);
-      res.status(201).json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  update = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const dto = UpdateIamUserSchema.parse(req.body);
-      const data = await this.service.update(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  setStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const dto = SetUserStatusSchema.parse(req.body);
-      const data = await this.service.setStatus(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
   lock = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const dto = LockUserSchema.parse(req.body);
       const data = await this.service.lock(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  unlock = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const data = await this.service.unlock(req.params.id, req.userId);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  setRoles = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const dto = SetUserRolesSchema.parse(req.body);
-      // Assignments are organization-scoped; default to the caller's organization.
-      const data = await this.service.setRoles(
-        req.params.id,
-        { ...dto, organizationId: dto.organizationId ?? req.tenantId },
-        req.userId
-      );
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  setGroups = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const dto = SetUserGroupsSchema.parse(req.body);
-      const data = await this.service.setGroups(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  delete = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const data = await this.service.delete(req.params.id, req.userId);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
