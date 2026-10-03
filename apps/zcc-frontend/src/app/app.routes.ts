@@ -106,10 +106,14 @@ export const appRoutes: Routes = [
       ),
   },
   {
-    path: 'cms-builder',
+    path: 'cms',
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/cms-builder/cms-builder.component').then((m) => m.CmsBuilderComponent),
+    canMatch: [canMatchPermission('cms:read')],
+    loadChildren: () => import('./features/cms/cms.routes').then((m) => m.cmsRoutes),
+  },
+  {
+    path: 'cms-builder',
+    redirectTo: 'cms',
   },
   {
     path: 'freelancer-sheets',

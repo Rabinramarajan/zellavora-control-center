@@ -1,0 +1,101 @@
+<div class="cms-dialog-backdrop" role="presentation" (click)="onBackdropClick($event)">
+  <div
+    class="cms-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cms-create-title"
+    (keydown.escape)="cancel()"
+  >
+    <div class="cms-dialog-head">
+      <h2 id="cms-create-title" class="cms-dialog-title">Create New Page</h2>
+      <p class="cms-dialog-desc">Choose a title, type and slug to get started.</p>
+      <button
+        type="button"
+        [class]="btn.icon"
+        aria-label="Close dialog"
+        (click)="cancel()"
+      >
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <form class="cms-dialog-body" (submit)="$event.preventDefault(); submit()">
+      <!-- Title -->
+      <div class="cms-field">
+        <label class="cms-label" for="cms-page-title">
+          Page Title <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="cms-page-title"
+          type="text"
+          [class]="inputClass"
+          placeholder="e.g. Home, About Us, Contact"
+          autocomplete="off"
+          maxlength="120"
+          [value]="title()"
+          (input)="onTitleInput($event)"
+          [attr.aria-describedby]="titleError() ? 'cms-title-err' : null"
+          [attr.aria-invalid]="titleError() ? 'true' : null"
+        />
+        @if (titleError()) {
+          <p id="cms-title-err" class="cms-field-error" role="alert">{{ titleError() }}</p>
+        }
+      </div>
+
+      <!-- Page Type -->
+      <div class="cms-field">
+        <label class="cms-label" for="cms-page-type">Page Type</label>
+        <app-select-control
+          [options]="typeOptions"
+          [value]="type()"
+          [searchable]="false"
+          (valueChange)="type.set($any($event))"
+        />
+      </div>
+
+      <!-- Slug -->
+      <div class="cms-field">
+        <label class="cms-label" for="cms-page-slug">
+          Slug <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
+        <div class="cms-slug-wrap">
+          <span class="cms-slug-prefix" aria-hidden="true">/</span>
+          <input
+            id="cms-page-slug"
+            type="text"
+            class="cms-slug-input"
+            placeholder="about-us"
+            autocomplete="off"
+            [value]="slug()"
+            (input)="onSlugInput($event)"
+            (blur)="onSlugBlur($event)"
+            [attr.aria-describedby]="slugError() ? 'cms-slug-err' : 'cms-slug-hint'"
+            [attr.aria-invalid]="slugError() ? 'true' : null"
+          />
+        </div>
+        @if (slugError()) {
+          <p id="cms-slug-err" class="cms-field-error" role="alert">{{ slugError() }}</p>
+        } @else {
+          <p id="cms-slug-hint" class="cms-field-hint">Auto-generated from title. You can edit it.</p>
+        }
+      </div>
+
+      @if (serverError()) {
+        <p class="cms-server-error" role="alert">{{ serverError() }}</p>
+      }
+
+      <div class="cms-dialog-foot">
+        <button type="button" [class]="btn.secondary" (click)="cancel()">Cancel</button>
+        <button type="submit" [class]="btn.primary" [disabled]="saving()">
+          @if (saving()) {
+            <i class="pi pi-spin pi-spinner text-sm" aria-hidden="true"></i>
+            Creating…
+          } @else {
+            <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+            Create &amp; Open Builder
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

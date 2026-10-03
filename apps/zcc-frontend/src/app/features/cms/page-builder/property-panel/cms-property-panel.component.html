@@ -1,0 +1,187 @@
+@if (section(); as s) {
+  <div class="prop-root">
+    <!-- Section header -->
+    <div class="prop-header">
+      <span class="prop-type">{{ s.type }}</span>
+      <span class="prop-title">{{ s.title }}</span>
+    </div>
+
+    <!-- Section label -->
+    <div class="prop-section">
+      <h3 class="prop-group-title">Label</h3>
+      <div class="prop-field">
+        <label class="prop-label" for="prop-section-title">Section Label</label>
+        <input
+          id="prop-section-title"
+          type="text"
+          [class]="inputClass"
+          [value]="s.title"
+          (input)="setTitle($any($event.target).value)"
+          placeholder="Section label"
+        />
+      </div>
+    </div>
+
+    <!-- Content props by type -->
+    @if (s.type === 'hero') {
+      <div class="prop-section">
+        <h3 class="prop-group-title">Content</h3>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-hero-title">Title</label>
+          <input id="prop-hero-title" type="text" [class]="inputClass" [value]="getProp('title')" (input)="setProp('title', $any($event.target).value)" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-hero-desc">Description</label>
+          <textarea id="prop-hero-desc" class="prop-textarea" [value]="getProp('description')" (input)="setProp('description', $any($event.target).value)" rows="3"></textarea>
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-hero-cta">CTA Text</label>
+          <input id="prop-hero-cta" type="text" [class]="inputClass" [value]="getProp('ctaText')" (input)="setProp('ctaText', $any($event.target).value)" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-hero-url">CTA URL</label>
+          <input id="prop-hero-url" type="url" [class]="inputClass" [value]="getProp('ctaUrl')" (input)="setProp('ctaUrl', $any($event.target).value)" />
+        </div>
+      </div>
+    }
+
+    @if (s.type === 'heading') {
+      <div class="prop-section">
+        <h3 class="prop-group-title">Content</h3>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-heading-text">Text</label>
+          <input id="prop-heading-text" type="text" [class]="inputClass" [value]="getProp('text')" (input)="setProp('text', $any($event.target).value)" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-heading-level">Level</label>
+          <select id="prop-heading-level" [class]="inputClass" [value]="getProp('level')" (change)="setProp('level', $any($event.target).value)">
+            <option value="h1">H1</option>
+            <option value="h2">H2</option>
+            <option value="h3">H3</option>
+            <option value="h4">H4</option>
+          </select>
+        </div>
+      </div>
+    }
+
+    @if (s.type === 'paragraph') {
+      <div class="prop-section">
+        <h3 class="prop-group-title">Content</h3>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-para-text">Text</label>
+          <textarea id="prop-para-text" class="prop-textarea" [value]="getProp('text')" (input)="setProp('text', $any($event.target).value)" rows="4"></textarea>
+        </div>
+      </div>
+    }
+
+    @if (s.type === 'button') {
+      <div class="prop-section">
+        <h3 class="prop-group-title">Content</h3>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-btn-label">Label</label>
+          <input id="prop-btn-label" type="text" [class]="inputClass" [value]="getProp('label')" (input)="setProp('label', $any($event.target).value)" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-btn-url">URL</label>
+          <input id="prop-btn-url" type="url" [class]="inputClass" [value]="getProp('url')" (input)="setProp('url', $any($event.target).value)" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-btn-variant">Variant</label>
+          <select id="prop-btn-variant" [class]="inputClass" [value]="getProp('variant')" (change)="setProp('variant', $any($event.target).value)">
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="outline">Outline</option>
+            <option value="ghost">Ghost</option>
+          </select>
+        </div>
+      </div>
+    }
+
+    @if (s.type === 'image') {
+      <div class="prop-section">
+        <h3 class="prop-group-title">Content</h3>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-img-src">Source URL</label>
+          <input id="prop-img-src" type="url" [class]="inputClass" [value]="getProp('src')" (input)="setProp('src', $any($event.target).value)" placeholder="https://…" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-img-alt">Alt Text</label>
+          <input id="prop-img-alt" type="text" [class]="inputClass" [value]="getProp('alt')" (input)="setProp('alt', $any($event.target).value)" />
+        </div>
+      </div>
+    }
+
+    @if (s.type === 'cta') {
+      <div class="prop-section">
+        <h3 class="prop-group-title">Content</h3>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-cta-title">Title</label>
+          <input id="prop-cta-title" type="text" [class]="inputClass" [value]="getProp('title')" (input)="setProp('title', $any($event.target).value)" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-cta-desc">Description</label>
+          <textarea id="prop-cta-desc" class="prop-textarea" [value]="getProp('description')" (input)="setProp('description', $any($event.target).value)" rows="2"></textarea>
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-cta-btn">Button Text</label>
+          <input id="prop-cta-btn" type="text" [class]="inputClass" [value]="getProp('buttonText')" (input)="setProp('buttonText', $any($event.target).value)" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-cta-url">Button URL</label>
+          <input id="prop-cta-url" type="url" [class]="inputClass" [value]="getProp('buttonUrl')" (input)="setProp('buttonUrl', $any($event.target).value)" />
+        </div>
+      </div>
+    }
+
+    @if (s.type === 'spacer') {
+      <div class="prop-section">
+        <h3 class="prop-group-title">Layout</h3>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-spacer-h">Height (px)</label>
+          <input id="prop-spacer-h" type="number" [class]="inputClass" [value]="getProp('height')" (input)="setProp('height', $any($event.target).value)" min="4" max="320" />
+        </div>
+      </div>
+    }
+
+    <!-- Spacing -->
+    <div class="prop-section">
+      <h3 class="prop-group-title">Spacing <span class="prop-device-badge">{{ device() }}</span></h3>
+      <div class="prop-grid-2">
+        <div class="prop-field">
+          <label class="prop-label" for="prop-pt">Padding Top</label>
+          <input id="prop-pt" type="number" [class]="inputClass" [value]="getStyle('paddingTop')" (input)="setStyle('paddingTop', $any($event.target).value)" min="0" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-pb">Padding Bottom</label>
+          <input id="prop-pb" type="number" [class]="inputClass" [value]="getStyle('paddingBottom')" (input)="setStyle('paddingBottom', $any($event.target).value)" min="0" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-pl">Padding Left</label>
+          <input id="prop-pl" type="number" [class]="inputClass" [value]="getStyle('paddingLeft')" (input)="setStyle('paddingLeft', $any($event.target).value)" min="0" />
+        </div>
+        <div class="prop-field">
+          <label class="prop-label" for="prop-pr">Padding Right</label>
+          <input id="prop-pr" type="number" [class]="inputClass" [value]="getStyle('paddingRight')" (input)="setStyle('paddingRight', $any($event.target).value)" min="0" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced -->
+    <div class="prop-section">
+      <h3 class="prop-group-title">Advanced</h3>
+      <div class="prop-field">
+        <label class="prop-label" for="prop-id">Element ID</label>
+        <input id="prop-id" type="text" [class]="inputClass" [value]="getProp('elementId')" (input)="setProp('elementId', $any($event.target).value)" placeholder="Optional anchor ID" />
+      </div>
+      <div class="prop-field">
+        <label class="prop-label" for="prop-class">CSS Class</label>
+        <input id="prop-class" type="text" [class]="inputClass" [value]="getProp('cssClass')" (input)="setProp('cssClass', $any($event.target).value)" placeholder="Additional classes" />
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="prop-empty">
+    <i class="pi pi-mouse-pointer text-2xl text-gray-300 dark:text-gray-600" aria-hidden="true"></i>
+    <p>Select a section to edit its properties.</p>
+  </div>
+}

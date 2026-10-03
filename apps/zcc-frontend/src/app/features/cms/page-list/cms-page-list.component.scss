@@ -1,0 +1,246 @@
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+
+  --cms-heading: #0f172a;
+  --cms-text: #334155;
+  --cms-muted: #64748b;
+  --cms-border: #e2e8f0;
+}
+
+:host-context(.dark) {
+  --cms-heading: #f8fafc;
+  --cms-text: #e2e8f0;
+  --cms-muted: #94a3b8;
+  --cms-border: rgb(148 163 184 / 0.14);
+}
+
+.cms-page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+/* Filter popup */
+
+.cms-popup {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 40;
+  display: flex;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: min(75vh, 36rem);
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 24px 64px rgb(15 23 42 / 0.18);
+
+  :host-context(.dark) & {
+    border-color: rgb(255 255 255 / 0.1);
+    background: #0d0c1a;
+    box-shadow: 0 24px 64px rgb(0 0 0 / 0.45);
+  }
+}
+
+.cms-popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 20px;
+  padding: 14px 0 10px;
+  border-bottom: 1px solid #e5e7eb;
+
+  h2 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--cms-heading);
+  }
+
+  :host-context(.dark) & {
+    border-color: rgb(255 255 255 / 0.1);
+  }
+}
+
+.cms-popup-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px 20px;
+  overflow-y: auto;
+  padding: 18px 20px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.cms-popup-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0 20px 18px;
+}
+
+/* Table */
+
+.cms-table {
+  flex: 1 1 auto;
+}
+
+.cms-title-btn {
+  display: flex;
+  min-width: 16rem;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: inherit;
+
+  &:hover .cms-page-title {
+    color: rgb(var(--brand-400));
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(var(--brand-400));
+    outline-offset: 3px;
+  }
+}
+
+.cms-page-icon {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: rgb(var(--brand-500) / 0.1);
+  color: rgb(var(--brand-400));
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.cms-page-title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.925rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--cms-heading);
+  transition: color 150ms ease;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.cms-slug {
+  font-size: 0.8125rem;
+  color: var(--cms-muted);
+  font-family: ui-monospace, monospace;
+}
+
+/* Row actions */
+
+.cms-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.cms-icon-btn {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 0.55rem;
+  color: var(--cms-muted);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: rgb(var(--brand-500) / 0.12);
+    color: var(--cms-heading);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(var(--brand-400));
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+/* Context menu */
+
+.cms-menu-popup {
+  position: fixed;
+  z-index: 60;
+  border: 1px solid var(--cms-border);
+  border-radius: 0.8rem;
+  background: #fff;
+  padding: 0.35rem;
+  box-shadow: 0 24px 48px -16px rgb(2 6 23 / 0.45);
+  animation: cms-pop 140ms ease-out both;
+
+  :host-context(.dark) & {
+    background: #121a2e;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.cms-menu-item {
+  display: flex;
+  width: 100%;
+  min-height: 2.6rem;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  border-radius: 0.55rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--cms-text);
+  transition: background-color 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgb(var(--brand-500) / 0.1);
+  }
+
+  &.is-danger:hover {
+    background: rgb(239 68 68 / 0.1);
+    color: #ef4444;
+  }
+
+  i {
+    color: var(--cms-muted);
+    width: 1rem;
+    text-align: center;
+  }
+}
+
+@keyframes cms-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

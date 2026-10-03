@@ -71,6 +71,7 @@ export class CmsBuilderComponent {
   async saveActivePage() {
     await firstValueFrom(
       this.repository.savePage({
+        id: undefined,
         title: this.pageTitle(),
         slug: this.pageSlug(),
         sections: this.activeSections(),

@@ -1779,3 +1779,53 @@ model BlogPost {
   @@index([organizationId, publishedAt])
   @@map("blog_posts")
 }
+
+// ============================================================================
+// CMS PAGE BUILDER
+// ============================================================================
+
+model CmsPage {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  title          String    @db.VarChar(200)
+  slug           String    @db.VarChar(200)
+  status         String    @default("DRAFT")        // DRAFT, IN_REVIEW, APPROVED, SCHEDULED, PUBLISHED, ARCHIVED
+  type           String    @default("STANDARD")     // STANDARD, LANDING, ARTICLE, SYSTEM, CUSTOM
+  template       String?   @db.VarChar(60)
+  parentId       String?   @map("parent_id") @db.Uuid
+  metaTitle      String?   @map("meta_title") @db.VarChar(70)
+  metaDescription String?  @map("meta_description") @db.VarChar(160)
+  seo            Json?     // { canonicalUrl, noIndex, noFollow, ogTitle, ogDescription, ogImage, structuredData }
+  sections       Json?     // Array of CmsSection JSON objects
+  schemaVersion  Int       @default(1) @map("schema_version")
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz
+  scheduledAt    DateTime? @map("scheduled_at") @db.Timestamptz
+  version        Int       @default(1)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  revisions      CmsPageRevision[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, isDeleted, status])
+  @@index([organizationId, type])
+  @@map("cms_pages")
+}
+
+model CmsPageRevision {
+  id        String   @id @default(uuid()) @db.Uuid
+  pageId    String   @map("page_id") @db.Uuid
+  version   Int
+  sections  Json?
+  savedBy   String?  @map("saved_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  page      CmsPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, version])
+  @@map("cms_page_revisions")
+}

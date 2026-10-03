@@ -39,6 +39,7 @@ import iamCommunicationRoutes from '../modules/communications/communications.rou
 import dailySheetsRoutes from '../modules/daily-sheets/daily-sheets.routes';
 import monthlySheetsRoutes from '../modules/monthly-sheets/monthly-sheets.routes';
 import timesheetsRoutes from '../modules/timesheets/timesheets.routes';
+import cmsRoutes from '../modules/cms/cms.routes';
 
 /** Register canonical API namespaces first, retaining historical paths as compatibility aliases. */
 export function registerApiRoutes(app: Express): void {
@@ -84,6 +85,7 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1', settingsRoutes);
 
   // Timesheet management routes
+  app.use('/api/v1/cms', cmsRoutes);
   app.use('/api/v1/daily-sheets', dailySheetsRoutes);
   app.use('/api/v1/monthly-sheets', monthlySheetsRoutes);
   app.use('/api/v1/timesheets', timesheetsRoutes);

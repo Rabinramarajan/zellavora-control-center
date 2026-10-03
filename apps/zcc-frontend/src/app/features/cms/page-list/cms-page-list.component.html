@@ -1,0 +1,226 @@
+<section class="cms-page">
+  <zcc-iam-page-header
+    title="CMS / Pages"
+    icon="pi pi-globe"
+    description="Create, manage, and publish pages for your website."
+  >
+    <div class="filter-anchor relative">
+      <button
+        type="button"
+        [class]="btn.secondary"
+        aria-haspopup="dialog"
+        aria-controls="cms-filter-popup"
+        [attr.aria-expanded]="filtersOpen()"
+        (click)="toggleFilters()"
+      >
+        <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+        Filter
+        @if (activeFilterCount() > 0) {
+          <span
+            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white"
+            [attr.aria-label]="activeFilterCount() + ' filters active'"
+            >{{ activeFilterCount() }}</span
+          >
+        }
+      </button>
+
+      @if (filtersOpen()) {
+        <form
+          id="cms-filter-popup"
+          role="dialog"
+          aria-labelledby="cms-filter-title"
+          class="cms-popup"
+          (click)="$event.stopPropagation()"
+          (submit)="$event.preventDefault(); search()"
+        >
+          <div class="cms-popup-head">
+            <h2 id="cms-filter-title">Filter Pages</h2>
+            <button
+              type="button"
+              [class]="btn.icon"
+              aria-label="Close filter"
+              (click)="filtersOpen.set(false)"
+            >
+              <i class="pi pi-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="cms-popup-body">
+            <app-form-input-control
+              class="sm:col-span-2"
+              label="Title / Slug"
+              icon="search"
+              placeholder="Search pages by title or slug..."
+              [value]="draft().q"
+              (valueChange)="patch('q', $event)"
+            />
+            <app-select-control
+              label="Status"
+              [searchable]="false"
+              [options]="statusOptions"
+              [value]="draft().status"
+              (valueChange)="patch('status', $event)"
+            />
+            <app-select-control
+              label="Type"
+              [searchable]="false"
+              [options]="typeOptions"
+              [value]="draft().type"
+              (valueChange)="patch('type', $event)"
+            />
+          </div>
+          <div class="cms-popup-foot">
+            <button type="button" [class]="btn.secondary" (click)="clearFilters()">Clear</button>
+            <button type="submit" [class]="btn.primary">Search</button>
+          </div>
+        </form>
+      }
+    </div>
+
+    <button type="button" [class]="btn.primary" (click)="openCreate()">
+      <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+      Create Page
+    </button>
+  </zcc-iam-page-header>
+
+  <!-- Status chips -->
+  <app-filter-chips
+    ariaLabel="Pages by status"
+    allLabel="All Pages"
+    [allCount]="stats()?.total ?? 0"
+    [options]="chipOptions()"
+    [selected]="activeChip()"
+    (selectedChange)="setChip($event)"
+  />
+
+  <!-- Table -->
+  <app-data-table
+    class="cms-table"
+    entityLabel="pages"
+    errorTitle="Failed to load pages"
+    [rows]="items()"
+    [columns]="columns"
+    [trackBy]="trackId"
+    [rowLabel]="rowTitle"
+    minWidth="820px"
+    [loading]="loading()"
+    [total]="total()"
+    [page]="page()"
+    [pageSize]="pageSize()"
+    [sort]="sort()"
+    (sortChange)="onSort($event)"
+    (paginate)="onPageChange($event)"
+  >
+    <ng-template dtCell="title" let-p>
+      <button
+        type="button"
+        class="cms-title-btn"
+        (click)="openBuilder(p)"
+      >
+        <span class="cms-page-icon" aria-hidden="true"><i class="pi pi-file"></i></span>
+        <span class="min-w-0">
+          <span class="cms-page-title">{{ p.title }}</span>
+        </span>
+      </button>
+    </ng-template>
+
+    <ng-template dtCell="slug" let-p>
+      <span class="cms-slug">{{ p.slug }}</span>
+    </ng-template>
+
+    <ng-template dtCell="status" let-p>
+      <span [class]="badge(p.status)">{{ label(p.status) }}</span>
+    </ng-template>
+
+    <ng-template dtCell="updatedAt" let-p>
+      <span class="whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ date(p.updatedAt) }}</span>
+    </ng-template>
+
+    <ng-template dtActions let-p>
+      <span class="cms-row-actions">
+        <button
+          type="button"
+          class="cms-icon-btn"
+          title="Open Builder"
+          [attr.aria-label]="'Open builder for ' + p.title"
+          (click)="openBuilder(p)"
+        >
+          <i class="pi pi-objects-column" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="cms-icon-btn"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menu()?.page?.id === p.id"
+          [attr.aria-label]="'More actions for ' + p.title"
+          title="More actions"
+          (click)="openMenu($event, p)"
+        >
+          <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+        </button>
+      </span>
+    </ng-template>
+
+    <ng-template dtEmpty>
+      <div class="flex flex-col items-center gap-3 py-16 text-center">
+        <span class="inline-flex size-14 items-center justify-center rounded-full bg-indigo-50 text-indigo-400 dark:bg-indigo-500/10" aria-hidden="true">
+          <i class="pi pi-globe text-2xl"></i>
+        </span>
+        @if (activeFilterCount() > 0) {
+          <p class="font-semibold text-gray-900 dark:text-white">No pages match these filters</p>
+          <button type="button" [class]="btn.secondary" (click)="clearFilters()">Clear Filters</button>
+        } @else {
+          <p class="font-semibold text-gray-900 dark:text-white">No pages yet</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Create your first page to get started.</p>
+          <button type="button" [class]="btn.primary" (click)="openCreate()">
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            Create Page
+          </button>
+        }
+      </div>
+    </ng-template>
+  </app-data-table>
+
+  <!-- Row context menu -->
+  @if (menu(); as m) {
+    <div
+      class="cms-menu-popup"
+      role="menu"
+      [style.top.px]="m.top"
+      [style.left.px]="m.left"
+      [style.width.px]="menuWidth"
+      (click)="$event.stopPropagation()"
+    >
+      <button role="menuitem" class="cms-menu-item" (click)="openBuilder(m.page)">
+        <i class="pi pi-objects-column" aria-hidden="true"></i> Open Builder
+      </button>
+      @if (m.page.status === 'DRAFT' || m.page.status === 'APPROVED') {
+        <button role="menuitem" class="cms-menu-item" (click)="publish(m.page)">
+          <i class="pi pi-send" aria-hidden="true"></i> Publish
+        </button>
+      }
+      @if (m.page.status === 'PUBLISHED') {
+        <button role="menuitem" class="cms-menu-item" (click)="unpublish(m.page)">
+          <i class="pi pi-ban" aria-hidden="true"></i> Unpublish
+        </button>
+      }
+      <button role="menuitem" class="cms-menu-item" (click)="duplicate(m.page)">
+        <i class="pi pi-copy" aria-hidden="true"></i> Duplicate
+      </button>
+      <button role="menuitem" class="cms-menu-item" (click)="copySlug(m.page)">
+        <i class="pi pi-link" aria-hidden="true"></i> Copy Slug
+      </button>
+      <hr class="my-1 border-gray-100 dark:border-white/10" />
+      <button role="menuitem" class="cms-menu-item is-danger" (click)="deletePage(m.page)">
+        <i class="pi pi-trash" aria-hidden="true"></i> Delete
+      </button>
+    </div>
+  }
+
+  <!-- Create page dialog -->
+  @if (createOpen()) {
+    <app-cms-create-page-dialog
+      (created)="onPageCreated($event)"
+      (cancelled)="onCreateCancelled()"
+    />
+  }
+</section>

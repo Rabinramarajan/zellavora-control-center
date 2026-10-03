@@ -1,0 +1,61 @@
+<div class="lib-root">
+  <div class="lib-search-wrap">
+    <i class="pi pi-search lib-search-icon" aria-hidden="true"></i>
+    <input
+      type="search"
+      class="lib-search"
+      placeholder="Search components…"
+      [value]="search()"
+      (input)="onSearch($event)"
+      aria-label="Search components"
+    />
+  </div>
+
+  <div class="lib-groups" role="list">
+    @for (group of filteredGroups(); track group.label) {
+      <div class="lib-group" role="listitem">
+        <button
+          type="button"
+          class="lib-group-header"
+          [attr.aria-expanded]="group.expanded"
+          (click)="toggleGroup(group.label)"
+        >
+          <span class="lib-group-label">{{ group.label }}</span>
+          <i
+            class="pi text-xs text-gray-400 transition-transform duration-200"
+            [class.pi-angle-down]="!group.expanded"
+            [class.pi-angle-up]="group.expanded"
+            aria-hidden="true"
+          ></i>
+        </button>
+
+        @if (group.expanded) {
+          <div class="lib-items">
+            @for (item of group.items; track item.type) {
+              <button
+                type="button"
+                class="lib-item"
+                [title]="'Add ' + item.label"
+                (click)="addComponent(item.type)"
+                draggable="false"
+              >
+                <span class="lib-item-icon" aria-hidden="true">
+                  <i class="pi {{ item.icon }}"></i>
+                </span>
+                <span class="lib-item-label">{{ item.label }}</span>
+                <i class="pi pi-plus lib-item-add" aria-hidden="true"></i>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (filteredGroups().length === 0) {
+      <div class="lib-empty">
+        <i class="pi pi-search-minus text-gray-400 text-lg" aria-hidden="true"></i>
+        <span>No components match "<strong>{{ search() }}</strong>"</span>
+      </div>
+    }
+  </div>
+</div>

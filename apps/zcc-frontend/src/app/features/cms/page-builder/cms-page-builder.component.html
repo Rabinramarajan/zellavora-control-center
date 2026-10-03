@@ -1,0 +1,143 @@
+@if (loading()) {
+  <div class="builder-loading" aria-live="polite">
+    <i class="pi pi-spin pi-spinner text-2xl text-indigo-400" aria-hidden="true"></i>
+    <span>Loading page…</span>
+  </div>
+} @else if (page(); as p) {
+  <div class="builder-shell" [attr.data-device]="device()">
+    <!-- Top bar -->
+    <header class="builder-topbar">
+      <div class="builder-topbar-left">
+        <button type="button" class="builder-back-btn" title="Back to Pages" (click)="goBack()">
+          <i class="pi pi-arrow-left" aria-hidden="true"></i>
+        </button>
+        <span class="builder-breadcrumb">
+          <span class="builder-bc-parent">Pages</span>
+          <i class="pi pi-angle-right text-gray-400 text-xs" aria-hidden="true"></i>
+          <span class="builder-bc-current">{{ p.title }}</span>
+        </span>
+        @if (dirty()) {
+          <span class="builder-unsaved" title="You have unsaved changes">
+            <i class="pi pi-circle-fill text-amber-400 text-xs" aria-hidden="true"></i>
+            Unsaved
+          </span>
+        }
+      </div>
+
+      <div class="builder-topbar-center">
+        @for (d of deviceOptions; track d.value) {
+          <button
+            type="button"
+            class="builder-device-btn"
+            [class.is-active]="device() === d.value"
+            [title]="d.label"
+            [attr.aria-pressed]="device() === d.value"
+            (click)="device.set(d.value)"
+          >
+            <i class="pi {{ d.icon }}" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+
+      <div class="builder-topbar-right">
+        <button type="button" class="builder-history-btn" title="Undo (Ctrl+Z)" [disabled]="!canUndo()" (click)="undo()">
+          <i class="pi pi-undo" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="builder-history-btn" title="Redo (Ctrl+Y)" [disabled]="!canRedo()" (click)="redo()">
+          <i class="pi pi-refresh" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          [class]="btn.secondary"
+          [disabled]="saving()"
+          (click)="saveDraft()"
+        >
+          @if (saving()) {
+            <i class="pi pi-spin pi-spinner text-xs" aria-hidden="true"></i>
+            Saving…
+          } @else {
+            Save Draft
+          }
+        </button>
+        <button
+          type="button"
+          [class]="btn.primary"
+          [disabled]="publishing()"
+          (click)="publish()"
+        >
+          @if (publishing()) {
+            <i class="pi pi-spin pi-spinner text-xs" aria-hidden="true"></i>
+            Publishing…
+          } @else if (p.status === 'PUBLISHED') {
+            <i class="pi pi-send text-xs" aria-hidden="true"></i>
+            Republish
+          } @else {
+            <i class="pi pi-send text-xs" aria-hidden="true"></i>
+            Publish
+          }
+        </button>
+      </div>
+    </header>
+
+    <!-- 3-panel layout -->
+    <div class="builder-content">
+      <!-- Left: Component Library -->
+      <aside class="builder-left" aria-label="Component library">
+        <app-cms-component-library
+          (add)="addSection($event)"
+        />
+      </aside>
+
+      <!-- Center: Canvas -->
+      <main class="builder-canvas-area" aria-label="Page canvas">
+        <app-cms-canvas
+          [sections]="sections()"
+          [selectedId]="selectedSection()?.id ?? null"
+          [device]="device()"
+          (selectSection)="selectSection($event)"
+          (removeSection)="removeSection($event)"
+          (moveSection)="moveSection($event.id, $event.direction)"
+          (duplicateSection)="duplicateSection($event)"
+          (reorder)="reorderSections($event)"
+        />
+      </main>
+
+      <!-- Right: Properties / Settings -->
+      <aside class="builder-right" aria-label="Properties panel">
+        <div class="builder-panel-tabs" role="tablist">
+          <button
+            role="tab"
+            class="builder-panel-tab"
+            [class.is-active]="rightPanel() === 'properties'"
+            [attr.aria-selected]="rightPanel() === 'properties'"
+            (click)="rightPanel.set('properties')"
+          >
+            Properties
+          </button>
+          <button
+            role="tab"
+            class="builder-panel-tab"
+            [class.is-active]="rightPanel() === 'settings'"
+            [attr.aria-selected]="rightPanel() === 'settings'"
+            (click)="rightPanel.set('settings')"
+          >
+            Settings
+          </button>
+        </div>
+
+        @if (rightPanel() === 'properties') {
+          <app-cms-property-panel
+            [section]="selectedSection()"
+            [device]="device()"
+            (update)="updateSection($event)"
+          />
+        } @else {
+          <app-cms-page-settings-panel
+            [page]="p"
+            (update)="updatePageSettings($event)"
+          />
+        }
+      </aside>
+    </div>
+  </div>
+}
