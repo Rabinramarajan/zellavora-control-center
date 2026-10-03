@@ -44,7 +44,7 @@ a:focus-visible {
   outline-offset: 3px;
 }
 textarea.field__input {
-  resize: vertical;
+  resize: none;
   min-height: 7rem;
   line-height: 1.6;
 }

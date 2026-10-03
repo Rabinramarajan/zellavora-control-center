@@ -1,5 +1,6 @@
 :host {
   display: block;
+  min-width: 0;
 
   --be-card: #ffffff;
   --be-border: #e2e8f0;
@@ -230,11 +231,12 @@
 .be-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  align-items: start;
+  // Columns share one height so the editor card never ends above the sidebar.
+  align-items: stretch;
   gap: 1rem;
 
   @media (min-width: 1280px) {
-    grid-template-columns: minmax(0, 1fr) 22rem;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
   }
 }
 
@@ -247,12 +249,28 @@
 
 .be-side {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 1rem;
+}
 
-  @media (min-width: 1280px) {
-    position: sticky;
-    top: 1rem;
+.be-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+/* Content area takes the remaining height of the editor card (beats .be-field display). */
+.be-field.be-grow {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+
+  .be-content,
+  .be-preview {
+    flex: 1 1 auto;
+    min-height: 24rem;
+    resize: none;
   }
 }
 
@@ -389,7 +407,7 @@
 }
 
 .be-textarea {
-  resize: vertical;
+  resize: none;
   line-height: 1.6;
 }
 

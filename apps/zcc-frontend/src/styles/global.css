@@ -56,6 +56,11 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Text areas size themselves to their layout; no manual resize handle anywhere. */
+textarea {
+  resize: none;
+}
+
 body {
   @apply bg-slate-50 text-slate-900 dark:bg-[#030712] dark:text-slate-100 transition-colors;
   font-family: var(--app-font);
