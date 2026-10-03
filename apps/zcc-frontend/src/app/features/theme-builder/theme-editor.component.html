@@ -1,0 +1,333 @@
+@if (loadError()) {
+  <zcc-empty-state
+    icon="pi pi-exclamation-triangle"
+    title="Unable to load theme"
+    [message]="loadError()!"
+  />
+} @else if (loading() && !theme()) {
+  <div class="space-y-3">
+    <div class="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+    <div class="grid gap-4 xl:grid-cols-5">
+      <div
+        class="h-[520px] animate-pulse rounded-xl bg-gray-100 xl:col-span-3 dark:bg-white/5"
+      ></div>
+      <div
+        class="h-[520px] animate-pulse rounded-xl bg-gray-100 xl:col-span-2 dark:bg-white/5"
+      ></div>
+    </div>
+  </div>
+} @else {
+  <form [formRoot]="form" class="te-page" novalidate>
+    <header class="te-bar">
+      <a routerLink="/theme-builder" [class]="btn.icon" aria-label="Back to themes" title="Back">
+        <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      </a>
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="truncate text-lg font-semibold text-gray-900 dark:text-white">
+            {{ isNew() ? 'New Theme' : theme()?.name }}
+          </h1>
+          @if (theme(); as t) {
+            <zcc-status-chip
+              [value]="t.isActive ? 'ACTIVE' : 'INACTIVE'"
+              [label]="t.isActive ? 'Active' : 'Inactive'"
+              [tone]="t.isActive ? 'green' : 'gray'"
+            />
+          }
+          @if (dirty() && !readOnly()) {
+            <span class="text-xs font-medium text-amber-600 dark:text-amber-400"
+              >Unsaved changes</span
+            >
+          }
+        </div>
+        @if (theme()?.updatedAt; as updated) {
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Last updated {{ dateTime(updated) }}
+          </p>
+        }
+      </div>
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        @if (!readOnly()) {
+          @if (theme(); as t) {
+            <button
+              type="button"
+              [class]="btn.secondary"
+              [disabled]="busy() || saving()"
+              (click)="duplicate()"
+            >
+              <i class="pi pi-copy text-xs" aria-hidden="true"></i>
+              Duplicate
+            </button>
+            @if (!t.isActive) {
+              <button
+                type="button"
+                [class]="btn.danger"
+                [disabled]="busy() || saving()"
+                (click)="remove()"
+              >
+                <i class="pi pi-trash text-xs" aria-hidden="true"></i>
+                Delete
+              </button>
+              <button
+                type="button"
+                [class]="btn.secondary"
+                [disabled]="busy() || saving() || dirty()"
+                [title]="dirty() ? 'Save your changes before activating' : 'Apply to everyone'"
+                (click)="activate()"
+              >
+                <i class="pi pi-check-circle text-xs" aria-hidden="true"></i>
+                Activate
+              </button>
+            }
+          }
+          @if (dirty()) {
+            <button type="button" [class]="btn.secondary" [disabled]="saving()" (click)="discard()">
+              Discard
+            </button>
+          }
+          <button
+            type="submit"
+            [class]="btn.primary"
+            [disabled]="saving() || busy() || (!dirty() && !isNew())"
+          >
+            @if (saving()) {
+              <i class="pi pi-spin pi-spinner text-xs" aria-hidden="true"></i>
+            }
+            {{ isNew() ? 'Create Theme' : 'Save Changes' }}
+          </button>
+        }
+      </div>
+    </header>
+
+    @if (readOnly()) {
+      <p class="te-note">
+        <i class="pi pi-lock" aria-hidden="true"></i>
+        You can view this theme. Ask an administrator with theme access to change it.
+      </p>
+    }
+
+    <div class="grid items-start gap-4 xl:grid-cols-5">
+      <!-- Settings -->
+      <div class="space-y-4 xl:col-span-3">
+        <section [class]="card" aria-labelledby="te-details">
+          <h2 id="te-details" class="te-section-title">Details</h2>
+          <div class="grid gap-4 md:grid-cols-2">
+            <app-form-input-control
+              class="md:col-span-2"
+              label="Theme Name"
+              placeholder="e.g. Acme Corporate"
+              [formField]="form.name"
+            />
+            <label class="md:col-span-2">
+              <span class="te-label">Description</span>
+              <textarea
+                class="te-textarea"
+                rows="2"
+                maxlength="300"
+                placeholder="Where and why this theme is used"
+                [readOnly]="readOnly()"
+                [value]="draft().description"
+                (input)="form.description().value.set($any($event.target).value)"
+              ></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section [class]="card" aria-labelledby="te-colours">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 id="te-colours" class="te-section-title !mb-0">Colours</h2>
+            @if (!readOnly()) {
+              <div class="flex flex-wrap gap-1.5" role="group" aria-label="Colour presets">
+                @for (p of presets; track p.name) {
+                  <button
+                    type="button"
+                    class="te-preset"
+                    [title]="p.name"
+                    [attr.aria-label]="'Use ' + p.name + ' preset'"
+                    (click)="applyPreset(p)"
+                  >
+                    <span [style.background]="p.primary"></span>
+                    <span [style.background]="p.secondary"></span>
+                    <span [style.background]="p.accent"></span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          <div class="grid gap-4 md:grid-cols-3">
+            @for (
+              c of [
+                {
+                  key: 'primaryColor',
+                  label: 'Primary',
+                  hint: 'Buttons, links, active navigation',
+                },
+                { key: 'secondaryColor', label: 'Secondary', hint: 'Supporting highlights' },
+                { key: 'accentColor', label: 'Accent', hint: 'Badges and data emphasis' },
+              ];
+              track c.key
+            ) {
+              <div>
+                <div class="flex items-end gap-2">
+                  <input
+                    type="color"
+                    class="te-picker"
+                    [attr.aria-label]="c.label + ' colour picker'"
+                    [disabled]="readOnly()"
+                    [value]="pickerValue($any(draft())[c.key])"
+                    (input)="pickColor($any(c.key), $event)"
+                  />
+                  @switch (c.key) {
+                    @case ('primaryColor') {
+                      <app-form-input-control
+                        class="min-w-0 flex-1"
+                        [label]="c.label"
+                        [formField]="form.primaryColor"
+                      />
+                    }
+                    @case ('secondaryColor') {
+                      <app-form-input-control
+                        class="min-w-0 flex-1"
+                        [label]="c.label"
+                        [formField]="form.secondaryColor"
+                      />
+                    }
+                    @case ('accentColor') {
+                      <app-form-input-control
+                        class="min-w-0 flex-1"
+                        [label]="c.label"
+                        [formField]="form.accentColor"
+                      />
+                    }
+                  }
+                </div>
+                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ c.hint }}</p>
+              </div>
+            }
+          </div>
+          <p class="te-contrast" [attr.data-ok]="contrastOk()" role="status">
+            <i
+              class="pi"
+              [class.pi-check-circle]="contrastOk()"
+              [class.pi-exclamation-triangle]="!contrastOk()"
+              aria-hidden="true"
+            ></i>
+            White text on the primary colour: {{ contrast() }}:1
+            {{
+              contrastOk()
+                ? '— readable (WCAG AA).'
+                : '— below 4.5:1, choose a darker primary for readable buttons.'
+            }}
+          </p>
+        </section>
+
+        <section [class]="card" aria-labelledby="te-type">
+          <h2 id="te-type" class="te-section-title">Typography &amp; Shape</h2>
+          <div class="grid gap-4 md:grid-cols-3">
+            <app-select-control
+              label="Font"
+              [options]="fontOptions"
+              [formField]="form.fontFamily"
+            />
+            <app-form-input-control
+              label="Corner Radius (px)"
+              type="number"
+              hint="0 gives square corners; 24 is fully rounded."
+              [formField]="form.borderRadius"
+            />
+            <app-select-control
+              label="Default Mode"
+              [searchable]="false"
+              [options]="modeOptions"
+              [formField]="form.mode"
+            />
+          </div>
+          <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+            Default mode applies to people who have not chosen light or dark themselves.
+          </p>
+        </section>
+
+        <section [class]="card" aria-labelledby="te-assets">
+          <h2 id="te-assets" class="te-section-title">Brand Assets</h2>
+          <div class="grid gap-4 md:grid-cols-2">
+            <app-form-input-control
+              label="Logo URL"
+              placeholder="https://cdn.example.com/logo.svg"
+              [formField]="form.logoUrl"
+            />
+            <app-form-input-control
+              label="Favicon URL"
+              placeholder="https://cdn.example.com/favicon.png"
+              [formField]="form.faviconUrl"
+            />
+          </div>
+        </section>
+      </div>
+
+      <!-- Live preview -->
+      <aside class="te-preview-wrap xl:col-span-2" aria-label="Live preview">
+        <div class="mb-2 flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-gray-900 dark:text-white">Live Preview</h2>
+          <div class="te-seg" role="group" aria-label="Preview mode">
+            @for (m of modeOptions; track m.value) {
+              <button
+                type="button"
+                [attr.aria-pressed]="previewMode() === m.value"
+                (click)="previewMode.set($any(m.value))"
+              >
+                {{ m.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="te-preview" [attr.data-mode]="previewMode()" [style]="previewStyle()">
+          <div class="pv-shell">
+            <nav class="pv-nav" aria-hidden="true">
+              @if (draft().logoUrl && form.logoUrl().valid()) {
+                <img class="pv-logo-img" [src]="draft().logoUrl" alt="" />
+              } @else {
+                <span class="pv-logo">{{ (draft().name || 'Brand').charAt(0).toUpperCase() }}</span>
+              }
+              <span class="pv-nav-item is-active"><i class="pi pi-home"></i>Dashboard</span>
+              <span class="pv-nav-item"><i class="pi pi-users"></i>Users</span>
+              <span class="pv-nav-item"><i class="pi pi-chart-line"></i>Analytics</span>
+            </nav>
+            <div class="pv-main">
+              <p class="pv-title">{{ draft().name || 'Your theme' }}</p>
+              <p class="pv-sub">Preview of common interface elements.</p>
+
+              <div class="pv-row">
+                <span class="pv-btn pv-btn-primary">Primary</span>
+                <span class="pv-btn pv-btn-outline">Secondary</span>
+                <span class="pv-chip">Accent</span>
+              </div>
+
+              <div class="pv-input">
+                <i class="pi pi-search"></i>
+                <span>Search…</span>
+              </div>
+
+              <div class="pv-cards">
+                <div class="pv-card">
+                  <span class="pv-card-label">Page views</span>
+                  <span class="pv-card-value">12,480</span>
+                  <span class="pv-bar"><span style="width: 72%"></span></span>
+                </div>
+                <div class="pv-card">
+                  <span class="pv-card-label">Sessions</span>
+                  <span class="pv-card-value">3,204</span>
+                  <span class="pv-bar is-secondary"><span style="width: 48%"></span></span>
+                </div>
+              </div>
+
+              <p class="pv-text">
+                Body text with an <span class="pv-link">inline link</span> to check readability.
+              </p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </form>
+}

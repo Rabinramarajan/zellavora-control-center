@@ -82,8 +82,8 @@
       class="mb-4 flex items-center gap-2 rounded-lg bg-indigo-500/10 px-4 py-3 text-sm text-indigo-700 dark:text-indigo-300"
     >
       <i class="pi pi-info-circle" aria-hidden="true"></i>
-      Your organization uses the built-in Zellavora theme. Create a theme and activate it to
-      apply your brand.
+      Your organization uses the built-in Zellavora theme. Create a theme and activate it to apply
+      your brand.
     </p>
   }
 
@@ -116,9 +116,24 @@
     </ng-template>
 
     <ng-template dtCell="colors" let-t>
-      <span class="inline-flex items-center" role="img" [attr.aria-label]="'Primary ' + t.primaryColor + ', secondary ' + t.secondaryColor + ', accent ' + t.accentColor">
+      <span
+        class="inline-flex items-center"
+        role="img"
+        [attr.aria-label]="
+          'Primary ' +
+          t.primaryColor +
+          ', secondary ' +
+          t.secondaryColor +
+          ', accent ' +
+          t.accentColor
+        "
+      >
         <span class="tl-swatch" [style.background]="t.primaryColor" [title]="t.primaryColor"></span>
-        <span class="tl-swatch" [style.background]="t.secondaryColor" [title]="t.secondaryColor"></span>
+        <span
+          class="tl-swatch"
+          [style.background]="t.secondaryColor"
+          [title]="t.secondaryColor"
+        ></span>
         <span class="tl-swatch" [style.background]="t.accentColor" [title]="t.accentColor"></span>
       </span>
     </ng-template>

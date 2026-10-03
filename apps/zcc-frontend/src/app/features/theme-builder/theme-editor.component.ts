@@ -16,6 +16,7 @@ import {
   maxLength,
   minLength,
   pattern,
+  readonly,
   required,
   validate,
 } from '@angular/forms/signals';
@@ -23,7 +24,11 @@ import { firstValueFrom, map } from 'rxjs';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ThemesApiService } from '../../core/api/themes.api';
 import { PermissionService } from '../../core/rbac/services/permission.service';
-import { ThemeRuntimeService, ensureFontLoaded, fontStack } from '../../core/theme/theme-runtime.service';
+import {
+  ThemeRuntimeService,
+  ensureFontLoaded,
+  fontStack,
+} from '../../core/theme/theme-runtime.service';
 import {
   SaveThemeRequest,
   THEME_FONTS,
@@ -31,7 +36,12 @@ import {
   ThemeFont,
   ThemeMode,
 } from '../../shared/models/theme-builder.model';
-import { BRAND_SHADES, brandPalette, contrastRatio, isHexColor } from '../../shared/utils/brand-palette';
+import {
+  BRAND_SHADES,
+  brandPalette,
+  contrastRatio,
+  isHexColor,
+} from '../../shared/utils/brand-palette';
 import { EmptyStateComponent, StatusChipComponent } from '../../shared/components/iam';
 import { FormDialogService } from '../../shared/components/form-dialog';
 import { IAM_BTN, IAM_CARD } from '../iam/shared/iam-page-header.component';
@@ -134,10 +144,9 @@ export class ThemeEditorComponent {
   private readonly feedback = inject(IamFeedbackService);
   protected readonly canManage = inject(PermissionService).can('themes:manage');
 
-  private readonly themeId = toSignal(
-    this.route.paramMap.pipe(map((p) => p.get('id') ?? 'new')),
-    { initialValue: 'new' }
-  );
+  private readonly themeId = toSignal(this.route.paramMap.pipe(map((p) => p.get('id') ?? 'new')), {
+    initialValue: 'new',
+  });
 
   protected readonly btn = IAM_BTN;
   protected readonly card = IAM_CARD;
@@ -167,6 +176,21 @@ export class ThemeEditorComponent {
   protected readonly form = form(
     this.model,
     (p) => {
+      // Viewers without themes:manage see every field but cannot change it.
+      for (const field of [
+        p.name,
+        p.description,
+        p.primaryColor,
+        p.secondaryColor,
+        p.accentColor,
+        p.fontFamily,
+        p.borderRadius,
+        p.mode,
+        p.logoUrl,
+        p.faviconUrl,
+      ]) {
+        readonly(field, () => !this.canManage());
+      }
       required(p.name, { message: 'Enter a theme name' });
       minLength(p.name, 2, { message: 'Name must be at least 2 characters' });
       maxLength(p.name, 80, { message: 'Name must be 80 characters or fewer' });
@@ -204,7 +228,7 @@ export class ThemeEditorComponent {
 
   private readonly safe = computed(() => {
     const d = this.model();
-    const pick = (v: string, fallback: string) => (isHexColor(v) ? v : fallback);
+    const pick = (v: string, fallback: string): string => (isHexColor(v) ? v : fallback);
     const radius = Math.min(24, Math.max(0, Number(d.borderRadius) || 0));
     return {
       primary: pick(d.primaryColor, NEW_DRAFT.primaryColor),
@@ -284,10 +308,7 @@ export class ThemeEditorComponent {
   }
 
   /** The native colour picker writes the same field as the hex text input. */
-  protected pickColor(
-    key: 'primaryColor' | 'secondaryColor' | 'accentColor',
-    event: Event
-  ): void {
+  protected pickColor(key: 'primaryColor' | 'secondaryColor' | 'accentColor', event: Event): void {
     const value = (event.target as HTMLInputElement).value.toUpperCase();
     this.model.update((d) => ({ ...d, [key]: value }));
   }

@@ -60,7 +60,7 @@ export class ThemeService {
    * The organization theme's default appearance; applied only to people who have never
    * picked light or dark themselves, and never saved as their own choice.
    */
-  applyOrganizationDefault(mode: ResolvedTheme): void {
+  public applyOrganizationDefault(mode: ResolvedTheme): void {
     if (!this.hasStoredPreference()) this.preference.set(mode);
   }
 
