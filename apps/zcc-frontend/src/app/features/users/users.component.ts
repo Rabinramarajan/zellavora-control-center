@@ -22,7 +22,7 @@ import { AccountStatus, IamUserListItem } from '../../shared/models/iam.model';
 import { UserRequestLookups } from '../../shared/models/user-request.model';
 import { createListStore } from '../../shared/utils/create-list-store';
 import { MultiSelectComponent, MultiSelectOption } from '../iam/shared/multi-select.component';
-import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../iam/shared/iam-page-header.component';
+import { IAM_BTN, IamPageHeaderComponent } from '../iam/shared/iam-page-header.component';
 import { CsvExporter } from '../../shared/utils/csv-exporter';
 import {
   ACTION_META,
@@ -152,7 +152,7 @@ const NAV_KEYS = ['view', 'audit'];
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown.escape)': 'onEscape()',
-    '(document:click)': 'closeMenu()',
+    '(document:click)': 'onDocumentClick($event)',
     '(window:resize)': 'closeMenu()',
     '(window:scroll)': 'closeMenu()',
   },
@@ -296,8 +296,9 @@ export class UsersComponent {
   ]);
 
   protected readonly btn = IAM_BTN;
-  protected readonly card = IAM_CARD;
-  protected readonly labelClass = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400';
+  protected readonly labelClass =
+    // Matches the @zellavoras/ui field label (13px, medium, 8px above the control).
+    'mb-2 block ps-0.5 text-[13px] font-medium leading-tight text-gray-600 dark:text-gray-400';
 
   readonly store = createListStore<IamUserListItem>({
     initialPageSize: 10,
@@ -317,18 +318,10 @@ export class UsersComponent {
   readonly menu = signal<OpenMenu | null>(null);
   readonly menuFor = computed(() => this.menu()?.user.id ?? null);
 
-  /** Applied filters hidden behind "More Filters" (the card shows the rest). */
-  readonly moreFilterCount = computed(() => {
+  /** Number of applied filters, shown on the Filter button. */
+  readonly activeFilterCount = computed(() => {
     const f = this.applied();
-    const onCard = new Set<keyof UserFilters>([
-      'q',
-      'status',
-      'roleId',
-      'groupId',
-      'createdFrom',
-      'createdTo',
-    ]);
-    return FILTER_KEYS.filter((k) => !onCard.has(k) && this.isSet(f[k])).length;
+    return FILTER_KEYS.filter((k) => this.isSet(f[k])).length;
   });
 
   constructor() {
@@ -356,9 +349,22 @@ export class UsersComponent {
     return this.draft()[key];
   }
 
+  /** Opens the filter popup on a copy of the applied filters; Cancel discards edits. */
+  toggleFilters(event: MouseEvent): void {
+    event.stopPropagation();
+    this.closeMenu();
+    if (!this.filtersOpen()) this.draft.set(clone(this.applied()));
+    this.filtersOpen.update((open) => !open);
+  }
+
   applyFilters(): void {
     this.applied.set(clone(this.draft()));
+    this.filtersOpen.set(false);
     this.pushFilters();
+  }
+
+  resetDraft(): void {
+    this.draft.set(clone(EMPTY_FILTERS));
   }
 
   resetAll(): void {
@@ -382,6 +388,13 @@ export class UsersComponent {
 
   onEscape(): void {
     if (this.menu()) this.closeMenu(true);
+    else if (this.filtersOpen()) this.filtersOpen.set(false);
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    this.closeMenu();
+    const anchor = (event.target as HTMLElement | null)?.closest('.filter-anchor');
+    if (!anchor) this.filtersOpen.set(false);
   }
 
   onSort(sort: DataTableSort | null): void {

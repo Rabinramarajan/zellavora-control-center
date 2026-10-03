@@ -6,6 +6,196 @@
     icon="pi pi-users"
     description="Provisioned accounts: profile, access and security. New accounts are created through User Requests and provisioned after approval."
   >
+    <div class="filter-anchor relative">
+      <button
+        type="button"
+        [class]="btn.secondary"
+        aria-haspopup="dialog"
+        aria-controls="us-filter-popup"
+        [attr.aria-expanded]="filtersOpen()"
+        (click)="toggleFilters($event)"
+      >
+        <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+        Filter
+        @if (activeFilterCount() > 0) {
+          <span
+            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white"
+            [attr.aria-label]="activeFilterCount() + ' filters active'"
+            >{{ activeFilterCount() }}</span
+          >
+        }
+      </button>
+
+      @if (filtersOpen()) {
+        <form
+          id="us-filter-popup"
+          role="dialog"
+          aria-label="Filter users"
+          class="us-filter-popup"
+          (ngSubmit)="applyFilters()"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="us-filter-head">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white">Filter Users</p>
+            <button
+              type="button"
+              [class]="btn.icon"
+              aria-label="Close filters"
+              (click)="filtersOpen.set(false)"
+            >
+              <i class="pi pi-times" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="us-filter-body">
+            <fieldset class="us-filter-section">
+              <legend class="us-filter-legend">
+                <i class="pi pi-search" aria-hidden="true"></i>Search
+              </legend>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <app-form-input-control
+                  class="sm:col-span-2"
+                  label="Name / Email / Employee Code"
+                  icon="search"
+                  placeholder="Search users…"
+                  [value]="draftText('q')"
+                  (valueChange)="patchDraft('q', $event)"
+                />
+                <div>
+                  <label for="us-status" [class]="labelClass">Account Status</label>
+                  <zcc-multi-select
+                    inputId="us-status"
+                    placeholder="Any account status"
+                    [options]="statusOptions"
+                    [value]="draftList('status')"
+                    (valueChange)="patchDraft('status', $event)"
+                  />
+                </div>
+                <div>
+                  <label for="us-roleId" [class]="labelClass">Role</label>
+                  <zcc-multi-select
+                    inputId="us-roleId"
+                    placeholder="Any role"
+                    [options]="roleOptions()"
+                    [value]="draftList('roleId')"
+                    (valueChange)="patchDraft('roleId', $event)"
+                  />
+                </div>
+                <div>
+                  <label for="us-groupId" [class]="labelClass">Group</label>
+                  <zcc-multi-select
+                    inputId="us-groupId"
+                    placeholder="Any group"
+                    [options]="groupOptions()"
+                    [value]="draftList('groupId')"
+                    (valueChange)="patchDraft('groupId', $event)"
+                  />
+                </div>
+              </div>
+            </fieldset>
+            <fieldset class="us-filter-section">
+              <legend class="us-filter-legend">
+                <i class="pi pi-id-card" aria-hidden="true"></i>Identity
+              </legend>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                @for (field of identityFields; track field.key) {
+                  <app-form-input-control
+                    [label]="field.label"
+                    [type]="field.type"
+                    [icon]="field.icon"
+                    [placeholder]="field.placeholder"
+                    [value]="draftText(field.key)"
+                    (valueChange)="patchDraft(field.key, $event)"
+                  />
+                }
+              </div>
+            </fieldset>
+            <fieldset class="us-filter-section">
+              <legend class="us-filter-legend">
+                <i class="pi pi-shield" aria-hidden="true"></i>Organization & Access
+              </legend>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                @for (field of moreAccessFields(); track field.key) {
+                  <div>
+                    <label [for]="'us-' + field.key" [class]="labelClass">{{ field.label }}</label>
+                    <zcc-multi-select
+                      [inputId]="'us-' + field.key"
+                      [placeholder]="'Any ' + field.label.toLowerCase()"
+                      [options]="field.options"
+                      [value]="draftList(field.key)"
+                      (valueChange)="patchDraft(field.key, $event)"
+                    />
+                  </div>
+                }
+                <app-select-control
+                  label="Email Verification"
+                  icon="list"
+                  [searchable]="false"
+                  [options]="verifiedOptions"
+                  [value]="draftText('emailVerified')"
+                  (valueChange)="patchDraft('emailVerified', $event)"
+                />
+                <app-select-control
+                  label="MFA Status"
+                  icon="list"
+                  [searchable]="false"
+                  [options]="mfaOptions"
+                  [value]="draftText('mfaEnabled')"
+                  (valueChange)="patchDraft('mfaEnabled', $event)"
+                />
+              </div>
+            </fieldset>
+            <fieldset class="us-filter-section">
+              <legend class="us-filter-legend">
+                <i class="pi pi-clock" aria-hidden="true"></i>Activity
+              </legend>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <app-date-control
+                  label="Created From"
+                  [maxDate]="draftText('createdTo') || undefined"
+                  [value]="draftText('createdFrom')"
+                  (valueChange)="patchDraft('createdFrom', $event)"
+                />
+                <app-date-control
+                  label="Created To"
+                  [minDate]="draftText('createdFrom') || undefined"
+                  [value]="draftText('createdTo')"
+                  (valueChange)="patchDraft('createdTo', $event)"
+                />
+                <app-date-control
+                  label="Last Login From"
+                  [maxDate]="draftText('lastLoginTo') || undefined"
+                  [value]="draftText('lastLoginFrom')"
+                  (valueChange)="patchDraft('lastLoginFrom', $event)"
+                />
+                <app-date-control
+                  label="Last Login To"
+                  [minDate]="draftText('lastLoginFrom') || undefined"
+                  [value]="draftText('lastLoginTo')"
+                  (valueChange)="patchDraft('lastLoginTo', $event)"
+                />
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="us-filter-foot">
+            <button type="button" [class]="btn.secondary" (click)="resetDraft()">
+              <i class="pi pi-refresh text-xs" aria-hidden="true"></i>
+              Reset
+            </button>
+            <div class="flex gap-2">
+              <button type="button" [class]="btn.secondary" (click)="filtersOpen.set(false)">
+                Cancel
+              </button>
+              <button type="submit" [class]="btn.primary">
+                <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+                Apply
+              </button>
+            </div>
+          </div>
+        </form>
+      }
+    </div>
     @if (canRequest()) {
       <button type="button" [class]="btn.primary" (click)="addUser()">
         <i class="pi pi-plus text-xs" aria-hidden="true"></i>
@@ -13,142 +203,6 @@
       </button>
     }
   </zcc-iam-page-header>
-
-  <form
-    [class]="card + ' mb-4'"
-    (ngSubmit)="applyFilters()"
-    role="search"
-    aria-label="Search users"
-  >
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <app-form-input-control
-        label="Name / Email / Employee Code"
-        icon="search"
-        placeholder="Search users…"
-        [value]="draftText('q')"
-        (valueChange)="patchDraft('q', $event)"
-      />
-      <div>
-        <label for="us-status" [class]="labelClass">Account Status</label>
-        <zcc-multi-select
-          inputId="us-status"
-          placeholder="Any status"
-          [options]="statusOptions"
-          [value]="draftList('status')"
-          (valueChange)="patchDraft('status', $event)"
-        />
-      </div>
-      <div>
-        <label for="us-role" [class]="labelClass">Role</label>
-        <zcc-multi-select
-          inputId="us-role"
-          placeholder="Any role"
-          [options]="roleOptions()"
-          [value]="draftList('roleId')"
-          (valueChange)="patchDraft('roleId', $event)"
-        />
-      </div>
-      <div>
-        <label for="us-group" [class]="labelClass">Group</label>
-        <zcc-multi-select
-          inputId="us-group"
-          placeholder="Any group"
-          [options]="groupOptions()"
-          [value]="draftList('groupId')"
-          (valueChange)="patchDraft('groupId', $event)"
-        />
-      </div>
-      <app-date-control
-        label="Created Date From"
-        [maxDate]="draftText('createdTo') || undefined"
-        [value]="draftText('createdFrom')"
-        (valueChange)="patchDraft('createdFrom', $event)"
-      />
-      <app-date-control
-        label="Created Date To"
-        [minDate]="draftText('createdFrom') || undefined"
-        [value]="draftText('createdTo')"
-        (valueChange)="patchDraft('createdTo', $event)"
-      />
-
-      @if (filtersOpen()) {
-        @for (field of identityFields; track field.key) {
-          <app-form-input-control
-            [label]="field.label"
-            [type]="field.type"
-            [icon]="field.icon"
-            [placeholder]="field.placeholder"
-            [value]="draftText(field.key)"
-            (valueChange)="patchDraft(field.key, $event)"
-          />
-        }
-        @for (field of moreAccessFields(); track field.key) {
-          <div>
-            <label [for]="'us-' + field.key" [class]="labelClass">{{ field.label }}</label>
-            <zcc-multi-select
-              [inputId]="'us-' + field.key"
-              [placeholder]="'Any ' + field.label.toLowerCase()"
-              [options]="field.options"
-              [value]="draftList(field.key)"
-              (valueChange)="patchDraft(field.key, $event)"
-            />
-          </div>
-        }
-        <app-select-control
-          label="Email Verification"
-          icon="list"
-          [searchable]="false"
-          [options]="verifiedOptions"
-          [value]="draftText('emailVerified')"
-          (valueChange)="patchDraft('emailVerified', $event)"
-        />
-        <app-select-control
-          label="MFA Status"
-          icon="list"
-          [searchable]="false"
-          [options]="mfaOptions"
-          [value]="draftText('mfaEnabled')"
-          (valueChange)="patchDraft('mfaEnabled', $event)"
-        />
-        <app-date-control
-          label="Last Login From"
-          [maxDate]="draftText('lastLoginTo') || undefined"
-          [value]="draftText('lastLoginFrom')"
-          (valueChange)="patchDraft('lastLoginFrom', $event)"
-        />
-        <app-date-control
-          label="Last Login To"
-          [minDate]="draftText('lastLoginFrom') || undefined"
-          [value]="draftText('lastLoginTo')"
-          (valueChange)="patchDraft('lastLoginTo', $event)"
-        />
-      }
-    </div>
-
-    <div class="mt-4 flex flex-wrap items-center gap-2">
-      <button type="submit" [class]="btn.primary">
-        <i class="pi pi-search text-xs" aria-hidden="true"></i>
-        Search
-      </button>
-      <button type="button" [class]="btn.secondary" (click)="resetAll()">Clear</button>
-      <button
-        type="button"
-        [class]="btn.secondary"
-        [attr.aria-expanded]="filtersOpen()"
-        (click)="filtersOpen.set(!filtersOpen())"
-      >
-        <i class="pi pi-filter text-xs" aria-hidden="true"></i>
-        {{ filtersOpen() ? 'Fewer Filters' : 'More Filters' }}
-        @if (!filtersOpen() && moreFilterCount() > 0) {
-          <span
-            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white"
-            [attr.aria-label]="moreFilterCount() + ' more filters active'"
-            >{{ moreFilterCount() }}</span
-          >
-        }
-      </button>
-    </div>
-  </form>
 
   <div class="mb-4 flex flex-wrap gap-2" role="group" aria-label="Users by account status">
     @for (card of stats; track card.label) {

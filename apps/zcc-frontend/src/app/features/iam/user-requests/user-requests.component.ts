@@ -11,9 +11,9 @@ import {
   UserRequestStatus,
 } from '../../../shared/models/user-request.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
-import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../shared/iam-page-header.component';
+import { StatusChipComponent } from '../../../shared/components/iam';
+import { PageChangeEvent } from '../../../shared/components/pagination/pagination.component';
+import { IAM_BTN, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { formatDate } from '../shared/iam-format';
 import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
 import { UserSelectComponent } from './components/user-select.component';
@@ -22,6 +22,8 @@ import {
   DataTableComponent,
   DataTableCellDirective,
   DataTableActionsDirective,
+  DataTableEmptyDirective,
+  DataTableSort,
 } from '../../../shared/components/data-table';
 import { REQUEST_TYPE_OPTIONS, STATUS_OPTIONS, STATUS_TONES } from './user-request.constants';
 
@@ -59,7 +61,10 @@ const EMPTY_FORM: SearchForm = {
   to: '',
 };
 
-const FILTER_KEYS = Object.keys(EMPTY_FORM);
+const FILTER_KEYS = [...Object.keys(EMPTY_FORM), 'sort', 'order'];
+
+/** Columns the API can sort by (user-request.dto `sort`). */
+type SortKey = 'refNo' | 'subjectName' | 'createdAt' | 'status' | 'priority';
 const QUICK_STATUSES: UserRequestStatus[] = [
   'DRAFT',
   'PENDING_APPROVAL',
@@ -85,15 +90,17 @@ const toOptions = (items: Array<{ id: string; name: string }>): MultiSelectOptio
     DataTableComponent,
     DataTableCellDirective,
     DataTableActionsDirective,
-    EmptyStateComponent,
+    DataTableEmptyDirective,
     StatusChipComponent,
-    PaginationComponent,
     MultiSelectComponent,
     UserSelectComponent,
   ],
   templateUrl: './user-requests.component.html',
   styleUrl: './user-requests.component.scss',
-  host: { '(document:click)': 'menuFor.set(null)' },
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'cancelFilters()',
+  },
 })
 export class UserRequestsComponent {
   private readonly api = inject(UserRequestsApiService);
@@ -101,8 +108,9 @@ export class UserRequestsComponent {
 
   protected readonly canCreate = inject(PermissionService).can('user-requests:create');
   protected readonly btn = IAM_BTN;
-  protected readonly card = IAM_CARD;
-  protected readonly labelClass = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400';
+  protected readonly labelClass =
+    // Matches the @zellavoras/ui field label (13px, medium, 8px above the control).
+    'mb-2 block ps-0.5 text-[13px] font-medium leading-tight text-gray-600 dark:text-gray-400';
   protected readonly typeOptions = REQUEST_TYPE_OPTIONS;
   protected readonly statusOptions = STATUS_OPTIONS;
   protected readonly quickStatuses = QUICK_STATUSES;
@@ -115,7 +123,9 @@ export class UserRequestsComponent {
   ];
 
   protected form: SearchForm = structuredClone(EMPTY_FORM);
-  protected readonly moreFilters = signal(false);
+  protected readonly filtersOpen = signal(false);
+  /** The last searched form, restored when the popup is cancelled. */
+  private appliedForm: SearchForm = structuredClone(EMPTY_FORM);
   protected readonly menuFor = signal<string | null>(null);
   protected readonly counts = signal<Record<UserRequestStatus, number> | null>(null);
   private readonly lookups = signal<UserRequestLookups | null>(null);
@@ -128,17 +138,30 @@ export class UserRequestsComponent {
   protected readonly groupOptions = computed(() => toOptions(this.lookups()?.groups ?? []));
   protected readonly roleOptions = computed(() => toOptions(this.lookups()?.roles ?? []));
 
-  protected readonly columns: DataTableColumn<unknown>[] = [
-    { id: 'refNo', label: 'Request Ref No' },
+  protected readonly columns: DataTableColumn<UserRequestListItem>[] = [
+    { id: 'refNo', label: 'Request Ref No', sortKey: 'refNo' },
     { id: 'type', label: 'Request Type' },
-    { id: 'name', label: 'Name' },
+    { id: 'name', label: 'Name', sortKey: 'subjectName' },
     { id: 'employeeCode', label: 'Employee Code' },
     { id: 'email', label: 'Email' },
     { id: 'requestedBy', label: 'Requested By' },
-    { id: 'requestedDate', label: 'Requested Date' },
+    { id: 'requestedDate', label: 'Requested Date', sortKey: 'createdAt' },
     { id: 'branch', label: 'Branch' },
-    { id: 'status', label: 'Status' },
+    { id: 'status', label: 'Status', sortKey: 'status' },
   ];
+
+  protected readonly pageSizes = [10, 25, 50, 100];
+  protected readonly sort = signal<DataTableSort<SortKey>>({ key: 'createdAt', dir: 'desc' });
+  protected readonly requestId = (r: UserRequestListItem): string => r.id;
+  protected readonly requestLabel = (r: UserRequestListItem): string => r.refNo;
+  /** Sum of the per-status counts, for the "All Requests" chip. */
+  protected readonly totalCount = computed(() => {
+    const c = this.counts();
+    return c ? Object.values(c).reduce((sum, n) => sum + n, 0) : null;
+  });
+  protected readonly noStatusFilter = computed(
+    () => !((this.store.filters()['status'] as string[] | undefined) ?? []).length
+  );
 
   readonly store = createListStore<UserRequestListItem>({
     filterKeys: FILTER_KEYS,
@@ -149,8 +172,19 @@ export class UserRequestsComponent {
     },
   });
 
+  /** Number of applied search filters, shown on the Filter button. */
+  protected readonly activeFilterCount = computed(
+    () =>
+      Object.entries(this.store.filters()).filter(
+        ([k, v]) => k !== 'sort' && k !== 'order' && (Array.isArray(v) ? v.length > 0 : !!v)
+      ).length
+  );
+
+  /** Search filters in effect (sort order alone does not count as a filter). */
   protected readonly filtersActive = computed(() =>
-    Object.values(this.store.filters()).some((v) => (Array.isArray(v) ? v.length : !!v))
+    Object.entries(this.store.filters()).some(
+      ([k, v]) => k !== 'sort' && k !== 'order' && (Array.isArray(v) ? v.length : !!v)
+    )
   );
 
   constructor() {
@@ -160,16 +194,71 @@ export class UserRequestsComponent {
   }
 
   protected search(): void {
+    this.appliedForm = structuredClone(this.form);
     this.store.setFilters({
       ...this.form,
       refNo: this.form.refNo.trim(),
       name: this.form.name.trim(),
+      ...this.sortFilters(),
     });
   }
 
   protected clear(): void {
     this.form = structuredClone(EMPTY_FORM);
-    this.store.setFilters({});
+    this.appliedForm = structuredClone(EMPTY_FORM);
+    this.store.setFilters(this.sortFilters());
+  }
+
+  /** Opens the filter popup on the applied search; Cancel discards edits. */
+  protected toggleFilters(event: MouseEvent): void {
+    event.stopPropagation();
+    this.menuFor.set(null);
+    if (this.filtersOpen()) {
+      this.cancelFilters();
+      return;
+    }
+    this.form = structuredClone(this.appliedForm);
+    this.filtersOpen.set(true);
+  }
+
+  protected applyFilters(): void {
+    this.filtersOpen.set(false);
+    this.search();
+  }
+
+  protected resetDraft(): void {
+    this.form = structuredClone(EMPTY_FORM);
+  }
+
+  protected cancelFilters(): void {
+    if (!this.filtersOpen()) return;
+    this.form = structuredClone(this.appliedForm);
+    this.filtersOpen.set(false);
+  }
+
+  protected onDocumentClick(event: MouseEvent): void {
+    this.menuFor.set(null);
+    if (!(event.target as HTMLElement | null)?.closest('.filter-anchor')) this.cancelFilters();
+  }
+
+  protected allStatuses(): void {
+    this.form = { ...this.form, status: [] };
+    this.search();
+  }
+
+  protected onSort(sort: DataTableSort | null): void {
+    if (!sort) return;
+    this.sort.set(sort as DataTableSort<SortKey>);
+    this.search();
+  }
+
+  protected onPaginate({ page, pageSize }: PageChangeEvent): void {
+    if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
+    else this.store.setPage(page);
+  }
+
+  private sortFilters() {
+    return { sort: this.sort().key, order: this.sort().dir };
   }
 
   protected quickStatus(status: UserRequestStatus): void {
