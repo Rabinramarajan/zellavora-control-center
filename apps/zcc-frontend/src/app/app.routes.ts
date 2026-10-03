@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth/auth.guard';
+import { authGuard, canMatchPermission } from './core/auth/auth.guard';
 
 export const appRoutes: Routes = [
   {
@@ -46,6 +46,7 @@ export const appRoutes: Routes = [
   {
     path: 'analytics',
     canActivate: [authGuard],
+    canMatch: [canMatchPermission('analytics:read')],
     loadChildren: () =>
       import('./features/analytics/analytics.routes').then((m) => m.analyticsRoutes),
   },

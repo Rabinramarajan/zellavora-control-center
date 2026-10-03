@@ -180,6 +180,7 @@ const DEFAULT_MENU: MenuDef[] = [
     label: 'Analytics',
     icon: '📈',
     route: '/analytics',
+    requiredPermission: 'analytics:read',
     orderIndex: 6,
   },
   {

@@ -4,6 +4,7 @@ import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
 import { ThemeService } from './core/services/theme.service';
+import { AnalyticsTrackerService } from './core/analytics/analytics-tracker.service';
 import { AdminLayoutComponent } from './shared/components/admin-layout/admin-layout.component';
 
 @Component({
@@ -32,6 +33,7 @@ export class AppComponent {
   });
 
   constructor() {
+    inject(AnalyticsTrackerService).start();
     const theme = inject(ThemeService);
     // The sign-in screens are designed dark-only; the chosen theme applies inside the app shell.
     effect(() => theme.forcedTheme.set(this.showAdminLayout() ? null : 'dark'));

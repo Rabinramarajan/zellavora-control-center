@@ -1,202 +1,84 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { AnalyticsApiService } from './analytics.api';
-import {
-  AnalyticsOverview,
-  AnalyticsTopItem,
-  AnalyticsDeviceBreakdown,
-  AnalyticsRange,
-} from './analytics.models';
+import { firstValueFrom } from 'rxjs';
+import { AnalyticsApiService } from '../../core/api/analytics.api';
+import { AnalyticsOverview, AnalyticsRange } from '../../shared/models/analytics.model';
 
-export interface AnalyticsStoreState {
+interface AnalyticsState {
   range: AnalyticsRange;
   overview: AnalyticsOverview | null;
-  loadingOverview: boolean;
-  errorOverview: string | null;
-  lastOverviewLoad: number | null;
-
-  topPages: AnalyticsTopItem[];
-  topReferrers: AnalyticsTopItem[];
-  topCountries: AnalyticsTopItem[];
-  topCities: AnalyticsTopItem[];
-  deviceBreakdown: AnalyticsDeviceBreakdown | null;
-  topBrowsers: AnalyticsTopItem[];
-  topOS: AnalyticsTopItem[];
-  loadingDetails: boolean;
-  errorDetails: string | null;
+  loading: boolean;
+  error: string | null;
+  exporting: boolean;
 }
 
-const initial: AnalyticsStoreState = {
+const INITIAL: AnalyticsState = {
   range: '30',
   overview: null,
-  loadingOverview: false,
-  errorOverview: null,
-  lastOverviewLoad: null,
-
-  topPages: [],
-  topReferrers: [],
-  topCountries: [],
-  topCities: [],
-  deviceBreakdown: null,
-  topBrowsers: [],
-  topOS: [],
-  loadingDetails: false,
-  errorDetails: null,
+  loading: false,
+  error: null,
+  exporting: false,
 };
 
+const messageOf = (err: unknown, fallback: string): string =>
+  (err as { error?: { error?: { message?: string } } })?.error?.error?.message ?? fallback;
+
+/** Page state for the Analytics screen; one overview request per range change. */
 @Injectable({ providedIn: 'root' })
 export class AnalyticsStore {
   private readonly api = inject(AnalyticsApiService);
-  private readonly state = signal<AnalyticsStoreState>(initial);
+  private readonly state = signal<AnalyticsState>(INITIAL);
+  /** Only the latest request may write state, so a slow older range cannot overwrite a newer one. */
+  private requestId = 0;
 
-  // --- Selectors ------------------------------------------------------------
-  readonly range = computed(() => this.state().range);
-  readonly overview = computed(() => this.state().overview);
-  readonly loadingOverview = computed(() => this.state().loadingOverview);
-  readonly errorOverview = computed(() => this.state().errorOverview);
+  public readonly range = computed(() => this.state().range);
+  public readonly overview = computed(() => this.state().overview);
+  public readonly loading = computed(() => this.state().loading);
+  public readonly error = computed(() => this.state().error);
+  public readonly exporting = computed(() => this.state().exporting);
+  /** True while a range switch is reloading data that is already on screen. */
+  public readonly refreshing = computed(() => this.loading() && this.overview() !== null);
+  public readonly hasTraffic = computed(() => (this.overview()?.kpis.pageViews.value ?? 0) > 0);
 
-  readonly topPages = computed(() => this.state().topPages);
-  readonly topReferrers = computed(() => this.state().topReferrers);
-  readonly topCountries = computed(() => this.state().topCountries);
-  readonly topCities = computed(() => this.state().topCities);
-  readonly deviceBreakdown = computed(() => this.state().deviceBreakdown);
-  readonly topBrowsers = computed(() => this.state().topBrowsers);
-  readonly topOS = computed(() => this.state().topOS);
-  readonly loadingDetails = computed(() => this.state().loadingDetails);
-  readonly errorDetails = computed(() => this.state().errorDetails);
-
-  // KPIs
-  readonly kpis = computed(() => this.state().overview?.kpis ?? null);
-
-  // Trends
-  readonly trends = computed(() => this.state().overview?.trends ?? null);
-  readonly pageViewsTrend = computed(() => this.state().overview?.trends.pageViews ?? []);
-  readonly uniqueVisitorsTrend = computed(() => this.state().overview?.trends.uniqueVisitors ?? []);
-  readonly engagementTrend = computed(() => this.state().overview?.trends.engagement ?? []);
-
-  // Chart-ready series
-  readonly trendLabels = computed(() => {
-    const t = this.pageViewsTrend();
-    return t.map((p) => this.formatLabel(p.date));
-  });
-
-  readonly pageViewsSeries = computed(() => this.pageViewsTrend().map((p) => p.count));
-  readonly uniqueVisitorsSeries = computed(() => this.uniqueVisitorsTrend().map((p) => p.count));
-  readonly engagementSeries = computed(() => this.engagementTrend().map((p) => p.count));
-
-  // Derived percentages
-  readonly hasOverview = computed(() => this.state().overview !== null);
-  readonly isStale = computed(() => {
-    const t = this.state().lastOverviewLoad;
-    return t === null || Date.now() - t > 5 * 60 * 1000;
-  });
-
-  // --- Actions --------------------------------------------------------------
-  setRange(range: AnalyticsRange): void {
+  public setRange(range: AnalyticsRange): void {
+    if (range === this.range() && this.overview()) return;
     this.state.update((s) => ({ ...s, range }));
-    void this.loadOverview(range);
-    void this.loadDetails(range);
+    void this.load();
   }
 
-  loadOverview(range: AnalyticsRange = this.state().range): Promise<void> {
-    this.state.update((s) => ({ ...s, loadingOverview: true, errorOverview: null }));
-    return new Promise<void>((resolve) => {
-      this.api.getOverview(range).subscribe({
-        next: (res) => {
-          this.state.update((s) => ({
-            ...s,
-            overview: res.data,
-            loadingOverview: false,
-            lastOverviewLoad: Date.now(),
-          }));
-          resolve();
-        },
-        error: (err) => {
-          const message = err?.error?.error?.message ?? 'Unable to load analytics overview.';
-          this.state.update((s) => ({
-            ...s,
-            loadingOverview: false,
-            errorOverview: message,
-          }));
-          resolve();
-        },
-      });
-    });
+  public async load(): Promise<void> {
+    const id = ++this.requestId;
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const res = await firstValueFrom(this.api.getOverview(this.range()));
+      if (id !== this.requestId) return;
+      this.state.update((s) => ({ ...s, overview: res.data, loading: false }));
+    } catch (err) {
+      if (id !== this.requestId) return;
+      this.state.update((s) => ({
+        ...s,
+        loading: false,
+        error: messageOf(err, 'Unable to load analytics.'),
+      }));
+    }
   }
 
-  loadDetails(range: AnalyticsRange = this.state().range): Promise<void> {
-    this.state.update((s) => ({ ...s, loadingDetails: true, errorDetails: null }));
-    return new Promise<void>((resolve) => {
-      this.api
-        .getTopPages(range, 10)
-        .toPromise()
-        .then((pages) => {
-          this.api
-            .getTopReferrers(range, 10)
-            .toPromise()
-            .then((referrers) => {
-              this.api
-                .getTopCountries(range, 10)
-                .toPromise()
-                .then((countries) => {
-                  this.api
-                    .getTopCities(range, 10)
-                    .toPromise()
-                    .then((cities) => {
-                      this.api
-                        .getDeviceBreakdown(range)
-                        .toPromise()
-                        .then((devices) => {
-                          this.api
-                            .getTopBrowsers(range, 10)
-                            .toPromise()
-                            .then((browsers) => {
-                              this.api
-                                .getTopOS(range, 10)
-                                .toPromise()
-                                .then((os) => {
-                                  this.state.update((s) => ({
-                                    ...s,
-                                    topPages: pages?.data ?? [],
-                                    topReferrers: referrers?.data ?? [],
-                                    topCountries: countries?.data ?? [],
-                                    topCities: cities?.data ?? [],
-                                    deviceBreakdown: devices?.data ?? null,
-                                    topBrowsers: browsers?.data ?? [],
-                                    topOS: os?.data ?? [],
-                                    loadingDetails: false,
-                                  }));
-                                  resolve();
-                                });
-                            });
-                        });
-                    });
-                });
-            });
-        })
-        .catch((err) => {
-          const message = err?.error?.error?.message ?? 'Unable to load analytics details.';
-          this.state.update((s) => ({
-            ...s,
-            loadingDetails: false,
-            errorDetails: message,
-          }));
-          resolve();
-        });
-    });
-  }
-
-  refreshAll(): void {
-    void this.loadOverview(this.state().range);
-    void this.loadDetails(this.state().range);
-  }
-
-  reset(): void {
-    this.state.set(initial);
-  }
-
-  // --- Helpers --------------------------------------------------------------
-  private formatLabel(iso: string): string {
-    const d = new Date(`${iso}T00:00:00Z`);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  /** Downloads the CSV report; resolves false when the download failed. */
+  public async exportCsv(): Promise<boolean> {
+    const range = this.range();
+    this.state.update((s) => ({ ...s, exporting: true }));
+    try {
+      const blob = await firstValueFrom(this.api.exportCsv(range));
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `analytics-${range}d-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      this.state.update((s) => ({ ...s, exporting: false }));
+    }
   }
 }

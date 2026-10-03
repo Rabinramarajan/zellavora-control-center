@@ -21,6 +21,7 @@ import auditLogRoutes from '../modules/audit/audit.routes';
 import storageRoutes from '../modules/storage/storage.routes';
 import lookupRoutes from '../modules/ddl/ddl.routes';
 import dashboardRoutes from '../modules/dashboard/dashboard.routes';
+import analyticsRoutes from '../modules/analytics/analytics.routes';
 import resourceRoutes from '../modules/resources/resource.routes';
 import roleRoutes from '../modules/roles/role.routes';
 import groupRoutes from '../modules/groups/group.routes';
@@ -55,6 +56,7 @@ export function registerApiRoutes(app: Express): void {
 
   // Operations Dashboard (tenant-scoped)
   app.use('/api/v1/dashboard', dashboardRoutes);
+  app.use('/api/v1/analytics', analyticsRoutes);
 
   // IAM Admin Console — RBAC modules (Resources first; Roles, Groups, Users follow)
   app.use('/api/v1/iam/resources', resourceRoutes);

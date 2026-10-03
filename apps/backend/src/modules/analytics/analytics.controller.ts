@@ -1,22 +1,47 @@
-import { Response, NextFunction } from 'express';
+import { Response } from 'express';
 import Redis from 'ioredis';
 import { config } from '../../config/env';
-import { AnalyticsService } from './analytics.service';
-import {
-  AnalyticsOverviewQuerySchema,
-  AnalyticsTopPagesQuerySchema,
-  AnalyticsTopReferrersQuerySchema,
-  AnalyticsGeoQuerySchema,
-  AnalyticsDevicesQuerySchema,
-  AnalyticsBrowsersQuerySchema,
-  AnalyticsExportQuerySchema,
-} from './analytics.dto';
+import { AppError } from '../../middleware/error';
 import type { AuthRequest } from '../../middleware/auth';
+import { AnalyticsService, type AnalyticsOverview } from './analytics.service';
+import type { Dimension } from './analytics.repository';
+import {
+  AnalyticsDevicesQuerySchema,
+  AnalyticsExportQuerySchema,
+  AnalyticsOverviewQuerySchema,
+  AnalyticsTopQuerySchema,
+  TrackEventSchema,
+} from './analytics.dto';
+
+/** Analytics is tenant data; a token without an organization cannot read or write it. */
+const tenantOf = (req: AuthRequest): string => {
+  if (!req.tenantId) {
+    throw new AppError('No organization selected', 403, 'TENANT_REQUIRED');
+  }
+  return req.tenantId;
+};
+
+const header = (req: AuthRequest, name: string): string | null => {
+  const value = req.headers[name];
+  const first = Array.isArray(value) ? value[0] : value;
+  return first && first !== 'XX' ? decodeURIComponent(first) : null;
+};
+
+const csvCell = (value: string | number): string => {
+  const text = String(value);
+  // Leading =,+,-,@ would run as a formula when the file is opened in a spreadsheet.
+  const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+  return `"${safe.replace(/"/g, '""')}"`;
+};
 
 export class AnalyticsController {
   private readonly service: AnalyticsService;
 
-  constructor() {
+  constructor(service?: AnalyticsService) {
+    if (service) {
+      this.service = service;
+      return;
+    }
     const redis =
       config.redisEnabled && config.redisUrl
         ? new Redis(config.redisUrl, {
@@ -26,151 +51,108 @@ export class AnalyticsController {
             enableOfflineQueue: false,
           })
         : null;
-    if (redis) {
-      redis.on('error', () => {
-        // best-effort: cache falls back to L1-only on Redis failure
-      });
-    }
+    redis?.on('error', () => {
+      // best-effort: cache falls back to L1-only on Redis failure
+    });
     this.service = new AnalyticsService(undefined, redis);
   }
 
-  overview = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsOverviewQuerySchema.parse(req.query);
-      const data = await this.service.getOverview(parsed.range);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
+  overview = async (req: AuthRequest, res: Response) => {
+    const { range } = AnalyticsOverviewQuerySchema.parse(req.query);
+    res.json({ success: true, data: await this.service.getOverview(tenantOf(req), range) });
   };
 
-  topPages = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsTopPagesQuerySchema.parse(req.query);
-      const data = await this.service.getTopPages(parsed.range, parsed.limit);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
+  top = (dimension: Dimension) => async (req: AuthRequest, res: Response) => {
+    const { range, limit } = AnalyticsTopQuerySchema.parse(req.query);
+    const data = await this.service.getTop(tenantOf(req), range, dimension, limit);
+    res.json({ success: true, data });
   };
 
-  topReferrers = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsTopReferrersQuerySchema.parse(req.query);
-      const data = await this.service.getTopReferrers(parsed.range, parsed.limit);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
+  devices = async (req: AuthRequest, res: Response) => {
+    const { range } = AnalyticsDevicesQuerySchema.parse(req.query);
+    res.json({ success: true, data: await this.service.getDeviceBreakdown(tenantOf(req), range) });
   };
 
-  topCountries = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsGeoQuerySchema.parse(req.query);
-      const data = await this.service.getTopCountries(parsed.range, parsed.limit);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
+  track = async (req: AuthRequest, res: Response) => {
+    const dto = TrackEventSchema.parse(req.body);
+    await this.service.track(dto, {
+      organizationId: tenantOf(req),
+      userId: req.userId ?? null,
+      userAgent: header(req, 'user-agent'),
+      country: header(req, 'x-vercel-ip-country') ?? header(req, 'cf-ipcountry'),
+      city: header(req, 'x-vercel-ip-city'),
+    });
+    res.status(202).json({ success: true });
   };
 
-  topCities = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsGeoQuerySchema.parse(req.query);
-      const data = await this.service.getTopCities(parsed.range, parsed.limit);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
+  export = async (req: AuthRequest, res: Response) => {
+    const { range, format } = AnalyticsExportQuerySchema.parse(req.query);
+    const overview = await this.service.getOverview(tenantOf(req), range);
+    const filename = `analytics-${range}d-${new Date().toISOString().slice(0, 10)}`;
+
+    if (format === 'csv') {
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
+      res.send(this.toCsv(overview));
+      return;
     }
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
+    res.json({ success: true, data: overview });
   };
 
-  deviceBreakdown = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsDevicesQuerySchema.parse(req.query);
-      const data = await this.service.getDeviceBreakdown(parsed.range);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  topBrowsers = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsBrowsersQuerySchema.parse(req.query);
-      const data = await this.service.getTopBrowsers(parsed.range, parsed.limit);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  topOS = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsBrowsersQuerySchema.parse(req.query);
-      const data = await this.service.getTopOS(parsed.range, parsed.limit);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  export = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const parsed = AnalyticsExportQuerySchema.parse(req.query);
-      const overview = await this.service.getOverview(parsed.range);
-
-      if (parsed.format === 'csv') {
-        const csv = this.toCsv(overview);
-        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename="analytics-${parsed.range}d-${new Date().toISOString().slice(0, 10)}.csv"`
-        );
-        res.send(csv);
-        return;
-      }
-
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="analytics-${parsed.range}d-${new Date().toISOString().slice(0, 10)}.json"`
-      );
-      res.json({ success: true, data: overview });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  private toCsv(overview: any): string {
-    const rows: string[][] = [
-      ['Metric', 'Value'],
-      ['Generated At', overview.generatedAt],
-      ['Page Views', overview.kpis.pageViews.toString()],
-      ['Unique Visitors', overview.kpis.uniqueVisitors.toString()],
-      ['Engagement Rate', `${overview.kpis.engagementRate}%`],
-      ['Project Views', overview.kpis.projectViews.toString()],
-      ['Blog Views', overview.kpis.blogViews.toString()],
-      ['', ''],
-      ['Top Pages', '', 'Count', 'Percentage'],
-      ...overview.topPages.map((p: any) => ['', p.name, p.count.toString(), `${p.percentage}%`]),
-      ['', ''],
-      ['Top Referrers', '', 'Count', 'Percentage'],
-      ...overview.topReferrers.map((p: any) => ['', p.name, p.count.toString(), `${p.percentage}%`]),
-      ['', ''],
-      ['Top Countries', '', 'Count', 'Percentage'],
-      ...overview.topCountries.map((p: any) => ['', p.name, p.count.toString(), `${p.percentage}%`]),
-      ['', ''],
-      ['Device Breakdown', '', 'Count'],
-      ['', 'Desktop', overview.deviceBreakdown.desktop.toString()],
-      ['', 'Mobile', overview.deviceBreakdown.mobile.toString()],
-      ['', 'Tablet', overview.deviceBreakdown.tablet.toString()],
-      ['', ''],
-      ['Top Browsers', '', 'Count', 'Percentage'],
-      ...overview.topBrowsers.map((p: any) => ['', p.name, p.count.toString(), `${p.percentage}%`]),
-      ['', ''],
-      ['Top OS', '', 'Count', 'Percentage'],
-      ...overview.topOS.map((p: any) => ['', p.name, p.count.toString(), `${p.percentage}%`]),
+  private toCsv(o: AnalyticsOverview): string {
+    const k = o.kpis;
+    const section = (
+      title: string,
+      items: Array<{ name: string; count: number; percentage: number }>
+    ) => [
+      [],
+      [title, 'Page Views', 'Share %'],
+      ...items.map((i) => [i.name, i.count, i.percentage]),
     ];
-
-    return rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+    const rows: Array<Array<string | number>> = [
+      ['Analytics report', `Last ${o.range.days} days`],
+      ['From', o.range.from.slice(0, 10)],
+      ['To', o.range.to.slice(0, 10)],
+      ['Generated At', o.generatedAt],
+      [],
+      ['Metric', 'Value', 'Previous Period', 'Change %'],
+      ['Page Views', k.pageViews.value, k.pageViews.previous, k.pageViews.change ?? ''],
+      [
+        'Unique Visitors',
+        k.uniqueVisitors.value,
+        k.uniqueVisitors.previous,
+        k.uniqueVisitors.change ?? '',
+      ],
+      ['Sessions', k.sessions.value, k.sessions.previous, k.sessions.change ?? ''],
+      [
+        'Engagement Rate %',
+        k.engagementRate.value,
+        k.engagementRate.previous,
+        k.engagementRate.change ?? '',
+      ],
+      [
+        'Avg Session (s)',
+        k.avgSessionSeconds.value,
+        k.avgSessionSeconds.previous,
+        k.avgSessionSeconds.change ?? '',
+      ],
+      [],
+      ['Date', 'Page Views', 'Unique Visitors', 'Sessions', 'Engagement Rate %'],
+      ...o.daily.map((d) => [d.date, d.pageViews, d.uniqueVisitors, d.sessions, d.engagementRate]),
+      ...section('Top Pages', o.topPages),
+      ...section('Top Referrers', o.topReferrers),
+      ...section('Top Countries', o.topCountries),
+      ...section('Top Cities', o.topCities),
+      ...section('Top Browsers', o.topBrowsers),
+      ...section('Top Operating Systems', o.topOS),
+      [],
+      ['Device', 'Page Views'],
+      ['Desktop', o.deviceBreakdown.desktop],
+      ['Mobile', o.deviceBreakdown.mobile],
+      ['Tablet', o.deviceBreakdown.tablet],
+    ];
+    // BOM so Excel opens the UTF-8 file with the right encoding.
+    return '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n');
   }
 }

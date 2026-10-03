@@ -1,0 +1,20 @@
+@if (items().length) {
+  <div class="rl-head" aria-hidden="true">
+    <span>{{ label() }}</span>
+    <span>Views</span>
+  </div>
+  <ol class="rl-list" [attr.aria-label]="label() + ' by page views'">
+    @for (item of items(); track item.name) {
+      <li class="rl-row">
+        <span class="rl-bar" [style.width.%]="width(item.count)" aria-hidden="true"></span>
+        <span class="rl-name" [class.font-mono]="mono()" [title]="item.name">{{ item.name }}</span>
+        <span class="rl-value">
+          <span class="tabular-nums">{{ item.count | number }}</span>
+          <span class="rl-share tabular-nums">{{ item.percentage }}%</span>
+        </span>
+      </li>
+    }
+  </ol>
+} @else {
+  <p class="rl-empty">{{ emptyText() }}</p>
+}

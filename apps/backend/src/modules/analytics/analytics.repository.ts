@@ -1,5 +1,5 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../infrastructure/prisma';
-import type { TxClient } from '../../infrastructure/prisma';
 
 export interface AnalyticsTrendPoint {
   date: string;
@@ -18,291 +18,240 @@ export interface AnalyticsDeviceBreakdown {
   tablet: number;
 }
 
-export interface AnalyticsRepository {
-  countPageViews(since: Date, tx?: TxClient): Promise<number>;
-  countUniqueVisitors(since: Date, tx?: TxClient): Promise<number>;
-  calculateEngagementRate(since: Date, tx?: TxClient): Promise<number>;
-  countProjectViews(since: Date, tx?: TxClient): Promise<number>;
-  countBlogViews(since: Date, tx?: TxClient): Promise<number>;
-  pageViewsTrend(since: Date, tx?: TxClient): Promise<AnalyticsTrendPoint[]>;
-  uniqueVisitorsTrend(since: Date, tx?: TxClient): Promise<AnalyticsTrendPoint[]>;
-  engagementTrend(since: Date, tx?: TxClient): Promise<AnalyticsTrendPoint[]>;
-  topPages(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]>;
-  topReferrers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]>;
-  topCountries(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]>;
-  topCities(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]>;
-  deviceBreakdown(since: Date, tx?: TxClient): Promise<AnalyticsDeviceBreakdown>;
-  topBrowsers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]>;
-  topOS(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]>;
+export interface AnalyticsTotals {
+  pageViews: number;
+  uniqueVisitors: number;
+  sessions: number;
+  engagedSessions: number;
+  /** Average session length in seconds. */
+  avgSessionSeconds: number;
 }
 
+export interface AnalyticsDailyRow {
+  date: string;
+  pageViews: number;
+  uniqueVisitors: number;
+  sessions: number;
+  engagedSessions: number;
+}
+
+/** Breakdown dimensions; values are column names, never user input. */
+export const DIMENSIONS = {
+  page: 'page_path',
+  referrer: 'referrer',
+  country: 'country',
+  city: 'city',
+  browser: 'browser',
+  os: 'os',
+} as const;
+export type Dimension = keyof typeof DIMENSIONS;
+
+export interface Window {
+  organizationId: string;
+  from: Date;
+  to: Date;
+}
+
+export interface NewEvent {
+  organizationId: string;
+  userId: string | null;
+  sessionId: string;
+  visitorId: string;
+  eventType: 'pageview' | 'event';
+  eventName: string | null;
+  pagePath: string;
+  pageTitle: string | null;
+  referrer: string | null;
+  deviceType: string;
+  browser: string | null;
+  os: string | null;
+  country: string | null;
+  city: string | null;
+}
+
+/** A session counts as engaged after a second page, 30 seconds, or a few interactions. */
+const ENGAGED = Prisma.sql`(page_views > 1 OR duration > 30000 OR events > 2)`;
+
+export interface AnalyticsRepository {
+  totals(w: Window): Promise<AnalyticsTotals>;
+  daily(w: Window): Promise<AnalyticsDailyRow[]>;
+  top(
+    w: Window,
+    dimension: Dimension,
+    limit: number
+  ): Promise<Array<{ name: string; count: number }>>;
+  devices(w: Window): Promise<AnalyticsDeviceBreakdown>;
+  record(event: NewEvent, at: Date): Promise<void>;
+}
+
+const num = (v: bigint | number | null | undefined): number => Number(v ?? 0);
+
 export class PrismaAnalyticsRepository implements AnalyticsRepository {
-  async countPageViews(since: Date, tx?: TxClient): Promise<number> {
-    const db = tx ?? prisma;
-    return db.analyticsEvent.count({
-      where: { eventType: 'pageview', createdAt: { gte: since } },
-    });
+  async totals({ organizationId, from, to }: Window): Promise<AnalyticsTotals> {
+    const [events, sessions] = await Promise.all([
+      prisma.$queryRaw<Array<{ page_views: bigint; visitors: bigint }>>`
+        SELECT COUNT(*) FILTER (WHERE event_type = 'pageview') AS page_views,
+               COUNT(DISTINCT visitor_id) AS visitors
+        FROM analytics_events
+        WHERE organization_id = ${organizationId}::uuid
+          AND created_at >= ${from} AND created_at < ${to}`,
+      prisma.$queryRaw<Array<{ sessions: bigint; engaged: bigint; avg_ms: number | null }>>`
+        SELECT COUNT(*) AS sessions,
+               COUNT(*) FILTER (WHERE ${ENGAGED}) AS engaged,
+               AVG(duration)::float AS avg_ms
+        FROM analytics_sessions
+        WHERE organization_id = ${organizationId}::uuid
+          AND started_at >= ${from} AND started_at < ${to}`,
+    ]);
+    return {
+      pageViews: num(events[0]?.page_views),
+      uniqueVisitors: num(events[0]?.visitors),
+      sessions: num(sessions[0]?.sessions),
+      engagedSessions: num(sessions[0]?.engaged),
+      avgSessionSeconds: Math.round((sessions[0]?.avg_ms ?? 0) / 1000),
+    };
   }
 
-  async countUniqueVisitors(since: Date, tx?: TxClient): Promise<number> {
-    const db = tx ?? prisma;
-    const result = await db.analyticsEvent.groupBy({
-      by: ['visitorId'],
-      where: { eventType: 'pageview', createdAt: { gte: since } },
-      _count: { visitorId: true },
-    });
-    return result.length;
+  async daily({ organizationId, from, to }: Window): Promise<AnalyticsDailyRow[]> {
+    const [events, sessions] = await Promise.all([
+      prisma.$queryRaw<Array<{ day: string; page_views: bigint; visitors: bigint }>>`
+        SELECT to_char(date_trunc('day', created_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS day,
+               COUNT(*) FILTER (WHERE event_type = 'pageview') AS page_views,
+               COUNT(DISTINCT visitor_id) AS visitors
+        FROM analytics_events
+        WHERE organization_id = ${organizationId}::uuid
+          AND created_at >= ${from} AND created_at < ${to}
+        GROUP BY 1`,
+      prisma.$queryRaw<Array<{ day: string; sessions: bigint; engaged: bigint }>>`
+        SELECT to_char(date_trunc('day', started_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS day,
+               COUNT(*) AS sessions,
+               COUNT(*) FILTER (WHERE ${ENGAGED}) AS engaged
+        FROM analytics_sessions
+        WHERE organization_id = ${organizationId}::uuid
+          AND started_at >= ${from} AND started_at < ${to}
+        GROUP BY 1`,
+    ]);
+    const byDay = new Map<string, AnalyticsDailyRow>();
+    const row = (day: string) => {
+      let r = byDay.get(day);
+      if (!r) {
+        r = { date: day, pageViews: 0, uniqueVisitors: 0, sessions: 0, engagedSessions: 0 };
+        byDay.set(day, r);
+      }
+      return r;
+    };
+    for (const e of events) {
+      const r = row(e.day);
+      r.pageViews = num(e.page_views);
+      r.uniqueVisitors = num(e.visitors);
+    }
+    for (const s of sessions) {
+      const r = row(s.day);
+      r.sessions = num(s.sessions);
+      r.engagedSessions = num(s.engaged);
+    }
+    return [...byDay.values()];
   }
 
-  async calculateEngagementRate(since: Date, tx?: TxClient): Promise<number> {
-    const db = tx ?? prisma;
-    const [totalSessions, engagedSessions] = await Promise.all([
-      db.analyticsSession.count({
-        where: { startedAt: { gte: since } },
-      }),
-      db.analyticsSession.count({
-        where: {
-          startedAt: { gte: since },
-          OR: [
-            { pageViews: { gt: 1 } },
-            { duration: { gt: 30000 } },
-            { events: { gt: 2 } },
-          ],
+  async top(
+    { organizationId, from, to }: Window,
+    dimension: Dimension,
+    limit: number
+  ): Promise<Array<{ name: string; count: number }>> {
+    const column = Prisma.raw(DIMENSIONS[dimension]);
+    // City is ambiguous on its own ("Springfield"), so it is reported with its country.
+    const label =
+      dimension === 'city' ? Prisma.sql`city || COALESCE(', ' || NULLIF(country, ''), '')` : column;
+    const rows = await prisma.$queryRaw<Array<{ name: string; count: bigint }>>`
+      SELECT ${label} AS name, COUNT(*) AS count
+      FROM analytics_events
+      WHERE organization_id = ${organizationId}::uuid
+        AND event_type = 'pageview'
+        AND created_at >= ${from} AND created_at < ${to}
+        AND ${column} IS NOT NULL AND ${column} <> ''
+      GROUP BY 1
+      ORDER BY count DESC, name ASC
+      LIMIT ${limit}`;
+    return rows.map((r) => ({ name: r.name, count: num(r.count) }));
+  }
+
+  async devices({ organizationId, from, to }: Window): Promise<AnalyticsDeviceBreakdown> {
+    const rows = await prisma.$queryRaw<Array<{ device_type: string | null; count: bigint }>>`
+      SELECT device_type, COUNT(*) AS count
+      FROM analytics_events
+      WHERE organization_id = ${organizationId}::uuid
+        AND event_type = 'pageview'
+        AND created_at >= ${from} AND created_at < ${to}
+      GROUP BY device_type`;
+    const get = (type: string) => num(rows.find((r) => r.device_type === type)?.count);
+    return { desktop: get('desktop'), mobile: get('mobile'), tablet: get('tablet') };
+  }
+
+  /** Stores the event and opens or extends its session in one transaction. */
+  async record(e: NewEvent, at: Date): Promise<void> {
+    const isPageView = e.eventType === 'pageview';
+    await prisma.$transaction(async (tx) => {
+      await tx.analyticsEvent.create({
+        data: {
+          organizationId: e.organizationId,
+          userId: e.userId,
+          sessionId: e.sessionId,
+          visitorId: e.visitorId,
+          eventType: e.eventType,
+          eventName: e.eventName,
+          pagePath: e.pagePath,
+          pageTitle: e.pageTitle,
+          referrer: e.referrer,
+          deviceType: e.deviceType,
+          browser: e.browser,
+          os: e.os,
+          country: e.country,
+          city: e.city,
+          createdAt: at,
         },
-      }),
-    ]);
-    return totalSessions > 0 ? (engagedSessions / totalSessions) * 100 : 0;
-  }
-
-  async countProjectViews(since: Date, tx?: TxClient): Promise<number> {
-    const db = tx ?? prisma;
-    return db.analyticsEvent.count({
-      where: {
-        eventType: 'pageview',
-        createdAt: { gte: since },
-        pagePath: { startsWith: '/projects' },
-      },
+      });
+      // The session id is client-generated; it is only honoured within its own organization.
+      const existing = await tx.analyticsSession.findFirst({
+        where: { id: e.sessionId, organizationId: e.organizationId },
+        select: { startedAt: true },
+      });
+      if (existing) {
+        await tx.analyticsSession.update({
+          where: { id: e.sessionId },
+          data: {
+            endedAt: at,
+            duration: Math.max(0, at.getTime() - existing.startedAt.getTime()),
+            ...(isPageView
+              ? { pageViews: { increment: 1 }, exitPage: e.pagePath }
+              : { events: { increment: 1 } }),
+          },
+        });
+        return;
+      }
+      await tx.analyticsSession.upsert({
+        where: { id: e.sessionId },
+        // Same id in another organization: leave that session alone.
+        update: {},
+        create: {
+          id: e.sessionId,
+          organizationId: e.organizationId,
+          visitorId: e.visitorId,
+          userId: e.userId,
+          startedAt: at,
+          endedAt: at,
+          duration: 0,
+          pageViews: isPageView ? 1 : 0,
+          events: isPageView ? 0 : 1,
+          entryPage: e.pagePath,
+          exitPage: e.pagePath,
+          referrer: e.referrer,
+          deviceType: e.deviceType,
+          browser: e.browser,
+          os: e.os,
+          country: e.country,
+          city: e.city,
+        },
+      });
     });
-  }
-
-  async countBlogViews(since: Date, tx?: TxClient): Promise<number> {
-    const db = tx ?? prisma;
-    return db.analyticsEvent.count({
-      where: {
-        eventType: 'pageview',
-        createdAt: { gte: since },
-        pagePath: { startsWith: '/blog' },
-      },
-    });
-  }
-
-  async pageViewsTrend(since: Date, tx?: TxClient): Promise<AnalyticsTrendPoint[]> {
-    const db = tx ?? prisma;
-    const rows = await db.analyticsEvent.groupBy({
-      by: ['createdAt'],
-      _count: { _all: true },
-      where: { eventType: 'pageview', createdAt: { gte: since } },
-    });
-    return this.toDailyBuckets(
-      rows.map((r) => ({ date: r.createdAt, count: r._count._all })),
-      since
-    );
-  }
-
-  async uniqueVisitorsTrend(since: Date, tx?: TxClient): Promise<AnalyticsTrendPoint[]> {
-    const db = tx ?? prisma;
-    const rows = await db.$queryRaw<Array<{ date: Date; count: bigint }>>`
-      SELECT DATE("createdAt") as date, COUNT(DISTINCT "visitorId")::bigint as count
-      FROM "AnalyticsEvent"
-      WHERE "eventType" = 'pageview' AND "createdAt" >= ${since}
-      GROUP BY DATE("createdAt")
-      ORDER BY date ASC
-    `;
-    return this.toDailyBuckets(
-      rows.map((r) => ({ date: r.date, count: Number(r.count) })),
-      since
-    );
-  }
-
-  async engagementTrend(since: Date, tx?: TxClient): Promise<AnalyticsTrendPoint[]> {
-    const db = tx ?? prisma;
-    const rows = await db.analyticsSession.groupBy({
-      by: ['startedAt'],
-      _count: { _all: true },
-      _avg: { duration: true, pageViews: true },
-      where: { startedAt: { gte: since } },
-    });
-    return this.toDailyBuckets(
-      rows.map((r) => ({
-        date: r.startedAt,
-        count: Math.round(
-          (r._avg.duration ?? 0) / 1000 + (r._avg.pageViews ?? 0) * 30
-        ),
-      })),
-      since
-    );
-  }
-
-  async topPages(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
-    const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, pagePath: { notIn: [null, ''] } };
-    const rows = await db.analyticsEvent.groupBy({
-      by: ['pagePath'],
-      _count: { _all: true },
-      where,
-    });
-    rows.sort((a, b) => b._count._all - a._count._all);
-    const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.slice(0, limit).map((r) => ({
-      name: String(r.pagePath),
-      count: r._count._all,
-      percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    }));
-  }
-
-  async topReferrers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
-    const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, referrer: { notIn: [null, ''] } };
-    const rows = await db.analyticsEvent.groupBy({
-      by: ['referrer'],
-      _count: { _all: true },
-      where,
-    });
-    rows.sort((a, b) => b._count._all - a._count._all);
-    const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.slice(0, limit).map((r) => ({
-      name: this.simplifyReferrer(String(r.referrer ?? 'Direct')),
-      count: r._count._all,
-      percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    }));
-  }
-
-  async topCountries(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
-    const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, country: { notIn: [null, ''] } };
-    const rows = await db.analyticsEvent.groupBy({
-      by: ['country'],
-      _count: { _all: true },
-      where,
-    });
-    rows.sort((a, b) => b._count._all - a._count._all);
-    const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.slice(0, limit).map((r) => ({
-      name: String(r.country ?? 'Unknown'),
-      count: r._count._all,
-      percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    }));
-  }
-
-  async topCities(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
-    const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, city: { notIn: [null, ''] } };
-    const rows = await db.analyticsEvent.groupBy({
-      by: ['city', 'country'],
-      _count: { _all: true },
-      where,
-    });
-    rows.sort((a, b) => b._count._all - a._count._all);
-    const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.slice(0, limit).map((r) => ({
-      name: `${String(r.city)}, ${String(r.country)}`,
-      count: r._count._all,
-      percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    }));
-  }
-
-  async deviceBreakdown(since: Date, tx?: TxClient): Promise<AnalyticsDeviceBreakdown> {
-    const db = tx ?? prisma;
-    const [desktop, mobile, tablet] = await Promise.all([
-      db.analyticsEvent.count({
-        where: { eventType: 'pageview', createdAt: { gte: since }, deviceType: 'desktop' },
-      }),
-      db.analyticsEvent.count({
-        where: { eventType: 'pageview', createdAt: { gte: since }, deviceType: 'mobile' },
-      }),
-      db.analyticsEvent.count({
-        where: { eventType: 'pageview', createdAt: { gte: since }, deviceType: 'tablet' },
-      }),
-    ]);
-    return { desktop, mobile, tablet };
-  }
-
-  async topBrowsers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
-    const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, browser: { notIn: [null, ''] } };
-    const rows = await db.analyticsEvent.groupBy({
-      by: ['browser'],
-      _count: { _all: true },
-      where,
-    });
-    rows.sort((a, b) => b._count._all - a._count._all);
-    const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.slice(0, limit).map((r) => ({
-      name: String(r.browser ?? 'Unknown'),
-      count: r._count._all,
-      percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    }));
-  }
-
-  async topOS(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
-    const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, os: { notIn: [null, ''] } };
-    const rows = await db.analyticsEvent.groupBy({
-      by: ['os'],
-      _count: { _all: true },
-      where,
-    });
-    rows.sort((a, b) => b._count._all - a._count._all);
-    const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.slice(0, limit).map((r) => ({
-      name: String(r.os ?? 'Unknown'),
-      count: r._count._all,
-      percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    }));
-  }
-
-  private simplifyReferrer(referrer: string): string {
-    try {
-      const url = new URL(referrer);
-      const hostname = url.hostname.replace('www.', '');
-      if (hostname.includes('google')) return 'Google';
-      if (hostname.includes('facebook')) return 'Facebook';
-      if (hostname.includes('twitter') || hostname.includes('x.com')) return 'X (Twitter)';
-      if (hostname.includes('linkedin')) return 'LinkedIn';
-      if (hostname.includes('github')) return 'GitHub';
-      if (hostname.includes('youtube')) return 'YouTube';
-      if (hostname.includes('instagram')) return 'Instagram';
-      return hostname;
-    } catch {
-      return 'Direct';
-    }
-  }
-
-  /** Collapse raw timestamps into zero-filled daily buckets over the window. */
-  private toDailyBuckets(
-    points: Array<{ date: Date; count: number }>,
-    since: Date
-  ): AnalyticsTrendPoint[] {
-    const buckets = new Map<string, number>();
-    const days: string[] = [];
-
-    const cursor = new Date(since);
-    cursor.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-
-    while (cursor <= today) {
-      const key = cursor.toISOString().slice(0, 10);
-      buckets.set(key, 0);
-      days.push(key);
-      cursor.setDate(cursor.getDate() + 1);
-    }
-
-    for (const p of points) {
-      const key = p.date.toISOString().slice(0, 10);
-      if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + p.count);
-    }
-
-    return days.map((date) => ({ date, count: buckets.get(date) ?? 0 }));
   }
 }
