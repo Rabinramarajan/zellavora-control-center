@@ -55,60 +55,66 @@
     [message]="store.error()!"
   />
 } @else if (store.hasItems()) {
-  <zcc-data-table [columns]="columns" [rows]="store.items()" [rowTemplate]="rowTpl">
-    <ng-template #rowTpl let-p>
-      <td class="px-4 py-3">
-        <span class="font-mono text-xs font-semibold text-gray-900 dark:text-white">{{
-          p.key
-        }}</span>
-        @if (p.isWildcard) {
-          <span
-            class="ml-2 rounded-full bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-400 ring-1 ring-inset ring-purple-500/20"
-            >wildcard</span
-          >
-        }
-      </td>
-      <td class="max-w-md px-4 py-3 text-gray-600 dark:text-gray-300">
-        {{ p.description ?? '—' }}
-      </td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ p.groupName ?? '—' }}</td>
-      <td class="px-4 py-3">
-        <button
-          type="button"
-          class="min-h-[36px] rounded-md px-2 font-medium tabular-nums text-indigo-600 hover:bg-indigo-500/10 dark:text-indigo-400"
-          [attr.aria-label]="'Show roles using ' + p.key"
-          (click)="showUsage(p)"
+  <app-data-table [columns]="columns" [rows]="store.items()" [paginated]="false">
+    <ng-template dtCell="key" let-p>
+      <span class="font-mono text-xs font-semibold text-gray-900 dark:text-white">{{ p.key }}</span>
+      @if (p.isWildcard) {
+        <span
+          class="ml-2 rounded-full bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-400 ring-1 ring-inset ring-purple-500/20"
+          >wildcard</span
         >
-          {{ p.roleCount }} {{ p.roleCount === 1 ? 'role' : 'roles' }}
-        </button>
-      </td>
-      <td class="px-4 py-3 text-right">
-        @if (canManage()) {
-          <div class="flex justify-end gap-1">
-            <button
-              type="button"
-              [class]="btn.icon"
-              [attr.aria-label]="'Edit ' + p.key"
-              title="Edit"
-              (click)="edit(p)"
-            >
-              <i class="pi pi-pencil" aria-hidden="true"></i>
-            </button>
-            <button
-              type="button"
-              [class]="btn.icon + ' hover:!text-red-500'"
-              [attr.aria-label]="'Delete ' + p.key"
-              [title]="deleteHint(p)"
-              [disabled]="p.isWildcard || p.roleCount > 0 || p.resourceActionCount > 0"
-              (click)="remove(p)"
-            >
-              <i class="pi pi-trash" aria-hidden="true"></i>
-            </button>
-          </div>
-        }
-      </td>
+      }
     </ng-template>
-  </zcc-data-table>
+
+    <ng-template dtCell="description" let-p>
+      <div class="max-w-md text-gray-600 dark:text-gray-300">
+        {{ p.description ?? '—' }}
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="group" let-p>
+      <div class="text-gray-600 dark:text-gray-300">
+        {{ p.groupName ?? '—' }}
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="usage" let-p>
+      <button
+        type="button"
+        class="min-h-[36px] rounded-md px-2 font-medium tabular-nums text-indigo-600 hover:bg-indigo-500/10 dark:text-indigo-400"
+        [attr.aria-label]="'Show roles using ' + p.key"
+        (click)="showUsage(p)"
+      >
+        {{ p.roleCount }} {{ p.roleCount === 1 ? 'role' : 'roles' }}
+      </button>
+    </ng-template>
+
+    <ng-template dtActions let-p>
+      @if (canManage()) {
+        <div class="flex justify-end gap-1">
+          <button
+            type="button"
+            [class]="btn.icon"
+            [attr.aria-label]="'Edit ' + p.key"
+            title="Edit"
+            (click)="edit(p)"
+          >
+            <i class="pi pi-pencil" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            [class]="btn.icon + ' hover:!text-red-500'"
+            [attr.aria-label]="'Delete ' + p.key"
+            [title]="deleteHint(p)"
+            [disabled]="p.isWildcard || p.roleCount > 0 || p.resourceActionCount > 0"
+            (click)="remove(p)"
+          >
+            <i class="pi pi-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+      }
+    </ng-template>
+  </app-data-table>
   <app-pagination
     class="px-1 py-3"
     entityLabel="permissions"

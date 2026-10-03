@@ -10,17 +10,18 @@ import {
   UserRequestStatus,
 } from '../../../shared/models/user-request.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
-import {
-  DataTableColumn,
-  DataTableComponent,
-  EmptyStateComponent,
-  StatusChipComponent,
-} from '../../../shared/components/iam';
+import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { formatDate } from '../shared/iam-format';
 import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
 import { UserSelectComponent } from './components/user-select.component';
+import {
+  DataTableColumn,
+  DataTableComponent,
+  DataTableCellDirective,
+  DataTableActionsDirective,
+} from '../../../shared/components/data-table';
 import { REQUEST_TYPE_OPTIONS, STATUS_OPTIONS, STATUS_TONES } from './user-request.constants';
 
 interface SearchForm {
@@ -81,6 +82,8 @@ const toOptions = (items: Array<{ id: string; name: string }>): MultiSelectOptio
     DateControl,
     IamPageHeaderComponent,
     DataTableComponent,
+    DataTableCellDirective,
+    DataTableActionsDirective,
     EmptyStateComponent,
     StatusChipComponent,
     PaginationComponent,
@@ -123,17 +126,16 @@ export class UserRequestsComponent {
   protected readonly groupOptions = computed(() => toOptions(this.lookups()?.groups ?? []));
   protected readonly roleOptions = computed(() => toOptions(this.lookups()?.roles ?? []));
 
-  protected readonly columns: DataTableColumn[] = [
-    { key: 'refNo', label: 'Request Ref No' },
-    { key: 'type', label: 'Request Type' },
-    { key: 'name', label: 'Name' },
-    { key: 'employeeCode', label: 'Employee Code' },
-    { key: 'email', label: 'Email' },
-    { key: 'requestedBy', label: 'Requested By' },
-    { key: 'requestedDate', label: 'Requested Date' },
-    { key: 'branch', label: 'Branch' },
-    { key: 'status', label: 'Status' },
-    { key: 'actions', label: 'Actions' },
+  protected readonly columns: DataTableColumn<unknown>[] = [
+    { id: 'refNo', label: 'Request Ref No' },
+    { id: 'type', label: 'Request Type' },
+    { id: 'name', label: 'Name' },
+    { id: 'employeeCode', label: 'Employee Code' },
+    { id: 'email', label: 'Email' },
+    { id: 'requestedBy', label: 'Requested By' },
+    { id: 'requestedDate', label: 'Requested Date' },
+    { id: 'branch', label: 'Branch' },
+    { id: 'status', label: 'Status' },
   ];
 
   readonly store = createListStore<UserRequestListItem>({

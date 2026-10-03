@@ -6,16 +6,18 @@ import {
   UpsertConfigurationRequest,
 } from '../../../shared/models/iam-admin.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
-import {
-  DataTableComponent,
-  DataTableColumn,
-  EmptyStateComponent,
-} from '../../../shared/components/iam';
+import { EmptyStateComponent } from '../../../shared/components/iam';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_INPUT, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService } from '../shared/iam-feedback.service';
 import { FormField, FormValues } from '../shared/iam-form-dialog.component';
+import {
+  DataTableColumn,
+  DataTableComponent,
+  DataTableCellDirective,
+  DataTableActionsDirective,
+} from '../../../shared/components/data-table';
 import { relativeTime } from '../shared/iam-format';
 
 const KEY_PATTERN = {
@@ -27,7 +29,14 @@ const KEY_PATTERN = {
   selector: 'zcc-configuration',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IamPageHeaderComponent, DataTableComponent, EmptyStateComponent, PaginationComponent],
+  imports: [
+    IamPageHeaderComponent,
+    DataTableComponent,
+    DataTableCellDirective,
+    DataTableActionsDirective,
+    EmptyStateComponent,
+    PaginationComponent,
+  ],
   templateUrl: './configuration.component.html',
   styleUrl: './configuration.component.scss',
 })
@@ -43,12 +52,11 @@ export class ConfigurationComponent {
   protected readonly busyKey = signal<string | null>(null);
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
-  protected readonly columns: DataTableColumn[] = [
-    { key: 'key', label: 'Key' },
-    { key: 'value', label: 'Value' },
-    { key: 'category', label: 'Category' },
-    { key: 'updated', label: 'Updated' },
-    { key: 'actions', label: '' },
+  protected readonly columns: DataTableColumn<unknown>[] = [
+    { id: 'key', label: 'Key' },
+    { id: 'value', label: 'Value' },
+    { id: 'category', label: 'Category' },
+    { id: 'updated', label: 'Updated' },
   ];
 
   readonly store = createListStore<ConfigurationItem>({

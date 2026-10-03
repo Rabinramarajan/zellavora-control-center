@@ -5,15 +5,17 @@ import { PermissionService } from '../../../core/rbac/services/permission.servic
 import { AppDialogService } from '../../../shared/components/dialog';
 import { CatalogPermission, PermissionGroupItem } from '../../../shared/models/iam-admin.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
-import {
-  DataTableComponent,
-  DataTableColumn,
-  EmptyStateComponent,
-} from '../../../shared/components/iam';
+import { EmptyStateComponent } from '../../../shared/components/iam';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_INPUT, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService } from '../shared/iam-feedback.service';
+import {
+  DataTableColumn,
+  DataTableComponent,
+  DataTableCellDirective,
+  DataTableActionsDirective,
+} from '../../../shared/components/data-table';
 import { PermissionUsageDrawerComponent } from './permission-usage-drawer.component';
 
 const SEGMENT = {
@@ -25,7 +27,14 @@ const SEGMENT = {
   selector: 'zcc-permissions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IamPageHeaderComponent, DataTableComponent, EmptyStateComponent, PaginationComponent],
+  imports: [
+    IamPageHeaderComponent,
+    DataTableComponent,
+    DataTableCellDirective,
+    DataTableActionsDirective,
+    EmptyStateComponent,
+    PaginationComponent,
+  ],
   templateUrl: './permissions.component.html',
   styleUrl: './permissions.component.scss',
 })
@@ -42,12 +51,11 @@ export class PermissionsComponent {
   private readonly groups = signal<PermissionGroupItem[]>([]);
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
-  protected readonly columns: DataTableColumn[] = [
-    { key: 'key', label: 'Key' },
-    { key: 'description', label: 'Description' },
-    { key: 'group', label: 'Group' },
-    { key: 'usage', label: 'Used by' },
-    { key: 'actions', label: '' },
+  protected readonly columns: DataTableColumn<unknown>[] = [
+    { id: 'key', label: 'Key' },
+    { id: 'description', label: 'Description' },
+    { id: 'group', label: 'Group' },
+    { id: 'usage', label: 'Used by' },
   ];
 
   readonly store = createListStore<CatalogPermission>({

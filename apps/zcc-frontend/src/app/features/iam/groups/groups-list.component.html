@@ -38,43 +38,46 @@
     [message]="store.error()!"
   />
 } @else if (store.hasItems()) {
-  <zcc-data-table
-    [columns]="columns()"
+  <app-data-table
+    [columns]="columns"
     [rows]="store.items()"
-    [rowTemplate]="rowTpl"
     [rowClickable]="true"
     (rowClick)="onRowClick($event)"
+    [paginated]="false"
   >
-    <ng-template #rowTpl let-r>
-      <td class="px-4 py-3">
-        <a
-          [routerLink]="['/iam/groups', r.id]"
-          class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
-          (click)="$event.stopPropagation()"
-        >
-          {{ r.name }}
-        </a>
-        @if (r.parentName) {
-          <p class="text-xs text-gray-400">in {{ r.parentName }}</p>
-        }
-      </td>
-      <td class="px-4 py-3">
-        <zcc-status-chip [value]="r.type" [label]="r.typeLabel" />
-      </td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-        <span class="tabular-nums">{{ r.memberCount }}</span>
-      </td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-        <span class="tabular-nums">{{ r.roleCount }}</span>
-      </td>
-      <td class="px-4 py-3">
-        <zcc-status-chip
-          [value]="r.status"
-          [label]="r.status === 'ACTIVE' ? 'Active' : 'Inactive'"
-        />
-      </td>
+    <ng-template dtCell="name" let-r>
+      <a
+        [routerLink]="['/iam/groups', r.id]"
+        class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+        (click)="$event.stopPropagation()"
+      >
+        {{ r.name }}
+      </a>
+      @if (r.parentName) {
+        <p class="text-xs text-gray-400">in {{ r.parentName }}</p>
+      }
     </ng-template>
-  </zcc-data-table>
+
+    <ng-template dtCell="type" let-r>
+      <zcc-status-chip [value]="r.type" [label]="r.typeLabel" />
+    </ng-template>
+
+    <ng-template dtCell="memberCount" let-r>
+      <div class="text-gray-600 dark:text-gray-300">
+        <span class="tabular-nums">{{ r.memberCount }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="roleCount" let-r>
+      <div class="text-gray-600 dark:text-gray-300">
+        <span class="tabular-nums">{{ r.roleCount }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="status" let-r>
+      <zcc-status-chip [value]="r.status" [label]="r.status === 'ACTIVE' ? 'Active' : 'Inactive'" />
+    </ng-template>
+  </app-data-table>
 
   <app-pagination
     class="px-1 py-3"

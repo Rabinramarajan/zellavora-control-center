@@ -15,11 +15,11 @@ import { AppDialogService } from '../../../shared/components/dialog';
 import { FormDialogService } from '../../../shared/components/form-dialog';
 import { EmptyStateComponent } from '../../../shared/components/iam';
 import {
-  ColumnDef,
-  FilterState,
-  SmartCellDirective,
-  SmartTableComponent,
-} from '../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableFilters,
+  DataTableCellDirective,
+  DataTableComponent,
+} from '../../../shared/components/data-table';
 import { SessionItem, SessionStats, SessionStatus } from '../../../shared/models/iam-admin.model';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { formatDateTime, initials, relativeTime } from '../shared/iam-format';
@@ -36,7 +36,7 @@ const LOAD_PAGE_SIZE = 100;
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'filterOpen.set(false)',
   },
-  imports: [RouterLink, SmartTableComponent, SmartCellDirective, EmptyStateComponent],
+  imports: [RouterLink, DataTableComponent, DataTableCellDirective, EmptyStateComponent],
   templateUrl: './sessions.component.html',
   styleUrl: './sessions.component.scss',
 })
@@ -60,39 +60,39 @@ export class SessionsComponent implements OnInit {
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly filters = signal<FilterState>({ status: '', deviceType: '' });
+  readonly filters = signal<DataTableFilters>({ status: '', deviceType: '' });
   readonly pageSize = signal(10);
   readonly pageSizeOptions = [10, 25, 50, 100] as const;
 
   readonly trackBy = (s: SessionItem) => s.id;
 
-  readonly columns: ColumnDef<SessionItem>[] = [
-    { key: 'userName', header: 'User', sortable: true, width: '24%' },
+  readonly columns: DataTableColumn<SessionItem>[] = [
+    { id: 'userName', label: 'User', sortKey: 'userName', width: '24%' },
     {
-      key: 'organizationName',
-      header: 'Organization',
-      sortable: true,
+      id: 'organizationName',
+      label: 'Organization',
+      sortKey: 'organizationName',
       value: (s) => s.organizationName ?? '',
     },
     {
-      key: 'device',
-      header: 'Device',
-      sortable: true,
+      id: 'device',
+      label: 'Device',
+      sortKey: 'device',
       value: (s) => `${s.browser ?? ''} ${s.platform ?? ''}`.trim(),
     },
-    { key: 'ipAddress', header: 'IP Address', sortable: true, width: '10rem' },
-    { key: 'createdAt', header: 'Signed In', sortable: true, width: '9rem' },
-    { key: 'lastActivityAt', header: 'Last Active', sortable: true, width: '9rem' },
-    { key: 'status', header: 'Status', sortable: true, width: '8rem' },
+    { id: 'ipAddress', label: 'IP Address', sortKey: 'ipAddress', width: '10rem' },
+    { id: 'createdAt', label: 'Signed In', sortKey: 'createdAt', width: '9rem' },
+    { id: 'lastActivityAt', label: 'Last Active', sortKey: 'lastActivityAt', width: '9rem' },
+    { id: 'status', label: 'Status', sortKey: 'status', width: '8rem' },
     // Hidden: only drives the device filter.
     {
-      key: 'deviceType',
-      header: 'Device Type',
+      id: 'deviceType',
+      label: 'Device Type',
       hidden: true,
       exportable: false,
       value: (s) => (s.isMobile ? 'mobile' : 'desktop'),
     },
-    { key: 'actions', header: '', align: 'right', width: '8.5rem', exportable: false },
+    { id: 'actions', label: '', align: 'right', width: '8.5rem', exportable: false },
   ];
 
   readonly deviceOptions = [

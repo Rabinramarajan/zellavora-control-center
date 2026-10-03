@@ -5,10 +5,16 @@ import { firstValueFrom } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { DateControl, FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
+import { PageChangeEvent } from '../../shared/components/pagination/pagination.component';
 import {
-  PageChangeEvent,
-  PaginationComponent,
-} from '../../shared/components/pagination/pagination.component';
+  DataTableActionsDirective,
+  DataTableCellDirective,
+  DataTableColumn,
+  DataTableComponent,
+  DataTableEmptyDirective,
+  DataTableFooterDirective,
+  DataTableSort,
+} from '../../shared/components/data-table';
 import { UserAdminApiService } from '../../core/api/user-admin.api';
 import { UserRequestsApiService } from '../../core/api/user-requests.api';
 import { PermissionService } from '../../core/rbac/services/permission.service';
@@ -126,7 +132,11 @@ const NAV_KEYS = ['view', 'edit', 'groups', 'roles', 'audit'];
     SelectControl,
     DateControl,
     MultiSelectComponent,
-    PaginationComponent,
+    DataTableComponent,
+    DataTableCellDirective,
+    DataTableActionsDirective,
+    DataTableEmptyDirective,
+    DataTableFooterDirective,
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
@@ -167,18 +177,63 @@ export class UsersComponent {
   readonly groupOptions = computed(() => this.toOptions(this.lookups()?.groups));
   readonly roleOptions = computed(() => this.toOptions(this.lookups()?.roles));
 
-  readonly columns: Array<{ key: SortKey | null; label: string; wide?: boolean }> = [
-    { key: 'userNo', label: 'User ID' },
-    { key: 'fullName', label: 'Name' },
-    { key: 'employeeCode', label: 'Employee Code' },
-    { key: 'email', label: 'Email' },
-    { key: null, label: 'Branch' },
-    { key: null, label: 'Team', wide: true },
-    { key: null, label: 'Group', wide: true },
-    { key: null, label: 'Role' },
-    { key: 'status', label: 'Status' },
-    { key: 'lastLoginDatetime', label: 'Last Login' },
+  readonly columns: DataTableColumn<IamUserListItem>[] = [
+    {
+      id: 'userNo',
+      label: 'User ID',
+      sortKey: 'userNo',
+      cellClass: 'whitespace-nowrap font-mono text-xs font-medium text-slate-200',
+    },
+    { id: 'fullName', label: 'Name', sortKey: 'fullName' },
+    {
+      id: 'employeeCode',
+      label: 'Employee Code',
+      sortKey: 'employeeCode',
+      value: (u) => u.employeeCode,
+      cellClass: 'whitespace-nowrap font-mono text-xs text-slate-300',
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      sortKey: 'email',
+      value: (u) => u.email,
+      cellClass: 'text-slate-300',
+    },
+    {
+      id: 'branch',
+      label: 'Branch',
+      value: (u) => u.branchName,
+      cellClass: 'whitespace-nowrap text-slate-200',
+    },
+    {
+      id: 'team',
+      label: 'Team',
+      value: (u) => u.teamName,
+      cellClass: 'whitespace-nowrap text-slate-200',
+      hideBelow: 'xl',
+    },
+    {
+      id: 'group',
+      label: 'Group',
+      cellClass: 'whitespace-nowrap text-slate-200',
+      hideBelow: 'xl',
+    },
+    { id: 'role', label: 'Role' },
+    { id: 'status', label: 'Status', sortKey: 'status' },
+    {
+      id: 'lastLogin',
+      label: 'Last Login',
+      sortKey: 'lastLoginDatetime',
+      value: (u) => this.formatDateTime(u.lastLoginDatetime),
+      cellClass: 'whitespace-nowrap text-slate-400',
+    },
   ];
+
+  readonly userId = (u: IamUserListItem): string => u.id;
+  readonly userName = (u: IamUserListItem): string => u.fullName;
+  readonly rowClass = (u: IamUserListItem): Record<string, boolean> => ({
+    'is-busy': this.busyId() === u.id,
+  });
 
   readonly identityFields: Array<{
     key: TextKey;
@@ -250,8 +305,7 @@ export class UsersComponent {
   readonly draft = signal<UserFilters>(clone(EMPTY_FILTERS));
   readonly applied = signal<UserFilters>(clone(EMPTY_FILTERS));
   readonly search = signal('');
-  readonly sortKey = signal<SortKey>('createdAt');
-  readonly sortDir = signal<'asc' | 'desc'>('desc');
+  readonly sort = signal<DataTableSort<SortKey>>({ key: 'createdAt', dir: 'desc' });
   readonly selected = signal<ReadonlySet<string>>(new Set());
   readonly busyId = signal<string | null>(null);
   readonly menu = signal<OpenMenu | null>(null);
@@ -310,16 +364,6 @@ export class UsersComponent {
     }
     return chips;
   });
-
-  readonly allOnPageSelected = computed(() => {
-    const rows = this.store.items();
-    const sel = this.selected();
-    return rows.length > 0 && rows.every((u) => sel.has(u.id));
-  });
-
-  readonly someOnPageSelected = computed(
-    () => !this.allOnPageSelected() && this.store.items().some((u) => this.selected().has(u.id))
-  );
 
   constructor() {
     void this.loadStats();
@@ -410,19 +454,10 @@ export class UsersComponent {
     else if (this.filtersOpen()) this.closeFilters();
   }
 
-  sortBy(key: SortKey): void {
-    if (this.sortKey() === key) {
-      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortKey.set(key);
-      this.sortDir.set('asc');
-    }
+  onSort(sort: DataTableSort | null): void {
+    if (!sort) return;
+    this.sort.set(sort as DataTableSort<SortKey>);
     this.pushFilters();
-  }
-
-  ariaSort(key: SortKey | null): 'ascending' | 'descending' | null {
-    if (!key) return null;
-    return this.sortKey() !== key ? null : this.sortDir() === 'asc' ? 'ascending' : 'descending';
   }
 
   onPaginate({ page, pageSize }: PageChangeEvent): void {
@@ -431,27 +466,8 @@ export class UsersComponent {
   }
 
   // ---------------------------------------------------------------------------
-  // Selection & export
+  // Export
   // ---------------------------------------------------------------------------
-
-  toggleRow(id: string): void {
-    this.selected.update((s) => {
-      const next = new Set(s);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  togglePage(): void {
-    const ids = this.store.items().map((u) => u.id);
-    const clear = this.allOnPageSelected();
-    this.selected.update((s) => {
-      const next = new Set(s);
-      ids.forEach((id) => (clear ? next.delete(id) : next.add(id)));
-      return next;
-    });
-  }
 
   exportUsers(): void {
     const sel = this.selected();
@@ -660,8 +676,8 @@ export class UsersComponent {
   private pushFilters(): void {
     const f = this.applied();
     const filters: Record<string, string | string[]> = {
-      sort: this.sortKey(),
-      order: this.sortDir(),
+      sort: this.sort().key,
+      order: this.sort().dir,
     };
     for (const key of FILTER_KEYS) {
       if (this.isSet(f[key])) filters[key] = f[key];

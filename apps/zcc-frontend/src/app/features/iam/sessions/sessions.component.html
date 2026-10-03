@@ -44,7 +44,8 @@
     [message]="error()!"
   />
 } @else {
-  <app-smart-table
+  <app-data-table
+    mode="client"
     [rows]="sessions()"
     [columns]="columns"
     [trackBy]="trackBy"
@@ -54,7 +55,7 @@
     [(pageSize)]="pageSize"
     [pageSizeOptions]="pageSizeOptions"
     entityLabel="sessions"
-    emptyMessage="No sessions match the selected filters."
+    emptyTitle="No sessions match the selected filters."
   >
     <div toolbar-end class="relative">
       <button
@@ -157,7 +158,7 @@
       }
     </div>
 
-    <ng-template smartCell="userName" let-s>
+    <ng-template dtCell="userName" let-s>
       <div class="flex items-center gap-3">
         @if (s.userAvatarUrl) {
           <img [src]="s.userAvatarUrl" alt="" class="size-8 shrink-0 rounded-full object-cover" />
@@ -180,10 +181,10 @@
         </div>
       </div>
     </ng-template>
-    <ng-template smartCell="organizationName" let-s>
+    <ng-template dtCell="organizationName" let-s>
       <span class="text-gray-600 dark:text-gray-300">{{ s.organizationName ?? '—' }}</span>
     </ng-template>
-    <ng-template smartCell="device" let-s>
+    <ng-template dtCell="device" let-s>
       <span
         class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300"
         [title]="s.userAgent ?? ''"
@@ -202,22 +203,22 @@
         }
       </span>
     </ng-template>
-    <ng-template smartCell="ipAddress" let-s>
+    <ng-template dtCell="ipAddress" let-s>
       <span class="font-mono text-xs text-gray-600 dark:text-gray-300">{{
         s.ipAddress ?? '—'
       }}</span>
     </ng-template>
-    <ng-template smartCell="createdAt" let-s>
+    <ng-template dtCell="createdAt" let-s>
       <span class="text-gray-600 dark:text-gray-300" [title]="dateTime(s.createdAt)">{{
         relative(s.createdAt)
       }}</span>
     </ng-template>
-    <ng-template smartCell="lastActivityAt" let-s>
+    <ng-template dtCell="lastActivityAt" let-s>
       <span class="text-gray-600 dark:text-gray-300" [title]="dateTime(s.lastActivityAt)">{{
         relative(s.lastActivityAt)
       }}</span>
     </ng-template>
-    <ng-template smartCell="status" let-s>
+    <ng-template dtCell="status" let-s>
       <span
         class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium"
         [class]="statusChipOf(s)"
@@ -226,7 +227,7 @@
         {{ statusLabelOf(s) }}
       </span>
     </ng-template>
-    <ng-template smartCell="actions" let-s>
+    <ng-template dtCell="actions" let-s>
       <div class="flex justify-end gap-1">
         <button
           type="button"
@@ -261,5 +262,5 @@
         }
       </div>
     </ng-template>
-  </app-smart-table>
+  </app-data-table>
 }

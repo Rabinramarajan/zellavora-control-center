@@ -422,7 +422,9 @@
 
   <!-- Project summary -->
   <section class="sheet-card sheet-table-card">
-    <app-smart-table
+    <app-data-table
+      mode="client"
+      [searchable]="true"
       #projectTable
       caption="Project summary"
       entityLabel="projects"
@@ -438,7 +440,7 @@
         Project Summary ({{ monthLabel() }})
       </h2>
 
-      <ng-template smartCell="name" let-row>
+      <ng-template dtCell="name" let-row>
         <div class="flex items-center gap-2">
           <span class="avatar-chip" [style.background]="row.color">{{ row.initials }}</span>
           <div class="leading-tight">
@@ -448,7 +450,7 @@
         </div>
       </ng-template>
 
-      <ng-template smartCell="approvalPercent" let-row>
+      <ng-template dtCell="approvalPercent" let-row>
         <div class="flex items-center gap-2">
           <span class="text-xs text-slate-300 tabular-nums w-9">{{ row.approvalPercent }}%</span>
           <div class="bar flex-1 min-w-[5rem]">
@@ -461,7 +463,7 @@
         </div>
       </ng-template>
 
-      <ng-template smartCell="actions" let-row>
+      <ng-template dtCell="actions" let-row>
         <button
           type="button"
           class="row-action"
@@ -472,12 +474,12 @@
         </button>
       </ng-template>
 
-      <ng-template smartEmpty>
+      <ng-template dtEmpty>
         <div class="empty-state">
           <span class="text-2xl" aria-hidden="true">📊</span>
           <p class="text-sm font-medium text-slate-300">No project activity found</p>
         </div>
       </ng-template>
-    </app-smart-table>
+    </app-data-table>
   </section>
 </div>

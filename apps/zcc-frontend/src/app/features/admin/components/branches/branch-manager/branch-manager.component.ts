@@ -14,11 +14,11 @@ import { PermissionService } from '../../../../../core/rbac/services/permission.
 import { AppDialogService } from '../../../../../shared/components/dialog';
 import { EmptyStateComponent, StatusChipComponent } from '../../../../../shared/components/iam';
 import {
-  ColumnDef,
-  FilterState,
-  SmartCellDirective,
-  SmartTableComponent,
-} from '../../../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableFilters,
+  DataTableCellDirective,
+  DataTableComponent,
+} from '../../../../../shared/components/data-table';
 import { BranchItem } from '../../../../../shared/models/iam-admin.model';
 import { IamFeedbackService, errorMessage } from '../../../../iam/shared/iam-feedback.service';
 import { FormDialogMode, FormDialogService } from '../../../../../shared/components/form-dialog';
@@ -37,8 +37,8 @@ const LOAD_PAGE_SIZE = 200;
   },
   imports: [
     DatePipe,
-    SmartTableComponent,
-    SmartCellDirective,
+    DataTableComponent,
+    DataTableCellDirective,
     StatusChipComponent,
     EmptyStateComponent,
   ],
@@ -58,25 +58,25 @@ export class BranchManagerComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly filters = signal<FilterState>({ status: '' });
+  readonly filters = signal<DataTableFilters>({ status: '' });
   readonly pageSize = signal(10);
   readonly pageSizeOptions = [10, 25, 50, 100] as const;
 
   readonly trackBy = (branch: BranchItem) => branch.id;
 
-  readonly columns: ColumnDef<BranchItem>[] = [
-    { key: 'code', header: 'Code', sortable: true, width: '9rem', value: (b) => b.code ?? '' },
-    { key: 'name', header: 'Branch Name', sortable: true },
+  readonly columns: DataTableColumn<BranchItem>[] = [
+    { id: 'code', label: 'Code', sortKey: 'code', width: '9rem', value: (b) => b.code ?? '' },
+    { id: 'name', label: 'Branch Name', sortKey: 'name' },
     {
-      key: 'location',
-      header: 'Location',
-      sortable: true,
+      id: 'location',
+      label: 'Location',
+      sortKey: 'location',
       value: (b) => this.location(b),
     },
-    { key: 'userCount', header: 'Users', sortable: true, align: 'right', width: '6rem' },
-    { key: 'status', header: 'Status', sortable: true, width: '8rem' },
-    { key: 'updatedAt', header: 'Last Updated', sortable: true, width: '9rem' },
-    { key: 'actions', header: '', align: 'right', width: '8.5rem', exportable: false },
+    { id: 'userCount', label: 'Users', sortKey: 'userCount', align: 'right', width: '6rem' },
+    { id: 'status', label: 'Status', sortKey: 'status', width: '8rem' },
+    { id: 'updatedAt', label: 'Last Updated', sortKey: 'updatedAt', width: '9rem' },
+    { id: 'actions', label: '', align: 'right', width: '8.5rem', exportable: false },
   ];
 
   readonly statusOptions = [

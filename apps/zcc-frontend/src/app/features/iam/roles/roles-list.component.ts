@@ -6,16 +6,17 @@ import { firstValueFrom } from 'rxjs';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
 import { RoleListItem } from '../../../shared/models/iam.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
-import {
-  DataTableColumn,
-  DataTableComponent,
-  EmptyStateComponent,
-  StatusChipComponent,
-} from '../../../shared/components/iam';
+import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { formatDate } from '../shared/iam-format';
 import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
+import {
+  DataTableColumn,
+  DataTableComponent,
+  DataTableCellDirective,
+  DataTableActionsDirective,
+} from '../../../shared/components/data-table';
 import { UserSelectComponent } from '../user-requests/components/user-select.component';
 
 interface RoleSearchForm {
@@ -101,6 +102,8 @@ const PERMISSION_OPTIONS: MultiSelectOption[] = [
     DateControl,
     IamPageHeaderComponent,
     DataTableComponent,
+    DataTableCellDirective,
+    DataTableActionsDirective,
     PaginationComponent,
     StatusChipComponent,
     EmptyStateComponent,
@@ -132,17 +135,16 @@ export class RolesListComponent {
     loader: (query) => firstValueFrom(this.api.listRoles(query)).then(unwrap),
   });
 
-  readonly columns: DataTableColumn[] = [
-    { key: 'name', label: 'Role Name' },
-    { key: 'key', label: 'Role Code' },
-    { key: 'type', label: 'Type' },
-    { key: 'scope', label: 'Scope' },
-    { key: 'permissionCount', label: 'Permissions' },
-    { key: 'groupCount', label: 'Groups' },
-    { key: 'userCount', label: 'Users' },
-    { key: 'status', label: 'Status' },
-    { key: 'updatedAt', label: 'Last Updated' },
-    { key: 'actions', label: 'Actions' },
+  readonly columns: DataTableColumn<unknown>[] = [
+    { id: 'name', label: 'Role Name' },
+    { id: 'key', label: 'Role Code' },
+    { id: 'type', label: 'Type' },
+    { id: 'scope', label: 'Scope' },
+    { id: 'permissionCount', label: 'Permissions' },
+    { id: 'groupCount', label: 'Groups' },
+    { id: 'userCount', label: 'Users' },
+    { id: 'status', label: 'Status' },
+    { id: 'updatedAt', label: 'Last Updated' },
   ];
 
   constructor() {

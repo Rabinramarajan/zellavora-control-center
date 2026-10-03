@@ -23,7 +23,8 @@
     [message]="error()!"
   />
 } @else {
-  <app-smart-table
+  <app-data-table
+    mode="client"
     [rows]="branches()"
     [columns]="columns"
     [trackBy]="trackBy"
@@ -33,7 +34,7 @@
     [(pageSize)]="pageSize"
     [pageSizeOptions]="pageSizeOptions"
     entityLabel="branches"
-    emptyMessage="No branches found. Create a new branch to get started."
+    emptyTitle="No branches found. Create a new branch to get started."
   >
     <div toolbar-end class="relative">
       <button
@@ -111,14 +112,14 @@
       }
     </div>
 
-    <ng-template smartCell="code" let-b>
+    <ng-template dtCell="code" let-b>
       <span
         class="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-200"
       >
         {{ b.code || '—' }}
       </span>
     </ng-template>
-    <ng-template smartCell="name" let-b>
+    <ng-template dtCell="name" let-b>
       <span class="inline-flex items-center gap-2 font-medium text-gray-900 dark:text-white">
         {{ b.name }}
         @if (b.isHeadOffice) {
@@ -130,23 +131,23 @@
         }
       </span>
     </ng-template>
-    <ng-template smartCell="location" let-b>
+    <ng-template dtCell="location" let-b>
       <span class="text-gray-600 dark:text-gray-300">
         {{ location(b) || '—' }}
       </span>
     </ng-template>
-    <ng-template smartCell="userCount" let-b>
+    <ng-template dtCell="userCount" let-b>
       <span class="tabular-nums">{{ b.userCount }}</span>
     </ng-template>
-    <ng-template smartCell="status" let-b>
+    <ng-template dtCell="status" let-b>
       <zcc-status-chip [value]="b.status" [label]="b.status === 'active' ? 'Active' : 'Inactive'" />
     </ng-template>
-    <ng-template smartCell="updatedAt" let-b>
+    <ng-template dtCell="updatedAt" let-b>
       <span class="tabular-nums text-gray-600 dark:text-gray-300">{{
         b.updatedAt | date: 'mediumDate'
       }}</span>
     </ng-template>
-    <ng-template smartCell="actions" let-b>
+    <ng-template dtCell="actions" let-b>
       <div class="flex justify-end gap-1">
         <button
           type="button"
@@ -178,5 +179,5 @@
         }
       </div>
     </ng-template>
-  </app-smart-table>
+  </app-data-table>
 }

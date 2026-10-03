@@ -23,7 +23,8 @@
     [message]="error()!"
   />
 } @else {
-  <app-smart-table
+  <app-data-table
+    mode="client"
     [rows]="teams()"
     [columns]="columns"
     [trackBy]="trackBy"
@@ -33,7 +34,7 @@
     [(pageSize)]="pageSize"
     [pageSizeOptions]="pageSizeOptions"
     entityLabel="teams"
-    emptyMessage="No teams found. Create a new team to get started."
+    emptyTitle="No teams found. Create a new team to get started."
   >
     <div toolbar-end class="relative">
       <button
@@ -111,7 +112,7 @@
       }
     </div>
 
-    <ng-template smartCell="name" let-t>
+    <ng-template dtCell="name" let-t>
       <a
         class="inline-flex items-center gap-2.5 font-medium text-indigo-600 hover:underline focus-visible:underline dark:text-indigo-400"
         [routerLink]="['/iam/organization/teams', t.id]"
@@ -125,7 +126,7 @@
         {{ t.name }}
       </a>
     </ng-template>
-    <ng-template smartCell="description" let-t>
+    <ng-template dtCell="description" let-t>
       <span
         class="block max-w-md truncate text-gray-600 dark:text-gray-300"
         [attr.title]="t.description"
@@ -133,7 +134,7 @@
         {{ t.description || '—' }}
       </span>
     </ng-template>
-    <ng-template smartCell="memberCount" let-t>
+    <ng-template dtCell="memberCount" let-t>
       <div class="flex items-center gap-2">
         @if (t.memberPreview.length) {
           <div class="flex -space-x-2" aria-hidden="true">
@@ -156,12 +157,12 @@
         <span class="tabular-nums text-gray-600 dark:text-gray-300">{{ t.memberCount }}</span>
       </div>
     </ng-template>
-    <ng-template smartCell="updatedAt" let-t>
+    <ng-template dtCell="updatedAt" let-t>
       <span class="tabular-nums text-gray-600 dark:text-gray-300">{{
         t.updatedAt | date: 'mediumDate'
       }}</span>
     </ng-template>
-    <ng-template smartCell="actions" let-t>
+    <ng-template dtCell="actions" let-t>
       <div class="flex justify-end gap-1">
         <button
           type="button"
@@ -191,5 +192,5 @@
         }
       </div>
     </ng-template>
-  </app-smart-table>
+  </app-data-table>
 }

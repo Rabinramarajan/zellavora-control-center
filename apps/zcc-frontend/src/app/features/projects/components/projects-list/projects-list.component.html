@@ -58,14 +58,16 @@
   <section
     class="projects-table bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
   >
-    <app-smart-table
+    <app-data-table
+      mode="client"
+      [searchable]="true"
       caption="Projects"
       entityLabel="projects"
       searchPlaceholder="Search projects..."
       [rows]="projects.projects()"
       [columns]="columns"
       [loading]="projects.isLoading()"
-      [emptyMessage]="emptyMessage()"
+      [emptyTitle]="emptyMessage()"
       [pageSizeOptions]="pageSizeOptions"
       [(sort)]="sort"
       [(pageSize)]="pageSize"
@@ -85,7 +87,7 @@
         }
       </div>
 
-      <ng-template smartCell="title" let-row>
+      <ng-template dtCell="title" let-row>
         <div class="flex items-center gap-3 min-w-[14rem]">
           <div
             class="w-10 h-10 shrink-0 rounded-md overflow-hidden bg-slate-100 dark:bg-slate-700 flex items-center justify-center"
@@ -108,7 +110,7 @@
         </div>
       </ng-template>
 
-      <ng-template smartCell="status" let-row>
+      <ng-template dtCell="status" let-row>
         <span
           class="px-2 py-1 rounded text-xs font-semibold uppercase"
           [class]="badgeClass(row.status)"
@@ -117,7 +119,7 @@
         </span>
       </ng-template>
 
-      <ng-template smartCell="actions" let-row>
+      <ng-template dtCell="actions" let-row>
         <div class="flex items-center justify-end gap-2">
           <a
             [routerLink]="row.id"
@@ -138,7 +140,7 @@
         </div>
       </ng-template>
 
-      <ng-template smartEmpty>
+      <ng-template dtEmpty>
         <div class="text-center py-10">
           <div class="text-4xl mb-4" aria-hidden="true">📁</div>
           <p class="text-slate-600 dark:text-slate-400 mb-4">{{ emptyMessage() }}</p>
@@ -152,6 +154,6 @@
           }
         </div>
       </ng-template>
-    </app-smart-table>
+    </app-data-table>
   </section>
 </div>

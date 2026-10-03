@@ -5,13 +5,16 @@ import { IamApiService, unwrap } from '../../../core/api/iam.api';
 import { ResourceListItem } from '../../../shared/models/iam.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
 import {
-  DataTableComponent,
-  DataTableColumn,
   FilterBarComponent,
   StatusChipComponent,
   EmptyStateComponent,
 } from '../../../shared/components/iam';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import {
+  DataTableColumn,
+  DataTableComponent,
+  DataTableCellDirective,
+} from '../../../shared/components/data-table';
 import { firstValueFrom } from 'rxjs';
 
 const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
@@ -30,6 +33,7 @@ const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   imports: [
     RouterLink,
     DataTableComponent,
+    DataTableCellDirective,
     FilterBarComponent,
     PaginationComponent,
     StatusChipComponent,
@@ -55,14 +59,13 @@ export class ResourcesListComponent {
     return t ? { type: String(t) } : {};
   });
 
-  readonly columns = () =>
-    [
-      { key: 'name', label: 'Resource', width: '30%' },
-      { key: 'type', label: 'Type' },
-      { key: 'category', label: 'Category' },
-      { key: 'actionCount', label: 'Actions' },
-      { key: 'status', label: 'Status' },
-    ] satisfies DataTableColumn[];
+  readonly columns: DataTableColumn<unknown>[] = [
+    { id: 'name', label: 'Resource', width: '30%' },
+    { id: 'type', label: 'Type' },
+    { id: 'category', label: 'Category' },
+    { id: 'actionCount', label: 'Actions' },
+    { id: 'status', label: 'Status' },
+  ];
 
   onSearch(q: string): void {
     this.store.setQ(q);

@@ -105,79 +105,101 @@
     [message]="store.error()!"
   />
 } @else if (store.hasItems()) {
-  <zcc-data-table
+  <app-data-table
     [columns]="columns"
     [rows]="store.items()"
-    [rowTemplate]="rowTpl"
     [rowClickable]="true"
     (rowClick)="onRowClick($event)"
+    [paginated]="false"
   >
-    <ng-template #rowTpl let-r>
-      <td class="px-4 py-3">
+    <ng-template dtCell="name" let-r>
+      <a
+        [routerLink]="['/iam/roles', r.id]"
+        class="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+        (click)="$event.stopPropagation()"
+      >
+        {{ r.name }}
+      </a>
+      @if (r.isSystem) {
+        <span
+          class="ml-2 rounded-full bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-500 ring-1 ring-inset ring-purple-500/20"
+        >
+          system
+        </span>
+      }
+    </ng-template>
+
+    <ng-template dtCell="key" let-r>
+      <div class="font-mono text-xs text-gray-500 dark:text-gray-400">
+        {{ r.key }}
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="type" let-r>
+      <div class="text-gray-600 dark:text-gray-300">
+        {{ roleType(r) }}
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="scope" let-r>
+      <zcc-status-chip [value]="r.scope" [label]="r.scope" />
+    </ng-template>
+
+    <ng-template dtCell="permissionCount" let-r>
+      <div class="text-gray-600 dark:text-gray-300">
+        <span class="tabular-nums">{{ r.permissionCount }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="groupCount" let-r>
+      <div class="text-gray-600 dark:text-gray-300">
+        <span class="tabular-nums">-</span>
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="userCount" let-r>
+      <div class="text-gray-600 dark:text-gray-300">
+        <span class="tabular-nums">{{ r.userCount }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="status" let-r>
+      <zcc-status-chip [value]="r.status" [label]="r.status === 'ACTIVE' ? 'Active' : 'Inactive'" />
+    </ng-template>
+
+    <ng-template dtCell="updatedAt" let-r>
+      <div class="text-gray-600 dark:text-gray-300">
+        {{ date(r.updatedAt) }}
+      </div>
+    </ng-template>
+
+    <ng-template dtActions let-r>
+      <div class="flex items-center justify-end gap-1">
         <a
           [routerLink]="['/iam/roles', r.id]"
-          class="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-          (click)="$event.stopPropagation()"
+          [class]="btn.icon"
+          title="View"
+          aria-label="View role"
         >
-          {{ r.name }}
+          <i class="pi pi-eye" aria-hidden="true"></i>
         </a>
-        @if (r.isSystem) {
-          <span
-            class="ml-2 rounded-full bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-500 ring-1 ring-inset ring-purple-500/20"
-          >
-            system
-          </span>
+        <a
+          [routerLink]="['/iam/roles', r.id]"
+          [queryParams]="{ section: 'permissions' }"
+          [class]="btn.icon"
+          title="Manage permissions"
+          aria-label="Manage permissions"
+        >
+          <i class="pi pi-key" aria-hidden="true"></i>
+        </a>
+        @if (!r.isSystem) {
+          <button type="button" [class]="btn.icon" title="Clone role" aria-label="Clone role">
+            <i class="pi pi-copy" aria-hidden="true"></i>
+          </button>
         }
-      </td>
-      <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{{ r.key }}</td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ roleType(r) }}</td>
-      <td class="px-4 py-3">
-        <zcc-status-chip [value]="r.scope" [label]="r.scope" />
-      </td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-        <span class="tabular-nums">{{ r.permissionCount }}</span>
-      </td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-        <span class="tabular-nums">-</span>
-      </td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-        <span class="tabular-nums">{{ r.userCount }}</span>
-      </td>
-      <td class="px-4 py-3">
-        <zcc-status-chip
-          [value]="r.status"
-          [label]="r.status === 'ACTIVE' ? 'Active' : 'Inactive'"
-        />
-      </td>
-      <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ date(r.updatedAt) }}</td>
-      <td class="px-4 py-3">
-        <div class="flex items-center justify-end gap-1">
-          <a
-            [routerLink]="['/iam/roles', r.id]"
-            [class]="btn.icon"
-            title="View"
-            aria-label="View role"
-          >
-            <i class="pi pi-eye" aria-hidden="true"></i>
-          </a>
-          <a
-            [routerLink]="['/iam/roles', r.id]"
-            [queryParams]="{ section: 'permissions' }"
-            [class]="btn.icon"
-            title="Manage permissions"
-            aria-label="Manage permissions"
-          >
-            <i class="pi pi-key" aria-hidden="true"></i>
-          </a>
-          @if (!r.isSystem) {
-            <button type="button" [class]="btn.icon" title="Clone role" aria-label="Clone role">
-              <i class="pi pi-copy" aria-hidden="true"></i>
-            </button>
-          }
-        </div>
-      </td>
+      </div>
     </ng-template>
-  </zcc-data-table>
+  </app-data-table>
 
   <app-pagination
     class="px-1 py-3"

@@ -13,7 +13,11 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { HasPermissionDirective } from '../../../../../core/rbac';
-import { Table, ColumnDef, CellDirective } from '../../../../../shared/components/table/table';
+import {
+  DataTableCellDirective,
+  DataTableColumn,
+  DataTableComponent,
+} from '../../../../../shared/components/data-table';
 import { AdminStoreService } from '../../../services';
 import { User, UserSearchCriteria } from '../../../models';
 
@@ -21,7 +25,13 @@ import { User, UserSearchCriteria } from '../../../models';
   selector: 'zcc-user-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [RouterLink, SelectControl, HasPermissionDirective, Table, CellDirective],
+  imports: [
+    RouterLink,
+    SelectControl,
+    HasPermissionDirective,
+    DataTableComponent,
+    DataTableCellDirective,
+  ],
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.scss',
 })
@@ -47,28 +57,28 @@ export class UserListComponent implements OnInit {
 
   readonly trackBy = (user: User) => user.userSerialId;
 
-  readonly columns: ColumnDef<User>[] = [
-    { key: 'userLoginId', header: 'Login ID', sortable: true },
+  readonly columns: DataTableColumn<User>[] = [
+    { id: 'userLoginId', label: 'Login ID', sortKey: 'userLoginId' },
     {
-      key: 'fullName',
-      header: 'Full Name',
-      sortable: true,
+      id: 'fullName',
+      label: 'Full Name',
+      sortKey: 'fullName',
       value: (u) => [u.firstName, u.middleName, u.lastName].filter(Boolean).join(' '),
     },
-    { key: 'emailId', header: 'Email', sortable: true },
-    { key: 'employeeCode', header: 'Employee Code', sortable: true },
+    { id: 'emailId', label: 'Email', sortKey: 'emailId' },
+    { id: 'employeeCode', label: 'Employee Code', sortKey: 'employeeCode' },
     {
-      key: 'department',
-      header: 'Department',
+      id: 'department',
+      label: 'Department',
       value: (u) => u.departmentDescription ?? u.departmentValue ?? '',
     },
     {
-      key: 'status',
-      header: 'Status',
-      sortable: true,
+      id: 'status',
+      label: 'Status',
+      sortKey: 'status',
       value: (u) => u.statusDescription ?? u.statusValue ?? '',
     },
-    { key: 'actions', header: 'Actions', align: 'right' },
+    { id: 'actions', label: 'Actions', align: 'right' },
   ];
 
   ngOnInit(): void {

@@ -5,7 +5,6 @@
 
 export * from './status-chip.component';
 export * from './filter-bar.component';
-export * from './data-table.component';
 export * from './confirm-dialog.component';
 export * from './detail-tabs.component';
 export * from './empty-state.component';

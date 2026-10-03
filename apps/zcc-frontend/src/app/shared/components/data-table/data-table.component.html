@@ -1,0 +1,191 @@
+<div class="dt-toolbar">
+  <div class="dt-toolbar-start"><ng-content select="[toolbar-start]" /></div>
+  <div class="dt-toolbar-end">
+    @if (searchable()) {
+      <app-form-input-control
+        class="dt-search"
+        icon="search"
+        [attr.aria-label]="searchPlaceholder()"
+        [placeholder]="searchPlaceholder()"
+        [(value)]="search"
+      />
+    }
+    <ng-content select="[toolbar-end]" />
+  </div>
+</div>
+
+<div class="dt-panel flex md:min-h-0 flex-1 flex-col overflow-hidden" [class.is-bare]="bare()">
+  <div
+    class="dt-scroll md:min-h-0 flex-1"
+    (scroll)="scrolled.emit()"
+    [class.is-loading]="loading() && hasRows()"
+  >
+    <table class="dt-table" [style.min-width]="minWidth()" [attr.aria-busy]="loading()">
+      @if (caption()) {
+        <caption class="sr-only">
+          {{
+            caption()
+          }}
+        </caption>
+      }
+      <thead>
+        <tr>
+          @if (selectable()) {
+            <th class="w-12">
+              <input
+                type="checkbox"
+                class="dt-check"
+                aria-label="Select all on page"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="togglePage()"
+              />
+            </th>
+          }
+          @for (col of visibleColumns(); track col.id) {
+            <th
+              scope="col"
+              [class]="col.headerClass ?? ''"
+              [style.width]="col.width"
+              [style.text-align]="col.align"
+              [attr.data-hide-below]="col.hideBelow ?? null"
+              [attr.aria-sort]="ariaSort(col.sortKey)"
+            >
+              @if (col.sortKey; as key) {
+                <button
+                  type="button"
+                  class="dt-sort"
+                  [class.is-sorted]="sort()?.key === key"
+                  (click)="sortBy(key)"
+                >
+                  {{ col.label }}
+                  <i
+                    class="pi text-[0.6rem]"
+                    [class.pi-arrow-up]="!isSortedDesc(key)"
+                    [class.pi-arrow-down]="isSortedDesc(key)"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              } @else {
+                {{ col.label }}
+              }
+            </th>
+          }
+          @if (actionsTemplate()) {
+            <th class="dt-col-actions" scope="col"><span class="sr-only">Actions</span></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading() && !hasRows()) {
+          @for (_ of skeletons(); track $index) {
+            <tr>
+              <td [attr.colspan]="colspan()"><span class="dt-skeleton block h-8 w-full"></span></td>
+            </tr>
+          }
+        } @else if (error()) {
+          <tr>
+            <td [attr.colspan]="colspan()">
+              <div class="flex flex-col items-center gap-3 py-16 text-center">
+                <span class="dt-state-icon" data-tone="rose"
+                  ><i class="pi pi-exclamation-triangle" aria-hidden="true"></i
+                ></span>
+                <p class="dt-state-title font-semibold">{{ errorTitle() }}</p>
+                <p class="dt-state-text text-sm">{{ error() }}</p>
+                <button type="button" class="dt-btn mt-1 h-10 px-4" (click)="retry.emit()">
+                  Try again
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @else {
+          @for (row of viewRows(); track rowId(row); let i = $index) {
+            <tr
+              class="dt-row"
+              [class]="rowClasses(row)"
+              [style.animation-delay.ms]="i * 28"
+              (click)="onRowClick(row, $event)"
+            >
+              @if (selectable()) {
+                <td>
+                  <input
+                    type="checkbox"
+                    class="dt-check"
+                    [attr.aria-label]="'Select ' + rowLabel()(row)"
+                    [checked]="isSelected(row)"
+                    (change)="toggleRow(row)"
+                  />
+                </td>
+              }
+              @for (col of visibleColumns(); track col.id) {
+                <td
+                  [class]="col.cellClass ?? ''"
+                  [style.text-align]="col.align"
+                  [attr.data-hide-below]="col.hideBelow ?? null"
+                >
+                  @if (templates().get(col.id); as tpl) {
+                    <ng-container
+                      [ngTemplateOutlet]="tpl"
+                      [ngTemplateOutletContext]="{
+                        $implicit: row,
+                        index: i,
+                        value: cellValue(col, row),
+                      }"
+                    />
+                  } @else {
+                    {{ cellText(col, row) }}
+                  }
+                </td>
+              }
+              @if (actionsTemplate(); as actions) {
+                <td class="dt-col-actions">
+                  <ng-container
+                    [ngTemplateOutlet]="actions.template"
+                    [ngTemplateOutletContext]="{ $implicit: row, index: i }"
+                  />
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="colspan()">
+                @if (emptyTemplate(); as empty) {
+                  <ng-container [ngTemplateOutlet]="empty.template" />
+                } @else {
+                  <div class="flex flex-col items-center gap-3 py-16 text-center">
+                    <span class="dt-state-icon" data-tone="violet"
+                      ><i class="pi pi-inbox" aria-hidden="true"></i
+                    ></span>
+                    <p class="dt-state-title font-semibold">{{ emptyTitle() }}</p>
+                    @if (emptyText()) {
+                      <p class="dt-state-text text-sm">{{ emptyText() }}</p>
+                    }
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if ((paginated() && viewTotal() > 0) || footerTemplate()) {
+    <footer class="dt-footer">
+      @if (footerTemplate(); as footer) {
+        <ng-container [ngTemplateOutlet]="footer.template" />
+      }
+      @if (paginated() && viewTotal() > 0) {
+        <app-pagination
+          class="w-full md:w-auto md:flex-1"
+          [entityLabel]="entityLabel()"
+          [totalItems]="viewTotal()"
+          [page]="viewPage()"
+          [pageSize]="viewPageSize()"
+          [pageSizeOptions]="pageSizeOptions()"
+          (paginate)="onPaginate($event)"
+        />
+      }
+    </footer>
+  }
+</div>

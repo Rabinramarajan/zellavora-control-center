@@ -154,7 +154,9 @@
   <div class="daily-grid">
     <!-- Entries table -->
     <section class="sheet-card sheet-table-card entries-card">
-      <app-smart-table
+      <app-data-table
+        mode="client"
+        [searchable]="true"
         class="entries-table"
         caption="Timesheet entries"
         entityLabel="entries"
@@ -199,7 +201,7 @@
           </button>
         </ng-container>
 
-        <ng-template smartCell="project" let-row>
+        <ng-template dtCell="project" let-row>
           <div class="flex items-center gap-2">
             <span class="avatar-chip" [style.background]="row.projectColor">{{
               row.projectInitials
@@ -211,7 +213,7 @@
           </div>
         </ng-template>
 
-        <ng-template smartCell="task" let-row>
+        <ng-template dtCell="task" let-row>
           <div class="leading-tight max-w-[15rem] whitespace-normal">
             <div class="text-slate-100 font-medium">{{ row.task }}</div>
             @if (row.description) {
@@ -220,13 +222,13 @@
           </div>
         </ng-template>
 
-        <ng-template smartCell="status" let-row>
+        <ng-template dtCell="status" let-row>
           <span [class]="statusPill(row.status)" [attr.title]="row.rejectionReason ?? null">{{
             row.statusLabel
           }}</span>
         </ng-template>
 
-        <ng-template smartCell="actions" let-row>
+        <ng-template dtCell="actions" let-row>
           <div class="flex items-center justify-end gap-1.5">
             @if (row.status === 'draft' || row.status === 'rejected') {
               <button
@@ -250,7 +252,7 @@
           </div>
         </ng-template>
 
-        <ng-template smartEmpty>
+        <ng-template dtEmpty>
           <div class="empty-state">
             <span class="text-2xl" aria-hidden="true"
               ><i class="pi pi-file" aria-hidden="true"></i
@@ -261,7 +263,7 @@
             </p>
           </div>
         </ng-template>
-      </app-smart-table>
+      </app-data-table>
     </section>
 
     <!-- Side column -->

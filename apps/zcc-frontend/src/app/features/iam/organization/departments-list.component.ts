@@ -16,11 +16,11 @@ import { AppDialogService } from '../../../shared/components/dialog';
 import { FormDialogMode, FormDialogService } from '../../../shared/components/form-dialog';
 import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
 import {
-  ColumnDef,
-  FilterState,
-  SmartCellDirective,
-  SmartTableComponent,
-} from '../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableFilters,
+  DataTableCellDirective,
+  DataTableComponent,
+} from '../../../shared/components/data-table';
 import { DepartmentItem } from '../../../shared/models/iam-admin.model';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { departmentDialogConfig, toDepartmentRequest } from './department-dialog.config';
@@ -39,8 +39,8 @@ const LOAD_PAGE_SIZE = 200;
   imports: [
     DatePipe,
     RouterLink,
-    SmartTableComponent,
-    SmartCellDirective,
+    DataTableComponent,
+    DataTableCellDirective,
     StatusChipComponent,
     EmptyStateComponent,
   ],
@@ -60,21 +60,21 @@ export class DepartmentsListComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly filters = signal<FilterState>({ status: '' });
+  readonly filters = signal<DataTableFilters>({ status: '' });
   readonly pageSize = signal(10);
   readonly pageSizeOptions = [10, 25, 50, 100] as const;
 
   readonly trackBy = (d: DepartmentItem) => d.id;
 
-  readonly columns: ColumnDef<DepartmentItem>[] = [
-    { key: 'code', header: 'Code', sortable: true, width: '8rem', value: (d) => d.code ?? '' },
-    { key: 'name', header: 'Department', sortable: true },
-    { key: 'parentName', header: 'Parent', sortable: true, value: (d) => d.parentName ?? '' },
-    { key: 'memberCount', header: 'Members', sortable: true, align: 'right', width: '7rem' },
-    { key: 'childCount', header: 'Sub-depts', sortable: true, align: 'right', width: '7rem' },
-    { key: 'status', header: 'Status', sortable: true, width: '8rem' },
-    { key: 'updatedAt', header: 'Last Updated', sortable: true, width: '9rem' },
-    { key: 'actions', header: '', align: 'right', width: '8.5rem', exportable: false },
+  readonly columns: DataTableColumn<DepartmentItem>[] = [
+    { id: 'code', label: 'Code', sortKey: 'code', width: '8rem', value: (d) => d.code ?? '' },
+    { id: 'name', label: 'Department', sortKey: 'name' },
+    { id: 'parentName', label: 'Parent', sortKey: 'parentName', value: (d) => d.parentName ?? '' },
+    { id: 'memberCount', label: 'Members', sortKey: 'memberCount', align: 'right', width: '7rem' },
+    { id: 'childCount', label: 'Sub-depts', sortKey: 'childCount', align: 'right', width: '7rem' },
+    { id: 'status', label: 'Status', sortKey: 'status', width: '8rem' },
+    { id: 'updatedAt', label: 'Last Updated', sortKey: 'updatedAt', width: '9rem' },
+    { id: 'actions', label: '', align: 'right', width: '8.5rem', exportable: false },
   ];
 
   readonly statusOptions = [

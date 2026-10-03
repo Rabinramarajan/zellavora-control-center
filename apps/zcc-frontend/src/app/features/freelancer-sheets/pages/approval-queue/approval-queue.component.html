@@ -382,7 +382,8 @@
         (paginate)="page.set($event.page); selectedDaily.set([])"
       />
     } @else {
-      <app-smart-table
+      <app-data-table
+        mode="client"
         [rows]="filteredMonthly()"
         [columns]="monthlyColumns"
         [loading]="isLoading()"
@@ -392,16 +393,16 @@
         [pageSizeOptions]="pageSizeOptions"
         entityLabel="sheets"
       >
-        <ng-template smartCell="employee" let-row
+        <ng-template dtCell="employee" let-row
           ><div class="person">
             <span class="avatar">{{ initials(row.employee) }}</span
             >{{ row.employee }}
           </div></ng-template
         >
-        <ng-template smartCell="status" let-row
+        <ng-template dtCell="status" let-row
           ><span [class]="statusPill(row.status)">{{ statusLabel(row.status) }}</span></ng-template
         >
-        <ng-template smartCell="actions" let-row>
+        <ng-template dtCell="actions" let-row>
           <div class="actions">
             <a
               class="icon-btn"
@@ -439,14 +440,14 @@
             }
           </div>
         </ng-template>
-        <ng-template smartEmpty>
+        <ng-template dtEmpty>
           <div class="empty">
             <span class="empty-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
             <h3>No matching monthly sheets</h3>
             <p>Try another status or team member.</p>
           </div>
         </ng-template>
-      </app-smart-table>
+      </app-data-table>
     }
   </section>
 </div>

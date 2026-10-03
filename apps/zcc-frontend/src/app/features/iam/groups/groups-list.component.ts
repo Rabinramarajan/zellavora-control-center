@@ -6,12 +6,15 @@ import { IamApiService, unwrap } from '../../../core/api/iam.api';
 import { GroupListItem } from '../../../shared/models/iam.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
 import {
-  DataTableComponent,
-  DataTableColumn,
   FilterBarComponent,
   StatusChipComponent,
   EmptyStateComponent,
 } from '../../../shared/components/iam';
+import {
+  DataTableColumn,
+  DataTableComponent,
+  DataTableCellDirective,
+} from '../../../shared/components/data-table';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
@@ -29,6 +32,7 @@ const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   imports: [
     RouterLink,
     DataTableComponent,
+    DataTableCellDirective,
     FilterBarComponent,
     PaginationComponent,
     StatusChipComponent,
@@ -54,14 +58,13 @@ export class GroupsListComponent {
     return t ? { type: String(t) } : {};
   });
 
-  readonly columns = () =>
-    [
-      { key: 'name', label: 'Group', width: '30%' },
-      { key: 'type', label: 'Type' },
-      { key: 'memberCount', label: 'Members' },
-      { key: 'roleCount', label: 'Roles' },
-      { key: 'status', label: 'Status' },
-    ] satisfies DataTableColumn[];
+  readonly columns: DataTableColumn<unknown>[] = [
+    { id: 'name', label: 'Group', width: '30%' },
+    { id: 'type', label: 'Type' },
+    { id: 'memberCount', label: 'Members' },
+    { id: 'roleCount', label: 'Roles' },
+    { id: 'status', label: 'Status' },
+  ];
 
   onSearch(q: string): void {
     this.store.setQ(q);

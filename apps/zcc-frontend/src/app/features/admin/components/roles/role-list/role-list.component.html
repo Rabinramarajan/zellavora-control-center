@@ -10,25 +10,26 @@
     <div class="error">{{ error() }}</div>
   }
 
-  <app-table
+  <app-data-table
+    mode="client"
+    [searchable]="true"
     [rows]="roles()"
     [columns]="columns"
     [loading]="loading()"
     [trackBy]="trackBy"
     searchPlaceholder="Search roles..."
-    [columnToggle]="true"
   >
-    <ng-template [appCell]="'roleName'" let-role>
+    <ng-template dtCell="roleName" let-role>
       <a [routerLink]="['/admin/roles', role.roleId]">
         {{ role.roleName }}
       </a>
     </ng-template>
 
-    <ng-template [appCell]="'resources'" let-role>
+    <ng-template dtCell="resources" let-role>
       {{ role.ilstRoleResource?.length || 0 }} resources
     </ng-template>
 
-    <ng-template [appCell]="'status'" let-role>
+    <ng-template dtCell="status" let-role>
       <span
         [class]="'badge ' + (role.statusValue === 'Active' ? 'badge-active' : 'badge-inactive')"
       >
@@ -36,7 +37,7 @@
       </span>
     </ng-template>
 
-    <ng-template [appCell]="'actions'" let-role>
+    <ng-template dtCell="actions" let-role>
       <div class="actions">
         <button
           *hasPermission="'admin:roles:read'"
@@ -54,5 +55,5 @@
         </button>
       </div>
     </ng-template>
-  </app-table>
+  </app-data-table>
 </div>

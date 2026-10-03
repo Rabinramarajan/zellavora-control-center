@@ -6,20 +6,12 @@
 }
 
 // Fixed-height card: only the table body scrolls; the page header and pagination stay put.
-app-smart-table {
+app-data-table {
   flex: 1 1 0;
   min-height: 18rem;
   display: flex;
   flex-direction: column;
-  --st-body-flex: 1 1 0;
-  border: 1px solid rgb(255 255 255 / 0.1);
-  border-radius: 0.75rem;
 }
-
-:host-context(html.light) app-smart-table {
-  border-color: #e5e7eb;
-}
-
 .btn-37 {
   height: 37px;
 }

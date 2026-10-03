@@ -10,13 +10,13 @@ import { CommonModule } from '@angular/common';
 import { DateControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
-  ColumnDef,
-  FilterState,
-  SmartCellDirective,
-  SmartEmptyDirective,
-  SmartTableComponent,
-  SortState,
-} from '../../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableFilters,
+  DataTableCellDirective,
+  DataTableEmptyDirective,
+  DataTableComponent,
+  DataTableSort,
+} from '../../../../shared/components/data-table';
 import { SheetsStore } from '../../sheets.store';
 import { TimesheetImportDialogComponent } from '../../components/timesheet-import-dialog/timesheet-import-dialog.component';
 import { DailySheet } from '../../sheets.models';
@@ -67,33 +67,33 @@ const STATUS_OPTIONS: { value: SheetStatus; label: string }[] = (
   ['draft', 'submitted', 'approved', 'rejected'] as const
 ).map((status) => ({ value: status, label: statusLabel(status) }));
 
-const ENTRY_COLUMNS: ColumnDef<EntryRow>[] = [
+const ENTRY_COLUMNS: DataTableColumn<EntryRow>[] = [
   {
-    key: 'date',
-    header: 'Date',
-    sortable: true,
+    id: 'date',
+    label: 'Date',
+    sortKey: 'date',
     format: (_, row) => row.dateLabel,
     cellClass: 'text-slate-300',
   },
-  { key: 'project', header: 'Project', sortable: true },
+  { id: 'project', label: 'Project', sortKey: 'project' },
   {
-    key: 'task',
-    header: 'Task / Description',
-    sortable: true,
+    id: 'task',
+    label: 'Task / Description',
+    sortKey: 'task',
     searchText: (row) => `${row.task} ${row.description}`,
   },
-  { key: 'start', header: 'Start', cellClass: 'text-slate-300 tabular-nums' },
-  { key: 'end', header: 'End', cellClass: 'text-slate-300 tabular-nums' },
-  { key: 'breakLabel', header: 'Break', cellClass: 'text-slate-400 tabular-nums' },
+  { id: 'start', label: 'Start', cellClass: 'text-slate-300 tabular-nums' },
+  { id: 'end', label: 'End', cellClass: 'text-slate-300 tabular-nums' },
+  { id: 'breakLabel', label: 'Break', cellClass: 'text-slate-400 tabular-nums' },
   {
-    key: 'hours',
-    header: 'Total',
-    sortable: true,
+    id: 'hours',
+    label: 'Total',
+    sortKey: 'hours',
     format: (value) => `${value}h`,
     cellClass: 'text-white font-semibold tabular-nums',
   },
-  { key: 'status', header: 'Status', sortable: true, format: (_, row) => row.statusLabel },
-  { key: 'actions', header: 'Actions', align: 'right', exportable: false },
+  { id: 'status', label: 'Status', sortKey: 'status', format: (_, row) => row.statusLabel },
+  { id: 'actions', label: 'Actions', align: 'right', exportable: false },
 ];
 
 /** Circumference of the r=54 donut ring used in Today's Summary. */
@@ -106,9 +106,9 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
     CommonModule,
     DateControl,
     SelectControl,
-    SmartTableComponent,
-    SmartCellDirective,
-    SmartEmptyDirective,
+    DataTableComponent,
+    DataTableCellDirective,
+    DataTableEmptyDirective,
     TimesheetImportDialogComponent,
   ],
   providers: [SheetsStore],
@@ -154,8 +154,8 @@ export class DailySheetsComponent implements OnInit {
   ];
   public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
-  public readonly filters = signal<FilterState>({ project: '', status: '' });
-  public readonly sort = signal<SortState>({ key: 'date', direction: 'desc' });
+  public readonly filters = signal<DataTableFilters>({ project: '', status: '' });
+  public readonly sort = signal<DataTableSort | null>({ key: 'date', dir: 'desc' });
   public readonly pageSize = signal(PAGE_SIZE_OPTIONS[0]);
 
   /** The table lists the selected month; the extra day loaded is for KPIs only. */

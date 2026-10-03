@@ -15,25 +15,57 @@
 
 /* ---------- surfaces ---------- */
 
-.sheet-header h1 { font-size: clamp(1.4rem, 2vw, 1.75rem); line-height: 1.25; }
-.sheet-header > div { min-width: 0; }
-.sheet-header > div:last-child { flex-wrap: wrap; }
-.sheet-card { min-width: 0; }
-.sheet-card__head h2 { letter-spacing: -0.015em; }
-app-smart-table { --st-head-bg: rgba(148, 163, 184, 0.04); --st-select-bg: #141e2e; }
-.ghost-btn, .primary-btn, .danger-btn { min-height: 2.75rem; justify-content: center; cursor: pointer; }
-button:focus-visible, a:focus-visible {
+.sheet-header h1 {
+  font-size: clamp(1.4rem, 2vw, 1.75rem);
+  line-height: 1.25;
+}
+.sheet-header > div {
+  min-width: 0;
+}
+.sheet-header > div:last-child {
+  flex-wrap: wrap;
+}
+.sheet-card {
+  min-width: 0;
+}
+.sheet-card__head h2 {
+  letter-spacing: -0.015em;
+}
+.ghost-btn,
+.primary-btn,
+.danger-btn {
+  min-height: 2.75rem;
+  justify-content: center;
+  cursor: pointer;
+}
+button:focus-visible,
+a:focus-visible {
   outline: 2px solid #a78bfa;
   outline-offset: 3px;
 }
-textarea.field__input { resize: vertical; min-height: 7rem; line-height: 1.6; }
-.field__input::placeholder { color: #94a3b8; }
-.field:focus-within .field__label { color: #ddd6fe; }
+textarea.field__input {
+  resize: vertical;
+  min-height: 7rem;
+  line-height: 1.6;
+}
+.field__input::placeholder {
+  color: #94a3b8;
+}
+.field:focus-within .field__label {
+  color: #ddd6fe;
+}
 
 @media (max-width: 640px) {
-  .sheet-card__head, .sheet-card__body { padding: 1rem; }
-  .sheet-header > div:last-child { max-width: 100%; }
-  .field__input { font-size: 1rem; }
+  .sheet-card__head,
+  .sheet-card__body {
+    padding: 1rem;
+  }
+  .sheet-header > div:last-child {
+    max-width: 100%;
+  }
+  .field__input {
+    font-size: 1rem;
+  }
 }
 
 .sheet-page {
@@ -122,9 +154,7 @@ textarea.field__input { resize: vertical; min-height: 7rem; line-height: 1.6; }
 
 .kpi--active {
   border-color: rgba(139, 92, 246, 0.3);
-  background:
-    linear-gradient(140deg, rgba(139, 92, 246, 0.12), transparent),
-    var(--sheet-surface);
+  background: linear-gradient(140deg, rgba(139, 92, 246, 0.12), transparent), var(--sheet-surface);
 }
 
 .kpi__icon {
@@ -231,7 +261,10 @@ textarea.field__input { resize: vertical; min-height: 7rem; line-height: 1.6; }
   color: #e2e8f0;
   font-size: 0.78rem;
   font-weight: 500;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .ghost-btn:hover:not(:disabled) {
@@ -255,7 +288,10 @@ textarea.field__input { resize: vertical; min-height: 7rem; line-height: 1.6; }
   font-size: 0.82rem;
   font-weight: 600;
   box-shadow: 0 12px 28px -14px rgba(139, 92, 246, 0.95);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .primary-btn:hover:not(:disabled) {
@@ -510,12 +546,11 @@ textarea.field__input { resize: vertical; min-height: 7rem; line-height: 1.6; }
   flex: 1;
 }
 
-.sheet-table-card > app-smart-table {
+.sheet-table-card > app-data-table {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  --st-body-flex: 1 0 auto;
 }
 
 /* ---- Light theme (generated from the dark rules above) ---- */
@@ -523,11 +558,6 @@ textarea.field__input { resize: vertical; min-height: 7rem; line-height: 1.6; }
   --sheet-surface: #ffffff;
   --sheet-surface-raised: #f4f5f6;
 }
-
-:host-context(html.light) app-smart-table {
-  --st-select-bg: #f4f5f6;
-}
-
 :host-context(html.light) .field__input::placeholder {
   color: #475569;
 }

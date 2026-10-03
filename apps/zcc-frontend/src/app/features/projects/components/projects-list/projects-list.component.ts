@@ -4,13 +4,13 @@ import { firstValueFrom } from 'rxjs';
 import { AppDialogService } from '../../../../shared/components/dialog';
 import { Project, ProjectStatus } from '../../../../shared/models';
 import {
-  ColumnDef,
-  FilterState,
-  SmartCellDirective,
-  SmartEmptyDirective,
-  SmartTableComponent,
-  SortState,
-} from '../../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableFilters,
+  DataTableCellDirective,
+  DataTableEmptyDirective,
+  DataTableComponent,
+  DataTableSort,
+} from '../../../../shared/components/data-table';
 import { ProjectsService } from '../../services/projects.service';
 
 type StatusFilter = ProjectStatus | null;
@@ -32,46 +32,46 @@ const STATUS_BADGE: Record<ProjectStatus, string> = {
   [ProjectStatus.ARCHIVED]: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
 };
 
-const PROJECT_COLUMNS: ColumnDef<Project>[] = [
+const PROJECT_COLUMNS: DataTableColumn<Project>[] = [
   {
-    key: 'title',
-    header: 'Project',
-    sortable: true,
+    id: 'title',
+    label: 'Project',
+    sortKey: 'title',
     searchText: (row) => `${row.title} ${row.slug} ${row.description ?? ''}`,
   },
   {
-    key: 'category',
-    header: 'Category',
-    sortable: true,
+    id: 'category',
+    label: 'Category',
+    sortKey: 'category',
     format: (value) => (value ? String(value) : '—'),
     cellClass: 'text-slate-600 dark:text-slate-300',
   },
-  { key: 'status', header: 'Status', sortable: true, width: '8rem' },
+  { id: 'status', label: 'Status', sortKey: 'status', width: '8rem' },
   {
-    key: 'viewCount',
-    header: 'Views',
-    sortable: true,
+    id: 'viewCount',
+    label: 'Views',
+    sortKey: 'viewCount',
     align: 'right',
     width: '6rem',
     format: (value) => String(value ?? 0),
     cellClass: 'tabular-nums text-slate-600 dark:text-slate-300',
   },
   {
-    key: 'updatedAt',
-    header: 'Updated',
-    sortable: true,
+    id: 'updatedAt',
+    label: 'Updated',
+    sortKey: 'updatedAt',
     width: '9rem',
     value: (row) => (row.updatedAt ? new Date(row.updatedAt).getTime() : 0),
     format: (value) => (value ? dateFormat.format(Number(value)) : '—'),
     cellClass: 'text-slate-600 dark:text-slate-300 whitespace-nowrap',
   },
-  { key: 'actions', header: 'Actions', align: 'right', width: '10rem', exportable: false },
+  { id: 'actions', label: 'Actions', align: 'right', width: '10rem', exportable: false },
 ];
 
 @Component({
   selector: 'app-projects-list',
   standalone: true,
-  imports: [RouterLink, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
+  imports: [RouterLink, DataTableComponent, DataTableCellDirective, DataTableEmptyDirective],
   templateUrl: './projects-list.component.html',
   styleUrl: './projects-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,9 +84,9 @@ export class ProjectsListComponent {
   public readonly statusTabs = STATUS_TABS;
   public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
-  public readonly sort = signal<SortState>({ key: 'updatedAt', direction: 'desc' });
+  public readonly sort = signal<DataTableSort | null>({ key: 'updatedAt', dir: 'desc' });
   public readonly pageSize = signal(PAGE_SIZE_OPTIONS[0]);
-  public readonly filters = signal<FilterState>({});
+  public readonly filters = signal<DataTableFilters>({});
 
   /** Ids with a delete in flight, so their buttons stay disabled. */
   public readonly deleting = signal<ReadonlySet<string>>(new Set());

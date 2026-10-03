@@ -10,13 +10,14 @@
     <div class="error">{{ error() }}</div>
   }
 
-  <app-table
+  <app-data-table
+    mode="client"
+    [searchable]="true"
     [rows]="filteredUsers()"
     [columns]="columns"
     [loading]="loading()"
     [trackBy]="trackBy"
     searchPlaceholder="Search by name, email, or employee code..."
-    [columnToggle]="true"
   >
     <div toolbar-start>
       <app-select-control
@@ -29,19 +30,19 @@
       />
     </div>
 
-    <ng-template [appCell]="'fullName'" let-user>
+    <ng-template dtCell="fullName" let-user>
       <a [routerLink]="['/admin/users', user.userSerialId]">
         {{ user.firstName }} {{ user.lastName }}
       </a>
     </ng-template>
 
-    <ng-template [appCell]="'status'" let-user>
+    <ng-template dtCell="status" let-user>
       <span [class]="'badge badge-' + (user.statusValue || 'unknown').toLowerCase()">
         {{ user.statusDescription || user.statusValue }}
       </span>
     </ng-template>
 
-    <ng-template [appCell]="'actions'" let-user>
+    <ng-template dtCell="actions" let-user>
       <div class="actions">
         <button
           *hasPermission="'admin:users:read'"
@@ -59,5 +60,5 @@
         </button>
       </div>
     </ng-template>
-  </app-table>
+  </app-data-table>
 </div>

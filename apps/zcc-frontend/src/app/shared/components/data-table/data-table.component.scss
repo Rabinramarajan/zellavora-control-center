@@ -1,0 +1,356 @@
+:host {
+  --dt-surface: rgba(14, 12, 36, 0.72);
+  --dt-border: rgba(255, 255, 255, 0.07);
+  --dt-primary: #6d4cff;
+  --dt-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  :host {
+    min-height: 0;
+  }
+}
+
+.dt-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dt-toolbar:not(:has(> * > *)) {
+  display: none;
+}
+
+.dt-toolbar-start,
+.dt-toolbar-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dt-toolbar-start:empty {
+  display: none;
+}
+
+/* Keeps end controls pinned right when the start slot is empty. */
+.dt-toolbar-end {
+  margin-left: auto;
+}
+
+.dt-search {
+  --zv-control-height: 36px;
+  width: 12rem;
+}
+
+.dt-panel {
+  background: var(--dt-surface);
+  border: 1px solid var(--dt-border);
+  border-radius: 1rem;
+  backdrop-filter: blur(14px);
+}
+
+.dt-panel.is-bare {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+
+.dt-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.35) transparent;
+}
+
+.dt-scroll.is-loading tbody {
+  opacity: 0.55;
+  transition: opacity 160ms ease;
+}
+
+.dt-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+}
+
+.dt-table th {
+  padding: 0.95rem 0.75rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid var(--dt-border);
+  white-space: nowrap;
+}
+
+.dt-table th:first-child,
+.dt-table td:first-child {
+  padding-left: 1.25rem;
+}
+
+.dt-table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+
+.dt-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dt-table th.dt-col-actions,
+.dt-table td.dt-col-actions {
+  width: 1%;
+  padding-inline: 1rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dt-row {
+  animation: dt-fade 380ms var(--dt-ease) both;
+  transition: background-color 160ms ease;
+}
+
+.dt-row:hover {
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.dt-row.is-selected {
+  background: rgba(109, 76, 255, 0.1);
+}
+
+.dt-row.is-clickable {
+  cursor: pointer;
+}
+
+.dt-row.is-busy {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@keyframes dt-fade {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+.dt-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  border-radius: 0.3rem;
+}
+
+.dt-sort .pi {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.dt-sort:hover,
+.dt-sort.is-sorted {
+  color: #e2e8f0;
+}
+
+.dt-sort:hover .pi,
+.dt-sort.is-sorted .pi {
+  opacity: 1;
+}
+
+.dt-sort:focus-visible,
+.dt-btn:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+
+.dt-check {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 0.3rem;
+  border: 1.5px solid #64748b;
+  background: transparent;
+  color: var(--dt-primary);
+  cursor: pointer;
+}
+
+.dt-check:focus {
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+  outline: none;
+}
+
+.dt-skeleton {
+  border-radius: 0.4rem;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.04)
+  );
+  background-size: 200% 100%;
+  animation: dt-shimmer 1.2s linear infinite;
+}
+
+@keyframes dt-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.dt-state-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.12);
+}
+
+.dt-state-icon[data-tone='violet'] {
+  color: #fff;
+  background: linear-gradient(135deg, #6d4cff, #8b5cf6);
+}
+
+.dt-state-title {
+  color: #fff;
+}
+
+.dt-state-text {
+  color: #94a3b8;
+}
+
+.dt-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: background-color 160ms ease;
+}
+
+.dt-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dt-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--dt-border);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+@media (min-width: 900px) {
+  .dt-footer {
+    flex-direction: row;
+    padding: 0.85rem 1.25rem;
+  }
+}
+
+/* Only the body scrolls on md+; the header row stays pinned. */
+@media (min-width: 768px) {
+  .dt-scroll {
+    overflow-y: auto;
+  }
+
+  .dt-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #13112f;
+  }
+}
+
+@media (max-width: 767px) {
+  [data-hide-below='md'] {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  [data-hide-below='lg'] {
+    display: none;
+  }
+}
+
+@media (max-width: 1279px) {
+  [data-hide-below='xl'] {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-row,
+  .dt-skeleton {
+    animation: none;
+  }
+}
+
+/* Light theme */
+:host-context(html.light) {
+  --dt-surface: rgba(255, 255, 255, 0.85);
+  --dt-border: rgba(15, 23, 42, 0.077);
+}
+
+:host-context(html.light) .dt-table th {
+  color: #475569;
+  background: rgba(15, 23, 42, 0.023);
+}
+
+:host-context(html.light) .dt-table td {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.044);
+}
+
+:host-context(html.light) .dt-sort:hover,
+:host-context(html.light) .dt-sort.is-sorted,
+:host-context(html.light) .dt-state-title {
+  color: #0f172a;
+}
+
+:host-context(html.light) .dt-state-text {
+  color: #475569;
+}
+
+:host-context(html.light) .dt-btn {
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+:host-context(html.light) .dt-footer {
+  background: rgba(15, 23, 42, 0.013);
+}
+
+:host-context(html.light) .dt-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.036),
+    rgba(15, 23, 42, 0.09),
+    rgba(15, 23, 42, 0.036)
+  );
+}
+
+@media (min-width: 768px) {
+  :host-context(html.light) .dt-table thead th {
+    background: #f4f4f7;
+  }
+}

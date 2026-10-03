@@ -10,12 +10,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import {
-  ColumnDef,
-  SmartCellDirective,
-  SmartEmptyDirective,
-  SmartTableComponent,
-  SortState,
-} from '../../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableCellDirective,
+  DataTableEmptyDirective,
+  DataTableComponent,
+  DataTableSort,
+} from '../../../../shared/components/data-table';
 import { SheetsStore } from '../../sheets.store';
 import { DailySheet, MonthlySheet } from '../../sheets.models';
 import {
@@ -62,38 +62,38 @@ interface ProjectRow {
   approvalPercent: number;
 }
 
-const PROJECT_COLUMNS: ColumnDef<ProjectRow>[] = [
-  { key: 'name', header: 'Project', sortable: true },
-  { key: 'type', header: 'Type', hidden: true },
+const PROJECT_COLUMNS: DataTableColumn<ProjectRow>[] = [
+  { id: 'name', label: 'Project', sortKey: 'name' },
+  { id: 'type', label: 'Type', hidden: true },
   {
-    key: 'totalHours',
-    header: 'Total Hours',
-    sortable: true,
+    id: 'totalHours',
+    label: 'Total Hours',
+    sortKey: 'totalHours',
     format: (value) => `${value}h`,
     cellClass: 'text-white font-semibold tabular-nums',
   },
   {
-    key: 'billableHours',
-    header: 'Billable Hours',
-    sortable: true,
+    id: 'billableHours',
+    label: 'Billable Hours',
+    sortKey: 'billableHours',
     format: (value) => `${value}h`,
     cellClass: 'text-slate-300 tabular-nums',
   },
   {
-    key: 'nonBillableHours',
-    header: 'Non-billable',
-    sortable: true,
+    id: 'nonBillableHours',
+    label: 'Non-billable',
+    sortKey: 'nonBillableHours',
     format: (value) => `${value}h`,
     cellClass: 'text-slate-400 tabular-nums',
   },
   {
-    key: 'approvalPercent',
-    header: 'Approval',
-    sortable: true,
+    id: 'approvalPercent',
+    label: 'Approval',
+    sortKey: 'approvalPercent',
     width: '14rem',
     format: (value) => `${value}%`,
   },
-  { key: 'actions', header: 'Actions', align: 'right', exportable: false },
+  { id: 'actions', label: 'Actions', align: 'right', exportable: false },
 ];
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -112,7 +112,13 @@ const CALENDAR_LEGEND: { label: string; status: CellStatus }[] = [
 @Component({
   selector: 'app-monthly-sheets',
   standalone: true,
-  imports: [CommonModule, RouterLink, SmartTableComponent, SmartCellDirective, SmartEmptyDirective],
+  imports: [
+    CommonModule,
+    RouterLink,
+    DataTableComponent,
+    DataTableCellDirective,
+    DataTableEmptyDirective,
+  ],
   providers: [SheetsStore],
   templateUrl: './monthly-sheets.component.html',
   styleUrls: ['../../styles/sheets-theme.scss', './monthly-sheets.component.scss'],
@@ -172,11 +178,11 @@ export class MonthlySheetsComponent implements OnInit {
   public readonly weekdays = WEEKDAYS;
   public readonly legend = CALENDAR_LEGEND;
   public readonly projectColumns = PROJECT_COLUMNS;
-  public readonly projectSort = signal<SortState>({ key: 'totalHours', direction: 'desc' });
+  public readonly projectSort = signal<DataTableSort | null>({ key: 'totalHours', dir: 'desc' });
   public readonly trackProject = (row: ProjectRow): string => row.name;
 
   private readonly projectTable =
-    viewChild.required<SmartTableComponent<ProjectRow>>('projectTable');
+    viewChild.required<DataTableComponent<ProjectRow>>('projectTable');
 
   /** Always the first of the displayed month. */
   public readonly month = signal(startOfMonth(new Date()));

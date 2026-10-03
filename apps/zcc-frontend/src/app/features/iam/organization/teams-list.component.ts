@@ -16,11 +16,11 @@ import { AppDialogService } from '../../../shared/components/dialog';
 import { FormDialogMode, FormDialogService } from '../../../shared/components/form-dialog';
 import { EmptyStateComponent } from '../../../shared/components/iam';
 import {
-  ColumnDef,
-  FilterState,
-  SmartCellDirective,
-  SmartTableComponent,
-} from '../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableFilters,
+  DataTableCellDirective,
+  DataTableComponent,
+} from '../../../shared/components/data-table';
 import { TeamDetail, TeamItem } from '../../../shared/models/iam-admin.model';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { initials } from '../shared/iam-format';
@@ -37,7 +37,7 @@ const LOAD_PAGE_SIZE = 100;
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'filterOpen.set(false)',
   },
-  imports: [DatePipe, RouterLink, SmartTableComponent, SmartCellDirective, EmptyStateComponent],
+  imports: [DatePipe, RouterLink, DataTableComponent, DataTableCellDirective, EmptyStateComponent],
   templateUrl: './teams-list.component.html',
   styleUrl: './teams-list.component.scss',
 })
@@ -55,26 +55,26 @@ export class TeamsListComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly filters = signal<FilterState>({ membership: '' });
+  readonly filters = signal<DataTableFilters>({ membership: '' });
   readonly pageSize = signal(10);
   readonly pageSizeOptions = [10, 25, 50, 100] as const;
 
   readonly trackBy = (t: TeamItem) => t.id;
 
-  readonly columns: ColumnDef<TeamItem>[] = [
-    { key: 'name', header: 'Team', sortable: true, width: '24%' },
-    { key: 'description', header: 'Description', value: (t) => t.description ?? '' },
-    { key: 'memberCount', header: 'Members', sortable: true, width: '12rem' },
+  readonly columns: DataTableColumn<TeamItem>[] = [
+    { id: 'name', label: 'Team', sortKey: 'name', width: '24%' },
+    { id: 'description', label: 'Description', value: (t) => t.description ?? '' },
+    { id: 'memberCount', label: 'Members', sortKey: 'memberCount', width: '12rem' },
     // Hidden: only drives the membership filter.
     {
-      key: 'membership',
-      header: 'Membership',
+      id: 'membership',
+      label: 'Membership',
       hidden: true,
       exportable: false,
       value: (t) => (t.memberCount > 0 ? 'with' : 'empty'),
     },
-    { key: 'updatedAt', header: 'Last Updated', sortable: true, width: '9rem' },
-    { key: 'actions', header: '', align: 'right', width: '8.5rem', exportable: false },
+    { id: 'updatedAt', label: 'Last Updated', sortKey: 'updatedAt', width: '9rem' },
+    { id: 'actions', label: '', align: 'right', width: '8.5rem', exportable: false },
   ];
 
   readonly membershipOptions = [
@@ -99,9 +99,7 @@ export class TeamsListComponent implements OnInit {
     try {
       const all: TeamItem[] = [];
       for (let page = 1, totalPages = 1; page <= totalPages; page++) {
-        const result = await firstValueFrom(
-          this.api.listTeams({ page, pageSize: LOAD_PAGE_SIZE })
-        );
+        const result = await firstValueFrom(this.api.listTeams({ page, pageSize: LOAD_PAGE_SIZE }));
         all.push(...result.data);
         totalPages = result.meta.totalPages;
       }

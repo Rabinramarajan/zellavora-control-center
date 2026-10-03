@@ -9,12 +9,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
-  ColumnDef,
-  SmartCellDirective,
-  SmartEmptyDirective,
-  SmartTableComponent,
-  SortState,
-} from '../../../../shared/components/smart-table';
+  DataTableColumn,
+  DataTableCellDirective,
+  DataTableEmptyDirective,
+  DataTableComponent,
+  DataTableSort,
+} from '../../../../shared/components/data-table';
 import { DateRangePickerComponent } from '../../../../shared/components/date-range-picker/date-range-picker.component';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { SheetsStore } from '../../sheets.store';
@@ -63,59 +63,59 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-const DAILY_COLUMNS: ColumnDef<DailyRow>[] = [
-  { key: 'employee', header: 'Employee', sortable: true },
+const DAILY_COLUMNS: DataTableColumn<DailyRow>[] = [
+  { id: 'employee', label: 'Employee', sortKey: 'employee' },
   {
-    key: 'date',
-    header: 'Date',
-    sortable: true,
+    id: 'date',
+    label: 'Date',
+    sortKey: 'date',
     format: (_, row) => row.dateLabel,
     cellClass: 'text-slate-300',
   },
-  { key: 'project', header: 'Project', sortable: true },
+  { id: 'project', label: 'Project', sortKey: 'project' },
   {
-    key: 'task',
-    header: 'Task',
-    sortable: true,
+    id: 'task',
+    label: 'Task',
+    sortKey: 'task',
     cellClass: 'text-slate-300 max-w-[18rem] whitespace-normal',
   },
   {
-    key: 'hours',
-    header: 'Hours',
-    sortable: true,
+    id: 'hours',
+    label: 'Hours',
+    sortKey: 'hours',
     format: (value) => `${value}h`,
     cellClass: 'text-white font-semibold tabular-nums',
   },
   {
-    key: 'amount',
-    header: 'Amount',
-    sortable: true,
+    id: 'amount',
+    label: 'Amount',
+    sortKey: 'amount',
     format: (value) => currency.format(Number(value)),
     cellClass: 'text-slate-300 tabular-nums',
   },
-  { key: 'actions', header: 'Decision', align: 'right', exportable: false },
+  { id: 'actions', label: 'Decision', align: 'right', exportable: false },
 ];
 
-const MONTHLY_COLUMNS: ColumnDef<MonthlyRow>[] = [
-  { key: 'employee', header: 'Employee', sortable: true },
-  { key: 'period', header: 'Month', sortable: true, cellClass: 'text-slate-300' },
+const MONTHLY_COLUMNS: DataTableColumn<MonthlyRow>[] = [
+  { id: 'employee', label: 'Employee', sortKey: 'employee' },
+  { id: 'period', label: 'Month', sortKey: 'period', cellClass: 'text-slate-300' },
   {
-    key: 'hours',
-    header: 'Hours',
-    sortable: true,
+    id: 'hours',
+    label: 'Hours',
+    sortKey: 'hours',
     format: (value) => `${value}h`,
     cellClass: 'text-white font-semibold tabular-nums',
   },
-  { key: 'workingDays', header: 'Days', sortable: true, cellClass: 'tabular-nums' },
+  { id: 'workingDays', label: 'Days', sortKey: 'workingDays', cellClass: 'tabular-nums' },
   {
-    key: 'amount',
-    header: 'Amount',
-    sortable: true,
+    id: 'amount',
+    label: 'Amount',
+    sortKey: 'amount',
     format: (value) => currency.format(Number(value)),
     cellClass: 'text-slate-300 tabular-nums',
   },
-  { key: 'status', header: 'Status', sortable: true },
-  { key: 'actions', header: 'Decision', align: 'right', exportable: false },
+  { id: 'status', label: 'Status', sortKey: 'status' },
+  { id: 'actions', label: 'Decision', align: 'right', exportable: false },
 ];
 
 /**
@@ -129,9 +129,9 @@ const MONTHLY_COLUMNS: ColumnDef<MonthlyRow>[] = [
   imports: [
     CommonModule,
     RouterLink,
-    SmartTableComponent,
-    SmartCellDirective,
-    SmartEmptyDirective,
+    DataTableComponent,
+    DataTableCellDirective,
+    DataTableEmptyDirective,
     DateRangePickerComponent,
     PaginationComponent,
   ],
@@ -275,8 +275,8 @@ export class ApprovalQueueComponent implements OnInit {
   public readonly dailyColumns = DAILY_COLUMNS;
   public readonly monthlyColumns = MONTHLY_COLUMNS;
   public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-  public readonly dailySort = signal<SortState>({ key: 'date', direction: 'asc' });
-  public readonly monthlySort = signal<SortState>({ key: 'period', direction: 'asc' });
+  public readonly dailySort = signal<DataTableSort | null>({ key: 'date', dir: 'asc' });
+  public readonly monthlySort = signal<DataTableSort | null>({ key: 'period', dir: 'asc' });
   public readonly pageSize = signal(PAGE_SIZE_OPTIONS[0]);
   public readonly selectedDaily = signal<readonly DailyRow[]>([]);
 

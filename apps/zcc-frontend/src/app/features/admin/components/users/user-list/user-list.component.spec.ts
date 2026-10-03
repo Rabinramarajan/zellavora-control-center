@@ -100,14 +100,14 @@ describe('UserListComponent', () => {
 
   it('should define searchable table columns', () => {
     expect(component.columns.length).toBeGreaterThan(0);
-    expect(component.columns.map((c) => c.key)).toContain('userLoginId');
-    expect(component.columns.map((c) => c.key)).toContain('fullName');
-    expect(component.columns.map((c) => c.key)).toContain('status');
-    expect(component.columns.map((c) => c.key)).toContain('actions');
+    expect(component.columns.map((c) => c.id)).toContain('userLoginId');
+    expect(component.columns.map((c) => c.id)).toContain('fullName');
+    expect(component.columns.map((c) => c.id)).toContain('status');
+    expect(component.columns.map((c) => c.id)).toContain('actions');
   });
 
-  it('should render the app-table', () => {
-    const tableEl = fixture.nativeElement.querySelector('app-table');
+  it('should render the app-data-table', () => {
+    const tableEl = fixture.nativeElement.querySelector('app-data-table');
     expect(tableEl).toBeTruthy();
   });
 });

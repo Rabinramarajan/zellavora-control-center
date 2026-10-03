@@ -23,7 +23,8 @@
     [message]="error()!"
   />
 } @else {
-  <app-smart-table
+  <app-data-table
+    mode="client"
     [rows]="departments()"
     [columns]="columns"
     [trackBy]="trackBy"
@@ -33,7 +34,7 @@
     [(pageSize)]="pageSize"
     [pageSizeOptions]="pageSizeOptions"
     entityLabel="departments"
-    emptyMessage="No departments found. Create a new department to get started."
+    emptyTitle="No departments found. Create a new department to get started."
   >
     <div toolbar-end class="relative">
       <button
@@ -111,7 +112,7 @@
       }
     </div>
 
-    <ng-template smartCell="code" let-d>
+    <ng-template dtCell="code" let-d>
       @if (d.code) {
         <span
           class="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-200"
@@ -122,7 +123,7 @@
         <span class="text-gray-400">—</span>
       }
     </ng-template>
-    <ng-template smartCell="name" let-d>
+    <ng-template dtCell="name" let-d>
       <a
         class="font-medium text-indigo-600 hover:underline focus-visible:underline dark:text-indigo-400"
         [routerLink]="['/iam/organization/departments', d.id]"
@@ -131,24 +132,24 @@
         {{ d.name }}
       </a>
     </ng-template>
-    <ng-template smartCell="parentName" let-d>
+    <ng-template dtCell="parentName" let-d>
       <span class="text-gray-600 dark:text-gray-300">{{ d.parentName ?? '—' }}</span>
     </ng-template>
-    <ng-template smartCell="memberCount" let-d>
+    <ng-template dtCell="memberCount" let-d>
       <span class="tabular-nums">{{ d.memberCount }}</span>
     </ng-template>
-    <ng-template smartCell="childCount" let-d>
+    <ng-template dtCell="childCount" let-d>
       <span class="tabular-nums">{{ d.childCount }}</span>
     </ng-template>
-    <ng-template smartCell="status" let-d>
+    <ng-template dtCell="status" let-d>
       <zcc-status-chip [value]="d.status" [label]="d.status === 'active' ? 'Active' : 'Inactive'" />
     </ng-template>
-    <ng-template smartCell="updatedAt" let-d>
+    <ng-template dtCell="updatedAt" let-d>
       <span class="tabular-nums text-gray-600 dark:text-gray-300">{{
         d.updatedAt | date: 'mediumDate'
       }}</span>
     </ng-template>
-    <ng-template smartCell="actions" let-d>
+    <ng-template dtCell="actions" let-d>
       <div class="flex justify-end gap-1">
         <button
           type="button"
@@ -180,5 +181,5 @@
         }
       </div>
     </ng-template>
-  </app-smart-table>
+  </app-data-table>
 }
