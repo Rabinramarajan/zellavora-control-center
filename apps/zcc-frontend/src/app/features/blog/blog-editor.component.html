@@ -1,0 +1,422 @@
+@if (loadError()) {
+  <zcc-empty-state
+    icon="pi pi-exclamation-triangle"
+    title="Unable to load post"
+    [message]="loadError()!"
+  />
+} @else if (loading() && !post()) {
+  <div class="space-y-3" aria-busy="true">
+    <div class="be-skeleton h-16"></div>
+    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div class="be-skeleton h-[560px]"></div>
+      <div class="be-skeleton h-[560px]"></div>
+    </div>
+  </div>
+} @else {
+  <section class="be-page">
+    <!-- Top bar -->
+    <header class="be-bar">
+      <a routerLink="/blog" class="be-icon-btn" aria-label="Back to posts" title="Back">
+        <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      </a>
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="be-title">{{ isNew() ? 'New Post' : 'Edit Post' }}</h1>
+          @if (post(); as p) {
+            <span class="be-status" [attr.data-status]="p.status">{{ statusLabel[p.status] }}</span>
+            @if (p.status === 'SCHEDULED' && p.publishedAt) {
+              <span class="be-meta">Goes live {{ dateTime(p.publishedAt) }}</span>
+            }
+          }
+          @if (dirty() && !readOnly()) {
+            <span class="be-dirty" role="status">Unsaved changes</span>
+          }
+        </div>
+        @if (post(); as p) {
+          <p class="be-meta">Last updated {{ dateTime(p.updatedAt) }} · {{ p.viewCount }} views</p>
+        }
+      </div>
+      @if (!readOnly()) {
+        <div class="be-actions">
+          @if (post() && !isNew()) {
+            <button
+              type="button"
+              class="be-icon-btn is-danger"
+              [disabled]="busy() || saving()"
+              aria-label="Delete post"
+              title="Delete"
+              (click)="remove()"
+            >
+              <i class="pi pi-trash" aria-hidden="true"></i>
+            </button>
+          }
+          @if (dirty() && post()) {
+            <button
+              type="button"
+              class="be-btn be-btn-ghost"
+              [disabled]="saving()"
+              (click)="discard()"
+            >
+              Discard
+            </button>
+          }
+          <button
+            type="button"
+            class="be-btn be-btn-outline"
+            [disabled]="saving() || busy() || (!dirty() && !isNew())"
+            (click)="save()"
+          >
+            @if (saving()) {
+              <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            } @else {
+              <i class="pi pi-save" aria-hidden="true"></i>
+            }
+            {{ live() ? 'Update' : 'Save Draft' }}
+          </button>
+          @if (live()) {
+            <button
+              type="button"
+              class="be-btn be-btn-outline"
+              [disabled]="busy() || saving()"
+              (click)="unpublish()"
+            >
+              <i class="pi pi-eye-slash" aria-hidden="true"></i>
+              Unpublish
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="be-btn be-btn-primary"
+              [disabled]="busy() || saving()"
+              (click)="publish(false)"
+            >
+              <i class="pi pi-send" aria-hidden="true"></i>
+              Publish
+            </button>
+          }
+        </div>
+      }
+    </header>
+
+    @if (readOnly()) {
+      <p class="be-note">
+        <i class="pi pi-lock" aria-hidden="true"></i> You can read this post. Ask an editor with
+        blog access to change it.
+      </p>
+    }
+
+    <div class="be-grid">
+      <!-- Main column -->
+      <div class="be-card be-main">
+        <label class="sr-only" for="be-title">Post title</label>
+        <input
+          id="be-title"
+          class="be-title-input"
+          placeholder="Post title"
+          maxlength="200"
+          [readOnly]="readOnly()"
+          [attr.aria-invalid]="touched() && !!errors().title"
+          [value]="draft().title"
+          (input)="setTitle($any($event.target).value)"
+        />
+        @if (touched() && errors().title) {
+          <p class="be-error">{{ errors().title }}</p>
+        }
+
+        <div class="be-slug">
+          <span class="be-slug-prefix">/blog/</span>
+          <label class="sr-only" for="be-slug">URL slug</label>
+          <input
+            id="be-slug"
+            spellcheck="false"
+            placeholder="url-slug"
+            maxlength="200"
+            [readOnly]="readOnly()"
+            [value]="draft().slug"
+            (input)="setSlug($any($event.target).value)"
+          />
+          @if (!readOnly() && !slugAuto()) {
+            <button type="button" class="be-link" (click)="regenerateSlug()">Use title</button>
+          }
+        </div>
+        @if (errors().slug) {
+          <p class="be-error">{{ errors().slug }}</p>
+        }
+
+        <label class="be-field">
+          <span class="be-label"
+            >Excerpt <small>{{ draft().excerpt.length }}/400</small></span
+          >
+          <textarea
+            class="be-textarea"
+            rows="2"
+            maxlength="400"
+            placeholder="A one or two sentence summary shown in listings and previews"
+            [readOnly]="readOnly()"
+            [value]="draft().excerpt"
+            (input)="set('excerpt', $any($event.target).value)"
+          ></textarea>
+        </label>
+
+        <div class="be-field">
+          <div class="be-editor-head">
+            <div class="be-seg" role="tablist" aria-label="Content view">
+              <button
+                type="button"
+                role="tab"
+                [attr.aria-selected]="view() === 'write'"
+                (click)="view.set('write')"
+              >
+                <i class="pi pi-pencil" aria-hidden="true"></i> Write
+              </button>
+              <button
+                type="button"
+                role="tab"
+                [attr.aria-selected]="view() === 'preview'"
+                (click)="view.set('preview')"
+              >
+                <i class="pi pi-eye" aria-hidden="true"></i> Preview
+              </button>
+            </div>
+            <span class="be-meta">{{ words() }} words · {{ minutes() }} min read</span>
+          </div>
+
+          @if (view() === 'write') {
+            <textarea
+              class="be-textarea be-content"
+              aria-label="Post content"
+              placeholder="Write your post…&#10;&#10;## Section heading&#10;- list item&#10;> quote"
+              [readOnly]="readOnly()"
+              [value]="draft().content"
+              (input)="set('content', $any($event.target).value)"
+            ></textarea>
+            <p class="be-hint">
+              Formatting: <code>##</code> heading, <code>###</code> subheading, <code>-</code> list
+              item, <code>&gt;</code> quote, blank line for a new paragraph.
+            </p>
+          } @else {
+            <article class="be-preview" aria-label="Post preview">
+              @if (draft().coverImageUrl && !errors().coverImageUrl) {
+                <img class="be-preview-cover" [src]="draft().coverImageUrl" alt="" />
+              }
+              @if (draft().category) {
+                <span class="be-chip" [attr.data-tone]="categoryTone(draft().category)">{{
+                  draft().category
+                }}</span>
+              }
+              <h2 class="be-preview-title">{{ draft().title || 'Untitled post' }}</h2>
+              @if (draft().excerpt) {
+                <p class="be-preview-lead">{{ draft().excerpt }}</p>
+              }
+              @for (b of blocks(); track $index) {
+                @switch (b.kind) {
+                  @case ('h2') {
+                    <h3 class="be-h2">{{ $any(b).text }}</h3>
+                  }
+                  @case ('h3') {
+                    <h4 class="be-h3">{{ $any(b).text }}</h4>
+                  }
+                  @case ('quote') {
+                    <blockquote class="be-quote">{{ $any(b).text }}</blockquote>
+                  }
+                  @case ('list') {
+                    <ul class="be-list">
+                      @for (item of $any(b).items; track $index) {
+                        <li>{{ item }}</li>
+                      }
+                    </ul>
+                  }
+                  @default {
+                    <p class="be-p">{{ $any(b).text }}</p>
+                  }
+                }
+              } @empty {
+                <p class="be-meta">Nothing to preview yet.</p>
+              }
+            </article>
+          }
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="be-side">
+        @if (!readOnly() && !live()) {
+          <section class="be-card">
+            <h2 class="be-card-title">
+              <i class="pi pi-calendar" aria-hidden="true"></i> Schedule
+            </h2>
+            @if (!scheduleOpen()) {
+              <p class="be-meta">Publish automatically at a later date and time.</p>
+              <button
+                type="button"
+                class="be-btn be-btn-outline mt-3 w-full"
+                (click)="scheduleOpen.set(true)"
+              >
+                Schedule for later
+              </button>
+            } @else {
+              <label class="be-field !mt-0">
+                <span class="be-label">Publish at (your local time)</span>
+                <input
+                  type="datetime-local"
+                  class="be-input"
+                  [min]="minSchedule()"
+                  [value]="scheduleAt()"
+                  (input)="scheduleAt.set($any($event.target).value)"
+                />
+              </label>
+              <div class="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  class="be-btn be-btn-ghost flex-1"
+                  (click)="scheduleOpen.set(false)"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  class="be-btn be-btn-primary flex-1"
+                  [disabled]="busy() || saving()"
+                  (click)="publish(true)"
+                >
+                  Schedule
+                </button>
+              </div>
+            }
+          </section>
+        }
+
+        <section class="be-card">
+          <h2 class="be-card-title"><i class="pi pi-tag" aria-hidden="true"></i> Organize</h2>
+          <label class="be-field !mt-0">
+            <span class="be-label">Category</span>
+            <input
+              class="be-input"
+              list="be-categories"
+              placeholder="Choose or type a category"
+              maxlength="60"
+              [readOnly]="readOnly()"
+              [attr.aria-invalid]="touched() && !!errors().category"
+              [value]="draft().category"
+              (input)="set('category', $any($event.target).value)"
+            />
+            <datalist id="be-categories">
+              @for (c of categories(); track c) {
+                <option [value]="c"></option>
+              }
+            </datalist>
+          </label>
+          @if (touched() && errors().category) {
+            <p class="be-error">{{ errors().category }}</p>
+          }
+
+          <div class="be-field">
+            <span class="be-label" id="be-tags-label"
+              >Tags <small>{{ draft().tags.length }}/10</small></span
+            >
+            <div class="be-tags" role="group" aria-labelledby="be-tags-label">
+              @for (t of draft().tags; track t; let i = $index) {
+                <span class="be-tag">
+                  #{{ t }}
+                  @if (!readOnly()) {
+                    <button
+                      type="button"
+                      [attr.aria-label]="'Remove tag ' + t"
+                      (click)="removeTag(i)"
+                    >
+                      ×
+                    </button>
+                  }
+                </span>
+              }
+              @if (!readOnly() && draft().tags.length < 10) {
+                <input
+                  aria-label="Add tag"
+                  placeholder="Add tag…"
+                  maxlength="30"
+                  [value]="tagInput()"
+                  (input)="tagInput.set($any($event.target).value)"
+                  (keydown)="onTagKey($event)"
+                  (blur)="addTag()"
+                />
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="be-card">
+          <h2 class="be-card-title"><i class="pi pi-image" aria-hidden="true"></i> Cover Image</h2>
+          <input
+            class="be-input"
+            aria-label="Cover image URL"
+            placeholder="https://cdn.example.com/cover.jpg"
+            [readOnly]="readOnly()"
+            [value]="draft().coverImageUrl"
+            (input)="set('coverImageUrl', $any($event.target).value)"
+          />
+          @if (errors().coverImageUrl) {
+            <p class="be-error">{{ errors().coverImageUrl }}</p>
+          }
+          <div class="be-cover">
+            @if (draft().coverImageUrl && !errors().coverImageUrl) {
+              <img [src]="draft().coverImageUrl" alt="Cover preview" />
+            } @else {
+              <span
+                ><i class="pi pi-image" aria-hidden="true"></i> 16:9 image, 1600×900
+                recommended</span
+              >
+            }
+          </div>
+        </section>
+
+        <section class="be-card">
+          <h2 class="be-card-title"><i class="pi pi-search" aria-hidden="true"></i> SEO</h2>
+          <label class="be-field !mt-0">
+            <span class="be-label"
+              >Meta title
+              <small [class.is-over]="draft().seoTitle.length > 70"
+                >{{ draft().seoTitle.length }}/70</small
+              ></span
+            >
+            <input
+              class="be-input"
+              maxlength="90"
+              [placeholder]="draft().title || 'Defaults to the post title'"
+              [readOnly]="readOnly()"
+              [value]="draft().seoTitle"
+              (input)="set('seoTitle', $any($event.target).value)"
+            />
+          </label>
+          <label class="be-field">
+            <span class="be-label"
+              >Meta description
+              <small [class.is-over]="draft().seoDescription.length > 160"
+                >{{ draft().seoDescription.length }}/160</small
+              ></span
+            >
+            <textarea
+              class="be-textarea"
+              rows="3"
+              maxlength="200"
+              [placeholder]="draft().excerpt || 'Defaults to the excerpt'"
+              [readOnly]="readOnly()"
+              [value]="draft().seoDescription"
+              (input)="set('seoDescription', $any($event.target).value)"
+            ></textarea>
+          </label>
+          <div class="be-serp" aria-label="Search result preview">
+            <p class="be-serp-url">yoursite.com › blog › {{ draft().slug || 'url-slug' }}</p>
+            <p class="be-serp-title">{{ draft().seoTitle || draft().title || 'Post title' }}</p>
+            <p class="be-serp-desc">
+              {{
+                draft().seoDescription ||
+                  draft().excerpt ||
+                  'A short description appears here in search results.'
+              }}
+            </p>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </section>
+}

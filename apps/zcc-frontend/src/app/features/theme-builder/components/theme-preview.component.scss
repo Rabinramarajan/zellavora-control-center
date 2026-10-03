@@ -293,6 +293,8 @@
   td {
     border-bottom: 1px solid var(--tp-border);
     padding: 0.7em 1em;
+    vertical-align: middle;
+    white-space: nowrap;
   }
 
   tr:last-child td {
@@ -327,7 +329,9 @@
 }
 
 .tp-actions {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
   gap: 1.1em;
   color: var(--tp-muted);
 }

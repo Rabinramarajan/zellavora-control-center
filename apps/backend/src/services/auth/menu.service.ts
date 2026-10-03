@@ -136,6 +136,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Blog / Insights',
         icon: '✍️',
         route: '/blog',
+        requiredPermission: 'blog:read',
         orderIndex: 1,
       },
       {

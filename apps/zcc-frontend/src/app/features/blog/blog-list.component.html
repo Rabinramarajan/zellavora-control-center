@@ -1,0 +1,269 @@
+<section class="bl-page">
+  <!-- Header -->
+  <header class="bl-header">
+    <div class="flex min-w-0 items-center gap-4">
+      <span class="bl-hero-icon" aria-hidden="true"><i class="pi pi-file"></i></span>
+      <div class="min-w-0">
+        <h1 class="bl-title">Blog / Insights</h1>
+        <p class="bl-subtitle">Create, edit, and manage your blog posts and insights.</p>
+      </div>
+    </div>
+    @if (canManage()) {
+      <a routerLink="new" class="bl-btn bl-btn-primary">
+        <i class="pi pi-plus" aria-hidden="true"></i>
+        Create New Post
+      </a>
+    }
+  </header>
+
+  <!-- Stats -->
+  <ul class="bl-stats" aria-label="Blog statistics">
+    @if (statCards().length) {
+      @for (s of statCards(); track s.key; let i = $index) {
+        <li class="bl-stat" [attr.data-tone]="s.tone" [style.animation-delay.ms]="i * 60">
+          <span class="bl-stat-icon" aria-hidden="true"><i [class]="s.icon"></i></span>
+          <div class="relative z-10 min-w-0">
+            <p class="bl-stat-label">{{ s.label }}</p>
+            <p class="bl-stat-value">{{ s.value }}</p>
+            <p class="bl-stat-hint" [class.is-up]="s.hintUp">
+              @if (s.hintUp) {
+                <i class="pi pi-arrow-up text-[10px]" aria-hidden="true"></i>
+              }
+              {{ s.hint }}
+            </p>
+          </div>
+          <app-sparkline class="bl-spark" [data]="s.series" [color]="s.color" />
+        </li>
+      }
+    } @else {
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <li class="bl-stat bl-skeleton" aria-hidden="true"></li>
+      }
+    }
+  </ul>
+
+  <!-- Filters -->
+  <div class="bl-filters" role="search">
+    <label class="bl-search">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <span class="sr-only">Search blogs</span>
+      <input
+        id="blog-search"
+        type="search"
+        placeholder="Search blogs by title or slug..."
+        autocomplete="off"
+        [value]="filters().q"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </label>
+    <app-select-control
+      aria-label="Category"
+      [options]="categoryOptions()"
+      [value]="filters().category"
+      (valueChange)="setFilter('category', $event)"
+    />
+    <app-select-control
+      aria-label="Status"
+      [searchable]="false"
+      [options]="statusOptions"
+      [value]="filters().status"
+      (valueChange)="setFilter('status', $event)"
+    />
+    <app-select-control
+      aria-label="Created within"
+      [searchable]="false"
+      [options]="periodOptions"
+      [value]="filters().period"
+      (valueChange)="setFilter('period', $event)"
+    />
+    <button
+      type="button"
+      class="bl-btn bl-btn-outline"
+      [disabled]="!hasFilters()"
+      (click)="clear()"
+    >
+      <i class="pi pi-filter-slash" aria-hidden="true"></i>
+      Clear Filters
+    </button>
+  </div>
+
+  <!-- Posts -->
+  <app-data-table
+    class="bl-table"
+    entityLabel="posts"
+    errorTitle="Failed to load posts"
+    [rows]="store.items()"
+    [columns]="columns"
+    [trackBy]="postId"
+    [rowLabel]="postTitle"
+    minWidth="1060px"
+    [loading]="store.loading()"
+    [error]="store.error()"
+    [total]="store.total()"
+    [page]="store.page()"
+    [pageSize]="store.pageSize()"
+    [pageSizeOptions]="pageSizes"
+    [sort]="sort()"
+    (sortChange)="onSort($event)"
+    (paginate)="onPaginate($event)"
+    (retry)="store.reload()"
+    (scrolled)="menu.set(null)"
+  >
+    <ng-template dtCell="index" let-p>{{ rowNumber(p) }}</ng-template>
+
+    <ng-template dtCell="title" let-p>
+      <a [routerLink]="[p.id, 'edit']" class="bl-post">
+        @if (p.coverImageUrl) {
+          <img class="bl-thumb" [src]="p.coverImageUrl" alt="" loading="lazy" />
+        } @else {
+          <span
+            class="bl-thumb is-fallback"
+            [attr.data-tone]="categoryTone(p.category)"
+            aria-hidden="true"
+          >
+            {{ initials(p.title) }}
+          </span>
+        }
+        <span class="min-w-0">
+          <span class="bl-post-title">{{ p.title }}</span>
+          <span class="bl-post-slug">{{ p.slug }}</span>
+        </span>
+      </a>
+    </ng-template>
+
+    <ng-template dtCell="category" let-p>
+      <span class="bl-chip" [attr.data-tone]="categoryTone(p.category)">{{ p.category }}</span>
+    </ng-template>
+
+    <ng-template dtCell="author" let-p>
+      @if (p.author; as a) {
+        <span class="bl-author">
+          @if (a.avatarUrl) {
+            <img [src]="a.avatarUrl" alt="" class="bl-avatar" />
+          } @else {
+            <span class="bl-avatar" aria-hidden="true">{{ initials(a.name) }}</span>
+          }
+          <span class="truncate">{{ a.name }}</span>
+        </span>
+      } @else {
+        <span class="text-slate-400">—</span>
+      }
+    </ng-template>
+
+    <ng-template dtCell="status" let-p>
+      <span class="bl-status" [attr.data-status]="p.status">{{ label(p.status) }}</span>
+    </ng-template>
+
+    <ng-template dtCell="views" let-p>{{ p.viewCount | number }}</ng-template>
+
+    <ng-template dtCell="publishedOn" let-p>
+      @if (p.publishedAt) {
+        <span
+          class="whitespace-nowrap"
+          [title]="p.status === 'SCHEDULED' ? 'Scheduled' : 'Published'"
+        >
+          {{ date(p.publishedAt) }}
+        </span>
+      } @else {
+        <span class="text-slate-400">Not published</span>
+      }
+    </ng-template>
+
+    <ng-template dtActions let-p>
+      <span class="bl-actions">
+        <a
+          class="bl-icon-btn"
+          [routerLink]="[p.id, 'edit']"
+          [queryParams]="{ view: 'preview' }"
+          [attr.aria-label]="'Preview ' + p.title"
+          title="Preview"
+          ><i class="pi pi-eye" aria-hidden="true"></i
+        ></a>
+        @if (canManage()) {
+          <a
+            class="bl-icon-btn"
+            [routerLink]="[p.id, 'edit']"
+            [attr.aria-label]="'Edit ' + p.title"
+            title="Edit"
+            ><i class="pi pi-pencil" aria-hidden="true"></i
+          ></a>
+          <button
+            type="button"
+            class="bl-icon-btn is-danger"
+            [disabled]="busyId() === p.id"
+            [attr.aria-label]="'Delete ' + p.title"
+            title="Delete"
+            (click)="remove(p)"
+          >
+            <i class="pi pi-trash" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="bl-icon-btn"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="menu()?.post?.id === p.id"
+            [disabled]="busyId() === p.id"
+            [attr.aria-label]="'More actions for ' + p.title"
+            (click)="toggleMenu(p, $event)"
+          >
+            @if (busyId() === p.id) {
+              <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            } @else {
+              <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+            }
+          </button>
+        }
+      </span>
+    </ng-template>
+
+    <ng-template dtEmpty>
+      <div class="flex flex-col items-center gap-3 py-16 text-center">
+        <span class="bl-hero-icon !size-12" aria-hidden="true"
+          ><i class="pi pi-file !text-xl"></i
+        ></span>
+        @if (hasFilters()) {
+          <p class="font-semibold text-slate-900 dark:text-white">No posts match these filters</p>
+          <button type="button" class="bl-btn bl-btn-outline" (click)="clear()">
+            Clear Filters
+          </button>
+        } @else {
+          <p class="font-semibold text-slate-900 dark:text-white">No posts yet</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            Share your first insight with your audience.
+          </p>
+          @if (canManage()) {
+            <a routerLink="new" class="bl-btn bl-btn-primary">
+              <i class="pi pi-plus" aria-hidden="true"></i>
+              Create New Post
+            </a>
+          }
+        }
+      </div>
+    </ng-template>
+  </app-data-table>
+</section>
+
+@if (menu(); as m) {
+  <div
+    class="bl-menu"
+    role="menu"
+    [style.top.px]="m.top"
+    [style.left.px]="m.left"
+    [attr.aria-label]="'Actions for ' + m.post.title"
+    (click)="$event.stopPropagation()"
+  >
+    <button type="button" role="menuitem" (click)="togglePublish(m.post)">
+      @if (m.post.status === 'PUBLISHED' || m.post.status === 'SCHEDULED') {
+        <i class="pi pi-eye-slash" aria-hidden="true"></i> Unpublish
+      } @else {
+        <i class="pi pi-send" aria-hidden="true"></i> Publish now
+      }
+    </button>
+    <button type="button" role="menuitem" (click)="duplicate(m.post)">
+      <i class="pi pi-copy" aria-hidden="true"></i> Duplicate
+    </button>
+    <button type="button" role="menuitem" (click)="copySlug(m.post)">
+      <i class="pi pi-link" aria-hidden="true"></i> Copy slug
+    </button>
+  </div>
+}

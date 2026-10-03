@@ -245,6 +245,9 @@ model User {
   // User requests
   userRequestsFor   UserRequest[]  @relation("UserRequestTarget")
   userRequestsBy    UserRequest[]  @relation("UserRequestRequester")
+
+  // Blog
+  blogPosts         BlogPost[]     @relation("BlogPostAuthor")
   statusHistory     UserStatusHistory[]
   adminNotes        UserNote[]
   emailLogs         UserEmailLog[]
@@ -1738,4 +1741,41 @@ model AnalyticsSession {
   @@index([organizationId, startedAt])
   @@index([organizationId, visitorId])
   @@map("analytics_sessions")
+}
+
+// ============================================================================
+// BLOG / INSIGHTS
+// ============================================================================
+
+model BlogPost {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  title          String    @db.VarChar(200)
+  slug           String    @db.VarChar(200)
+  excerpt        String?   @db.VarChar(400)
+  content        String    @default("") @db.Text
+  category       String    @db.VarChar(60)
+  tags           String[]  @default([])
+  coverImageUrl  String?   @map("cover_image_url")
+  status         String    @default("DRAFT") // DRAFT, PUBLISHED, SCHEDULED, ARCHIVED
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz // go-live time; future for SCHEDULED
+  viewCount      Int       @default(0) @map("view_count")
+  readingMinutes Int       @default(1) @map("reading_minutes")
+  seoTitle       String?   @map("seo_title") @db.VarChar(70)
+  seoDescription String?   @map("seo_description") @db.VarChar(160)
+  authorId       String?   @map("author_id") @db.Uuid
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  author         User?     @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, isDeleted, status])
+  @@index([organizationId, publishedAt])
+  @@map("blog_posts")
 }

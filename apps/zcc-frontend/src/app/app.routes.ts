@@ -36,6 +36,7 @@ export const appRoutes: Routes = [
   {
     path: 'blog',
     canActivate: [authGuard],
+    canMatch: [canMatchPermission('blog:read')],
     loadChildren: () => import('./features/blog/blog.routes').then((m) => m.blogRoutes),
   },
   {
