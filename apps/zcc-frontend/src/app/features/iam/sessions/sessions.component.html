@@ -7,57 +7,8 @@
       request.
     </p>
   </div>
-  <button
-    type="button"
-    class="btn-37 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
-    [disabled]="loading()"
-    (click)="refresh()"
-  >
-    <i class="pi pi-refresh text-xs" [class.pi-spin]="loading()" aria-hidden="true"></i>
-    Refresh
-  </button>
-</div>
-
-<div class="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:max-w-md">
-  <div class="rounded-xl border border-gray-200 px-4 py-3 dark:border-white/10">
-    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-      Active sessions
-    </p>
-    <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900 dark:text-white">
-      {{ stats()?.activeSessions ?? '—' }}
-    </p>
-  </div>
-  <div class="rounded-xl border border-gray-200 px-4 py-3 dark:border-white/10">
-    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-      Signed-in users
-    </p>
-    <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900 dark:text-white">
-      {{ stats()?.activeUsers ?? '—' }}
-    </p>
-  </div>
-</div>
-
-@if (error()) {
-  <zcc-empty-state
-    icon="pi pi-exclamation-triangle"
-    title="Failed to load sessions"
-    [message]="error()!"
-  />
-} @else {
-  <app-data-table
-    mode="client"
-    [rows]="sessions()"
-    [columns]="columns"
-    [trackBy]="trackBy"
-    [loading]="loading()"
-    [searchable]="false"
-    [(filters)]="filters"
-    [(pageSize)]="pageSize"
-    [pageSizeOptions]="pageSizeOptions"
-    entityLabel="sessions"
-    emptyTitle="No sessions match the selected filters."
-  >
-    <div toolbar-end class="relative">
+  <div class="flex shrink-0 items-center gap-2">
+    <div class="filter-anchor relative">
       <button
         type="button"
         class="btn-37 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3.5 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
@@ -157,7 +108,57 @@
         </div>
       }
     </div>
+    <button
+      type="button"
+      class="btn-37 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
+      [disabled]="loading()"
+      (click)="refresh()"
+    >
+      <i class="pi pi-refresh text-xs" [class.pi-spin]="loading()" aria-hidden="true"></i>
+      Refresh
+    </button>
+  </div>
+</div>
 
+<div class="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:max-w-md">
+  <div class="rounded-xl border border-gray-200 px-4 py-3 dark:border-white/10">
+    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      Active sessions
+    </p>
+    <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900 dark:text-white">
+      {{ stats()?.activeSessions ?? '—' }}
+    </p>
+  </div>
+  <div class="rounded-xl border border-gray-200 px-4 py-3 dark:border-white/10">
+    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      Signed-in users
+    </p>
+    <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900 dark:text-white">
+      {{ stats()?.activeUsers ?? '—' }}
+    </p>
+  </div>
+</div>
+
+@if (error()) {
+  <zcc-empty-state
+    icon="pi pi-exclamation-triangle"
+    title="Failed to load sessions"
+    [message]="error()!"
+  />
+} @else {
+  <app-data-table
+    mode="client"
+    [rows]="sessions()"
+    [columns]="columns"
+    [trackBy]="trackBy"
+    [loading]="loading()"
+    [searchable]="false"
+    [(filters)]="filters"
+    [(pageSize)]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    entityLabel="sessions"
+    emptyTitle="No sessions match the selected filters."
+  >
     <ng-template dtCell="userName" let-s>
       <div class="flex items-center gap-3">
         @if (s.userAvatarUrl) {

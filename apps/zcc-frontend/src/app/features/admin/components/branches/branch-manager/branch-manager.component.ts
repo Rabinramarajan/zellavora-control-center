@@ -172,7 +172,7 @@ export class BranchManagerComponent implements OnInit {
 
   onDocumentClick(event: MouseEvent): void {
     if (!this.filterOpen()) return;
-    const popupRoot = this.host.nativeElement.querySelector('[toolbar-end]');
+    const popupRoot = this.host.nativeElement.querySelector('.filter-anchor');
     if (popupRoot && !popupRoot.contains(event.target as Node)) this.filterOpen.set(false);
   }
 
