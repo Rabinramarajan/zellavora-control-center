@@ -145,7 +145,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topPages(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, pagePath: { not: null, not: '' } };
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, pagePath: { notIn: [null, ''] } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['pagePath'],
       _count: { _all: true },
@@ -162,7 +162,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topReferrers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, referrer: { not: null, not: '' } };
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, referrer: { notIn: [null, ''] } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['referrer'],
       _count: { _all: true },
@@ -179,7 +179,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topCountries(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, country: { not: null, not: '' } };
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, country: { notIn: [null, ''] } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['country'],
       _count: { _all: true },
@@ -196,7 +196,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topCities(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, city: { not: null, not: '' } };
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, city: { notIn: [null, ''] } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['city', 'country'],
       _count: { _all: true },
@@ -229,7 +229,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topBrowsers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, browser: { not: null, not: '' } };
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, browser: { notIn: [null, ''] } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['browser'],
       _count: { _all: true },
@@ -246,7 +246,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topOS(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
-    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, os: { not: null, not: '' } };
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, os: { notIn: [null, ''] } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['os'],
       _count: { _all: true },
@@ -258,7 +258,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
       name: String(r.os ?? 'Unknown'),
       count: r._count._all,
       percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    });
+    }));
   }
 
   private simplifyReferrer(referrer: string): string {
