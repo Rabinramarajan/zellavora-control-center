@@ -61,7 +61,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     subtitle: 'Add team member',
     icon: 'user-plus',
     tone: 'blue',
-    link: '/admin/users',
+    link: '/iam/user-requests/create',
   },
   {
     title: 'Upload Media',

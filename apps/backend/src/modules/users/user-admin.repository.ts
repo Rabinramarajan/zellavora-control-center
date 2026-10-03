@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
+import { APPROVED_USER_WHERE } from './approved-user';
 
 /** Actions written by the auth module on the user's own behalf (sign-in, MFA, password). */
 const SELF_SERVICE_ACTIONS = [
@@ -26,7 +27,7 @@ export class UserAdminRepository extends BaseRepository {
 
   findUser(id: string, tx?: TxClient) {
     return this.getDb(tx).user.findFirst({
-      where: { id, isDeleted: false },
+      where: { id, isDeleted: false, ...APPROVED_USER_WHERE },
       include: {
         userTenants: { include: { tenant: { select: { id: true, name: true } } } },
         teams: { where: { deletedAt: null }, select: { id: true, name: true } },

@@ -4,6 +4,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 import { AuditService } from '../../infrastructure/audit';
 import { cacheDelPattern } from '../../infrastructure/cache';
 import { IamUserRepository } from './iam-user.repository';
+import { APPROVED_USER_WHERE } from './approved-user';
 import { IamUserMapper } from './iam-user.mapper';
 import { UserAdminService } from './user-admin.service';
 import {
@@ -53,14 +54,16 @@ export class IamUserService {
   async stats() {
     const counts = await Promise.all(
       ACCOUNT_STATUSES.map((s) =>
-        this.repo.countWhere({ isDeleted: false, ...accountStatusWhere([s]) })
+        this.repo.countWhere({
+          AND: [{ isDeleted: false }, APPROVED_USER_WHERE, accountStatusWhere([s])],
+        })
       )
     );
     const byStatus = Object.fromEntries(ACCOUNT_STATUSES.map((s, i) => [s, counts[i]])) as Record<
       AccountStatus,
       number
     >;
-    const total = await this.repo.countWhere({ isDeleted: false });
+    const total = await this.repo.countWhere({ isDeleted: false, ...APPROVED_USER_WHERE });
     return { total, byStatus };
   }
 

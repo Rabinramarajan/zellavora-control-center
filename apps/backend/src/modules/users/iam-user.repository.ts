@@ -2,6 +2,7 @@ import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 import { Prisma } from '@prisma/client';
 import { IamUserListQueryDto } from './iam-user.dto';
 import { AccountStatus, accountStatusWhere } from './account-status';
+import { APPROVED_USER_WHERE } from './approved-user';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,8 +33,8 @@ export class IamUserRepository extends BaseRepository {
   }
 
   async findByIdDetail(id: string, tx?: TxClient) {
-    return this.getDb(tx).user.findUnique({
-      where: { id },
+    return this.getDb(tx).user.findFirst({
+      where: { id, ...APPROVED_USER_WHERE },
       include: {
         roleAssignments: {
           include: { role: true },
@@ -64,7 +65,7 @@ export class IamUserRepository extends BaseRepository {
   }
 
   async list(query: IamUserListQueryDto, tx?: TxClient) {
-    const and: UserWhere[] = [{ isDeleted: false }];
+    const and: UserWhere[] = [{ isDeleted: false }, APPROVED_USER_WHERE];
     const contains = (value: string) => ({ contains: value, mode: 'insensitive' as const });
 
     if (query.q) {
