@@ -139,4 +139,15 @@ export class IamDialogsService {
       sublabel: d.parentName ? `Under ${d.parentName}` : `${d.memberCount} members`,
     }));
   };
+
+  readonly searchResources = async (q: string): Promise<PickerOption[]> => {
+    const page = unwrap(
+      await firstValueFrom(this.iam.listResources({ q, page: 1, pageSize: 100, status: ['ACTIVE'] }))
+    );
+    return page.data.map((r) => ({
+      id: r.id,
+      label: r.name,
+      sublabel: `${r.key} (${r.typeLabel})`,
+    }));
+  };
 }

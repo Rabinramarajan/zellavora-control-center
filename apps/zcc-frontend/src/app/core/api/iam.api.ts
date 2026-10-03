@@ -52,6 +52,15 @@ export interface CreateResourceRequest {
   actions?: Array<{ action: string }>;
 }
 
+export interface UpdateResourceRequest {
+  name?: string;
+  category?: string | null;
+  description?: string | null;
+  parentId?: string | null;
+  ownerId?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
 export interface CreateRoleRequest {
   name: string;
   description?: string | null;
@@ -94,6 +103,10 @@ export class IamApiService {
 
   createResource(body: CreateResourceRequest): Observable<ApiEnvelope<ResourceDetail>> {
     return this.apiData.postData<ApiEnvelope<ResourceDetail>>('/iam/resources', body);
+  }
+
+  updateResource(id: string, body: UpdateResourceRequest): Observable<ApiEnvelope<ResourceDetail>> {
+    return this.apiData.patchData<ApiEnvelope<ResourceDetail>>(`/iam/resources/${id}`, body);
   }
 
   addResourceAction(id: string, body: { action: string }): Observable<ApiEnvelope<unknown>> {

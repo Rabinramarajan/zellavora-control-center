@@ -1,18 +1,15 @@
-<div class="mb-6 flex items-center justify-between">
-  <div>
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Resources</h1>
-    <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-      Protected entitlements — each action maps to a permission key.
-    </p>
-  </div>
-  <a
-    routerLink="/iam/resources/new"
-    class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-600"
-  >
-    <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-    New Resource
-  </a>
-</div>
+<zcc-iam-page-header
+  title="Resources"
+  icon="pi pi-database"
+  description="Protected entitlements — each action maps to a permission key."
+>
+  @if (canManage()) {
+    <button type="button" [class]="btn.primary" (click)="create()">
+      <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+      New Resource
+    </button>
+  }
+</zcc-iam-page-header>
 
 <div class="mb-4">
   <zcc-filter-bar

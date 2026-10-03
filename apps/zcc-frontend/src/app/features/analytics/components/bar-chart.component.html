@@ -1,0 +1,65 @@
+<svg
+  [attr.viewBox]="'0 0 ' + W + ' ' + (H + 40)"
+  class="bar-chart"
+  role="img"
+  [attr.aria-label]="ariaLabel()"
+>
+  <!-- Y-axis grid lines and labels -->
+  @for (tick of yTicks(); track tick) {
+    <line
+      [attr.x1]="0"
+      [attr.y1]="yAt(tick)"
+      [attr.x2]="W"
+      [attr.y2]="yAt(tick)"
+      class="grid-line"
+    />
+    <text
+      [attr.x]="-8"
+      [attr.y]="yAt(tick) + 4"
+      class="y-label"
+      text-anchor="end"
+    >
+      {{ formatNumber(tick) }}
+    </text>
+  }
+
+  <!-- Bars -->
+  @for (s of series(); track s.name; let si = $index) {
+    <g [attr.fill]="s.color" class="bar-group" [attr.data-series]="s.name">
+      @for (bar of bars()[si]; track bar.label) {
+        <rect
+          [attr.x]="bar.x"
+          [attr.y]="bar.y"
+          [attr.width]="bar.width"
+          [attr.height]="bar.height"
+          [attr.rx]="2"
+          [attr.ry]="2"
+          class="bar"
+        />
+      }
+    </g>
+  }
+
+  <!-- X-axis labels -->
+  @for (xl of xLabels(); track xl.index) {
+    <text
+      [attr.x]="xAt(xl.index)"
+      [attr.y]="H + 24"
+      class="x-label"
+      text-anchor="middle"
+      dominant-baseline="hanging"
+    >
+      {{ xl.text }}
+    </text>
+  }
+</svg>
+
+<!-- Legend -->
+<div class="legend" role="list" aria-label="Chart legend">
+  @for (s of series(); track s.name; let si = $index) {
+    <div class="legend-item" style="--legend-color: {{ s.color }}">
+      <span class="legend-swatch"></span>
+      <span class="legend-label">{{ s.name }}</span>
+    </div>
+  }
+</div>

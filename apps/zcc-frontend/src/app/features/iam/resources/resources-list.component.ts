@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
 import { ResourceListItem } from '../../../shared/models/iam.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
@@ -15,16 +16,15 @@ import {
   DataTableComponent,
   DataTableCellDirective,
 } from '../../../shared/components/data-table';
-import { firstValueFrom } from 'rxjs';
-
-const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
-  { label: 'API', value: 'API' },
-  { label: 'Feature', value: 'FEATURE' },
-  { label: 'Data', value: 'DATA' },
-  { label: 'Menu', value: 'MENU' },
-  { label: 'Report', value: 'REPORT' },
-  { label: 'Integration', value: 'INTEGRATION' },
-];
+import { FormDialogService } from '../../../shared/components/form-dialog';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
+import { IAM_BTN, IamPageHeaderComponent } from '../shared/iam-page-header.component';
+import { IamDialogsService } from '../shared/iam-dialogs.service';
+import {
+  createResourceDialogConfig,
+  toCreateResourceRequest,
+  loadParentResourceOptions,
+} from './resource-dialog.config';
 
 @Component({
   selector: 'zcc-resources-list',
@@ -32,6 +32,7 @@ const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   standalone: true,
   imports: [
     RouterLink,
+    IamPageHeaderComponent,
     DataTableComponent,
     DataTableCellDirective,
     FilterBarComponent,
@@ -44,6 +45,11 @@ const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
 })
 export class ResourcesListComponent {
   private readonly api = inject(IamApiService);
+  private readonly router = inject(Router);
+  private readonly formDialog = inject(FormDialogService);
+  private readonly dialogs = inject(IamDialogsService);
+  protected readonly canManage = inject(PermissionService).can('resources:manage');
+  protected readonly btn = IAM_BTN;
 
   readonly store = createListStore<ResourceListItem>({
     filterKeys: ['type'],
@@ -86,4 +92,27 @@ export class ResourcesListComponent {
     // Cell links handle navigation; here for future row-level actions.
     void row;
   }
+
+  protected async create(): Promise<void> {
+    const parentOptions = await loadParentResourceOptions(this.dialogs);
+    const created = await this.formDialog.open(
+      createResourceDialogConfig(
+        (values) =>
+          firstValueFrom(this.api.createResource(toCreateResourceRequest(values))).then(unwrap),
+        parentOptions
+      )
+    );
+    if (created) {
+      await this.router.navigate(['/iam/resources', created.id]);
+    }
+  }
 }
+
+const TYPE_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: 'API', value: 'API' },
+  { label: 'Feature', value: 'FEATURE' },
+  { label: 'Data', value: 'DATA' },
+  { label: 'Menu', value: 'MENU' },
+  { label: 'Report', value: 'REPORT' },
+  { label: 'Integration', value: 'INTEGRATION' },
+];

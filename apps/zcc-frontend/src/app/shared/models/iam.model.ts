@@ -75,6 +75,15 @@ export interface ResourceDetail extends ResourceListItem {
   parents: Array<{ id: string; name: string }>;
 }
 
+export interface UpdateResourceRequest {
+  name?: string;
+  category?: string | null;
+  description?: string | null;
+  parentId?: string | null;
+  ownerId?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
 // ============================================================================
 // ROLES
 // ============================================================================

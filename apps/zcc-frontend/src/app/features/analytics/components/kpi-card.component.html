@@ -1,0 +1,30 @@
+<div class="kpi-card-inner">
+  <div class="kpi-header">
+    <div class="kpi-icon" [class]="iconBgClass()">
+      <i class="pi" [class]="icon()"></i>
+    </div>
+    @if (delta() !== null) {
+      <div class="kpi-delta" [class]="deltaClass()">
+        <i class="pi" [class]="deltaIcon()"></i>
+        <span>{{ absDelta() }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="kpi-body">
+    <p class="kpi-label">{{ label() }}</p>
+    <p class="kpi-value">{{ value() }}</p>
+    @if (hint()) {
+      <p class="kpi-hint">{{ hint() }}</p>
+    }
+  </div>
+
+  @if (hasTrend()) {
+    <div class="kpi-trend">
+      <app-trend-chart
+        [labels]="generateLabels()"
+        [series]="[{ name: 'Trend', color: getToneColor(), data: series() }]"
+      />
+    </div>
+  }
+</div>

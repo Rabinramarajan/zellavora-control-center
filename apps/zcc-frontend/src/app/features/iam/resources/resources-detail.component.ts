@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { IamApiService } from '../../../core/api/iam.api';
+import { IamApiService, unwrap } from '../../../core/api/iam.api';
 import { ResourceAction, ResourceDetail } from '../../../shared/models/iam.model';
 import {
   DetailTabsComponent,
@@ -11,6 +11,15 @@ import {
   EmptyStateComponent,
 } from '../../../shared/components/iam';
 import { AppDialogService } from '../../../shared/components/dialog';
+import { FormDialogService } from '../../../shared/components/form-dialog';
+import { IamDialogsService } from '../shared/iam-dialogs.service';
+import { IamFeedbackService } from '../shared/iam-feedback.service';
+import { IAM_BTN } from '../shared/iam-page-header.component';
+import {
+  editResourceDialogConfig,
+  toUpdateResourceRequest,
+  loadParentResourceOptions,
+} from './resource-dialog.config';
 
 @Component({
   selector: 'zcc-resources-detail',
@@ -25,12 +34,17 @@ export class ResourcesDetailComponent {
   private readonly router = inject(Router);
   private readonly api = inject(IamApiService);
   private readonly dialog = inject(AppDialogService);
+  private readonly formDialog = inject(FormDialogService);
+  private readonly dialogs = inject(IamDialogsService);
+  private readonly feedback = inject(IamFeedbackService);
 
-  readonly resource = signal<ResourceDetail | null>(null);
-  readonly loading = signal(true);
-  readonly activeTab = signal('overview');
+  protected readonly resource = signal<ResourceDetail | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly activeTab = signal('overview');
 
-  readonly tabs = (): DetailTab[] => [
+  protected readonly btn = IAM_BTN;
+
+  protected readonly tabs = (): DetailTab[] => [
     { key: 'overview', label: 'Overview', icon: 'pi pi-info-circle' },
     { key: 'actions', label: 'Actions', icon: 'pi pi-key' },
   ];
@@ -49,6 +63,25 @@ export class ResourcesDetailComponent {
       this.resource.set(null);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  protected async edit(): Promise<void> {
+    const current = this.resource()!;
+    const parentOptions = await loadParentResourceOptions(this.dialogs);
+    const saved = await this.formDialog.open(
+      editResourceDialogConfig(
+        (values) =>
+          firstValueFrom(
+            this.api.updateResource(current.id, toUpdateResourceRequest(values, current))
+          ).then(unwrap),
+        parentOptions,
+        current
+      )
+    );
+    if (saved) {
+      this.resource.set(saved);
+      this.feedback.success('Resource updated.');
     }
   }
 
@@ -104,6 +137,7 @@ export class ResourcesDetailComponent {
     if (!confirmed) return;
     try {
       await firstValueFrom(this.api.deleteResource(this.resource()!.id));
+      this.feedback.success('Resource deleted.');
       await this.router.navigate(['/iam/resources']);
     } catch {
       /* ignore */
