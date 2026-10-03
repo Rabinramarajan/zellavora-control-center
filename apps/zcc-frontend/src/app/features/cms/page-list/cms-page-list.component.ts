@@ -206,10 +206,12 @@ export class CmsPageListComponent implements OnInit {
           )
         )
       );
-      // API may return PaginatedCmsPages or PaginatedList shape
-      const data = (result as any).items ?? (result as any).data ?? [];
-      const totalCount = (result as any).total ?? (result as any).meta?.total ?? 0;
-      this.items.set(data);
+      // Backend wraps in { success, data: { items, total } }; mock uses { data: [], meta: {} }
+      const envelope = result as any;
+      const payload = envelope.data ?? envelope;
+      const data = Array.isArray(payload) ? payload : (payload.items ?? payload.data ?? []);
+      const totalCount = payload.total ?? payload.meta?.total ?? envelope.total ?? 0;
+      this.items.set(Array.isArray(data) ? data : []);
       this.total.set(totalCount);
     } finally {
       this.loading.set(false);

@@ -8,18 +8,24 @@ import {
   signal,
 } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { CmsBuilderApiService } from '../../../core/api/cms-builder.api';
 import { errorMessage } from '../../iam/shared/iam-feedback.service';
 import { IAM_BTN, IAM_INPUT } from '../../iam/shared/iam-page-header.component';
 import { CmsPageType } from '../../../shared/models';
 
-const TYPE_OPTIONS: SelectControlOption[] = [
-  { value: 'STANDARD', label: 'Standard Page' },
-  { value: 'LANDING', label: 'Landing Page' },
-  { value: 'ARTICLE', label: 'Article / Content Page' },
-  { value: 'SYSTEM', label: 'System Page' },
-  { value: 'CUSTOM', label: 'Custom Page' },
+interface TypeOption {
+  value: CmsPageType;
+  label: string;
+  icon: string;
+  hint: string;
+}
+
+const TYPE_OPTIONS: TypeOption[] = [
+  { value: 'STANDARD', label: 'Standard',  icon: 'pi-file',        hint: 'General purpose page' },
+  { value: 'LANDING',  label: 'Landing',   icon: 'pi-megaphone',   hint: 'Marketing / conversion' },
+  { value: 'ARTICLE',  label: 'Article',   icon: 'pi-book',        hint: 'Blog or content post' },
+  { value: 'SYSTEM',   label: 'System',    icon: 'pi-cog',         hint: 'Error, legal, etc.' },
+  { value: 'CUSTOM',   label: 'Custom',    icon: 'pi-sliders-h',   hint: 'Custom template' },
 ];
 
 const slugify = (text: string): string =>
@@ -34,7 +40,7 @@ const slugify = (text: string): string =>
   selector: 'app-cms-create-page-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SelectControl],
+  imports: [],
   templateUrl: './cms-create-page-dialog.component.html',
   styleUrl: './cms-create-page-dialog.component.scss',
 })
@@ -68,7 +74,7 @@ export class CmsCreatePageDialogComponent {
     if (!this.submitted()) return null;
     const s = this.slug().trim();
     if (!s) return 'Slug is required.';
-    if (!/^[a-z0-9/-]+$/.test(s)) return 'Slug may only contain lowercase letters, numbers, hyphens, and slashes.';
+    if (!/^[a-z0-9/-]+$/.test(s)) return 'Use lowercase letters, numbers, hyphens and slashes.';
     return null;
   });
 

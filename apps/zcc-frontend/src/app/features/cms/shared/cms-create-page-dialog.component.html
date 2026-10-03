@@ -6,12 +6,19 @@
     aria-labelledby="cms-create-title"
     (keydown.escape)="cancel()"
   >
+
+    <!-- Header -->
     <div class="cms-dialog-head">
-      <h2 id="cms-create-title" class="cms-dialog-title">Create New Page</h2>
-      <p class="cms-dialog-desc">Choose a title, type and slug to get started.</p>
+      <div class="cms-dialog-icon" aria-hidden="true">
+        <i class="pi pi-plus-circle"></i>
+      </div>
+      <div class="cms-dialog-meta">
+        <h2 id="cms-create-title" class="cms-dialog-title">New Page</h2>
+        <p class="cms-dialog-desc">Set a title, pick a type and you're in the builder.</p>
+      </div>
       <button
         type="button"
-        [class]="btn.icon"
+        class="cms-dialog-close"
         aria-label="Close dialog"
         (click)="cancel()"
       >
@@ -19,7 +26,9 @@
       </button>
     </div>
 
+    <!-- Body -->
     <form class="cms-dialog-body" (submit)="$event.preventDefault(); submit()">
+
       <!-- Title -->
       <div class="cms-field">
         <label class="cms-label" for="cms-page-title">
@@ -38,25 +47,42 @@
           [attr.aria-invalid]="titleError() ? 'true' : null"
         />
         @if (titleError()) {
-          <p id="cms-title-err" class="cms-field-error" role="alert">{{ titleError() }}</p>
+          <p id="cms-title-err" class="cms-field-error" role="alert">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            {{ titleError() }}
+          </p>
         }
       </div>
 
-      <!-- Page Type -->
+      <!-- Page Type pill grid -->
       <div class="cms-field">
-        <label class="cms-label" for="cms-page-type">Page Type</label>
-        <app-select-control
-          [options]="typeOptions"
-          [value]="type()"
-          [searchable]="false"
-          (valueChange)="type.set($any($event))"
-        />
+        <span class="cms-label" id="cms-type-label">Page Type</span>
+        <div
+          class="cms-type-grid"
+          role="radiogroup"
+          aria-labelledby="cms-type-label"
+        >
+          @for (opt of typeOptions; track opt.value) {
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="type() === opt.value"
+              [title]="opt.hint"
+              class="cms-type-pill"
+              [class.active]="type() === opt.value"
+              (click)="type.set(opt.value)"
+            >
+              <i [class]="'pi ' + opt.icon" aria-hidden="true"></i>
+              {{ opt.label }}
+            </button>
+          }
+        </div>
       </div>
 
       <!-- Slug -->
       <div class="cms-field">
         <label class="cms-label" for="cms-page-slug">
-          Slug <span class="text-red-500" aria-hidden="true">*</span>
+          URL Slug <span class="text-red-500" aria-hidden="true">*</span>
         </label>
         <div class="cms-slug-wrap">
           <span class="cms-slug-prefix" aria-hidden="true">/</span>
@@ -74,28 +100,42 @@
           />
         </div>
         @if (slugError()) {
-          <p id="cms-slug-err" class="cms-field-error" role="alert">{{ slugError() }}</p>
+          <p id="cms-slug-err" class="cms-field-error" role="alert">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            {{ slugError() }}
+          </p>
         } @else {
-          <p id="cms-slug-hint" class="cms-field-hint">Auto-generated from title. You can edit it.</p>
+          <p id="cms-slug-hint" class="cms-field-hint">
+            <i class="pi pi-sync" aria-hidden="true"></i>
+            Auto-generated from title — you can edit it.
+          </p>
         }
       </div>
 
       @if (serverError()) {
-        <p class="cms-server-error" role="alert">{{ serverError() }}</p>
+        <div class="cms-server-error" role="alert">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          {{ serverError() }}
+        </div>
       }
 
-      <div class="cms-dialog-foot">
-        <button type="button" [class]="btn.secondary" (click)="cancel()">Cancel</button>
-        <button type="submit" [class]="btn.primary" [disabled]="saving()">
-          @if (saving()) {
-            <i class="pi pi-spin pi-spinner text-sm" aria-hidden="true"></i>
-            Creating…
-          } @else {
-            <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-            Create &amp; Open Builder
-          }
-        </button>
-      </div>
     </form>
+
+    <!-- Footer -->
+    <div class="cms-dialog-foot">
+      <button type="button" [class]="btn.secondary" [disabled]="saving()" (click)="cancel()">
+        Cancel
+      </button>
+      <button type="button" [class]="btn.primary" [disabled]="saving()" (click)="submit()">
+        @if (saving()) {
+          <i class="pi pi-spin pi-spinner text-sm" aria-hidden="true"></i>
+          Creating…
+        } @else {
+          <i class="pi pi-arrow-right text-xs" aria-hidden="true"></i>
+          Create &amp; Open Builder
+        }
+      </button>
+    </div>
+
   </div>
 </div>
