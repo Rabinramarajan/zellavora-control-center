@@ -145,16 +145,16 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topPages(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, pagePath: { not: null, not: '' } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['pagePath'],
       _count: { _all: true },
-      where: { eventType: 'pageview', createdAt: { gte: since } },
-      orderBy: { _count: { _all: 'desc' } },
-      take: limit,
+      where,
     });
+    rows.sort((a, b) => b._count._all - a._count._all);
     const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.map((r) => ({
-      name: r.pagePath,
+    return rows.slice(0, limit).map((r) => ({
+      name: String(r.pagePath),
       count: r._count._all,
       percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
     }));
@@ -162,20 +162,16 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topReferrers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, referrer: { not: null, not: '' } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['referrer'],
       _count: { _all: true },
-      where: {
-        eventType: 'pageview',
-        createdAt: { gte: since },
-        referrer: { not: null, not: '' },
-      },
-      orderBy: { _count: { _all: 'desc' } },
-      take: limit,
+      where,
     });
+    rows.sort((a, b) => b._count._all - a._count._all);
     const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.map((r) => ({
-      name: this.simplifyReferrer(r.referrer ?? 'Direct'),
+    return rows.slice(0, limit).map((r) => ({
+      name: this.simplifyReferrer(String(r.referrer ?? 'Direct')),
       count: r._count._all,
       percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
     }));
@@ -183,20 +179,16 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topCountries(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, country: { not: null, not: '' } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['country'],
       _count: { _all: true },
-      where: {
-        eventType: 'pageview',
-        createdAt: { gte: since },
-        country: { not: null, not: '' },
-      },
-      orderBy: { _count: { _all: 'desc' } },
-      take: limit,
+      where,
     });
+    rows.sort((a, b) => b._count._all - a._count._all);
     const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.map((r) => ({
-      name: r.country ?? 'Unknown',
+    return rows.slice(0, limit).map((r) => ({
+      name: String(r.country ?? 'Unknown'),
       count: r._count._all,
       percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
     }));
@@ -204,20 +196,16 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topCities(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, city: { not: null, not: '' } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['city', 'country'],
       _count: { _all: true },
-      where: {
-        eventType: 'pageview',
-        createdAt: { gte: since },
-        city: { not: null, not: '' },
-      },
-      orderBy: { _count: { _all: 'desc' } },
-      take: limit,
+      where,
     });
+    rows.sort((a, b) => b._count._all - a._count._all);
     const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.map((r) => ({
-      name: `${r.city}, ${r.country}`,
+    return rows.slice(0, limit).map((r) => ({
+      name: `${String(r.city)}, ${String(r.country)}`,
       count: r._count._all,
       percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
     }));
@@ -241,20 +229,16 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topBrowsers(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, browser: { not: null, not: '' } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['browser'],
       _count: { _all: true },
-      where: {
-        eventType: 'pageview',
-        createdAt: { gte: since },
-        browser: { not: null, not: '' },
-      },
-      orderBy: { _count: { _all: 'desc' } },
-      take: limit,
+      where,
     });
+    rows.sort((a, b) => b._count._all - a._count._all);
     const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.map((r) => ({
-      name: r.browser ?? 'Unknown',
+    return rows.slice(0, limit).map((r) => ({
+      name: String(r.browser ?? 'Unknown'),
       count: r._count._all,
       percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
     }));
@@ -262,23 +246,19 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async topOS(since: Date, limit: number, tx?: TxClient): Promise<AnalyticsTopItem[]> {
     const db = tx ?? prisma;
+    const where: Record<string, unknown> = { eventType: 'pageview', createdAt: { gte: since }, os: { not: null, not: '' } };
     const rows = await db.analyticsEvent.groupBy({
       by: ['os'],
       _count: { _all: true },
-      where: {
-        eventType: 'pageview',
-        createdAt: { gte: since },
-        os: { not: null, not: '' },
-      },
-      orderBy: { _count: { _all: 'desc' } },
-      take: limit,
+      where,
     });
+    rows.sort((a, b) => b._count._all - a._count._all);
     const total = rows.reduce((sum, r) => sum + r._count._all, 0);
-    return rows.map((r) => ({
-      name: r.os ?? 'Unknown',
+    return rows.slice(0, limit).map((r) => ({
+      name: String(r.os ?? 'Unknown'),
       count: r._count._all,
       percentage: total > 0 ? Math.round((r._count._all / total) * 100) : 0,
-    }));
+    });
   }
 
   private simplifyReferrer(referrer: string): string {

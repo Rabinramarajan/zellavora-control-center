@@ -1,10 +1,8 @@
 import { LRUCache } from 'lru-cache';
 import Redis from 'ioredis';
-import { config } from '../../config/env';
 import {
   PrismaAnalyticsRepository,
   type AnalyticsRepository,
-  type AnalyticsOverview,
   type AnalyticsTopItem,
   type AnalyticsDeviceBreakdown,
   type AnalyticsTrendPoint,

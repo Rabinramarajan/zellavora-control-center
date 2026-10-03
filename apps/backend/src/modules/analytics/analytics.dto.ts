@@ -27,6 +27,7 @@ export const AnalyticsDevicesQuerySchema = z.object({
 
 export const AnalyticsBrowsersQuerySchema = z.object({
   range: AnalyticsRangeSchema,
+  limit: z.coerce.number().int().min(1).max(50).default(10),
 });
 
 export const AnalyticsExportQuerySchema = z.object({

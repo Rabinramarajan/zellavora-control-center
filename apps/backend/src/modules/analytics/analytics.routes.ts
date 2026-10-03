@@ -1,6 +1,6 @@
 import { Router, RequestHandler, Response, NextFunction } from 'express';
 import { AnalyticsController } from './analytics.controller';
-import { authenticate, requirePermission } from '../../middleware/auth';
+import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
 
 const router = Router();
 const controller = new AnalyticsController();
@@ -11,9 +11,9 @@ const controller = new AnalyticsController();
  * controller would hang the request instead of returning its status code.
  */
 const handle =
-  (fn: (req: AuthRequest, res: Response) => Promise<unknown>): RequestHandler =>
+  (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<unknown>): RequestHandler =>
   (req, res, next: NextFunction) => {
-    Promise.resolve(fn(req as AuthRequest, res)).catch(next);
+    Promise.resolve(fn(req as AuthRequest, res, next)).catch(next);
   };
 
 router.use(authenticate);
@@ -47,7 +47,7 @@ router.use(authenticate);
 router.get(
   '/overview',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.overview(req, res))
+  handle((req, res, next) => controller.overview(req, res, next))
 );
 
 /**
@@ -81,7 +81,7 @@ router.get(
 router.get(
   '/top-pages',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.topPages(req, res))
+  handle((req, res, next) => controller.topPages(req, res, next))
 );
 
 /**
@@ -115,7 +115,7 @@ router.get(
 router.get(
   '/top-referrers',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.topReferrers(req, res))
+  handle((req, res, next) => controller.topReferrers(req, res, next))
 );
 
 /**
@@ -149,7 +149,7 @@ router.get(
 router.get(
   '/top-countries',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.topCountries(req, res))
+  handle((req, res, next) => controller.topCountries(req, res, next))
 );
 
 /**
@@ -183,7 +183,7 @@ router.get(
 router.get(
   '/top-cities',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.topCities(req, res))
+  handle((req, res, next) => controller.topCities(req, res, next))
 );
 
 /**
@@ -210,7 +210,7 @@ router.get(
 router.get(
   '/device-breakdown',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.deviceBreakdown(req, res))
+  handle((req, res, next) => controller.deviceBreakdown(req, res, next))
 );
 
 /**
@@ -244,7 +244,7 @@ router.get(
 router.get(
   '/top-browsers',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.topBrowsers(req, res))
+  handle((req, res, next) => controller.topBrowsers(req, res, next))
 );
 
 /**
@@ -278,7 +278,7 @@ router.get(
 router.get(
   '/top-os',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.topOS(req, res))
+  handle((req, res, next) => controller.topOS(req, res, next))
 );
 
 /**
@@ -311,7 +311,7 @@ router.get(
 router.get(
   '/export',
   requirePermission('analytics:read'),
-  handle((req, res) => controller.export(req, res))
+  handle((req, res, next) => controller.export(req, res, next))
 );
 
 export default router;

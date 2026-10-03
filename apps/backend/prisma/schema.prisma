@@ -1647,3 +1647,75 @@ model UserEmailLog {
   @@index([userId, createdAt])
   @@map("user_email_logs")
 }
+
+// ============================================================================
+// ANALYTICS
+// ============================================================================
+
+enum AnalyticsEventType {
+  pageview
+  event
+}
+
+model AnalyticsEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  visitorId    String   @map("visitor_id") @db.VarChar(64) // anonymous visitor fingerprint
+  userId       String?  @map("user_id") @db.Uuid           // authenticated user (optional)
+  sessionId    String?  @map("session_id") @db.Uuid
+  
+  // Event details
+  eventType    AnalyticsEventType @default(pageview) @map("event_type")
+  eventName    String?  @map("event_name")                 // custom event name (e.g. 'button_click')
+  pagePath     String?  @map("page_path")                  // URL path
+  pageTitle    String?  @map("page_title")
+  referrer     String?  @map("referrer")                   // HTTP referrer
+  
+  // Device/Geo info
+  deviceType   String?  @map("device_type")                // desktop, mobile, tablet
+  browser      String?  @map("browser")
+  os           String?  @map("os")
+  country      String?  @map("country")
+  city         String?  @map("city")
+  
+  // Metadata
+  properties   Json?    @map("properties")                 // flexible event properties
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, visitorId])
+  @@index([organizationId, eventType])
+  @@index([sessionId])
+  @@map("analytics_events")
+}
+
+model AnalyticsSession {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  visitorId      String   @map("visitor_id") @db.VarChar(64)
+  userId         String?  @map("user_id") @db.Uuid
+  
+  // Session metrics
+  startedAt      DateTime @map("started_at") @db.Timestamptz
+  endedAt        DateTime? @map("ended_at") @db.Timestamptz
+  duration       Int?     @map("duration")                // milliseconds
+  pageViews      Int      @default(1) @map("page_views")
+  events         Int      @default(0) @map("events")
+  entryPage      String?  @map("entry_page")
+  exitPage       String?  @map("exit_page")
+  referrer       String?  @map("referrer")
+  
+  // Device/Geo
+  deviceType     String?  @map("device_type")
+  browser        String?  @map("browser")
+  os             String?  @map("os")
+  country        String?  @map("country")
+  city           String?  @map("city")
+  
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, visitorId])
+  @@map("analytics_sessions")
+}
