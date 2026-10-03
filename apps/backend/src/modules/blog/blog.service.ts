@@ -34,6 +34,7 @@ export interface BlogStatsDto {
   published: number;
   drafts: number;
   scheduled: number;
+  archived: number;
   totalViews: number;
   createdThisMonth: number;
   /** Daily series (oldest first) for the last 30 days, for the stat-card sparklines. */
@@ -119,6 +120,7 @@ export class BlogService {
       published: count('PUBLISHED'),
       drafts: count('DRAFT'),
       scheduled: count('SCHEDULED'),
+      archived: count('ARCHIVED'),
       totalViews: counts.reduce((sum, c) => sum + (c._sum.viewCount ?? 0), 0),
       createdThisMonth,
       trend: {

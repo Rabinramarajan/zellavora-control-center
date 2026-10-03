@@ -2,10 +2,11 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { SelectControl, SelectControlOption } from '@zellavoras/ui';
+import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { BlogApiService } from '../../core/api/blog.api';
 import { PermissionService } from '../../core/rbac/services/permission.service';
-import { BlogCategory, BlogPost, BlogStats } from '../../shared/models/blog.model';
+import { BlogCategory, BlogPost, BlogStats, BlogStatus } from '../../shared/models/blog.model';
+import { FilterChipOption, FilterChipsComponent } from '../../shared/components/filter-chips';
 import { createListStore } from '../../shared/utils/create-list-store';
 import {
   DataTableActionsDirective,
@@ -19,15 +20,8 @@ import { PageChangeEvent } from '../../shared/components/pagination/pagination.c
 import { IamDialogsService } from '../iam/shared/iam-dialogs.service';
 import { IamFeedbackService } from '../iam/shared/iam-feedback.service';
 import { formatDate } from '../iam/shared/iam-format';
-import { SparklineComponent } from './components/sparkline.component';
-import {
-  PERIOD_OPTIONS,
-  STATUS_LABEL,
-  STATUS_OPTIONS,
-  categoryTone,
-  compactNumber,
-  initials,
-} from './blog-ui';
+import { IAM_BTN, IamPageHeaderComponent } from '../iam/shared/iam-page-header.component';
+import { PERIOD_OPTIONS, STATUS_LABEL, STATUS_OPTIONS, categoryTone, initials } from './blog-ui';
 
 type SortKey = 'title' | 'viewCount' | 'publishedAt' | 'createdAt';
 
@@ -39,20 +33,9 @@ interface Filters {
 }
 
 const EMPTY: Filters = { q: '', category: '', status: '', period: '' };
-const SEARCH_DEBOUNCE_MS = 300;
+const FILTER_KEYS = Object.keys(EMPTY) as Array<keyof Filters>;
+const CHIP_STATUSES: BlogStatus[] = ['PUBLISHED', 'DRAFT', 'SCHEDULED', 'ARCHIVED'];
 const MENU_WIDTH = 210;
-
-interface StatCard {
-  key: string;
-  label: string;
-  value: string;
-  hint: string;
-  hintUp: boolean;
-  icon: string;
-  tone: string;
-  color: string;
-  series: number[];
-}
 
 interface OpenMenu {
   post: BlogPost;
@@ -67,16 +50,18 @@ interface OpenMenu {
   imports: [
     DecimalPipe,
     RouterLink,
+    FormInputControl,
     SelectControl,
-    SparklineComponent,
+    FilterChipsComponent,
+    IamPageHeaderComponent,
     DataTableComponent,
     DataTableCellDirective,
     DataTableActionsDirective,
     DataTableEmptyDirective,
   ],
   host: {
-    '(document:click)': 'menu.set(null)',
-    '(document:keydown.escape)': 'menu.set(null)',
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'menu.set(null); filtersOpen.set(false)',
     '(window:resize)': 'menu.set(null)',
   },
   templateUrl: './blog-list.component.html',
@@ -89,6 +74,7 @@ export class BlogListComponent {
   private readonly feedback = inject(IamFeedbackService);
   protected readonly canManage = inject(PermissionService).can('blog:manage');
 
+  protected readonly btn = IAM_BTN;
   protected readonly categoryTone = categoryTone;
   protected readonly initials = initials;
   protected readonly date = formatDate;
@@ -103,58 +89,24 @@ export class BlogListComponent {
   ]);
 
   private readonly stats = signal<BlogStats | null>(null);
-  protected readonly statCards = computed<StatCard[]>(() => {
+  protected readonly totalCount = computed(() => this.stats()?.total ?? null);
+  protected readonly statusChips = computed<FilterChipOption<BlogStatus>[]>(() => {
     const s = this.stats();
-    if (!s) return [];
-    const share = (n: number): string =>
-      s.total ? `${Math.round((n / s.total) * 1000) / 10}% of total` : '—';
-    return [
-      {
-        key: 'total',
-        label: 'Total Posts',
-        value: compactNumber(s.total),
-        hint: `${s.createdThisMonth} this month`,
-        hintUp: s.createdThisMonth > 0,
-        icon: 'pi pi-file',
-        tone: 'blue',
-        color: '#3b82f6',
-        series: s.trend.created,
-      },
-      {
-        key: 'published',
-        label: 'Published',
-        value: compactNumber(s.published),
-        hint: share(s.published),
-        hintUp: false,
-        icon: 'pi pi-check',
-        tone: 'green',
-        color: '#10b981',
-        series: s.trend.published,
-      },
-      {
-        key: 'drafts',
-        label: 'Drafts',
-        value: compactNumber(s.drafts),
-        hint: s.scheduled ? `${share(s.drafts)} · ${s.scheduled} scheduled` : share(s.drafts),
-        hintUp: false,
-        icon: 'pi pi-file-edit',
-        tone: 'amber',
-        color: '#f59e0b',
-        series: s.trend.drafts,
-      },
-      {
-        key: 'views',
-        label: 'Total Views',
-        value: compactNumber(s.totalViews),
-        hint: `${s.published} published post${s.published === 1 ? '' : 's'}`,
-        hintUp: false,
-        icon: 'pi pi-eye',
-        tone: 'violet',
-        color: '#8b5cf6',
-        series: s.trend.views,
-      },
-    ];
+    const counts: Record<BlogStatus, number | undefined> = {
+      PUBLISHED: s?.published,
+      DRAFT: s?.drafts,
+      SCHEDULED: s?.scheduled,
+      ARCHIVED: s?.archived,
+    };
+    return CHIP_STATUSES.map((value) => ({
+      value,
+      label: STATUS_LABEL[value],
+      count: s ? (counts[value] ?? 0) : null,
+    }));
   });
+  protected readonly activeStatus = computed<BlogStatus | null>(
+    () => (this.filters().status as BlogStatus) || null
+  );
 
   protected readonly columns: DataTableColumn<BlogPost>[] = [
     { id: 'index', label: '#', cellClass: 'tabular-nums text-slate-400' },
@@ -182,9 +134,14 @@ export class BlogListComponent {
   protected readonly hasFilters = computed(() =>
     Object.values(this.filters()).some((v) => v.trim())
   );
+  /** Filters set in the popup; the status chips are counted separately. */
+  protected readonly activeFilterCount = computed(
+    () => FILTER_KEYS.filter((k) => k !== 'status' && this.filters()[k].trim()).length
+  );
+  protected readonly filtersOpen = signal(false);
+  protected readonly draft = signal<Filters>({ ...EMPTY });
   protected readonly busyId = signal<string | null>(null);
   protected readonly menu = signal<OpenMenu | null>(null);
-  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   public constructor() {
     this.push();
@@ -195,20 +152,39 @@ export class BlogListComponent {
   // Filters
   // ---------------------------------------------------------------------------
 
-  protected onSearch(value: string): void {
-    this.filters.update((f) => ({ ...f, q: value }));
-    if (this.searchTimer) clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.push(), SEARCH_DEBOUNCE_MS);
+  /** Opens the filter popup on a copy of the applied filters; closing discards edits. */
+  protected toggleFilters(): void {
+    if (!this.filtersOpen()) this.draft.set({ ...this.filters() });
+    this.filtersOpen.update((open) => !open);
   }
 
-  protected setFilter(key: Exclude<keyof Filters, 'q'>, value: string | null): void {
-    this.filters.update((f) => ({ ...f, [key]: value ?? '' }));
+  protected patch(key: keyof Filters, value: string | null): void {
+    this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
+  }
+
+  protected search(): void {
+    this.filters.set({ ...this.draft() });
+    this.filtersOpen.set(false);
     this.push();
   }
 
   protected clear(): void {
+    this.draft.set({ ...EMPTY });
     this.filters.set({ ...EMPTY });
+    this.filtersOpen.set(false);
     this.push();
+  }
+
+  protected onStatusChip(status: BlogStatus | null | undefined): void {
+    this.filters.update((f) => ({ ...f, status: status ?? '' }));
+    this.push();
+  }
+
+  protected onDocumentClick(event: MouseEvent): void {
+    this.menu.set(null);
+    if (!(event.target as HTMLElement | null)?.closest('.filter-anchor')) {
+      this.filtersOpen.set(false);
+    }
   }
 
   protected onSort(sort: DataTableSort | null): void {

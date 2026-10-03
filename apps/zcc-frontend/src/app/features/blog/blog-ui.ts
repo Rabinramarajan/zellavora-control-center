@@ -52,6 +52,3 @@ export const initials = (name: string | null | undefined): string =>
     .slice(0, 2)
     .join('')
     .toUpperCase();
-
-export const compactNumber = (n: number): string =>
-  new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(n);

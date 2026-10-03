@@ -28,6 +28,7 @@ export interface BlogStats {
   published: number;
   drafts: number;
   scheduled: number;
+  archived: number;
   totalViews: number;
   createdThisMonth: number;
   trend: { created: number[]; published: number[]; drafts: number[]; views: number[] };
