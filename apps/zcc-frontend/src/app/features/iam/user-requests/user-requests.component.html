@@ -3,10 +3,12 @@
   icon="pi pi-inbox"
   description="Request, approve and track new accounts and access changes. Every change is provisioned only after approval."
 >
-  <a routerLink="create" [class]="btn.primary">
-    <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-    New Request
-  </a>
+  @if (canCreate()) {
+    <a routerLink="create" [class]="btn.primary">
+      <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+      New Request
+    </a>
+  }
 </zcc-iam-page-header>
 
 <form [class]="card + ' mb-4'" (ngSubmit)="search()" aria-label="Search user requests">

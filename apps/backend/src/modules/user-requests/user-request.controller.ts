@@ -19,6 +19,7 @@ const actorOf = (req: AuthRequest): RequestActor => {
     userId: req.userId,
     organizationId: req.tenantId,
     canManage: !!req.permissions && PermissionService.has(req.permissions, 'users:manage'),
+    can: (permission) => !!req.permissions && PermissionService.has(req.permissions, permission),
   };
 };
 

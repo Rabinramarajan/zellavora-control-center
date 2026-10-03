@@ -22,6 +22,7 @@ import { AccountStatus, IamUserListItem } from '../../shared/models/iam.model';
 import { UserRequestLookups } from '../../shared/models/user-request.model';
 import { createListStore } from '../../shared/utils/create-list-store';
 import { MultiSelectComponent, MultiSelectOption } from '../iam/shared/multi-select.component';
+import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../iam/shared/iam-page-header.component';
 import { CsvExporter } from '../../shared/utils/csv-exporter';
 import { ACTION_META, StateAction, UserActionsService, rowActions } from './user-actions';
 
@@ -132,6 +133,7 @@ const NAV_KEYS = ['view', 'edit', 'groups', 'roles', 'audit'];
     SelectControl,
     DateControl,
     MultiSelectComponent,
+    IamPageHeaderComponent,
     DataTableComponent,
     DataTableCellDirective,
     DataTableActionsDirective,
@@ -275,22 +277,19 @@ export class UsersComponent {
     },
   ];
 
-  readonly accessFields = computed<
+  /** Organization filters shown under "More Filters" (status, role and group are on the card). */
+  readonly moreAccessFields = computed<
     Array<{ key: ListKey; label: string; options: MultiSelectOption[] }>
   >(() => [
-    { key: 'status', label: 'Account Status', options: STATUS_OPTIONS },
     { key: 'userType', label: 'User Type', options: USER_TYPE_OPTIONS },
     { key: 'branchId', label: 'Branch', options: this.branchOptions() },
     { key: 'departmentId', label: 'Department', options: this.departmentOptions() },
     { key: 'teamId', label: 'Team', options: this.teamOptions() },
-    { key: 'groupId', label: 'Group', options: this.groupOptions() },
-    { key: 'roleId', label: 'Role', options: this.roleOptions() },
   ]);
 
-  readonly dateRanges: Array<{ label: string; from: DateKey; to: DateKey }> = [
-    { label: 'Created', from: 'createdFrom', to: 'createdTo' },
-    { label: 'Last Login', from: 'lastLoginFrom', to: 'lastLoginTo' },
-  ];
+  protected readonly btn = IAM_BTN;
+  protected readonly card = IAM_CARD;
+  protected readonly labelClass = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400';
 
   readonly store = createListStore<IamUserListItem>({
     initialPageSize: 10,
@@ -304,65 +303,24 @@ export class UsersComponent {
   readonly filtersOpen = signal(false);
   readonly draft = signal<UserFilters>(clone(EMPTY_FILTERS));
   readonly applied = signal<UserFilters>(clone(EMPTY_FILTERS));
-  readonly search = signal('');
   readonly sort = signal<DataTableSort<SortKey>>({ key: 'createdAt', dir: 'desc' });
   readonly selected = signal<ReadonlySet<string>>(new Set());
   readonly busyId = signal<string | null>(null);
   readonly menu = signal<OpenMenu | null>(null);
   readonly menuFor = computed(() => this.menu()?.user.id ?? null);
 
-  /** Filters behind "More Filters" that are currently applied. */
+  /** Applied filters hidden behind "More Filters" (the card shows the rest). */
   readonly moreFilterCount = computed(() => {
     const f = this.applied();
-    const quick = new Set<keyof UserFilters>(['q', 'status', 'roleId', 'groupId', 'branchId']);
-    const ranges = this.dateRanges.filter((r) => f[r.from] || f[r.to]).length;
-    const rest = FILTER_KEYS.filter(
-      (k) =>
-        !quick.has(k) &&
-        !this.dateRanges.some((r) => r.from === k || r.to === k) &&
-        this.isSet(f[k])
-    ).length;
-    return rest + ranges;
-  });
-
-  readonly activeChips = computed(() => {
-    const f = this.applied();
-    const chips: Array<{ label: string; value: string; keys: Array<keyof UserFilters> }> = [];
-    if (f.q) chips.push({ label: 'Search', value: f.q, keys: ['q'] });
-    for (const field of this.identityFields) {
-      if (f[field.key]) chips.push({ label: field.label, value: f[field.key], keys: [field.key] });
-    }
-    for (const field of this.accessFields()) {
-      const values = f[field.key];
-      if (values.length) {
-        const labels = values.map((v) => field.options.find((o) => o.value === v)?.label ?? v);
-        chips.push({ label: field.label, value: labels.join(', '), keys: [field.key] });
-      }
-    }
-    if (f.emailVerified) {
-      chips.push({
-        label: 'Email',
-        value: f.emailVerified === 'true' ? 'Verified' : 'Unverified',
-        keys: ['emailVerified'],
-      });
-    }
-    if (f.mfaEnabled) {
-      chips.push({
-        label: 'MFA',
-        value: f.mfaEnabled === 'true' ? 'Enabled' : 'Disabled',
-        keys: ['mfaEnabled'],
-      });
-    }
-    for (const range of this.dateRanges) {
-      if (f[range.from] || f[range.to]) {
-        chips.push({
-          label: range.label,
-          value: `${f[range.from] || '…'} → ${f[range.to] || '…'}`,
-          keys: [range.from, range.to],
-        });
-      }
-    }
-    return chips;
+    const onCard = new Set<keyof UserFilters>([
+      'q',
+      'status',
+      'roleId',
+      'groupId',
+      'createdFrom',
+      'createdTo',
+    ]);
+    return FILTER_KEYS.filter((k) => !onCard.has(k) && this.isSet(f[k])).length;
   });
 
   constructor() {
@@ -378,35 +336,6 @@ export class UsersComponent {
   // Filters
   // ---------------------------------------------------------------------------
 
-  runSearch(): void {
-    this.applied.update((f) => ({ ...f, q: this.search().trim() }));
-    this.pushFilters();
-  }
-
-  setQuick(key: ListKey, values: string[]): void {
-    this.applied.update((f) => ({ ...f, [key]: values }));
-    this.pushFilters();
-  }
-
-  removeChip(keys: Array<keyof UserFilters>): void {
-    if (keys.includes('q')) this.search.set('');
-    this.applied.update((f) => {
-      const next = clone(f);
-      for (const key of keys) (next as Record<string, unknown>)[key] = clone(EMPTY_FILTERS)[key];
-      return next;
-    });
-    this.pushFilters();
-  }
-
-  openFilters(): void {
-    this.draft.set(clone(this.applied()));
-    this.filtersOpen.set(true);
-  }
-
-  closeFilters(): void {
-    this.filtersOpen.set(false);
-  }
-
   patchDraft(key: keyof UserFilters, value: string | string[]): void {
     this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
   }
@@ -420,27 +349,21 @@ export class UsersComponent {
   }
 
   applyFilters(): void {
-    const next = clone(this.draft());
-    this.applied.set(next);
-    this.search.set(next.q);
-    this.filtersOpen.set(false);
+    this.applied.set(clone(this.draft()));
     this.pushFilters();
-  }
-
-  resetDraft(): void {
-    this.draft.set(clone(EMPTY_FILTERS));
   }
 
   resetAll(): void {
     this.draft.set(clone(EMPTY_FILTERS));
     this.applied.set(clone(EMPTY_FILTERS));
-    this.search.set('');
     this.selected.set(new Set());
     this.pushFilters();
   }
 
   filterByStatus(status: AccountStatus | ''): void {
-    this.applied.update((f) => ({ ...f, status: status ? [status] : [] }));
+    const next = status ? [status] : [];
+    this.draft.update((f) => ({ ...f, status: next }));
+    this.applied.update((f) => ({ ...f, status: next }));
     this.pushFilters();
   }
 
@@ -451,7 +374,6 @@ export class UsersComponent {
 
   onEscape(): void {
     if (this.menu()) this.closeMenu(true);
-    else if (this.filtersOpen()) this.closeFilters();
   }
 
   onSort(sort: DataTableSort | null): void {

@@ -531,6 +531,10 @@ export class UserRequestDetailComponent {
       return true;
     } catch (err) {
       this.feedback.error(err);
+      // Someone else acted on this request first: show its current state instead.
+      if ((err as { code?: string } | null)?.code === 'REQUEST_CHANGED') {
+        await this.load(this.request()!.id);
+      }
       return false;
     } finally {
       this.busy.set(false);

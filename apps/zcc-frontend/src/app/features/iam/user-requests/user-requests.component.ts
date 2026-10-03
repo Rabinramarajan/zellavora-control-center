@@ -4,6 +4,7 @@ import { DateControl, FormInputControl } from '@zellavoras/ui';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { UserRequestsApiService } from '../../../core/api/user-requests.api';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
 import {
   UserRequestListItem,
   UserRequestLookups,
@@ -98,6 +99,7 @@ export class UserRequestsComponent {
   private readonly api = inject(UserRequestsApiService);
   private readonly router = inject(Router);
 
+  protected readonly canCreate = inject(PermissionService).can('user-requests:create');
   protected readonly btn = IAM_BTN;
   protected readonly card = IAM_CARD;
   protected readonly labelClass = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400';

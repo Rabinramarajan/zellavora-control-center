@@ -1,171 +1,179 @@
 <p-toast />
 
-<section class="us-page relative flex flex-1 flex-col md:min-h-0 gap-5">
-  <div class="us-aurora pointer-events-none" aria-hidden="true"></div>
-
-  <!-- Header -->
-  <header class="us-rise flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div class="min-w-0">
-      <nav
-        aria-label="Breadcrumb"
-        class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500"
-      >
-        <a routerLink="/" class="cursor-pointer transition-colors duration-200 hover:text-slate-200"
-          >Home</a
-        >
-        <i class="pi pi-angle-right text-[0.6rem]" aria-hidden="true"></i>
-        <span class="text-slate-300" aria-current="page">Users</span>
-      </nav>
-      <h1 class="text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">User Search</h1>
-      <p class="mt-1 text-sm text-slate-400">
-        Provisioned accounts: profile, access and security. New accounts are created through
-        <a routerLink="/iam/user-requests" class="text-violet-300 hover:underline">User Requests</a
-        >.
-      </p>
-    </div>
+<section class="relative flex flex-1 flex-col md:min-h-0">
+  <zcc-iam-page-header
+    title="Users"
+    icon="pi pi-users"
+    description="Provisioned accounts: profile, access and security. New accounts are created through User Requests and provisioned after approval."
+  >
     @if (canManage()) {
-      <button type="button" class="us-btn us-btn-primary h-11 shrink-0 px-5" (click)="addUser()">
-        <i class="pi pi-plus text-sm" aria-hidden="true"></i>
+      <button type="button" [class]="btn.primary" (click)="addUser()">
+        <i class="pi pi-plus text-xs" aria-hidden="true"></i>
         Add User
       </button>
     }
-  </header>
+  </zcc-iam-page-header>
 
-  <!-- Quick search -->
   <form
-    class="us-rise us-quickbar"
+    [class]="card + ' mb-4'"
+    (ngSubmit)="applyFilters()"
     role="search"
     aria-label="Search users"
-    (ngSubmit)="runSearch()"
   >
-    <div class="us-quick-search">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <app-form-input-control
-        label="Search"
+        label="Name / Email / Employee Code"
         icon="search"
-        placeholder="Name / Employee Code / Email / User ID"
-        [value]="search()"
-        (valueChange)="search.set($event)"
+        placeholder="Search users…"
+        [value]="draftText('q')"
+        (valueChange)="patchDraft('q', $event)"
       />
-    </div>
-    <div class="us-quick-field">
-      <label class="us-quick-label" for="qs-status-btn">Status</label>
-      <zcc-multi-select
-        inputId="qs-status-btn"
-        placeholder="Any status"
-        [options]="statusOptions"
-        [value]="applied().status"
-        (valueChange)="setQuick('status', $event)"
+      <div>
+        <label for="us-status" [class]="labelClass">Account Status</label>
+        <zcc-multi-select
+          inputId="us-status"
+          placeholder="Any status"
+          [options]="statusOptions"
+          [value]="draftList('status')"
+          (valueChange)="patchDraft('status', $event)"
+        />
+      </div>
+      <div>
+        <label for="us-role" [class]="labelClass">Role</label>
+        <zcc-multi-select
+          inputId="us-role"
+          placeholder="Any role"
+          [options]="roleOptions()"
+          [value]="draftList('roleId')"
+          (valueChange)="patchDraft('roleId', $event)"
+        />
+      </div>
+      <div>
+        <label for="us-group" [class]="labelClass">Group</label>
+        <zcc-multi-select
+          inputId="us-group"
+          placeholder="Any group"
+          [options]="groupOptions()"
+          [value]="draftList('groupId')"
+          (valueChange)="patchDraft('groupId', $event)"
+        />
+      </div>
+      <app-date-control
+        label="Created Date From"
+        [maxDate]="draftText('createdTo') || undefined"
+        [value]="draftText('createdFrom')"
+        (valueChange)="patchDraft('createdFrom', $event)"
       />
-    </div>
-    <div class="us-quick-field">
-      <label class="us-quick-label" for="qs-role-btn">Role</label>
-      <zcc-multi-select
-        inputId="qs-role-btn"
-        placeholder="Any role"
-        [options]="roleOptions()"
-        [value]="applied().roleId"
-        (valueChange)="setQuick('roleId', $event)"
+      <app-date-control
+        label="Created Date To"
+        [minDate]="draftText('createdFrom') || undefined"
+        [value]="draftText('createdTo')"
+        (valueChange)="patchDraft('createdTo', $event)"
       />
+
+      @if (filtersOpen()) {
+        @for (field of identityFields; track field.key) {
+          <app-form-input-control
+            [label]="field.label"
+            [type]="field.type"
+            [icon]="field.icon"
+            [placeholder]="field.placeholder"
+            [value]="draftText(field.key)"
+            (valueChange)="patchDraft(field.key, $event)"
+          />
+        }
+        @for (field of moreAccessFields(); track field.key) {
+          <div>
+            <label [for]="'us-' + field.key" [class]="labelClass">{{ field.label }}</label>
+            <zcc-multi-select
+              [inputId]="'us-' + field.key"
+              [placeholder]="'Any ' + field.label.toLowerCase()"
+              [options]="field.options"
+              [value]="draftList(field.key)"
+              (valueChange)="patchDraft(field.key, $event)"
+            />
+          </div>
+        }
+        <app-select-control
+          label="Email Verification"
+          icon="list"
+          [searchable]="false"
+          [options]="verifiedOptions"
+          [value]="draftText('emailVerified')"
+          (valueChange)="patchDraft('emailVerified', $event)"
+        />
+        <app-select-control
+          label="MFA Status"
+          icon="list"
+          [searchable]="false"
+          [options]="mfaOptions"
+          [value]="draftText('mfaEnabled')"
+          (valueChange)="patchDraft('mfaEnabled', $event)"
+        />
+        <app-date-control
+          label="Last Login From"
+          [maxDate]="draftText('lastLoginTo') || undefined"
+          [value]="draftText('lastLoginFrom')"
+          (valueChange)="patchDraft('lastLoginFrom', $event)"
+        />
+        <app-date-control
+          label="Last Login To"
+          [minDate]="draftText('lastLoginFrom') || undefined"
+          [value]="draftText('lastLoginTo')"
+          (valueChange)="patchDraft('lastLoginTo', $event)"
+        />
+      }
     </div>
-    <div class="us-quick-field">
-      <label class="us-quick-label" for="qs-group-btn">Group</label>
-      <zcc-multi-select
-        inputId="qs-group-btn"
-        placeholder="Any group"
-        [options]="groupOptions()"
-        [value]="applied().groupId"
-        (valueChange)="setQuick('groupId', $event)"
-      />
-    </div>
-    <div class="us-quick-field">
-      <label class="us-quick-label" for="qs-branch-btn">Branch</label>
-      <zcc-multi-select
-        inputId="qs-branch-btn"
-        placeholder="Any branch"
-        [options]="branchOptions()"
-        [value]="applied().branchId"
-        (valueChange)="setQuick('branchId', $event)"
-      />
-    </div>
-    <div class="us-quick-actions">
-      <button type="submit" class="us-btn us-btn-primary h-11 px-4">
-        <i class="pi pi-search text-sm" aria-hidden="true"></i>
+
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <button type="submit" [class]="btn.primary">
+        <i class="pi pi-search text-xs" aria-hidden="true"></i>
         Search
       </button>
+      <button type="button" [class]="btn.secondary" (click)="resetAll()">Clear</button>
       <button
         type="button"
-        class="us-btn us-btn-outline us-filter-btn relative h-11 px-4"
-        [class.is-active]="moreFilterCount() > 0"
-        aria-haspopup="dialog"
+        [class]="btn.secondary"
         [attr.aria-expanded]="filtersOpen()"
-        (click)="openFilters()"
+        (click)="filtersOpen.set(!filtersOpen())"
       >
-        <i class="pi pi-sliders-h text-sm" aria-hidden="true"></i>
-        More Filters
-        @if (moreFilterCount() > 0) {
-          <span class="us-badge" [attr.aria-label]="moreFilterCount() + ' more filters active'">{{
-            moreFilterCount()
-          }}</span>
+        <i class="pi pi-filter text-xs" aria-hidden="true"></i>
+        {{ filtersOpen() ? 'Fewer Filters' : 'More Filters' }}
+        @if (!filtersOpen() && moreFilterCount() > 0) {
+          <span
+            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white"
+            [attr.aria-label]="moreFilterCount() + ' more filters active'"
+            >{{ moreFilterCount() }}</span
+          >
         }
       </button>
     </div>
   </form>
 
-  <!-- Status chips -->
-  <div
-    class="us-rise -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible"
-    role="group"
-    aria-label="Filter by account status"
-  >
-    @for (card of stats; track card.label; let i = $index) {
+  <div class="mb-4 flex flex-wrap gap-2" role="group" aria-label="Users by account status">
+    @for (card of stats; track card.label) {
       <button
         type="button"
-        class="us-stat"
-        [attr.data-tone]="card.tone"
-        [class.is-active]="isStatusCard(card.status)"
+        class="inline-flex min-h-[36px] cursor-pointer items-center gap-2 rounded-full border px-3 text-xs font-medium transition-colors"
+        [class]="
+          isStatusCard(card.status)
+            ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
+            : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'
+        "
         [attr.aria-pressed]="isStatusCard(card.status)"
-        [style.animation-delay.ms]="40 + i * 50"
         (click)="filterByStatus(card.status)"
       >
-        <span class="us-stat-icon"><i [class]="card.icon" aria-hidden="true"></i></span>
-        <span class="whitespace-nowrap">{{ card.label }}</span>
-        @if (statCounts()[card.label] === undefined) {
-          <span class="us-skeleton h-5 w-7"></span>
-        } @else {
-          <span class="us-stat-count">{{
-            statCounts()[card.label] === null ? '—' : statCounts()[card.label]!.toLocaleString()
-          }}</span>
-        }
+        {{ card.label }}
+        <span class="tabular-nums text-gray-400">{{
+          statCounts()[card.label] === undefined
+            ? '…'
+            : statCounts()[card.label] === null
+              ? '—'
+              : statCounts()[card.label]!.toLocaleString()
+        }}</span>
       </button>
     }
   </div>
-
-  <!-- Active filters -->
-  @if (activeChips().length) {
-    <div class="us-rise flex flex-wrap items-center gap-2" aria-label="Active filters">
-      @for (chip of activeChips(); track chip.label) {
-        <span class="us-chip">
-          <span class="text-slate-400">{{ chip.label }}:</span>
-          <span class="font-medium text-white">{{ chip.value }}</span>
-          <button
-            type="button"
-            class="us-chip-x"
-            [attr.aria-label]="'Remove ' + chip.label + ' filter'"
-            (click)="removeChip(chip.keys)"
-          >
-            <i class="pi pi-times" aria-hidden="true"></i>
-          </button>
-        </span>
-      }
-      <button
-        type="button"
-        class="ml-1 cursor-pointer text-xs font-semibold text-violet-300 transition-colors duration-200 hover:text-violet-200"
-        (click)="resetAll()"
-      >
-        Clear all
-      </button>
-    </div>
-  }
 
   <!-- Results -->
   <app-data-table
@@ -316,136 +324,5 @@
         {{ item.label }}
       </button>
     }
-  </div>
-}
-
-<!-- More filters dialog -->
-@if (filtersOpen()) {
-  <div class="us-backdrop" (click)="closeFilters()" aria-hidden="true"></div>
-  <div class="us-dialog" role="dialog" aria-modal="true" aria-labelledby="us-filter-title">
-    <div class="flex items-start justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6">
-      <div class="flex items-center gap-4">
-        <span class="us-dialog-icon"><i class="pi pi-filter" aria-hidden="true"></i></span>
-        <div>
-          <h2 id="us-filter-title" class="text-lg font-semibold text-white">More Filters</h2>
-          <p class="text-sm text-slate-400">
-            Narrow the search by identity, organization, access and activity
-          </p>
-        </div>
-      </div>
-      <button type="button" class="us-icon-btn" aria-label="Close filters" (click)="closeFilters()">
-        <i class="pi pi-times" aria-hidden="true"></i>
-      </button>
-    </div>
-
-    <form class="us-dialog-body" (ngSubmit)="applyFilters()" id="us-filter-form">
-      <fieldset class="us-section">
-        <legend class="us-section-title">
-          <i class="pi pi-id-card" aria-hidden="true"></i>Identity
-        </legend>
-        <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          @for (field of identityFields; track field.key) {
-            <app-form-input-control
-              [label]="field.label"
-              [type]="field.type"
-              [icon]="field.icon"
-              [placeholder]="field.placeholder"
-              [value]="draftText(field.key)"
-              (valueChange)="patchDraft(field.key, $event)"
-            />
-          }
-        </div>
-      </fieldset>
-
-      <fieldset class="us-section">
-        <legend class="us-section-title">
-          <i class="pi pi-shield" aria-hidden="true"></i>Organization &amp; Access
-        </legend>
-        <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          @for (field of accessFields(); track field.key) {
-            <div>
-              <span class="us-range-label">{{ field.label }}</span>
-              <zcc-multi-select
-                [placeholder]="'Any ' + field.label.toLowerCase()"
-                [options]="field.options"
-                [value]="draftList(field.key)"
-                (valueChange)="patchDraft(field.key, $event)"
-              />
-            </div>
-          }
-          <app-select-control
-            label="Email Verification"
-            icon="list"
-            [searchable]="false"
-            [options]="verifiedOptions"
-            [value]="draftText('emailVerified')"
-            (valueChange)="patchDraft('emailVerified', $event)"
-          />
-          <app-select-control
-            label="MFA Status"
-            icon="list"
-            [searchable]="false"
-            [options]="mfaOptions"
-            [value]="draftText('mfaEnabled')"
-            (valueChange)="patchDraft('mfaEnabled', $event)"
-          />
-        </div>
-      </fieldset>
-
-      <fieldset class="us-section">
-        <legend class="us-section-title">
-          <i class="pi pi-clock" aria-hidden="true"></i>Activity
-        </legend>
-        <div class="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
-          @for (range of dateRanges; track range.label) {
-            <div class="us-range-group">
-              <span class="us-range-label">{{ range.label }}</span>
-              <div class="grid grid-cols-2 gap-3">
-                <app-date-control
-                  label="From"
-                  placeholder="Start date"
-                  [maxDate]="draftText(range.to) || undefined"
-                  [value]="draftText(range.from)"
-                  (valueChange)="patchDraft(range.from, $event)"
-                />
-                <app-date-control
-                  label="To"
-                  placeholder="End date"
-                  [minDate]="draftText(range.from) || undefined"
-                  [value]="draftText(range.to)"
-                  (valueChange)="patchDraft(range.to, $event)"
-                />
-              </div>
-            </div>
-          }
-        </div>
-      </fieldset>
-    </form>
-
-    <div
-      class="flex flex-col-reverse gap-3 border-t border-white/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
-    >
-      <button type="button" class="us-btn us-btn-outline h-11 px-4" (click)="resetDraft()">
-        <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
-        Reset Filters
-      </button>
-      <div class="flex gap-3">
-        <button
-          type="button"
-          class="us-btn us-btn-outline h-11 flex-1 px-5 sm:flex-none"
-          (click)="closeFilters()"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          form="us-filter-form"
-          class="us-btn us-btn-primary h-11 flex-1 px-5 sm:flex-none"
-        >
-          <i class="pi pi-filter text-sm" aria-hidden="true"></i>
-          Apply Filters
-        </button>
-      </div>
-    </div>
   </div>
 }

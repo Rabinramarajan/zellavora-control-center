@@ -249,7 +249,7 @@ const DEFAULT_MENU: MenuDef[] = [
         icon: '📨',
         route: '/iam/user-requests',
         orderIndex: 2,
-        requiredPermission: 'users:read',
+        requiredPermission: 'user-requests:read',
       },
       {
         id: 'iam-groups',

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { canMatchPermission } from '../../../core/auth/auth.guard';
 
 export const userRequestsRoutes: Routes = [
   {
@@ -8,6 +9,7 @@ export const userRequestsRoutes: Routes = [
   },
   {
     path: 'create',
+    canMatch: [canMatchPermission('user-requests:create')],
     loadComponent: () =>
       import('./user-request-form.component').then((m) => m.UserRequestFormComponent),
     data: { title: 'New User Request' },
@@ -20,6 +22,7 @@ export const userRequestsRoutes: Routes = [
   },
   {
     path: ':requestId/edit',
+    canMatch: [canMatchPermission('user-requests:update')],
     loadComponent: () =>
       import('./user-request-form.component').then((m) => m.UserRequestFormComponent),
     data: { title: 'Edit User Request' },

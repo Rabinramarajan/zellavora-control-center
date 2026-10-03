@@ -33,6 +33,8 @@ export interface RequestActor {
   userId: string;
   organizationId: string;
   canManage: boolean;
+  /** Whether the actor holds a permission (e.g. `user-requests:approve`); gates allowed actions. */
+  can: (permission: string) => boolean;
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -301,16 +303,23 @@ export class UserRequestService {
       actor.organizationId
     );
 
-    await this.repo.update(id, {
-      targetUserId: needsTargetUser(type) ? dto.targetUserId : null,
-      priority: dto.priority,
-      justification: dto.justification,
-      effectiveFrom: dto.effectiveFrom,
-      effectiveUntil: dto.effectiveUntil,
-      attachmentUrl: dto.attachmentUrl,
-      payload: dto.payload as Prisma.InputJsonValue,
-      updatedBy: actor.userId,
-      ...searchable,
+    await this.repo.transaction(async (tx) => {
+      await this.repo.claim(id, row, tx);
+      await this.repo.update(
+        id,
+        {
+          targetUserId: needsTargetUser(type) ? dto.targetUserId : null,
+          priority: dto.priority,
+          justification: dto.justification,
+          effectiveFrom: dto.effectiveFrom,
+          effectiveUntil: dto.effectiveUntil,
+          attachmentUrl: dto.attachmentUrl,
+          payload: dto.payload as Prisma.InputJsonValue,
+          updatedBy: actor.userId,
+          ...searchable,
+        },
+        tx
+      );
     });
     await AuditService.log({
       action: 'user_request.edited',
@@ -396,6 +405,7 @@ export class UserRequestService {
 
     const now = new Date();
     await this.repo.transaction(async (tx) => {
+      await this.repo.claim(id, row, tx);
       await this.repo.createApprovals(
         steps.map((s, i) => ({
           requestId: id,
@@ -480,6 +490,7 @@ export class UserRequestService {
     this.assertStatus(row.status, CANCELLABLE_STATUSES, 'This request can no longer be cancelled');
     this.assertOwnerOrManager(row, actor);
     await this.repo.transaction(async (tx) => {
+      await this.repo.claim(id, row, tx);
       await this.repo.closeOpenApprovals(id, 'CANCELLED', tx);
       await this.repo.update(
         id,
@@ -515,6 +526,7 @@ export class UserRequestService {
     const now = new Date();
 
     await this.repo.transaction(async (tx) => {
+      await this.repo.claim(id, row, tx);
       await this.repo.updateApproval(
         step.id,
         {
@@ -601,6 +613,7 @@ export class UserRequestService {
     const actorName = await this.actorName(actor.userId);
 
     await this.repo.transaction(async (tx) => {
+      await this.repo.claim(id, row, tx);
       await this.repo.updateApproval(
         step.id,
         {
@@ -667,6 +680,8 @@ export class UserRequestService {
       );
     const row = await this.load(id, actor.organizationId);
     this.assertStatus(row.status, ['FAILED'], 'Only failed requests can be retried');
+    // A double-clicked or concurrent retry must not provision twice.
+    await this.repo.transaction((tx) => this.repo.claim(id, row, tx));
     await this.runProvisioning(id, actor);
     return this.getById(id, actor);
   }
@@ -1133,16 +1148,19 @@ export class UserRequestService {
         createdAt: m.createdAt.toISOString(),
       })),
       actions: {
-        canEdit: editable,
-        canSubmit: editable,
-        canApprove: canDecide,
-        canReject: canDecide,
-        canSendBack: canDecide,
+        // Workflow state and role decide eligibility; the granular permission must also be held.
+        canEdit: editable && actor.can('user-requests:update'),
+        canSubmit: editable && actor.can('user-requests:submit'),
+        canApprove: canDecide && actor.can('user-requests:approve'),
+        canReject: canDecide && actor.can('user-requests:reject'),
+        canSendBack: canDecide && actor.can('user-requests:send-back'),
         canCancel:
           CANCELLABLE_STATUSES.includes(row.status as RequestStatus) &&
-          (isOwner || actor.canManage),
-        canRetryProvisioning: row.status === 'FAILED' && actor.canManage,
-        canRetryEmail: actor.canManage,
+          (isOwner || actor.canManage) &&
+          actor.can('user-requests:cancel'),
+        canRetryProvisioning:
+          row.status === 'FAILED' && actor.canManage && actor.can('user-requests:retry'),
+        canRetryEmail: actor.canManage && actor.can('user-requests:retry'),
       },
     };
   }

@@ -7,7 +7,8 @@ const controller = new UserRequestController();
 
 // Anyone who can see the directory may raise a request; approval authority is
 // enforced per step in the service (named approver or users:manage).
-const read = [authenticate, requirePermission('users:read')];
+/** Every route requires authentication plus its own granular user-requests permission. */
+const can = (permission: string) => [authenticate, requirePermission(permission)];
 
 /**
  * @swagger
@@ -71,8 +72,8 @@ const read = [authenticate, requirePermission('users:read')];
  *     responses:
  *       201: { description: Request created }
  */
-router.get('/', ...read, controller.list);
-router.post('/', ...read, controller.create);
+router.get('/', ...can('user-requests:read'), controller.list);
+router.post('/', ...can('user-requests:create'), controller.create);
 
 /**
  * @swagger
@@ -87,7 +88,7 @@ router.post('/', ...read, controller.create);
  *     responses:
  *       200: { description: Lookup lists }
  */
-router.get('/lookups', ...read, controller.lookups);
+router.get('/lookups', ...can('user-requests:read'), controller.lookups);
 
 /**
  * @swagger
@@ -102,7 +103,7 @@ router.get('/lookups', ...read, controller.lookups);
  *     responses:
  *       200: { description: Comparison rows and calculated permissions }
  */
-router.post('/access-preview', ...read, controller.preview);
+router.post('/access-preview', ...can('user-requests:read'), controller.preview);
 
 /**
  * @swagger
@@ -129,8 +130,8 @@ router.post('/access-preview', ...read, controller.preview);
  *     responses:
  *       200: { description: Request updated }
  */
-router.get('/:id', ...read, controller.getById);
-router.patch('/:id', ...read, controller.update);
+router.get('/:id', ...can('user-requests:read'), controller.getById);
+router.patch('/:id', ...can('user-requests:update'), controller.update);
 
 /**
  * @swagger
@@ -157,8 +158,8 @@ router.patch('/:id', ...read, controller.update);
  *     responses:
  *       200: { description: Read-only audit trail }
  */
-router.get('/:id/access', ...read, controller.requestPreview);
-router.get('/:id/audit', ...read, controller.audit);
+router.get('/:id/access', ...can('user-requests:read'), controller.requestPreview);
+router.get('/:id/audit', ...can('user-requests:audit:read'), controller.audit);
 
 /**
  * @swagger
@@ -185,17 +186,12 @@ router.get('/:id/audit', ...read, controller.audit);
  *     responses:
  *       200: { description: Updated request detail }
  */
-router.post('/:id/submit', ...read, controller.submit);
-router.post('/:id/approve', ...read, controller.approve);
-router.post('/:id/reject', ...read, controller.reject);
-router.post('/:id/send-back', ...read, controller.sendBack);
-router.post('/:id/cancel', ...read, controller.cancel);
-router.post(
-  '/:id/retry-provisioning',
-  authenticate,
-  requirePermission('users:manage'),
-  controller.retryProvisioning
-);
+router.post('/:id/submit', ...can('user-requests:submit'), controller.submit);
+router.post('/:id/approve', ...can('user-requests:approve'), controller.approve);
+router.post('/:id/reject', ...can('user-requests:reject'), controller.reject);
+router.post('/:id/send-back', ...can('user-requests:send-back'), controller.sendBack);
+router.post('/:id/cancel', ...can('user-requests:cancel'), controller.cancel);
+router.post('/:id/retry-provisioning', ...can('user-requests:retry'), controller.retryProvisioning);
 
 /**
  * @swagger
@@ -224,12 +220,7 @@ router.post(
  *     responses:
  *       200: { description: Email re-sent }
  */
-router.post('/:id/notes', ...read, controller.addNote);
-router.post(
-  '/:id/emails/:emailId/retry',
-  authenticate,
-  requirePermission('users:manage'),
-  controller.retryEmail
-);
+router.post('/:id/notes', ...can('user-requests:notes:create'), controller.addNote);
+router.post('/:id/emails/:emailId/retry', ...can('user-requests:retry'), controller.retryEmail);
 
 export default router;

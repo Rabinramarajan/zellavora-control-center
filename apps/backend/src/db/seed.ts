@@ -277,6 +277,17 @@ async function main() {
         ['settings', 'manage', 'Manage security policies, configuration and communications'],
         ['sessions', 'view', 'View live sign-in sessions of the people you manage or lead'],
         ['sessions', 'revoke', 'Sign out sessions of the people you manage or lead'],
+        ['user-requests', 'read', 'Search and view user requests'],
+        ['user-requests', 'create', 'Raise new user requests'],
+        ['user-requests', 'update', 'Edit draft and sent-back user requests'],
+        ['user-requests', 'submit', 'Submit user requests for approval'],
+        ['user-requests', 'cancel', 'Cancel user requests'],
+        ['user-requests', 'approve', 'Approve user requests'],
+        ['user-requests', 'reject', 'Reject user requests'],
+        ['user-requests', 'send-back', 'Send user requests back for correction'],
+        ['user-requests', 'retry', 'Retry failed provisioning and emails'],
+        ['user-requests', 'notes:create', 'Add notes to user requests'],
+        ['user-requests', 'audit:read', 'View the audit trail of user requests'],
       ] as const
     ).map(([resource, action, description]) => ({
       name: `${action}:${resource}`,

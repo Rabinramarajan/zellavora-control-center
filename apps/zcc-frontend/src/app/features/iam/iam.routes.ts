@@ -29,7 +29,7 @@ export const iamRoutes: Routes = [
       },
       {
         path: 'user-requests',
-        canMatch: [canMatchPermission('users:read')],
+        canMatch: [canMatchPermission('user-requests:read')],
         loadChildren: () =>
           import('./user-requests/user-requests.routes').then((m) => m.userRequestsRoutes),
       },

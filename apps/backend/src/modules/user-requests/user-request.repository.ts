@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 import { UserRequestListQueryDto } from './user-request.dto';
+import { AppError } from '../../middleware/error';
 
 const userSummary = { select: { id: true, fullName: true, email: true } } as const;
 
@@ -97,6 +98,25 @@ export class UserRequestRepository extends BaseRepository {
       where: { id },
       data: { ...data, version: { increment: 1 } },
     });
+  }
+
+  /**
+   * Optimistic concurrency guard. Atomically bumps the version only if the request still
+   * has the status and version the caller decided on; otherwise another actor changed it
+   * first (e.g. a second approver), and the action must not proceed.
+   */
+  async claim(id: string, seen: { status: string; version: number }, tx: TxClient) {
+    const { count } = await tx.userRequest.updateMany({
+      where: { id, status: seen.status, version: seen.version },
+      data: { version: { increment: 1 } },
+    });
+    if (count === 0) {
+      throw new AppError(
+        'This request has changed. Refresh to view the latest status.',
+        409,
+        'REQUEST_CHANGED'
+      );
+    }
   }
 
   addEvent(data: Prisma.UserRequestEventUncheckedCreateInput, tx?: TxClient) {
