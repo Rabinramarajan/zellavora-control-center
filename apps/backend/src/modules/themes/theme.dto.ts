@@ -31,6 +31,14 @@ const ThemeFields = {
   primaryColor: Hex,
   secondaryColor: Hex,
   accentColor: Hex,
+  successColor: Hex,
+  warningColor: Hex,
+  errorColor: Hex,
+  infoColor: Hex,
+  backgroundColor: Hex,
+  surfaceColor: Hex,
+  fontSize: z.coerce.number().int().min(12, 'Minimum 12').max(20, 'Maximum 20'),
+  spacing: z.coerce.number().int().min(2, 'Minimum 2').max(8, 'Maximum 8'),
   fontFamily: z.enum(THEME_FONTS),
   borderRadius: z.coerce.number().int().min(0, 'Minimum 0').max(24, 'Maximum 24'),
   mode: ThemeModeSchema,
@@ -42,6 +50,11 @@ export const CreateThemeSchema = z.object(ThemeFields).strict();
 export const UpdateThemeSchema = z
   .object({ ...ThemeFields, version: z.number().int().min(1) })
   .partial()
+  .strict();
+
+/** The builder saves the whole active theme at once. */
+export const SaveActiveThemeSchema = z
+  .object({ ...ThemeFields, version: z.number().int().min(1).optional() })
   .strict();
 
 export const DuplicateThemeSchema = z.object({ name: ThemeFields.name }).strict();
@@ -57,4 +70,5 @@ export const ThemeListQuerySchema = z.object({
 
 export type CreateThemeDto = z.infer<typeof CreateThemeSchema>;
 export type UpdateThemeDto = z.infer<typeof UpdateThemeSchema>;
+export type SaveActiveThemeDto = z.infer<typeof SaveActiveThemeSchema>;
 export type ThemeListQueryDto = z.infer<typeof ThemeListQuerySchema>;

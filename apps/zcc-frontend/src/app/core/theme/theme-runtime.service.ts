@@ -37,6 +37,13 @@ const THEME_VARS = [
   '--zv-accent',
   '--zv-font',
   '--zv-radius-control',
+  '--zv-control-height',
+  '--app-spacing',
+  '--color-success',
+  '--color-warning',
+  '--color-error',
+  '--color-info',
+  'font-size',
 ];
 
 /**
@@ -89,6 +96,15 @@ export class ThemeRuntimeService {
     root.setProperty('--app-radius', `${theme.borderRadius}px`);
     root.setProperty('--zv-radius-control', `${theme.borderRadius}px`);
     root.setProperty('--zv-accent', theme.primaryColor);
+    // Tailwind sizes are rem-based, so the base font size scales the whole interface.
+    root.setProperty('font-size', `${theme.fontSize}px`);
+    root.setProperty('--app-spacing', `${theme.spacing}px`);
+    // 44px controls at the default 4px unit; denser or roomier with the spacing scale.
+    root.setProperty('--zv-control-height', `${28 + theme.spacing * 4}px`);
+    root.setProperty('--color-success', theme.successColor);
+    root.setProperty('--color-warning', theme.warningColor);
+    root.setProperty('--color-error', theme.errorColor);
+    root.setProperty('--color-info', theme.infoColor);
     this.setFavicon(theme.faviconUrl);
     this.appearance.applyOrganizationDefault(theme.mode);
     this.current.set(theme);

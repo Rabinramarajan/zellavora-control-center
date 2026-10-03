@@ -3,7 +3,7 @@ import { AuditService } from '../../infrastructure/audit';
 import type { OrgContext } from '../../middleware/org-context';
 import { ThemeRepository } from './theme.repository';
 import { DEFAULT_THEME, ThemeDto, toThemeDto } from './theme.mapper';
-import { CreateThemeDto, ThemeListQueryDto, UpdateThemeDto } from './theme.dto';
+import { CreateThemeDto, SaveActiveThemeDto, ThemeListQueryDto, UpdateThemeDto } from './theme.dto';
 
 const notFound = () => new AppError('Theme not found', 404, 'THEME_NOT_FOUND');
 
@@ -33,6 +33,17 @@ export class ThemeService {
     return theme ? toThemeDto(theme) : DEFAULT_THEME;
   }
 
+  /**
+   * Saves the Theme Builder: updates the active theme, or creates and activates the
+   * organization's first theme when it still uses the built-in default.
+   */
+  async saveActive(ctx: OrgContext, dto: SaveActiveThemeDto): Promise<ThemeDto> {
+    const active = await this.repo.findActive(ctx.organizationId);
+    if (active) return this.update(ctx, active.id, dto);
+    const created = await this.create(ctx, dto);
+    return this.activate(ctx, created.id!);
+  }
+
   async get(ctx: OrgContext, id: string): Promise<ThemeDto> {
     const theme = await this.repo.findById(ctx.organizationId, id);
     if (!theme) throw notFound();
@@ -48,6 +59,14 @@ export class ThemeService {
       primaryColor: dto.primaryColor,
       secondaryColor: dto.secondaryColor,
       accentColor: dto.accentColor,
+      successColor: dto.successColor,
+      warningColor: dto.warningColor,
+      errorColor: dto.errorColor,
+      infoColor: dto.infoColor,
+      backgroundColor: dto.backgroundColor,
+      surfaceColor: dto.surfaceColor,
+      fontSize: dto.fontSize,
+      spacing: dto.spacing,
       fontFamily: dto.fontFamily,
       borderRadius: dto.borderRadius,
       mode: dto.mode,
@@ -108,6 +127,14 @@ export class ThemeService {
       primaryColor: source.primaryColor ?? DEFAULT_THEME.primaryColor,
       secondaryColor: source.secondaryColor ?? DEFAULT_THEME.secondaryColor,
       accentColor: source.accentColor ?? DEFAULT_THEME.accentColor,
+      successColor: source.successColor ?? DEFAULT_THEME.successColor,
+      warningColor: source.warningColor ?? DEFAULT_THEME.warningColor,
+      errorColor: source.errorColor ?? DEFAULT_THEME.errorColor,
+      infoColor: source.infoColor ?? DEFAULT_THEME.infoColor,
+      backgroundColor: source.backgroundColor ?? DEFAULT_THEME.backgroundColor,
+      surfaceColor: source.surfaceColor ?? DEFAULT_THEME.surfaceColor,
+      fontSize: source.fontSize,
+      spacing: source.spacing,
       fontFamily: source.fontFamily as CreateThemeDto['fontFamily'],
       borderRadius: source.borderRadius,
       mode: source.mode === 'dark' ? 'dark' : 'light',

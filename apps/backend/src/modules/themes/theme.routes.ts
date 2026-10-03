@@ -6,6 +6,7 @@ import { orgContextOf } from '../../middleware/org-context';
 import { ThemeService } from './theme.service';
 import {
   CreateThemeSchema,
+  SaveActiveThemeSchema,
   DuplicateThemeSchema,
   ThemeListQuerySchema,
   UpdateThemeSchema,
@@ -42,6 +43,31 @@ router.get(
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     if (!req.tenantId) throw new AppError('No organization selected', 403, 'TENANT_REQUIRED');
     res.json({ success: true, data: await service.active(req.tenantId) });
+  })
+);
+
+/**
+ * @swagger
+ * /api/v1/themes/active:
+ *   put:
+ *     summary: saveActiveTheme
+ *     operationId: putThemesActive
+ *     description: Save the Theme Builder. Updates the active theme or creates and activates the first one.
+ *     tags: [themes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved active theme
+ *       409:
+ *         description: Edited by someone else since it was loaded
+ */
+router.put(
+  '/active',
+  requirePermission('themes:manage'),
+  asyncHandler<AuthRequest>(async (req, res: Response) => {
+    const dto = SaveActiveThemeSchema.parse(req.body);
+    res.json({ success: true, data: await service.saveActive(orgContextOf(req), dto) });
   })
 );
 

@@ -20,6 +20,16 @@ export interface Theme {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  successColor: string;
+  warningColor: string;
+  errorColor: string;
+  infoColor: string;
+  backgroundColor: string;
+  surfaceColor: string;
+  /** Base font size in px (12–20). */
+  fontSize: number;
+  /** Base spacing unit in px (2–8). */
+  spacing: number;
   fontFamily: ThemeFont;
   borderRadius: number;
   mode: ThemeMode;
@@ -37,6 +47,16 @@ export interface SaveThemeRequest {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  successColor: string;
+  warningColor: string;
+  errorColor: string;
+  infoColor: string;
+  backgroundColor: string;
+  surfaceColor: string;
+  /** Base font size in px (12–20). */
+  fontSize: number;
+  /** Base spacing unit in px (2–8). */
+  spacing: number;
   fontFamily: ThemeFont;
   borderRadius: number;
   mode: ThemeMode;

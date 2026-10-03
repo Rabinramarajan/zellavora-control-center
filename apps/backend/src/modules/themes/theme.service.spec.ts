@@ -1,6 +1,6 @@
 import { ThemeService } from './theme.service';
 import { ThemeRepository } from './theme.repository';
-import { CreateThemeSchema, UpdateThemeSchema } from './theme.dto';
+import { CreateThemeSchema, SaveActiveThemeSchema, UpdateThemeSchema } from './theme.dto';
 import { DEFAULT_THEME } from './theme.mapper';
 
 jest.mock('../../infrastructure/audit', () => ({ AuditService: { log: jest.fn() } }));
@@ -20,6 +20,13 @@ const row = (n: number, extra: Record<string, unknown> = {}) => ({
   accentColor: '#333333',
   backgroundColor: null,
   textColor: null,
+  successColor: null,
+  warningColor: null,
+  errorColor: null,
+  infoColor: null,
+  surfaceColor: null,
+  fontSize: 16,
+  spacing: 4,
   fontFamily: 'Inter',
   borderRadius: 8,
   logoUrl: null,
@@ -58,6 +65,14 @@ const valid = {
   primaryColor: '#4f46e5',
   secondaryColor: '#8b5cf6',
   accentColor: '#0ea5e9',
+  successColor: '#10b981',
+  warningColor: '#f59e0b',
+  errorColor: '#ef4444',
+  infoColor: '#3b82f6',
+  backgroundColor: '#0f172a',
+  surfaceColor: '#1e293b',
+  fontSize: 16,
+  spacing: 4,
   fontFamily: 'Inter',
   borderRadius: 8,
   mode: 'light',
@@ -145,5 +160,28 @@ describe('ThemeService', () => {
     expect(repo.create).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Copy', primaryColor: '#111111', fontFamily: 'Inter' })
     );
+  });
+
+  it('saveActive updates the active theme when there is one', async () => {
+    const { repo } = makeRepo({
+      findActive: jest.fn().mockResolvedValue(row(1, { isDefault: true })),
+    });
+    await new ThemeService(repo).saveActive(ctx, SaveActiveThemeSchema.parse(valid));
+    expect(repo.updateVersioned).toHaveBeenCalled();
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it('saveActive creates and activates the first theme', async () => {
+    const { repo, tx } = makeRepo();
+    await new ThemeService(repo).saveActive(ctx, SaveActiveThemeSchema.parse(valid));
+    expect(repo.create).toHaveBeenCalled();
+    expect(tx.theme.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ isDefault: true }) })
+    );
+  });
+
+  it('limits the type and spacing scale', () => {
+    expect(() => SaveActiveThemeSchema.parse({ ...valid, fontSize: 30 })).toThrow();
+    expect(() => SaveActiveThemeSchema.parse({ ...valid, spacing: 1 })).toThrow();
   });
 });

@@ -950,6 +950,13 @@ model Theme {
   accentColor    String?  @map("accent_color")
   backgroundColor String? @map("background_color")
   textColor      String?  @map("text_color")
+  successColor   String?  @map("success_color")
+  warningColor   String?  @map("warning_color")
+  errorColor     String?  @map("error_color")
+  infoColor      String?  @map("info_color")
+  surfaceColor   String?  @map("surface_color")
+  fontSize       Int      @default(16) @map("font_size")      // base px
+  spacing        Int      @default(4) @map("spacing")         // base spacing unit px
   fontFamily     String   @default("Outfit") @map("font_family")
   borderRadius   Int      @default(10) @map("border_radius")    // px, applied to controls and cards
   logoUrl        String?  @map("logo_url")

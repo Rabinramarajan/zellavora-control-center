@@ -1,0 +1,202 @@
+:host {
+  display: block;
+}
+
+.cf-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+
+  :host-context(.dark) & {
+    color: #cbd5e1;
+  }
+}
+
+.cf-control {
+  display: flex;
+  height: 3rem;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+
+  &:focus-within {
+    border-color: rgb(var(--brand-500));
+    box-shadow: 0 0 0 3px rgb(var(--brand-500) / 0.2);
+  }
+
+  &.is-invalid {
+    border-color: #ef4444;
+  }
+
+  &.is-disabled {
+    opacity: 0.7;
+  }
+
+  :host-context(.dark) & {
+    border-color: rgb(255 255 255 / 0.1);
+    background: rgb(255 255 255 / 0.03);
+  }
+}
+
+.cf-swatch {
+  position: relative;
+  width: 2.5rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 0.55rem;
+  box-shadow: inset 0 0 0 1px rgb(15 23 42 / 0.12);
+  transition: transform 160ms ease;
+
+  &:hover {
+    transform: scale(1.04);
+  }
+
+  &:focus-within {
+    outline: 2px solid rgb(var(--brand-400));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+/* The native input covers the swatch invisibly so the whole swatch opens the picker. */
+.cf-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  opacity: 0;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.cf-hex,
+.cf-tile-hex {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  text-transform: lowercase;
+
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  :host-context(.dark) & {
+    color: #f1f5f9;
+  }
+}
+
+.cf-hex {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.cf-dropper {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  color: #64748b;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+
+  &:hover {
+    background: rgb(var(--brand-500) / 0.12);
+    color: rgb(var(--brand-500));
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(var(--brand-500));
+  }
+
+  :host-context(.dark) & {
+    color: #94a3b8;
+  }
+}
+
+.cf-error {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: #ef4444;
+}
+
+/* Tile variant (extended palette) ------------------------------------------ */
+
+.cf-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cf-tile-label {
+  font-size: 0.8125rem;
+  color: #475569;
+
+  :host-context(.dark) & {
+    color: #cbd5e1;
+  }
+}
+
+.cf-tile-swatch {
+  width: 100%;
+  height: 4.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.7rem;
+  // Inner swatch with a frame, as in a colour chip card.
+  background-clip: content-box !important;
+  padding: 0.7rem 0.75rem 1.6rem;
+  box-shadow: none;
+
+  :host-context(.dark) & {
+    border-color: rgb(255 255 255 / 0.1);
+    background-color: transparent;
+  }
+
+  .is-invalid & {
+    border-color: #ef4444;
+  }
+}
+
+.cf-tile-hex {
+  width: 100%;
+  margin-top: -1.95rem;
+  text-align: center;
+  font-size: 0.78rem;
+
+  &:focus {
+    color: rgb(var(--brand-500));
+  }
+
+  :host-context(.dark) & {
+    color: #e2e8f0;
+  }
+}
