@@ -15,43 +15,27 @@
   }
 }
 
-.us-count {
-  display: inline-flex;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: #6366f1;
-  padding: 0 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-.us-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgb(15 23 42 / 0.45);
-}
-
 .us-dialog {
+  --zv-control-height: 40px;
+  --zv-radius-control: 0.5rem;
+
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 40;
   display: flex;
-  width: 100%;
-  max-width: 680px;
-  max-height: calc(100dvh - 32px);
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: min(75vh, 44rem);
   flex-direction: column;
-  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
   background: #fff;
-  box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
+  box-shadow: 0 24px 64px rgb(15 23 42 / 0.18);
 
   :host-context(.dark) & {
-    background: #111827;
+    border-color: rgb(255 255 255 / 0.1);
+    background: #0d0c1a;
+    box-shadow: 0 24px 64px rgb(0 0 0 / 0.45);
   }
 }
 

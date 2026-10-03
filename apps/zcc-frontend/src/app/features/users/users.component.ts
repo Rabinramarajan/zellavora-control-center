@@ -77,7 +77,10 @@ const STATUS_OPTIONS: SelectControlOption[] = [
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(document:keydown.escape)': 'filtersOpen.set(false)' },
+  host: {
+    '(document:keydown.escape)': 'filtersOpen.set(false)',
+    '(document:click)': 'onDocumentClick($event)',
+  },
 })
 export class UsersComponent {
   private readonly api = inject(UserAdminApiService);
@@ -124,6 +127,8 @@ export class UsersComponent {
 
   readonly store = createListStore<IamUserListItem>({
     initialPageSize: 10,
+    // The constructor's pushFilters() issues the first load with the default sort.
+    autoLoad: false,
     filterKeys: [...FILTER_KEYS, 'sort', 'order'],
     loader: (query) => firstValueFrom(this.api.search(query)),
   });
@@ -148,9 +153,15 @@ export class UsersComponent {
     this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
   }
 
-  openFilters(): void {
-    this.draft.set({ ...this.applied() });
-    this.filtersOpen.set(true);
+  /** Opens the filter popup on a copy of the applied filters; closing discards edits. */
+  toggleFilters(): void {
+    if (!this.filtersOpen()) this.draft.set({ ...this.applied() });
+    this.filtersOpen.update((open) => !open);
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    if (!(event.target as HTMLElement | null)?.closest('.filter-anchor'))
+      this.filtersOpen.set(false);
   }
 
   search(): void {
