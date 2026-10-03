@@ -51,6 +51,10 @@ export const IamUserListQuerySchema = z.object({
   createdTo: z.coerce.date().optional(),
   lastLoginFrom: z.coerce.date().optional(),
   lastLoginTo: z.coerce.date().optional(),
+  beginFrom: z.coerce.date().optional(),
+  beginTo: z.coerce.date().optional(),
+  endFrom: z.coerce.date().optional(),
+  endTo: z.coerce.date().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   sort: z
@@ -63,6 +67,8 @@ export const IamUserListQuerySchema = z.object({
       'employeeCode',
       'createdAt',
       'lastLoginDatetime',
+      'joiningDate',
+      'endDate',
     ])
     .default('createdAt'),
   order: z.enum(['asc', 'desc']).default('desc'),

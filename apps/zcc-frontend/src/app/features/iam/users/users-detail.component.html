@@ -6,830 +6,269 @@
   />
 } @else if (!user()) {
   <div class="space-y-3">
-    <div class="h-28 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+    <div class="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
     <div class="h-72 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
   </div>
 } @else {
   @let u = user()!;
-  <header [class]="card + ' mb-5 !p-4 sm:!p-5'">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-      <div class="flex min-w-0 items-start gap-3">
-        <a routerLink="/iam/users" [class]="btn.icon" aria-label="Back to users" title="Back">
-          <i class="pi pi-arrow-left" aria-hidden="true"></i>
-        </a>
-        @if (u.avatarUrl) {
-          <img
-            [src]="u.avatarUrl"
-            alt=""
-            class="size-14 shrink-0 rounded-2xl object-cover"
-            width="56"
-            height="56"
-          />
-        } @else {
-          <span
-            class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/10 text-lg font-bold text-indigo-500"
-            aria-hidden="true"
-          >
-            {{ initials(u.personal.fullName) }}
-          </span>
-        }
-        <div class="min-w-0">
-          <div class="flex flex-wrap items-center gap-2">
-            <h1 class="truncate text-xl font-bold text-gray-900 dark:text-white">
-              {{ u.personal.fullName }}
-            </h1>
-            <zcc-status-chip
-              [value]="u.accountStatus"
-              [label]="u.statusLabel"
-              [tone]="statusTone()"
-            />
-          </div>
-          <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            <span class="font-mono">{{ u.userCode ?? '—' }}</span>
-            @if (u.employee.employeeCode) {
-              · <span class="font-mono">{{ u.employee.employeeCode }}</span>
-            }
-            @if (u.personal.username) {
-              · {{ u.personal.username }}
-            }
-          </p>
-          <p class="truncate text-sm text-gray-500 dark:text-gray-400">
-            {{ u.contact.workEmail }}
-          </p>
-        </div>
-      </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        @if (changes().length) {
-          <div class="relative">
-            <button
-              type="button"
-              [class]="btn.primary"
-              aria-haspopup="menu"
-              [attr.aria-expanded]="changeOpen()"
-              (click)="$event.stopPropagation(); changeOpen.set(!changeOpen()); moreOpen.set(false)"
-            >
-              <i class="pi pi-inbox text-xs" aria-hidden="true"></i>
-              Request Change
-              <i class="pi pi-chevron-down text-xs" aria-hidden="true"></i>
-            </button>
-            @if (changeOpen()) {
-              <div
-                role="menu"
-                aria-label="Request a change"
-                class="absolute right-0 z-30 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-gray-900"
-                (click)="$event.stopPropagation()"
-              >
-                <p class="px-3 pb-1 pt-2 text-xs text-gray-500 dark:text-gray-400">
-                  Changes are applied after approval.
-                </p>
-                @for (c of changes(); track c) {
-                  <button
-                    type="button"
-                    role="menuitem"
-                    [class]="menuItem"
-                    (click)="requestChange(c)"
-                  >
-                    <i [class]="changeMeta(c).icon + ' text-xs'" aria-hidden="true"></i>
-                    {{ changeMeta(c).label }}
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        }
+  <header class="ud-bar">
+    <a routerLink="/iam/users" [class]="btn.icon" aria-label="Back to users" title="Back">
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+    </a>
+    <h1 class="ud-title">User Detail</h1>
+    <div class="flex items-center gap-2">
+      @if (changes().length) {
         <div class="relative">
           <button
             type="button"
-            [class]="btn.secondary"
+            [class]="btn.primary"
             aria-haspopup="menu"
-            [attr.aria-expanded]="moreOpen()"
-            [disabled]="busy()"
-            (click)="$event.stopPropagation(); moreOpen.set(!moreOpen())"
+            [attr.aria-expanded]="changeOpen()"
+            (click)="$event.stopPropagation(); changeOpen.set(!changeOpen())"
           >
-            More
+            Request Change
             <i class="pi pi-chevron-down text-xs" aria-hidden="true"></i>
           </button>
-          @if (moreOpen()) {
+          @if (changeOpen()) {
             <div
               role="menu"
-              class="absolute right-0 z-30 mt-1 w-60 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-gray-900"
+              aria-label="Request a change"
+              class="ud-menu"
               (click)="$event.stopPropagation()"
             >
-              @for (a of stateActions(); track a) {
+              <p class="px-3 pb-1 pt-2 text-xs text-gray-500 dark:text-gray-400">
+                Changes are applied after approval.
+              </p>
+              @for (c of changes(); track c) {
                 <button
                   type="button"
                   role="menuitem"
-                  [class]="menuItem"
-                  [class.!text-red-500]="meta(a).danger"
-                  (click)="runAction(a)"
+                  class="ud-menu-item"
+                  (click)="requestChange(c)"
                 >
-                  <i [class]="meta(a).icon + ' text-xs'" aria-hidden="true"></i>
-                  {{ meta(a).label }}
+                  <i [class]="changeMeta(c).icon + ' text-xs'" aria-hidden="true"></i>
+                  {{ changeMeta(c).label }}
                 </button>
               }
-              @if (u.latestRequest) {
-                <a
-                  role="menuitem"
-                  [class]="menuItem"
-                  [routerLink]="['/iam/user-requests', u.latestRequest.id]"
-                >
-                  <i class="pi pi-external-link text-xs" aria-hidden="true"></i>
-                  View Request {{ u.latestRequest.refNo }}
-                </a>
-              }
-              <button type="button" role="menuitem" [class]="menuItem" (click)="go('status')">
-                <i class="pi pi-history text-xs" aria-hidden="true"></i>
-                View History
-              </button>
-              <button type="button" role="menuitem" [class]="menuItem" (click)="go('audit')">
-                <i class="pi pi-list text-xs" aria-hidden="true"></i>
-                View Audit
-              </button>
             </div>
           }
         </div>
-      </div>
-    </div>
-
-    <dl
-      class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-gray-100 pt-4 text-sm sm:grid-cols-3 lg:grid-cols-5 dark:border-white/5"
-      aria-label="User summary"
-    >
-      @for (f of summary(); track f.label) {
-        <div class="min-w-0">
-          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ f.label }}</dt>
-          <dd class="truncate font-medium text-gray-900 dark:text-white" [title]="f.value ?? ''">
-            {{ f.value || '—' }}
-          </dd>
-        </div>
       }
-    </dl>
+      <button
+        type="button"
+        [class]="btn.icon"
+        aria-label="Refresh"
+        title="Refresh"
+        (click)="reload()"
+      >
+        <i class="pi pi-refresh" aria-hidden="true"></i>
+      </button>
+    </div>
   </header>
 
-  @if (u.accountStatus === 'INVITED' && u.pendingInvitation) {
-    <div
-      role="status"
-      class="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300"
-    >
-      Invitation sent {{ dateTime(u.pendingInvitation.sentAt) }} · expires
-      {{ dateTime(u.pendingInvitation.expiresAt) }}.
+  <dl class="ud-summary">
+    <div>
+      <dt>Name</dt>
+      <dd>{{ u.personal.fullName }}</dd>
     </div>
-  }
-  @if (u.security.passwordResetRequired) {
-    <div
-      role="status"
-      class="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300"
-    >
-      A password change is required before this user can sign in again.
+    <div>
+      <dt>Employee Code</dt>
+      <dd>{{ u.employee.employeeCode ?? '—' }}</dd>
     </div>
-  }
+    <div>
+      <dt>Contact No</dt>
+      <dd>{{ u.contact.mobile ?? '—' }}</dd>
+    </div>
+    <div>
+      <dt>Email ID</dt>
+      <dd class="break-all">{{ u.contact.workEmail }}</dd>
+    </div>
+    <div>
+      <dt>Status</dt>
+      <dd>{{ u.statusLabel }}</dd>
+    </div>
+  </dl>
 
-  <div class="flex flex-col gap-5 lg:flex-row">
-    <nav aria-label="User sections" class="lg:w-56 lg:shrink-0">
-      <ul class="flex gap-1 overflow-x-auto lg:sticky lg:top-4 lg:flex-col">
-        @for (s of sections; track s.key) {
-          <li class="shrink-0">
-            <button
-              type="button"
-              class="flex min-h-[40px] w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium transition-colors"
-              [class]="
-                section() === s.key
-                  ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5'
-              "
-              [attr.aria-current]="section() === s.key ? 'page' : null"
-              (click)="go(s.key)"
-            >
-              <i [class]="s.icon + ' text-xs'" aria-hidden="true"></i>
-              {{ s.label }}
-            </button>
-          </li>
-        }
-      </ul>
-    </nav>
-
-    <section [class]="card + ' min-w-0 flex-1'" [attr.aria-label]="sectionLabel()">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-          {{ sectionLabel() }}
-        </h2>
+  <ng-template #fieldList let-fields>
+    @for (f of fields; track f.label) {
+      <div class="ud-field">
+        <span class="ud-label">{{ f.label }}</span>
+        <div class="ud-value" [class.is-empty]="!f.value">{{ f.value || '' }}</div>
       </div>
+    }
+  </ng-template>
 
-      @switch (section()) {
-        @case ('overview') {
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            @for (group of overview(); track group.title) {
-              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-                <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
-                  {{ group.title }}
-                </h3>
-                <dl class="space-y-2 text-sm">
-                  @for (f of group.fields; track f.label) {
-                    <div class="flex justify-between gap-4">
-                      <dt class="text-gray-500 dark:text-gray-400">{{ f.label }}</dt>
-                      <dd class="text-right font-medium text-gray-900 dark:text-white">
-                        {{ f.value || '—' }}
-                      </dd>
-                    </div>
-                  }
-                </dl>
-              </div>
-            }
+  <ng-template #sectionHead let-key="key" let-title="title">
+    <button
+      type="button"
+      class="ud-section-head"
+      [attr.aria-expanded]="isOpen(key)"
+      [attr.aria-controls]="'ud-' + key"
+      (click)="toggle(key)"
+    >
+      {{ title }}
+      <i
+        class="pi text-xs"
+        [class.pi-chevron-up]="isOpen(key)"
+        [class.pi-chevron-down]="!isOpen(key)"
+        aria-hidden="true"
+      ></i>
+    </button>
+  </ng-template>
+
+  <!-- User Details -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="sectionHead; context: { key: 'user', title: 'User Details' }"
+    />
+    @if (isOpen('user')) {
+      <div id="ud-user" class="ud-body grid gap-6 lg:grid-cols-3">
+        <div>
+          <h3 class="ud-sub">User Details</h3>
+          <ng-container *ngTemplateOutlet="fieldList; context: { $implicit: userFields() }" />
+        </div>
+        <div>
+          <h3 class="ud-sub">Family Details</h3>
+          <ng-container *ngTemplateOutlet="fieldList; context: { $implicit: familyFields() }" />
+        </div>
+        <div>
+          <h3 class="ud-sub">Contact Details</h3>
+          <ng-container *ngTemplateOutlet="fieldList; context: { $implicit: contactFields() }" />
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Employment Details -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="sectionHead; context: { key: 'employment', title: 'Employment Details' }"
+    />
+    @if (isOpen('employment')) {
+      <div id="ud-employment" class="ud-body">
+        <h3 class="ud-sub !text-left">Employment Details</h3>
+        <div class="grid gap-x-10 md:grid-cols-2 lg:w-2/3">
+          <div>
+            <ng-container *ngTemplateOutlet="fieldList; context: { $implicit: employmentLeft() }" />
           </div>
-        }
-
-        @case ('groups') {
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              Prefer User → Group → Role → Permission over direct role assignments.
-            </p>
-            @if (canRequest('ADD_GROUP')) {
-              <button type="button" [class]="btn.primary" (click)="requestChange('ADD_GROUP')">
-                <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-                Request Group
-              </button>
-            }
+          <div>
+            <ng-container
+              *ngTemplateOutlet="fieldList; context: { $implicit: employmentRight() }"
+            />
           </div>
-          @if (access()?.groups?.length) {
-            <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-              <table class="w-full min-w-[720px] text-sm">
-                <thead>
-                  <tr [class]="theadRow">
-                    @for (
-                      h of [
-                        'Group',
-                        'Type',
-                        'Roles Inherited',
-                        'Scope',
-                        'Assigned On',
-                        'Assigned By',
-                        '',
-                      ];
-                      track $index
-                    ) {
-                      <th scope="col" [class]="th">{{ h }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                  @for (g of access()!.groups; track g.groupId) {
-                    <tr>
-                      <td [class]="td + ' font-medium text-gray-900 dark:text-white'">
-                        {{ g.name }}
-                      </td>
-                      <td [class]="td">{{ humanize(g.type) }}</td>
-                      <td [class]="td + ' tabular-nums'">{{ g.rolesInherited }}</td>
-                      <td [class]="td">{{ g.scope }}</td>
-                      <td [class]="td">{{ date(g.assignedOn) }}</td>
-                      <td [class]="td">{{ g.assignedBy }}</td>
-                      <td [class]="td + ' text-right'">
-                        @if (canRequest('REMOVE_GROUP')) {
-                          <button
-                            type="button"
-                            [class]="linkDanger"
-                            [attr.aria-label]="'Request removal of ' + g.name"
-                            (click)="requestChange('REMOVE_GROUP')"
-                          >
-                            Request removal
-                          </button>
-                        }
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else if (!accessLoading()) {
-            <p class="text-sm text-gray-500">Not a member of any group.</p>
-          }
-        }
+        </div>
+      </div>
+    }
+  </section>
 
-        @case ('roles') {
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Assigned Roles</h3>
-            <div class="flex gap-2">
-              @if (canRequest('ADD_ROLE')) {
-                <button type="button" [class]="btn.primary" (click)="requestChange('ADD_ROLE')">
-                  <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-                  Request Role
-                </button>
+  <!-- Group Details -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="sectionHead; context: { key: 'groups', title: 'Group Details' }"
+    />
+    @if (isOpen('groups')) {
+      <div id="ud-groups" class="ud-body overflow-x-auto">
+        <table class="ud-table">
+          <thead>
+            <tr>
+              <th>Group Name</th>
+              <th>Begin Date</th>
+              <th>End Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (bucket of groupsByType(); track bucket.type) {
+              <tr class="ud-group-row">
+                <td colspan="4">{{ bucket.type }}</td>
+              </tr>
+              @for (g of bucket.groups; track g.groupId) {
+                <tr>
+                  <td>{{ g.name }}</td>
+                  <td>{{ day(g.assignedOn) ?? '' }}</td>
+                  <td></td>
+                  <td>Active</td>
+                </tr>
               }
-            </div>
-          </div>
-          @if (access()?.roles?.length) {
-            <div
-              class="mb-6 overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10"
-            >
-              <table class="w-full min-w-[720px] text-sm">
-                <thead>
-                  <tr [class]="theadRow">
-                    @for (
-                      h of ['Role', 'Assignment Source', 'Scope', 'Assigned By', 'Assigned On', ''];
-                      track $index
-                    ) {
-                      <th scope="col" [class]="th">{{ h }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                  @for (r of access()!.roles; track r.roleId + r.source) {
-                    <tr>
-                      <td [class]="td">
-                        <span class="font-medium text-gray-900 dark:text-white">{{ r.name }}</span>
-                        <span class="block font-mono text-[11px] text-gray-400">{{ r.key }}</span>
-                      </td>
-                      <td [class]="td">
-                        <zcc-status-chip
-                          [value]="r.sourceType"
-                          [label]="r.source"
-                          [tone]="r.sourceType === 'DIRECT' ? 'purple' : 'blue'"
-                        />
-                      </td>
-                      <td [class]="td">{{ r.scope }}</td>
-                      <td [class]="td">{{ r.assignedBy }}</td>
-                      <td [class]="td">{{ date(r.assignedOn) }}</td>
-                      <td [class]="td + ' text-right'">
-                        @if (canRequest('REMOVE_ROLE') && r.sourceType === 'DIRECT') {
-                          <button
-                            type="button"
-                            [class]="linkDanger"
-                            [attr.aria-label]="'Request removal of ' + r.name"
-                            (click)="requestChange('REMOVE_ROLE')"
-                          >
-                            Request removal
-                          </button>
-                        } @else if (r.sourceType === 'GROUP') {
-                          <span
-                            class="text-xs text-gray-400"
-                            title="Remove the group membership to revoke this role"
-                            >Inherited</span
-                          >
-                        }
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else if (!accessLoading()) {
-            <p class="mb-6 text-sm text-gray-500">No roles assigned.</p>
-          }
-
-          <div class="mb-2 flex flex-wrap items-end justify-between gap-2">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
-              Effective Permissions ({{ filteredPermissions().length }})
-            </h3>
-            <div class="w-full sm:w-64">
-              <app-form-input-control
-                icon="search"
-                placeholder="Filter permissions…"
-                aria-label="Filter permissions"
-                [value]="permissionFilter()"
-                (valueChange)="permissionFilter.set($event)"
-              />
-            </div>
-          </div>
-          <p class="mb-3 text-xs text-gray-400">
-            Calculated from direct and group-inherited roles.
-          </p>
-          @if (filteredPermissions().length) {
-            <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-              <table class="w-full min-w-[640px] text-sm">
-                <thead>
-                  <tr [class]="theadRow">
-                    @for (h of ['Resource', 'Permission', 'Source', 'Scope']; track h) {
-                      <th scope="col" [class]="th">{{ h }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                  @for (p of filteredPermissions(); track p.key) {
-                    <tr>
-                      <td [class]="td + ' capitalize'">{{ p.resource }}</td>
-                      <td [class]="td">
-                        <span class="font-mono text-xs">{{ p.key }}</span>
-                      </td>
-                      <td [class]="td">{{ p.source }}</td>
-                      <td [class]="td">{{ p.scope }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else if (!accessLoading()) {
-            <p class="text-sm text-gray-500">No effective permissions.</p>
-          }
-        }
-
-        @case ('security') {
-          <dl class="mb-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm md:grid-cols-2">
-            @for (f of securityFields(); track f.label) {
-              <div class="border-b border-gray-100 pb-2 dark:border-white/5">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ f.label }}
-                </dt>
-                <dd class="mt-0.5 text-gray-900 dark:text-white">{{ f.value || '—' }}</dd>
-              </div>
-            }
-          </dl>
-          <p class="mb-3 text-xs text-gray-400">
-            Password hashes, MFA secrets, reset tokens, session tokens and recovery codes are never
-            shown.
-          </p>
-          @if (securityActions().length) {
-            <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-              Security Actions
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              @for (a of securityActions(); track a) {
-                <button
-                  type="button"
-                  [class]="meta(a).danger ? btn.danger : btn.secondary"
-                  [disabled]="busy()"
-                  (click)="runAction(a)"
-                >
-                  <i [class]="meta(a).icon + ' text-xs'" aria-hidden="true"></i>
-                  {{ meta(a).label }}
-                </button>
-              }
-            </div>
-          }
-        }
-
-        @case ('sessions') {
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-xs text-gray-400">
-              Location is not resolved from IP addresses; the IP shown is approximate network
-              information only.
-            </p>
-            @if (can('revokeSessions') && sessions().length) {
-              <button type="button" [class]="btn.danger" [disabled]="busy()" (click)="revokeAll()">
-                <i class="pi pi-sign-out text-xs" aria-hidden="true"></i>
-                {{ hasCurrentSession() ? 'Revoke All Other Sessions' : 'Revoke All Sessions' }}
-              </button>
-            }
-          </div>
-          @if (sessions().length) {
-            <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-              <table class="w-full min-w-[720px] text-sm">
-                <thead>
-                  <tr [class]="theadRow">
-                    @for (
-                      h of [
-                        'Device',
-                        'Browser',
-                        'IP (approx.)',
-                        'Login',
-                        'Last Activity',
-                        'Status',
-                        '',
-                      ];
-                      track $index
-                    ) {
-                      <th scope="col" [class]="th">{{ h }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                  @for (s of sessions(); track s.id) {
-                    <tr>
-                      <td [class]="td">
-                        <i
-                          class="pi mr-1 text-xs"
-                          [class.pi-mobile]="s.isMobile"
-                          [class.pi-desktop]="!s.isMobile"
-                          aria-hidden="true"
-                        ></i>
-                        {{ s.device }}
-                      </td>
-                      <td [class]="td">{{ s.browser }}</td>
-                      <td [class]="td + ' font-mono text-xs'">{{ s.ipAddress ?? '—' }}</td>
-                      <td [class]="td">{{ dateTime(s.loginAt) }}</td>
-                      <td [class]="td">{{ dateTime(s.lastActivityAt) }}</td>
-                      <td [class]="td">
-                        <zcc-status-chip
-                          [value]="s.isCurrent ? 'current' : 'active'"
-                          [label]="s.isCurrent ? 'Current' : 'Active'"
-                          [tone]="s.isCurrent ? 'blue' : 'green'"
-                        />
-                      </td>
-                      <td [class]="td + ' text-right'">
-                        @if (can('revokeSessions') && !s.isCurrent) {
-                          <button
-                            type="button"
-                            [class]="linkDanger"
-                            [disabled]="busy()"
-                            (click)="revokeOne(s)"
-                          >
-                            Revoke
-                          </button>
-                        }
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <p class="text-sm text-gray-500">No active sessions.</p>
-          }
-        }
-
-        @case ('notes') {
-          @if (canManage()) {
-            <form class="mb-6 space-y-3" (submit)="$event.preventDefault(); addNote()">
-              <label
-                for="user-note"
-                class="block text-xs font-medium text-gray-600 dark:text-gray-400"
-                >Note</label
-              >
-              <textarea
-                id="user-note"
-                rows="3"
-                maxlength="4000"
-                [class]="inputClass"
-                placeholder="Administrative context about this user…"
-                [value]="noteBody()"
-                (input)="noteBody.set($any($event.target).value)"
-              ></textarea>
-              <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <app-select-control
-                  label="Note Type"
-                  [searchable]="false"
-                  [options]="noteTypes"
-                  [(value)]="noteType"
-                />
-                <app-select-control
-                  label="Visibility"
-                  [searchable]="false"
-                  [options]="noteVisibility"
-                  [(value)]="noteVisibilityValue"
-                />
-                <app-form-input-control
-                  label="Attachment URL"
-                  placeholder="https://…"
-                  [(value)]="noteAttachment"
-                />
-              </div>
-              <button type="submit" [class]="btn.primary" [disabled]="busy() || !noteBody().trim()">
-                <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-                Add Note
-              </button>
-            </form>
-          }
-          <p class="mb-3 text-xs text-gray-400">
-            Notes are append-only; earlier notes are never overwritten.
-          </p>
-          <ul class="space-y-3">
-            @for (n of notes(); track n.id) {
-              <li class="rounded-lg border border-gray-200 p-3 dark:border-white/10">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                    {{ n.authorName }}
-                  </p>
-                  <div class="flex gap-1">
-                    <zcc-status-chip
-                      [value]="n.noteType"
-                      [label]="option(noteTypes, n.noteType)"
-                      tone="blue"
-                    />
-                    <zcc-status-chip
-                      [value]="n.visibility"
-                      [label]="option(noteVisibility, n.visibility)"
-                      tone="gray"
-                    />
-                  </div>
-                </div>
-                <p class="text-xs text-gray-500">{{ dateTime(n.createdAt) }}</p>
-                <p class="mt-2 whitespace-pre-line text-sm text-gray-700 dark:text-gray-200">
-                  {{ n.body }}
-                </p>
-                @if (n.attachmentUrl) {
-                  <a
-                    [href]="n.attachmentUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="mt-1 inline-flex items-center gap-1 text-xs text-indigo-500 hover:underline"
-                  >
-                    <i class="pi pi-paperclip text-xs" aria-hidden="true"></i> Attachment
-                  </a>
-                }
-              </li>
             } @empty {
-              <li class="text-sm text-gray-500">No notes yet.</li>
+              <tr>
+                <td colspan="4" class="ud-empty">No groups assigned.</td>
+              </tr>
             }
-          </ul>
-        }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 
-        @case ('requests') {
-          <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
-            The approved requests that explain why this user has their current access.
-          </p>
-          @if (requests().length) {
-            <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-              <table class="w-full min-w-[640px] text-sm">
-                <thead>
-                  <tr [class]="theadRow">
-                    @for (h of ['Request Ref', 'Type', 'Requested By', 'Date', 'Status']; track h) {
-                      <th scope="col" [class]="th">{{ h }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                  @for (r of requests(); track r.id) {
-                    <tr>
-                      <td [class]="td">
-                        <a
-                          [routerLink]="['/iam/user-requests', r.id]"
-                          class="font-mono font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
-                          >{{ r.refNo }}</a
-                        >
-                      </td>
-                      <td [class]="td">{{ r.typeLabel }}</td>
-                      <td [class]="td">{{ r.requestedBy ?? '—' }}</td>
-                      <td [class]="td">{{ date(r.createdAt) }}</td>
-                      <td [class]="td">
-                        <zcc-status-chip
-                          [value]="r.status"
-                          [label]="r.statusLabel"
-                          [tone]="
-                            r.status === 'COMPLETED'
-                              ? 'green'
-                              : r.status === 'REJECTED' || r.status === 'FAILED'
-                                ? 'red'
-                                : 'amber'
-                          "
-                        />
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <p class="text-sm text-gray-500">No requests reference this user.</p>
-          }
-        }
-
-        @case ('status') {
-          @if (statusHistory().length) {
-            <ol class="relative ml-2 border-l border-gray-200 dark:border-white/10">
-              @for (h of statusHistory(); track h.id; let last = $last) {
-                <li class="mb-6 ml-5 last:mb-0">
-                  <span
-                    class="absolute -left-[7px] mt-1 size-3.5 rounded-full ring-4 ring-white dark:ring-gray-900"
-                    [class]="last ? 'bg-indigo-500' : 'bg-gray-300 dark:bg-white/30'"
-                    aria-hidden="true"
-                  ></span>
-                  <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                    {{ h.toLabel }}
-                    @if (h.fromLabel) {
-                      <span class="font-normal text-gray-400">from {{ h.fromLabel }}</span>
-                    }
-                  </p>
-                  <p class="text-xs text-gray-500">
-                    {{ dateTime(h.createdAt) }} · {{ h.actorName }}
-                  </p>
-                  @if (h.reason) {
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ h.reason }}</p>
-                  }
-                </li>
-              }
-            </ol>
-          } @else {
-            <p class="text-sm text-gray-500">No status changes recorded yet.</p>
-          }
-        }
-
-        @case ('emails') {
-          @if (emails().length) {
-            <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-              <table class="w-full min-w-[860px] text-sm">
-                <thead>
-                  <tr [class]="theadRow">
-                    @for (
-                      h of [
-                        'Email ID',
-                        'Type',
-                        'Recipient',
-                        'Subject',
-                        'Trigger',
-                        'Sent On',
-                        'Status',
-                      ];
-                      track h
-                    ) {
-                      <th scope="col" [class]="th">{{ h }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                  @for (m of emails(); track m.id) {
-                    <tr>
-                      <td [class]="td + ' font-mono text-[11px] text-gray-500'">
-                        {{ m.id.slice(0, 8).toUpperCase() }}
-                      </td>
-                      <td [class]="td">{{ humanize(m.type) }}</td>
-                      <td [class]="td">{{ m.recipient }}</td>
-                      <td [class]="td + ' text-gray-900 dark:text-white'">{{ m.subject }}</td>
-                      <td [class]="td">
-                        {{ m.trigger }}
-                        @if (m.requestRef) {
-                          <span class="block text-[11px] text-gray-400">{{ m.requestRef }}</span>
-                        }
-                      </td>
-                      <td [class]="td">{{ dateTime(m.sentOn) }}</td>
-                      <td [class]="td">
-                        <zcc-status-chip
-                          [value]="m.deliveryStatus"
-                          [label]="humanize(m.deliveryStatus)"
-                          [tone]="
-                            m.deliveryStatus === 'FAILED'
-                              ? 'red'
-                              : m.deliveryStatus === 'QUEUED'
-                                ? 'gray'
-                                : 'green'
-                          "
-                        />
-                        @if (m.lastError) {
-                          <p
-                            class="mt-0.5 max-w-[180px] truncate text-[11px] text-red-500"
-                            [title]="m.lastError"
-                          >
-                            {{ m.lastError }}
-                          </p>
-                        }
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <p class="text-sm text-gray-500">No emails have been sent to this user.</p>
-          }
-        }
-
-        @case ('audit') {
-          <p class="mb-3 text-xs text-gray-400">Audit records are read-only.</p>
-          <ul class="space-y-2">
-            @for (a of audit(); track a.id) {
-              <li class="rounded-lg border border-gray-200 dark:border-white/10">
-                <button
-                  type="button"
-                  class="flex min-h-[44px] w-full flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-left text-sm"
-                  [attr.aria-expanded]="openAudit() === a.id"
-                  (click)="openAudit.set(openAudit() === a.id ? null : a.id)"
-                >
-                  <span class="font-mono text-xs text-gray-500">{{ dateTime(a.timestamp) }}</span>
-                  <span class="font-medium text-gray-900 dark:text-white">{{
-                    auditLabel(a.action)
-                  }}</span>
-                  <span class="text-gray-600 dark:text-gray-300">{{ a.actor }}</span>
-                  <span class="text-gray-500">{{ a.module }}</span>
-                  <zcc-status-chip
-                    class="ml-auto"
-                    [value]="a.result"
-                    [label]="a.result"
-                    [tone]="a.result === 'Success' ? 'green' : 'red'"
-                  />
-                </button>
-                @if (openAudit() === a.id) {
-                  <div
-                    class="space-y-2 border-t border-gray-100 px-3 py-3 text-xs dark:border-white/5"
-                  >
-                    <p class="text-gray-500">
-                      Correlation: <span class="font-mono">{{ a.correlationId ?? '—' }}</span> · IP:
-                      {{ a.ipAddress ?? '—' }}
-                    </p>
-                    @if (a.before || a.after) {
-                      <zcc-json-diff-viewer [before]="a.before" [after]="a.after" />
-                    }
-                  </div>
-                }
-              </li>
+  <!-- Branch Details -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="sectionHead; context: { key: 'branches', title: 'Branch Details' }"
+    />
+    @if (isOpen('branches')) {
+      <div id="ud-branches" class="ud-body overflow-x-auto">
+        <table class="ud-table">
+          <thead>
+            <tr>
+              <th>Branch Name</th>
+              <th>Begin Date</th>
+              <th>End Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of u.branches; track b.id) {
+              <tr>
+                <td>{{ b.name }}</td>
+                <td>{{ day(b.beginDate) ?? '' }}</td>
+                <td>{{ day(b.endDate) ?? '' }}</td>
+                <td>{{ b.status }}</td>
+              </tr>
             } @empty {
-              <li class="text-sm text-gray-500">No audit entries.</li>
+              <tr>
+                <td colspan="4" class="ud-empty">No branch assigned.</td>
+              </tr>
             }
-          </ul>
-        }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 
-        @default {
-          <dl class="grid grid-cols-1 gap-x-6 gap-y-4 text-sm md:grid-cols-2">
-            @for (f of viewFields(); track f.label) {
-              <div class="border-b border-gray-100 pb-2 dark:border-white/5">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ f.label }}
-                </dt>
-                <dd class="mt-0.5 break-words text-gray-900 dark:text-white">
-                  {{ f.value || '—' }}
-                </dd>
-              </div>
+  <!-- Team Details -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="sectionHead; context: { key: 'teams', title: 'Team Details' }"
+    />
+    @if (isOpen('teams')) {
+      <div id="ud-teams" class="ud-body overflow-x-auto">
+        <table class="ud-table">
+          <thead>
+            <tr>
+              <th>Team Name</th>
+              <th>Begin Date</th>
+              <th>End Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of u.teams; track t.id) {
+              <tr>
+                <td>{{ t.name }}</td>
+                <td>{{ day(t.beginDate) ?? '' }}</td>
+                <td>{{ day(t.endDate) ?? '' }}</td>
+                <td>{{ t.status }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="ud-empty">No team assigned.</td>
+              </tr>
             }
-          </dl>
-        }
-      }
-    </section>
-  </div>
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 }

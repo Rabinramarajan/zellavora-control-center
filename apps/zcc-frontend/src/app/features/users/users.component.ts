@@ -1,304 +1,126 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 import { DateControl, FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { PageChangeEvent } from '../../shared/components/pagination/pagination.component';
 import {
-  DataTableActionsDirective,
   DataTableCellDirective,
   DataTableColumn,
   DataTableComponent,
   DataTableEmptyDirective,
-  DataTableFooterDirective,
   DataTableSort,
 } from '../../shared/components/data-table';
 import { UserAdminApiService } from '../../core/api/user-admin.api';
 import { UserRequestsApiService } from '../../core/api/user-requests.api';
-import { PermissionService } from '../../core/rbac/services/permission.service';
-import { AccountStatus, IamUserListItem } from '../../shared/models/iam.model';
-import { UserRequestLookups } from '../../shared/models/user-request.model';
+import { IamUserListItem } from '../../shared/models/iam.model';
 import { createListStore } from '../../shared/utils/create-list-store';
-import { MultiSelectComponent, MultiSelectOption } from '../iam/shared/multi-select.component';
 import { IAM_BTN, IamPageHeaderComponent } from '../iam/shared/iam-page-header.component';
-import { CsvExporter } from '../../shared/utils/csv-exporter';
-import {
-  ACTION_META,
-  REQUEST_CHANGE_META,
-  StateAction,
-  UserActionsService,
-  rowActions,
-  rowChanges,
-} from './user-actions';
+import { formatDate } from '../iam/shared/iam-format';
 
-type SortKey =
-  'userNo' | 'fullName' | 'email' | 'employeeCode' | 'status' | 'createdAt' | 'lastLoginDatetime';
-type TextKey =
-  'q' | 'userId' | 'username' | 'firstName' | 'lastName' | 'employeeCode' | 'email' | 'mobile';
-type ListKey =
-  'status' | 'userType' | 'branchId' | 'departmentId' | 'teamId' | 'groupId' | 'roleId';
-type ChoiceKey = 'emailVerified' | 'mfaEnabled';
-type DateKey = 'createdFrom' | 'createdTo' | 'lastLoginFrom' | 'lastLoginTo';
+type SortKey = 'fullName' | 'employeeCode' | 'joiningDate' | 'endDate' | 'status';
 
-type UserFilters = Record<TextKey | ChoiceKey | DateKey, string> & Record<ListKey, string[]>;
+interface UserFilters {
+  firstName: string;
+  mobile: string;
+  email: string;
+  employeeCode: string;
+  groupId: string;
+  status: string;
+  beginFrom: string;
+  beginTo: string;
+  endFrom: string;
+  endTo: string;
+}
 
 const EMPTY_FILTERS: UserFilters = {
-  q: '',
-  userId: '',
-  username: '',
   firstName: '',
-  lastName: '',
-  employeeCode: '',
-  email: '',
   mobile: '',
-  status: [],
-  userType: [],
-  branchId: [],
-  departmentId: [],
-  teamId: [],
-  groupId: [],
-  roleId: [],
-  emailVerified: '',
-  mfaEnabled: '',
-  createdFrom: '',
-  createdTo: '',
-  lastLoginFrom: '',
-  lastLoginTo: '',
+  email: '',
+  employeeCode: '',
+  groupId: '',
+  status: '',
+  beginFrom: '',
+  beginTo: '',
+  endFrom: '',
+  endTo: '',
 };
 
 const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof UserFilters>;
-const clone = (f: UserFilters): UserFilters => structuredClone(f);
 
-const STATUS_OPTIONS: MultiSelectOption[] = [
-  { value: 'INVITED', label: 'Invited' },
-  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+const STATUS_OPTIONS: SelectControlOption[] = [
+  { value: '', label: '--Select--' },
   { value: 'ACTIVE', label: 'Active' },
+  { value: 'PENDING', label: 'Pending' },
   { value: 'INACTIVE', label: 'Inactive' },
   { value: 'LOCKED', label: 'Locked' },
   { value: 'SUSPENDED', label: 'Suspended' },
   { value: 'DISABLED', label: 'Disabled' },
 ];
 
-const USER_TYPE_OPTIONS: MultiSelectOption[] = [
-  { value: 'EMPLOYEE', label: 'Employee' },
-  { value: 'CONTRACTOR', label: 'Contractor' },
-  { value: 'EXTERNAL', label: 'External' },
-];
-
-interface StatCard {
-  label: string;
-  icon: string;
-  tone: 'violet' | 'emerald' | 'rose' | 'amber' | 'indigo';
-  status: AccountStatus | '';
-}
-
-const STAT_CARDS: StatCard[] = [
-  { label: 'Total Users', icon: 'pi pi-users', tone: 'violet', status: '' },
-  { label: 'Active', icon: 'pi pi-user', tone: 'emerald', status: 'ACTIVE' },
-  { label: 'Invited', icon: 'pi pi-envelope', tone: 'amber', status: 'INVITED' },
-  { label: 'Locked', icon: 'pi pi-lock', tone: 'indigo', status: 'LOCKED' },
-  { label: 'Inactive', icon: 'pi pi-user-minus', tone: 'rose', status: 'INACTIVE' },
-  { label: 'Disabled', icon: 'pi pi-ban', tone: 'rose', status: 'DISABLED' },
-];
-
-const AVATAR_TONES = ['#7c3aed', '#8b5cf6', '#a855f7', '#6366f1', '#db2777', '#c026d3'];
-
-interface MenuItem {
-  key: string;
-  label: string;
-  icon: string;
-  danger?: boolean;
-  run: () => void;
-}
-
-interface OpenMenu {
-  user: IamUserListItem;
-  items: MenuItem[];
-  top: number;
-  left: number;
-  /** Opened above the trigger because there was no room below. */
-  above: boolean;
-  trigger: HTMLElement;
-}
-
-const MENU_WIDTH = 232;
-const MENU_ITEM_HEIGHT = 40;
-const MENU_CHROME = 44;
-const VIEWPORT_GAP = 8;
-const NAV_KEYS = ['view', 'audit'];
-
+/**
+ * Read-only User Search. Accounts are created and changed only through
+ * User Request → Approval → Provisioning, so this screen has no edit actions.
+ */
 @Component({
   selector: 'app-users',
   standalone: true,
   imports: [
-    FormsModule,
     RouterLink,
-    ToastModule,
     FormInputControl,
     SelectControl,
     DateControl,
-    MultiSelectComponent,
     IamPageHeaderComponent,
     DataTableComponent,
     DataTableCellDirective,
-    DataTableActionsDirective,
     DataTableEmptyDirective,
-    DataTableFooterDirective,
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(document:keydown.escape)': 'onEscape()',
-    '(document:click)': 'onDocumentClick($event)',
-    '(window:resize)': 'closeMenu()',
-    '(window:scroll)': 'closeMenu()',
-  },
+  host: { '(document:keydown.escape)': 'filtersOpen.set(false)' },
 })
 export class UsersComponent {
   private readonly api = inject(UserAdminApiService);
   private readonly requestsApi = inject(UserRequestsApiService);
-  private readonly router = inject(Router);
-  private readonly messages = inject(MessageService);
-  private readonly actions = inject(UserActionsService);
-  protected readonly canManage = inject(PermissionService).can('users:manage');
-  protected readonly canRequest = inject(PermissionService).can('user-requests:create');
 
+  protected readonly btn = IAM_BTN;
   readonly pageSizes = [10, 25, 50, 100];
   readonly statusOptions = STATUS_OPTIONS;
-  readonly userTypeOptions = USER_TYPE_OPTIONS;
-  readonly verifiedOptions: SelectControlOption[] = [
-    { value: '', label: 'Any' },
-    { value: 'true', label: 'Verified' },
-    { value: 'false', label: 'Unverified' },
-  ];
-  readonly mfaOptions: SelectControlOption[] = [
-    { value: '', label: 'Any' },
-    { value: 'true', label: 'Enabled' },
-    { value: 'false', label: 'Disabled' },
-  ];
 
-  private readonly lookups = signal<UserRequestLookups | null>(null);
-  readonly branchOptions = computed(() => this.toOptions(this.lookups()?.branches));
-  readonly departmentOptions = computed(() => this.toOptions(this.lookups()?.departments));
-  readonly teamOptions = computed(() => this.toOptions(this.lookups()?.teams));
-  readonly groupOptions = computed(() => this.toOptions(this.lookups()?.groups));
-  readonly roleOptions = computed(() => this.toOptions(this.lookups()?.roles));
+  private readonly groups = signal<Array<{ id: string; name: string }>>([]);
+  readonly groupOptions = computed<SelectControlOption[]>(() => [
+    { value: '', label: '--Select--' },
+    ...this.groups().map((g) => ({ value: g.id, label: g.name })),
+  ]);
 
   readonly columns: DataTableColumn<IamUserListItem>[] = [
-    {
-      id: 'userNo',
-      label: 'User ID',
-      sortKey: 'userNo',
-      cellClass: 'whitespace-nowrap font-mono text-xs font-medium text-slate-200',
-    },
-    { id: 'fullName', label: 'Name', sortKey: 'fullName' },
+    { id: 'fullName', label: 'Employee Name', sortKey: 'fullName' },
     {
       id: 'employeeCode',
       label: 'Employee Code',
       sortKey: 'employeeCode',
-      value: (u) => u.employeeCode,
-      cellClass: 'whitespace-nowrap font-mono text-xs text-slate-300',
+      value: (u) => u.employeeCode ?? '—',
+    },
+    { id: 'username', label: 'User Name', value: (u) => u.username ?? u.firstName ?? '—' },
+    {
+      id: 'beginDate',
+      label: 'Begin Date',
+      sortKey: 'joiningDate',
+      value: (u) => (u.beginDate ? formatDate(u.beginDate) : '—'),
+      cellClass: 'whitespace-nowrap',
     },
     {
-      id: 'email',
-      label: 'Email',
-      sortKey: 'email',
-      value: (u) => u.email,
-      cellClass: 'text-slate-300',
+      id: 'endDate',
+      label: 'End Date',
+      sortKey: 'endDate',
+      value: (u) => (u.endDate ? formatDate(u.endDate) : ''),
+      cellClass: 'whitespace-nowrap',
     },
-    {
-      id: 'branch',
-      label: 'Branch',
-      value: (u) => u.branchName,
-      cellClass: 'whitespace-nowrap text-slate-200',
-    },
-    {
-      id: 'team',
-      label: 'Team',
-      value: (u) => u.teamName,
-      cellClass: 'whitespace-nowrap text-slate-200',
-      hideBelow: 'xl',
-    },
-    {
-      id: 'group',
-      label: 'Group',
-      cellClass: 'whitespace-nowrap text-slate-200',
-      hideBelow: 'xl',
-    },
-    { id: 'role', label: 'Role' },
-    { id: 'status', label: 'Status', sortKey: 'status' },
-    {
-      id: 'lastLogin',
-      label: 'Last Login',
-      sortKey: 'lastLoginDatetime',
-      value: (u) => this.formatDateTime(u.lastLoginDatetime),
-      cellClass: 'whitespace-nowrap text-slate-400',
-    },
+    { id: 'status', label: 'Status', sortKey: 'status', value: (u) => u.statusLabel },
   ];
 
   readonly userId = (u: IamUserListItem): string => u.id;
   readonly userName = (u: IamUserListItem): string => u.fullName;
-  readonly rowClass = (u: IamUserListItem): Record<string, boolean> => ({
-    'is-busy': this.busyId() === u.id,
-  });
-
-  readonly identityFields: Array<{
-    key: TextKey;
-    label: string;
-    icon: 'search' | 'user' | 'email' | 'phone' | 'list';
-    type: 'text' | 'tel';
-    placeholder: string;
-  }> = [
-    { key: 'userId', label: 'User ID', icon: 'search', type: 'text', placeholder: 'USR000236' },
-    { key: 'username', label: 'Username', icon: 'user', type: 'text', placeholder: 'eric.parker' },
-    {
-      key: 'firstName',
-      label: 'First Name',
-      icon: 'user',
-      type: 'text',
-      placeholder: 'First name',
-    },
-    { key: 'lastName', label: 'Last Name', icon: 'user', type: 'text', placeholder: 'Last name' },
-    {
-      key: 'employeeCode',
-      label: 'Employee Code',
-      icon: 'list',
-      type: 'text',
-      placeholder: 'EMP00236',
-    },
-    {
-      key: 'email',
-      label: 'Email ID',
-      icon: 'email',
-      type: 'text',
-      placeholder: 'name@company.com',
-    },
-    {
-      key: 'mobile',
-      label: 'Contact Number',
-      icon: 'phone',
-      type: 'tel',
-      placeholder: 'Digits only',
-    },
-  ];
-
-  /** Organization filters shown under "More Filters" (status, role and group are on the card). */
-  readonly moreAccessFields = computed<
-    Array<{ key: ListKey; label: string; options: MultiSelectOption[] }>
-  >(() => [
-    { key: 'userType', label: 'User Type', options: USER_TYPE_OPTIONS },
-    { key: 'branchId', label: 'Branch', options: this.branchOptions() },
-    { key: 'departmentId', label: 'Department', options: this.departmentOptions() },
-    { key: 'teamId', label: 'Team', options: this.teamOptions() },
-  ]);
-
-  protected readonly btn = IAM_BTN;
-  protected readonly labelClass =
-    // Matches the @zellavoras/ui field label (13px, medium, 8px above the control).
-    'mb-2 block ps-0.5 text-[13px] font-medium leading-tight text-gray-600 dark:text-gray-400';
 
   readonly store = createListStore<IamUserListItem>({
     initialPageSize: 10,
@@ -306,95 +128,41 @@ export class UsersComponent {
     loader: (query) => firstValueFrom(this.api.search(query)),
   });
 
-  readonly statCounts = signal<Record<string, number | null>>({});
-  readonly stats = STAT_CARDS;
-
   readonly filtersOpen = signal(false);
-  readonly draft = signal<UserFilters>(clone(EMPTY_FILTERS));
-  readonly applied = signal<UserFilters>(clone(EMPTY_FILTERS));
-  readonly sort = signal<DataTableSort<SortKey>>({ key: 'createdAt', dir: 'desc' });
-  readonly selected = signal<ReadonlySet<string>>(new Set());
-  readonly busyId = signal<string | null>(null);
-  readonly menu = signal<OpenMenu | null>(null);
-  readonly menuFor = computed(() => this.menu()?.user.id ?? null);
+  readonly draft = signal<UserFilters>({ ...EMPTY_FILTERS });
+  readonly applied = signal<UserFilters>({ ...EMPTY_FILTERS });
+  readonly sort = signal<DataTableSort<SortKey>>({ key: 'joiningDate', dir: 'desc' });
 
-  /** Number of applied filters, shown on the Filter button. */
-  readonly activeFilterCount = computed(() => {
-    const f = this.applied();
-    return FILTER_KEYS.filter((k) => this.isSet(f[k])).length;
-  });
+  readonly activeFilterCount = computed(
+    () => FILTER_KEYS.filter((k) => this.applied()[k].trim()).length
+  );
 
   constructor() {
-    void this.loadStats();
     firstValueFrom(this.requestsApi.lookups())
-      .then((l) => this.lookups.set(l))
-      .catch(() =>
-        this.notify('warn', 'Filters limited', 'Could not load branches, groups and roles.')
-      );
+      .then((l) => this.groups.set(l.groups ?? []))
+      .catch(() => this.groups.set([]));
+    this.pushFilters();
   }
 
-  // ---------------------------------------------------------------------------
-  // Filters
-  // ---------------------------------------------------------------------------
-
-  patchDraft(key: keyof UserFilters, value: string | string[]): void {
+  patch(key: keyof UserFilters, value: string | null): void {
     this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
   }
 
-  draftList(key: ListKey): string[] {
-    return this.draft()[key];
+  openFilters(): void {
+    this.draft.set({ ...this.applied() });
+    this.filtersOpen.set(true);
   }
 
-  draftText(key: TextKey | ChoiceKey | DateKey): string {
-    return this.draft()[key];
-  }
-
-  /** Opens the filter popup on a copy of the applied filters; Cancel discards edits. */
-  toggleFilters(event: MouseEvent): void {
-    event.stopPropagation();
-    this.closeMenu();
-    if (!this.filtersOpen()) this.draft.set(clone(this.applied()));
-    this.filtersOpen.update((open) => !open);
-  }
-
-  applyFilters(): void {
-    this.applied.set(clone(this.draft()));
+  search(): void {
+    this.applied.set({ ...this.draft() });
     this.filtersOpen.set(false);
     this.pushFilters();
   }
 
-  resetDraft(): void {
-    this.draft.set(clone(EMPTY_FILTERS));
-  }
-
-  resetAll(): void {
-    this.draft.set(clone(EMPTY_FILTERS));
-    this.applied.set(clone(EMPTY_FILTERS));
-    this.selected.set(new Set());
+  clear(): void {
+    this.draft.set({ ...EMPTY_FILTERS });
+    this.applied.set({ ...EMPTY_FILTERS });
     this.pushFilters();
-  }
-
-  filterByStatus(status: AccountStatus | ''): void {
-    const next = status ? [status] : [];
-    this.draft.update((f) => ({ ...f, status: next }));
-    this.applied.update((f) => ({ ...f, status: next }));
-    this.pushFilters();
-  }
-
-  isStatusCard(status: AccountStatus | ''): boolean {
-    const current = this.applied().status;
-    return status ? current.length === 1 && current[0] === status : current.length === 0;
-  }
-
-  onEscape(): void {
-    if (this.menu()) this.closeMenu(true);
-    else if (this.filtersOpen()) this.filtersOpen.set(false);
-  }
-
-  onDocumentClick(event: MouseEvent): void {
-    this.closeMenu();
-    const anchor = (event.target as HTMLElement | null)?.closest('.filter-anchor');
-    if (!anchor) this.filtersOpen.set(false);
   }
 
   onSort(sort: DataTableSort | null): void {
@@ -408,247 +176,10 @@ export class UsersComponent {
     else this.store.setPage(page);
   }
 
-  // ---------------------------------------------------------------------------
-  // Export
-  // ---------------------------------------------------------------------------
-
-  exportUsers(): void {
-    const sel = this.selected();
-    const rows = sel.size ? this.store.items().filter((u) => sel.has(u.id)) : this.store.items();
-    if (!rows.length) {
-      this.notify('info', 'Nothing to export', 'No users on this page.');
-      return;
-    }
-    CsvExporter.export(
-      'users',
-      [
-        'User ID',
-        'Name',
-        'Employee Code',
-        'Email',
-        'Branch',
-        'Team',
-        'Group',
-        'Role',
-        'Status',
-        'Last Login',
-      ],
-      rows.map((u) => [
-        u.userCode ?? u.id,
-        u.fullName,
-        u.employeeCode,
-        u.email,
-        u.branchName,
-        u.teamName,
-        u.primaryGroup,
-        u.primaryRole?.name,
-        u.statusLabel,
-        u.lastLoginDatetime ? this.formatDateTime(u.lastLoginDatetime) : 'Never',
-      ])
-    );
-    this.notify('success', 'Export complete', `${rows.length} users exported`);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Row actions
-  // ---------------------------------------------------------------------------
-
-  /**
-   * The menu is rendered once, outside the scrolling table, with fixed
-   * positioning, so neither the scroll container nor the animated rows can clip
-   * or cover it. It opens below the trigger and flips above when there is no room.
-   */
-  toggleMenu(user: IamUserListItem, event: MouseEvent): void {
-    event.stopPropagation();
-    if (this.menuFor() === user.id) {
-      this.closeMenu();
-      return;
-    }
-    const trigger = event.currentTarget as HTMLElement;
-    const rect = trigger.getBoundingClientRect();
-    const items = this.menuItems(user);
-    const dividers = new Set(items.map((i) => this.groupOf(i))).size - 1;
-    const height = items.length * MENU_ITEM_HEIGHT + MENU_CHROME + dividers * 9;
-    const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_GAP;
-    const spaceAbove = rect.top - VIEWPORT_GAP;
-    const above = spaceBelow < height && spaceAbove > spaceBelow;
-    const top = above
-      ? rect.top - height - 6
-      : Math.min(rect.bottom + 6, window.innerHeight - height - VIEWPORT_GAP);
-    const left = Math.min(
-      Math.max(VIEWPORT_GAP, rect.right - MENU_WIDTH),
-      window.innerWidth - MENU_WIDTH - VIEWPORT_GAP
-    );
-    this.menu.set({ user, items, top: Math.max(VIEWPORT_GAP, top), left, above, trigger });
-    queueMicrotask(() => this.focusMenuItem(0));
-  }
-
-  closeMenu(restoreFocus = false): void {
-    const open = this.menu();
-    if (!open) return;
-    this.menu.set(null);
-    if (restoreFocus) open.trigger.focus();
-  }
-
-  selectMenuItem(item: MenuItem): void {
-    this.closeMenu();
-    item.run();
-  }
-
-  /** Arrow keys, Home and End move through the items; Tab closes the menu. */
-  onMenuKeydown(event: KeyboardEvent): void {
-    const buttons = this.menuButtons();
-    const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    const target: Record<string, number> = {
-      ArrowDown: index + 1,
-      ArrowUp: index - 1,
-      Home: 0,
-      End: buttons.length - 1,
-    };
-    if (event.key in target) {
-      event.preventDefault();
-      this.focusMenuItem((target[event.key] + buttons.length) % buttons.length);
-    } else if (event.key === 'Tab') {
-      this.closeMenu(true);
-    }
-  }
-
-  /** Items are grouped: navigation, state actions, then destructive actions. */
-  groupOf(item: MenuItem): number {
-    if (item.danger) return 3;
-    if (NAV_KEYS.includes(item.key)) return 0;
-    return item.key.startsWith('request:') ? 1 : 2;
-  }
-
-  private menuButtons(): HTMLButtonElement[] {
-    return Array.from(document.querySelectorAll<HTMLButtonElement>('.us-menu [role="menuitem"]'));
-  }
-
-  private focusMenuItem(index: number): void {
-    this.menuButtons()[index]?.focus();
-  }
-
-  menuItems(user: IamUserListItem): MenuItem[] {
-    const go = (section: string) => () =>
-      void this.router.navigate(['/iam/users', user.id], { queryParams: { section } });
-    const items: MenuItem[] = [
-      { key: 'view', label: 'View Details', icon: 'pi pi-eye', run: go('overview') },
-    ];
-    // Changes are raised as User Requests (request → approval → provisioning).
-    for (const change of rowChanges(user, this.canRequest())) {
-      items.push({
-        key: 'request:' + change,
-        label: 'Request: ' + REQUEST_CHANGE_META[change].label,
-        icon: REQUEST_CHANGE_META[change].icon,
-        run: () =>
-          void this.router.navigate(['/iam/user-requests/create'], {
-            queryParams: { type: change, userId: user.id },
-          }),
-      });
-    }
-    // Emergency actions and messages stay direct (confirmed and audited).
-    for (const action of rowActions(user, this.canManage())) {
-      items.push({
-        key: action,
-        ...ACTION_META[action],
-        run: () => void this.runAction(action, user),
-      });
-    }
-    items.push({ key: 'audit', label: 'View Audit', icon: 'pi pi-shield', run: go('audit') });
-    return items.sort((a, b) => this.groupOf(a) - this.groupOf(b));
-  }
-
-  async runAction(action: StateAction, user: IamUserListItem): Promise<void> {
-    this.busyId.set(user.id);
-    try {
-      if (await this.actions.run(action, user)) {
-        await Promise.all([this.store.reload(), this.loadStats()]);
-      }
-    } finally {
-      this.busyId.set(null);
-    }
-  }
-
-  addUser(): void {
-    void this.router.navigate(['/iam/user-requests/create'], { queryParams: { type: 'NEW_USER' } });
-  }
-
-  // ---------------------------------------------------------------------------
-  // Display helpers
-  // ---------------------------------------------------------------------------
-
-  initials(name: string): string {
-    return name
-      .split(/\s+/)
-      .map((p) => p[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  }
-
-  avatarColor(user: IamUserListItem): string {
-    return AVATAR_TONES[user.fullName.charCodeAt(0) % AVATAR_TONES.length];
-  }
-
-  roleTone(key: string | undefined): string {
-    if (!key) return 'slate';
-    if (key.includes('owner') || key.includes('super')) return 'violet';
-    if (key.includes('admin')) return 'blue';
-    if (key.includes('manager')) return 'amber';
-    if (key.includes('editor') || key.includes('employee')) return 'emerald';
-    return 'rose';
-  }
-
-  formatDateTime(iso: string | null): string {
-    if (!iso) return 'Never';
-    return new Date(iso).toLocaleString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  }
-
-  private isSet(value: string | string[]): boolean {
-    return Array.isArray(value) ? value.length > 0 : !!value.trim();
-  }
-
-  private toOptions(items: Array<{ id: string; name: string }> | undefined): MultiSelectOption[] {
-    return (items ?? []).map((i) => ({ value: i.id, label: i.name }));
-  }
-
   private pushFilters(): void {
     const f = this.applied();
-    const filters: Record<string, string | string[]> = {
-      sort: this.sort().key,
-      order: this.sort().dir,
-    };
-    for (const key of FILTER_KEYS) {
-      if (this.isSet(f[key])) filters[key] = f[key];
-    }
+    const filters: Record<string, string> = { sort: this.sort().key, order: this.sort().dir };
+    for (const key of FILTER_KEYS) if (f[key].trim()) filters[key] = f[key].trim();
     this.store.setFilters(filters);
-  }
-
-  private async loadStats(): Promise<void> {
-    try {
-      const { total, byStatus } = await firstValueFrom(this.api.stats());
-      this.statCounts.set(
-        Object.fromEntries(
-          STAT_CARDS.map((c) => [c.label, c.status ? (byStatus[c.status] ?? 0) : total])
-        )
-      );
-    } catch {
-      this.statCounts.set(Object.fromEntries(STAT_CARDS.map((c) => [c.label, null])));
-    }
-  }
-
-  private notify(
-    severity: 'success' | 'info' | 'warn' | 'error',
-    summary: string,
-    detail: string
-  ): void {
-    this.messages.add({ severity, summary, detail, life: 3000 });
   }
 }

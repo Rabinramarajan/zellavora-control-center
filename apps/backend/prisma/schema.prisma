@@ -138,6 +138,13 @@ model User {
   middleName     String?      @map("middle_name")
   employmentType String?      @map("employment_type")     // PERMANENT, CONTRACT, CONSULTANT, INTERN, EXTERNAL
   joiningDate    DateTime?    @map("joining_date") @db.Date
+  endDate        DateTime?    @map("end_date") @db.Date
+  dateOfBirth    DateTime?    @map("date_of_birth") @db.Date
+  fatherName     String?      @map("father_name")
+  motherName     String?      @map("mother_name")
+  maritalStatus  String?      @map("marital_status")      // SINGLE, MARRIED, DIVORCED, WIDOWED
+  spouseName     String?      @map("spouse_name")
+  spouseDateOfBirth DateTime? @map("spouse_date_of_birth") @db.Date
   company        String?      @map("company")
   workLocation   String?      @map("work_location")
   costCenter     String?      @map("cost_center")

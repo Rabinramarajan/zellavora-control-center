@@ -33,6 +33,7 @@ export interface AdminActor {
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
+const day = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : null);
 
 const SCOPE_LABELS: Record<string, string> = {
   GLOBAL: 'Global',
@@ -106,12 +107,22 @@ export class UserAdminService {
         userType: user.userType,
         language: user.language,
         timezone: user.timezone,
+        dateOfBirth: day(user.dateOfBirth),
+        gender: user.gender,
+      },
+      family: {
+        fatherName: user.fatherName,
+        motherName: user.motherName,
+        maritalStatus: user.maritalStatus,
+        spouseName: user.spouseName,
+        spouseDateOfBirth: day(user.spouseDateOfBirth),
       },
       employee: {
         employeeCode: user.employeeCode,
         employmentType: user.employmentType,
         designation: user.jobTitle,
         joiningDate: iso(user.joiningDate),
+        endDate: iso(user.endDate),
         company: user.company ?? membership?.tenant.name ?? null,
         workLocation: user.workLocation,
         costCenter: user.costCenter,
@@ -141,6 +152,23 @@ export class UserAdminService {
         location: user.workLocation,
         accessScope: user.accessScope,
       },
+      // The schema keeps one branch and undated team memberships, so begin/end follow employment.
+      branches: branch
+        ? [
+            {
+              ...branch,
+              beginDate: iso(user.joiningDate),
+              endDate: iso(user.endDate),
+              status: user.endDate ? 'Ended' : 'Active',
+            },
+          ]
+        : [],
+      teams: user.teams.map((t) => ({
+        ...t,
+        beginDate: iso(user.joiningDate),
+        endDate: iso(user.endDate),
+        status: user.endDate ? 'Ended' : 'Active',
+      })),
       security: {
         emailVerified: user.emailVerified,
         emailVerifiedAt: iso(user.emailVerifiedAt),

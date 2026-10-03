@@ -24,6 +24,12 @@ export interface NamedRef {
   name: string;
 }
 
+export interface DatedMembership extends NamedRef {
+  beginDate: string | null;
+  endDate: string | null;
+  status: string;
+}
+
 export interface UserProfile {
   id: string;
   userCode: string | null;
@@ -43,12 +49,22 @@ export interface UserProfile {
     userType: string | null;
     language: string;
     timezone: string | null;
+    dateOfBirth: string | null;
+    gender: string | null;
+  };
+  family: {
+    fatherName: string | null;
+    motherName: string | null;
+    maritalStatus: string | null;
+    spouseName: string | null;
+    spouseDateOfBirth: string | null;
   };
   employee: {
     employeeCode: string | null;
     employmentType: string | null;
     designation: string | null;
     joiningDate: string | null;
+    endDate: string | null;
     company: string | null;
     workLocation: string | null;
     costCenter: string | null;
@@ -76,6 +92,8 @@ export interface UserProfile {
     location: string | null;
     accessScope: string | null;
   };
+  branches: DatedMembership[];
+  teams: DatedMembership[];
   security: {
     emailVerified: boolean;
     emailVerifiedAt: string | null;

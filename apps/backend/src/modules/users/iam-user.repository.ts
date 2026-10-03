@@ -127,6 +127,12 @@ export class IamUserRepository extends BaseRepository {
         lastLoginDatetime: { gte: query.lastLoginFrom, lte: endOfDay(query.lastLoginTo) },
       });
     }
+    if (query.beginFrom || query.beginTo) {
+      and.push({ joiningDate: { gte: query.beginFrom, lte: query.beginTo } });
+    }
+    if (query.endFrom || query.endTo) {
+      and.push({ endDate: { gte: query.endFrom, lte: query.endTo } });
+    }
     const where: UserWhere = { AND: and };
 
     const [data, total] = await Promise.all([
@@ -147,6 +153,8 @@ export class IamUserRepository extends BaseRepository {
           employeeCode: true,
           userType: true,
           branchId: true,
+          joiningDate: true,
+          endDate: true,
           status: true,
           passwordHash: true,
           timezone: true,

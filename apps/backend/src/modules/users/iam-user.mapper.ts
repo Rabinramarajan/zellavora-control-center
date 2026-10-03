@@ -18,6 +18,8 @@ export interface IamUserListItemDto {
   department: string | null;
   jobTitle: string | null;
   employeeCode: string | null;
+  beginDate: string | null;
+  endDate: string | null;
   userType: string | null;
   branchId: string | null;
   branchName: string | null;
@@ -96,6 +98,8 @@ export class IamUserMapper {
       department: row.department ?? null,
       jobTitle: row.jobTitle ?? null,
       employeeCode: row.employeeCode ?? null,
+      beginDate: row.joiningDate?.toISOString().slice(0, 10) ?? null,
+      endDate: row.endDate?.toISOString().slice(0, 10) ?? null,
       userType: row.userType ?? null,
       branchId: row.branchId ?? null,
       branchName,

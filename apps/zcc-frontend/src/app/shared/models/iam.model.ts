@@ -185,6 +185,8 @@ export interface IamUserListItem {
   /** Human-readable id, e.g. USR000236. */
   userCode: string | null;
   employeeCode: string | null;
+  beginDate: string | null;
+  endDate: string | null;
   userType: string | null;
   branchId: string | null;
   branchName: string | null;
