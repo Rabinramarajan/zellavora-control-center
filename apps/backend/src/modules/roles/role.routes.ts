@@ -56,6 +56,22 @@ router.get('/all', authenticate, requirePermission('roles:read'), controller.lis
 
 /**
  * @swagger
+ * /api/v1/iam/roles/stats:
+ *   get:
+ *     summary: getRoleStats
+ *     operationId: getIamRolesStats
+ *     description: Role counts by status and scope for the list quick filters.
+ *     tags: [iamRoles]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "{ total, byStatus, byScope }"
+ */
+router.get('/stats', authenticate, requirePermission('roles:read'), controller.stats);
+
+/**
+ * @swagger
  * /api/v1/iam/roles/{id}:
  *   get:
  *     summary: getRoleById

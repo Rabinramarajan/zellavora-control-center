@@ -10,6 +10,7 @@ export interface RoleListItemDto {
   isSystem: boolean;
   organizationId: string | null;
   userCount: number;
+  groupCount: number;
   permissionCount: number;
   createdAt: string;
   updatedAt: string;
@@ -25,19 +26,52 @@ export interface RolePermissionDto {
   effect: 'allow' | 'deny';
 }
 
+export interface RoleGroupDto {
+  groupId: string;
+  name: string;
+  type: string;
+  status: string;
+  memberCount: number;
+  assignedAt: string;
+}
+
+export interface RoleUserDto {
+  userId: string;
+  fullName: string;
+  email: string;
+  employeeCode: string | null;
+  status: string;
+  assignedAt: string;
+}
+
 export interface RoleDetailDto extends RoleListItemDto {
   permissions: RolePermissionDto[];
+  groups: RoleGroupDto[];
+  users: RoleUserDto[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RoleRow = Role & {
-  _count?: { userAssignments?: number; rolePermissions?: number };
+  _count?: { userAssignments?: number; rolePermissions?: number; groupRoles?: number };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RoleRowWithPermissions = Role & {
+type RoleRowWithPermissions = RoleRow & {
   rolePermissions?: Array<RolePermission & { permission: Permission }>;
-  _count?: { userAssignments?: number };
+  groupRoles?: Array<{
+    createdAt: Date;
+    group: { id: string; name: string; type: string; status: string; _count: { members: number } };
+  }>;
+  userAssignments?: Array<{
+    createdAt: Date;
+    user: {
+      id: string;
+      fullName: string;
+      email: string;
+      employeeCode: string | null;
+      status: string;
+    };
+  }>;
 };
 
 export class RoleMapper {
@@ -52,6 +86,7 @@ export class RoleMapper {
       isSystem: row.isSystem,
       organizationId: row.organizationId ?? null,
       userCount: row._count?.userAssignments ?? 0,
+      groupCount: row._count?.groupRoles ?? 0,
       permissionCount: row._count?.rolePermissions ?? 0,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -70,6 +105,25 @@ export class RoleMapper {
         action: rp.permission.action ?? null,
         effect: rp.effect as 'allow' | 'deny',
       })),
+      groups: (row.groupRoles ?? []).map((gr) => ({
+        groupId: gr.group.id,
+        name: gr.group.name,
+        type: gr.group.type,
+        status: gr.group.status,
+        memberCount: gr.group._count.members,
+        assignedAt: gr.createdAt.toISOString(),
+      })),
+      // A user can hold the role in several organizations; list each person once.
+      users: [...new Map((row.userAssignments ?? []).map((ua) => [ua.user.id, ua])).values()].map(
+        (ua) => ({
+          userId: ua.user.id,
+          fullName: ua.user.fullName,
+          email: ua.user.email,
+          employeeCode: ua.user.employeeCode,
+          status: ua.user.status,
+          assignedAt: ua.createdAt.toISOString(),
+        })
+      ),
     };
   }
 }

@@ -50,6 +50,24 @@ export class RoleService {
     return rows.map((row) => RoleMapper.toListItem(row as never));
   }
 
+  /** Role counts per status and scope, for the list screen's quick filters. */
+  async stats() {
+    const [byStatus, byScope] = await Promise.all([
+      this.repo.countBy('status'),
+      this.repo.countBy('scope'),
+    ]);
+    const toMap = (
+      rows: Array<Record<string, unknown> & { _count: { _all: number } }>,
+      key: string
+    ) => Object.fromEntries(rows.map((r) => [String(r[key]), r._count._all]));
+    const status = toMap(byStatus as never, 'status');
+    return {
+      total: Object.values(status).reduce((sum, n) => sum + n, 0),
+      byStatus: status,
+      byScope: toMap(byScope as never, 'scope'),
+    };
+  }
+
   async getById(id: string) {
     const row = await this.repo.findByIdWithPermissions(id);
     if (!row) {
@@ -79,21 +97,19 @@ export class RoleService {
   // Mutations
   // ---------------------------------------------------------------------------
 
-  async create(dto: CreateRoleDto, actorId?: string | null) {
-    const key = slugify(dto.name);
-    const existingKey = await this.repo.findByKey(key);
-    if (existingKey) {
-      throw new AppError(`A role with key '${key}' already exists`, 409, 'ROLE_KEY_EXISTS');
-    }
+  /** System roles are seeded only; they cannot be created through the API. */
+  async create(dto: CreateRoleDto, actorId?: string | null, actorOrgId?: string | null) {
+    await this.assertNameFree(dto.name);
+    const key = await this.uniqueKey(dto.name);
 
     const created = await this.repo.create({
       name: dto.name,
       key,
-      organizationId: dto.organizationId ?? null,
+      organizationId: dto.organizationId ?? actorOrgId ?? null,
       description: dto.description ?? null,
       scope: dto.scope,
       status: dto.status,
-      isSystem: dto.isSystem,
+      isSystem: false,
       createdBy: actorId ?? null,
     });
 
@@ -117,9 +133,14 @@ export class RoleService {
     if (existing.isSystem && dto.name && dto.name !== existing.name) {
       throw new AppError('System role names cannot be renamed', 403, 'SYSTEM_ROLE');
     }
+    if (existing.isSystem && dto.scope && dto.scope !== existing.scope) {
+      throw new AppError('System role scope cannot be changed', 403, 'SYSTEM_ROLE');
+    }
+    if (dto.name) await this.assertNameFree(dto.name, id);
 
     const updated = await this.repo.update(id, {
       ...(dto.name !== undefined ? { name: dto.name } : {}),
+      ...(dto.scope !== undefined ? { scope: dto.scope } : {}),
       ...(dto.description !== undefined ? { description: dto.description } : {}),
       ...(dto.status !== undefined ? { status: dto.status } : {}),
       updatedBy: actorId ?? null,
@@ -165,7 +186,12 @@ export class RoleService {
     return { success: true };
   }
 
-  async setPermissions(roleId: string, dto: SetRolePermissionsDto, actorId?: string | null) {
+  async setPermissions(
+    roleId: string,
+    dto: SetRolePermissionsDto,
+    actorId?: string | null,
+    actorOrgId?: string | null
+  ) {
     const role = await this.repo.findById(roleId);
     if (!role) {
       throw new AppError('Role not found', 404, 'ROLE_NOT_FOUND');
@@ -177,8 +203,19 @@ export class RoleService {
         'SYSTEM_ROLE'
       );
     }
+    // role_permissions.organization_id is a required uuid; platform roles take the caller's org.
+    const orgId = role.organizationId ?? actorOrgId;
+    if (!orgId) {
+      throw new AppError('No organization to scope these permissions to', 400, 'NO_ORGANIZATION');
+    }
+    const permissionIds = [...new Set(dto.permissions.map((p) => p.permissionId))];
+    if (
+      permissionIds.length &&
+      (await this.repo.countPermissions(permissionIds)) !== permissionIds.length
+    ) {
+      throw new AppError('One or more permissions do not exist', 400, 'INVALID_PERMISSION');
+    }
 
-    const orgId = role.organizationId ?? 'platform';
     const before = await this.repo.listPermissions(roleId);
 
     await this.repo.transaction(async (tx) => {
@@ -213,12 +250,8 @@ export class RoleService {
     if (!source) {
       throw new AppError('Role not found', 404, 'ROLE_NOT_FOUND');
     }
-
-    const key = slugify(dto.name);
-    const existingKey = await this.repo.findByKey(key);
-    if (existingKey) {
-      throw new AppError(`A role with key '${key}' already exists`, 409, 'ROLE_KEY_EXISTS');
-    }
+    await this.assertNameFree(dto.name);
+    const key = await this.uniqueKey(dto.name);
 
     const copy = await this.repo.transaction(async (tx) => {
       const created = await this.repo.create(
@@ -253,6 +286,25 @@ export class RoleService {
 
     this.invalidate();
     return this.getById(copy.id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  private async assertNameFree(name: string, exceptId?: string): Promise<void> {
+    const dup = await this.repo.findByName(name);
+    if (dup && dup.id !== exceptId) {
+      throw new AppError(`A role named '${name}' already exists`, 409, 'ROLE_NAME_EXISTS');
+    }
+  }
+
+  /** Keys stay unique even when different names slugify alike (e.g. "HR Admin" / "HR-Admin"). */
+  private async uniqueKey(name: string): Promise<string> {
+    const base = slugify(name) || 'role';
+    let key = base;
+    for (let n = 2; await this.repo.findByKey(key); n++) key = `${base}_${n}`;
+    return key;
   }
 
   private invalidate() {

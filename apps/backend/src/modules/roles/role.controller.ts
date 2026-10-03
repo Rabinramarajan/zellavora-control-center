@@ -35,6 +35,15 @@ export class RoleController {
     }
   };
 
+  stats = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.stats();
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.getById(req.params.id);
@@ -56,7 +65,7 @@ export class RoleController {
   create = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const dto = CreateRoleSchema.parse(req.body);
-      const data = await this.service.create(dto, req.userId);
+      const data = await this.service.create(dto, req.userId, req.tenantId);
       res.status(201).json({ success: true, data });
     } catch (err) {
       next(err);
@@ -85,7 +94,7 @@ export class RoleController {
   setPermissions = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const dto = SetRolePermissionsSchema.parse(req.body);
-      const data = await this.service.setPermissions(req.params.id, dto, req.userId);
+      const data = await this.service.setPermissions(req.params.id, dto, req.userId, req.tenantId);
       res.json({ success: true, data });
     } catch (err) {
       next(err);

@@ -16,6 +16,8 @@ import {
   ResourceListItem,
   RoleDetail,
   RoleListItem,
+  RoleStats,
+  SaveRoleRequest,
   SetGroupRolesRequest,
   SetRolePermissionsRequest,
   SetUserGroupsRequest,
@@ -132,6 +134,14 @@ export class IamApiService {
 
   listAllPermissions(): Observable<ApiEnvelope<PermissionListItem[]>> {
     return this.apiData.getData<ApiEnvelope<PermissionListItem[]>>('/permissions');
+  }
+
+  roleStats(): Observable<ApiEnvelope<RoleStats>> {
+    return this.apiData.getData<ApiEnvelope<RoleStats>>('/iam/roles/stats');
+  }
+
+  updateRole(id: string, body: SaveRoleRequest): Observable<ApiEnvelope<RoleDetail>> {
+    return this.apiData.patchData<ApiEnvelope<RoleDetail>>(`/iam/roles/${id}`, body);
   }
 
   getRole(id: string): Observable<ApiEnvelope<RoleDetail>> {

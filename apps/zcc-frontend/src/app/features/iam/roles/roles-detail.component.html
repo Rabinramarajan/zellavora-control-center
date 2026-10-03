@@ -1,215 +1,298 @@
-@if (role()) {
-  <div class="mb-6">
-    <a
-      routerLink="/iam/roles"
-      class="mb-3 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
-    >
-      <i class="pi pi-arrow-left text-xs" aria-hidden="true"></i>
-      Roles
+@if (loadError()) {
+  <zcc-empty-state
+    icon="pi pi-exclamation-triangle"
+    title="Unable to load role"
+    [message]="loadError()!"
+  />
+} @else if (!role()) {
+  <div class="space-y-3">
+    <div class="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+    <div class="h-72 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+  </div>
+} @else {
+  @let r = role()!;
+
+  <header class="ud-bar">
+    <a routerLink="/iam/roles" [class]="btn.icon" aria-label="Back to roles" title="Back">
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
     </a>
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <div class="flex items-center gap-3">
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ role()!.name }}</h1>
-          <zcc-status-chip [value]="role()!.scope" [label]="role()!.scope" />
-          <zcc-status-chip [value]="role()!.status" [label]="role()!.status" />
-          @if (role()!.isSystem) {
-            <zcc-status-chip value="SYSTEM" label="System" tone="purple" />
-          }
-        </div>
-        <p class="mt-1 font-mono text-sm text-gray-400">{{ role()!.key }}</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="rounded-lg border border-indigo-500/30 px-3 py-1.5 text-sm font-medium text-indigo-500 hover:bg-indigo-500/10"
-          (click)="onCopy()"
-        >
-          <i class="pi pi-copy mr-1 text-xs" aria-hidden="true"></i>
+    <h1 class="ud-title">Role Detail</h1>
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      @if (canManage()) {
+        <button type="button" [class]="btn.secondary" [disabled]="busy()" (click)="copy()">
+          <i class="pi pi-copy text-xs" aria-hidden="true"></i>
           Copy
         </button>
-        <button
-          type="button"
-          class="rounded-lg border border-indigo-500/30 px-3 py-1.5 text-sm font-medium text-indigo-500 hover:bg-indigo-500/10"
-          (click)="activeTab.set('permissions')"
-        >
-          <i class="pi pi-key mr-1 text-xs" aria-hidden="true"></i>
-          Manage Permissions
+        <button type="button" [class]="btn.secondary" [disabled]="busy()" (click)="edit()">
+          <i class="pi pi-pencil text-xs" aria-hidden="true"></i>
+          Edit
         </button>
         <button
           type="button"
-          [disabled]="role()!.isSystem"
-          class="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-          (click)="onDelete()"
+          [class]="btn.danger"
+          [disabled]="busy() || r.isSystem"
+          [title]="r.isSystem ? 'System roles cannot be deleted' : 'Delete role'"
+          (click)="remove()"
         >
-          <i class="pi pi-trash mr-1 text-xs" aria-hidden="true"></i>
+          <i class="pi pi-trash text-xs" aria-hidden="true"></i>
           Delete
         </button>
-      </div>
-    </div>
-  </div>
-
-  <zcc-detail-tabs [tabs]="tabs()" [(activeKey)]="activeTab" />
-
-  <div class="mt-5">
-    @switch (activeTab()) {
-      @case ('overview') {
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Role ID</p>
-            <p class="mt-1 break-all font-mono text-sm text-gray-900 dark:text-white">
-              {{ role()!.id }}
-            </p>
-          </div>
-          <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Role Code</p>
-            <p class="mt-1 font-mono text-sm text-gray-900 dark:text-white">
-              {{ role()!.key }}
-            </p>
-          </div>
-          <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Role Type</p>
-            <p class="mt-1 text-sm text-gray-900 dark:text-white">
-              {{ role()!.isSystem ? 'System' : 'Custom' }}
-            </p>
-          </div>
-          <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scope</p>
-            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ role()!.scope }}</p>
-          </div>
-          <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Status</p>
-            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ role()!.status }}</p>
-          </div>
-          <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Assignments</p>
-            <p class="mt-1 text-sm text-gray-900 dark:text-white">
-              {{ role()!.permissionCount }} permissions · {{ role()!.userCount }} users
-            </p>
-          </div>
-          <div class="rounded-xl border border-gray-200 p-4 dark:border-white/10 md:col-span-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Description</p>
-            <p class="mt-1 text-sm text-gray-900 dark:text-white">
-              {{ role()!.description ?? 'No description' }}
-            </p>
-          </div>
-        </div>
       }
-      @case ('permissions') {
-        <div class="mb-4 flex items-center justify-end">
-          <span class="mr-3 text-xs text-gray-400 tabular-nums">
-            {{ matrixCount() }} selected
+      <button
+        type="button"
+        [class]="btn.icon"
+        aria-label="Refresh"
+        title="Refresh"
+        (click)="reload()"
+      >
+        <i class="pi pi-refresh" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <dl class="ud-summary rd-summary">
+    <div>
+      <dt>Role Name</dt>
+      <dd>{{ r.name }}</dd>
+    </div>
+    <div>
+      <dt>Role Key</dt>
+      <dd class="font-mono text-sm">{{ r.key }}</dd>
+    </div>
+    <div>
+      <dt>Scope</dt>
+      <dd>{{ scopeLabel(r.scope) }}</dd>
+    </div>
+    <div>
+      <dt>Users</dt>
+      <dd class="tabular-nums">{{ r.userCount }}</dd>
+    </div>
+    <div>
+      <dt>Groups</dt>
+      <dd class="tabular-nums">{{ r.groupCount }}</dd>
+    </div>
+    <div>
+      <dt>Status</dt>
+      <dd>{{ statusLabel(r.status) }}</dd>
+    </div>
+  </dl>
+
+  <ng-template #sectionHead let-key="key" let-title="title">
+    <button
+      type="button"
+      class="ud-section-head"
+      [attr.aria-expanded]="isOpen(key)"
+      [attr.aria-controls]="'rd-' + key"
+      (click)="toggle(key)"
+    >
+      {{ title }}
+      <i
+        class="pi text-xs"
+        [class.pi-chevron-up]="isOpen(key)"
+        [class.pi-chevron-down]="!isOpen(key)"
+        aria-hidden="true"
+      ></i>
+    </button>
+  </ng-template>
+
+  <!-- Role Details -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="sectionHead; context: { key: 'details', title: 'Role Details' }"
+    />
+    @if (isOpen('details')) {
+      <div id="rd-details" class="ud-body grid gap-x-10 md:grid-cols-2 lg:grid-cols-3">
+        <div class="ud-field">
+          <span class="ud-label">Role Name</span>
+          <div class="ud-value">{{ r.name }}</div>
+        </div>
+        <div class="ud-field">
+          <span class="ud-label">Role Key</span>
+          <div class="ud-value font-mono">{{ r.key }}</div>
+        </div>
+        <div class="ud-field">
+          <span class="ud-label">Scope</span>
+          <div class="ud-value">{{ scopeLabel(r.scope) }}</div>
+        </div>
+        <div class="ud-field">
+          <span class="ud-label">Status</span>
+          <div class="ud-value">{{ statusLabel(r.status) }}</div>
+        </div>
+        <div class="ud-field">
+          <span class="ud-label">System Role</span>
+          <div class="ud-value">{{ r.isSystem ? 'Yes' : 'No' }}</div>
+        </div>
+        <div class="ud-field">
+          <span class="ud-label">Permissions</span>
+          <div class="ud-value tabular-nums">{{ r.permissionCount }}</div>
+        </div>
+        <div class="ud-field">
+          <span class="ud-label">Created On</span>
+          <div class="ud-value">{{ date(r.createdAt) }}</div>
+        </div>
+        <div class="ud-field">
+          <span class="ud-label">Last Updated</span>
+          <div class="ud-value">{{ date(r.updatedAt) }}</div>
+        </div>
+        <div class="ud-field md:col-span-2 lg:col-span-3">
+          <span class="ud-label">Description</span>
+          <div class="ud-value min-h-[64px] whitespace-pre-line">{{ r.description ?? '' }}</div>
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Permissions -->
+  <section class="ud-section">
+    <div class="ud-section-row">
+      <ng-container
+        *ngTemplateOutlet="
+          sectionHead;
+          context: {
+            key: 'permissions',
+            title: 'Permissions (' + (matrix().length ? grantedCount() : r.permissionCount) + ')',
+          }
+        "
+      />
+      @if (canManage() && matrixDirty()) {
+        <div class="flex items-center gap-2 pe-3">
+          <span class="hidden text-xs text-amber-600 sm:inline dark:text-amber-400">
+            Unsaved changes
           </span>
           <button
             type="button"
-            class="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-600"
+            class="ud-section-action !m-0"
+            [disabled]="busy()"
+            (click)="discardPermissions()"
+          >
+            Discard
+          </button>
+          <button
+            type="button"
+            [class]="btn.primary"
+            class="!min-h-[34px] !py-1"
+            [disabled]="busy()"
             (click)="savePermissions()"
           >
-            Save permissions
+            Save Permissions
           </button>
         </div>
-        <zcc-permission-matrix
-          [existing]="role()!.permissions"
-          [(matrix)]="matrix"
-          (change)="matrixDirty.set(true)"
-        />
       }
-      @case ('resources') {
-        <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
-          <table class="min-w-full divide-y divide-gray-100 text-sm dark:divide-white/10">
-            <thead
-              class="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-gray-400"
-            >
+    </div>
+    @if (isOpen('permissions')) {
+      <div id="rd-permissions" class="ud-body">
+        @if (r.isSystem && canManage()) {
+          <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+            System role: permissions can be added or switched between allow and deny, but not
+            removed.
+          </p>
+        }
+        @for (v of [matrixVersion()]; track v) {
+          <zcc-permission-matrix
+            [existing]="r.permissions"
+            [readonly]="!canManage()"
+            [locked]="lockedPermissions()"
+            [(matrix)]="matrix"
+            (change)="matrixDirty.set(true)"
+          />
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Groups -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="
+        sectionHead;
+        context: { key: 'groups', title: 'Groups (' + r.groups.length + ')' }
+      "
+    />
+    @if (isOpen('groups')) {
+      <div id="rd-groups" class="ud-body overflow-x-auto">
+        <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+          Every member of these groups holds this role. Attach the role from the group's page.
+        </p>
+        <table class="ud-table">
+          <thead>
+            <tr>
+              <th>Group Name</th>
+              <th>Type</th>
+              <th>Members</th>
+              <th>Begin Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (g of r.groups; track g.groupId) {
               <tr>
-                <th class="px-4 py-3">Resource</th>
-                <th class="px-4 py-3">Permissions</th>
-                <th class="px-4 py-3">Actions</th>
+                <td>
+                  <a class="ud-link" [routerLink]="['/iam/groups', g.groupId]">{{ g.name }}</a>
+                </td>
+                <td>
+                  <zcc-status-chip
+                    [value]="g.type"
+                    [label]="groupTypeLabel(g.type)"
+                    [tone]="groupTypeTone(g.type)"
+                  />
+                </td>
+                <td class="tabular-nums">{{ g.memberCount }}</td>
+                <td class="whitespace-nowrap">{{ date(g.assignedAt) }}</td>
+                <td>{{ statusLabel(g.status) }}</td>
               </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-              @for (resource of resources(); track resource.name) {
-                <tr>
-                  <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                    {{ resource.name }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {{ resource.count }}
-                  </td>
-                  <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    {{ resource.actions }}
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">
-                    No resources attached.
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-      @case ('groups') {
-        <zcc-empty-state
-          icon="pi pi-sitemap"
-          title="Group assignments need API support"
-          message="This section should list assigned groups, scope, assigned date, actor, and remove/view actions."
-        />
-      }
-      @case ('users') {
-        <div class="rounded-xl border border-gray-200 dark:border-white/10 p-6">
-          <p class="text-sm text-gray-600 dark:text-gray-300">
-            <span class="font-semibold tabular-nums">{{ role()!.userCount }}</span>
-            user(s) currently hold this role.
-          </p>
-          <p class="mt-2 text-xs text-gray-400">
-            Direct versus inherited assignments should be separated once role assignment APIs expose
-            the source.
-          </p>
-        </div>
-      }
-      @case ('scope') {
-        <div class="rounded-xl border border-gray-200 p-6 dark:border-white/10">
-          <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scope Type</p>
-          <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-            {{ role()!.scope }}
-          </p>
-          <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
-            Scope decides where the permissions apply. Branch, department, team and custom scope
-            targets need backend fields before they can be edited here.
-          </p>
-        </div>
-      }
-      @case ('history') {
-        <zcc-empty-state
-          icon="pi pi-history"
-          title="No role change requests yet"
-          message="Role request history should link approval requests such as permission, scope and assignment changes."
-        />
-      }
-      @case ('status-history') {
-        <zcc-empty-state
-          icon="pi pi-clock"
-          title="Status history needs API support"
-          message="Store actor, timestamp, reason and correlation ID for created, activated, updated and deactivated events."
-        />
-      }
-      @case ('audit') {
-        <zcc-empty-state
-          icon="pi pi-shield"
-          title="Audit is read-only"
-          message="This section should show role creation, permission changes, assignment changes, scope changes and clone events."
-        />
-      }
+            } @empty {
+              <tr>
+                <td colspan="5" class="ud-empty">No groups carry this role.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
-  </div>
-} @else if (loading()) {
-  <div class="space-y-2">
-    @for (_ of [1, 2, 3]; track $index) {
-      <div class="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"></div>
+  </section>
+
+  <!-- Users -->
+  <section class="ud-section">
+    <ng-container
+      *ngTemplateOutlet="
+        sectionHead;
+        context: { key: 'users', title: 'Users (' + r.users.length + ')' }
+      "
+    />
+    @if (isOpen('users')) {
+      <div id="rd-users" class="ud-body overflow-x-auto">
+        <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+          Users assigned this role directly. Changes go through a User Request.
+        </p>
+        <table class="ud-table">
+          <thead>
+            <tr>
+              <th>Employee Name</th>
+              <th>Employee Code</th>
+              <th>Email ID</th>
+              <th>Begin Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of r.users; track u.userId) {
+              <tr>
+                <td>
+                  <a class="ud-link" [routerLink]="['/iam/users', u.userId]">{{ u.fullName }}</a>
+                </td>
+                <td>{{ u.employeeCode ?? '—' }}</td>
+                <td class="break-all">{{ u.email }}</td>
+                <td class="whitespace-nowrap">{{ date(u.assignedAt) }}</td>
+                <td>{{ accountStatus(u.status) }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="ud-empty">No users hold this role directly.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
-  </div>
-} @else {
-  <zcc-empty-state icon="pi pi-shield" title="Role not found" message="It may have been deleted." />
+  </section>
 }

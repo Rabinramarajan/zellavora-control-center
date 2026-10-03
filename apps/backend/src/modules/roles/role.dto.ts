@@ -5,7 +5,7 @@ export const EntityStatusSchema = z.enum(['ACTIVE', 'INACTIVE']);
 
 export const CreateRoleSchema = z
   .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
+    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120),
     description: z.string().max(500).nullable().optional(),
     scope: RoleScopeSchema.default('ORG'),
     status: EntityStatusSchema.default('ACTIVE'),
@@ -16,7 +16,8 @@ export const CreateRoleSchema = z
 
 export const UpdateRoleSchema = z
   .object({
-    name: z.string().min(2).optional(),
+    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120).optional(),
+    scope: RoleScopeSchema.optional(),
     description: z.string().max(500).nullable().optional(),
     status: EntityStatusSchema.optional(),
   })

@@ -89,6 +89,7 @@ export interface RoleListItem {
   isSystem: boolean;
   organizationId: string | null;
   userCount: number;
+  groupCount: number;
   permissionCount: number;
   createdAt: string;
   updatedAt: string;
@@ -104,8 +105,41 @@ export interface RolePermission {
   effect: PermissionEffect;
 }
 
+export interface RoleGroup {
+  groupId: string;
+  name: string;
+  type: GroupType;
+  status: EntityStatus;
+  memberCount: number;
+  assignedAt: string;
+}
+
+export interface RoleUser {
+  userId: string;
+  fullName: string;
+  email: string;
+  employeeCode: string | null;
+  status: string;
+  assignedAt: string;
+}
+
 export interface RoleDetail extends RoleListItem {
   permissions: RolePermission[];
+  groups: RoleGroup[];
+  users: RoleUser[];
+}
+
+export interface RoleStats {
+  total: number;
+  byStatus: Partial<Record<EntityStatus, number>>;
+  byScope: Partial<Record<RoleScope, number>>;
+}
+
+export interface SaveRoleRequest {
+  name: string;
+  scope: RoleScope;
+  status: EntityStatus;
+  description: string | null;
 }
 
 export interface SetRolePermissionsRequest {

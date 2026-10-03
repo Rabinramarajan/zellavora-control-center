@@ -4,6 +4,14 @@ import { RoleListQueryDto } from './role.dto';
 
 interface RoleWhere extends Prisma.RoleWhereInput {}
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Only live groups and users count towards a role's holders. */
+const COUNTS = {
+  userAssignments: { where: { user: { isDeleted: false } } },
+  rolePermissions: true,
+  groupRoles: { where: { group: { isDeleted: false } } },
+} as const;
+
 export class RoleRepository extends BaseRepository {
   /** Public transaction wrapper so services can orchestrate multi-repo writes. */
   transaction<T>(
@@ -14,29 +22,78 @@ export class RoleRepository extends BaseRepository {
   }
 
   async findById(id: string, tx?: TxClient) {
-    return this.getDb(tx).role.findUnique({
-      where: { id },
-      include: {
-        _count: { select: { userAssignments: true, rolePermissions: true } },
-      },
+    // uuid columns reject malformed ids with a 500; treat them as missing.
+    if (!UUID.test(id)) return null;
+    return this.getDb(tx).role.findFirst({
+      where: { id, isDeleted: false },
+      include: { _count: { select: COUNTS } },
     });
   }
 
   async findByIdWithPermissions(id: string, tx?: TxClient) {
-    return this.getDb(tx).role.findUnique({
-      where: { id },
+    if (!UUID.test(id)) return null;
+    return this.getDb(tx).role.findFirst({
+      where: { id, isDeleted: false },
       include: {
         rolePermissions: {
           include: { permission: true },
           orderBy: { permission: { name: 'asc' } },
         },
-        _count: { select: { userAssignments: true } },
+        groupRoles: {
+          where: { group: { isDeleted: false } },
+          include: {
+            group: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                status: true,
+                _count: { select: { members: true } },
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        userAssignments: {
+          where: { user: { isDeleted: false } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                employeeCode: true,
+                status: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        _count: { select: COUNTS },
       },
     });
   }
 
   async findByKey(key: string, tx?: TxClient) {
     return this.getDb(tx).role.findUnique({ where: { key } });
+  }
+
+  async findByName(name: string, tx?: TxClient) {
+    return this.getDb(tx).role.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' }, isDeleted: false },
+    });
+  }
+
+  async countBy(field: 'status' | 'scope', tx?: TxClient) {
+    return this.getDb(tx).role.groupBy({
+      by: [field],
+      where: { isDeleted: false },
+      _count: { _all: true },
+    });
+  }
+
+  async countPermissions(ids: string[], tx?: TxClient) {
+    return this.getDb(tx).permission.count({ where: { id: { in: ids } } });
   }
 
   async list(query: RoleListQueryDto, tx?: TxClient) {
@@ -57,7 +114,7 @@ export class RoleRepository extends BaseRepository {
       this.getDb(tx).role.findMany({
         where,
         include: {
-          _count: { select: { userAssignments: true, rolePermissions: true } },
+          _count: { select: COUNTS },
         },
         orderBy: { [query.sort]: query.order },
         skip: (query.page - 1) * query.pageSize,
@@ -72,7 +129,7 @@ export class RoleRepository extends BaseRepository {
   async listAll(tx?: TxClient) {
     return this.getDb(tx).role.findMany({
       where: { isDeleted: false },
-      include: { _count: { select: { userAssignments: true, rolePermissions: true } } },
+      include: { _count: { select: COUNTS } },
       orderBy: { name: 'asc' },
     });
   }
@@ -111,7 +168,13 @@ export class RoleRepository extends BaseRepository {
   async softDelete(id: string, deletedBy?: string | null, tx?: TxClient) {
     return this.getDb(tx).role.update({
       where: { id },
-      data: { isDeleted: true, deletedAt: new Date(), deletedBy: deletedBy ?? null },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy: deletedBy ?? null,
+        // key is a unique column; release it so a new role can reuse it.
+        key: `${id}~deleted`,
+      },
     });
   }
 

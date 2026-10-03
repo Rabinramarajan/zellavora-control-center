@@ -1,175 +1,223 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { DateControl, FormInputControl } from '@zellavoras/ui';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
-import { RoleListItem } from '../../../shared/models/iam.model';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
+import { EntityStatus, RoleListItem, RoleStats } from '../../../shared/models/iam.model';
 import { createListStore } from '../../../shared/utils/create-list-store';
-import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { IAM_BTN, IAM_CARD, IamPageHeaderComponent } from '../shared/iam-page-header.component';
-import { formatDate } from '../shared/iam-format';
-import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
+import { StatusChipComponent } from '../../../shared/components/iam';
 import {
+  DataTableCellDirective,
   DataTableColumn,
   DataTableComponent,
-  DataTableCellDirective,
-  DataTableActionsDirective,
+  DataTableEmptyDirective,
+  DataTableSort,
 } from '../../../shared/components/data-table';
-import { UserSelectComponent } from '../user-requests/components/user-select.component';
+import { FilterChipOption, FilterChipsComponent } from '../../../shared/components/filter-chips';
+import { FormDialogService } from '../../../shared/components/form-dialog';
+import { PageChangeEvent } from '../../../shared/components/pagination/pagination.component';
+import { IAM_BTN, IamPageHeaderComponent } from '../shared/iam-page-header.component';
+import {
+  ROLE_SCOPE_OPTIONS,
+  ROLE_STATUS_OPTIONS,
+  roleDialogConfig,
+  roleScopeLabel,
+  roleScopeTone,
+  roleStatusLabel,
+  toRoleRequest,
+} from './role-dialog.config';
 
-interface RoleSearchForm {
+type SortKey = 'name' | 'scope' | 'status' | 'createdAt';
+
+interface RoleFilters {
   q: string;
-  status: string[];
-  type: string[];
-  scope: string[];
-  resource: string[];
-  permission: string[];
-  groupId: string[];
-  createdBy: string | null;
-  createdFrom: string;
-  createdTo: string;
-  updatedFrom: string;
-  updatedTo: string;
+  scope: string;
+  status: string;
 }
 
-const EMPTY_FORM: RoleSearchForm = {
-  q: '',
-  status: [],
-  type: [],
-  scope: [],
-  resource: [],
-  permission: [],
-  groupId: [],
-  createdBy: null,
-  createdFrom: '',
-  createdTo: '',
-  updatedFrom: '',
-  updatedTo: '',
-};
-
-const FILTER_KEYS = Object.keys(EMPTY_FORM).filter((key) => key !== 'q');
-
-const STATUS_OPTIONS: MultiSelectOption[] = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-];
-
-const TYPE_OPTIONS: MultiSelectOption[] = [
-  { value: 'SYSTEM', label: 'System' },
-  { value: 'CUSTOM', label: 'Custom' },
-];
-
-const SCOPE_OPTIONS: MultiSelectOption[] = [
-  { value: 'GLOBAL', label: 'Global' },
-  { value: 'ORG', label: 'Organization' },
-  { value: 'RESOURCE', label: 'Resource' },
-  { value: 'BRANCH', label: 'Branch' },
-  { value: 'DEPARTMENT', label: 'Department' },
-  { value: 'TEAM', label: 'Team' },
-  { value: 'OWN', label: 'Own Records' },
-];
-
-const RESOURCE_OPTIONS: MultiSelectOption[] = [
-  { value: 'users', label: 'Users' },
-  { value: 'user-requests', label: 'User Requests' },
-  { value: 'groups', label: 'Groups' },
-  { value: 'roles', label: 'Roles' },
-  { value: 'permissions', label: 'Permissions' },
-  { value: 'projects', label: 'Projects' },
-  { value: 'blog', label: 'Blog' },
-  { value: 'audit', label: 'Audit Logs' },
-];
-
-const PERMISSION_OPTIONS: MultiSelectOption[] = [
-  { value: 'read', label: 'Read' },
-  { value: 'create', label: 'Create' },
-  { value: 'update', label: 'Update' },
-  { value: 'delete', label: 'Delete' },
-  { value: 'approve', label: 'Approve' },
-  { value: 'manage', label: 'Manage' },
-];
+const EMPTY_FILTERS: RoleFilters = { q: '', scope: '', status: '' };
+const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof RoleFilters>;
+const ANY: SelectControlOption = { value: '', label: '--Select--' };
 
 @Component({
   selector: 'zcc-roles-list',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
     RouterLink,
     FormInputControl,
-    DateControl,
+    SelectControl,
+    StatusChipComponent,
     IamPageHeaderComponent,
+    FilterChipsComponent,
     DataTableComponent,
     DataTableCellDirective,
-    DataTableActionsDirective,
-    PaginationComponent,
-    StatusChipComponent,
-    EmptyStateComponent,
-    MultiSelectComponent,
-    UserSelectComponent,
+    DataTableEmptyDirective,
   ],
+  host: {
+    '(document:keydown.escape)': 'filtersOpen.set(false)',
+    '(document:click)': 'onDocumentClick($event)',
+  },
   templateUrl: './roles-list.component.html',
   styleUrl: './roles-list.component.scss',
 })
 export class RolesListComponent {
   private readonly api = inject(IamApiService);
+  private readonly router = inject(Router);
+  private readonly formDialog = inject(FormDialogService);
+  protected readonly canManage = inject(PermissionService).can('roles:manage');
 
   protected readonly btn = IAM_BTN;
-  protected readonly card = IAM_CARD;
-  protected readonly labelClass = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400';
-  protected readonly statusOptions = STATUS_OPTIONS;
-  protected readonly typeOptions = TYPE_OPTIONS;
-  protected readonly scopeOptions = SCOPE_OPTIONS;
-  protected readonly resourceOptions = RESOURCE_OPTIONS;
-  protected readonly permissionOptions = PERMISSION_OPTIONS;
-  protected readonly date = formatDate;
-  protected form: RoleSearchForm = structuredClone(EMPTY_FORM);
-  protected readonly moreFilters = signal(false);
-  private readonly groups = signal<MultiSelectOption[]>([]);
-  protected readonly groupOptions = computed(() => this.groups());
+  protected readonly scopeTone = roleScopeTone;
+  protected readonly scopeLabel = roleScopeLabel;
+  protected readonly statusLabel = roleStatusLabel;
+  protected readonly pageSizes = [10, 25, 50, 100];
+  protected readonly scopeOptions: SelectControlOption[] = [ANY, ...ROLE_SCOPE_OPTIONS];
+  protected readonly statusOptions: SelectControlOption[] = [ANY, ...ROLE_STATUS_OPTIONS];
 
-  readonly store = createListStore<RoleListItem>({
-    filterKeys: FILTER_KEYS,
+  private readonly stats = signal<RoleStats | null>(null);
+  protected readonly statusChips = computed<FilterChipOption<EntityStatus>[]>(() =>
+    ROLE_STATUS_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label,
+      count: this.stats() ? (this.stats()!.byStatus[o.value] ?? 0) : null,
+    }))
+  );
+  protected readonly totalCount = computed(() => this.stats()?.total ?? null);
+  protected readonly activeStatus = computed<EntityStatus | null>(
+    () => (this.applied().status as EntityStatus) || null
+  );
+
+  protected readonly columns: DataTableColumn<RoleListItem>[] = [
+    { id: 'name', label: 'Role Name', sortKey: 'name' },
+    {
+      id: 'key',
+      label: 'Role Key',
+      value: (r) => r.key,
+      cellClass: 'whitespace-nowrap font-mono text-xs',
+    },
+    { id: 'scope', label: 'Scope', sortKey: 'scope' },
+    { id: 'userCount', label: 'Users', value: (r) => r.userCount, cellClass: 'tabular-nums' },
+    { id: 'groupCount', label: 'Groups', value: (r) => r.groupCount, cellClass: 'tabular-nums' },
+    {
+      id: 'permissionCount',
+      label: 'Permissions',
+      value: (r) => r.permissionCount,
+      cellClass: 'tabular-nums',
+    },
+    { id: 'status', label: 'Status', sortKey: 'status' },
+  ];
+
+  protected readonly roleId = (r: RoleListItem): string => r.id;
+  protected readonly roleName = (r: RoleListItem): string => r.name;
+
+  protected readonly store = createListStore<RoleListItem>({
+    initialPageSize: 10,
+    // The constructor's pushFilters() issues the first load with the default sort.
+    autoLoad: false,
+    filterKeys: ['q', 'scope', 'status', 'sort', 'order'],
     loader: (query) => firstValueFrom(this.api.listRoles(query)).then(unwrap),
   });
 
-  readonly columns: DataTableColumn<unknown>[] = [
-    { id: 'name', label: 'Role Name' },
-    { id: 'key', label: 'Role Code' },
-    { id: 'type', label: 'Type' },
-    { id: 'scope', label: 'Scope' },
-    { id: 'permissionCount', label: 'Permissions' },
-    { id: 'groupCount', label: 'Groups' },
-    { id: 'userCount', label: 'Users' },
-    { id: 'status', label: 'Status' },
-    { id: 'updatedAt', label: 'Last Updated' },
-  ];
+  protected readonly filtersOpen = signal(false);
+  protected readonly draft = signal<RoleFilters>({ ...EMPTY_FILTERS });
+  protected readonly applied = signal<RoleFilters>({ ...EMPTY_FILTERS });
+  protected readonly sort = signal<DataTableSort<SortKey>>({ key: 'name', dir: 'asc' });
 
-  constructor() {
-    firstValueFrom(this.api.listGroups({ page: 1, pageSize: 100 }))
-      .then((res) => this.groups.set(res.data.data.map((g) => ({ value: g.id, label: g.name }))))
-      .catch(() => this.groups.set([]));
+  protected readonly activeFilterCount = computed(
+    () => FILTER_KEYS.filter((k) => this.applied()[k].trim()).length
+  );
+
+  public constructor() {
+    this.pushFilters();
+    void this.loadStats();
   }
 
-  search(): void {
-    const { q, ...filters } = this.form;
-    this.store.setQ(q.trim());
+  // ---------------------------------------------------------------------------
+  // Filters
+  // ---------------------------------------------------------------------------
+
+  protected patch(key: keyof RoleFilters, value: string | null): void {
+    this.draft.update((d) => ({ ...d, [key]: value ?? '' }));
+  }
+
+  /** Opens the filter popup on a copy of the applied filters; closing discards edits. */
+  protected toggleFilters(): void {
+    if (!this.filtersOpen()) this.draft.set({ ...this.applied() });
+    this.filtersOpen.update((open) => !open);
+  }
+
+  protected onDocumentClick(event: MouseEvent): void {
+    if (!(event.target as HTMLElement | null)?.closest('.filter-anchor')) {
+      this.filtersOpen.set(false);
+    }
+  }
+
+  protected search(): void {
+    this.applied.set({ ...this.draft() });
+    this.filtersOpen.set(false);
+    this.pushFilters();
+  }
+
+  protected clear(): void {
+    this.draft.set({ ...EMPTY_FILTERS });
+    this.applied.set({ ...EMPTY_FILTERS });
+    this.filtersOpen.set(false);
+    this.pushFilters();
+  }
+
+  protected onStatusChip(status: EntityStatus | null | undefined): void {
+    this.applied.update((f) => ({ ...f, status: status ?? '' }));
+    this.pushFilters();
+  }
+
+  protected onSort(sort: DataTableSort | null): void {
+    if (!sort) return;
+    this.sort.set(sort as DataTableSort<SortKey>);
+    this.pushFilters();
+  }
+
+  protected onPaginate({ page, pageSize }: PageChangeEvent): void {
+    if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
+    else this.store.setPage(page);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Create
+  // ---------------------------------------------------------------------------
+
+  protected async createRole(): Promise<void> {
+    const created = await this.formDialog.open(
+      roleDialogConfig('create', (values) =>
+        firstValueFrom(this.api.createRole(toRoleRequest(values))).then(unwrap)
+      )
+    );
+    // Straight to the new role so its permissions can be chosen.
+    if (created) await this.router.navigate(['/iam/roles', created.id]);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Data
+  // ---------------------------------------------------------------------------
+
+  private pushFilters(): void {
+    const f = this.applied();
+    const filters: Record<string, string | string[]> = {
+      sort: this.sort().key,
+      order: this.sort().dir,
+    };
+    if (f.scope) filters['scope'] = [f.scope];
+    if (f.status) filters['status'] = [f.status];
+    if (f.q.trim()) filters['q'] = f.q.trim();
     this.store.setFilters(filters);
   }
 
-  clear(): void {
-    this.form = structuredClone(EMPTY_FORM);
-    this.store.setFilters({});
-    this.store.setQ('');
-  }
-
-  roleType(role: RoleListItem): string {
-    return role.isSystem ? 'System' : 'Custom';
-  }
-
-  onRowClick(_row: RoleListItem): void {
-    /* cell links navigate */
+  private async loadStats(): Promise<void> {
+    try {
+      this.stats.set(unwrap(await firstValueFrom(this.api.roleStats())));
+    } catch {
+      this.stats.set({ total: 0, byStatus: {}, byScope: {} });
+    }
   }
 }

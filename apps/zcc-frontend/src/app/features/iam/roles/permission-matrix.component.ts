@@ -40,16 +40,20 @@ export class PermissionMatrixComponent {
   private readonly api = inject(IamApiService);
 
   /** Existing granted permissions (from the role detail). */
-  readonly existing = input<RolePermission[]>([]);
+  public readonly existing = input<RolePermission[]>([]);
   /** Two-way model of the full matrix as the user edits it. */
-  readonly matrix = model<PermissionRow[]>([]);
-  readonly change = output<void>();
+  public readonly matrix = model<PermissionRow[]>([]);
+  /** View-only: every toggle is disabled. */
+  public readonly readonly = input(false);
+  /** Permissions that cannot be cleared (system roles may gain, never lose, permissions). */
+  public readonly locked = input<ReadonlySet<string>>(new Set());
+  public readonly change = output<void>();
 
   private readonly loaded = signal(false);
-  readonly loading = computed(() => this.matrix().length === 0 && !this.loaded());
-  readonly query = signal('');
+  public readonly loading = computed(() => this.matrix().length === 0 && !this.loaded());
+  public readonly query = signal('');
 
-  constructor() {
+  public constructor() {
     void this.loadAll();
   }
 
@@ -74,7 +78,7 @@ export class PermissionMatrixComponent {
     }
   }
 
-  readonly groups = computed(() => {
+  public readonly groups = computed(() => {
     const term = this.query().trim().toLowerCase();
     const all = this.matrix();
     const rows = term
@@ -97,7 +101,14 @@ export class PermissionMatrixComponent {
       .map(([resource, rows]) => ({ resource, rows }));
   });
 
-  toggle(row: PermissionRow, effect: PermissionEffect): void {
+  public isLocked(row: PermissionRow): boolean {
+    return this.locked().has(row.permissionId);
+  }
+
+  public toggle(row: PermissionRow, effect: PermissionEffect): void {
+    if (this.readonly()) return;
+    // A locked permission may switch allow/deny but never be cleared.
+    if (this.isLocked(row) && row.effect === effect) return;
     const next = row.effect === effect ? null : effect;
     this.matrix.update((rows) =>
       rows.map((r) => (r.permissionId === row.permissionId ? { ...r, effect: next } : r))
