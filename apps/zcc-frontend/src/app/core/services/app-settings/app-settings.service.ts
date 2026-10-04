@@ -34,7 +34,7 @@ export interface AppSettings {
 const DEFAULT_SETTINGS: AppSettings = {
   logLevel: 'info',
   supabaseFunctions: 'https://api.zellavora.com/api/v1',
-  adminPath: 'https://api.zellavora.com/admin',
+  adminPath: 'https://api.zellavora.com/api/v1/admin',
   encrypt: true,
   serverDateFormat: 'YYYY-MM-DD',
   serverDateTimeFormat: 'YYYY-MM-DD HH:mm:ss',
