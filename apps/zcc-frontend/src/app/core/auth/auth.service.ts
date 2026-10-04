@@ -22,7 +22,7 @@ import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/ope
 import { AuthStore } from './auth.store';
 import { PolicyStore } from '../rbac/store/policy.store';
 import { apiErrorCode } from './auth-errors';
-import { LoginEncryptionService } from './login-encryption.service';
+import { AesService } from '../services/aes/aes.service';
 import type {
   AcceptInvitationRequest,
   AcceptInvitationResponse,
@@ -76,7 +76,7 @@ export class AuthService {
   private readonly store = inject(AuthStore);
   private readonly policy = inject(PolicyStore);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly loginEncryption = inject(LoginEncryptionService);
+  private readonly aes = inject(AesService);
 
   private refreshTimer: Subscription | null = null;
   private refreshRequest$?: Observable<boolean>;
@@ -191,19 +191,14 @@ export class AuthService {
   login(request: LoginRequest): Observable<LoginResponse> {
     this.refreshStorage = request.rememberMe ? localStorage : sessionStorage;
     const body: LoginRequest = { ...request, email: request.email.trim().toLowerCase() };
-    const encryption = this.loginEncryption;
+    const encryption = this.aes;
 
     return new Observable<LoginResponse>((observer) => {
       encryption
         .encryptLoginPayload(body)
         .then((encryptedPayload) => {
-          const headers = {
-            'X-Encryption-Key': encryptedPayload.key,
-            'X-Encryption-IV': encryptedPayload.iv,
-          };
-
           this.http
-            .post<LoginResponse>(`${AUTH_API}/login`, encryptedPayload, { headers })
+            .post<LoginResponse>(`${AUTH_API}/login`, encryptedPayload)
             .subscribe({
               next: (res) => {
                 localStorage.setItem(STORAGE.clientCode, request.clientCode);

@@ -9,37 +9,38 @@ function parseBinaryString(str: string): Buffer {
   return Buffer.from(str, 'binary');
 }
 
-function decryptPayload(encryptedData: string, key: Buffer, iv: Buffer): unknown {
+function decryptField(encryptedData: string, key: Buffer, iv: Buffer): string {
   const decipher = crypto.createDecipheriv(ALGO, key, iv);
   let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
   decrypted += decipher.final('utf8');
-  return JSON.parse(decrypted);
+  return decrypted;
 }
 
 export function loginDecryptMiddleware(req: Request, _res: Response, next: NextFunction): void {
-  if (req.path === '/login' && req.method === 'POST') {
-    const encryptionKey = req.headers['x-encryption-key'] as string;
-    const encryptionIv = req.headers['x-encryption-iv'] as string;
-
-    if (encryptionKey && encryptionIv) {
+  if (req.path === '/api/v1/auth/login' && req.method === 'POST') {
+    const body = req.body;
+    if (
+      body &&
+      typeof body === 'object' &&
+      Array.isArray(body.tokenkeys) &&
+      body.tokenkeys.length === 2 &&
+      typeof body.userLoginId === 'string' &&
+      typeof body.password === 'string'
+    ) {
       try {
-        const key = parseBinaryString(encryptionKey);
-        const iv = parseBinaryString(encryptionIv);
+        const key = parseBinaryString(body.tokenkeys[0]);
+        const iv = parseBinaryString(body.tokenkeys[1]);
 
         if (key.length !== KEY_BYTES || iv.length !== IV_BYTES) {
           return next();
         }
 
-        const encryptedBody = req.body;
-        if (
-          encryptedBody &&
-          typeof encryptedBody === 'object' &&
-          encryptedBody.encrypted === true &&
-          encryptedBody.data
-        ) {
-          const decrypted = decryptPayload(encryptedBody.data, key, iv);
-          req.body = decrypted;
-        }
+        req.body = {
+          clientCode: body.clientCode,
+          email: decryptField(body.userLoginId, key, iv),
+          password: decryptField(body.password, key, iv),
+          rememberMe: false,
+        };
       } catch (error) {
         console.error('Login decryption failed:', error);
       }
