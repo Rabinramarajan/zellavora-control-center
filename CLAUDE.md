@@ -363,6 +363,8 @@ npm run db:studio             # Prisma Studio
 ## Support & Documentation
 
 - **Main Docs**: `/docs` folder
+- **Application review**: `docs/review/APPLICATION_REVIEW.md` (findings by severity, fix plan)
+- **Module documentation**: `docs/modules/README.md` (one page per module: code, endpoints, guards, data, rules, screens)
 - **Structure**: `docs/CODE_CLEANUP.md`
 - **API**: `docs/API_REFERENCE.md`, `docs/API_NAMING.md`
 - **Admin / IAM**: `docs/ADMIN_MODULE_SETUP.md`
