@@ -248,7 +248,7 @@ app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (_req, res) => {
 });
 
 // Compatibility route for Zellavora Admin Authentication token format
-app.get('/api/admin/api/Authentication/gettoken', (_req, res) => {
+app.get('/api/v1/admin/api/Authentication/gettoken', (_req, res) => {
   const key = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
   res.json([key.toString('binary'), iv.toString('binary')]);

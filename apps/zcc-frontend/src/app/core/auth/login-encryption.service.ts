@@ -10,7 +10,7 @@ interface EncryptionToken {
 @Injectable({ providedIn: 'root' })
 export class LoginEncryptionService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/admin/api/Authentication/gettoken';
+  private readonly apiUrl = '/api/v1/admin/api/Authentication/gettoken';
 
   private cachedToken: EncryptionToken | null = null;
 
