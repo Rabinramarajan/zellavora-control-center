@@ -181,7 +181,23 @@ const mockAuditLogs = [
 
 router.get(['/audit-logs/search', '/auditlog/search'], authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({}));
+    const plstAuditLogDetail = mockAuditLogs.map((log) => ({
+      tableName: log.tableName,
+      primaryKey: String(log.primaryKey),
+      changedMode: log.changeModeValue,
+      logCount: String(log.lstAuditLogDetail.length),
+      changedBy: log.changedBy,
+      auditLogId: log.auditLogId,
+      changedDate: log.changedDate,
+    }));
+    res.json(
+      wrapResponse({
+        plstAuditLogDetail,
+        totalCount: plstAuditLogDetail.length,
+        pageSize: Number(req.query.pageSize) || 10,
+        pageNumber: Number(req.query.pageNumber) || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }

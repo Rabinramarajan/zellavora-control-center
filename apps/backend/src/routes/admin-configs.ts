@@ -604,7 +604,23 @@ router.get(['/branches/template', '/Branch/Branch/new'], authenticate, async (re
 
 router.get(['/branches/search', '/Branch/Branch/search'], authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({}));
+    const searchResultSet = currentBranches.map((b) => ({
+      admBranchId: String(b.admBranchId),
+      branchCode: b.branchCode,
+      branchName: b.branchName,
+      effectiveDate: b.effectiveDate,
+      statusId: b.statusId,
+      statusValue: b.statusValue,
+      statusDescription: b.statusValue,
+    }));
+    res.json(
+      wrapResponse({
+        searchResultSet,
+        totalCount: searchResultSet.length,
+        pageSize: Number(req.query.pageSize) || 10,
+        pageNumber: Number(req.query.pageNumber) || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
@@ -675,7 +691,20 @@ router.post(['/branches/delete', '/Branch/Branch/delete'], authenticate, async (
 
 router.get(['/configurations/search', '/config/search'], authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({}));
+    const searchResult = mockConfigs.map((c) => ({
+      configSerialId: c.configSerialId,
+      configId: c.configId,
+      configValue: c.configValue,
+      configDescription: c.configDescription,
+    }));
+    res.json(
+      wrapResponse({
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: Number(req.query.pageSize) || 10,
+        pageNumber: Number(req.query.pageNumber) || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }

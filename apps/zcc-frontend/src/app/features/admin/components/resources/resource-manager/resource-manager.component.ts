@@ -52,7 +52,7 @@ export class ResourceManagerComponent implements OnInit {
         pageNumber: 1,
         ascending: true,
       };
-      await this.store.loadResources(criteria);
+      await this.store.loadResources(criteria, 'GET');
     } catch {
       // Error handling is done by the store
     }

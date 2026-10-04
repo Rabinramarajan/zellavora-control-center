@@ -243,7 +243,21 @@ let mockGroups = [
 
 router.get(['/groups/search', '/group/search'], authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({}));
+    const searchResult = mockGroups.map((g) => ({
+      groupId: g.groupId,
+      groupName: g.groupName,
+      beginDate: g.beginDate,
+      endDate: g.endDate,
+      statusDescription: g.statusDescription,
+    }));
+    res.json(
+      wrapResponse({
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: Number(req.query.pageSize) || 10,
+        pageNumber: Number(req.query.pageNumber) || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }

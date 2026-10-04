@@ -373,11 +373,27 @@ router.get(['/roles/metadata', '/role/initialize'], authenticate, async (req, re
 
 router.get(['/roles/search', '/role/search'], authenticate, async (req, res, next) => {
   try {
+    const { data: dbRoles, error } = await supabase.from('roles').select('*');
+    if (error) throw error;
+
+    const searchResult = (dbRoles || []).map((role: any) => {
+      const serial = getOrAddRoleSerial(role.id);
+      return {
+        roleId: serial,
+        roleName: role.label || role.key,
+        moduleDescription: 'Admin',
+        beginDate: role.created_at,
+        endDate: '2099-12-31T23:59:59Z',
+        statusDescription: 'Active',
+      };
+    });
+
     res.json(
       wrapResponse({
-        pageSize: 10,
-        pageNumber: 1,
-        ascending: true,
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: Number(req.query.pageSize) || 10,
+        pageNumber: Number(req.query.pageNumber) || 1,
       })
     );
   } catch (error) {

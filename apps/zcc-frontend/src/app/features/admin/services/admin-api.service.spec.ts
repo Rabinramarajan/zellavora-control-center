@@ -88,6 +88,22 @@ describe('AdminApiService', () => {
       expect(result).toEqual(mockResponse.data!);
     });
 
+    it('should initialize user search with GET criteria', async () => {
+      const criteria: UserSearchCriteria = { pageSize: 20, pageNumber: 2, ascending: false };
+      const mockResponse = wrap({ searchResult: [], totalCount: 0, ...criteria });
+
+      const promise = service.searchUsers(criteria, 'GET');
+
+      const req = httpMock.expectOne(
+        '/api/v1/admin/users/search?pageSize=20&pageNumber=2&ascending=false'
+      );
+      expect(req.request.method).toBe('GET');
+      expect(req.request.body).toBeNull();
+      req.flush(mockResponse);
+
+      expect(await promise).toEqual(mockResponse.data!);
+    });
+
     it('should create a new user', async () => {
       const mockUser = makeUser(0, '');
       const mockResponse = wrap(mockUser);
@@ -134,6 +150,19 @@ describe('AdminApiService', () => {
 
       const result = await promise;
       expect(result).toEqual(mockResponse.data!);
+    });
+
+    it('should initialize role search with GET criteria', async () => {
+      const criteria: RoleSearchCriteria = { pageSize: 10, pageNumber: 1, ascending: true };
+      const promise = service.searchRoles(criteria, 'GET');
+
+      const req = httpMock.expectOne(
+        '/api/v1/admin/roles/search?pageSize=10&pageNumber=1&ascending=true'
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(wrap({ searchResult: [], totalCount: 0, ...criteria }));
+
+      await promise;
     });
 
     it('should delete a role', async () => {

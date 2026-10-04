@@ -25,6 +25,8 @@ import {
   ApiResponse,
 } from '../models/admin.models';
 
+export type SearchHttpMethod = 'GET' | 'POST';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -41,13 +43,42 @@ export class AdminApiService {
     return (res?.data ?? ({} as T)) as T;
   }
 
+  /**
+   * Legacy search endpoints expose GET for screen initialization and POST for
+   * executing a search. Keep that distinction in one place so every search
+   * screen serializes criteria consistently for either transport.
+   */
+  private async search<TCriteria extends object, TResult>(
+    path: string,
+    criteria: TCriteria,
+    method: SearchHttpMethod
+  ): Promise<TResult> {
+    const url = `${this.baseUrl}/${path}/search`;
+    const request =
+      method === 'GET'
+        ? this.http.get<ApiResponse<TResult>>(url, {
+            params: this.toQueryParams(criteria),
+          })
+        : this.http.post<ApiResponse<TResult>>(url, criteria);
+
+    return this.unwrap(await lastValueFrom(request));
+  }
+
+  private toQueryParams(criteria: object): Record<string, string> {
+    return Object.fromEntries(
+      Object.entries(criteria)
+        .filter(([, value]) => value !== undefined && value !== null && value !== '')
+        .map(([key, value]) => [key, String(value)])
+    );
+  }
+
   // ==================== USER ENDPOINTS ====================
 
-  async searchUsers(criteria: UserSearchCriteria): Promise<UserSearchResult> {
-    const res = await lastValueFrom(
-      this.http.post<ApiResponse<UserSearchResult>>(`${this.baseUrl}/users/search`, criteria)
-    );
-    return this.unwrap(res);
+  async searchUsers(
+    criteria: UserSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<UserSearchResult> {
+    return this.search('users', criteria, method);
   }
 
   async createNewUser(): Promise<User> {
@@ -75,11 +106,11 @@ export class AdminApiService {
 
   // ==================== ROLE ENDPOINTS ====================
 
-  async searchRoles(criteria: RoleSearchCriteria): Promise<RoleSearchResult> {
-    const res = await lastValueFrom(
-      this.http.post<ApiResponse<RoleSearchResult>>(`${this.baseUrl}/roles/search`, criteria)
-    );
-    return this.unwrap(res);
+  async searchRoles(
+    criteria: RoleSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<RoleSearchResult> {
+    return this.search('roles', criteria, method);
   }
 
   async createNewRole(): Promise<Role> {
@@ -116,14 +147,11 @@ export class AdminApiService {
 
   // ==================== RESOURCE ENDPOINTS ====================
 
-  async searchResources(criteria: ResourceSearchCriteria): Promise<ResourceSearchResult> {
-    const res = await lastValueFrom(
-      this.http.post<ApiResponse<ResourceSearchResult>>(
-        `${this.baseUrl}/resources/search`,
-        criteria
-      )
-    );
-    return this.unwrap(res);
+  async searchResources(
+    criteria: ResourceSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<ResourceSearchResult> {
+    return this.search('resources', criteria, method);
   }
 
   async createNewResource(): Promise<Resource> {
@@ -151,11 +179,11 @@ export class AdminApiService {
 
   // ==================== BRANCH ENDPOINTS ====================
 
-  async searchBranches(criteria: BranchSearchCriteria): Promise<BranchSearchResult> {
-    const res = await lastValueFrom(
-      this.http.post<ApiResponse<BranchSearchResult>>(`${this.baseUrl}/branches/search`, criteria)
-    );
-    return this.unwrap(res);
+  async searchBranches(
+    criteria: BranchSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<BranchSearchResult> {
+    return this.search('branches', criteria, method);
   }
 
   async openBranch(branchId: number): Promise<Branch> {
@@ -185,14 +213,11 @@ export class AdminApiService {
 
   // ==================== AUDIT LOG ENDPOINTS ====================
 
-  async searchAuditLogs(criteria: AuditLogSearchCriteria): Promise<AuditLogSearchResult> {
-    const res = await lastValueFrom(
-      this.http.post<ApiResponse<AuditLogSearchResult>>(
-        `${this.baseUrl}/audit-logs/search`,
-        criteria
-      )
-    );
-    return this.unwrap(res);
+  async searchAuditLogs(
+    criteria: AuditLogSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<AuditLogSearchResult> {
+    return this.search('audit-logs', criteria, method);
   }
 
   // ==================== CONFIG ENDPOINTS ====================

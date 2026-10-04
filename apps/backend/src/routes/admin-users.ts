@@ -459,11 +459,32 @@ router.get(['/users/metadata', '/user/initialize'], authenticate, async (req, re
 
 router.get(['/users/search', '/user/search'], authenticate, async (req, res, next) => {
   try {
+    const { data: dbUsers, error } = await supabase.from('users').select('*');
+    if (error) throw error;
+
+    const searchResult = (dbUsers || []).map((user: any) => {
+      const serial = getOrAddUserSerial(user.id);
+      return {
+        userSerialId: serial,
+        userLoginId: user.email,
+        firstName: user.full_name.split(' ')[0] || '',
+        lastName: user.full_name.split(' ').slice(1).join(' ') || '',
+        emailId: user.email_id || user.email,
+        userName: user.username,
+        contactNumber: '+1 555-0100',
+        employeeCode: `EMP-${1000 + serial}`,
+        statusDescription: user.is_active ? 'Active' : 'Inactive',
+        beginDateFrom: user.created_at,
+        endDateFrom: null,
+      };
+    });
+
     res.json(
       wrapResponse({
-        pageSize: 10,
-        pageNumber: 1,
-        ascending: true,
+        searchResult,
+        totalCount: searchResult.length,
+        pageSize: Number(req.query.pageSize) || 10,
+        pageNumber: Number(req.query.pageNumber) || 1,
       })
     );
   } catch (error) {

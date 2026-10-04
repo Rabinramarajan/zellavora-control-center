@@ -2,7 +2,7 @@
  * Admin Store Service - Centralized state management using Angular Signals
  */
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { AdminApiService } from './admin-api.service';
+import { AdminApiService, SearchHttpMethod } from './admin-api.service';
 import {
   User,
   UserSearchCriteria,
@@ -75,9 +75,12 @@ export class AdminStoreService {
 
   // ==================== USER OPERATIONS ====================
 
-  async loadUsers(criteria: UserSearchCriteria): Promise<User[]> {
+  async loadUsers(
+    criteria: UserSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<User[]> {
     return this.runOperation(async () => {
-      const result = await this.api.searchUsers(criteria);
+      const result = await this.api.searchUsers(criteria, method);
       const users = (result.searchResult || []) as any[];
       this.state.update((s) => ({
         ...s,
@@ -119,9 +122,12 @@ export class AdminStoreService {
 
   // ==================== ROLE OPERATIONS ====================
 
-  async loadRoles(criteria: RoleSearchCriteria): Promise<Role[]> {
+  async loadRoles(
+    criteria: RoleSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<Role[]> {
     return this.runOperation(async () => {
-      const result = await this.api.searchRoles(criteria);
+      const result = await this.api.searchRoles(criteria, method);
       const roles = (result.searchResult || []) as any[];
       this.state.update((s) => ({
         ...s,
@@ -174,9 +180,12 @@ export class AdminStoreService {
 
   // ==================== RESOURCE OPERATIONS ====================
 
-  async loadResources(criteria: ResourceSearchCriteria): Promise<Resource[]> {
+  async loadResources(
+    criteria: ResourceSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<Resource[]> {
     return this.runOperation(async () => {
-      const result = await this.api.searchResources(criteria);
+      const result = await this.api.searchResources(criteria, method);
       const resources = (result.searchResult || []) as any[];
       this.state.update((s) => ({
         ...s,
@@ -223,9 +232,12 @@ export class AdminStoreService {
 
   // ==================== BRANCH OPERATIONS ====================
 
-  async loadBranches(criteria: BranchSearchCriteria): Promise<Branch[]> {
+  async loadBranches(
+    criteria: BranchSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<Branch[]> {
     return this.runOperation(async () => {
-      const result = await this.api.searchBranches(criteria);
+      const result = await this.api.searchBranches(criteria, method);
       const branches = (result.searchResultSet || []).map(
         (r): Branch => ({
           admBranchId: Number(r.admBranchId),
@@ -284,9 +296,12 @@ export class AdminStoreService {
 
   // ==================== AUDIT LOG OPERATIONS ====================
 
-  async loadAuditLogs(criteria: AuditLogSearchCriteria): Promise<AuditLog[]> {
+  async loadAuditLogs(
+    criteria: AuditLogSearchCriteria,
+    method: SearchHttpMethod = 'POST'
+  ): Promise<AuditLog[]> {
     return this.runOperation(async () => {
-      const result = await this.api.searchAuditLogs(criteria);
+      const result = await this.api.searchAuditLogs(criteria, method);
       const auditLogs = (result.plstAuditLogDetail || []) as any[];
       this.state.update((s) => ({
         ...s,

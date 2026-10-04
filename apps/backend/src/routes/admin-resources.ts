@@ -407,7 +407,14 @@ router.get(
 
 router.get(['/resources/search', '/resource/search'], authenticate, async (req, res, next) => {
   try {
-    res.json(wrapResponse({}));
+    res.json(
+      wrapResponse({
+        searchResult: mockResources,
+        totalCount: mockResources.length,
+        pageSize: Number(req.query.pageSize) || 10,
+        pageNumber: Number(req.query.pageNumber) || 1,
+      })
+    );
   } catch (error) {
     next(error);
   }
