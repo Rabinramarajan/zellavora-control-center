@@ -1,6 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { ConfigService } from '../config/config.service';
+import { AppSettingsService } from '../services/app-settings/app-settings.service';
 
 export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
   // Do not intercept static asset requests or fully qualified URLs
@@ -12,13 +12,9 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  const configService = inject(ConfigService);
-  const supabaseFunctionsUrl = (
-    configService.get('apiUrls.supabaseFunctions') || 'https://api.zellavora.com/api/v1'
-  ).replace(/\/+$/, '');
-  const adminApiUrl = (
-    configService.get('apiUrls.adminApi') || 'https://api.zellavora.com/api/v1/admin'
-  ).replace(/\/+$/, '');
+  const { supabaseFunctions, adminPath } = inject(AppSettingsService).environment;
+  const supabaseFunctionsUrl = supabaseFunctions.replace(/\/+$/, '');
+  const adminApiUrl = adminPath.replace(/\/+$/, '');
 
   let rewrittenUrl = req.url;
 
@@ -42,12 +38,12 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
     rewrittenUrl.startsWith('/group');
 
   if (isAdminRequest) {
-    let normalizedPath = rewrittenUrl;
+    let normalizedPath: string;
     if (rewrittenUrl.startsWith('/api/v1/admin')) {
-      // Keep as-is
+      normalizedPath = rewrittenUrl.slice('/api/v1/admin'.length);
     } else {
       const legacyPath = rewrittenUrl.startsWith('/api') ? rewrittenUrl : '/api' + rewrittenUrl;
-      normalizedPath = legacyPath.replace('/api/', '/api/v1/admin/');
+      normalizedPath = legacyPath.replace(/^\/api/, '');
     }
     rewrittenUrl = `${adminApiUrl}${normalizedPath}`;
   } else if (rewrittenUrl.startsWith('/api/v1')) {

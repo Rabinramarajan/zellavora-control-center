@@ -14,6 +14,7 @@ import {
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import { switchMap } from 'rxjs/operators';
+import { from } from 'rxjs';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
@@ -23,7 +24,7 @@ import { loggingInterceptor } from './core/http/logging.interceptor';
 import { retryInterceptor } from './core/http/retry.interceptor';
 import { errorInterceptor } from './core/error/error.interceptor';
 import { PolicyVersionInterceptor } from './core/rbac/interceptors/policy-version.interceptor';
-import { ConfigService } from './core/config/config.service';
+import { AppSettingsService } from './core/services/app-settings/app-settings.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -44,12 +45,12 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG(),
     MessageService,
     provideAppInitializer(() => {
-      const configService = inject(ConfigService);
+      const appSettings = inject(AppSettingsService);
       const authService = inject(AuthService);
       // 1. Load the runtime config first (the API base-url interceptor needs it).
       // 2. Then silently restore any existing session from the stored refresh
       //    token so a page refresh keeps the user logged in.
-      return configService.loadConfig().pipe(switchMap(() => authService.initialize()));
+      return from(appSettings.load()).pipe(switchMap(() => authService.initialize()));
     }),
   ],
 };
