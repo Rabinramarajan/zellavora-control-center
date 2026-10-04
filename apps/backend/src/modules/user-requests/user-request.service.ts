@@ -786,6 +786,98 @@ export class UserRequestService {
   }
 
   /** Called when an invitee sets their password: NEW_USER requests waiting on activation complete here. */
+  /**
+   * Raises the approval request for a self-registered account.
+   *
+   * The account already exists in PENDING, which blocks login, so the request
+   * carries targetUserId from the start — unlike an admin-raised NEW_USER
+   * request, where provisioning creates the account later.
+   *
+   * It is opened directly in PENDING_APPROVAL: there is no draft stage, because
+   * the person who filled the form is not an operator who could submit it.
+   */
+  async onSelfRegistration(input: {
+    userId: string;
+    organizationId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+  }) {
+    const now = new Date();
+    const payload = {
+      user: { firstName: input.firstName, lastName: input.lastName, userType: 'EMPLOYEE' },
+      employee: {},
+      contact: { workEmail: input.email },
+      organization: {},
+      access: {},
+    };
+
+    const request = await this.repo.transaction(async (tx) => {
+      const refNo = await this.repo.nextRefNo(tx);
+      const created = await this.repo.create(
+        {
+          organizationId: input.organizationId,
+          refNo,
+          type: 'NEW_USER',
+          status: 'PENDING_APPROVAL',
+          priority: 'NORMAL',
+          source: 'SYSTEM',
+          targetUserId: input.userId,
+          requestedById: input.userId,
+          subjectName: input.fullName,
+          subjectEmail: input.email,
+          justification: 'Self-registration through the sign-up page',
+          payload: payload as unknown as Prisma.InputJsonValue,
+          currentStep: 1,
+          submittedAt: now,
+        },
+        tx
+      );
+      await this.repo.createApprovals(
+        [
+          {
+            requestId: created.id,
+            level: 1,
+            stepName: 'IAM / Admin Approval',
+            approverId: null,
+            approverName: 'IAM Administrators',
+            status: 'PENDING',
+            assignedAt: now,
+          },
+        ],
+        tx
+      );
+      await this.addEvent(tx, created.id, null, 'SUBMITTED', input.userId, 'Self-registered');
+      await this.addEvent(
+        tx,
+        created.id,
+        'SUBMITTED',
+        'PENDING_APPROVAL',
+        null,
+        'Awaiting IAM / Admin Approval'
+      );
+      await AuditService.log(
+        {
+          action: 'user_request.self_registered',
+          resource: 'user_request',
+          resourceId: created.id,
+          organizationId: input.organizationId,
+          actorId: input.userId,
+          after: { refNo, type: 'NEW_USER', email: input.email },
+        },
+        tx
+      );
+      return created;
+    });
+
+    // Best-effort: a failed notification must not undo a completed registration.
+    await this.notifier
+      .notify(request, 'APPROVAL_REQUIRED', input.email, null)
+      .catch(() => undefined);
+    return request;
+  }
+
   async onInvitationAccepted(userId: string) {
     try {
       const pending = await this.repo.findProvisioningForUser(userId);

@@ -327,7 +327,9 @@ export class AuthService {
     }
     const response = {
       ok: true,
-      message: 'If the details are valid, a verification email is on its way.',
+      message:
+        'Your registration has been submitted and is awaiting administrator approval. ' +
+        'You will be notified once your account is approved.',
     };
 
     const tenant = await TenantService.findByClientCode(dto.clientCode);
@@ -352,7 +354,10 @@ export class AuthService {
           passwordHash,
           passwordChangedAt: new Date(),
           tenantId: tenant.id,
-          status: 'ACTIVE',
+          // PENDING blocks sign-in (see assertAccountUsable) until an
+          // administrator approves the account from User Requests. Approval
+          // flips this to ACTIVE.
+          status: 'PENDING',
           emailVerified: false,
           termsAccepted: true,
           termsAcceptedAt: new Date(),
@@ -367,6 +372,23 @@ export class AuthService {
     });
 
     await this.audit('user_registered', tenant.id, user.id, meta);
+
+    // Raise the approval request outside the account transaction: a failure
+    // here must not roll back a user who has already been told they registered,
+    // and the request can be reconciled from the PENDING account.
+    await new UserRequestService()
+      .onSelfRegistration({
+        userId: user.id,
+        organizationId: tenant.id,
+        email: dto.email,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        fullName: `${dto.firstName} ${dto.lastName}`,
+      })
+      .catch((e) =>
+        logger.error(`[auth] self-registration request failed: ${(e as Error).message}`)
+      );
+
     // Account stays recoverable through resend-verification if delivery fails.
     await this.sendVerificationEmail(user).catch((e) =>
       logger.error(`[auth] verification email failed: ${(e as Error).message}`)

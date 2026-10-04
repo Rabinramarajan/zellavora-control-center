@@ -46,7 +46,12 @@ export class UserRequestProvisioner {
   async provision(input: ProvisionInput, actorId: string): Promise<ProvisionResult> {
     const result =
       input.type === 'NEW_USER'
-        ? await this.createUser(input, actorId)
+        ? // A self-registration request already owns its account, created in
+          // PENDING at sign-up. Creating another would collide on the email,
+          // so that case activates the existing row instead.
+          input.targetUserId
+          ? await this.activateSelfRegistered(input, actorId)
+          : await this.createUser(input, actorId)
         : await this.updateUser(input, actorId);
     void cacheDelPattern('iam:users:*');
     return result;
@@ -181,6 +186,59 @@ export class UserRequestProvisioner {
     });
 
     return { userId, awaitingActivation: true, inviteEmail: email };
+  }
+
+  /**
+   * Approves an account that registered itself: the person already chose a
+   * password, so there is no invitation to accept — the account goes straight
+   * to ACTIVE and the requested access is applied.
+   */
+  private async activateSelfRegistered(
+    input: ProvisionInput,
+    actorId: string
+  ): Promise<ProvisionResult> {
+    const userId = input.targetUserId;
+    if (!userId) throw new AppError('Request has no target user', 400, 'TARGET_USER_REQUIRED');
+    const existing = await this.repo.findUserForRequest(userId, input.organizationId);
+    if (!existing) throw new AppError('Target user no longer exists', 404, 'USER_NOT_FOUND');
+
+    const current = await this.access.currentAccess(userId, input.organizationId);
+    const requested = applyRequest(current, 'NEW_USER', input.payload);
+    const previousStatus = accountStatusOf(existing);
+
+    await this.repo.transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { status: 'ACTIVE', updatedBy: actorId },
+      });
+      await this.syncAccess(tx, userId, input.organizationId, current, requested, actorId);
+      await AuditService.log(
+        {
+          action: 'user.activated',
+          resource: 'user',
+          resourceId: userId,
+          organizationId: input.organizationId,
+          actorId,
+          before: { status: existing.status },
+          after: { status: 'ACTIVE', roles: input.payload.access.addRoleIds },
+          metadata: { requestId: input.id, selfRegistered: true },
+        },
+        tx
+      );
+      await recordStatusChange(
+        {
+          userId,
+          organizationId: input.organizationId,
+          from: previousStatus,
+          to: 'ACTIVE',
+          reason: 'Self-registration approved',
+          actorId,
+        },
+        tx
+      );
+    });
+
+    return { userId, awaitingActivation: false, inviteEmail: null };
   }
 
   private async updateUser(input: ProvisionInput, actorId: string): Promise<ProvisionResult> {

@@ -75,6 +75,16 @@ jest.mock('../security-policy/security-policy.service', () => {
   };
 });
 jest.mock('../../infrastructure/queue', () => ({ addQueueJob: jest.fn(async () => undefined) }));
+// Pinned so these tests do not depend on whatever ALLOW_SELF_REGISTRATION
+// happens to be in the developer's .env.local.
+jest.mock('../../config/env', () => {
+  const actual = jest.requireActual('../../config/env');
+  return { ...actual, config: { ...actual.config, selfRegistrationEnabled: true } };
+});
+const onSelfRegistration = jest.fn(async () => ({ id: 'req-1', refNo: 'UR-2026-000001' }));
+jest.mock('../user-requests/user-request.service', () => ({
+  UserRequestService: jest.fn().mockImplementation(() => ({ onSelfRegistration })),
+}));
 jest.mock('../../infrastructure/logger', () => ({ logger: { info: jest.fn(), error: jest.fn() } }));
 
 const meta = { ipAddress: '203.0.113.7', userAgent: 'jest' };
@@ -121,6 +131,12 @@ function makeRepo(overrides: Partial<Record<keyof AuthRepository, jest.Mock>> = 
     createPasswordReset: jest.fn(),
     findLivePasswordReset: jest.fn(),
     recentPasswordHashes: jest.fn(async () => []),
+    transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
+    createUser: jest.fn(async (data: Record<string, unknown>) => ({ id: 'new-user-1', ...data })),
+    ensureMembership: jest.fn(),
+    addPasswordHistory: jest.fn(),
+    createEmailVerification: jest.fn(),
+    invalidateEmailVerifications: jest.fn(),
     ...overrides,
   } as unknown as AuthRepository;
 }
@@ -134,6 +150,71 @@ describe('AuthService', () => {
     (SecurityPolicyService.forOrganization as jest.Mock).mockResolvedValue({
       password: DEFAULT_PASSWORD_POLICY,
       login: DEFAULT_LOGIN_POLICY,
+    });
+  });
+
+  describe('register', () => {
+    const registerDto = {
+      clientCode: 'acme',
+      email: 'grace@acme.test',
+      password: 'Str0ng-Passw0rd!',
+      firstName: 'Grace',
+      lastName: 'Hopper',
+    };
+
+    const registerRepo = (): AuthRepository =>
+      makeRepo({ findUserByEmail: jest.fn(async () => null) });
+
+    it('creates the account as PENDING so sign-in is blocked until approval', async () => {
+      const repo = registerRepo();
+      await new AuthService(repo).register(registerDto, meta);
+
+      expect(repo.createUser).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'PENDING', email: registerDto.email }),
+        expect.anything()
+      );
+      // The old behaviour — immediately usable accounts — must not come back.
+      expect(repo.createUser).not.toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'ACTIVE' }),
+        expect.anything()
+      );
+    });
+
+    it('raises a NEW_USER approval request for the new account', async () => {
+      await new AuthService(registerRepo()).register(registerDto, meta);
+
+      expect(onSelfRegistration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'new-user-1',
+          organizationId: tenant.id,
+          email: registerDto.email,
+          fullName: 'Grace Hopper',
+        })
+      );
+    });
+
+    it('tells the person the account is awaiting approval', async () => {
+      const result = await new AuthService(registerRepo()).register(registerDto, meta);
+
+      expect(result.message).toMatch(/awaiting administrator approval/i);
+    });
+
+    it('still succeeds when raising the approval request fails', async () => {
+      onSelfRegistration.mockRejectedValueOnce(new Error('request service down'));
+
+      // The account exists and the person was told they registered; a failed
+      // request must not surface as a registration error.
+      await expect(
+        new AuthService(registerRepo()).register(registerDto, meta)
+      ).resolves.toMatchObject({ ok: true });
+    });
+
+    it('does not create an account for an email that already exists', async () => {
+      const repo = makeRepo();
+      await new AuthService(repo).register(registerDto, meta);
+
+      expect(repo.createUser).not.toHaveBeenCalled();
+      expect(onSelfRegistration).not.toHaveBeenCalled();
     });
   });
 

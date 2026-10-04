@@ -172,13 +172,14 @@
             <path d="m4 7 8 6 8-6" />
           </svg>
         </span>
-        <p class="kicker">Almost there</p>
+        <p class="kicker">Request received</p>
         <h1 id="register-title" class="card-title">
-          Check your <span class="title-accent">inbox</span>
+          Awaiting <span class="title-accent">approval</span>
         </h1>
         <p class="card-lead">
-          If the details are valid, a verification link is on its way to
-          <strong class="done__email">{{ model().email }}</strong>. Verify your email, then sign in.
+          Your registration for <strong class="done__email">{{ model().email }}</strong> has been
+          submitted to your administrators. You'll be notified once it's approved, and you can sign
+          in from then on.
         </p>
         <a class="submit" routerLink="/auth/login">
           <span>Go to sign in</span>
@@ -198,7 +199,7 @@
           </svg>
         </a>
         <p class="note note--plain">
-          No email?
+          A verification link was also sent to your inbox.
           <a class="auth-link" routerLink="/auth/resend-verification">Resend verification</a>
         </p>
       </div>
