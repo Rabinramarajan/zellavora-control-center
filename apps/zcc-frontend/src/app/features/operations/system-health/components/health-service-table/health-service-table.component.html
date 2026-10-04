@@ -15,16 +15,19 @@
       <tbody class="divide-y divide-gray-100 dark:divide-white/5">
         @for (service of services(); track service.id) {
           <tr class="transition-colors hover:bg-gray-50/60 dark:hover:bg-white/[0.02]">
-            <!-- Service Name & Critical Badge -->
+            <!-- Service Name & Tier Badge -->
             <td class="whitespace-nowrap px-5 py-4">
               <div class="flex items-center gap-2">
                 <span class="font-semibold text-gray-900 dark:text-white">{{ service.name }}</span>
                 @if (service.critical) {
+                  <!-- Importance, not status: a healthy service is still a core
+                       dependency. Kept visually neutral so it never reads as an
+                       alert next to a green STATUS cell. -->
                   <span
-                    class="rounded bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400"
-                    title="Critical dependency"
+                    class="rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+                    title="Core dependency — an outage here degrades the whole system"
                   >
-                    Critical
+                    Core
                   </span>
                 }
               </div>
