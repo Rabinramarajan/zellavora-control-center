@@ -3,10 +3,10 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@a
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
-import { ThemeService } from './core/services/theme.service';
 import { AnalyticsTrackerService } from './core/analytics/analytics-tracker.service';
-import { ThemeRuntimeService } from './core/theme/theme-runtime.service';
 import { AdminLayoutComponent } from './shared/components/admin-layout/admin-layout.component';
+import { ThemeService } from './core/services/theme/theme.service';
+import { ThemeRuntimeService } from './core/services/theme/theme-runtime.service';
 
 @Component({
   selector: 'app-root',

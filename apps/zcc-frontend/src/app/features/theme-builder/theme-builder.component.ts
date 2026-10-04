@@ -11,7 +11,6 @@ import { firstValueFrom } from 'rxjs';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ThemesApiService } from '../../core/api/themes.api';
 import { PermissionService } from '../../core/rbac/services/permission.service';
-import { ThemeRuntimeService, ensureFontLoaded } from '../../core/theme/theme-runtime.service';
 import { THEME_FONTS, Theme, ThemeFont, ThemeMode } from '../../shared/models/theme-builder.model';
 import { contrastRatio } from '../../shared/utils/brand-palette';
 import { EmptyStateComponent } from '../../shared/components/iam';
@@ -36,6 +35,7 @@ import {
   toRequest,
   validateDraft,
 } from './theme-draft';
+import { ensureFontLoaded, ThemeRuntimeService } from '../../core/services/theme/theme-runtime.service';
 
 type TabKey = 'colors' | 'branding' | 'layout' | 'components' | 'export';
 

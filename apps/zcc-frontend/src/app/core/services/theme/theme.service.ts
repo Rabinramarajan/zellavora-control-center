@@ -1,16 +1,20 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type ResolvedTheme = 'light' | 'dark';
 
 /** Must match the key read by the pre-bootstrap script in index.html. */
 const THEME_STORAGE_KEY = 'zcc-theme';
+const DEFAULT_PREFERENCE: ThemePreference = 'dark';
 
 const THEME_COLOR: Record<ResolvedTheme, string> = {
   light: '#f8fafc',
   dark: '#03020c',
 };
+
+const isThemePreference = (value: string | null): value is ThemePreference =>
+  value === 'light' || value === 'dark' || value === 'system';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -18,9 +22,15 @@ export class ThemeService {
   private readonly window = this.document.defaultView;
   private readonly mediaQuery = this.window?.matchMedia?.('(prefers-color-scheme: dark)') ?? null;
 
-  readonly preference = signal<ThemePreference>(this.readStoredPreference());
+  private readonly _preference = signal<ThemePreference>(
+    this.readStoredPreference() ?? DEFAULT_PREFERENCE,
+  );
+  /** Read-only: change it through setPreference() so it is persisted. */
+  readonly preference = this._preference.asReadonly();
+
   /** Pages with a fixed brand look (the sign-in screens) pin a theme regardless of preference. */
   readonly forcedTheme = signal<ResolvedTheme | null>(null);
+
   private readonly systemPrefersDark = signal(this.mediaQuery?.matches ?? true);
 
   readonly theme = computed<ResolvedTheme>(() => {
@@ -28,7 +38,7 @@ export class ThemeService {
     if (forced) {
       return forced;
     }
-    const preference = this.preference();
+    const preference = this._preference();
     if (preference === 'system') {
       return this.systemPrefersDark() ? 'dark' : 'light';
     }
@@ -39,16 +49,17 @@ export class ThemeService {
 
   constructor() {
     if (this.mediaQuery) {
+      const mediaQuery = this.mediaQuery;
       const onChange = (event: MediaQueryListEvent) => this.systemPrefersDark.set(event.matches);
-      this.mediaQuery.addEventListener('change', onChange);
-      inject(DestroyRef).onDestroy(() => this.mediaQuery?.removeEventListener('change', onChange));
+      mediaQuery.addEventListener('change', onChange);
+      inject(DestroyRef).onDestroy(() => mediaQuery.removeEventListener('change', onChange));
     }
 
     effect(() => this.apply(this.theme()));
   }
 
   setPreference(preference: ThemePreference): void {
-    this.preference.set(preference);
+    this._preference.set(preference);
     try {
       this.window?.localStorage.setItem(THEME_STORAGE_KEY, preference);
     } catch {
@@ -60,8 +71,10 @@ export class ThemeService {
    * The organization theme's default appearance; applied only to people who have never
    * picked light or dark themselves, and never saved as their own choice.
    */
-  public applyOrganizationDefault(mode: ResolvedTheme): void {
-    if (!this.hasStoredPreference()) this.preference.set(mode);
+  applyOrganizationDefault(mode: ResolvedTheme): void {
+    if (!this.readStoredPreference()) {
+      this._preference.set(mode);
+    }
   }
 
   toggle(): void {
@@ -70,34 +83,29 @@ export class ThemeService {
 
   private apply(theme: ResolvedTheme): void {
     const root = this.document.documentElement;
+
     // Suppress per-element transitions so the whole UI swaps in one frame instead of fading piecemeal.
-    root.classList.add('theme-switching');
+    // Only when a window exists: without one the frame callback never runs and the class would stick.
+    if (this.window) {
+      root.classList.add('theme-switching');
+      this.window.requestAnimationFrame(() => root.classList.remove('theme-switching'));
+    }
+
     root.classList.toggle('dark', theme === 'dark');
     root.classList.toggle('light', theme === 'light');
     root.style.colorScheme = theme;
     this.document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', THEME_COLOR[theme]);
-    this.window?.requestAnimationFrame(() => root.classList.remove('theme-switching'));
   }
 
-  private hasStoredPreference(): boolean {
+  /** The saved preference, or null when nothing valid is stored (or storage is blocked). */
+  private readStoredPreference(): ThemePreference | null {
     try {
-      return !!this.window?.localStorage.getItem(THEME_STORAGE_KEY);
+      const stored = this.window?.localStorage.getItem(THEME_STORAGE_KEY) ?? null;
+      return isThemePreference(stored) ? stored : null;
     } catch {
-      return false;
+      return null;
     }
-  }
-
-  private readStoredPreference(): ThemePreference {
-    try {
-      const stored = this.window?.localStorage.getItem(THEME_STORAGE_KEY);
-      if (stored === 'light' || stored === 'dark' || stored === 'system') {
-        return stored;
-      }
-    } catch {
-      // Fall through to the default when storage is inaccessible.
-    }
-    return 'dark';
   }
 }

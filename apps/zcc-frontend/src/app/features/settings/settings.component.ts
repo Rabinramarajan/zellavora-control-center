@@ -1,12 +1,34 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { firstValueFrom, map } from 'rxjs';
-import { ToastModule } from 'primeng/toast';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { ApiIntegrationService } from '../../core/services/api-integration.service';
-import { AuthService } from '../../core/auth/auth.service';
+import { ToastModule } from 'primeng/toast';
+import { firstValueFrom, map, Observable } from 'rxjs';
+
 import { apiErrorMessage } from '../../core/auth/auth-errors';
+import { AuthService } from '../../core/auth/auth.service';
+import { AppearanceSettingsComponent } from './components/appearance-settings/appearance-settings.component';
+import { AvatarUploaderComponent } from './components/avatar-uploader/avatar-uploader.component';
+import { EmailSettingsFormComponent } from './components/email-settings-form/email-settings-form.component';
+import { GeneralSettingsFormComponent } from './components/general-settings-form/general-settings-form.component';
+import { ProfileSettingsFormComponent } from './components/profile-settings-form/profile-settings-form.component';
+import { RegistrationSettingsFormComponent } from './components/registration-settings-form/registration-settings-form.component';
+import { SettingsAsideComponent } from './components/settings-aside/settings-aside.component';
+import { SettingsCardComponent } from './components/settings-card/settings-card.component';
+import { SettingsIconComponent } from './components/settings-icon/settings-icon.component';
+import { SettingsNavComponent } from './components/settings-nav/settings-nav.component';
+import { EmailSettingsService } from './email-settings.service';
+import {
+  DEFAULT_EMAIL_SETTINGS,
+  EmailSettings,
+  EmailSettingsPayload,
+  EmailTestResult,
+} from './models/email-settings.model';
+import {
+  DEFAULT_REGISTRATION_SETTINGS,
+  RegistrationSettings,
+  RegistrationSettingsPayload,
+} from './models/registration-settings.model';
 import {
   DEFAULT_GENERAL_SETTINGS,
   DEFAULT_PROFILE_SETTINGS,
@@ -16,35 +38,32 @@ import {
   SettingsTabId,
   SystemInfoItem,
 } from './models/settings.model';
-import { SettingsIconComponent } from './components/settings-icon/settings-icon.component';
-import { SettingsNavComponent } from './components/settings-nav/settings-nav.component';
-import { SettingsCardComponent } from './components/settings-card/settings-card.component';
-import { GeneralSettingsFormComponent } from './components/general-settings-form/general-settings-form.component';
-import { ProfileSettingsFormComponent } from './components/profile-settings-form/profile-settings-form.component';
-import { SettingsAsideComponent } from './components/settings-aside/settings-aside.component';
-import { AvatarUploaderComponent } from './components/avatar-uploader/avatar-uploader.component';
-import { AppearanceSettingsComponent } from './components/appearance-settings/appearance-settings.component';
-import { EmailSettingsFormComponent } from './components/email-settings-form/email-settings-form.component';
-import { EmailSettingsService } from './email-settings.service';
-import { RegistrationSettingsFormComponent } from './components/registration-settings-form/registration-settings-form.component';
 import { RegistrationSettingsService } from './registration-settings.service';
-import {
-  DEFAULT_REGISTRATION_SETTINGS,
-  RegistrationSettings,
-  RegistrationSettingsPayload,
-} from './models/registration-settings.model';
-import {
-  DEFAULT_EMAIL_SETTINGS,
-  EmailSettings,
-  EmailSettingsPayload,
-  EmailTestResult,
-} from './models/email-settings.model';
+import { ApiIntegrationService } from '../../core/services/integration/api-integration.service';
 
-type SavingSection = 'general' | 'profile' | null;
+type SettingsSection = 'general' | 'profile';
+
+/** Shape of GET /settings: every section is optional. */
+interface AllSettings {
+  general?: Partial<GeneralSettings>;
+  profile?: Partial<ProfileSettings>;
+}
+
+interface SaveOptions<T> {
+  request: Observable<T>;
+  setBusy: (busy: boolean) => void;
+  success: string;
+  failure: string;
+  onSuccess?: (result: T) => void;
+}
+
+const isTabId = (value: string | null): value is SettingsTabId =>
+  SETTINGS_TABS.some((tab) => tab.id === value);
+
+const toTabId = (value: string | null): SettingsTabId => (isTabId(value) ? value : 'general');
 
 @Component({
   selector: 'app-settings',
-  standalone: true,
   imports: [
     ToastModule,
     SettingsIconComponent,
@@ -74,24 +93,26 @@ export class SettingsComponent {
 
   protected readonly tabs = SETTINGS_TABS;
 
+  // ActivatedRoute.paramMap emits synchronously, so no initialValue is needed.
   protected readonly activeTabId = toSignal(
-    this.route.paramMap.pipe(map((params) => this.toTabId(params.get('tab')))),
-    { initialValue: this.toTabId(this.route.snapshot.paramMap.get('tab')) }
+    this.route.paramMap.pipe(map((params) => toTabId(params.get('tab')))),
+    { requireSync: true },
   );
   protected readonly activeTab = computed(
-    () => this.tabs.find((tab) => tab.id === this.activeTabId()) ?? this.tabs[0]
+    () => this.tabs.find((tab) => tab.id === this.activeTabId()) ?? this.tabs[0],
   );
 
   protected readonly generalSettings = signal<GeneralSettings>(DEFAULT_GENERAL_SETTINGS);
   protected readonly profileSettings = signal<ProfileSettings>(DEFAULT_PROFILE_SETTINGS);
-  protected readonly savingSection = signal<SavingSection>(null);
+  protected readonly savingSection = signal<SettingsSection | null>(null);
 
   protected readonly emailSettings = signal<EmailSettings>(DEFAULT_EMAIL_SETTINGS);
   protected readonly emailSaving = signal(false);
   protected readonly emailTesting = signal(false);
   protected readonly emailTestResult = signal<EmailTestResult | null>(null);
+
   protected readonly registrationSettings = signal<RegistrationSettings>(
-    DEFAULT_REGISTRATION_SETTINGS
+    DEFAULT_REGISTRATION_SETTINGS,
   );
   protected readonly registrationSaving = signal(false);
 
@@ -113,8 +134,14 @@ export class SettingsComponent {
     void this.loadRegistrationSettings();
   }
 
+  // ---------- template handlers ----------
+
   protected selectTab(tabId: SettingsTabId): void {
     void this.router.navigate(['/settings', tabId]);
+  }
+
+  protected openSecurity(): void {
+    void this.router.navigate(['/account/security']);
   }
 
   protected async saveGeneral(settings: GeneralSettings): Promise<void> {
@@ -130,34 +157,37 @@ export class SettingsComponent {
   }
 
   protected async updateAvatar(avatar: string | null): Promise<void> {
-    this.avatarSaving.set(true);
-    try {
-      await firstValueFrom(this.auth.updateAvatar(avatar));
-      this.toast(
-        'success',
-        'Saved',
-        avatar ? 'Profile picture updated' : 'Profile picture removed'
-      );
-    } catch (err) {
-      this.toast('error', 'Error', apiErrorMessage(err, 'Failed to update profile picture'));
-    } finally {
-      this.avatarSaving.set(false);
-    }
+    await this.save({
+      request: this.auth.updateAvatar(avatar),
+      setBusy: (busy) => this.avatarSaving.set(busy),
+      success: avatar ? 'Profile picture updated' : 'Profile picture removed',
+      failure: 'Failed to update profile picture',
+    });
   }
 
   protected async saveEmailSettings(payload: EmailSettingsPayload): Promise<void> {
-    this.emailSaving.set(true);
-    try {
-      this.emailSettings.set(await firstValueFrom(this.emailSettingsService.update(payload)));
-      // A previous result refers to the old configuration, so drop it rather
-      // than leave a stale "succeeded" badge next to new credentials.
-      this.emailTestResult.set(null);
-      this.toast('success', 'Saved', 'Email settings updated');
-    } catch (err) {
-      this.toast('error', 'Error', apiErrorMessage(err, 'Failed to save email settings'));
-    } finally {
-      this.emailSaving.set(false);
-    }
+    await this.save({
+      request: this.emailSettingsService.update(payload),
+      setBusy: (busy) => this.emailSaving.set(busy),
+      success: 'Email settings updated',
+      failure: 'Failed to save email settings',
+      onSuccess: (settings) => {
+        this.emailSettings.set(settings);
+        // A previous result refers to the old configuration, so drop it rather
+        // than leave a stale "succeeded" badge next to new credentials.
+        this.emailTestResult.set(null);
+      },
+    });
+  }
+
+  protected async saveRegistrationSettings(payload: RegistrationSettingsPayload): Promise<void> {
+    await this.save({
+      request: this.registrationSettingsService.update(payload),
+      setBusy: (busy) => this.registrationSaving.set(busy),
+      success: 'Registration settings updated',
+      failure: 'Failed to save registration settings',
+      onSuccess: (settings) => this.registrationSettings.set(settings),
+    });
   }
 
   protected async sendTestEmail(to: string): Promise<void> {
@@ -180,75 +210,77 @@ export class SettingsComponent {
     }
   }
 
-  protected async saveRegistrationSettings(payload: RegistrationSettingsPayload): Promise<void> {
-    this.registrationSaving.set(true);
-    try {
-      this.registrationSettings.set(
-        await firstValueFrom(this.registrationSettingsService.update(payload))
-      );
-      this.toast('success', 'Saved', 'Registration settings updated');
-    } catch (err) {
-      this.toast('error', 'Error', apiErrorMessage(err, 'Failed to save registration settings'));
-    } finally {
-      this.registrationSaving.set(false);
-    }
-  }
-
-  private async loadRegistrationSettings(): Promise<void> {
-    try {
-      this.registrationSettings.set(await firstValueFrom(this.registrationSettingsService.get()));
-    } catch {
-      // Permission-scoped: users without settings:manage can still use other tabs.
-    }
-  }
-
-  private async loadEmailSettings(): Promise<void> {
-    try {
-      this.emailSettings.set(await firstValueFrom(this.emailSettingsService.get()));
-    } catch {
-      // Non-fatal: the tab may simply be out of reach for this user's role,
-      // and the rest of the settings page must still render.
-    }
-  }
-
-  protected openSecurity(): void {
-    void this.router.navigate(['/account/security']);
-  }
+  // ---------- loading ----------
 
   private async loadAllSettings(): Promise<void> {
     try {
-      const response = await firstValueFrom(this.apiService.getSettings());
-      const data = response?.data;
+      const { data } = await firstValueFrom(this.apiService.getSettings<AllSettings | undefined>());
       if (data?.general) this.generalSettings.update((s) => ({ ...s, ...data.general }));
       if (data?.profile) this.profileSettings.update((s) => ({ ...s, ...data.profile }));
-    } catch {
-      this.toast('error', 'Error', 'Failed to load settings');
+    } catch (err) {
+      this.toast('error', 'Error', apiErrorMessage(err, 'Failed to load settings'));
     }
   }
 
-  private async saveSection(
-    section: Exclude<SavingSection, null>,
-    payload: GeneralSettings | ProfileSettings,
-    label: string
-  ): Promise<boolean> {
-    this.savingSection.set(section);
+  private loadEmailSettings(): Promise<void> {
+    return this.loadQuietly(this.emailSettingsService.get(), (s) => this.emailSettings.set(s));
+  }
+
+  private loadRegistrationSettings(): Promise<void> {
+    return this.loadQuietly(this.registrationSettingsService.get(), (s) =>
+      this.registrationSettings.set(s),
+    );
+  }
+
+  /**
+   * Non-fatal load: a tab may be out of reach for this user's role
+   * (e.g. no settings:manage), and the rest of the page must still render.
+   */
+  private async loadQuietly<T>(source: Observable<T>, apply: (value: T) => void): Promise<void> {
     try {
-      await firstValueFrom(this.apiService.updateSettings(section, payload));
-      this.toast('success', 'Saved', `${label} saved successfully`);
-      return true;
+      apply(await firstValueFrom(source));
     } catch {
-      this.toast('error', 'Error', `Failed to save ${label.toLowerCase()}`);
+      // intentionally ignored
+    }
+  }
+
+  // ---------- saving ----------
+
+  private saveSection(
+    section: SettingsSection,
+    payload: GeneralSettings | ProfileSettings,
+    label: string,
+  ): Promise<boolean> {
+    return this.save({
+      request: this.apiService.updateSettings(section, payload),
+      setBusy: (busy) => this.savingSection.set(busy ? section : null),
+      success: `${label} saved successfully`,
+      failure: `Failed to save ${label.toLowerCase()}`,
+    });
+  }
+
+  /** Runs a save request, toggles its busy flag, toasts the outcome, resolves true on success. */
+  private async save<T>({
+    request,
+    setBusy,
+    success,
+    failure,
+    onSuccess,
+  }: SaveOptions<T>): Promise<boolean> {
+    setBusy(true);
+    try {
+      onSuccess?.(await firstValueFrom(request));
+      this.toast('success', 'Saved', success);
+      return true;
+    } catch (err) {
+      this.toast('error', 'Error', apiErrorMessage(err, failure));
       return false;
     } finally {
-      this.savingSection.set(null);
+      setBusy(false);
     }
   }
 
   private toast(severity: 'success' | 'error', summary: string, detail: string): void {
     this.messageService.add({ severity, summary, detail, life: 3000 });
-  }
-
-  private toTabId(value: string | null): SettingsTabId {
-    return SETTINGS_TABS.some((tab) => tab.id === value) ? (value as SettingsTabId) : 'general';
   }
 }
