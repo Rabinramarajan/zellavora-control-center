@@ -872,16 +872,28 @@ model UserRoleAssignment {
 
 model AuditLog {
   id             String   @id @default(uuid()) @db.Uuid
+  auditId        String?  @unique @map("audit_id")
   actorId        String?  @map("actor_id") @db.Uuid
   action         String
+  module         String?  @map("module")
   resource       String?  @map("resource")    // user, organization, branch, etc.
+  resourceType   String?  @map("resource_type")
   resourceId     String?  @map("resource_id")
-  organizationId String   @map("organization_id") @db.Uuid
+  resourceName   String?  @map("resource_name")
+  httpMethod     String?  @map("http_method")
+  endpoint       String?  @map("endpoint")
+  status         String   @default("SUCCESS") @map("status") // SUCCESS, FAILURE, PARTIAL
   severity       String   @default("info") @map("severity") // debug, info, warning, error, critical
   ipAddress      String?  @map("ip_address")
   userAgent      String?  @map("user_agent")
   requestId      String?  @map("request_id")
+  correlationId  String?  @map("correlation_id")
+  beforeData     Json?    @map("before_data")
+  afterData      Json?    @map("after_data")
   metadata       Json?    @map("metadata")
+  errorCode      String?  @map("error_code")
+  errorMessage   String?  @map("error_message")
+  organizationId String   @map("organization_id") @db.Uuid
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   
   actor        User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
@@ -890,7 +902,12 @@ model AuditLog {
   @@index([organizationId])
   @@index([actorId])
   @@index([action])
+  @@index([module])
   @@index([resourceId])
+  @@index([resourceType])
+  @@index([status])
+  @@index([correlationId])
+  @@index([createdAt])
   @@map("audit_logs")
 }
 

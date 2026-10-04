@@ -92,18 +92,18 @@ export const appRoutes: Routes = [
       ),
   },
   {
-    path: 'audit-logs',
+    path: 'operations',
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),
+    loadChildren: () =>
+      import('./features/operations/operations.routes').then((m) => m.operationsRoutes),
+  },
+  {
+    path: 'audit-logs',
+    redirectTo: 'operations/audit-logs',
   },
   {
     path: 'system-health',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/system-health/system-health.component').then(
-        (m) => m.SystemHealthComponent
-      ),
+    redirectTo: 'operations/system-health',
   },
   {
     path: 'cms',

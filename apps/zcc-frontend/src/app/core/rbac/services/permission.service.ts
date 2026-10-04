@@ -41,9 +41,40 @@ export class PermissionService {
     if (policy.denied.includes(permission)) return false;
     if (policy.allowed.includes(permission)) return true;
 
-    // Wildcard match (e.g. allowed has "users:*:create")
+    // Operational aliases mapping
+    if (permission === 'OPERATIONS_SYSTEM_HEALTH_VIEW') {
+      if (
+        policy.allowed.includes('system:rbac:read') ||
+        policy.allowed.includes('system:health:read') ||
+        policy.allowed.includes('system:health:view')
+      ) {
+        return true;
+      }
+    }
+    if (permission === 'AUDIT_LOG_VIEW') {
+      if (
+        policy.allowed.includes('system:audit:read') ||
+        policy.allowed.includes('audit:read')
+      ) {
+        return true;
+      }
+    }
+    if (permission === 'AUDIT_LOG_EXPORT') {
+      if (
+        policy.allowed.includes('system:audit:export') ||
+        policy.allowed.includes('audit:export') ||
+        policy.allowed.includes('system:audit:read')
+      ) {
+        return true;
+      }
+    }
+
+    // Wildcard match (e.g. allowed has "users:*:create", "*:*", "system:*")
     for (const key of policy.allowed) {
       if (this.matchGlob(key, permission)) return true;
+      if (permission === 'OPERATIONS_SYSTEM_HEALTH_VIEW' && this.matchGlob(key, 'system:rbac:read')) return true;
+      if (permission === 'AUDIT_LOG_VIEW' && this.matchGlob(key, 'system:audit:read')) return true;
+      if (permission === 'AUDIT_LOG_EXPORT' && this.matchGlob(key, 'system:audit:read')) return true;
     }
     return false;
   }

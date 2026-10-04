@@ -41,10 +41,16 @@ import monthlySheetsRoutes from '../modules/monthly-sheets/monthly-sheets.routes
 import timesheetsRoutes from '../modules/timesheets/timesheets.routes';
 import cmsRoutes from '../modules/cms/cms.routes';
 
+import operationsHealthRoutes from '../modules/operations/health/health.routes';
+
 /** Register canonical API namespaces first, retaining historical paths as compatibility aliases. */
 export function registerApiRoutes(app: Express): void {
   // Core routes
   app.use('/api/v1/auth', authRoutes);
+
+  // Operations Module (System Health + Audit Logs)
+  app.use(['/api/v1/operations/health', '/api/v1/system-health'], operationsHealthRoutes);
+  app.use(['/api/v1/operations/audit-logs', '/api/v1/audit-logs', '/api/v1/clean/audits'], auditLogRoutes);
 
   // Organization and identity services
   app.use(['/api/v1/invitations', '/api/v1/clean/invitations'], invitationRoutes);
@@ -53,7 +59,6 @@ export function registerApiRoutes(app: Express): void {
   app.use(['/api/v1/permissions', '/api/v1/clean/permissions'], permissionRoutes);
   app.use(['/api/v1/organization-settings', '/api/v1/clean/settings'], organizationSettingsRoutes);
   app.use(['/api/v1/notifications', '/api/v1/clean/notifications'], notificationRoutes);
-  app.use(['/api/v1/audit-logs', '/api/v1/clean/audits'], auditLogRoutes);
   app.use(['/api/v1/storage', '/api/v1/clean/storage'], storageRoutes);
   app.use(['/api/v1/lookups', '/api/v1/clean/ddls'], lookupRoutes);
 

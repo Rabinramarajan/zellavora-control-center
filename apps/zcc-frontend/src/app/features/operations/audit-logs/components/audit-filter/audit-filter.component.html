@@ -1,0 +1,183 @@
+<form (ngSubmit)="onSearch()" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+  <div class="mb-4 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-white/5">
+    <div class="flex items-center gap-2">
+      <i class="pi pi-filter text-indigo-500 text-sm" aria-hidden="true"></i>
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Search Filters</h3>
+    </div>
+    <span class="text-xs text-gray-400">Refine audit records by criteria</span>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <!-- Date From -->
+    <div>
+      <label for="filter-date-from" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Date From</label>
+      <input
+        type="date"
+        id="filter-date-from"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().dateFrom"
+        (input)="updateField('dateFrom', $any($event.target).value)"
+      />
+    </div>
+
+    <!-- Date To -->
+    <div>
+      <label for="filter-date-to" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Date To</label>
+      <input
+        type="date"
+        id="filter-date-to"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().dateTo"
+        (input)="updateField('dateTo', $any($event.target).value)"
+      />
+    </div>
+
+    <!-- Module Select -->
+    <div>
+      <label for="filter-module" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Module</label>
+      <select
+        id="filter-module"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().module"
+        (change)="updateField('module', $any($event.target).value)"
+      >
+        <option value="">All Modules</option>
+        @for (mod of options()?.modules; track mod) {
+          <option [value]="mod">{{ mod }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Action Select -->
+    <div>
+      <label for="filter-action" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Action</label>
+      <select
+        id="filter-action"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().action"
+        (change)="updateField('action', $any($event.target).value)"
+      >
+        <option value="">All Actions</option>
+        @for (act of options()?.actions; track act) {
+          <option [value]="act">{{ act }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Status Select -->
+    <div>
+      <label for="filter-status" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Status</label>
+      <select
+        id="filter-status"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().status"
+        (change)="updateField('status', $any($event.target).value)"
+      >
+        <option value="">All Statuses</option>
+        <option value="SUCCESS">SUCCESS</option>
+        <option value="FAILURE">FAILURE</option>
+        <option value="PARTIAL">PARTIAL</option>
+      </select>
+    </div>
+
+    <!-- User / Email / ID -->
+    <div>
+      <label for="filter-user" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">User / Email</label>
+      <input
+        type="text"
+        id="filter-user"
+        placeholder="admin@zellavora.com or username"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().user"
+        (input)="updateField('user', $any($event.target).value)"
+      />
+    </div>
+
+    <!-- Resource Type -->
+    <div>
+      <label for="filter-resource-type" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Resource Type</label>
+      <select
+        id="filter-resource-type"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().resourceType"
+        (change)="updateField('resourceType', $any($event.target).value)"
+      >
+        <option value="">All Resource Types</option>
+        @for (rt of options()?.resourceTypes; track rt) {
+          <option [value]="rt">{{ rt }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Resource ID -->
+    <div>
+      <label for="filter-resource-id" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Resource ID</label>
+      <input
+        type="text"
+        id="filter-resource-id"
+        placeholder="USR-1024 or UUID"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().resourceId"
+        (input)="updateField('resourceId', $any($event.target).value)"
+      />
+    </div>
+
+    <!-- IP Address -->
+    <div>
+      <label for="filter-ip" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">IP Address</label>
+      <input
+        type="text"
+        id="filter-ip"
+        placeholder="127.0.0.1"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().ipAddress"
+        (input)="updateField('ipAddress', $any($event.target).value)"
+      />
+    </div>
+
+    <!-- Correlation ID -->
+    <div>
+      <label for="filter-correlation-id" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Correlation ID</label>
+      <input
+        type="text"
+        id="filter-correlation-id"
+        placeholder="Request/Correlation ID"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().correlationId"
+        (input)="updateField('correlationId', $any($event.target).value)"
+      />
+    </div>
+
+    <!-- Free-text Search -->
+    <div class="sm:col-span-2">
+      <label for="filter-search-text" class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Keyword Search</label>
+      <input
+        type="text"
+        id="filter-search-text"
+        placeholder="Search action, details, actor, or ID..."
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+        [value]="filterForm().searchText"
+        (input)="updateField('searchText', $any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="mt-4 flex items-center justify-end gap-3 border-t border-gray-100 pt-3 dark:border-white/5">
+    <button
+      type="button"
+      class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10"
+      (click)="onReset()"
+    >
+      <i class="pi pi-filter-slash text-xs" aria-hidden="true"></i>
+      <span>Reset</span>
+    </button>
+    <button
+      type="submit"
+      class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
+    >
+      <i class="pi pi-search text-xs" aria-hidden="true"></i>
+      <span>Search</span>
+    </button>
+  </div>
+</form>

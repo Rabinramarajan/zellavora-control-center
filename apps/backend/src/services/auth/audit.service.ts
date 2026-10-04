@@ -63,21 +63,30 @@ export class AuditService {
   static async log(event: AuditEvent): Promise<void> {
     try {
       const { prisma } = await import('../../infrastructure/prisma');
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randomHex = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const auditId = `AUD-${today}-${randomHex}`;
+
       await prisma.auditLog.create({
         data: {
+          auditId,
           organizationId: event.organizationId,
           actorId: event.actorId,
-          action: event.action,
+          action: event.action.toUpperCase(),
+          module: 'AUTHENTICATION',
           resource: event.resourceType ?? null,
+          resourceType: event.resourceType ?? null,
           resourceId: event.resourceId ?? null,
           ipAddress: event.ipAddress ?? null,
           userAgent: event.userAgent ?? null,
           requestId: event.requestId ?? null,
+          correlationId: event.requestId ?? null,
+          status: event.severity === 'critical' || event.action.includes('failed') ? 'FAILURE' : 'SUCCESS',
           severity: event.severity ?? 'info',
+          beforeData: (event.oldValues as object) ?? undefined,
+          afterData: (event.newValues as object) ?? undefined,
           metadata: {
             ...((event.metadata ?? {}) as object),
-            ...(event.oldValues ? { oldValues: event.oldValues } : {}),
-            ...(event.newValues ? { newValues: event.newValues } : {}),
             ...(event.description ? { description: event.description } : {}),
           } as never,
         },
