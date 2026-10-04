@@ -137,9 +137,9 @@ export class AuthService {
 
     const tenant = await TenantService.findByClientCode(dto.clientCode);
     const { login: loginPolicy } = await SecurityPolicyService.forOrganization(tenant?.id);
-    await RateLimitService.assertAccountAllowed(dto.email, loginPolicy);
+    await RateLimitService.assertAccountAllowed(dto.userLoginId, loginPolicy);
 
-    const user = tenant ? await this.repo.findUserInTenant(dto.email, tenant.id) : null;
+    const user = tenant ? await this.repo.findUserInTenant(dto.userLoginId, tenant.id) : null;
 
     const passwordless = !!user && config.devPasswordlessEmails.includes(user.email.toLowerCase());
     if (passwordless) logger.warn(`Dev passwordless login used for ${user.email}`);
@@ -176,10 +176,10 @@ export class AuthService {
     }
 
     if (user.mfaEnabled && config.enableTwoFactor) {
-      return this.issueMfaChallenge(user, tenant, dto.rememberMe);
+      return this.issueMfaChallenge(user, tenant, false);
     }
 
-    return this.completeLogin(user, tenant, dto.rememberMe, meta);
+    return this.completeLogin(user, tenant, false, meta);
   }
 
   async verifyMfa(mfaToken: string, code: string, meta: RequestMeta): Promise<LoginSuccess> {
@@ -1091,7 +1091,7 @@ export class AuthService {
     loginPolicy: LoginPolicy
   ): Promise<void> {
     await RateLimitService.record({
-      email: dto.email,
+      email: dto.userLoginId,
       clientCode: dto.clientCode,
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
@@ -1100,13 +1100,13 @@ export class AuthService {
     });
     await AuditService.logLoginFailure({
       organizationId,
-      email: dto.email,
+      email: dto.userLoginId,
       reason,
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     });
     try {
-      await RateLimitService.assertAccountAllowed(dto.email, loginPolicy);
+      await RateLimitService.assertAccountAllowed(dto.userLoginId, loginPolicy);
     } catch (e) {
       // This failure tipped the account into lockout.
       if (organizationId) {
@@ -1115,7 +1115,7 @@ export class AuthService {
           actorId: null,
           action: 'lockout',
           severity: 'warn',
-          description: `Temporary lockout after repeated failures for ${dto.email}`,
+          description: `Temporary lockout after repeated failures for ${dto.userLoginId}`,
           ipAddress: meta.ipAddress,
           userAgent: meta.userAgent,
         });
