@@ -97,6 +97,44 @@
         </div>
       }
     </dl>
+
+    @if (r.actions.canCompleteProvisioning) {
+      <section [class]="card + ' mt-3 !p-4'" aria-labelledby="approval-placement-heading">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 id="approval-placement-heading" class="text-sm font-semibold text-gray-900 dark:text-white">
+              Complete placement before approval
+            </h2>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Department, branch and at least one role are required to provision this account.
+            </p>
+          </div>
+          @if (!placementLookups()) {
+            <button type="button" [class]="btn.secondary" [disabled]="busy()" (click)="loadPlacement()">
+              Assign placement
+            </button>
+          }
+        </div>
+        @if (placementLookups()) {
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <app-select-control label="Branch" [required]="true" [options]="branchOptions()" [(value)]="placement.branchId" />
+            <app-select-control label="Department" [required]="true" [options]="departmentOptions()" [(value)]="placement.departmentId" />
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Roles <span aria-hidden="true">*</span></label>
+              <zcc-multi-select [options]="roleOptions()" [(value)]="placement.roleIds" placeholder="Select roles…" />
+            </div>
+          </div>
+          @if (placementErrors().length) {
+            <ul class="mt-3 text-xs text-red-600 dark:text-red-300" role="alert">
+              @for (error of placementErrors(); track error) { <li>{{ error }}</li> }
+            </ul>
+          }
+          <div class="mt-4 flex justify-end">
+            <button type="button" [class]="btn.primary" [disabled]="busy()" (click)="savePlacement()">Save placement</button>
+          </div>
+        }
+      </section>
+    }
   </div>
 
   @if (r.status === 'FAILED' && r.failureReason) {

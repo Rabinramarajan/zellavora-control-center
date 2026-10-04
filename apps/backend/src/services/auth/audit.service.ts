@@ -44,7 +44,7 @@ export type AuditAction =
   | 'resource_deleted';
 
 export interface AuditEvent {
-  organizationId: string;
+  organizationId: string | null;
   actorId: string | null;
   action: AuditAction;
   resourceType?: string;
@@ -81,7 +81,10 @@ export class AuditService {
           userAgent: event.userAgent ?? null,
           requestId: event.requestId ?? null,
           correlationId: event.requestId ?? null,
-          status: event.severity === 'critical' || event.action.includes('failed') ? 'FAILURE' : 'SUCCESS',
+          status:
+            event.severity === 'critical' || event.action.includes('failed')
+              ? 'FAILURE'
+              : 'SUCCESS',
           severity: event.severity ?? 'info',
           beforeData: (event.oldValues as object) ?? undefined,
           afterData: (event.newValues as object) ?? undefined,

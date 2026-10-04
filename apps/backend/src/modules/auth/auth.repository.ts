@@ -1,4 +1,4 @@
-import type { User } from '@prisma/client';
+import type { OrganizationRole, User } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 
 export type AuthChallengePurpose = 'mfa_login' | 'mfa_enrollment';
@@ -32,12 +32,55 @@ export class AuthRepository extends BaseRepository {
     return this.getDb(tx).user.create({ data });
   }
 
-  ensureMembership(userId: string, tenantId: string, tx?: TxClient) {
+  ensureMembership(
+    userId: string,
+    tenantId: string,
+    tx?: TxClient,
+    role: OrganizationRole = 'member'
+  ) {
     return this.getDb(tx).userTenant.upsert({
       where: { userId_tenantId: { userId, tenantId } },
-      create: { userId, tenantId, isDefault: true },
+      create: { userId, tenantId, isDefault: true, role },
       update: {},
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Organizations (self-registration)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Registration config for an organization. Returned even when
+   * self-registration is off, so the caller can tell "no such organization"
+   * apart from "closed to registration" without a second query — the public
+   * response never distinguishes them, but the log does.
+   */
+  findRegistrationTarget(clientCode: string, tx?: TxClient) {
+    return this.getDb(tx).organization.findFirst({
+      where: { clientCode: clientCode.toLowerCase(), isDeleted: false },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        allowSelfRegistration: true,
+        allowedRegistrationTypes: true,
+        requireAdminApproval: true,
+      },
+    });
+  }
+
+  organizationCodeTaken(clientCode: string, tx?: TxClient) {
+    return this.getDb(tx).organization.findUnique({
+      where: { clientCode: clientCode.toLowerCase() },
+      select: { id: true },
+    });
+  }
+
+  createOrganization(
+    data: Parameters<TxClient['organization']['create']>[0]['data'],
+    tx?: TxClient
+  ) {
+    return this.getDb(tx).organization.create({ data });
   }
 
   // ---------------------------------------------------------------------------

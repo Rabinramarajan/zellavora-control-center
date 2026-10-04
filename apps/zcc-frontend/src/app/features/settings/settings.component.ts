@@ -26,6 +26,13 @@ import { AvatarUploaderComponent } from './components/avatar-uploader/avatar-upl
 import { AppearanceSettingsComponent } from './components/appearance-settings/appearance-settings.component';
 import { EmailSettingsFormComponent } from './components/email-settings-form/email-settings-form.component';
 import { EmailSettingsService } from './email-settings.service';
+import { RegistrationSettingsFormComponent } from './components/registration-settings-form/registration-settings-form.component';
+import { RegistrationSettingsService } from './registration-settings.service';
+import {
+  DEFAULT_REGISTRATION_SETTINGS,
+  RegistrationSettings,
+  RegistrationSettingsPayload,
+} from './models/registration-settings.model';
 import {
   DEFAULT_EMAIL_SETTINGS,
   EmailSettings,
@@ -49,6 +56,7 @@ type SavingSection = 'general' | 'profile' | null;
     AvatarUploaderComponent,
     AppearanceSettingsComponent,
     EmailSettingsFormComponent,
+    RegistrationSettingsFormComponent,
   ],
   providers: [MessageService],
   templateUrl: './settings.component.html',
@@ -62,6 +70,7 @@ export class SettingsComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly emailSettingsService = inject(EmailSettingsService);
+  private readonly registrationSettingsService = inject(RegistrationSettingsService);
 
   protected readonly tabs = SETTINGS_TABS;
 
@@ -81,6 +90,10 @@ export class SettingsComponent {
   protected readonly emailSaving = signal(false);
   protected readonly emailTesting = signal(false);
   protected readonly emailTestResult = signal<EmailTestResult | null>(null);
+  protected readonly registrationSettings = signal<RegistrationSettings>(
+    DEFAULT_REGISTRATION_SETTINGS
+  );
+  protected readonly registrationSaving = signal(false);
 
   protected readonly avatarUrl = computed(() => this.auth.user()?.avatarUrl ?? null);
   protected readonly avatarSaving = signal(false);
@@ -97,6 +110,7 @@ export class SettingsComponent {
   constructor() {
     void this.loadAllSettings();
     void this.loadEmailSettings();
+    void this.loadRegistrationSettings();
   }
 
   protected selectTab(tabId: SettingsTabId): void {
@@ -163,6 +177,28 @@ export class SettingsComponent {
       this.toast('error', 'Error', apiErrorMessage(err, 'Failed to send test email'));
     } finally {
       this.emailTesting.set(false);
+    }
+  }
+
+  protected async saveRegistrationSettings(payload: RegistrationSettingsPayload): Promise<void> {
+    this.registrationSaving.set(true);
+    try {
+      this.registrationSettings.set(
+        await firstValueFrom(this.registrationSettingsService.update(payload))
+      );
+      this.toast('success', 'Saved', 'Registration settings updated');
+    } catch (err) {
+      this.toast('error', 'Error', apiErrorMessage(err, 'Failed to save registration settings'));
+    } finally {
+      this.registrationSaving.set(false);
+    }
+  }
+
+  private async loadRegistrationSettings(): Promise<void> {
+    try {
+      this.registrationSettings.set(await firstValueFrom(this.registrationSettingsService.get()));
+    } catch {
+      // Permission-scoped: users without settings:manage can still use other tabs.
     }
   }
 

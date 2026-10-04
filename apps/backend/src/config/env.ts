@@ -77,6 +77,17 @@ export const config = {
           .filter(Boolean),
   // Public self-registration is off by default: ZCC onboards users by invitation.
   selfRegistrationEnabled: process.env.ALLOW_SELF_REGISTRATION === 'true',
+  // Which registration types the public form offers, narrowing the global flag.
+  // Defaults to all three self-service types; PARTNER, VENDOR and CONTRACTOR are
+  // not self-service yet and are rejected by RegisterSchema regardless.
+  registrationTypes: (
+    process.env.REGISTRATION_TYPES || 'ORGANIZATION_MEMBER,INDIVIDUAL,CREATE_ORGANIZATION'
+  )
+    .split(',')
+    .map((t) => t.trim().toUpperCase())
+    .filter((t): t is 'ORGANIZATION_MEMBER' | 'INDIVIDUAL' | 'CREATE_ORGANIZATION' =>
+      ['ORGANIZATION_MEMBER', 'INDIVIDUAL', 'CREATE_ORGANIZATION'].includes(t)
+    ),
   requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION !== 'false',
   revokeSessionsOnPasswordChange: process.env.REVOKE_SESSIONS_ON_PASSWORD_CHANGE !== 'false',
   // Base URL of the Angular app, used to build links in auth emails. Never derived

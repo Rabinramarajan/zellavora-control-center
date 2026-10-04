@@ -56,6 +56,13 @@
             (sendTest)="sendTestEmail($event)"
           />
         }
+        @case ('registration') {
+          <app-registration-settings-form
+            [settings]="registrationSettings()"
+            [saving]="registrationSaving()"
+            (save)="saveRegistrationSettings($event)"
+          />
+        }
         @case ('appearance') {
           <app-appearance-settings />
         }

@@ -6,6 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
@@ -16,6 +17,7 @@ import {
   UserRequestAuditEntry,
   UserRequestDetail,
   UserRequestEmail,
+  UserRequestLookups,
 } from '../../../shared/models/user-request.model';
 import {
   EmptyStateComponent,
@@ -27,6 +29,7 @@ import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService, errorMessage } from '../shared/iam-feedback.service';
 import { formatDate, formatDateTime } from '../shared/iam-format';
 import { AccessPreviewComponent } from './components/access-preview.component';
+import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
 import {
   ACCESS_SCOPE_OPTIONS,
   EMPLOYMENT_TYPE_OPTIONS,
@@ -96,12 +99,14 @@ interface Field {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    FormsModule,
     FormInputControl,
     SelectControl,
     StatusChipComponent,
     EmptyStateComponent,
     JsonDiffViewerComponent,
     AccessPreviewComponent,
+    MultiSelectComponent,
   ],
   templateUrl: './user-request-detail.component.html',
   styleUrl: './user-request-detail.component.scss',
@@ -153,6 +158,28 @@ export class UserRequestDetailComponent {
   protected readonly loadError = signal<string | null>(null);
   protected readonly section = signal<SectionKey>('request');
   protected readonly busy = signal(false);
+  protected readonly placementLookups = signal<UserRequestLookups | null>(null);
+  protected placement = { branchId: '', departmentId: '', roleIds: [] as string[] };
+  protected readonly placementErrors = signal<string[]>([]);
+  protected readonly branchOptions = computed<SelectControlOption[]>(() => [
+    { value: '', label: 'Select branch…' },
+    ...(this.placementLookups()?.branches ?? []).map((x) => ({
+      value: x.id,
+      label: x.name,
+      description: x.code ?? undefined,
+    })),
+  ]);
+  protected readonly departmentOptions = computed<SelectControlOption[]>(() => [
+    { value: '', label: 'Select department…' },
+    ...(this.placementLookups()?.departments ?? []).map((x) => ({
+      value: x.id,
+      label: x.name,
+      description: x.code ?? undefined,
+    })),
+  ]);
+  protected readonly roleOptions = computed<MultiSelectOption[]>(() =>
+    (this.placementLookups()?.roles ?? []).map((x) => ({ value: x.id, label: x.name }))
+  );
   protected readonly access = signal<AccessPreview | null>(null);
   protected readonly accessLoading = signal(false);
   protected readonly audit = signal<UserRequestAuditEntry[]>([]);
@@ -414,6 +441,34 @@ export class UserRequestDetailComponent {
       action: 'approve',
       message: 'Approved.',
     });
+  }
+
+  protected async loadPlacement(): Promise<void> {
+    if (this.placementLookups()) return;
+    try {
+      this.placementLookups.set(await firstValueFrom(this.api.lookups()));
+      const r = this.request()!;
+      this.placement = {
+        branchId: r.payload.organization.branchId ?? '',
+        departmentId: r.payload.organization.departmentId ?? '',
+        roleIds: [...r.payload.access.addRoleIds],
+      };
+    } catch (err) {
+      this.feedback.error(err, 'Could not load placement choices.');
+    }
+  }
+
+  protected async savePlacement(): Promise<void> {
+    const errors: string[] = [];
+    if (!this.placement.branchId) errors.push('Branch is required.');
+    if (!this.placement.departmentId) errors.push('Department is required.');
+    if (!this.placement.roleIds.length) errors.push('At least one role is required.');
+    this.placementErrors.set(errors);
+    if (errors.length) return;
+    await this.run(
+      () => firstValueFrom(this.api.setApprovalProvisioning(this.request()!.id, this.placement)),
+      'Placement saved. The request is ready to approve.'
+    );
   }
 
   protected async decide(action: 'reject' | 'send-back'): Promise<void> {

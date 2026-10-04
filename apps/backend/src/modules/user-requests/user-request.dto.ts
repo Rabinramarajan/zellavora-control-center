@@ -235,6 +235,16 @@ export const ActionCommentSchema = z
   })
   .strict();
 
+export const ApprovalProvisioningSchema = z
+  .object({
+    branchId: z.string().uuid(),
+    departmentId: z.string().uuid(),
+    roleIds: z.array(z.string().uuid()).min(1, 'Select at least one role'),
+  })
+  .strict();
+
+export type ApprovalProvisioningDto = z.infer<typeof ApprovalProvisioningSchema>;
+
 export const RequiredCommentSchema = z
   .object({ comments: z.string().trim().min(3, 'A comment is required').max(2000) })
   .strict();

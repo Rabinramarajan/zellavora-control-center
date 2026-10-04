@@ -155,14 +155,13 @@
       }
 
       <form class="auth-form" [formRoot]="form" aria-labelledby="login-title">
-        <app-select-control
+        <app-auth-field
           [formField]="form.clientCode"
-          label="Organization"
+          label="Organization code"
+          type="text"
           icon="building"
-          [placeholder]="orgsLoading() ? 'Loading organizations…' : 'Select your organization'"
-          searchPlaceholder="Search organizations…"
-          [options]="orgOptions()"
-          [searchable]="true"
+          autocomplete="organization"
+          placeholder="e.g. ACME"
         />
 
         <app-auth-field

@@ -1,0 +1,87 @@
+<fieldset
+  class="rt-group"
+  [attr.aria-describedby]="showError() ? id + '-error' : null"
+  [attr.aria-invalid]="showError() ? true : null"
+>
+  <legend class="rt-legend">{{ legend() }}</legend>
+
+  @for (option of options(); track option.type) {
+    <label
+      class="rt-card rt-card--{{ option.accent }}"
+      [class.rt-card--on]="value() === option.type"
+    >
+      <input
+        #radio
+        class="rt-radio"
+        type="radio"
+        [name]="groupName"
+        [value]="option.type"
+        [checked]="value() === option.type"
+        [disabled]="disabled()"
+        (change)="select(option.type)"
+        (blur)="touch.emit()"
+      />
+
+      <span class="rt-icon" aria-hidden="true">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          @switch (option.icon) {
+            @case ('building') {
+              <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15" />
+              <path d="M14 10h5a1 1 0 0 1 1 1v10" />
+              <path d="M3 21h18M7.5 9h3M7.5 13h3M7.5 17h3M17 14h0M17 17.5h0" />
+            }
+            @case ('user') {
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M5 20c.7-3.6 3.4-5.6 7-5.6s6.3 2 7 5.6" />
+            }
+            @case ('plus') {
+              <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4" />
+              <path d="M3 21h11M7.5 9h3M7.5 13h3M7.5 17h3" />
+              <circle cx="17.5" cy="16.5" r="4.5" />
+              <path d="M17.5 14.3v4.4M15.3 16.5h4.4" />
+            }
+          }
+        </svg>
+      </span>
+
+      <span class="rt-text">
+        <span class="rt-title">{{ option.cardTitle }}</span>
+        <span class="rt-subtitle">{{ option.cardSubtitle }}</span>
+      </span>
+
+      <!-- Checked state is carried by the glyph as well as the accent border, so
+         it does not rely on colour alone. -->
+      <span class="rt-mark" aria-hidden="true">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          @if (value() === option.type) {
+            <path d="m5 12.5 4.5 4.5L19 7.5" />
+          } @else {
+            <path d="M9 6l6 6-6 6" />
+          }
+        </svg>
+      </span>
+    </label>
+  }
+</fieldset>
+
+@if (showError()) {
+  <p [id]="id + '-error'" class="auth-inline-error" role="alert">{{ errorText() }}</p>
+}

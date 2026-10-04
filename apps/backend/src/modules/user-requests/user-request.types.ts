@@ -1,5 +1,6 @@
 export const REQUEST_TYPES = [
   'NEW_USER',
+  'NEW_ORGANIZATION',
   'UPDATE_USER',
   'ACCESS_CHANGE',
   'ADD_ROLE',
@@ -55,8 +56,11 @@ export const CANCELLABLE_STATUSES: readonly RequestStatus[] = [
   'SENT_BACK',
 ];
 
-/** Types that act on an existing account (everything except NEW_USER). */
-export const needsTargetUser = (type: RequestType): boolean => type !== 'NEW_USER';
+/** Types that create their subject rather than acting on an existing account. */
+const CREATES_SUBJECT: readonly RequestType[] = ['NEW_USER', 'NEW_ORGANIZATION'];
+
+/** Types that act on an existing account. */
+export const needsTargetUser = (type: RequestType): boolean => !CREATES_SUBJECT.includes(type);
 
 /** Role keys that make a request privileged and add a Security Approval step. */
 export const PRIVILEGED_ROLE_KEYS = new Set(['owner', 'super_admin', 'superadmin', 'admin']);
@@ -83,6 +87,7 @@ export const STATUS_LABELS: Record<RequestStatus, string> = {
 
 export const TYPE_LABELS: Record<RequestType, string> = {
   NEW_USER: 'New User',
+  NEW_ORGANIZATION: 'New Organization',
   UPDATE_USER: 'Update User',
   ACCESS_CHANGE: 'Access Change',
   ADD_ROLE: 'Add Role',

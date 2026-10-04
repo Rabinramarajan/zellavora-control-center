@@ -212,14 +212,6 @@ a.submit {
   }
 }
 
-/* Match the library select's label to the auth-field labels beside it. */
-:host ::ng-deep .card-inner .sc-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--auth-text-strong);
-  padding-left: 0;
-}
-
 /* Themed, overlay-thin scrollbar instead of the light native one. */
 .card-inner {
   scrollbar-width: thin;
@@ -260,7 +252,7 @@ a.submit {
 .stepper {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(var(--step-count, 2), minmax(0, 1fr));
   gap: 0.75rem;
   margin: 1.5rem 0 0;
   padding: 0;
@@ -458,4 +450,243 @@ a.submit {
     margin-top: 1rem;
     padding-top: 0.9rem;
   }
+}
+
+/* ---------- Registration type chip ---------- */
+/* The chosen type stays on screen as a mode, not as a completed step. */
+.type-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+.type-chip__icon {
+  --rt-accent: var(--lp-indigo);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 9999px;
+  color: var(--rt-accent);
+  border: 1px solid color-mix(in srgb, var(--rt-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--rt-accent) 10%, transparent);
+}
+.type-chip__icon--org {
+  --rt-accent: var(--lp-indigo);
+}
+.type-chip__icon--solo {
+  --rt-accent: var(--lp-cyan);
+}
+.type-chip__icon--create {
+  --rt-accent: var(--lp-emerald);
+}
+.type-chip__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--auth-text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.type-chip__change {
+  flex-shrink: 0;
+  /* Matches .step-summary__edit so both inline actions clear 44px. */
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 9999px;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a5b4fc;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.type-chip__change:hover {
+  background: rgba(139, 92, 246, 0.15);
+}
+.type-chip__change:focus-visible {
+  outline: 2px solid var(--auth-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Stepper: compact mode ---------- */
+/* Three labels do not fit a 375px card, so past two steps the labels give way
+   to a segmented bar with the current step named above it. */
+.stepper-block {
+  margin-top: 1.5rem;
+}
+.stepper-block .stepper {
+  margin-top: 0;
+}
+.stepper-status {
+  display: none;
+  margin-bottom: 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--auth-text-strong);
+}
+
+@mixin stepper-compact {
+  .stepper-status {
+    display: block;
+  }
+  .stepper {
+    gap: 0.4rem;
+  }
+  .stepper__item {
+    gap: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .stepper__dot {
+    display: none;
+  }
+  /* The label text stays for assistive tech; the bar carries it visually. */
+  .stepper__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .stepper__item::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 0.3rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: background 0.3s ease;
+  }
+  .stepper__item--active::before {
+    background: linear-gradient(90deg, #7c3aed, var(--lp-indigo));
+  }
+  .stepper__item--done::before {
+    background: rgba(52, 211, 153, 0.55);
+  }
+}
+
+.stepper-block--compact {
+  @include stepper-compact;
+}
+/* Even two steps lose their labels on the narrowest phones. */
+@media (max-width: 420px) {
+  .stepper-block {
+    @include stepper-compact;
+  }
+}
+
+/* With three or more steps the card can scroll, so progress stays pinned. */
+.stepper-block--compact {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.75rem 0 0.6rem;
+  margin-top: 1.25rem;
+  background: var(--lp-card);
+  backdrop-filter: blur(12px);
+}
+
+/* ---------- Steps ---------- */
+/* A fieldset only to carry the step's legend; it must not re-introduce layout. */
+.step-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.field-note {
+  margin-top: -0.35rem;
+  font-size: 0.8125rem;
+  color: var(--auth-text-muted);
+}
+.field-note strong {
+  color: var(--auth-text-strong);
+}
+
+.chooser {
+  margin-top: 1.5rem;
+}
+
+/* Direction-aware so Back reads as going back rather than as another step
+   forward. */
+.step-pane--forward {
+  animation: step-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.step-pane--back {
+  animation: step-in-back 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes step-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Terminal panel tones ---------- */
+.done__icon--cyan {
+  color: #67e8f9;
+  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(34, 211, 238, 0.12);
+  box-shadow: 0 0 30px -8px rgba(34, 211, 238, 0.8);
+}
+.done__icon--emerald {
+  color: #6ee7b7;
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.12);
+  box-shadow: 0 0 30px -8px rgba(52, 211, 153, 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-pane--forward,
+  .step-pane--back,
+  .done {
+    animation: none;
+  }
+  .type-chip__change,
+  .stepper-block .stepper__item::before {
+    transition: none;
+  }
+}
+
+/* ---------- Organization code availability ---------- */
+/* Advisory line under the code field. Never red for "taken": the submit is the
+   authority, and this is guidance while the person is still choosing. */
+.code-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  padding-left: 0.1rem;
+  font-size: 0.8125rem;
+  color: var(--auth-text-muted);
+}
+.code-status--available {
+  color: var(--lp-emerald);
+}
+.code-status--taken {
+  color: #fbbf24;
+}
+.auth-spinner--sm {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-width: 2px;
 }

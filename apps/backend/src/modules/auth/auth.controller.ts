@@ -16,6 +16,7 @@ import {
   PasswordConfirmSchema,
   RecoveryCodeSchema,
   RefreshSchema,
+  OrganizationCodeSchema,
   RegisterSchema,
   ResetPasswordSchema,
   ResetTokenSchema,
@@ -24,6 +25,7 @@ import {
   UpdateAvatarSchema,
   VerifyEmailSchema,
 } from './auth.dto';
+import type { RegisterDto } from './auth.dto';
 
 // Routes wrap every handler in asyncHandler, which forwards rejections to the error
 // middleware, so handlers stay free of try/catch boilerplate.
@@ -63,6 +65,15 @@ export class AuthController {
     noStore(res).json({ tenants: await this.service.listTenants() });
   };
 
+  registrationOrganizations = async (_req: Request, res: Response) => {
+    noStore(res).json({ tenants: await this.service.listOrganizationsOpenToRegistration() });
+  };
+
+  organizationCodeAvailability = async (req: Request, res: Response) => {
+    const { code } = OrganizationCodeSchema.parse(req.query);
+    noStore(res).json(await this.service.checkOrganizationCode(code));
+  };
+
   login = async (req: Request, res: Response) => {
     const dto = LoginSchema.parse(req.body);
     noStore(res).json(await this.service.login(dto, meta(req)));
@@ -84,7 +95,9 @@ export class AuthController {
   };
 
   register = async (req: Request, res: Response) => {
-    const dto = RegisterSchema.parse(req.body);
+    // The cast is the schema-to-type boundary: zod has validated the shape, but
+    // its inferred type is all-optional under this tsconfig (see RegisterDto).
+    const dto = RegisterSchema.parse(req.body) as RegisterDto;
     res.status(202).json(await this.service.register(dto, meta(req)));
   };
 

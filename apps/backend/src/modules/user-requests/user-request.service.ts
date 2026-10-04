@@ -9,6 +9,7 @@ import { AccessCalculator, applyRequest } from './user-request.access';
 import {
   AccessPreviewDto,
   AddNoteDto,
+  ApprovalProvisioningDto,
   CreateUserRequestDto,
   RequestPayload,
   RequestPayloadSchema,
@@ -39,6 +40,30 @@ export interface RequestActor {
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
+
+/**
+ * Pure: what a self-registered account still needs before it can be provisioned.
+ *
+ * A registrant supplies no organizational placement — by design, since they
+ * usually guess it wrong — so the approver has to fill it in. Reported on the
+ * detail response so the UI can disable Approve and say why, and enforced in
+ * `approve` so the API cannot be driven past it.
+ */
+export function missingProvisioningFields(row: {
+  type: string;
+  payload: unknown;
+}): string[] {
+  if (row.type !== 'NEW_USER') return [];
+  const payload = (row.payload ?? {}) as {
+    organization?: { departmentId?: string | null; branchId?: string | null };
+    access?: { addRoleIds?: string[] };
+  };
+  const missing: string[] = [];
+  if (!payload.organization?.departmentId) missing.push('organization.departmentId');
+  if (!payload.organization?.branchId) missing.push('organization.branchId');
+  if (!payload.access?.addRoleIds?.length) missing.push('access.addRoleIds');
+  return missing;
+}
 
 /** Pure: the fields a request of this type must carry before it can be submitted. */
 export function validateForSubmit(
@@ -521,7 +546,22 @@ export class UserRequestService {
   async approve(id: string, comments: string | null, actor: RequestActor) {
     const row = await this.load(id, actor.organizationId);
     const step = this.assertCanAct(row, actor);
+
     const next = row.approvals.find((a) => a.status === 'WAITING' && a.level === step.level + 1);
+
+    // Only on the final approval: an intermediate approver is endorsing the
+    // request, and should not be forced to complete someone else's placement.
+    if (!next) {
+      const missing = missingProvisioningFields(row);
+      if (missing.length) {
+        throw new AppError(
+          'Assign a department, branch and at least one role before approving.',
+          400,
+          'PROVISIONING_DETAILS_REQUIRED',
+          { fields: Object.fromEntries(missing.map((f) => [f, 'Required before approval.'])) }
+        );
+      }
+    }
     const actorName = await this.actorName(actor.userId);
     const now = new Date();
 
@@ -591,6 +631,64 @@ export class UserRequestService {
       comments
     );
     await this.runProvisioning(id, actor);
+    return this.getById(id, actor);
+  }
+
+  /** Let the active approver complete placement without reopening the whole request. */
+  async setApprovalProvisioning(
+    id: string,
+    dto: ApprovalProvisioningDto,
+    actor: RequestActor
+  ) {
+    const row = await this.load(id, actor.organizationId);
+    this.assertCanAct(row, actor);
+    if (row.type !== 'NEW_USER') {
+      throw new AppError(
+        'Provisioning placement only applies to new-user requests',
+        409,
+        'INVALID_REQUEST_TYPE'
+      );
+    }
+
+    const payload = RequestPayloadSchema.parse(row.payload);
+    const updatedPayload: RequestPayload = {
+      ...payload,
+      organization: {
+        ...payload.organization,
+        branchId: dto.branchId,
+        departmentId: dto.departmentId,
+      },
+      access: { ...payload.access, addRoleIds: [...new Set(dto.roleIds)] },
+    };
+    await this.assertReferences('NEW_USER', row.targetUserId, updatedPayload, actor.organizationId);
+    const searchable = await this.searchColumns(
+      'NEW_USER',
+      row.targetUserId,
+      updatedPayload,
+      actor.organizationId
+    );
+
+    await this.repo.transaction(async (tx) => {
+      await this.repo.claim(id, row, tx);
+      await this.repo.update(
+        id,
+        {
+          payload: updatedPayload as Prisma.InputJsonValue,
+          updatedBy: actor.userId,
+          ...searchable,
+        },
+        tx
+      );
+    });
+    await AuditService.log({
+      action: 'user_request.approval_provisioning_updated',
+      resource: 'user_request',
+      resourceId: id,
+      organizationId: actor.organizationId,
+      actorId: actor.userId,
+      before: { payload: row.payload as Record<string, unknown> },
+      after: { payload: updatedPayload },
+    });
     return this.getById(id, actor);
   }
 
@@ -872,10 +970,148 @@ export class UserRequestService {
     });
 
     // Best-effort: a failed notification must not undo a completed registration.
-    await this.notifier
-      .notify(request, 'APPROVAL_REQUIRED', input.email, null)
-      .catch(() => undefined);
+    await this.announceSelfRegistration(
+      request,
+      input.email,
+      () => this.repo.findApproverEmails(input.organizationId),
+      'self_registration'
+    );
     return request;
+  }
+
+  /**
+   * Raises the platform-level request for a newly registered organization. The
+   * organization row already exists in `pending_verification`; approval
+   * activates it and its owner.
+   */
+  async onOrganizationRegistration(input: {
+    userId: string;
+    organizationId: string;
+    organizationName: string;
+    clientCode: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+  }) {
+    const now = new Date();
+    const payload = {
+      user: { firstName: input.firstName, lastName: input.lastName, userType: 'EMPLOYEE' },
+      employee: {},
+      contact: { workEmail: input.email },
+      organization: { name: input.organizationName, clientCode: input.clientCode },
+      access: {},
+    };
+
+    const request = await this.repo.transaction(async (tx) => {
+      const refNo = await this.repo.nextRefNo(tx);
+      const created = await this.repo.create(
+        {
+          organizationId: input.organizationId,
+          refNo,
+          type: 'NEW_ORGANIZATION',
+          status: 'PENDING_APPROVAL',
+          priority: 'HIGH',
+          source: 'SYSTEM',
+          targetUserId: input.userId,
+          requestedById: input.userId,
+          subjectName: input.organizationName,
+          subjectEmail: input.email,
+          justification: `New organization "${input.organizationName}" (${input.clientCode}) registered through the sign-up page`,
+          payload: payload as unknown as Prisma.InputJsonValue,
+          currentStep: 1,
+          submittedAt: now,
+        },
+        tx
+      );
+      await this.repo.createApprovals(
+        [
+          {
+            requestId: created.id,
+            level: 1,
+            stepName: 'Platform Approval',
+            approverId: null,
+            approverName: 'Platform Administrators',
+            status: 'PENDING',
+            assignedAt: now,
+          },
+        ],
+        tx
+      );
+      await this.addEvent(
+        tx,
+        created.id,
+        null,
+        'SUBMITTED',
+        input.userId,
+        'Organization self-registered'
+      );
+      await this.addEvent(
+        tx,
+        created.id,
+        'SUBMITTED',
+        'PENDING_APPROVAL',
+        null,
+        'Awaiting Platform Approval'
+      );
+      await AuditService.log(
+        {
+          action: 'user_request.self_registered',
+          resource: 'user_request',
+          resourceId: created.id,
+          organizationId: input.organizationId,
+          actorId: input.userId,
+          after: {
+            refNo,
+            type: 'NEW_ORGANIZATION',
+            email: input.email,
+            clientCode: input.clientCode,
+          },
+        },
+        tx
+      );
+      return created;
+    });
+
+    await this.announceSelfRegistration(
+      request,
+      input.email,
+      () => this.repo.findPlatformAdminEmails(),
+      'organization_registration'
+    );
+    return request;
+  }
+
+  /**
+   * APPROVAL_REQUIRED goes to the people who can approve; the registrant gets
+   * SUBMITTED. Previously the registrant received APPROVAL_REQUIRED, which told
+   * them to open an IAM screen they cannot reach and left approvers unaware.
+   */
+  private async announceSelfRegistration(
+    request: Parameters<UserRequestNotifier['notify']>[0],
+    registrantEmail: string,
+    approvers: () => Promise<string[]>,
+    trigger: string
+  ) {
+    await this.notifier
+      .notify(request, 'SUBMITTED', registrantEmail, trigger)
+      .catch(() => undefined);
+
+    const recipients = await approvers().catch((e) => {
+      logger.error(`[user-requests] approver lookup failed: ${(e as Error).message}`);
+      return [] as string[];
+    });
+    if (!recipients.length) {
+      logger.warn(
+        `[user-requests] ${request.refNo} has no reachable approver; it is visible in the queue but nobody was emailed`
+      );
+      return;
+    }
+    await Promise.all(
+      recipients.map((to) =>
+        this.notifier.notify(request, 'APPROVAL_REQUIRED', to, trigger).catch(() => undefined)
+      )
+    );
   }
 
   async onInvitationAccepted(userId: string) {
@@ -1088,7 +1324,10 @@ export class UserRequestService {
       ['role', [...new Set([...access.addRoleIds, ...access.removeRoleIds])], 'Role'],
     ];
     for (const [model, ids, label] of checks) {
-      if (ids.length && (await this.repo.countExisting(model, ids)) !== ids.length) {
+      if (
+        ids.length &&
+        (await this.repo.countExisting(model, ids, organizationId)) !== ids.length
+      ) {
         throw new AppError(`${label} not found`, 400, 'INVALID_REFERENCE');
       }
     }
@@ -1157,6 +1396,14 @@ export class UserRequestService {
     const editable =
       EDITABLE_STATUSES.includes(row.status as RequestStatus) && (isOwner || actor.canManage);
     const canDecide = this.canActOn(row, actor);
+    // Self-registrations arrive with no placement, so the approver has to add
+    // one. Surfaced here so the UI can disable Approve and name what is
+    // missing, rather than letting the request fail at provisioning. Only the
+    // final approval is blocked, matching `approve`: an intermediate approver
+    // endorses the request and should not have to complete it.
+    const isFinalApproval =
+      !!step && !row.approvals.some((a) => a.status === 'WAITING' && a.level > step.level);
+    const missingProvisioning = isFinalApproval ? missingProvisioningFields(row) : [];
 
     return {
       id: row.id,
@@ -1239,11 +1486,16 @@ export class UserRequestService {
         sentAt: iso(m.sentAt),
         createdAt: m.createdAt.toISOString(),
       })),
+      // Field paths the approver must fill before Approve will be accepted.
+      missingProvisioning,
       actions: {
         // Workflow state and role decide eligibility; the granular permission must also be held.
         canEdit: editable && actor.can('user-requests:update'),
         canSubmit: editable && actor.can('user-requests:submit'),
-        canApprove: canDecide && actor.can('user-requests:approve'),
+        canApprove:
+          canDecide && actor.can('user-requests:approve') && missingProvisioning.length === 0,
+        canCompleteProvisioning:
+          canDecide && actor.can('user-requests:approve') && missingProvisioning.length > 0,
         canReject: canDecide && actor.can('user-requests:reject'),
         canSendBack: canDecide && actor.can('user-requests:send-back'),
         canCancel:

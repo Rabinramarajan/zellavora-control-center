@@ -67,6 +67,44 @@ export class TenantService {
     return orgs;
   }
 
+  /**
+   * Organizations that have opened themselves to member self-registration.
+   *
+   * Deliberately narrower than `listActive`: the registration picker is a
+   * public, unauthenticated list, so it must not double as a directory of every
+   * customer. An organization appears here only once its administrator turns
+   * self-registration on and leaves ORGANIZATION_MEMBER among the types it
+   * accepts.
+   */
+  static async listOpenToRegistration(): Promise<
+    Array<Pick<Tenant, 'id' | 'name' | 'clientCode' | 'logoUrl'>>
+  > {
+    const orgs = await prisma.organization.findMany({
+      where: {
+        isDeleted: false,
+        status: 'active',
+        allowSelfRegistration: true,
+      },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        clientCode: true,
+        logoUrl: true,
+        allowedRegistrationTypes: true,
+      },
+    });
+    // A null list means ORGANIZATION_MEMBER only, which is what every
+    // organization accepted before registration types existed.
+    return orgs
+      .filter((o) => {
+        const allowed = o.allowedRegistrationTypes;
+        if (allowed === null || allowed === undefined) return true;
+        return Array.isArray(allowed) && allowed.includes('ORGANIZATION_MEMBER');
+      })
+      .map(({ id, name, clientCode, logoUrl }) => ({ id, name, clientCode, logoUrl }));
+  }
+
   /** Get a tenant by id (for the /auth/me payload). */
   static async getById(orgId: string): Promise<Tenant | null> {
     const org = await prisma.organization.findUnique({ where: { id: orgId } });

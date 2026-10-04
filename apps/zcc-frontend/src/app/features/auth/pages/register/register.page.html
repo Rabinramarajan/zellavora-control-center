@@ -155,9 +155,10 @@
 
   <main id="register-card" class="card" tabindex="-1" aria-labelledby="register-title">
     <div class="card-inner">
+      <!-- ================= Terminal states ================= -->
       @if (submitted()) {
       <div class="done">
-        <span class="done__icon" aria-hidden="true">
+        <span class="done__icon done__icon--{{ meta().terminal.tone }}" aria-hidden="true">
           <svg
             width="28"
             height="28"
@@ -168,18 +169,82 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
+            @switch (meta().terminal.icon) { @case ('mail') {
             <rect x="3" y="5" width="18" height="14" rx="2.5" />
             <path d="m4 7 8 6 8-6" />
+            } @case ('shield') {
+            <path d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z" />
+            <path d="M9.2 12l2 2 3.6-3.8" />
+            } @case ('building-plus') {
+            <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4" />
+            <path d="M3 21h11M7.5 9h3M7.5 13h3M7.5 17h3" />
+            <circle cx="17.5" cy="16.5" r="4.5" />
+            <path d="M17.5 14.3v4.4M15.3 16.5h4.4" />
+            } }
           </svg>
         </span>
-        <p class="kicker">Request received</p>
+        <p class="kicker">{{ meta().terminal.kicker }}</p>
         <h1 id="register-title" class="card-title">
-          Awaiting <span class="title-accent">approval</span>
+          {{ meta().terminal.title }}
+          <span class="title-accent">{{ meta().terminal.titleAccent }}</span>
         </h1>
+
+        @switch (type()) { @case ('INDIVIDUAL') {
         <p class="card-lead">
-          Your registration for <strong class="done__email">{{ model().email }}</strong> has been
-          submitted to your administrators. You'll be notified once it's approved, and you can sign
-          in from then on.
+          We sent a link to <strong class="done__email">{{ model().email }}</strong>. Open it to
+          activate your account.
+        </p>
+        <a class="submit" routerLink="/auth/resend-verification">
+          <span>Resend verification</span>
+          <svg
+            class="submit-arrow"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+        <p class="note note--plain">
+          Already verified? <a class="auth-link" routerLink="/auth/login">Sign in</a>
+        </p>
+        } @case ('CREATE_ORGANIZATION') {
+        <p class="card-lead">
+          <strong class="done__email">{{ model().orgName }}</strong> is awaiting review by the
+          Zellavora team. Verify your email in the meantime — we'll be in touch at
+          <strong class="done__email">{{ model().businessEmail }}</strong>.
+        </p>
+        <a class="submit" routerLink="/auth/login">
+          <span>Go to sign in</span>
+          <svg
+            class="submit-arrow"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+        <p class="note note--plain">
+          A verification link was sent to your inbox.
+          <a class="auth-link" routerLink="/auth/resend-verification">Resend verification</a>
+        </p>
+        } @default {
+        <p class="card-lead">
+          Your request for <strong class="done__email">{{ model().email }}</strong> is with your
+          administrators. We'll email you once it's approved, and you can sign in from then on.
         </p>
         <a class="submit" routerLink="/auth/login">
           <span>Go to sign in</span>
@@ -202,165 +267,376 @@
           A verification link was also sent to your inbox.
           <a class="auth-link" routerLink="/auth/resend-verification">Resend verification</a>
         </p>
+        } }
       </div>
-      } @else {
+      }
+
+      <!-- ================= Pre-step: how will you use Zellavora ================= -->
+      @else if (!type()) {
       <p class="kicker">Get started</p>
       <h1 id="register-title" class="card-title">
         Create your <span class="title-accent">account</span>
       </h1>
-      <p class="card-lead">Join your organization's workspace on Zellavora Control Center.</p>
+      <p class="card-lead" id="register-chooser-lead">How will you use Zellavora?</p>
 
       @if (formError()) {
-      <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
+      <app-auth-alert tone="error" role="alert">{{ formError() }}</app-auth-alert>
       }
 
-      <ol class="stepper" aria-label="Registration progress">
-        @for (s of steps; track s.id) {
-        <li
-          class="stepper__item"
-          [class.stepper__item--active]="step() === s.id"
-          [class.stepper__item--done]="step() > s.id"
-          [attr.aria-current]="step() === s.id ? 'step' : null"
-        >
-          <span class="stepper__dot" aria-hidden="true">
-            @if (step() > s.id) {
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.6"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="m5 12.5 4.5 4.5L19 7.5" />
-            </svg>
-            } @else { {{ s.id }} }
-          </span>
-          <span class="stepper__label">
-            <span class="sr-only">Step {{ s.id }} of {{ steps.length }}: </span>{{ s.label }}
-          </span>
-        </li>
-        }
-      </ol>
+      <div class="chooser step-pane step-pane--forward">
+        <!-- Not form-bound: the type is a mode, and you cannot leave this
+             screen without picking one, so there is nothing to validate. -->
+        <app-registration-type-cards
+          [value]="type() ?? ''"
+          [options]="availableTypes()"
+          legend="How will you use Zellavora?"
+          (chosen)="chooseType($event)"
+        />
+      </div>
 
-      @if (step() === 1) {
-      <form
-        class="auth-form step-pane"
-        novalidate
-        (submit)="$event.preventDefault(); next()"
-        aria-label="Your details"
-      >
-        <app-select-control
-          [formField]="form.clientCode"
-          label="Organization"
-          icon="building"
-          [placeholder]="orgsLoading() ? 'Loading organizations…' : 'Select your organization'"
-          searchPlaceholder="Search organizations…"
-          [options]="orgOptions()"
-          [searchable]="true"
-        />
-        <div class="auth-row">
-          <app-auth-field
-            [formField]="form.firstName"
-            label="First name"
-            icon="user"
-            autocomplete="given-name"
-            placeholder="First name"
-          />
-          <app-auth-field
-            [formField]="form.lastName"
-            label="Last name"
-            icon="user"
-            autocomplete="family-name"
-            placeholder="Last name"
-          />
-        </div>
-        <app-auth-field
-          [formField]="form.email"
-          label="Work email"
-          type="email"
-          icon="mail"
-          autocomplete="email"
-          inputmode="email"
-          placeholder="name@company.com"
-        />
-        <button type="submit" class="submit">
-          <span>Continue</span>
+      <p class="note">
+        Already have an account? <a class="auth-link" routerLink="/auth/login">Sign in</a>
+      </p>
+      }
+
+      <!-- ================= Typed wizard ================= -->
+      @else {
+      <!-- The chosen type is a mode, so it stays visible and changeable rather
+           than disappearing into a step the person cannot get back to. -->
+      @if (availableTypes().length > 1) {
+      <div class="type-chip">
+        <span class="type-chip__icon type-chip__icon--{{ meta().accent }}" aria-hidden="true">
           <svg
-            class="submit-arrow"
             width="18"
             height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1.6"
             stroke-linecap="round"
             stroke-linejoin="round"
-            aria-hidden="true"
           >
-            <path d="M5 12h14M13 6l6 6-6 6" />
+            @switch (meta().icon) { @case ('building') {
+            <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15" />
+            <path d="M14 10h5a1 1 0 0 1 1 1v10" />
+            <path d="M3 21h18M7.5 9h3M7.5 13h3M7.5 17h3" />
+            } @case ('user') {
+            <circle cx="12" cy="8" r="3.6" />
+            <path d="M5 20c.7-3.6 3.4-5.6 7-5.6s6.3 2 7 5.6" />
+            } @case ('plus') {
+            <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4" />
+            <path d="M3 21h11M7.5 9h3M7.5 13h3M7.5 17h3" />
+            <circle cx="17.5" cy="16.5" r="4.5" />
+            <path d="M17.5 14.3v4.4M15.3 16.5h4.4" />
+            } }
           </svg>
+        </span>
+        <span class="type-chip__label">{{ meta().cardTitle }}</span>
+        <button type="button" class="type-chip__change" (click)="changeType()">
+          Change<span class="sr-only"> account type</span>
         </button>
-      </form>
-      } @else {
-      <form class="auth-form step-pane" [formRoot]="form" aria-label="Secure your account">
-        <div class="step-summary">
-          <span class="step-summary__avatar" aria-hidden="true">{{ initials() }}</span>
-          <div class="step-summary__text">
-            <p class="step-summary__name">{{ model().firstName }} {{ model().lastName }}</p>
-            <p class="step-summary__email">{{ model().email }}</p>
+      </div>
+      }
+
+      <p class="kicker">{{ meta().kicker }}</p>
+      <h1 id="register-title" class="card-title">
+        {{ meta().title }} <span class="title-accent">{{ meta().titleAccent }}</span>
+      </h1>
+      <p class="card-lead">{{ meta().lead }}</p>
+
+      @if (formError()) {
+      <app-auth-alert tone="error" role="alert">{{ formError() }}</app-auth-alert>
+      }
+
+      <!-- Step count drives the grid; 3+ steps switch to the compact bar so
+           three labels never have to fit a 375px card. -->
+      <div class="stepper-block" [class.stepper-block--compact]="steps().length > 2">
+        <p class="stepper-status" aria-hidden="true">
+          Step {{ step() }} of {{ steps().length }} · {{ stepLabel() }}
+        </p>
+        <ol
+          class="stepper"
+          aria-label="Registration progress"
+          [style.--step-count]="steps().length"
+        >
+          @for (s of steps(); track s.id) {
+          <li
+            class="stepper__item"
+            [class.stepper__item--active]="step() === s.id"
+            [class.stepper__item--done]="step() > s.id"
+            [attr.aria-current]="step() === s.id ? 'step' : null"
+          >
+            <span class="stepper__dot" aria-hidden="true">
+              @if (step() > s.id) {
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m5 12.5 4.5 4.5L19 7.5" />
+              </svg>
+              } @else { {{ s.id }} }
+            </span>
+            <span class="stepper__label">
+              <span class="sr-only">Step {{ s.id }} of {{ steps().length }}: </span>{{ s.label }}
+            </span>
+          </li>
+          }
+        </ol>
+      </div>
+
+      @if (!isLastStep()) {
+      <form
+        class="auth-form step-pane step-pane--{{ direction() }}"
+        novalidate
+        (submit)="$event.preventDefault(); next()"
+      >
+        <fieldset class="step-fields">
+          <legend class="sr-only">{{ stepLabel() }}</legend>
+
+          @if (type() === 'CREATE_ORGANIZATION' && step() === 1) {
+          <app-form-input-control
+            [formField]="form.orgName"
+            label="Organization name"
+            icon="user"
+            placeholder="Acme Robotics"
+            (input)="onOrgNameInput()"
+          />
+          <div>
+            <app-form-input-control
+              [formField]="form.orgCode"
+              label="Organization code"
+              icon="list"
+              placeholder="acme-robotics"
+              hint="Used in your sign-in URL and invites. Derived from the name — edit it if you'd rather."
+              (input)="onOrgCodeInput()"
+              (focusout)="onOrgCodeBlur()"
+            />
+            <!-- Advisory: aria-live so it is announced, and polite so it does
+                 not interrupt someone still typing. -->
+            @if (codeStatus(); as status) {
+            <p class="code-status code-status--{{ status }}" role="status" aria-live="polite">
+              @switch (status) { @case ('checking') {
+              <span class="auth-spinner auth-spinner--sm" aria-hidden="true"></span>
+              <span>Checking availability…</span>
+              } @case ('available') {
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m5 12.5 4.5 4.5L19 7.5" />
+              </svg>
+              <span>{{ model().orgCode }} is available.</span>
+              } @case ('taken') {
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7.5v5M12 16.2h0" />
+              </svg>
+              <span>{{ model().orgCode }} is taken. Try another.</span>
+              } }
+            </p>
+            }
           </div>
-          <button type="button" class="step-summary__edit" (click)="back()">Edit</button>
+          <app-form-input-control
+            [formField]="form.businessEmail"
+            label="Business email"
+            type="email"
+            icon="email"
+            placeholder="billing@company.com"
+            hint="Billing and account notices go here. Can differ from your own."
+          />
+          <div class="auth-row">
+            <app-form-input-control
+              [formField]="form.country"
+              label="Country"
+              type="select"
+              icon="list"
+              placeholder="Select a country"
+              searchPlaceholder="Search countries…"
+              [options]="countryOptions"
+            />
+            <app-form-input-control
+              [formField]="form.timezone"
+              label="Time zone"
+              type="select"
+              icon="list"
+              placeholder="Select a time zone"
+              searchPlaceholder="Search time zones…"
+              [options]="timeZoneOptions"
+            />
+          </div>
+          <p class="field-note">Detected from your browser — change if this isn't right.</p>
+          }
+
+          <!-- Organization member step 1 and create-organization step 2 both
+               collect the person; create-organization labels it as the admin. -->
+          @else { @if (type() === 'ORGANIZATION_MEMBER') {
+          <app-form-input-control
+            [formField]="form.clientCode"
+            label="Organization"
+            type="select"
+            icon="list"
+            [placeholder]="orgsLoading() ? 'Loading organizations…' : 'Select your organization'"
+            searchPlaceholder="Search organizations…"
+            [options]="orgOptions()"
+          />
+          } @if (type() === 'CREATE_ORGANIZATION') {
+          <p class="field-note">
+            This is your personal login for <strong>{{ model().orgName }}</strong>.
+          </p>
+          }
+          <div class="auth-row">
+            <app-form-input-control
+              [formField]="form.firstName"
+              label="First name"
+              icon="user"
+              placeholder="First name"
+            />
+            <app-form-input-control
+              [formField]="form.lastName"
+              label="Last name"
+              icon="user"
+              placeholder="Last name"
+            />
+          </div>
+          <app-form-input-control
+            [formField]="form.email"
+            [label]="type() === 'INDIVIDUAL' ? 'Email' : 'Work email'"
+            type="email"
+            icon="email"
+            [placeholder]="type() === 'INDIVIDUAL' ? 'you@example.com' : 'name@company.com'"
+          />
+          }
+        </fieldset>
+
+        <div class="step-actions">
+          @if (step() > 1 || availableTypes().length > 1) {
+          <button type="button" class="back-btn" (click)="back()">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M19 12H5M11 6l-6 6 6 6" />
+            </svg>
+            <span>Back</span>
+          </button>
+          }
+          <button type="submit" class="submit">
+            <span>Continue</span>
+            <svg
+              class="submit-arrow"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
         </div>
-        <div>
-          <app-auth-field
-            [formField]="form.password"
-            label="Password"
+      </form>
+      }
+
+      <!-- ================= Last step: security ================= -->
+      @else {
+      <form class="auth-form step-pane step-pane--{{ direction() }}" [formRoot]="form">
+        <fieldset class="step-fields">
+          <legend class="sr-only">{{ stepLabel() }}</legend>
+
+          <div class="step-summary">
+            <span class="step-summary__avatar" aria-hidden="true">{{ initials() }}</span>
+            <div class="step-summary__text">
+              <p class="step-summary__name">{{ model().firstName }} {{ model().lastName }}</p>
+              <p class="step-summary__email">{{ model().email }}</p>
+            </div>
+            <button type="button" class="step-summary__edit" (click)="editStep(steps().length - 1)">
+              Edit<span class="sr-only"> your details</span>
+            </button>
+          </div>
+
+          <div>
+            <app-form-input-control
+              [formField]="form.password"
+              label="Password"
+              type="password"
+              icon="lock"
+              placeholder="Create a strong password"
+            />
+            <app-password-requirements [password]="model().password" [policy]="policy()" />
+          </div>
+          <app-form-input-control
+            [formField]="form.confirmPassword"
+            label="Confirm password"
             type="password"
             icon="lock"
-            autocomplete="new-password"
-            placeholder="Create a strong password"
+            placeholder="Confirm your password"
           />
-          <app-password-requirements [password]="model().password" [policy]="policy()" />
-        </div>
-        <app-auth-field
-          [formField]="form.confirmPassword"
-          label="Confirm password"
-          type="password"
-          icon="lock"
-          autocomplete="new-password"
-          placeholder="Confirm your password"
-        />
 
-        <div>
-          <label class="auth-check">
-            <input
-              type="checkbox"
-              [formField]="form.acceptTerms"
-              [attr.aria-invalid]="termsError() ? true : null"
-              [attr.aria-describedby]="termsError() ? 'terms-error' : null"
-            />
-            <span>
-              I agree to the
-              <a class="auth-link" href="https://zellavora.com/terms" target="_blank" rel="noopener"
-                >Terms of Service</a
-              >
-              and
-              <a
-                class="auth-link"
-                href="https://zellavora.com/privacy"
-                target="_blank"
-                rel="noopener"
-                >Privacy Policy</a
-              >.
-            </span>
-          </label>
-          @if (termsError()) {
-          <p id="terms-error" class="auth-inline-error">{{ termsError() }}</p>
-          }
-        </div>
+          <div>
+            <label class="auth-check">
+              <input
+                type="checkbox"
+                [formField]="form.acceptTerms"
+                [attr.aria-invalid]="termsError() ? true : null"
+                [attr.aria-describedby]="termsError() ? 'terms-error' : null"
+              />
+              <span>
+                I agree to the
+                <a
+                  class="auth-link"
+                  href="https://zellavora.com/terms"
+                  target="_blank"
+                  rel="noopener"
+                  >Terms of Service</a
+                >
+                and
+                <a
+                  class="auth-link"
+                  href="https://zellavora.com/privacy"
+                  target="_blank"
+                  rel="noopener"
+                  >Privacy Policy</a
+                >.
+              </span>
+            </label>
+            @if (termsError()) {
+            <p id="terms-error" class="auth-inline-error" role="alert">{{ termsError() }}</p>
+            }
+          </div>
+        </fieldset>
 
         <div class="step-actions">
           <button type="button" class="back-btn" (click)="back()">
@@ -384,7 +660,10 @@
             <span class="auth-spinner" aria-hidden="true"></span>
             <span>Creating account…</span>
             } @else {
-            <span>Create account</span>
+            <span
+              >{{ type() === 'CREATE_ORGANIZATION' ? 'Create organization' : 'Create account'
+              }}</span
+            >
             <svg
               class="submit-arrow"
               width="18"

@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 import { UserRequestListQueryDto } from './user-request.dto';
+import { PRIVILEGED_ROLE_KEYS } from './user-request.types';
 import { AppError } from '../../middleware/error';
 
 const userSummary = { select: { id: true, fullName: true, email: true } } as const;
@@ -201,6 +202,42 @@ export class UserRequestRepository extends BaseRepository {
     });
   }
 
+  /**
+   * Email addresses of the people who can act on an organization's requests:
+   * owners and admins by membership, plus anyone holding an admin-grade role.
+   * Used to send APPROVAL_REQUIRED to the approvers rather than the requester.
+   */
+  async findApproverEmails(organizationId: string): Promise<string[]> {
+    const rows = await this.getDb().user.findMany({
+      where: {
+        isDeleted: false,
+        status: 'ACTIVE',
+        OR: [
+          { userTenants: { some: { tenantId: organizationId, role: { in: ['owner', 'admin'] } } } },
+          {
+            roleAssignments: {
+              some: {
+                organizationId,
+                role: { key: { in: [...PRIVILEGED_ROLE_KEYS] } },
+              },
+            },
+          },
+        ],
+      },
+      select: { email: true },
+    });
+    return [...new Set(rows.map((r) => r.email).filter(Boolean))];
+  }
+
+  /** Platform super admins, who approve organization registrations. */
+  async findPlatformAdminEmails(): Promise<string[]> {
+    const rows = await this.getDb().user.findMany({
+      where: { isDeleted: false, status: 'ACTIVE', isPlatformAdmin: true },
+      select: { email: true },
+    });
+    return [...new Set(rows.map((r) => r.email).filter(Boolean))];
+  }
+
   findUsersByIds(ids: string[]) {
     if (!ids.length) return Promise.resolve([]);
     return this.getDb().user.findMany({
@@ -313,20 +350,32 @@ export class UserRequestRepository extends BaseRepository {
     ]);
   }
 
-  async countExisting(model: 'branch' | 'department' | 'team' | 'group' | 'role', ids: string[]) {
+  async countExisting(
+    model: 'branch' | 'department' | 'team' | 'group' | 'role',
+    ids: string[],
+    organizationId: string
+  ) {
     if (!ids.length) return 0;
     const where = { id: { in: ids } };
     switch (model) {
       case 'branch':
-        return this.getDb().branch.count({ where });
+        return this.getDb().branch.count({ where: { ...where, organizationId, isDeleted: false } });
       case 'department':
-        return this.getDb().department.count({ where });
+        return this.getDb().department.count({
+          where: { ...where, organizationId, isDeleted: false },
+        });
       case 'team':
-        return this.getDb().team.count({ where });
+        return this.getDb().team.count({ where: { ...where, organizationId, deletedAt: null } });
       case 'group':
-        return this.getDb().group.count({ where });
+        return this.getDb().group.count({ where: { ...where, isDeleted: false } });
       case 'role':
-        return this.getDb().role.count({ where });
+        return this.getDb().role.count({
+          where: {
+            ...where,
+            isDeleted: false,
+            OR: [{ organizationId }, { organizationId: null, isSystem: true }],
+          },
+        });
     }
   }
 }

@@ -42,6 +42,7 @@ import type {
   PendingMfaChallenge,
   RefreshResponse,
   RegisterRequest,
+  RegisterResponse,
   ResetPasswordRequest,
   SecurityOverview,
   TenantSummary,
@@ -79,6 +80,7 @@ export class AuthService {
   private refreshRequest$?: Observable<boolean>;
   private config$?: Observable<AuthConfig>;
   private clients$?: Observable<TenantSummary[]>;
+  private registrationOrgs$?: Observable<TenantSummary[]>;
   private refreshStorage: Storage = sessionStorage;
 
   constructor() {
@@ -140,6 +142,35 @@ export class AuthService {
       shareReplay({ bufferSize: 1, refCount: false })
     );
     return this.clients$;
+  }
+
+  /**
+   * Organizations offered in the *registration* picker — only those that opted
+   * into self-registration. Deliberately not `clients()`: that list is every
+   * active tenant, and the sign-up page must not publish the customer list.
+   *
+   * Not cached in the store either, since these are not sign-in targets.
+   */
+  registrationOrganizations(): Observable<TenantSummary[]> {
+    this.registrationOrgs$ ??= this.http
+      .get<{ tenants: TenantSummary[] }>(`${AUTH_API}/registration/organizations`)
+      .pipe(
+        map((res) => res.tenants ?? []),
+        catchError((err) => {
+          this.registrationOrgs$ = undefined;
+          return throwError(() => err);
+        }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    return this.registrationOrgs$;
+  }
+
+  /** Whether an organization code is free, for inline feedback while typing. */
+  checkOrganizationCode(code: string): Observable<{ code: string; available: boolean }> {
+    return this.http.get<{ code: string; available: boolean }>(
+      `${AUTH_API}/registration/organization-code`,
+      { params: { code } }
+    );
   }
 
   get lastClientCode(): string {
@@ -315,8 +346,8 @@ export class AuthService {
   // Onboarding
   // ---------------------------------------------------------------------------
 
-  register(request: RegisterRequest): Observable<GenericMessageResponse> {
-    return this.http.post<GenericMessageResponse>(`${AUTH_API}/register`, request);
+  register(request: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${AUTH_API}/register`, request);
   }
 
   previewInvitation(token: string): Observable<InvitationPreview> {

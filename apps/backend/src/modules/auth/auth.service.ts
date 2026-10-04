@@ -34,7 +34,12 @@ import { UserRequestService } from '../user-requests/user-request.service';
 import { recordStatusChange } from '../users/account-status';
 import type { LoginPolicy } from '../security-policy/security-policy.dto';
 import { AuthRepository } from './auth.repository';
-import type { AcceptInvitationDto, LoginDto, RegisterDto } from './auth.dto';
+import type {
+  AcceptInvitationDto,
+  LoginDto,
+  RegisterDto,
+  SelfServiceRegistrationType,
+} from './auth.dto';
 import type {
   AuthenticatedActor,
   InvitationState,
@@ -75,6 +80,9 @@ export class AuthService {
   getPublicConfig() {
     return {
       selfRegistrationEnabled: config.selfRegistrationEnabled,
+      // Empty when registration is off, so the client never renders a chooser
+      // for a flow it cannot complete.
+      registrationTypes: config.selfRegistrationEnabled ? config.registrationTypes : [],
       requireEmailVerification: config.requireEmailVerification,
       supportEmail: config.supportEmail,
       passwordPolicy: {
@@ -90,6 +98,34 @@ export class AuthService {
 
   async listTenants() {
     return TenantService.listActive();
+  }
+
+  /**
+   * The registration picker's list. Separate from `listTenants` on purpose:
+   * this one is only the organizations that opted in, so turning on
+   * self-registration does not publish the customer list.
+   */
+  async listOrganizationsOpenToRegistration() {
+    if (!config.selfRegistrationEnabled) return [];
+    return TenantService.listOpenToRegistration();
+  }
+
+  /**
+   * Whether an organization code is free. Only reachable while
+   * CREATE_ORGANIZATION registration is on, and it answers about organizations
+   * the registrant is about to create rather than about accounts, so it
+   * discloses nothing a failed submit would not.
+   */
+  async checkOrganizationCode(code: string): Promise<{ code: string; available: boolean }> {
+    const normalized = code.trim().toLowerCase();
+    if (
+      !config.selfRegistrationEnabled ||
+      !config.registrationTypes.includes('CREATE_ORGANIZATION')
+    ) {
+      throw new AppError('Registration is not available.', 404, 'REGISTRATION_DISABLED');
+    }
+    const taken = await this.repo.organizationCodeTaken(normalized);
+    return { code: normalized, available: !taken };
   }
 
   // ===========================================================================
@@ -321,19 +357,63 @@ export class AuthService {
   // Self-registration (disabled unless ALLOW_SELF_REGISTRATION=true)
   // ===========================================================================
 
+  /**
+   * Public registration. Routes on registration type; each handler owns its own
+   * account shape and approval path. Every branch returns the same shape of
+   * response whether or not the target exists, so the endpoint stays
+   * enumeration-resistant.
+   */
   async register(dto: RegisterDto, meta: RequestMeta) {
     if (!config.selfRegistrationEnabled) {
       throw new AppError('Registration is not available.', 404, 'REGISTRATION_DISABLED');
     }
+    if (!config.registrationTypes.includes(dto.registrationType)) {
+      throw new AppError(
+        'That kind of registration is not available.',
+        404,
+        'REGISTRATION_TYPE_DISABLED'
+      );
+    }
+
+    switch (dto.registrationType) {
+      case 'ORGANIZATION_MEMBER':
+        return this.registerOrganizationMember(dto, meta);
+      case 'INDIVIDUAL':
+        return this.registerIndividual(dto, meta);
+      case 'CREATE_ORGANIZATION':
+        return this.registerOrganizationOwner(dto, meta);
+    }
+  }
+
+  /**
+   * Joins an existing organization. The account is PENDING until an
+   * administrator approves the auto-raised User Request, which provisions
+   * department, branch, role and groups.
+   */
+  private async registerOrganizationMember(
+    dto: Extract<RegisterDto, { registrationType: 'ORGANIZATION_MEMBER' }>,
+    meta: RequestMeta
+  ) {
     const response = {
       ok: true,
+      registrationType: 'ORGANIZATION_MEMBER' as const,
+      outcome: 'PENDING_APPROVAL' as const,
       message:
         'Your registration has been submitted and is awaiting administrator approval. ' +
         'You will be notified once your account is approved.',
     };
 
-    const tenant = await TenantService.findByClientCode(dto.clientCode);
-    if (!tenant) return response;
+    const target = await this.repo.findRegistrationTarget(dto.clientCode);
+    // Both "no such organization" and "closed to registration" answer the same,
+    // so a stranger cannot probe which tenants exist or which are open.
+    if (!target) {
+      logger.info('[auth] registration attempted for an unknown organization');
+      return response;
+    }
+    if (!this.organizationAccepts(target, 'ORGANIZATION_MEMBER')) {
+      logger.info(`[auth] organization ${target.id} is closed to member self-registration`);
+      return response;
+    }
 
     const existing = await this.repo.findUserByEmail(dto.email);
     if (existing) {
@@ -341,37 +421,27 @@ export class AuthService {
       return response;
     }
 
-    await this.assertPasswordPolicy(tenant.id, dto.password, dto.email);
+    await this.assertPasswordPolicy(target.id, dto.password, dto.email);
     const passwordHash = await PasswordService.hash(dto.password);
     const user = await this.repo.transaction(async (tx) => {
       const created = await this.repo.createUser(
         {
-          email: dto.email,
-          emailId: dto.email,
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          fullName: `${dto.firstName} ${dto.lastName}`,
-          passwordHash,
-          passwordChangedAt: new Date(),
-          tenantId: tenant.id,
+          ...this.registrantFields(dto, passwordHash),
+          registrationType: 'ORGANIZATION_MEMBER',
+          tenantId: target.id,
           // PENDING blocks sign-in (see assertAccountUsable) until an
           // administrator approves the account from User Requests. Approval
           // flips this to ACTIVE.
           status: 'PENDING',
-          emailVerified: false,
-          termsAccepted: true,
-          termsAcceptedAt: new Date(),
-          privacyAccepted: true,
-          privacyAcceptedAt: new Date(),
         },
         tx
       );
-      await this.repo.ensureMembership(created.id, tenant.id, tx);
+      await this.repo.ensureMembership(created.id, target.id, tx);
       await this.repo.addPasswordHistory(created.id, passwordHash, tx);
       return created;
     });
 
-    await this.audit('user_registered', tenant.id, user.id, meta);
+    await this.audit('user_registered', target.id, user.id, meta);
 
     // Raise the approval request outside the account transaction: a failure
     // here must not roll back a user who has already been told they registered,
@@ -379,7 +449,7 @@ export class AuthService {
     await new UserRequestService()
       .onSelfRegistration({
         userId: user.id,
-        organizationId: tenant.id,
+        organizationId: target.id,
         email: dto.email,
         firstName: dto.firstName,
         lastName: dto.lastName,
@@ -389,11 +459,198 @@ export class AuthService {
         logger.error(`[auth] self-registration request failed: ${(e as Error).message}`)
       );
 
-    // Account stays recoverable through resend-verification if delivery fails.
     await this.sendVerificationEmail(user).catch((e) =>
       logger.error(`[auth] verification email failed: ${(e as Error).message}`)
     );
     return response;
+  }
+
+  /**
+   * A standalone personal account: no organization, no membership, no approval.
+   * Created ACTIVE — the email-verification gate in `login` is what withholds
+   * access until the address is proven, so status stays a statement about the
+   * account rather than a stand-in for verification.
+   */
+  private async registerIndividual(
+    dto: Extract<RegisterDto, { registrationType: 'INDIVIDUAL' }>,
+    meta: RequestMeta
+  ) {
+    const response = {
+      ok: true,
+      registrationType: 'INDIVIDUAL' as const,
+      outcome: config.requireEmailVerification
+        ? ('PENDING_EMAIL_VERIFICATION' as const)
+        : ('ACTIVE' as const),
+      message: config.requireEmailVerification
+        ? 'Check your inbox — open the link we sent to activate your account.'
+        : 'Your account is ready. You can sign in now.',
+    };
+
+    const existing = await this.repo.findUserByEmail(dto.email);
+    if (existing) {
+      logger.info('[auth] individual registration attempted for an existing account');
+      return response;
+    }
+
+    // No tenant, so the global password policy applies.
+    await this.assertPasswordPolicy(null, dto.password, dto.email);
+    const passwordHash = await PasswordService.hash(dto.password);
+    const user = await this.repo.transaction(async (tx) => {
+      const created = await this.repo.createUser(
+        {
+          ...this.registrantFields(dto, passwordHash),
+          registrationType: 'INDIVIDUAL',
+          tenantId: null,
+          status: 'ACTIVE',
+        },
+        tx
+      );
+      await this.repo.addPasswordHistory(created.id, passwordHash, tx);
+      return created;
+    });
+
+    await this.audit('user_registered', null, user.id, meta);
+    await this.sendVerificationEmail(user).catch((e) =>
+      logger.error(`[auth] verification email failed: ${(e as Error).message}`)
+    );
+    return response;
+  }
+
+  /**
+   * Creates a new organization and its first administrator. The organization is
+   * written immediately with status `pending_verification` so the membership and
+   * the approval request have something real to point at, and is activated by
+   * platform approval — `TenantService.listActive` already excludes it, so an
+   * unapproved organization is not a sign-in target.
+   */
+  private async registerOrganizationOwner(
+    dto: Extract<RegisterDto, { registrationType: 'CREATE_ORGANIZATION' }>,
+    meta: RequestMeta
+  ) {
+    const response = {
+      ok: true,
+      registrationType: 'CREATE_ORGANIZATION' as const,
+      outcome: 'PENDING_APPROVAL' as const,
+      message:
+        'Your organization has been submitted for review. Verify your email address ' +
+        'in the meantime — we will be in touch once it is approved.',
+    };
+
+    const clientCode = dto.organization.code.toLowerCase();
+    if (await this.repo.organizationCodeTaken(clientCode)) {
+      // The code is shown to the user and must be unique, so unlike the email
+      // this is a real field error rather than a generic response.
+      throw new AppError('That organization code is already taken.', 409, 'ORG_CODE_TAKEN', {
+        fields: { 'organization.code': 'That organization code is already taken.' },
+      });
+    }
+
+    const existing = await this.repo.findUserByEmail(dto.email);
+    if (existing) {
+      logger.info('[auth] organization registration attempted for an existing account');
+      return response;
+    }
+
+    await this.assertPasswordPolicy(null, dto.password, dto.email);
+    const passwordHash = await PasswordService.hash(dto.password);
+
+    const { user, organizationId } = await this.repo.transaction(async (tx) => {
+      const org = await this.repo.createOrganization(
+        {
+          name: dto.organization.name,
+          clientCode,
+          email: dto.organization.businessEmail,
+          country: dto.organization.country,
+          status: 'pending_verification',
+          isVerified: false,
+          registrationSource: 'organic',
+          // The owner registers through the public form, so the organization
+          // starts closed to further self-registration; its admin opens it.
+          allowSelfRegistration: false,
+          termsAccepted: true,
+          termsAcceptedAt: new Date(),
+          privacyAccepted: true,
+          privacyAcceptedAt: new Date(),
+        },
+        tx
+      );
+      const created = await this.repo.createUser(
+        {
+          ...this.registrantFields(dto, passwordHash),
+          registrationType: 'CREATE_ORGANIZATION',
+          tenantId: org.id,
+          timezone: dto.organization.timezone,
+          country: dto.organization.country,
+          status: 'PENDING',
+        },
+        tx
+      );
+      await this.repo.ensureMembership(created.id, org.id, tx, 'owner');
+      await this.repo.addPasswordHistory(created.id, passwordHash, tx);
+      return { user: created, organizationId: org.id };
+    });
+
+    await this.audit('user_registered', organizationId, user.id, meta);
+
+    await new UserRequestService()
+      .onOrganizationRegistration({
+        userId: user.id,
+        organizationId,
+        organizationName: dto.organization.name,
+        clientCode,
+        email: dto.email,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        fullName: `${dto.firstName} ${dto.lastName}`,
+      })
+      .catch((e) =>
+        logger.error(`[auth] organization registration request failed: ${(e as Error).message}`)
+      );
+
+    await this.sendVerificationEmail(user).catch((e) =>
+      logger.error(`[auth] verification email failed: ${(e as Error).message}`)
+    );
+    return response;
+  }
+
+  /** Account fields every registration type writes identically. */
+  private registrantFields(
+    dto: Extract<
+      RegisterDto,
+      { registrationType: 'ORGANIZATION_MEMBER' | 'INDIVIDUAL' | 'CREATE_ORGANIZATION' }
+    >,
+    passwordHash: string
+  ) {
+    const now = new Date();
+    return {
+      email: dto.email,
+      emailId: dto.email,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      fullName: `${dto.firstName} ${dto.lastName}`,
+      passwordHash,
+      passwordChangedAt: now,
+      emailVerified: false,
+      termsAccepted: true,
+      termsAcceptedAt: now,
+      privacyAccepted: true,
+      privacyAcceptedAt: now,
+    };
+  }
+
+  /**
+   * Per-organization gate on top of the global flag. A null
+   * `allowedRegistrationTypes` means ORGANIZATION_MEMBER only, which is what
+   * every organization accepted before types existed.
+   */
+  private organizationAccepts(
+    target: { allowSelfRegistration: boolean; allowedRegistrationTypes: unknown; status: string },
+    type: SelfServiceRegistrationType
+  ): boolean {
+    if (!target.allowSelfRegistration || target.status !== 'active') return false;
+    const allowed = target.allowedRegistrationTypes;
+    if (allowed === null || allowed === undefined) return type === 'ORGANIZATION_MEMBER';
+    return Array.isArray(allowed) && allowed.includes(type);
   }
 
   // ===========================================================================
@@ -1110,7 +1367,7 @@ export class AuthService {
 
   private audit(
     action: AuditAction,
-    organizationId: string,
+    organizationId: string | null,
     actorId: string | null,
     meta: RequestMeta,
     severity: 'info' | 'warn' | 'critical' = 'info',

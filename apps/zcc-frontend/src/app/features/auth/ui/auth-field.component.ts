@@ -18,7 +18,7 @@ import type {
 let nextId = 0;
 
 type FieldType = 'text' | 'email' | 'password';
-type FieldIcon = 'mail' | 'lock' | 'user';
+type FieldIcon = 'mail' | 'lock' | 'user' | 'building';
 
 /**
  * Text / email / password input bound with `[formField]`.

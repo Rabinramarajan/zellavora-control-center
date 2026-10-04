@@ -81,6 +81,14 @@ export class UserRequestsApiService {
   ): Observable<UserRequestDetail> {
     return this.post(`/${id}/${action}`, comments ? { comments } : {});
   }
+  setApprovalProvisioning(
+    id: string,
+    body: { branchId: string; departmentId: string; roleIds: string[] }
+  ): Observable<UserRequestDetail> {
+    return this.api
+      .putData<ApiEnvelope<UserRequestDetail>>(`${this.base}/${id}/approval-provisioning`, body)
+      .pipe(map((r) => r.data));
+  }
   addNote(
     id: string,
     body: { body: string; noteType: string; visibility: string; attachmentUrl: string | null }

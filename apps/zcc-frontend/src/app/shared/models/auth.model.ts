@@ -18,6 +18,8 @@ export interface PasswordPolicy {
 
 export interface AuthConfig {
   selfRegistrationEnabled: boolean;
+  /** Types the server will accept. Empty when registration is off. */
+  registrationTypes: RegistrationType[];
   requireEmailVerification: boolean;
   supportEmail: string;
   passwordPolicy: PasswordPolicy;
@@ -75,13 +77,54 @@ export interface PendingMfaChallenge {
 // Onboarding
 // ============================================================================
 
-export interface RegisterRequest {
-  clientCode: string;
+/** Self-service registration types. Mirrors the backend's narrowed enum. */
+export type RegistrationType = 'ORGANIZATION_MEMBER' | 'INDIVIDUAL' | 'CREATE_ORGANIZATION';
+
+interface RegisterRequestBase {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   acceptTerms: true;
+}
+
+export interface RegisterOrganizationMemberRequest extends RegisterRequestBase {
+  registrationType: 'ORGANIZATION_MEMBER';
+  clientCode: string;
+}
+
+export interface RegisterIndividualRequest extends RegisterRequestBase {
+  registrationType: 'INDIVIDUAL';
+}
+
+export interface RegisterOrganizationRequest extends RegisterRequestBase {
+  registrationType: 'CREATE_ORGANIZATION';
+  organization: {
+    name: string;
+    code: string;
+    businessEmail: string;
+    /** ISO 3166-1 alpha-2. */
+    country: string;
+    /** IANA zone, e.g. Asia/Kolkata. */
+    timezone: string;
+  };
+}
+
+/**
+ * Discriminated so the compiler rejects an individual registration that
+ * carries a clientCode, or an organization one that omits its details.
+ */
+export type RegisterRequest =
+  RegisterOrganizationMemberRequest | RegisterIndividualRequest | RegisterOrganizationRequest;
+
+/** Where a registration left the account, which decides the success panel. */
+export type RegistrationOutcome = 'PENDING_APPROVAL' | 'PENDING_EMAIL_VERIFICATION' | 'ACTIVE';
+
+export interface RegisterResponse {
+  ok: boolean;
+  message: string;
+  registrationType: RegistrationType;
+  outcome: RegistrationOutcome;
 }
 
 export type InvitationState = 'valid' | 'expired' | 'used' | 'revoked' | 'invalid';

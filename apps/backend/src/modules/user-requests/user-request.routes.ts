@@ -49,7 +49,7 @@ const can = (permission: string) => [authenticate, requirePermission(permission)
  *   post:
  *     summary: createUserRequest
  *     operationId: postIamUserRequests
- *     description: Create a request as a draft, or submit it immediately with `submit: true`.
+ *     description: "Create a request as a draft, or submit it immediately with submit=true."
  *     tags: [iamUserRequests]
  *     security:
  *       - bearerAuth: []
@@ -188,6 +188,37 @@ router.get('/:id/audit', ...can('user-requests:audit:read'), controller.audit);
  */
 router.post('/:id/submit', ...can('user-requests:submit'), controller.submit);
 router.post('/:id/approve', ...can('user-requests:approve'), controller.approve);
+/**
+ * @swagger
+ * /api/v1/iam/user-requests/{id}/approval-provisioning:
+ *   put:
+ *     summary: setUserRequestApprovalProvisioning
+ *     operationId: putIamUserRequestApprovalProvisioning
+ *     description: Assign the branch, department and roles required before final new-user approval.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [branchId, departmentId, roleIds]
+ *             properties:
+ *               branchId: { type: string, format: uuid }
+ *               departmentId: { type: string, format: uuid }
+ *               roleIds: { type: array, minItems: 1, items: { type: string, format: uuid } }
+ *     responses:
+ *       200: { description: Updated request detail }
+ */
+router.put(
+  '/:id/approval-provisioning',
+  ...can('user-requests:approve'),
+  controller.setApprovalProvisioning
+);
 router.post('/:id/reject', ...can('user-requests:reject'), controller.reject);
 router.post('/:id/send-back', ...can('user-requests:send-back'), controller.sendBack);
 router.post('/:id/cancel', ...can('user-requests:cancel'), controller.cancel);

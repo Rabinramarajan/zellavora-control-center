@@ -39,7 +39,7 @@ export class AuditService {
           action: input.action,
           resource: input.resource,
           resourceId: input.resourceId ?? null,
-          organizationId: input.organizationId ?? ctx.organizationId ?? '',
+          organizationId: input.organizationId ?? ctx.organizationId ?? null,
           severity: input.severity ?? 'info',
           ipAddress: input.ipAddress ?? ctx.ipAddress ?? null,
           userAgent: input.userAgent ?? ctx.userAgent ?? null,

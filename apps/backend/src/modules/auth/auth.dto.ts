@@ -60,14 +60,95 @@ export const RefreshSchema = z.object({
   refreshToken: z.string().min(10).max(4096),
 });
 
-export const RegisterSchema = z.object({
-  clientCode,
+/**
+ * Registration types the public endpoint accepts. PARTNER, VENDOR and
+ * CONTRACTOR exist in the database enum but are not self-service yet, so they
+ * are deliberately absent here — an unimplemented type must fail validation
+ * rather than reach a handler that cannot serve it.
+ */
+export const SELF_SERVICE_REGISTRATION_TYPES = [
+  'ORGANIZATION_MEMBER',
+  'INDIVIDUAL',
+  'CREATE_ORGANIZATION',
+] as const;
+
+export type SelfServiceRegistrationType = (typeof SELF_SERVICE_REGISTRATION_TYPES)[number];
+
+const acceptTerms = z.literal(true, {
+  errorMap: () => ({ message: 'You must accept the terms' }),
+});
+
+const registrant = {
   firstName: personName('First name'),
   lastName: personName('Last name'),
   email,
   password: PasswordPolicySchema,
-  acceptTerms: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms' }) }),
-});
+  acceptTerms,
+};
+
+const organizationName = z
+  .string()
+  .trim()
+  .min(2, 'Organization name must be at least 2 characters')
+  .max(120, 'Organization name must be at most 120 characters')
+  .refine((v) => !CONTROL_CHARS.test(v), 'Organization name contains invalid characters');
+
+// IANA zone, e.g. Asia/Kolkata. Validated for shape here and against the
+// runtime's own zone table in the service, which is the only authority.
+const timezone = z
+  .string()
+  .trim()
+  .min(3)
+  .max(64)
+  .regex(/^[A-Za-z]+(?:\/[A-Za-z0-9_+-]+){0,2}$/, 'Select a valid time zone');
+
+const country = z
+  .string()
+  .trim()
+  .length(2, 'Select a country')
+  .toUpperCase()
+  .regex(/^[A-Z]{2}$/, 'Select a country');
+
+/**
+ * Conditional by registration type. A discriminated union rather than one wide
+ * optional-everything object, so an individual registration carrying a
+ * clientCode is a validation error instead of a silently ignored field.
+ */
+const RegistrationUnion = z.discriminatedUnion('registrationType', [
+  z.object({
+    registrationType: z.literal('ORGANIZATION_MEMBER'),
+    clientCode,
+    ...registrant,
+  }),
+  z.object({
+    registrationType: z.literal('INDIVIDUAL'),
+    ...registrant,
+  }),
+  z.object({
+    registrationType: z.literal('CREATE_ORGANIZATION'),
+    organization: z.object({
+      name: organizationName,
+      code: clientCode,
+      businessEmail: email,
+      country,
+      timezone,
+    }),
+    ...registrant,
+  }),
+]);
+
+/**
+ * A missing `registrationType` is read as ORGANIZATION_MEMBER, which is what
+ * every request meant before types existed. This keeps already-deployed clients
+ * working; it is not a default for new ones, which always send the type.
+ */
+export const RegisterSchema = z.preprocess(
+  (value) =>
+    value && typeof value === 'object' && !('registrationType' in value)
+      ? { ...value, registrationType: 'ORGANIZATION_MEMBER' }
+      : value,
+  RegistrationUnion
+);
 
 export const InvitationTokenSchema = z.object({ token: opaqueToken });
 
@@ -128,5 +209,43 @@ export const UpdateAvatarSchema = z.object({
 });
 
 export type LoginDto = z.infer<typeof LoginSchema>;
-export type RegisterDto = z.infer<typeof RegisterSchema>;
+/**
+ * Declared rather than inferred. This tsconfig runs with `strictNullChecks`
+ * off, under which zod's inference marks every property optional — including
+ * the discriminant, which makes `Extract` on the union collapse to `never`.
+ * These mirror the schemas above; keep them in step.
+ */
+interface Registrant {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  acceptTerms: true;
+}
+
+export interface RegisterOrganizationMemberDto extends Registrant {
+  registrationType: 'ORGANIZATION_MEMBER';
+  clientCode: string;
+}
+
+export interface RegisterIndividualDto extends Registrant {
+  registrationType: 'INDIVIDUAL';
+}
+
+export interface RegisterOrganizationDto extends Registrant {
+  registrationType: 'CREATE_ORGANIZATION';
+  organization: {
+    name: string;
+    code: string;
+    businessEmail: string;
+    country: string;
+    timezone: string;
+  };
+}
+
+export type RegisterDto =
+  RegisterOrganizationMemberDto | RegisterIndividualDto | RegisterOrganizationDto;
 export type AcceptInvitationDto = z.infer<typeof AcceptInvitationSchema>;
+
+/** Query for the public organization-code availability check. */
+export const OrganizationCodeSchema = z.object({ code: clientCode });

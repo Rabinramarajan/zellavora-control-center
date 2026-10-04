@@ -44,17 +44,85 @@ export class UserRequestProvisioner {
   }
 
   async provision(input: ProvisionInput, actorId: string): Promise<ProvisionResult> {
-    const result =
-      input.type === 'NEW_USER'
-        ? // A self-registration request already owns its account, created in
-          // PENDING at sign-up. Creating another would collide on the email,
-          // so that case activates the existing row instead.
-          input.targetUserId
-          ? await this.activateSelfRegistered(input, actorId)
-          : await this.createUser(input, actorId)
-        : await this.updateUser(input, actorId);
+    let result: ProvisionResult;
+    if (input.type === 'NEW_ORGANIZATION') {
+      result = await this.activateOrganization(input, actorId);
+    } else if (input.type === 'NEW_USER') {
+      // A self-registration request already owns its account, created in
+      // PENDING at sign-up. Creating another would collide on the email, so
+      // that case activates the existing row instead.
+      result = input.targetUserId
+        ? await this.activateSelfRegistered(input, actorId)
+        : await this.createUser(input, actorId);
+    } else {
+      result = await this.updateUser(input, actorId);
+    }
     void cacheDelPattern('iam:users:*');
     return result;
+  }
+
+  /**
+   * Approves a self-registered organization: the organization row and its owner
+   * membership already exist from sign-up, both inactive. This activates the
+   * pair, which is what "Create Tenant" means once the rows are already there.
+   */
+  private async activateOrganization(
+    input: ProvisionInput,
+    actorId: string
+  ): Promise<ProvisionResult> {
+    const userId = input.targetUserId;
+    if (!userId) throw new AppError('Request has no target user', 400, 'TARGET_USER_REQUIRED');
+    const existing = await this.repo.findUserForRequest(userId, input.organizationId);
+    if (!existing) throw new AppError('Target user no longer exists', 404, 'USER_NOT_FOUND');
+    const previousStatus = accountStatusOf(existing);
+
+    await this.repo.transaction(async (tx) => {
+      const org = await tx.organization.update({
+        where: { id: input.organizationId },
+        data: {
+          status: 'active',
+          isVerified: true,
+          verifiedAt: new Date(),
+          updatedBy: actorId,
+        },
+      });
+      await tx.user.update({
+        where: { id: userId },
+        data: { status: 'ACTIVE', updatedBy: actorId },
+      });
+      // The owner membership was written at sign-up; re-assert the role so an
+      // edited request cannot downgrade the only administrator of a new tenant.
+      await tx.userTenant.update({
+        where: { userId_tenantId: { userId, tenantId: input.organizationId } },
+        data: { role: 'owner' },
+      });
+      await AuditService.log(
+        {
+          action: 'organization_created',
+          resource: 'organization',
+          resourceId: input.organizationId,
+          organizationId: input.organizationId,
+          actorId,
+          before: { status: 'pending_verification', ownerStatus: existing.status },
+          after: { status: 'active', ownerStatus: 'ACTIVE', clientCode: org.clientCode },
+          metadata: { requestId: input.id, selfRegistered: true },
+        },
+        tx
+      );
+      await recordStatusChange(
+        {
+          userId,
+          organizationId: input.organizationId,
+          from: previousStatus,
+          to: 'ACTIVE',
+          reason: 'Organization registration approved',
+          actorId,
+        },
+        tx
+      );
+    });
+
+    return { userId, awaitingActivation: false, inviteEmail: null };
   }
 
   private async createUser(input: ProvisionInput, actorId: string): Promise<ProvisionResult> {

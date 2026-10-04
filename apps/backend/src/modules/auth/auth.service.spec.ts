@@ -1,5 +1,6 @@
 import { AuthService } from './auth.service';
 import type { AuthRepository } from './auth.repository';
+import type { RegisterDto } from './auth.dto';
 import {
   MfaService,
   PasswordService,
@@ -48,6 +49,8 @@ jest.mock('../../services/auth', () => ({
     findByClientCode: jest.fn(),
     getById: jest.fn(),
     assertMembership: jest.fn(async () => 'member'),
+    listOpenToRegistration: jest.fn(async () => []),
+    listActive: jest.fn(async () => []),
   },
   TokenService: {
     issue: jest.fn(async () => ({
@@ -82,8 +85,11 @@ jest.mock('../../config/env', () => {
   return { ...actual, config: { ...actual.config, selfRegistrationEnabled: true } };
 });
 const onSelfRegistration = jest.fn(async () => ({ id: 'req-1', refNo: 'UR-2026-000001' }));
+const onOrganizationRegistration = jest.fn(async () => ({ id: 'req-2', refNo: 'UR-2026-000002' }));
 jest.mock('../user-requests/user-request.service', () => ({
-  UserRequestService: jest.fn().mockImplementation(() => ({ onSelfRegistration })),
+  UserRequestService: jest
+    .fn()
+    .mockImplementation(() => ({ onSelfRegistration, onOrganizationRegistration })),
 }));
 jest.mock('../../infrastructure/logger', () => ({ logger: { info: jest.fn(), error: jest.fn() } }));
 
@@ -133,6 +139,19 @@ function makeRepo(overrides: Partial<Record<keyof AuthRepository, jest.Mock>> = 
     recentPasswordHashes: jest.fn(async () => []),
     transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
     createUser: jest.fn(async (data: Record<string, unknown>) => ({ id: 'new-user-1', ...data })),
+    findRegistrationTarget: jest.fn(async () => ({
+      id: tenant.id,
+      name: 'Acme',
+      status: 'active',
+      allowSelfRegistration: true,
+      allowedRegistrationTypes: null,
+      requireAdminApproval: true,
+    })),
+    organizationCodeTaken: jest.fn(async () => null),
+    createOrganization: jest.fn(async (data: Record<string, unknown>) => ({
+      id: 'new-org-1',
+      ...data,
+    })),
     ensureMembership: jest.fn(),
     addPasswordHistory: jest.fn(),
     createEmailVerification: jest.fn(),
@@ -153,13 +172,45 @@ describe('AuthService', () => {
     });
   });
 
+  describe('registration organization list', () => {
+    it('asks only for organizations that opted in, not the full tenant list', async () => {
+      // The registration picker is public, so it must not double as a
+      // directory of every customer (listActive does list them all).
+      await new AuthService(makeRepo()).listOrganizationsOpenToRegistration();
+
+      expect(TenantService.listOpenToRegistration).toHaveBeenCalled();
+      expect(TenantService.listActive).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('organization code availability', () => {
+    it('reports a free code as available', async () => {
+      const repo = makeRepo({ organizationCodeTaken: jest.fn(async () => null) });
+
+      await expect(new AuthService(repo).checkOrganizationCode('Acme-Robotics')).resolves.toEqual({
+        code: 'acme-robotics',
+        available: true,
+      });
+    });
+
+    it('reports a taken code as unavailable', async () => {
+      const repo = makeRepo({ organizationCodeTaken: jest.fn(async () => ({ id: 'org-9' })) });
+
+      await expect(new AuthService(repo).checkOrganizationCode('acme')).resolves.toMatchObject({
+        available: false,
+      });
+    });
+  });
+
   describe('register', () => {
-    const registerDto = {
+    const registerDto: RegisterDto = {
+      registrationType: 'ORGANIZATION_MEMBER',
       clientCode: 'acme',
       email: 'grace@acme.test',
       password: 'Str0ng-Passw0rd!',
       firstName: 'Grace',
       lastName: 'Hopper',
+      acceptTerms: true,
     };
 
     const registerRepo = (): AuthRepository =>
@@ -215,6 +266,162 @@ describe('AuthService', () => {
 
       expect(repo.createUser).not.toHaveBeenCalled();
       expect(onSelfRegistration).not.toHaveBeenCalled();
+    });
+
+    it('records the registration type on the account', async () => {
+      const repo = registerRepo();
+      await new AuthService(repo).register(registerDto, meta);
+
+      expect(repo.createUser).toHaveBeenCalledWith(
+        expect.objectContaining({ registrationType: 'ORGANIZATION_MEMBER' }),
+        expect.anything()
+      );
+    });
+
+    it('refuses an organization that has not opened itself to self-registration', async () => {
+      const repo = makeRepo({
+        findUserByEmail: jest.fn(async () => null),
+        findRegistrationTarget: jest.fn(async () => ({
+          id: tenant.id,
+          name: 'Acme',
+          status: 'active',
+          allowSelfRegistration: false,
+          allowedRegistrationTypes: null,
+          requireAdminApproval: true,
+        })),
+      });
+
+      const result = await new AuthService(repo).register(registerDto, meta);
+
+      // Same response as an open organization, so a closed tenant is not
+      // detectable from the outside.
+      expect(result).toMatchObject({ ok: true });
+      expect(repo.createUser).not.toHaveBeenCalled();
+    });
+
+    it('refuses a member registration for an organization that allows only other types', async () => {
+      const repo = makeRepo({
+        findUserByEmail: jest.fn(async () => null),
+        findRegistrationTarget: jest.fn(async () => ({
+          id: tenant.id,
+          name: 'Acme',
+          status: 'active',
+          allowSelfRegistration: true,
+          allowedRegistrationTypes: ['CONTRACTOR'],
+          requireAdminApproval: true,
+        })),
+      });
+
+      await new AuthService(repo).register(registerDto, meta);
+
+      expect(repo.createUser).not.toHaveBeenCalled();
+    });
+
+    describe('INDIVIDUAL', () => {
+      const individualDto: RegisterDto = {
+        registrationType: 'INDIVIDUAL',
+        email: 'ada@personal.test',
+        password: 'Str0ng-Passw0rd!',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        acceptTerms: true,
+      };
+
+      it('creates an ACTIVE account with no organization and no approval request', async () => {
+        const repo = registerRepo();
+        await new AuthService(repo).register(individualDto, meta);
+
+        expect(repo.createUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: 'ACTIVE',
+            tenantId: null,
+            registrationType: 'INDIVIDUAL',
+            emailVerified: false,
+          }),
+          expect.anything()
+        );
+        expect(repo.ensureMembership).not.toHaveBeenCalled();
+        expect(onSelfRegistration).not.toHaveBeenCalled();
+      });
+
+      it('tells the person to verify their email rather than wait for approval', async () => {
+        const result = await new AuthService(registerRepo()).register(individualDto, meta);
+
+        expect(result.message).not.toMatch(/approval/i);
+        expect(result.outcome).toBe('PENDING_EMAIL_VERIFICATION');
+      });
+    });
+
+    describe('CREATE_ORGANIZATION', () => {
+      const createOrgDto: RegisterDto = {
+        registrationType: 'CREATE_ORGANIZATION',
+        organization: {
+          name: 'Acme Robotics',
+          code: 'acme-robotics',
+          businessEmail: 'billing@acme.test',
+          country: 'IN',
+          timezone: 'Asia/Kolkata',
+        },
+        email: 'owner@acme.test',
+        password: 'Str0ng-Passw0rd!',
+        firstName: 'Grace',
+        lastName: 'Hopper',
+        acceptTerms: true,
+      };
+
+      it('creates an inactive organization with the registrant as its PENDING owner', async () => {
+        const repo = registerRepo();
+        await new AuthService(repo).register(createOrgDto, meta);
+
+        expect(repo.createOrganization).toHaveBeenCalledWith(
+          expect.objectContaining({
+            clientCode: 'acme-robotics',
+            status: 'pending_verification',
+            isVerified: false,
+            // A brand-new organization must not be open to further
+            // self-registration until its admin says so.
+            allowSelfRegistration: false,
+          }),
+          expect.anything()
+        );
+        expect(repo.createUser).toHaveBeenCalledWith(
+          expect.objectContaining({ status: 'PENDING', registrationType: 'CREATE_ORGANIZATION' }),
+          expect.anything()
+        );
+        expect(repo.ensureMembership).toHaveBeenCalledWith(
+          'new-user-1',
+          'new-org-1',
+          expect.anything(),
+          'owner'
+        );
+      });
+
+      it('raises a NEW_ORGANIZATION request rather than a NEW_USER one', async () => {
+        await new AuthService(registerRepo()).register(createOrgDto, meta);
+
+        expect(onOrganizationRegistration).toHaveBeenCalledWith(
+          expect.objectContaining({
+            organizationId: 'new-org-1',
+            organizationName: 'Acme Robotics',
+            clientCode: 'acme-robotics',
+          })
+        );
+        expect(onSelfRegistration).not.toHaveBeenCalled();
+      });
+
+      it('rejects a code another organization already holds', async () => {
+        const repo = makeRepo({
+          findUserByEmail: jest.fn(async () => null),
+          organizationCodeTaken: jest.fn(async () => ({ id: 'other-org' })),
+        });
+
+        // Unlike the email, the code is the registrant's own choice and is
+        // shown back to them, so it is a real field error.
+        await expect(new AuthService(repo).register(createOrgDto, meta)).rejects.toMatchObject({
+          code: 'ORG_CODE_TAKEN',
+        });
+        expect(repo.createOrganization).not.toHaveBeenCalled();
+      });
     });
   });
 

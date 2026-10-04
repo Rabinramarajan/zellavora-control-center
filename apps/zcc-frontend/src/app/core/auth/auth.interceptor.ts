@@ -22,7 +22,6 @@ import { ErrorBus } from '../error/error-bus';
 /** Public auth endpoints: never carry a bearer token and never trigger refresh. */
 const PUBLIC_AUTH_PATHS = [
   '/api/v1/auth/config',
-  '/api/v1/auth/clients',
   '/api/v1/auth/login',
   '/api/v1/auth/refresh',
   '/api/v1/auth/register',

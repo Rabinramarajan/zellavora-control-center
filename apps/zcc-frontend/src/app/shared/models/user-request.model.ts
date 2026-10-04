@@ -180,10 +180,12 @@ export interface UserRequestDetail {
   events: UserRequestEvent[];
   notes: UserRequestNote[];
   emails: UserRequestEmail[];
+  missingProvisioning: string[];
   actions: {
     canEdit: boolean;
     canSubmit: boolean;
     canApprove: boolean;
+    canCompleteProvisioning: boolean;
     canReject: boolean;
     canSendBack: boolean;
     canCancel: boolean;

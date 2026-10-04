@@ -53,6 +53,15 @@ model Organization {
   inviteCode         String? @map("invite_code")
   useCases           Json?   @map("use_cases") // Selected use cases during registration
 
+  // Self-registration (gated by the global ALLOW_SELF_REGISTRATION on top of this).
+  // Off by default so enabling the global flag does not silently open every
+  // existing organization to public registration.
+  allowSelfRegistration    Boolean @default(false) @map("allow_self_registration")
+  /// RegistrationType names this organization accepts. Null means ORGANIZATION_MEMBER only.
+  allowedRegistrationTypes Json?   @map("allowed_registration_types")
+  requireAdminApproval     Boolean @default(true) @map("require_admin_approval")
+  requireEmailVerification Boolean @default(true) @map("require_email_verification")
+
   // Theme & Branding
   primaryColor String? @map("primary_color")
   theme        String  @default("light") @map("theme") // light, dark, system
@@ -159,6 +168,9 @@ model User {
   postalCode         String?    @map("postal_code")
   lockReason         String?    @map("lock_reason")
   status             UserStatus @default(ACTIVE) @map("status")
+  /// Null for accounts that predate self-registration types, and for users
+  /// created by an administrator or an invitation rather than by registering.
+  registrationType   RegistrationType? @map("registration_type")
 
   // Location
   country  String? @map("country")
@@ -279,6 +291,18 @@ enum UserStatus {
   PENDING
   SUSPENDED
   DISABLED
+}
+
+/// How an account came into being. Kept separate from UserStatus: a registration
+/// type never changes, a status does. PARTNER, VENDOR and CONTRACTOR are reserved
+/// for the next phase and are not offered by self-registration yet.
+enum RegistrationType {
+  ORGANIZATION_MEMBER
+  INDIVIDUAL
+  CREATE_ORGANIZATION
+  PARTNER
+  VENDOR
+  CONTRACTOR
 }
 
 enum EntityStatus {
@@ -893,11 +917,13 @@ model AuditLog {
   metadata       Json?    @map("metadata")
   errorCode      String?  @map("error_code")
   errorMessage   String?  @map("error_message")
-  organizationId String   @map("organization_id") @db.Uuid
+  /// Null for platform-scope actions that belong to no organization, such as an
+  /// individual account registering with no tenant.
+  organizationId String?  @map("organization_id") @db.Uuid
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?         @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([actorId])

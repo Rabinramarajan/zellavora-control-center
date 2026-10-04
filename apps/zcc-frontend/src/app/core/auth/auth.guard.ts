@@ -40,8 +40,12 @@ export const registrationGuard: CanActivateFn = () => {
   return inject(AuthService)
     .config()
     .pipe(
+      // An enabled flag with no offered types would render a chooser with
+      // nothing in it, so both have to hold.
       map((config) =>
-        config.selfRegistrationEnabled ? true : router.createUrlTree(['/auth/login'])
+        config.selfRegistrationEnabled && config.registrationTypes?.length
+          ? true
+          : router.createUrlTree(['/auth/login'])
       ),
       catchError(() => of(router.createUrlTree(['/auth/login'])))
     );

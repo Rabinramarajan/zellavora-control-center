@@ -1,6 +1,6 @@
 import { applyRequest, AccessState, EMPTY_ACCESS } from './user-request.access';
 import { RequestPayloadSchema } from './user-request.dto';
-import { validateForSubmit } from './user-request.service';
+import { missingProvisioningFields, validateForSubmit } from './user-request.service';
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const payload = (input: Record<string, unknown> = {}) => RequestPayloadSchema.parse(input);
@@ -139,5 +139,47 @@ describe('RequestPayloadSchema', () => {
   it('enforces name length and username format', () => {
     expect(() => payload({ user: { firstName: 'E' } })).toThrow();
     expect(() => payload({ user: { username: 'Eric Parker' } })).toThrow();
+  });
+});
+
+describe('missingProvisioningFields', () => {
+  const selfRegistered = (organization = {}, access = {}) => ({
+    type: 'NEW_USER',
+    payload: payload({ organization, access }),
+  });
+
+  it('names every placement field a bare self-registration is missing', () => {
+    // This is exactly what /auth/register writes: identity only, no placement.
+    expect(missingProvisioningFields(selfRegistered())).toEqual([
+      'organization.departmentId',
+      'organization.branchId',
+      'access.addRoleIds',
+    ]);
+  });
+
+  it('is satisfied once the approver has assigned department, branch and a role', () => {
+    expect(
+      missingProvisioningFields(
+        selfRegistered({ departmentId: id(2), branchId: id(1) }, { addRoleIds: [id(20)] })
+      )
+    ).toEqual([]);
+  });
+
+  it('still reports a role that is missing when the placement is set', () => {
+    expect(
+      missingProvisioningFields(selfRegistered({ departmentId: id(2), branchId: id(1) }))
+    ).toEqual(['access.addRoleIds']);
+  });
+
+  it('does not apply to requests that act on an existing account', () => {
+    // An ACCESS_CHANGE carries only the delta; the account already has a
+    // department and branch, so demanding them here would block every one.
+    expect(missingProvisioningFields({ type: 'ACCESS_CHANGE', payload: payload() })).toEqual([]);
+  });
+
+  it('does not apply to a new organization, whose owner needs no placement', () => {
+    expect(missingProvisioningFields({ type: 'NEW_ORGANIZATION', payload: payload() })).toEqual(
+      []
+    );
   });
 });

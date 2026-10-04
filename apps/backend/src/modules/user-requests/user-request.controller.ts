@@ -5,6 +5,7 @@ import { PermissionService } from '../../services/auth';
 import {
   AccessPreviewSchema,
   ActionCommentSchema,
+  ApprovalProvisioningSchema,
   AddNoteSchema,
   CreateUserRequestSchema,
   RequiredCommentSchema,
@@ -61,6 +62,13 @@ export class UserRequestController {
   submit = handle((req, actor) => this.service.submit(req.params.id, actor));
   approve = handle((req, actor) =>
     this.service.approve(req.params.id, ActionCommentSchema.parse(req.body ?? {}).comments, actor)
+  );
+  setApprovalProvisioning = handle((req, actor) =>
+    this.service.setApprovalProvisioning(
+      req.params.id,
+      ApprovalProvisioningSchema.parse(req.body),
+      actor
+    )
   );
   reject = handle((req, actor) =>
     this.service.reject(req.params.id, RequiredCommentSchema.parse(req.body).comments, actor)

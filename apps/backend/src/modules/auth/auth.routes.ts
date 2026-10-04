@@ -1,7 +1,7 @@
 /**
  * Authentication API — mounted at /api/v1/auth.
  *
- * Public:  config, tenants, login (+2FA / recovery code), refresh, register
+ * Public:  config, login (+2FA / recovery code), refresh, register
  *          (feature-flagged), invitations, email verification, password recovery.
  * Authed:  logout, me, tenants, password change, 2FA management, sessions.
  */
@@ -29,6 +29,9 @@ const challengeLimiter = limit('challenge', 5, 15);
 const emailLimiter = limit('email', 15, 5);
 const tokenLimiter = limit('token', 15, 20);
 const registerLimiter = limit('register', 60, 5);
+// The availability check runs on every blur of the code field, so it needs its
+// own budget — the registration limiter's 5/hour would block normal typing.
+const orgCodeLimiter = limit('register-org-code', 10, 30);
 const sensitiveLimiter = limit('sensitive', 15, 10);
 
 /**
@@ -48,17 +51,47 @@ router.get('/config', asyncHandler(controller.config));
 
 /**
  * @swagger
- * /api/v1/auth/clients:
+ * /api/v1/auth/registration/organizations:
  *   get:
- *     summary: listSignInOrganizations
- *     operationId: getAuthClients
+ *     summary: listOrganizationsOpenToRegistration
+ *     operationId: getAuthRegistrationOrganizations
+ *     description: >
+ *       Organizations that have opted into member self-registration. Narrower
+ *       than /auth/clients by design: this list is public, so it must not
+ *       double as a directory of every customer. Empty when registration is off.
  *     tags: [authentication]
  *     security: []
  *     responses:
  *       200:
- *         description: Organizations available at sign-in
+ *         description: Organizations accepting self-registration
  */
-router.get('/clients', asyncHandler(controller.tenants));
+router.get('/registration/organizations', asyncHandler(controller.registrationOrganizations));
+
+/**
+ * @swagger
+ * /api/v1/auth/registration/organization-code:
+ *   get:
+ *     summary: checkOrganizationCodeAvailability
+ *     operationId: getAuthRegistrationOrganizationCode
+ *     description: Whether an organization code is free, for inline feedback on the sign-up form.
+ *     tags: [authentication]
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: "{ code, available }"
+ *       404:
+ *         description: Organization registration is not available
+ */
+router.get(
+  '/registration/organization-code',
+  orgCodeLimiter,
+  asyncHandler(controller.organizationCodeAvailability)
+);
 
 /**
  * @swagger
@@ -171,14 +204,27 @@ router.post('/refresh', asyncHandler(controller.refresh));
  *   post:
  *     summary: registerAccount
  *     operationId: postAuthRegister
- *     description: Only available when ALLOW_SELF_REGISTRATION=true. Generic response for existing emails.
+ *     description: >
+ *       Only available when ALLOW_SELF_REGISTRATION=true. Generic response for
+ *       existing emails. The body is conditional on registrationType:
+ *       ORGANIZATION_MEMBER requires clientCode and ends in PENDING_APPROVAL;
+ *       INDIVIDUAL takes no organization fields and ends ACTIVE behind email
+ *       verification; CREATE_ORGANIZATION requires an organization object
+ *       (name, code, businessEmail, country, timezone) and ends in
+ *       PENDING_APPROVAL by a platform administrator. Omitting registrationType
+ *       is read as ORGANIZATION_MEMBER for clients that predate types.
  *     tags: [authentication]
  *     security: []
  *     responses:
  *       202:
- *         description: Accepted; verification email sent when applicable
+ *         description: >
+ *           Accepted; verification email sent when applicable. Body carries
+ *           registrationType and outcome (PENDING_APPROVAL,
+ *           PENDING_EMAIL_VERIFICATION or ACTIVE).
  *       404:
- *         description: Registration disabled
+ *         description: Registration disabled, or that registration type is not offered
+ *       409:
+ *         description: Organization code already taken (CREATE_ORGANIZATION only)
  */
 router.post('/register', registerLimiter, asyncHandler(controller.register));
 

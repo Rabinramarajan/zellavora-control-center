@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { FormField, FormRoot, form, required } from '@angular/forms/signals';
 import { catchError, firstValueFrom, map, of } from 'rxjs';
-import { SelectControl, type SelectControlOption } from '@zellavoras/ui';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { apiErrorCode } from '../../../../core/auth/auth-errors';
 import { AuthFieldComponent } from '../../ui/auth-field.component';
@@ -25,7 +24,7 @@ interface Highlight {
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [FormField, FormRoot, RouterLink, SelectControl, AuthFieldComponent, AuthAlertComponent],
+  imports: [FormField, FormRoot, RouterLink, AuthFieldComponent, AuthAlertComponent],
   templateUrl: './login.page.html',
   styleUrl: '../../ui/auth-showcase.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,16 +57,6 @@ export class LoginPage {
   protected readonly formError = signal<string | null>(null);
   protected readonly unverified = signal(false);
 
-  private readonly orgs = toSignal(this.auth.clients().pipe(catchError(() => of([]))));
-  protected readonly orgsLoading = computed(() => this.orgs() === undefined);
-  protected readonly orgOptions = computed<SelectControlOption[]>(() =>
-    (this.orgs() ?? []).map((org) => ({
-      // The form stores codes lower-cased; the API matches case-insensitively.
-      value: org.clientCode.toLowerCase(),
-      label: org.name,
-      description: org.clientCode,
-    }))
-  );
   protected readonly selfRegistration = toSignal(
     this.auth.config().pipe(
       map((c) => c.selfRegistrationEnabled),
@@ -86,7 +75,7 @@ export class LoginPage {
   protected readonly form = form(
     this.model,
     (path) => {
-      required(path.clientCode, { message: 'Select your organization.' });
+      required(path.clientCode, { message: 'Enter your organization code.' });
       emailRules(path.email);
       currentPasswordRules(path.password);
     },
