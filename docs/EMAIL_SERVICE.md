@@ -2,11 +2,8 @@
 
 ## Overview
 
-The Zellavora Control Center email service provides a robust, multi-provider email solution with support for SMTP, SendGrid, and console (development) modes. It includes comprehensive email templates, queue-based processing, and full error handling.
-
 ## Features
 
-- ✅ **Multiple Email Providers**: SMTP, SendGrid, Console
 - ✅ **Queue-Based Processing**: Async email sending via BullMQ + Redis
 - ✅ **Professional Templates**: Pre-built templates for common email types
 - ✅ **Batch Sending**: Send multiple emails efficiently
@@ -19,7 +16,6 @@ The Zellavora Control Center email service provides a robust, multi-provider ema
 ### Environment Variables
 
 ```env
-# Email Provider: 'console', 'smtp', or 'sendgrid'
 EMAIL_PROVIDER=smtp
 
 # SMTP Configuration
@@ -29,10 +25,6 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 SMTP_FROM_EMAIL=noreply@zellavora.com
 SMTP_FROM_NAME=Zellavora Control Center
-
-# SendGrid Configuration
-SENDGRID_API_KEY=your-sendgrid-api-key
-SENDGRID_FROM_EMAIL=noreply@zellavora.com
 
 # Redis Queue (for async processing)
 REDIS_ENABLED=true
@@ -285,13 +277,6 @@ SMTP_PASSWORD=your-app-password  # Generate app password in Google Account setti
 SMTP_FROM_EMAIL=your-email@gmail.com
 ```
 
-#### SendGrid
-```env
-EMAIL_PROVIDER=sendgrid
-SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SENDGRID_FROM_EMAIL=noreply@yourdomain.com
-```
-
 #### Mailgun
 ```env
 EMAIL_PROVIDER=smtp
@@ -402,19 +387,9 @@ Check:
 - SMTP_USER and SMTP_PASSWORD are valid
 - Firewall allows outbound SMTP connections
 
-### SendGrid Not Working
-```
-[SendGrid] Send failed
-```
-Check:
-- SENDGRID_API_KEY is valid
-- API key has proper permissions
-- From email is verified in SendGrid
-
 ### Emails Going to Spam
 - Add SPF records for your domain
 - Add DKIM signatures
-- Use SendGrid or other transactional providers
 - Include unsubscribe links
 
 ### Queue Jobs Not Processing
@@ -435,7 +410,6 @@ Check:
 ## Performance Metrics
 
 - **SMTP**: ~100-500ms per email
-- **SendGrid**: ~50-200ms per email
 - **Batch sending**: Up to 50 emails per request recommended
 - **Queue processing**: Async, non-blocking
 
@@ -446,4 +420,3 @@ For issues or questions, please check:
 2. Email provider settings
 3. Redis connection (if using queue)
 4. Network connectivity
-5. Logs in `[Email]`, `[SMTP]`, or `[SendGrid]` prefixes

@@ -6,7 +6,6 @@
 ```bash
 npm install
 ```
-The `@sendgrid/mail` package has been added to package.json.
 
 ### 2. Configure Environment
 Add to `.env.local`:
@@ -22,10 +21,6 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 SMTP_FROM_EMAIL=noreply@zellavora.com
 SMTP_FROM_NAME=Zellavora Control Center
-
-# For SendGrid Provider:
-SENDGRID_API_KEY=SG.your-api-key
-SENDGRID_FROM_EMAIL=noreply@zellavora.com
 
 # Optional: Redis for queue processing
 REDIS_ENABLED=true
@@ -216,13 +211,6 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=generated-app-password
 ```
 
-### SendGrid
-```env
-EMAIL_PROVIDER=sendgrid
-SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SENDGRID_FROM_EMAIL=noreply@yourdomain.com
-```
-
 ### Development/Console
 ```env
 EMAIL_PROVIDER=console
@@ -247,7 +235,6 @@ if (!success) {
 Look for these log prefixes:
 - `[Email]` - General email operations
 - `[SMTP]` - SMTP provider operations
-- `[SendGrid]` - SendGrid provider operations
 - `[Queue]` - Queue operations
 - `[Queue Worker]` - Background job processing
 
@@ -267,12 +254,9 @@ Example log output:
 - [ ] Send test OTP: `POST /api/v1/email/send-otp`
 - [ ] Verify email received (or logged to console)
 - [ ] Check logs for `[Email]` prefix messages
-- [ ] Test with different providers (smtp, sendgrid, console)
 
 ## Production Checklist
 
-- [ ] Set EMAIL_PROVIDER to production provider (smtp or sendgrid)
-- [ ] Configure SMTP credentials or SendGrid API key
 - [ ] Enable Redis for queue processing
 - [ ] Set up monitoring/alerting for failed emails
 - [ ] Add rate limiting to email endpoints
@@ -286,7 +270,6 @@ Example log output:
 ### Emails not being sent
 1. Check health: `GET /api/v1/email/health`
 2. Verify EMAIL_PROVIDER is set
-3. Check SMTP/SendGrid credentials
 4. Review logs for `[Email]` messages
 
 ### "Connection verification failed"
@@ -294,12 +277,6 @@ Example log output:
 2. Check firewall allows SMTP
 3. Verify credentials are correct
 4. Test credentials with mail client
-
-### SendGrid errors
-1. Verify SENDGRID_API_KEY
-2. Check key has proper permissions
-3. Verify SENDGRID_FROM_EMAIL is verified
-4. Review SendGrid API documentation
 
 ### Queue not processing
 1. Verify Redis is running: `redis-cli ping`

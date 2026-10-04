@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
-import sgMail from '@sendgrid/mail';
-import { config } from '../config/env';
 import { logger } from '../infrastructure/logger';
+import { resolveEmailConfig, type ResolvedEmailConfig } from './email-config';
 
 export interface EmailOptions {
   to: string | string[];
@@ -25,66 +24,53 @@ export interface SendEmailResponse {
   error?: string;
 }
 
+/** Identity of the transport a cached transporter was built from. */
+const transportFingerprint = (cfg: ResolvedEmailConfig): string =>
+  [cfg.smtpHost, cfg.smtpPort, cfg.smtpSecure, cfg.smtpUser, cfg.smtpPassword].join('|');
+
 class EmailService {
   private smtpTransporter: nodemailer.Transporter | null = null;
-  private provider: 'console' | 'smtp' | 'sendgrid';
+  private smtpFingerprint: string | null = null;
 
-  constructor() {
-    this.provider = config.emailProvider;
-
-    if (this.provider === 'smtp' && config.smtpHost && config.smtpUser) {
-      this.initializeSMTP();
-    } else if (this.provider === 'sendgrid' && config.sendgridApiKey) {
-      this.initializeSendGrid();
+  /**
+   * Transports are built per send from the resolved configuration rather than
+   * once in the constructor. Settings now live in the database and can change
+   * at runtime, so a transporter pinned at construction would keep using
+   * credentials an administrator had already replaced. The fingerprint check
+   * keeps the connection pool alive while the configuration is unchanged.
+   */
+  private smtpTransport(cfg: ResolvedEmailConfig): nodemailer.Transporter {
+    const fingerprint = transportFingerprint(cfg);
+    if (this.smtpTransporter && this.smtpFingerprint === fingerprint) {
+      return this.smtpTransporter;
     }
+
+    this.smtpTransporter?.close();
+    this.smtpTransporter = nodemailer.createTransport({
+      host: cfg.smtpHost,
+      port: cfg.smtpPort,
+      // Implicit TLS on 465; 587 upgrades via STARTTLS, which nodemailer
+      // negotiates on its own when secure is false.
+      secure: cfg.smtpSecure || cfg.smtpPort === 465,
+      auth: cfg.smtpUser ? { user: cfg.smtpUser, pass: cfg.smtpPassword } : undefined,
+    });
+    this.smtpFingerprint = fingerprint;
+    return this.smtpTransporter;
   }
 
-  private initializeSMTP(): void {
-    try {
-      this.smtpTransporter = nodemailer.createTransport({
-        host: config.smtpHost,
-        port: config.smtpPort,
-        secure: config.smtpPort === 465,
-        auth: config.smtpUser
-          ? {
-              user: config.smtpUser,
-              pass: config.smtpPassword,
-            }
-          : undefined,
-      });
-
-      this.smtpTransporter.verify((err, success) => {
-        if (err) {
-          logger.error(`[SMTP] Connection verification failed: ${err.message}`);
-        } else if (success) {
-          logger.info('[SMTP] Email service ready');
-        }
-      });
-    } catch (err: any) {
-      logger.error(`[SMTP] Initialization failed: ${err.message}`);
-    }
-  }
-
-  private initializeSendGrid(): void {
-    try {
-      sgMail.setApiKey(config.sendgridApiKey);
-      logger.info('[SendGrid] Email service configured');
-    } catch (err: any) {
-      logger.error(`[SendGrid] Initialization failed: ${err.message}`);
-    }
-  }
 
   async sendEmail(options: EmailOptions): Promise<SendEmailResponse> {
     try {
-      if (this.provider === 'console') {
-        return this.sendViaConsole(options);
-      } else if (this.provider === 'smtp' && this.smtpTransporter) {
-        return this.sendViaSMTP(options);
-      } else if (this.provider === 'sendgrid') {
-        return this.sendViaSendGrid(options);
-      }
+      const cfg = await resolveEmailConfig();
 
-      logger.warn('[Email] No email provider configured, using console fallback');
+      if (cfg.provider === 'smtp' && cfg.smtpHost) {
+        return await this.sendViaSMTP(options, cfg);
+      }
+      if (cfg.provider !== 'console') {
+        logger.warn(
+          `[Email] Provider "${cfg.provider}" is selected but not fully configured; falling back to console.`
+        );
+      }
       return this.sendViaConsole(options);
     } catch (err: any) {
       logger.error(`[Email] Failed to send email: ${err.message}`);
@@ -95,10 +81,13 @@ class EmailService {
     }
   }
 
-  private async sendViaSMTP(options: EmailOptions): Promise<SendEmailResponse> {
+  private async sendViaSMTP(
+    options: EmailOptions,
+    cfg: ResolvedEmailConfig
+  ): Promise<SendEmailResponse> {
     try {
       const mailOptions = {
-        from: `"${config.smtpFromName}" <${config.smtpFromEmail}>`,
+        from: `"${cfg.fromName}" <${cfg.fromEmail}>`,
         to: options.to,
         subject: options.subject,
         text: options.text,
@@ -109,7 +98,7 @@ class EmailService {
         attachments: options.attachments,
       };
 
-      const info = await this.smtpTransporter!.sendMail(mailOptions);
+      const info = await this.smtpTransport(cfg).sendMail(mailOptions);
       logger.info(`[SMTP] Email sent successfully: ${info.messageId}`);
       return {
         success: true,
@@ -117,38 +106,6 @@ class EmailService {
       };
     } catch (err: any) {
       logger.error(`[SMTP] Send failed: ${err.message}`);
-      throw err;
-    }
-  }
-
-  private async sendViaSendGrid(options: EmailOptions): Promise<SendEmailResponse> {
-    try {
-      const recipients = Array.isArray(options.to) ? options.to : [options.to];
-
-      const msg = {
-        to: recipients,
-        from: config.sendgridFromEmail,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-        cc: options.cc,
-        bcc: options.bcc,
-        replyTo: options.replyTo,
-        attachments: options.attachments?.map((att) => ({
-          filename: att.filename,
-          content: att.content || (att.path ? require('fs').readFileSync(att.path) : ''),
-          type: att.contentType,
-        })),
-      };
-
-      const response = await sgMail.send(msg);
-      logger.info(`[SendGrid] Email sent successfully: ${response[0].headers['x-message-id']}`);
-      return {
-        success: true,
-        messageId: response[0].headers['x-message-id'],
-      };
-    } catch (err: any) {
-      logger.error(`[SendGrid] Send failed: ${err.message}`);
       throw err;
     }
   }
@@ -165,22 +122,15 @@ class EmailService {
     };
   }
 
+  /** Handshake check that sends nothing. */
   async verifyConnection(): Promise<boolean> {
     try {
-      if (this.provider === 'smtp' && this.smtpTransporter) {
-        await this.smtpTransporter.verify();
+      const cfg = await resolveEmailConfig();
+      if (cfg.provider === 'smtp' && cfg.smtpHost) {
+        await this.smtpTransport(cfg).verify();
         return true;
-      } else if (this.provider === 'sendgrid') {
-        const testEmail = {
-          to: 'test@example.com',
-          subject: 'Test',
-          text: 'Test',
-          html: '<p>Test</p>',
-        };
-        const response = await this.sendEmail(testEmail);
-        return response.success;
       }
-      return this.provider === 'console';
+      return cfg.provider === 'console';
     } catch (err) {
       logger.error(`[Email] Connection verification failed: ${err}`);
       return false;

@@ -24,6 +24,14 @@ import { ProfileSettingsFormComponent } from './components/profile-settings-form
 import { SettingsAsideComponent } from './components/settings-aside/settings-aside.component';
 import { AvatarUploaderComponent } from './components/avatar-uploader/avatar-uploader.component';
 import { AppearanceSettingsComponent } from './components/appearance-settings/appearance-settings.component';
+import { EmailSettingsFormComponent } from './components/email-settings-form/email-settings-form.component';
+import { EmailSettingsService } from './email-settings.service';
+import {
+  DEFAULT_EMAIL_SETTINGS,
+  EmailSettings,
+  EmailSettingsPayload,
+  EmailTestResult,
+} from './models/email-settings.model';
 
 type SavingSection = 'general' | 'profile' | null;
 
@@ -40,6 +48,7 @@ type SavingSection = 'general' | 'profile' | null;
     SettingsAsideComponent,
     AvatarUploaderComponent,
     AppearanceSettingsComponent,
+    EmailSettingsFormComponent,
   ],
   providers: [MessageService],
   templateUrl: './settings.component.html',
@@ -52,6 +61,7 @@ export class SettingsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  private readonly emailSettingsService = inject(EmailSettingsService);
 
   protected readonly tabs = SETTINGS_TABS;
 
@@ -67,6 +77,11 @@ export class SettingsComponent {
   protected readonly profileSettings = signal<ProfileSettings>(DEFAULT_PROFILE_SETTINGS);
   protected readonly savingSection = signal<SavingSection>(null);
 
+  protected readonly emailSettings = signal<EmailSettings>(DEFAULT_EMAIL_SETTINGS);
+  protected readonly emailSaving = signal(false);
+  protected readonly emailTesting = signal(false);
+  protected readonly emailTestResult = signal<EmailTestResult | null>(null);
+
   protected readonly avatarUrl = computed(() => this.auth.user()?.avatarUrl ?? null);
   protected readonly avatarSaving = signal(false);
   protected readonly userRole = computed(() => this.auth.user()?.role ?? '');
@@ -81,6 +96,7 @@ export class SettingsComponent {
 
   constructor() {
     void this.loadAllSettings();
+    void this.loadEmailSettings();
   }
 
   protected selectTab(tabId: SettingsTabId): void {
@@ -112,6 +128,50 @@ export class SettingsComponent {
       this.toast('error', 'Error', apiErrorMessage(err, 'Failed to update profile picture'));
     } finally {
       this.avatarSaving.set(false);
+    }
+  }
+
+  protected async saveEmailSettings(payload: EmailSettingsPayload): Promise<void> {
+    this.emailSaving.set(true);
+    try {
+      this.emailSettings.set(await firstValueFrom(this.emailSettingsService.update(payload)));
+      // A previous result refers to the old configuration, so drop it rather
+      // than leave a stale "succeeded" badge next to new credentials.
+      this.emailTestResult.set(null);
+      this.toast('success', 'Saved', 'Email settings updated');
+    } catch (err) {
+      this.toast('error', 'Error', apiErrorMessage(err, 'Failed to save email settings'));
+    } finally {
+      this.emailSaving.set(false);
+    }
+  }
+
+  protected async sendTestEmail(to: string): Promise<void> {
+    this.emailTesting.set(true);
+    this.emailTestResult.set(null);
+    try {
+      const result = await firstValueFrom(this.emailSettingsService.sendTest(to));
+      this.emailTestResult.set(result);
+      if (result.success) {
+        this.toast('success', 'Sent', `Test email sent to ${to}`);
+      } else {
+        this.toast('error', 'Delivery failed', result.error ?? 'The provider rejected the message');
+      }
+      // Refresh so the stored last-test status matches what was just shown.
+      await this.loadEmailSettings();
+    } catch (err) {
+      this.toast('error', 'Error', apiErrorMessage(err, 'Failed to send test email'));
+    } finally {
+      this.emailTesting.set(false);
+    }
+  }
+
+  private async loadEmailSettings(): Promise<void> {
+    try {
+      this.emailSettings.set(await firstValueFrom(this.emailSettingsService.get()));
+    } catch {
+      // Non-fatal: the tab may simply be out of reach for this user's role,
+      // and the rest of the settings page must still render.
     }
   }
 

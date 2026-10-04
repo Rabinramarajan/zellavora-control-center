@@ -28,6 +28,7 @@ export type SettingsTabId =
   | 'general'
   | 'profile'
   | 'notifications'
+  | 'email'
   | 'appearance'
   | 'localization'
   | 'integrations'
@@ -72,6 +73,12 @@ export const SETTINGS_TABS: readonly SettingsTab[] = [
     label: 'Notifications',
     description: 'Email & system alerts',
     icon: 'bell',
+  },
+  {
+    id: 'email',
+    label: 'Email delivery',
+    description: 'SMTP & provider settings',
+    icon: 'mail',
   },
   { id: 'appearance', label: 'Appearance', description: 'Theme & display', icon: 'palette' },
   { id: 'localization', label: 'Localization', description: 'Language & timezone', icon: 'globe' },

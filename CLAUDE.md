@@ -27,7 +27,7 @@
 - **Auth**: Supabase Auth + JWT with Refresh Tokens
 - **Storage**: Supabase Storage
 - **Real-time**: WebSocket support
-- **Email**: SendGrid / Nodemailer
+- **Email**: Nodemailer (SMTP)
 - **Queue**: BullMQ + Redis (optional)
 - **Logging**: Winston
 
@@ -262,7 +262,6 @@ DATABASE_URL=postgresql://user:password@localhost:5432/zcc
 JWT_SECRET=your-secret-key
 SUPABASE_URL=
 SUPABASE_KEY=
-SENDGRID_API_KEY=
 REDIS_URL=redis://localhost:6379
 ```
 

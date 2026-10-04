@@ -34,6 +34,7 @@ import iamDepartmentRoutes from '../modules/departments/departments.routes';
 import iamTeamRoutes from '../modules/teams/teams.routes';
 import iamSessionRoutes from '../modules/sessions/sessions.routes';
 import iamSecurityRoutes from '../modules/security-policy/security-policy.routes';
+import emailSettingsRoutes from '../modules/email-settings/email-settings.routes';
 import iamConfigurationRoutes from '../modules/configuration/configuration.routes';
 import iamCommunicationRoutes from '../modules/communications/communications.routes';
 import dailySheetsRoutes from '../modules/daily-sheets/daily-sheets.routes';
@@ -79,6 +80,7 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/iam/teams', iamTeamRoutes);
   app.use('/api/v1/iam/sessions', iamSessionRoutes);
   app.use('/api/v1/iam/security', iamSecurityRoutes);
+  app.use('/api/v1/settings/email', emailSettingsRoutes);
   app.use('/api/v1/iam/configurations', iamConfigurationRoutes);
   app.use('/api/v1/iam/communications', iamCommunicationRoutes);
   // Mounted under /projects: this router declares bare '/' and '/:id' paths, which at

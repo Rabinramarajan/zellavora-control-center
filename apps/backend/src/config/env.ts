@@ -94,7 +94,7 @@ export const config = {
   // ============================================================================
   // Email Service
   // ============================================================================
-  emailProvider: (process.env.EMAIL_PROVIDER || 'console') as 'console' | 'smtp' | 'sendgrid',
+  emailProvider: (process.env.EMAIL_PROVIDER || 'console') as 'console' | 'smtp',
 
   // SMTP Configuration
   smtpHost: process.env.SMTP_HOST || '',
@@ -103,10 +103,6 @@ export const config = {
   smtpPassword: process.env.SMTP_PASSWORD || '',
   smtpFromEmail: process.env.SMTP_FROM_EMAIL || 'noreply@zellavora.com',
   smtpFromName: process.env.SMTP_FROM_NAME || 'Zellavora Control Center',
-
-  // SendGrid Configuration
-  sendgridApiKey: process.env.SENDGRID_API_KEY || '',
-  sendgridFromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@zellavora.com',
 
   // ============================================================================
   // Encryption
@@ -199,7 +195,7 @@ const requiredEnvVars = ['JWT_SECRET', 'REFRESH_TOKEN_SECRET'];
 const productionEnvVars = [
   'ENCRYPTION_KEY', // Must be provided in production
   'APP_URL', // Links in invitation / reset / verification emails
-  'SMTP_HOST', // Or SendGrid configured
+  'SMTP_HOST', // Outbound mail transport
 ];
 
 /**
@@ -232,10 +228,6 @@ export function collectConfigErrors(): string[] {
   if (config.emailProvider === 'smtp') {
     if (!config.smtpHost || !config.smtpUser || !config.smtpPassword) {
       errors.push('SMTP email provider requires SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
-    }
-  } else if (config.emailProvider === 'sendgrid') {
-    if (!config.sendgridApiKey) {
-      errors.push('SendGrid email provider requires SENDGRID_API_KEY');
     }
   }
 

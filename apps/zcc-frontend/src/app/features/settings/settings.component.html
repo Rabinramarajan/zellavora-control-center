@@ -46,6 +46,16 @@
             (save)="saveProfile($event)"
           />
         }
+        @case ('email') {
+          <app-email-settings-form
+            [settings]="emailSettings()"
+            [saving]="emailSaving()"
+            [testing]="emailTesting()"
+            [testResult]="emailTestResult()"
+            (save)="saveEmailSettings($event)"
+            (sendTest)="sendTestEmail($event)"
+          />
+        }
         @case ('appearance') {
           <app-appearance-settings />
         }
