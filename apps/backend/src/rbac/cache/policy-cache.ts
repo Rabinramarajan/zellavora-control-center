@@ -1,14 +1,15 @@
 /**
  * Two-tier policy cache: L1 (in-process LRU) + L2 (Redis).
  *
- * Key format:  rbac:policy:{orgId}:{userId}:v{policyVersion}
- * Plus negative cache:  rbac:deny:{orgId}:{userId}:{permKey}
+ * Keys are built by infrastructure/redis-keys.ts and live under
+ * zcc:rbac:policy:{orgId}:{userId}:v{policyVersion}.
  *
  * Single-flight via SETNX prevents cache stampede.
  */
 import { LRUCache } from 'lru-cache';
 import type Redis from 'ioredis';
 import type { EffectivePolicy } from '../engine/permission-engine';
+import { redisKeys } from '../../infrastructure/redis-keys';
 
 const L1_TTL_MS = 60_000; // 1 min in-process
 const L2_TTL_SEC = 300; // 5 min Redis
@@ -28,11 +29,11 @@ export class PolicyCache {
   }
 
   private static k(orgId: string, userId: string, version: number) {
-    return `rbac:policy:${orgId}:${userId}:v${version}`;
+    return redisKeys.rbacPolicy(orgId, userId, version);
   }
 
   private static lockKey(orgId: string, userId: string, version: number) {
-    return `rbac:lock:${orgId}:${userId}:v${version}`;
+    return redisKeys.rbacLock(orgId, userId, version);
   }
 
   /**
@@ -93,7 +94,7 @@ export class PolicyCache {
     if (!acquired) {
       // Another worker is computing — brief wait then re-read
       await new Promise((r) => setTimeout(r, 50));
-      const second = await this.get(userId, userId, version);
+      const second = await this.get(userId, orgId, version);
       if (second) return second as T;
     }
 
@@ -117,7 +118,7 @@ export class PolicyCache {
 
     // L2: pattern delete via SCAN
     const stream = this.redis.scanStream({
-      match: `rbac:policy:${orgId}:${userId}:*`,
+      match: redisKeys.rbacPolicyUserPattern(orgId, userId),
     });
     const toDelete: string[] = [];
     for await (const keys of stream) {
@@ -137,7 +138,7 @@ export class PolicyCache {
     }
 
     const stream = this.redis.scanStream({
-      match: `rbac:policy:${orgId}:*`,
+      match: redisKeys.rbacPolicyOrgPattern(orgId),
     });
     const toDelete: string[] = [];
     for await (const keys of stream) {
@@ -148,6 +149,9 @@ export class PolicyCache {
     }
 
     // Broadcast so other instances drop their L1 caches
-    await this.redis.publish(`rbac:invalidate:${orgId}`, JSON.stringify({ ts: Date.now() }));
+    await this.redis.publish(
+      redisKeys.rbacInvalidateChannel(orgId),
+      JSON.stringify({ ts: Date.now() })
+    );
   }
 }

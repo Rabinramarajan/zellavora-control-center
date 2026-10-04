@@ -3,11 +3,15 @@
  * builder. Safe when Redis is disabled or unreachable — every helper falls
  * back to L1-only with a short TTL so the app keeps working.
  *
- * Key format is namespaced per domain:  zcc:cache:{domain}:{key}
+ * Callers pass a domain-scoped logical key (e.g. 'iam:users:42'); the
+ * `zcc:cache:` namespace is applied here, in one place, so no call site can
+ * drift out of it. See infrastructure/redis-keys.ts for the full layout.
  */
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 import { LRUCache } from 'lru-cache';
 import { config } from '../config/env';
+import { getRedis } from './redis';
+import { redisKeys } from './redis-keys';
 
 const L1_TTL_MS = 15_000; // in-process, always shorter than L2
 
@@ -18,23 +22,13 @@ interface CacheClient {
 }
 
 class RedisCacheClient implements CacheClient {
-  private redis: Redis | null = null;
   private l1 = new LRUCache<string, string>({ max: 20_000, ttl: L1_TTL_MS });
 
+  // Shares the process-wide connection with the rate limiter. L2 stays
+  // opt-in via REDIS_ENABLED; without it this collapses to an L1-only cache.
   private ensure(): Redis | null {
-    if (!config.redisEnabled || !config.redisUrl) return null;
-    if (!this.redis) {
-      this.redis = new Redis(config.redisUrl, {
-        lazyConnect: true,
-        maxRetriesPerRequest: 2,
-        connectTimeout: 5000,
-        enableOfflineQueue: false,
-      });
-      this.redis.on('error', () => {
-        // best-effort — L1 fallback keeps the app alive
-      });
-    }
-    return this.redis;
+    if (!config.redisEnabled) return null;
+    return getRedis();
   }
 
   async get(key: string): Promise<string | null> {
@@ -101,7 +95,7 @@ export const cacheKey = (...parts: Array<string | number>): string =>
   parts.map((p) => String(p)).join(':');
 
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  const raw = await cache.get(key);
+  const raw = await cache.get(redisKeys.cache(key));
   if (raw === null) return null;
   return deserialize<T>(raw);
 }
@@ -111,10 +105,10 @@ export async function cacheSet<T>(
   value: T,
   ttlSeconds: number = config.redisTtlSeconds
 ): Promise<void> {
-  await cache.set(key, serialize(value), ttlSeconds);
+  await cache.set(redisKeys.cache(key), serialize(value), ttlSeconds);
 }
 
-/** Delete every key matching `prefix*` (e.g. 'zcc:cache:user:42:*'). */
+/** Delete every key matching `pattern` (e.g. 'iam:users:*'). */
 export async function cacheDelPattern(pattern: string): Promise<void> {
-  await cache.delPattern(pattern);
+  await cache.delPattern(redisKeys.cache(pattern));
 }

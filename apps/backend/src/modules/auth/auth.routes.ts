@@ -6,38 +6,30 @@
  * Authed:  logout, me, tenants, password change, 2FA management, sessions.
  */
 import { Router, type Router as ExpressRouter } from 'express';
-import { rateLimit } from 'express-rate-limit';
 import { authenticate } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { AuthController } from './auth.controller';
+import type { RateLimitRequestHandler } from 'express-rate-limit';
+import { createRateLimiter } from '../../middleware/rate-limit';
 
 const router: ExpressRouter = Router();
 const controller = new AuthController();
 
-const limit = (windowMinutes: number, max: number) =>
-  rateLimit({
+// Each limiter needs its own bucket: a shared Redis prefix would merge the
+// counters, letting login traffic exhaust the much tighter email quota.
+const limit = (bucket: string, windowMinutes: number, max: number): RateLimitRequestHandler =>
+  createRateLimiter({
+    bucket: `auth:${bucket}`,
     windowMs: windowMinutes * 60 * 1000,
     limit: max,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_req, res, _next, options) => {
-      res.status(429).json({
-        error: {
-          message: 'Too many attempts. Please try again later.',
-          code: 'RATE_LIMITED',
-          status: 429,
-          retryAfterSeconds: Math.ceil(options.windowMs / 1000),
-        },
-      });
-    },
   });
 
-const loginLimiter = limit(15, 30);
-const challengeLimiter = limit(5, 15);
-const emailLimiter = limit(15, 5);
-const tokenLimiter = limit(15, 20);
-const registerLimiter = limit(60, 5);
-const sensitiveLimiter = limit(15, 10);
+const loginLimiter = limit('login', 15, 30);
+const challengeLimiter = limit('challenge', 5, 15);
+const emailLimiter = limit('email', 15, 5);
+const tokenLimiter = limit('token', 15, 20);
+const registerLimiter = limit('register', 60, 5);
+const sensitiveLimiter = limit('sensitive', 15, 10);
 
 /**
  * @swagger

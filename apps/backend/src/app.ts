@@ -2,7 +2,6 @@ import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { rateLimit } from 'express-rate-limit';
 import Redis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
 import type { RequestHandler } from 'express';
@@ -11,6 +10,7 @@ import { errorHandler } from './middleware/error';
 import { registerSwaggerRoutes } from './routes/swagger';
 import { registerApiRoutes } from './routes';
 import { responseEnvelope } from './middleware/response-envelope';
+import { createRateLimiter } from './middleware/rate-limit';
 import { requestContext } from './middleware/request-context';
 import crypto from 'crypto';
 import os from 'os';
@@ -77,11 +77,10 @@ app.use(
 // login handler via RateLimitService.
 app.use(
   '/api/v1/auth',
-  rateLimit({
+  createRateLimiter({
+    bucket: 'auth-surface',
     windowMs: 60 * 1000,
     limit: 120,
-    standardHeaders: true,
-    legacyHeaders: false,
     message: { error: 'Too many requests. Please slow down.', code: 'RATE_LIMITED' },
   })
 );

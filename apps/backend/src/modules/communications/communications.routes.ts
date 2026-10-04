@@ -1,21 +1,20 @@
 import { Router, type Response } from 'express';
-import rateLimit from 'express-rate-limit';
 import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { orgContextOf } from '../../middleware/org-context';
 import { CommunicationsService } from './communications.service';
 import { HistoryQuerySchema, SendEmailSchema, SendMessageSchema } from './communications.dto';
+import { createRateLimiter, userOrIpKey } from '../../middleware/rate-limit';
 
 const router = Router();
 const service = new CommunicationsService();
 
 // Bulk sends are expensive and easy to abuse; cap them per user.
-const sendLimiter = rateLimit({
+const sendLimiter = createRateLimiter({
+  bucket: 'communications:send',
   windowMs: 60 * 60 * 1000,
   limit: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => (req as AuthRequest).userId ?? req.ip ?? 'anonymous',
+  keyGenerator: userOrIpKey,
 });
 
 /**

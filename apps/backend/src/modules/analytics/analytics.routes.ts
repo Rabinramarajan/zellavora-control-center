@@ -1,19 +1,18 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
-import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
+import { authenticate, requirePermission } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { AnalyticsController } from './analytics.controller';
+import { createRateLimiter, userOrIpKey } from '../../middleware/rate-limit';
 
 const router = Router();
 const controller = new AnalyticsController();
 
 // One event per navigation; a generous cap still stops a runaway client from flooding the table.
-const trackLimiter = rateLimit({
+const trackLimiter = createRateLimiter({
+  bucket: 'analytics:track',
   windowMs: 60 * 1000,
   limit: 120,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => (req as AuthRequest).userId ?? req.ip ?? 'anonymous',
+  keyGenerator: userOrIpKey,
 });
 
 router.use(authenticate);
