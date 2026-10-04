@@ -22,6 +22,7 @@ import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/ope
 import { AuthStore } from './auth.store';
 import { PolicyStore } from '../rbac/store/policy.store';
 import { apiErrorCode } from './auth-errors';
+import { LoginEncryptionService } from './login-encryption.service';
 import type {
   AcceptInvitationRequest,
   AcceptInvitationResponse,
@@ -75,6 +76,7 @@ export class AuthService {
   private readonly store = inject(AuthStore);
   private readonly policy = inject(PolicyStore);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly loginEncryption = inject(LoginEncryptionService);
 
   private refreshTimer: Subscription | null = null;
   private refreshRequest$?: Observable<boolean>;
@@ -189,28 +191,50 @@ export class AuthService {
   login(request: LoginRequest): Observable<LoginResponse> {
     this.refreshStorage = request.rememberMe ? localStorage : sessionStorage;
     const body: LoginRequest = { ...request, email: request.email.trim().toLowerCase() };
-    return this.http.post<LoginResponse>(`${AUTH_API}/login`, body).pipe(
-      tap((res) => {
-        localStorage.setItem(STORAGE.clientCode, request.clientCode);
-        sessionStorage.removeItem(STORAGE.pendingEmail);
-        if (res.mfaRequired) {
-          this.storeMfaChallenge(res);
-          void this.router.navigate(['/auth/two-factor'], { replaceUrl: true });
-          return;
-        }
-        this.completeSignIn(res);
-      }),
-      catchError((err) => {
-        const code = apiErrorCode(err);
-        if (code === 'EMAIL_NOT_VERIFIED') sessionStorage.setItem(STORAGE.pendingEmail, body.email);
-        if (code === 'ACCOUNT_LOCKED' || code === 'ACCOUNT_DISABLED') {
-          void this.router.navigate(['/auth/account-locked'], {
-            queryParams: { reason: code === 'ACCOUNT_DISABLED' ? 'disabled' : 'locked' },
-          });
-        }
-        return throwError(() => err);
-      })
-    );
+    const encryption = this.loginEncryption;
+
+    return new Observable<LoginResponse>((observer) => {
+      encryption
+        .encryptLoginPayload(body)
+        .then((encryptedPayload) => {
+          const headers = {
+            'X-Encryption-Key': encryptedPayload.key,
+            'X-Encryption-IV': encryptedPayload.iv,
+          };
+
+          this.http
+            .post<LoginResponse>(`${AUTH_API}/login`, encryptedPayload, { headers })
+            .subscribe({
+              next: (res) => {
+                localStorage.setItem(STORAGE.clientCode, request.clientCode);
+                sessionStorage.removeItem(STORAGE.pendingEmail);
+                if (res.mfaRequired) {
+                  this.storeMfaChallenge(res);
+                  void this.router.navigate(['/auth/two-factor'], { replaceUrl: true });
+                  return;
+                }
+                this.completeSignIn(res);
+                observer.next(res);
+                observer.complete();
+              },
+              error: (err) => {
+                const code = apiErrorCode(err);
+                if (code === 'EMAIL_NOT_VERIFIED') {
+                  sessionStorage.setItem(STORAGE.pendingEmail, body.email);
+                }
+                if (code === 'ACCOUNT_LOCKED' || code === 'ACCOUNT_DISABLED') {
+                  void this.router.navigate(['/auth/account-locked'], {
+                    queryParams: { reason: code === 'ACCOUNT_DISABLED' ? 'disabled' : 'locked' },
+                  });
+                }
+                observer.error(err);
+              },
+            });
+        })
+        .catch((err) => {
+          observer.error(err);
+        });
+    });
   }
 
   pendingMfaChallenge(): PendingMfaChallenge | null {

@@ -12,6 +12,7 @@ import { registerApiRoutes } from './routes';
 import { responseEnvelope } from './middleware/response-envelope';
 import { createRateLimiter } from './middleware/rate-limit';
 import { requestContext } from './middleware/request-context';
+import { loginDecryptMiddleware } from './middleware/login-decrypt';
 import crypto from 'crypto';
 import os from 'os';
 import { prisma } from './infrastructure/prisma';
@@ -35,6 +36,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(responseEnvelope);
+
+app.use(loginDecryptMiddleware);
 
 app.use(
   cors({
@@ -239,6 +242,13 @@ app.get('/info', (_req, res) => {
 
 // Compatibility route for PRIMS Member Portal token format
 app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (_req, res) => {
+  const key = crypto.randomBytes(32);
+  const iv = crypto.randomBytes(16);
+  res.json([key.toString('binary'), iv.toString('binary')]);
+});
+
+// Compatibility route for Zellavora Admin Authentication token format
+app.get('/api/admin/api/Authentication/gettoken', (_req, res) => {
   const key = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
   res.json([key.toString('binary'), iv.toString('binary')]);
