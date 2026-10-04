@@ -58,26 +58,9 @@ export class LoginEncryptionService {
 
   async encryptLoginPayload(payload: {
     clientCode: string;
-    userSerialId: number;
-    userLoginId: string;
-    companyId: number;
-    emailId: string;
-    applicationEmailUrl: string;
-    mPin: string;
-    screenName: string;
-    newPassword: string;
-    confirmPassword: string;
-    isPasswordValidation: boolean;
-    tokenkeys: string[];
-    isPinValidation: boolean;
-    pin: string;
+    email: string;
     password: string;
-    isAdmin: boolean;
-    urlDate: string;
-    confirmMPin: number;
-    language_preference: string;
-    oldPassWord: string;
-    clientName: number;
+    rememberMe?: boolean;
   }): Promise<{ encrypted: true; data: string; key: string; iv: string }> {
     const token = await this.getEncryptionToken();
 

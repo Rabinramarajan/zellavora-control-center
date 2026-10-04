@@ -1,40 +1,56 @@
-import { inject, Injectable } from '@angular/core';
-import AES from 'crypto-js/aes';
-import Utf8 from 'crypto-js/enc-utf8';
-
+import { Injectable } from '@angular/core';
+import * as CryptoJS from 'crypto-js';
 import { StorageService } from '../storage/storage.service';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 
-/** Stored under 'encryptkey' as [key, iv] */
-type EncryptKeyPair = readonly [key: string, iv: string];
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AesService {
-  private readonly storage = inject(StorageService);
-  private readonly appSetting = inject(AppSettingsService);
 
-  private readonly localSecret = '_Admin_Web';
+  local: any = '_Admin_Web';
+  constructor(public storage: StorageService, public appSetting: AppSettingsService) { }
 
-  /** API payload encryption (AES-CBC + PKCS7 are CryptoJS defaults). */
-  async encrypt(text: string): Promise<string> {
-    if (!this.appSetting.environment.encrypt) {
-      return text;
-    }
+  async encrypt(text: any) {
+    return new Promise(async (resolve, reject) => {
+      if (this.appSetting.environment.encrypt === false) {
+        resolve(text);
+        return;
+      }
 
-    const pair = (await this.storage.get('encryptkey')) as EncryptKeyPair | null;
-    if (!pair?.[0] || !pair?.[1]) {
-      return text;
-    }
-
-    const [key, iv] = pair;
-    return AES.encrypt(text, Utf8.parse(key), { iv: Utf8.parse(iv) }).toString();
+     await this.storage.get('encryptkey').then((val: any) => {
+        if (val) {
+          let Key = CryptoJS.enc.Utf8.parse(val[0]);
+          let IV = CryptoJS.enc.Utf8.parse(val[1]);
+          let encryptedText = CryptoJS.AES.encrypt(text, Key, {
+            iv: IV,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7,
+          });
+          resolve(encryptedText.toString());
+          // return;
+        } else {
+          resolve(text);
+          // return;
+        }
+      });
+    });
   }
 
-  localEncrypt(text: unknown): string {
-    return AES.encrypt(String(text), this.localSecret).toString();
+
+  async localencrypt(text: any) {
+    return new Promise((resolve, reject) => {
+      let en = CryptoJS.AES.encrypt(text.toString(), this.local).toString();
+      resolve(en);
+      return;
+    });
   }
 
-  localDecrypt(cipherText: string): string {
-    return AES.decrypt(cipherText, this.localSecret).toString(Utf8);
+  async localdecrypt(text: any) {
+    return new Promise((resolve, reject) => {
+      let en = CryptoJS.AES.decrypt(text, this.local).toString(CryptoJS.enc.Utf8);
+      resolve(en);
+      return;
+    });
   }
 }

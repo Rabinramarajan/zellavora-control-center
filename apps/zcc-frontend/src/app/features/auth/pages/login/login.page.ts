@@ -67,33 +67,16 @@ export class LoginPage {
 
   private readonly model = signal({
     clientCode: this.auth.lastClientCode,
-    userSerialId: 0,
-    userLoginId: '',
-    companyId: 0,
-    emailId: '',
-    applicationEmailUrl: '',
-    mPin: '',
-    screenName: '',
-    newPassword: '',
-    confirmPassword: '',
-    isPasswordValidation: true,
-    tokenkeys: ['', ''],
-    isPinValidation: false,
-    pin: '',
+    email: '',
     password: '',
-    isAdmin: true,
-    urlDate: '',
-    confirmMPin: 0,
-    language_preference: '',
-    oldPassWord: '',
-    clientName: 0,
+    rememberMe: false,
   });
 
   protected readonly form = form(
     this.model,
     (path) => {
       required(path.clientCode, { message: 'Enter your organization code.' });
-      // email is sent as userLoginId in legacy format
+      emailRules(path.email);
       currentPasswordRules(path.password);
     },
     { submission: { action: () => this.signIn() } }
@@ -116,7 +99,7 @@ export class LoginPage {
       this.model.update((m) => ({ ...m, password: '' }));
       const { fieldErrors, message } = mapServerErrors(
         err,
-        { password: this.form.password, clientCode: this.form.clientCode },
+        { email: this.form.email, password: this.form.password, clientCode: this.form.clientCode },
         'Invalid email or password.'
       );
       this.formError.set(message);

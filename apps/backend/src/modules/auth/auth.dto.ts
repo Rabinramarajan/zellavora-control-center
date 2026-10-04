@@ -34,26 +34,9 @@ const presentedPassword = z.string().min(1, 'Password is required').max(128);
 
 export const LoginSchema = z.object({
   clientCode,
-  userSerialId: z.number().int().optional().default(0),
-  userLoginId: z.string().optional().default(''),
-  companyId: z.number().int().optional().default(0),
-  emailId: z.string().optional().default(''),
-  applicationEmailUrl: z.string().optional().default(''),
-  mPin: z.string().optional().default(''),
-  screenName: z.string().optional().default(''),
-  newPassword: z.string().optional().default(''),
-  confirmPassword: z.string().optional().default(''),
-  isPasswordValidation: z.boolean().optional().default(true),
-  tokenkeys: z.array(z.string()).optional().default(['', '']),
-  isPinValidation: z.boolean().optional().default(false),
-  pin: z.string().optional().default(''),
+  email,
   password: presentedPassword,
-  isAdmin: z.boolean().optional().default(true),
-  urlDate: z.string().optional().default(''),
-  confirmMPin: z.number().int().optional().default(0),
-  language_preference: z.string().optional().default(''),
-  oldPassWord: z.string().optional().default(''),
-  clientName: z.number().int().optional().default(0),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 export const MfaVerifySchema = z.object({
