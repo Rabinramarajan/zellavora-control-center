@@ -4,48 +4,41 @@ import {
   computed,
   ElementRef,
   inject,
-  OnInit,
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
-import { IamAdminApiService } from '../../../../../core/api/iam-admin.api';
-import { PermissionService } from '../../../../../core/rbac/services/permission.service';
-import { AppDialogService } from '../../../../../shared/components/dialog';
-import { EmptyStateComponent, StatusChipComponent } from '../../../../../shared/components/iam';
+import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
+import { PermissionService } from '../../../core/rbac/services/permission.service';
+import { AppDialogService } from '../../../shared/components/dialog';
+import { StatusChipComponent } from '../../../shared/components/iam';
 import {
   DataTableColumn,
-  DataTableFilters,
   DataTableCellDirective,
   DataTableComponent,
-} from '../../../../../shared/components/data-table';
-import { BranchItem } from '../../../../../shared/models/iam-admin.model';
-import { IamFeedbackService, errorMessage } from '../../../../iam/shared/iam-feedback.service';
-import { FormDialogMode, FormDialogService } from '../../../../../shared/components/form-dialog';
+  DataTableSort,
+} from '../../../shared/components/data-table';
+import { PageChangeEvent } from '../../../shared/components/pagination/pagination.component';
+import { BranchItem, BranchSearchCriteria } from '../../../shared/models/iam-admin.model';
+import { countActiveFilters, createSearchStore } from '../../../shared/search';
+import { IamFeedbackService } from '../shared/iam-feedback.service';
+import { FormDialogMode, FormDialogService } from '../../../shared/components/form-dialog';
 import { branchDialogConfig, toBranchRequest } from './branch-dialog.config';
 
-/** Upper bound the API accepts per page; branches are few enough to filter client-side. */
-const LOAD_PAGE_SIZE = 200;
-
 @Component({
-  selector: 'zcc-branch-manager',
+  selector: 'zcc-branches-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'filterOpen.set(false)',
   },
-  imports: [
-    DatePipe,
-    DataTableComponent,
-    DataTableCellDirective,
-    StatusChipComponent,
-    EmptyStateComponent,
-  ],
-  templateUrl: './branch-manager.component.html',
-  styleUrl: './branch-manager.component.scss',
+  imports: [DatePipe, DataTableComponent, DataTableCellDirective, StatusChipComponent],
+  templateUrl: './branches-list.component.html',
+  styleUrl: './branches-list.component.scss',
 })
-export class BranchManagerComponent implements OnInit {
+export class BranchesListComponent {
   private readonly api = inject(IamAdminApiService);
   private readonly dialog = inject(AppDialogService);
   private readonly formDialog = inject(FormDialogService);
@@ -54,13 +47,11 @@ export class BranchManagerComponent implements OnInit {
 
   readonly canManage = inject(PermissionService).can('users:manage');
 
-  readonly branches = signal<BranchItem[]>([]);
-  readonly loading = signal(false);
-  readonly error = signal<string | null>(null);
+  readonly store = createSearchStore<BranchSearchCriteria, BranchItem>({
+    endpoint: SEARCH_ENDPOINTS.branches,
+  });
 
-  readonly filters = signal<DataTableFilters>({ status: '' });
-  readonly pageSize = signal(10);
-  readonly pageSizeOptions = [10, 25, 50, 100] as const;
+  readonly pageSizeOptions = [10, 25, 50, 100];
 
   readonly trackBy = (branch: BranchItem) => branch.id;
 
@@ -70,10 +61,10 @@ export class BranchManagerComponent implements OnInit {
     {
       id: 'location',
       label: 'Location',
-      sortKey: 'location',
+      sortKey: 'city',
       value: (b) => this.location(b),
     },
-    { id: 'userCount', label: 'Users', sortKey: 'userCount', align: 'right', width: '6rem' },
+    { id: 'userCount', label: 'Users', align: 'right', width: '6rem' },
     { id: 'status', label: 'Status', sortKey: 'status', width: '8rem' },
     { id: 'updatedAt', label: 'Last Updated', sortKey: 'updatedAt', width: '9rem' },
     { id: 'actions', label: '', align: 'right', width: '8.5rem', exportable: false },
@@ -87,49 +78,28 @@ export class BranchManagerComponent implements OnInit {
 
   readonly filterOpen = signal(false);
   readonly draftStatus = signal('');
-  readonly activeFilterCount = computed(
-    () => Object.values(this.filters()).filter((value) => value !== '').length
-  );
+  readonly activeFilterCount = computed(() => countActiveFilters(this.store.criteria()));
 
   readonly location = (b: BranchItem) => [b.city, b.country].filter(Boolean).join(', ');
-
-  ngOnInit(): void {
-    void this.load();
-  }
-
-  async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
-    try {
-      const page = await firstValueFrom(
-        this.api.listBranches({ page: 1, pageSize: LOAD_PAGE_SIZE })
-      );
-      this.branches.set(page.data);
-    } catch (err) {
-      this.error.set(errorMessage(err, 'Could not load branches.'));
-    } finally {
-      this.loading.set(false);
-    }
-  }
 
   async onCreate(): Promise<void> {
     if (await this.openBranchDialog('create')) {
       this.feedback.success('Branch created.');
-      await this.load();
+      await this.store.reload();
     }
   }
 
   async onView(branch: BranchItem): Promise<void> {
     if (await this.openBranchDialog('view', branch)) {
       this.feedback.success('Branch updated.');
-      await this.load();
+      await this.store.reload();
     }
   }
 
   async onEdit(branch: BranchItem): Promise<void> {
     if (await this.openBranchDialog('edit', branch)) {
       this.feedback.success('Branch updated.');
-      await this.load();
+      await this.store.reload();
     }
   }
 
@@ -148,26 +118,37 @@ export class BranchManagerComponent implements OnInit {
     try {
       await firstValueFrom(this.api.deleteBranch(branch.id));
       this.feedback.success(`${branch.name} deleted.`);
-      await this.load();
+      await this.store.reload();
     } catch (err) {
       this.feedback.error(err, 'Could not delete the branch.');
     }
   }
 
   toggleFilter(): void {
-    if (!this.filterOpen()) this.draftStatus.set(this.filters()['status'] ?? '');
+    if (!this.filterOpen()) this.draftStatus.set(this.store.criteria()?.statusValue ?? '');
     this.filterOpen.update((open) => !open);
   }
 
   applyFilter(): void {
-    this.filters.update((filters) => ({ ...filters, status: this.draftStatus() }));
     this.filterOpen.set(false);
+    const status = this.draftStatus();
+    void this.store.search({
+      statusValue: status === '' ? null : (status as 'active' | 'inactive'),
+    });
   }
 
   resetFilter(): void {
     this.draftStatus.set('');
-    this.filters.set({ status: '' });
     this.filterOpen.set(false);
+    void this.store.reset();
+  }
+
+  onSort(sort: DataTableSort | null): void {
+    void this.store.sortBy(sort);
+  }
+
+  onPaginate({ page, pageSize }: PageChangeEvent): void {
+    void this.store.setPage(page, pageSize);
   }
 
   onDocumentClick(event: MouseEvent): void {

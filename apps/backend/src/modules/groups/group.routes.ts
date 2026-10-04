@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { groupSearch } from './group.search';
 import { GroupController } from './group.controller';
 import { authenticate, requirePermission } from '../../middleware/auth';
 
@@ -11,6 +13,31 @@ const controller = new GroupController();
  *   name: iamGroups
  *   description: IAM groups, membership and group-level roles.
  */
+
+/**
+ * @swagger
+ * /api/v1/iam/groups/search/criteria:
+ *   get:
+ *     summary: getIamGroupsSearchCriteria
+ *     operationId: getIamGroupsSearchCriteria
+ *     tags: [iamGroups]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/iam/groups/search:
+ *   post:
+ *     summary: searchIamGroups
+ *     operationId: postIamGroupsSearch
+ *     description: "Filtered, sorted, paginated groups. orderByColumnName: name, type, status, createdAt."
+ *     tags: [iamGroups]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, groupSearch(), [authenticate, requirePermission('groups:read')]);
 
 /**
  * @swagger

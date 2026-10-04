@@ -7,22 +7,10 @@ import {
   SaveUserRequest,
   UserRequestAuditEntry,
   UserRequestDetail,
-  UserRequestList,
   UserRequestLookups,
   UserRequestPayload,
   UserRequestType,
 } from '../../shared/models/user-request.model';
-
-export type UserRequestQuery = Record<string, string | number | string[] | null | undefined>;
-
-const clean = (params: UserRequestQuery): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(params)
-      .filter(
-        ([, v]) => v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && !v.length)
-      )
-      .map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
-  );
 
 /** API client for the IAM user request workflow (`/iam/user-requests`). */
 @Injectable({ providedIn: 'root' })
@@ -34,11 +22,6 @@ export class UserRequestsApiService {
     return this.api.postData<ApiEnvelope<T>>(`${this.base}${path}`, body).pipe(map((r) => r.data));
   }
 
-  list(params: UserRequestQuery): Observable<UserRequestList> {
-    return this.api
-      .getData<ApiEnvelope<UserRequestList>>(this.base, clean(params))
-      .pipe(map((r) => r.data));
-  }
   lookups(): Observable<UserRequestLookups> {
     return this.api
       .getData<ApiEnvelope<UserRequestLookups>>(`${this.base}/lookups`)

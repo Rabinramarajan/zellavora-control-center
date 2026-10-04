@@ -47,8 +47,20 @@ export const iamRoutes: Routes = [
         path: 'permissions',
         canMatch: [canMatchPermission('roles:read')],
         children: [
-          { path: '', loadComponent: () => import('./permissions/permissions.component').then((m) => m.PermissionsComponent), data: { title: 'Permissions' } },
-          { path: ':id', loadComponent: () => import('./permissions/permissions-detail.component').then((m) => m.PermissionsDetailComponent), data: { title: 'Permission Details' } },
+          {
+            path: '',
+            loadComponent: () =>
+              import('./permissions/permissions.component').then((m) => m.PermissionsComponent),
+            data: { title: 'Permissions' },
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./permissions/permissions-detail.component').then(
+                (m) => m.PermissionsDetailComponent
+              ),
+            data: { title: 'Permission Details' },
+          },
         ],
       },
       {
@@ -67,9 +79,7 @@ export const iamRoutes: Routes = [
           {
             path: 'branches',
             loadComponent: () =>
-              import('../admin/components/branches/branch-manager/branch-manager.component').then(
-                (m) => m.BranchManagerComponent
-              ),
+              import('./organization/branches-list.component').then((m) => m.BranchesListComponent),
             data: { title: 'Branches' },
           },
           {

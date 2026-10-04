@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiDataService } from '../http/api-data.service';
-import { ApiEnvelope, IamUserListItem, PaginatedList } from '../../shared/models/iam.model';
+import { ApiEnvelope } from '../../shared/models/iam.model';
 import {
   UserAccess,
   UserAuditItem,
@@ -12,17 +12,6 @@ import {
   UserSession,
   UserStatusHistoryItem,
 } from '../../shared/models/user-admin.model';
-
-export type UserSearchQuery = Record<string, string | number | string[] | null | undefined>;
-
-const clean = (params: UserSearchQuery): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(params)
-      .filter(
-        ([, v]) => v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && !v.length)
-      )
-      .map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
-  );
 
 /** Direct user actions that change no account data; all other changes are User Requests. */
 export type UserSecurityAction = 'password-reset' | 'resend-invitation';
@@ -36,9 +25,6 @@ export class UserAdminApiService {
     return this.api.getData<ApiEnvelope<T>>(`/iam/users${path}`, params).pipe(map((r) => r.data));
   }
 
-  search(query: UserSearchQuery): Observable<PaginatedList<IamUserListItem>> {
-    return this.get('', clean(query));
-  }
   stats(): Observable<{ total: number; byStatus: Record<string, number> }> {
     return this.get('/stats');
   }

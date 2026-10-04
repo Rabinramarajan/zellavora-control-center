@@ -225,10 +225,6 @@ export interface ConfigurationItem {
   updatedAt: string;
 }
 
-export interface ConfigurationList extends PaginatedList<ConfigurationItem> {
-  categories: string[];
-}
-
 export interface UpsertConfigurationRequest {
   key: string;
   value?: string;
@@ -273,4 +269,29 @@ export interface CommunicationHistoryItem extends DeliverySummary {
   sentById: string | null;
   sentByName: string | null;
   sentAt: string;
+}
+
+/** Filters of the Common Configuration Search (`POST /iam/configurations/search`). */
+export interface ConfigurationSearchCriteria {
+  configKey: string | null;
+  category: string | null;
+}
+
+export interface ConfigurationSearchSummary {
+  categories: string[];
+}
+
+/** Filters of the Message / Email Communication Search (`POST /iam/communications/{messages|emails}/search`). */
+export interface CommunicationSearchCriteria {
+  subject: string | null;
+  /** `YYYY-MM-DD` */
+  sentFromDate: string | null;
+  sentToDate: string | null;
+}
+
+/** Filters of the Branch Search (`POST /branches/search`). */
+export interface BranchSearchCriteria {
+  /** Matches name, code or city. */
+  branchName: string | null;
+  statusValue: 'active' | 'inactive' | null;
 }

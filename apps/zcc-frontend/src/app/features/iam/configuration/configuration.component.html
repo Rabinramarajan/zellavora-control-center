@@ -17,7 +17,7 @@
       type="search"
       placeholder="Search keys or values…"
       [class]="inputClass + ' min-h-[40px]'"
-      [value]="store.q()"
+      [value]="query()"
       (input)="onSearch($any($event.target).value)"
     />
   </div>
@@ -30,7 +30,7 @@
     >
       <option value="">All categories</option>
       @for (c of categories(); track c) {
-        <option [value]="c" [selected]="store.filters()['category'] === c">{{ c }}</option>
+        <option [value]="c" [selected]="store.criteria()?.category === c">{{ c }}</option>
       }
     </select>
   </div>
@@ -115,12 +115,12 @@
     [totalItems]="store.total()"
     [page]="store.page()"
     [pageSize]="store.pageSize()"
-    (pageChange)="store.setPage($event)"
+    (paginate)="onPaginate($event)"
   />
 } @else {
   <zcc-empty-state
     icon="pi pi-cog"
     title="No configuration entries"
-    [message]="store.q() ? 'Nothing matches your search.' : 'Add a key/value entry to get started.'"
+    [message]="query() ? 'Nothing matches your search.' : 'Add a key/value entry to get started.'"
   />
 }

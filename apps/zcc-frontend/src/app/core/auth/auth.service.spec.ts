@@ -6,12 +6,17 @@ import { AuthService } from './auth.service';
 import { AuthStore } from './auth.store';
 import { authInterceptor } from './auth.interceptor';
 import { PolicyStore } from '../rbac/store/policy.store';
+import { AesService } from '../services/aes/aes.service';
 
 describe('AuthService', () => {
   let auth: AuthService;
   let store: AuthStore;
   let http: HttpTestingController;
   let router: { url: string; navigate: jasmine.Spy; navigateByUrl: jasmine.Spy };
+  /** Login encryption is covered by aes.service.spec; here it passes the payload through. */
+  let aes: { encryptLoginPayload: jasmine.Spy };
+  /** Lets the async login encryption resolve so the /login request is sent. */
+  const encrypted = (): Promise<void> => new Promise((resolve) => setTimeout(resolve));
 
   const pair = () => ({
     accessToken: 'access',
@@ -49,11 +54,17 @@ describe('AuthService', () => {
       navigate: jasmine.createSpy('navigate').and.resolveTo(true),
       navigateByUrl: jasmine.createSpy('navigateByUrl').and.resolveTo(true),
     };
+    aes = {
+      encryptLoginPayload: jasmine
+        .createSpy('encryptLoginPayload')
+        .and.callFake((payload: unknown) => Promise.resolve(payload)),
+    };
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
         { provide: Router, useValue: router },
+        { provide: AesService, useValue: aes },
       ],
     });
     auth = TestBed.inject(AuthService);
@@ -108,18 +119,22 @@ describe('AuthService', () => {
       rememberMe: false,
     };
 
-    it('normalizes the email and never sends a bearer token to /login', () => {
+    it('normalizes the email and never sends a bearer token to /login', async () => {
       store.updateTokens(pair());
       auth.login(credentials).subscribe();
+      await encrypted();
       const req = http.expectOne('/api/v1/auth/login');
-      expect(req.request.body.email).toBe('ada@acme.test');
+      expect(aes.encryptLoginPayload).toHaveBeenCalledWith(
+        jasmine.objectContaining({ email: 'ada@acme.test' })
+      );
       expect(req.request.headers.has('Authorization')).toBeFalse();
       req.flush(success());
       finishMe();
     });
 
-    it('stores a 2FA challenge and routes to the challenge page', () => {
+    it('stores a 2FA challenge and routes to the challenge page', async () => {
       auth.login(credentials).subscribe();
+      await encrypted();
       http.expectOne('/api/v1/auth/login').flush({
         mfaRequired: true,
         mfaToken: 'challenge-token',
@@ -157,8 +172,9 @@ describe('AuthService', () => {
       expect(auth.pendingMfaChallenge()).toBeNull();
     });
 
-    it('routes locked accounts to the safe status page', () => {
+    it('routes locked accounts to the safe status page', async () => {
       auth.login(credentials).subscribe({ error: () => undefined });
+      await encrypted();
       http
         .expectOne('/api/v1/auth/login')
         .flush(
@@ -170,16 +186,18 @@ describe('AuthService', () => {
       });
     });
 
-    it('sends users with unfinished 2FA setup to account security', () => {
+    it('sends users with unfinished 2FA setup to account security', async () => {
       auth.login(credentials).subscribe();
+      await encrypted();
       http.expectOne('/api/v1/auth/login').flush(success({ mfaSetupRequired: true }));
       expect(router.navigateByUrl).toHaveBeenCalledWith('/account/security', { replaceUrl: true });
       finishMe();
     });
 
-    it('never restores an off-site or auth-page redirect after sign-in', () => {
+    it('never restores an off-site or auth-page redirect after sign-in', async () => {
       sessionStorage.setItem('zcc.redirect', '//evil.example');
       auth.login(credentials).subscribe();
+      await encrypted();
       http.expectOne('/api/v1/auth/login').flush(success());
       expect(router.navigateByUrl).toHaveBeenCalledWith('/dashboard', { replaceUrl: true });
       finishMe();

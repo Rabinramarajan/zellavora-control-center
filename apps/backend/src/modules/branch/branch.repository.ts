@@ -29,7 +29,9 @@ export class BranchRepository extends BaseRepository {
     const [data, total] = await Promise.all([
       this.getDb(tx).branch.findMany({
         where,
-        orderBy: [{ isHeadOffice: 'desc' }, { name: 'asc' }],
+        orderBy: query.sort
+          ? [{ [query.sort]: query.order }, { name: 'asc' }]
+          : [{ isHeadOffice: 'desc' }, { name: 'asc' }],
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
       }),

@@ -3,8 +3,8 @@ import {
   FormDialogMode,
   FormDialogValues,
   FormSectionDef,
-} from '../../../../../shared/components/form-dialog';
-import { BranchItem, SaveBranchRequest } from '../../../../../shared/models/iam-admin.model';
+} from '../../../shared/components/form-dialog';
+import { BranchItem, SaveBranchRequest } from '../../../shared/models/iam-admin.model';
 
 const sections = (current?: BranchItem): FormSectionDef[] => [
   {

@@ -13,7 +13,7 @@
 
 <div class="mb-4">
   <zcc-filter-bar
-    [query]="store.q()"
+    [query]="query()"
     [filters]="filters()"
     [selected]="selectedFilters()"
     (search)="onSearch($event)"
@@ -79,7 +79,7 @@
     [totalItems]="store.total()"
     [page]="store.page()"
     [pageSize]="store.pageSize()"
-    (pageChange)="store.setPage($event)"
+    (paginate)="onPaginate($event)"
   />
 } @else {
   <zcc-empty-state

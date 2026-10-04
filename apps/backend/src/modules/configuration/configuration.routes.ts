@@ -1,4 +1,6 @@
 import { Router, type Response } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { configurationSearch } from './configuration.search';
 import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { orgContextOf } from '../../middleware/org-context';
@@ -11,6 +13,34 @@ import {
 
 const router = Router();
 const service = new ConfigurationService();
+
+/**
+ * @swagger
+ * /api/v1/iam/configurations/search/criteria:
+ *   get:
+ *     summary: getIamConfigurationsSearchCriteria
+ *     operationId: getIamConfigurationsSearchCriteria
+ *     tags: [iamConfiguration]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/iam/configurations/search:
+ *   post:
+ *     summary: searchIamConfigurations
+ *     operationId: postIamConfigurationsSearch
+ *     description: "Filtered, sorted, paginated configurations. orderByColumnName: key, category, updatedAt."
+ *     tags: [iamConfiguration]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, configurationSearch(), [
+  authenticate,
+  requirePermission('settings:manage'),
+]);
 
 /**
  * @swagger

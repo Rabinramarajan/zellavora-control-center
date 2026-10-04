@@ -17,7 +17,9 @@ export class ConfigurationRepository extends BaseRepository {
     const [data, total] = await Promise.all([
       this.getDb(tx).commonConfiguration.findMany({
         where,
-        orderBy: [{ category: 'asc' }, { key: 'asc' }],
+        orderBy: query.sort
+          ? [{ [query.sort]: query.order }, { key: 'asc' }]
+          : [{ category: 'asc' }, { key: 'asc' }],
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
       }),

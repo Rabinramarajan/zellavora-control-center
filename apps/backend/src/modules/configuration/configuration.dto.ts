@@ -25,6 +25,9 @@ export const ConfigurationListQuerySchema = z.object({
   category: z.string().trim().max(60).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
+  /** Omitted: category, then key. */
+  sort: z.enum(['key', 'category', 'updatedAt']).optional(),
+  order: z.enum(['asc', 'desc']).default('asc'),
 });
 
 export const KeyParamSchema = z.object({ key: ConfigurationKeySchema });

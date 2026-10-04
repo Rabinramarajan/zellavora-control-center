@@ -1,13 +1,19 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
 import {
   ConfigurationItem,
+  ConfigurationSearchCriteria,
+  ConfigurationSearchSummary,
   UpsertConfigurationRequest,
 } from '../../../shared/models/iam-admin.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
+import { createSearchStore } from '../../../shared/search';
 import { EmptyStateComponent } from '../../../shared/components/iam';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import {
+  PageChangeEvent,
+  PaginationComponent,
+} from '../../../shared/components/pagination/pagination.component';
 import { IAM_BTN, IAM_INPUT, IamPageHeaderComponent } from '../shared/iam-page-header.component';
 import { IamDialogsService } from '../shared/iam-dialogs.service';
 import { IamFeedbackService } from '../shared/iam-feedback.service';
@@ -48,7 +54,6 @@ export class ConfigurationComponent {
   protected readonly btn = IAM_BTN;
   protected readonly inputClass = IAM_INPUT;
   protected readonly relative = relativeTime;
-  protected readonly categories = signal<string[]>([]);
   protected readonly busyKey = signal<string | null>(null);
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -59,23 +64,29 @@ export class ConfigurationComponent {
     { id: 'updated', label: 'Updated' },
   ];
 
-  readonly store = createListStore<ConfigurationItem>({
-    initialPageSize: 50,
-    filterKeys: ['category'],
-    loader: async (query) => {
-      const list = await firstValueFrom(this.api.listConfigurations(query));
-      this.categories.set(list.categories);
-      return list;
-    },
-  });
+  readonly store = createSearchStore<
+    ConfigurationSearchCriteria,
+    ConfigurationItem,
+    ConfigurationSearchSummary
+  >({ endpoint: SEARCH_ENDPOINTS.configurations });
+
+  protected readonly query = computed(() => this.store.criteria()?.configKey ?? '');
+  protected readonly categories = computed(() => this.store.summary()?.categories ?? []);
 
   protected onSearch(q: string): void {
     clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.store.setQ(q.trim()), 300);
+    this.searchTimer = setTimeout(
+      () => void this.store.search({ configKey: q.trim() || null }),
+      300
+    );
   }
 
   protected onCategory(category: string): void {
-    this.store.setFilters(category ? { category } : {});
+    void this.store.search({ category: category || null });
+  }
+
+  protected onPaginate({ page, pageSize }: PageChangeEvent): void {
+    void this.store.setPage(page, pageSize);
   }
 
   protected async create(): Promise<void> {

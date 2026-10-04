@@ -80,15 +80,6 @@ describe('API naming contract', () => {
     expect(mounts.find((m) => m.paths.includes('/api/v1/clean/settings'))?.paths[0]).toBe(
       '/api/v1/organization-settings'
     );
-    const adminRoutes = mounts
-      .filter((m) => m.paths[0] === '/api/v1/admin')
-      .flatMap((m) => m.router.stack);
-    expect(
-      adminRoutes.find((l) => l.route?.path.includes('/Branch/Branch/Search'))?.route?.path
-    ).toEqual(['/branches/search', '/Branch/Branch/Search']);
-    expect(
-      adminRoutes.find((l) => l.route?.path.includes('/auditlog/LoadAuditLogDetails'))?.route?.path
-    ).toEqual(['/audit-logs/details', '/auditlog/LoadAuditLogDetails']);
   });
 });
 
@@ -118,16 +109,15 @@ describe('Renamed API HTTP routing', () => {
   });
 
   it.each([
-    ['GET', '/admin/users/search', '/admin/user/search'],
-    ['POST', '/admin/branches/search', '/admin/Branch/Branch/Search'],
-    ['POST', '/admin/audit-logs/details', '/admin/auditlog/LoadAuditLogDetails'],
-    ['POST', '/admin/resources/bulk-save', '/admin/resource/SaveListResource'],
-  ])('%s %s and its historical alias enforce authentication', async (method, canonical, alias) => {
-    for (const path of [canonical, alias]) {
-      const response = await fetch(baseUrl + path, { method });
-      expect(response.status).toBe(401);
-      expect(await response.json()).toMatchObject({ error: { code: 'NO_TOKEN' } });
-    }
+    ['GET', '/iam/users/search/criteria'],
+    ['POST', '/iam/users/search'],
+    ['POST', '/iam/user-requests/search'],
+    ['POST', '/branches/search'],
+    ['POST', '/operations/audit-logs/search'],
+  ])('%s %s enforces authentication', async (method, path) => {
+    const response = await fetch(baseUrl + path, { method });
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({ error: { code: 'NO_TOKEN' } });
   });
 
   it('publishes the public auth policy without a token', async () => {

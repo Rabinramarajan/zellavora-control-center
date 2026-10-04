@@ -3,14 +3,18 @@ import { FormsModule } from '@angular/forms';
 import { DateControl, FormInputControl } from '@zellavoras/ui';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
 import { UserRequestsApiService } from '../../../core/api/user-requests.api';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
 import {
   UserRequestListItem,
   UserRequestLookups,
+  UserRequestSearchCriteria,
   UserRequestStatus,
+  UserRequestStatusCounts,
+  UserRequestType,
 } from '../../../shared/models/user-request.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
+import { countActiveFilters, createSearchStore } from '../../../shared/search';
 import { StatusChipComponent } from '../../../shared/components/iam';
 import { FilterChipOption, FilterChipsComponent } from '../../../shared/components/filter-chips';
 import { PageChangeEvent } from '../../../shared/components/pagination/pagination.component';
@@ -62,10 +66,44 @@ const EMPTY_FORM: SearchForm = {
   to: '',
 };
 
-const FILTER_KEYS = [...Object.keys(EMPTY_FORM), 'sort', 'order'];
+/** Search criteria for the API from the filter form; blanks are sent as null. */
+const toCriteria = (f: SearchForm): UserRequestSearchCriteria => ({
+  requestRefNo: f.refNo.trim() || null,
+  requestType: f.type as UserRequestType[],
+  fullName: f.name.trim() || null,
+  employeeCode: f.employeeCode.trim() || null,
+  emailId: f.email.trim() || null,
+  requestedBy: f.requestedById,
+  branchId: f.branchId,
+  departmentId: f.departmentId,
+  teamId: f.teamId,
+  groupId: f.groupId,
+  roleId: f.roleId,
+  statusValue: f.status as UserRequestStatus[],
+  requestedFromDate: f.from || null,
+  requestedToDate: f.to || null,
+});
 
-/** Columns the API can sort by (user-request.dto `sort`). */
-type SortKey = 'refNo' | 'subjectName' | 'createdAt' | 'status' | 'priority';
+/** The filter form for applied (or default) criteria. */
+const toForm = (c: UserRequestSearchCriteria | null): SearchForm =>
+  c
+    ? {
+        refNo: c.requestRefNo ?? '',
+        type: [...c.requestType],
+        name: c.fullName ?? '',
+        employeeCode: c.employeeCode ?? '',
+        email: c.emailId ?? '',
+        requestedById: c.requestedBy,
+        branchId: [...c.branchId],
+        departmentId: [...c.departmentId],
+        teamId: [...c.teamId],
+        groupId: [...c.groupId],
+        roleId: [...c.roleId],
+        status: [...c.statusValue],
+        from: c.requestedFromDate ?? '',
+        to: c.requestedToDate ?? '',
+      }
+    : structuredClone(EMPTY_FORM);
 /** Every request status gets a quick-filter chip, in workflow order. */
 const QUICK_STATUSES: UserRequestStatus[] = [
   'DRAFT',
@@ -131,10 +169,7 @@ export class UserRequestsComponent {
 
   protected form: SearchForm = structuredClone(EMPTY_FORM);
   protected readonly filtersOpen = signal(false);
-  /** The last searched form, restored when the popup is cancelled. */
-  private appliedForm: SearchForm = structuredClone(EMPTY_FORM);
   protected readonly menuFor = signal<string | null>(null);
-  protected readonly counts = signal<Record<UserRequestStatus, number> | null>(null);
   private readonly lookups = signal<UserRequestLookups | null>(null);
 
   protected readonly branchOptions = computed(() => toOptions(this.lookups()?.branches ?? []));
@@ -158,7 +193,16 @@ export class UserRequestsComponent {
   ];
 
   protected readonly pageSizes = [10, 25, 50, 100];
-  protected readonly sort = signal<DataTableSort<SortKey>>({ key: 'createdAt', dir: 'desc' });
+
+  readonly store = createSearchStore<
+    UserRequestSearchCriteria,
+    UserRequestListItem,
+    UserRequestStatusCounts
+  >({ endpoint: SEARCH_ENDPOINTS.userRequests });
+
+  protected readonly counts = this.store.summary;
+  /** Column sort shown in the table; null while the server's default order applies. */
+  protected readonly sort = this.store.sort;
   protected readonly requestId = (r: UserRequestListItem): string => r.id;
   protected readonly requestLabel = (r: UserRequestListItem): string => r.refNo;
   /** Sum of the per-status counts, for the "All Requests" chip. */
@@ -175,34 +219,16 @@ export class UserRequestsComponent {
   );
   /** `null` = no status filter; `undefined` = a multi-status filter no chip represents. */
   protected readonly activeStatus = computed<UserRequestStatus | null | undefined>(() => {
-    const current = (this.store.filters()['status'] as UserRequestStatus[] | undefined) ?? [];
+    const current = this.store.criteria()?.statusValue ?? [];
     if (!current.length) return null;
     return current.length === 1 ? current[0] : undefined;
   });
 
-  readonly store = createListStore<UserRequestListItem>({
-    filterKeys: FILTER_KEYS,
-    loader: async (query) => {
-      const list = await firstValueFrom(this.api.list(query));
-      this.counts.set(list.counts);
-      return list;
-    },
-  });
-
   /** Number of applied search filters, shown on the Filter button. */
-  protected readonly activeFilterCount = computed(
-    () =>
-      Object.entries(this.store.filters()).filter(
-        ([k, v]) => k !== 'sort' && k !== 'order' && (Array.isArray(v) ? v.length > 0 : !!v)
-      ).length
-  );
+  protected readonly activeFilterCount = computed(() => countActiveFilters(this.store.criteria()));
 
   /** Search filters in effect (sort order alone does not count as a filter). */
-  protected readonly filtersActive = computed(() =>
-    Object.entries(this.store.filters()).some(
-      ([k, v]) => k !== 'sort' && k !== 'order' && (Array.isArray(v) ? v.length : !!v)
-    )
-  );
+  protected readonly filtersActive = computed(() => this.activeFilterCount() > 0);
 
   constructor() {
     firstValueFrom(this.api.lookups())
@@ -211,19 +237,12 @@ export class UserRequestsComponent {
   }
 
   protected search(): void {
-    this.appliedForm = structuredClone(this.form);
-    this.store.setFilters({
-      ...this.form,
-      refNo: this.form.refNo.trim(),
-      name: this.form.name.trim(),
-      ...this.sortFilters(),
-    });
+    void this.store.search(toCriteria(this.form));
   }
 
   protected clear(): void {
     this.form = structuredClone(EMPTY_FORM);
-    this.appliedForm = structuredClone(EMPTY_FORM);
-    this.store.setFilters(this.sortFilters());
+    void this.store.reset();
   }
 
   /** Opens the filter popup on the applied search; Cancel discards edits. */
@@ -234,7 +253,7 @@ export class UserRequestsComponent {
       this.cancelFilters();
       return;
     }
-    this.form = structuredClone(this.appliedForm);
+    this.form = toForm(this.store.criteria());
     this.filtersOpen.set(true);
   }
 
@@ -244,12 +263,12 @@ export class UserRequestsComponent {
   }
 
   protected resetDraft(): void {
-    this.form = structuredClone(EMPTY_FORM);
+    this.form = toForm(this.store.defaults());
   }
 
   protected cancelFilters(): void {
     if (!this.filtersOpen()) return;
-    this.form = structuredClone(this.appliedForm);
+    this.form = toForm(this.store.criteria());
     this.filtersOpen.set(false);
   }
 
@@ -259,23 +278,15 @@ export class UserRequestsComponent {
   }
 
   protected onSort(sort: DataTableSort | null): void {
-    if (!sort) return;
-    this.sort.set(sort as DataTableSort<SortKey>);
-    this.search();
+    void this.store.sortBy(sort);
   }
 
   protected onPaginate({ page, pageSize }: PageChangeEvent): void {
-    if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
-    else this.store.setPage(page);
-  }
-
-  private sortFilters() {
-    return { sort: this.sort().key, order: this.sort().dir };
+    void this.store.setPage(page, pageSize);
   }
 
   protected onStatusChip(status: UserRequestStatus | null | undefined): void {
-    this.form = { ...this.form, status: status ? [status] : [] };
-    this.search();
+    void this.store.search({ statusValue: status ? [status] : [] });
   }
 
   protected statusLabel(status: UserRequestStatus): string {

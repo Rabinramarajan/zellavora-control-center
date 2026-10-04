@@ -6,9 +6,7 @@ import {
   CatalogPermission,
   CatalogPermissionDetail,
   CatalogPermissionList,
-  CommunicationHistoryItem,
   ConfigurationItem,
-  ConfigurationList,
   CreateCatalogPermissionRequest,
   DeliverySummary,
   BranchItem,
@@ -185,9 +183,6 @@ export class IamAdminApiService {
   }
 
   // Configuration -------------------------------------------------------------
-  listConfigurations(params: QueryParams): Observable<ConfigurationList> {
-    return this.get('/iam/configurations', params);
-  }
   upsertConfiguration(body: UpsertConfigurationRequest): Observable<ConfigurationItem> {
     return this.put('/iam/configurations', body);
   }
@@ -201,10 +196,5 @@ export class IamAdminApiService {
   }
   sendEmail(body: SendEmailRequest): Observable<DeliverySummary> {
     return this.post('/iam/communications/emails', body);
-  }
-  listCommunicationHistory(
-    params: QueryParams & { channel: 'in_app' | 'email' }
-  ): Observable<PaginatedList<CommunicationHistoryItem>> {
-    return this.get('/iam/communications/history', params);
   }
 }

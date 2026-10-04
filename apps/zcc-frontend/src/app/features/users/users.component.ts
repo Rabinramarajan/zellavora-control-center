@@ -10,14 +10,12 @@ import {
   DataTableEmptyDirective,
   DataTableSort,
 } from '../../shared/components/data-table';
-import { UserAdminApiService } from '../../core/api/user-admin.api';
 import { UserRequestsApiService } from '../../core/api/user-requests.api';
-import { IamUserListItem } from '../../shared/models/iam.model';
-import { createListStore } from '../../shared/utils/create-list-store';
+import { SEARCH_ENDPOINTS } from '../../core/api/search-endpoints';
+import { IamUserListItem, UserSearchCriteria } from '../../shared/models/iam.model';
+import { countActiveFilters, createSearchStore } from '../../shared/search';
 import { IAM_BTN, IamPageHeaderComponent } from '../iam/shared/iam-page-header.component';
 import { formatDate } from '../iam/shared/iam-format';
-
-type SortKey = 'fullName' | 'employeeCode' | 'joiningDate' | 'endDate' | 'status';
 
 interface UserFilters {
   firstName: string;
@@ -45,7 +43,32 @@ const EMPTY_FILTERS: UserFilters = {
   endTo: '',
 };
 
-const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof UserFilters>;
+const toCriteria = (f: UserFilters): UserSearchCriteria => ({
+  userLoginId: null,
+  firstName: f.firstName.trim() || null,
+  emailId: f.email.trim() || null,
+  contactNumber: f.mobile.trim() || null,
+  employeeCode: f.employeeCode.trim() || null,
+  groupId: f.groupId || null,
+  statusValue: f.status || null,
+  beginFromDate: f.beginFrom || null,
+  beginToDate: f.beginTo || null,
+  endFromDate: f.endFrom || null,
+  endToDate: f.endTo || null,
+});
+
+const toFilters = (c: UserSearchCriteria | null): UserFilters => ({
+  firstName: c?.firstName ?? '',
+  mobile: c?.contactNumber ?? '',
+  email: c?.emailId ?? '',
+  employeeCode: c?.employeeCode ?? '',
+  groupId: c?.groupId ?? '',
+  status: c?.statusValue ?? '',
+  beginFrom: c?.beginFromDate ?? '',
+  beginTo: c?.beginToDate ?? '',
+  endFrom: c?.endFromDate ?? '',
+  endTo: c?.endToDate ?? '',
+});
 
 const STATUS_OPTIONS: SelectControlOption[] = [
   { value: '', label: '--Select--' },
@@ -83,7 +106,6 @@ const STATUS_OPTIONS: SelectControlOption[] = [
   },
 })
 export class UsersComponent {
-  private readonly api = inject(UserAdminApiService);
   private readonly requestsApi = inject(UserRequestsApiService);
 
   protected readonly btn = IAM_BTN;
@@ -125,28 +147,20 @@ export class UsersComponent {
   protected readonly userId = (u: IamUserListItem): string => u.id;
   protected readonly userName = (u: IamUserListItem): string => u.fullName;
 
-  protected readonly store = createListStore<IamUserListItem>({
-    initialPageSize: 10,
-    // The constructor's pushFilters() issues the first load with the default sort.
-    autoLoad: false,
-    filterKeys: [...FILTER_KEYS, 'sort', 'order'],
-    loader: (query) => firstValueFrom(this.api.search(query)),
+  protected readonly store = createSearchStore<UserSearchCriteria, IamUserListItem>({
+    endpoint: SEARCH_ENDPOINTS.users,
   });
 
   protected readonly filtersOpen = signal(false);
   protected readonly draft = signal<UserFilters>({ ...EMPTY_FILTERS });
-  protected readonly applied = signal<UserFilters>({ ...EMPTY_FILTERS });
-  protected readonly sort = signal<DataTableSort<SortKey>>({ key: 'joiningDate', dir: 'desc' });
+  protected readonly sort = this.store.sort;
 
-  protected readonly activeFilterCount = computed(
-    () => FILTER_KEYS.filter((k) => this.applied()[k].trim()).length
-  );
+  protected readonly activeFilterCount = computed(() => countActiveFilters(this.store.criteria()));
 
   public constructor() {
     firstValueFrom(this.requestsApi.lookups())
       .then((l) => this.groups.set(l.groups ?? []))
       .catch(() => this.groups.set([]));
-    this.pushFilters();
   }
 
   protected patch(key: keyof UserFilters, value: string | null): void {
@@ -155,7 +169,7 @@ export class UsersComponent {
 
   /** Opens the filter popup on a copy of the applied filters; closing discards edits. */
   protected toggleFilters(): void {
-    if (!this.filtersOpen()) this.draft.set({ ...this.applied() });
+    if (!this.filtersOpen()) this.draft.set(toFilters(this.store.criteria()));
     this.filtersOpen.update((open) => !open);
   }
 
@@ -165,32 +179,20 @@ export class UsersComponent {
   }
 
   protected search(): void {
-    this.applied.set({ ...this.draft() });
     this.filtersOpen.set(false);
-    this.pushFilters();
+    void this.store.search(toCriteria(this.draft()));
   }
 
   protected clear(): void {
     this.draft.set({ ...EMPTY_FILTERS });
-    this.applied.set({ ...EMPTY_FILTERS });
-    this.pushFilters();
+    void this.store.reset();
   }
 
   protected onSort(sort: DataTableSort | null): void {
-    if (!sort) return;
-    this.sort.set(sort as DataTableSort<SortKey>);
-    this.pushFilters();
+    void this.store.sortBy(sort);
   }
 
   protected onPaginate({ page, pageSize }: PageChangeEvent): void {
-    if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
-    else this.store.setPage(page);
-  }
-
-  private pushFilters(): void {
-    const f = this.applied();
-    const filters: Record<string, string> = { sort: this.sort().key, order: this.sort().dir };
-    for (const key of FILTER_KEYS) if (f[key].trim()) filters[key] = f[key].trim();
-    this.store.setFilters(filters);
+    void this.store.setPage(page, pageSize);
   }
 }

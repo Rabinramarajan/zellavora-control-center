@@ -127,13 +127,6 @@ export class IamApiService {
   // Roles
   // ---------------------------------------------------------------------------
 
-  listRoles(query: IamListQuery): Observable<ApiEnvelope<PaginatedList<RoleListItem>>> {
-    return this.apiData.getData<ApiEnvelope<PaginatedList<RoleListItem>>>(
-      '/iam/roles',
-      this.toParams(query)
-    );
-  }
-
   /** Every permission key in the system (for the role permission matrix). */
   /** Every role, unpaginated (for pickers). */
   listAllRoles(): Observable<ApiEnvelope<RoleListItem[]>> {

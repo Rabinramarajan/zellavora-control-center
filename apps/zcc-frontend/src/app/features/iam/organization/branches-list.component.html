@@ -93,92 +93,89 @@
     }
   </div>
 </div>
-@if (error()) {
-  <zcc-empty-state
-    icon="pi pi-exclamation-triangle"
-    title="Failed to load branches"
-    [message]="error()!"
-  />
-} @else {
-  <app-data-table
-    mode="client"
-    [rows]="branches()"
-    [columns]="columns"
-    [trackBy]="trackBy"
-    [loading]="loading()"
-    [searchable]="false"
-    [(filters)]="filters"
-    [(pageSize)]="pageSize"
-    [pageSizeOptions]="pageSizeOptions"
-    entityLabel="branches"
-    emptyTitle="No branches found. Create a new branch to get started."
-  >
-    <ng-template dtCell="code" let-b>
-      <span
-        class="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-200"
+<app-data-table
+  entityLabel="branches"
+  errorTitle="Failed to load branches"
+  emptyTitle="No branches found."
+  [rows]="store.items()"
+  [columns]="columns"
+  [trackBy]="trackBy"
+  [loading]="store.loading()"
+  [error]="store.error()"
+  [total]="store.total()"
+  [page]="store.page()"
+  [pageSize]="store.pageSize()"
+  [pageSizeOptions]="pageSizeOptions"
+  [sort]="store.sort()"
+  (sortChange)="onSort($event)"
+  (paginate)="onPaginate($event)"
+  (retry)="store.reload()"
+>
+  <ng-template dtCell="code" let-b>
+    <span
+      class="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-200"
+    >
+      {{ b.code || '—' }}
+    </span>
+  </ng-template>
+  <ng-template dtCell="name" let-b>
+    <span class="inline-flex items-center gap-2 font-medium text-gray-900 dark:text-white">
+      {{ b.name }}
+      @if (b.isHeadOffice) {
+        <span
+          class="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[0.68rem] font-semibold text-indigo-600 dark:text-indigo-300"
+        >
+          Head office
+        </span>
+      }
+    </span>
+  </ng-template>
+  <ng-template dtCell="location" let-b>
+    <span class="text-gray-600 dark:text-gray-300">
+      {{ location(b) || '—' }}
+    </span>
+  </ng-template>
+  <ng-template dtCell="userCount" let-b>
+    <span class="tabular-nums">{{ b.userCount }}</span>
+  </ng-template>
+  <ng-template dtCell="status" let-b>
+    <zcc-status-chip [value]="b.status" [label]="b.status === 'active' ? 'Active' : 'Inactive'" />
+  </ng-template>
+  <ng-template dtCell="updatedAt" let-b>
+    <span class="tabular-nums text-gray-600 dark:text-gray-300">{{
+      b.updatedAt | date: 'mediumDate'
+    }}</span>
+  </ng-template>
+  <ng-template dtCell="actions" let-b>
+    <div class="flex justify-end gap-1">
+      <button
+        type="button"
+        class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-indigo-400"
+        [attr.aria-label]="'View ' + b.name"
+        (click)="onView(b)"
       >
-        {{ b.code || '—' }}
-      </span>
-    </ng-template>
-    <ng-template dtCell="name" let-b>
-      <span class="inline-flex items-center gap-2 font-medium text-gray-900 dark:text-white">
-        {{ b.name }}
-        @if (b.isHeadOffice) {
-          <span
-            class="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[0.68rem] font-semibold text-indigo-600 dark:text-indigo-300"
-          >
-            Head office
-          </span>
-        }
-      </span>
-    </ng-template>
-    <ng-template dtCell="location" let-b>
-      <span class="text-gray-600 dark:text-gray-300">
-        {{ location(b) || '—' }}
-      </span>
-    </ng-template>
-    <ng-template dtCell="userCount" let-b>
-      <span class="tabular-nums">{{ b.userCount }}</span>
-    </ng-template>
-    <ng-template dtCell="status" let-b>
-      <zcc-status-chip [value]="b.status" [label]="b.status === 'active' ? 'Active' : 'Inactive'" />
-    </ng-template>
-    <ng-template dtCell="updatedAt" let-b>
-      <span class="tabular-nums text-gray-600 dark:text-gray-300">{{
-        b.updatedAt | date: 'mediumDate'
-      }}</span>
-    </ng-template>
-    <ng-template dtCell="actions" let-b>
-      <div class="flex justify-end gap-1">
+        <i class="pi pi-eye text-sm" aria-hidden="true"></i>
+      </button>
+      @if (canManage()) {
         <button
           type="button"
           class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-indigo-400"
-          [attr.aria-label]="'View ' + b.name"
-          (click)="onView(b)"
+          [attr.aria-label]="'Edit ' + b.name"
+          (click)="onEdit(b)"
         >
-          <i class="pi pi-eye text-sm" aria-hidden="true"></i>
+          <i class="pi pi-pencil text-sm" aria-hidden="true"></i>
         </button>
-        @if (canManage()) {
-          <button
-            type="button"
-            class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-indigo-400"
-            [attr.aria-label]="'Edit ' + b.name"
-            (click)="onEdit(b)"
-          >
-            <i class="pi pi-pencil text-sm" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-            [disabled]="b.isHeadOffice"
-            [attr.title]="b.isHeadOffice ? 'The head office cannot be deleted' : null"
-            [attr.aria-label]="'Delete ' + b.name"
-            (click)="onDelete(b)"
-          >
-            <i class="pi pi-trash text-sm" aria-hidden="true"></i>
-          </button>
-        }
-      </div>
-    </ng-template>
-  </app-data-table>
-}
+        <button
+          type="button"
+          class="btn-37 inline-flex w-[37px] cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+          [disabled]="b.isHeadOffice"
+          [attr.title]="b.isHeadOffice ? 'The head office cannot be deleted' : null"
+          [attr.aria-label]="'Delete ' + b.name"
+          (click)="onDelete(b)"
+        >
+          <i class="pi pi-trash text-sm" aria-hidden="true"></i>
+        </button>
+      }
+    </div>
+  </ng-template>
+</app-data-table>

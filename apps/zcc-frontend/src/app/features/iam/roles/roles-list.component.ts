@@ -4,8 +4,15 @@ import { firstValueFrom } from 'rxjs';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
-import { EntityStatus, RoleListItem, RoleStats } from '../../../shared/models/iam.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
+import {
+  EntityStatus,
+  RoleListItem,
+  RoleScope,
+  RoleSearchCriteria,
+  RoleStats,
+} from '../../../shared/models/iam.model';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
+import { countActiveFilters, createSearchStore } from '../../../shared/search';
 import { StatusChipComponent } from '../../../shared/components/iam';
 import {
   DataTableCellDirective,
@@ -28,8 +35,6 @@ import {
   toRoleRequest,
 } from './role-dialog.config';
 
-type SortKey = 'name' | 'scope' | 'status' | 'createdAt';
-
 interface RoleFilters {
   q: string;
   scope: string;
@@ -37,7 +42,17 @@ interface RoleFilters {
 }
 
 const EMPTY_FILTERS: RoleFilters = { q: '', scope: '', status: '' };
-const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof RoleFilters>;
+const toCriteria = (f: RoleFilters): RoleSearchCriteria => ({
+  roleName: f.q.trim() || null,
+  scope: (f.scope as RoleScope) || null,
+  statusValue: (f.status as EntityStatus) || null,
+});
+
+const toFilters = (c: RoleSearchCriteria | null): RoleFilters => ({
+  q: c?.roleName ?? '',
+  scope: c?.scope ?? '',
+  status: c?.statusValue ?? '',
+});
 const ANY: SelectControlOption = { value: '', label: '--Select--' };
 
 @Component({
@@ -112,25 +127,19 @@ export class RolesListComponent {
   protected readonly roleId = (r: RoleListItem): string => r.id;
   protected readonly roleName = (r: RoleListItem): string => r.name;
 
-  protected readonly store = createListStore<RoleListItem>({
-    initialPageSize: 10,
-    // The constructor's pushFilters() issues the first load with the default sort.
-    autoLoad: false,
-    filterKeys: ['q', 'scope', 'status', 'sort', 'order'],
-    loader: (query) => firstValueFrom(this.api.listRoles(query)).then(unwrap),
+  protected readonly store = createSearchStore<RoleSearchCriteria, RoleListItem>({
+    endpoint: SEARCH_ENDPOINTS.roles,
   });
 
   protected readonly filtersOpen = signal(false);
   protected readonly draft = signal<RoleFilters>({ ...EMPTY_FILTERS });
-  protected readonly applied = signal<RoleFilters>({ ...EMPTY_FILTERS });
-  protected readonly sort = signal<DataTableSort<SortKey>>({ key: 'name', dir: 'asc' });
+  /** Filters of the last search, in form shape. */
+  protected readonly applied = computed(() => toFilters(this.store.criteria()));
+  protected readonly sort = this.store.sort;
 
-  protected readonly activeFilterCount = computed(
-    () => FILTER_KEYS.filter((k) => this.applied()[k].trim()).length
-  );
+  protected readonly activeFilterCount = computed(() => countActiveFilters(this.store.criteria()));
 
   public constructor() {
-    this.pushFilters();
     void this.loadStats();
   }
 
@@ -155,32 +164,26 @@ export class RolesListComponent {
   }
 
   protected search(): void {
-    this.applied.set({ ...this.draft() });
     this.filtersOpen.set(false);
-    this.pushFilters();
+    void this.store.search(toCriteria(this.draft()));
   }
 
   protected clear(): void {
     this.draft.set({ ...EMPTY_FILTERS });
-    this.applied.set({ ...EMPTY_FILTERS });
     this.filtersOpen.set(false);
-    this.pushFilters();
+    void this.store.reset();
   }
 
   protected onStatusChip(status: EntityStatus | null | undefined): void {
-    this.applied.update((f) => ({ ...f, status: status ?? '' }));
-    this.pushFilters();
+    void this.store.search({ statusValue: status ?? null });
   }
 
   protected onSort(sort: DataTableSort | null): void {
-    if (!sort) return;
-    this.sort.set(sort as DataTableSort<SortKey>);
-    this.pushFilters();
+    void this.store.sortBy(sort);
   }
 
   protected onPaginate({ page, pageSize }: PageChangeEvent): void {
-    if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
-    else this.store.setPage(page);
+    void this.store.setPage(page, pageSize);
   }
 
   // ---------------------------------------------------------------------------
@@ -200,18 +203,6 @@ export class RolesListComponent {
   // ---------------------------------------------------------------------------
   // Data
   // ---------------------------------------------------------------------------
-
-  private pushFilters(): void {
-    const f = this.applied();
-    const filters: Record<string, string | string[]> = {
-      sort: this.sort().key,
-      order: this.sort().dir,
-    };
-    if (f.scope) filters['scope'] = [f.scope];
-    if (f.status) filters['status'] = [f.status];
-    if (f.q.trim()) filters['q'] = f.q.trim();
-    this.store.setFilters(filters);
-  }
 
   private async loadStats(): Promise<void> {
     try {

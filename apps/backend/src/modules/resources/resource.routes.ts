@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { resourceSearch } from './resource.search';
 import { ResourceController } from './resource.controller';
 import { authenticate, requirePermission } from '../../middleware/auth';
 
@@ -11,6 +13,31 @@ const controller = new ResourceController();
  *   name: iamResources
  *   description: IAM protected resources and their actions.
  */
+
+/**
+ * @swagger
+ * /api/v1/iam/resources/search/criteria:
+ *   get:
+ *     summary: getIamResourcesSearchCriteria
+ *     operationId: getIamResourcesSearchCriteria
+ *     tags: [iamResources]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/iam/resources/search:
+ *   post:
+ *     summary: searchIamResources
+ *     operationId: postIamResourcesSearch
+ *     description: "Filtered, sorted, paginated resources. orderByColumnName: name, type, category, createdAt."
+ *     tags: [iamResources]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, resourceSearch(), [authenticate, requirePermission('resources:read')]);
 
 /**
  * @swagger

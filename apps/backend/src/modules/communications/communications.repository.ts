@@ -2,6 +2,13 @@ import { Prisma } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 import { Audience } from './communications.dto';
 
+export interface HistoryFilter {
+  action: string;
+  subject?: string;
+  sentAt?: { gte?: Date; lte?: Date };
+  order: 'asc' | 'desc';
+}
+
 export class CommunicationsRepository extends BaseRepository {
   /** Resolve an audience to live, active members of the organization. */
   resolveRecipients(organizationId: string, audience: Audience, limit: number, tx?: TxClient) {
@@ -41,17 +48,24 @@ export class CommunicationsRepository extends BaseRepository {
 
   async history(
     organizationId: string,
-    action: string,
+    filter: HistoryFilter,
     page: number,
     pageSize: number,
     tx?: TxClient
   ) {
-    const where: Prisma.AuditLogWhereInput = { organizationId, action };
+    const where: Prisma.AuditLogWhereInput = { organizationId, action: filter.action };
+    if (filter.subject) {
+      // Emails record a subject, in-app messages a title.
+      where.OR = ['subject', 'title'].map((key) => ({
+        metadata: { path: [key], string_contains: filter.subject },
+      }));
+    }
+    if (filter.sentAt) where.createdAt = filter.sentAt;
     const [data, total] = await Promise.all([
       this.getDb(tx).auditLog.findMany({
         where,
         include: { actor: { select: { id: true, fullName: true } } },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: filter.order },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),

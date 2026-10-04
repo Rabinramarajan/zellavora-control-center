@@ -308,3 +308,42 @@ export interface SetUserGroupsRequest {
   groupIds: string[];
   mode?: 'replace' | 'merge';
 }
+
+// ============================================================================
+// SEARCH CRITERIA (POST {module}/search)
+// ============================================================================
+
+/** Dates are `YYYY-MM-DD`; null means "no filter". */
+export interface UserSearchCriteria {
+  userLoginId: string | null;
+  firstName: string | null;
+  emailId: string | null;
+  contactNumber: string | null;
+  employeeCode: string | null;
+  groupId: string | null;
+  statusValue: string | null;
+  beginFromDate: string | null;
+  beginToDate: string | null;
+  endFromDate: string | null;
+  endToDate: string | null;
+}
+
+export interface GroupSearchCriteria {
+  groupName: string | null;
+  groupType: GroupType | null;
+  statusValue: EntityStatus | null;
+  parentGroupId: string | null;
+}
+
+export interface RoleSearchCriteria {
+  roleName: string | null;
+  scope: RoleScope | null;
+  statusValue: EntityStatus | null;
+}
+
+export interface ResourceSearchCriteria {
+  resourceName: string | null;
+  resourceType: ResourceType | null;
+  category: string | null;
+  statusValue: EntityStatus | null;
+}

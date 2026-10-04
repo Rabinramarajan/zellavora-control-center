@@ -4,12 +4,6 @@ import projectRoutes from './projects';
 import portfolioRoutes from './portfolio';
 import galleryRoutes from './gallery';
 import techRoutes from './technologies';
-import adminUsersRoutes from './admin-users';
-import adminGroupsRoutes from './admin-groups';
-import adminRolesRoutes from './admin-roles';
-import adminResourcesRoutes from './admin-resources';
-import adminConfigsRoutes from './admin-configs';
-import adminAuditRoutes from './admin-audit';
 import settingsRoutes from './settings';
 import invitationRoutes from '../modules/invitation/invitation.routes';
 import organizationRoutes from '../modules/organization/organization.routes';
@@ -52,7 +46,10 @@ export function registerApiRoutes(app: Express): void {
 
   // Operations Module (System Health + Audit Logs)
   app.use(['/api/v1/operations/health', '/api/v1/system-health'], operationsHealthRoutes);
-  app.use(['/api/v1/operations/audit-logs', '/api/v1/audit-logs', '/api/v1/clean/audits'], auditLogRoutes);
+  app.use(
+    ['/api/v1/operations/audit-logs', '/api/v1/audit-logs', '/api/v1/clean/audits'],
+    auditLogRoutes
+  );
 
   // Organization and identity services
   app.use(['/api/v1/invitations', '/api/v1/clean/invitations'], invitationRoutes);
@@ -98,11 +95,4 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/daily-sheets', dailySheetsRoutes);
   app.use('/api/v1/monthly-sheets', monthlySheetsRoutes);
   app.use('/api/v1/timesheets', timesheetsRoutes);
-
-  app.use('/api/v1/admin', adminUsersRoutes);
-  app.use('/api/v1/admin', adminGroupsRoutes);
-  app.use('/api/v1/admin', adminRolesRoutes);
-  app.use('/api/v1/admin', adminResourcesRoutes);
-  app.use('/api/v1/admin', adminConfigsRoutes);
-  app.use('/api/v1/admin', adminAuditRoutes);
 }

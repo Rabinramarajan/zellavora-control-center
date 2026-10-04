@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { authenticate, requirePermission } from '../../middleware/auth';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
 import { UserRequestController } from './user-request.controller';
+import { userRequestSearch } from './user-request.search';
 
 const router = Router();
 const controller = new UserRequestController();
@@ -16,6 +18,34 @@ const can = (permission: string) => [authenticate, requirePermission(permission)
  *   name: iamUserRequests
  *   description: IAM user request workflow — create, approve, provision and audit user/access changes.
  */
+
+/**
+ * @swagger
+ * /api/v1/iam/user-requests/search/criteria:
+ *   get:
+ *     summary: createUserRequestSearch
+ *     operationId: getIamUserRequestsSearchCriteria
+ *     description: Default criteria (filters, paging, sorting) for the User Request Search screen.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request }
+ * /api/v1/iam/user-requests/search:
+ *   post:
+ *     summary: searchUserRequest
+ *     operationId: postIamUserRequestsSearch
+ *     description: >
+ *       Filtered, sorted, paginated user requests. The body is the criteria from search/criteria;
+ *       orderByColumnName is one of refNo, subjectName, createdAt, status, priority.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, summary, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, userRequestSearch(), can('user-requests:read'));
 
 /**
  * @swagger

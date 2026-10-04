@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { roleSearch } from './role.search';
 import { RoleController } from './role.controller';
 import { authenticate, requirePermission } from '../../middleware/auth';
 
@@ -11,6 +13,31 @@ const controller = new RoleController();
  *   name: iamRoles
  *   description: IAM roles and their permission assignments.
  */
+
+/**
+ * @swagger
+ * /api/v1/iam/roles/search/criteria:
+ *   get:
+ *     summary: getIamRolesSearchCriteria
+ *     operationId: getIamRolesSearchCriteria
+ *     tags: [iamRoles]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/iam/roles/search:
+ *   post:
+ *     summary: searchIamRoles
+ *     operationId: postIamRolesSearch
+ *     description: "Filtered, sorted, paginated roles. orderByColumnName: name, scope, status, createdAt."
+ *     tags: [iamRoles]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, roleSearch(), [authenticate, requirePermission('roles:read')]);
 
 /**
  * @swagger

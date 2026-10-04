@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const BranchStatusSchema = z.enum(['active', 'inactive']);
+export const BranchStatusSchema = z.enum(['active', 'inactive']);
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional();
 
@@ -42,6 +42,9 @@ export const BranchListQuerySchema = z.object({
   status: BranchStatusSchema.optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
+  /** Omitted: head office first, then name. */
+  sort: z.enum(['code', 'name', 'city', 'status', 'updatedAt']).optional(),
+  order: z.enum(['asc', 'desc']).default('asc'),
 });
 
 export const IdParamSchema = z.object({ id: z.string().uuid() });

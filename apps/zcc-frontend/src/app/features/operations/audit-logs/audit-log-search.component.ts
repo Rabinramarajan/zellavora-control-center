@@ -4,8 +4,11 @@ import { AuditLogService } from './audit-log.service';
 import {
   AuditFilterCriteria,
   AuditFilterOptions,
+  AuditSearchCriteria,
   AuditSearchItem,
 } from './audit-log.models';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
+import { createSearchStore } from '../../../shared/search';
 import { AuditFilterComponent } from './components/audit-filter/audit-filter.component';
 import { AuditTableComponent } from './components/audit-table/audit-table.component';
 import { AuditDetailsComponent } from './components/audit-details/audit-details.component';
@@ -15,11 +18,7 @@ import { PermissionService } from '../../../core/rbac/services/permission.servic
 @Component({
   selector: 'zcc-audit-log-search',
   standalone: true,
-  imports: [
-    CommonModule,
-    AuditFilterComponent,
-    AuditTableComponent,
-  ],
+  imports: [CommonModule, AuditFilterComponent, AuditTableComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-log-search.component.html',
   styleUrl: './audit-log-search.component.scss',
@@ -29,21 +28,30 @@ export class AuditLogSearchComponent {
   private readonly dialogService = inject(AppDialogService);
   private readonly permissionService = inject(PermissionService);
 
-  // Search state signals
-  readonly logs = signal<AuditSearchItem[]>([]);
-  readonly loading = signal<boolean>(true);
+  private readonly store = createSearchStore<AuditSearchCriteria, AuditSearchItem>({
+    endpoint: SEARCH_ENDPOINTS.auditLogs,
+  });
+
+  readonly logs = this.store.items;
+  readonly loading = this.store.loading;
+  readonly error = this.store.error;
   readonly exporting = signal<boolean>(false);
-  readonly error = signal<string | null>(null);
 
   readonly filterOptions = signal<AuditFilterOptions | null>(null);
-  readonly activeFilters = signal<AuditFilterCriteria>({});
+  /** Applied filters in the shape the filter form and CSV export use. */
+  readonly activeFilters = computed<AuditFilterCriteria>(() =>
+    toFilterCriteria(this.store.criteria())
+  );
 
-  // Pagination & Sorting state
-  readonly page = signal<number>(1);
-  readonly size = signal<number>(25);
-  readonly sort = signal<string>('createdAt,desc');
-  readonly totalElements = signal<number>(0);
-  readonly totalPages = signal<number>(1);
+  readonly page = this.store.pageNumber;
+  readonly size = this.store.pageSize;
+  /** `field,dir` for the table; empty while the server's default order applies. */
+  readonly sort = computed(() => {
+    const s = this.store.sort();
+    return s ? `${s.key},${s.dir}` : '';
+  });
+  readonly totalElements = this.store.totalCount;
+  readonly totalPages = this.store.totalPages;
 
   readonly canExport = computed(() => {
     return (
@@ -56,7 +64,6 @@ export class AuditLogSearchComponent {
 
   constructor() {
     this.loadFilterOptions();
-    this.executeSearch();
   }
 
   loadFilterOptions() {
@@ -75,51 +82,28 @@ export class AuditLogSearchComponent {
   }
 
   executeSearch() {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.auditService
-      .search(this.activeFilters(), this.page(), this.size(), this.sort())
-      .subscribe({
-        next: (result) => {
-          this.logs.set(result.content);
-          this.totalElements.set(result.totalElements);
-          this.totalPages.set(result.totalPages);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.loading.set(false);
-          this.error.set(err?.message || 'Unable to load audit logs.');
-        },
-      });
+    void this.store.reload();
   }
 
   onFilterSubmit(criteria: AuditFilterCriteria) {
-    this.activeFilters.set(criteria);
-    this.page.set(1);
-    this.executeSearch();
+    void this.store.search(toSearchCriteria(criteria));
   }
 
   onFilterReset() {
-    this.activeFilters.set({});
-    this.page.set(1);
-    this.executeSearch();
+    void this.store.reset();
   }
 
   onSortChange(newSort: string) {
-    this.sort.set(newSort);
-    this.executeSearch();
+    const [key, dir] = newSort.split(',');
+    void this.store.sortBy({ key, dir: dir === 'asc' ? 'asc' : 'desc' });
   }
 
   onPageChange(newPage: number) {
-    this.page.set(newPage);
-    this.executeSearch();
+    void this.store.setPage(newPage);
   }
 
   onSizeChange(newSize: number) {
-    this.size.set(newSize);
-    this.page.set(1);
-    this.executeSearch();
+    void this.store.setPage(1, newSize);
   }
 
   openDetails(item: AuditSearchItem) {
@@ -135,7 +119,7 @@ export class AuditLogSearchComponent {
     if (this.exporting() || !this.canExport()) return;
 
     this.exporting.set(true);
-    this.auditService.exportCsv(this.activeFilters(), this.sort()).subscribe({
+    this.auditService.exportCsv(this.activeFilters(), this.sort() || undefined).subscribe({
       next: (blob) => {
         this.exporting.set(false);
         const url = window.URL.createObjectURL(blob);
@@ -152,3 +136,37 @@ export class AuditLogSearchComponent {
     });
   }
 }
+
+const blank = (v: string | undefined): string | null => v?.trim() || null;
+
+const toSearchCriteria = (f: AuditFilterCriteria): AuditSearchCriteria => ({
+  fromDate: blank(f.dateFrom),
+  toDate: blank(f.dateTo),
+  changedBy: blank(f.user),
+  moduleName: blank(f.module),
+  action: blank(f.action),
+  resourceType: blank(f.resourceType),
+  resourceId: blank(f.resourceId),
+  statusValue: blank(f.status),
+  ipAddress: blank(f.ipAddress),
+  correlationId: blank(f.correlationId),
+  searchText: blank(f.searchText),
+});
+
+const toFilterCriteria = (c: AuditSearchCriteria | null): AuditFilterCriteria => {
+  if (!c) return {};
+  const entries: Array<[keyof AuditFilterCriteria, string | null]> = [
+    ['dateFrom', c.fromDate],
+    ['dateTo', c.toDate],
+    ['user', c.changedBy],
+    ['module', c.moduleName],
+    ['action', c.action],
+    ['resourceType', c.resourceType],
+    ['resourceId', c.resourceId],
+    ['status', c.statusValue],
+    ['ipAddress', c.ipAddress],
+    ['correlationId', c.correlationId],
+    ['searchText', c.searchText],
+  ];
+  return Object.fromEntries(entries.filter(([, v]) => v)) as AuditFilterCriteria;
+};

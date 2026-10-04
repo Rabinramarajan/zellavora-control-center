@@ -1,4 +1,6 @@
 import { Router, type Response } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { communicationSearch } from './communications.search';
 import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { orgContextOf } from '../../middleware/org-context';
@@ -23,6 +25,56 @@ const sendLimiter = createRateLimiter({
  *   name: iamCommunications
  *   description: In-app messages and email to organization members.
  */
+
+/**
+ * @swagger
+ * /api/v1/iam/communications/messages/search/criteria:
+ *   get:
+ *     summary: getIamCommunicationsMessagesSearchCriteria
+ *     operationId: getIamCommunicationsMessagesSearchCriteria
+ *     tags: [iamCommunications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/iam/communications/messages/search:
+ *   post:
+ *     summary: searchIamCommunicationsMessages
+ *     operationId: postIamCommunicationsMessagesSearch
+ *     description: "Filtered, sorted, paginated in-app messages. orderByColumnName: sentAt."
+ *     tags: [iamCommunications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+/**
+ * @swagger
+ * /api/v1/iam/communications/emails/search/criteria:
+ *   get:
+ *     summary: getIamCommunicationsEmailsSearchCriteria
+ *     operationId: getIamCommunicationsEmailsSearchCriteria
+ *     tags: [iamCommunications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/iam/communications/emails/search:
+ *   post:
+ *     summary: searchIamCommunicationsEmails
+ *     operationId: postIamCommunicationsEmailsSearch
+ *     description: "Filtered, sorted, paginated emails. orderByColumnName: sentAt."
+ *     tags: [iamCommunications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+const historyGuards = [authenticate, requirePermission('settings:manage')];
+mountSearchRoutes(router, communicationSearch('in_app'), historyGuards, '/messages');
+mountSearchRoutes(router, communicationSearch('email'), historyGuards, '/emails');
 
 /**
  * @swagger

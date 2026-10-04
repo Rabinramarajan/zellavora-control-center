@@ -1,4 +1,6 @@
 import { Router, type Response } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { branchSearch } from './branch.search';
 import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { orgContextOf } from '../../middleware/org-context';
@@ -12,6 +14,34 @@ import {
 
 const router = Router();
 const service = new BranchService();
+
+/**
+ * @swagger
+ * /api/v1/branches/search/criteria:
+ *   get:
+ *     summary: getBranchesSearchCriteria
+ *     operationId: getBranchesSearchCriteria
+ *     tags: [branches]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/branches/search:
+ *   post:
+ *     summary: searchBranches
+ *     operationId: postBranchesSearch
+ *     description: "Filtered, sorted, paginated branches. orderByColumnName: code, name, city, status, updatedAt."
+ *     tags: [branches]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, branchSearch(), [
+  authenticate,
+  requirePermission('users:read', 'users:manage'),
+]);
 
 /**
  * @swagger

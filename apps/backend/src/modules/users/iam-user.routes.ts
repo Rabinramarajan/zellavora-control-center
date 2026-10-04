@@ -1,4 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { userSearch } from './iam-user.search';
 import { IamUserController } from './iam-user.controller';
 import { UserAdminController } from './user-admin.controller';
 import { authenticate, requirePermission } from '../../middleware/auth';
@@ -31,6 +33,31 @@ const manage = [authenticate, requirePermission('users:manage')];
  *   name: iamUsers
  *   description: IAM user directory, status and RBAC assignments.
  */
+
+/**
+ * @swagger
+ * /api/v1/iam/users/search/criteria:
+ *   get:
+ *     summary: getIamUsersSearchCriteria
+ *     operationId: getIamUsersSearchCriteria
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/iam/users/search:
+ *   post:
+ *     summary: searchIamUsers
+ *     operationId: postIamUsersSearch
+ *     description: "Filtered, sorted, paginated users. orderByColumnName: fullName, employeeCode, joiningDate, endDate, status."
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, userSearch(), [authenticate, requirePermission('users:read')]);
 
 /**
  * @swagger

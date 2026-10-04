@@ -1,5 +1,3 @@
-import { PaginatedList } from './iam.model';
-
 export type UserRequestType =
   | 'NEW_USER'
   | 'UPDATE_USER'
@@ -92,9 +90,27 @@ export interface UserRequestListItem {
   createdAt: string;
 }
 
-export interface UserRequestList extends PaginatedList<UserRequestListItem> {
-  counts: Record<UserRequestStatus, number>;
+/** Filters of the User Request Search (`POST /iam/user-requests/search`). */
+export interface UserRequestSearchCriteria {
+  requestRefNo: string | null;
+  requestType: UserRequestType[];
+  fullName: string | null;
+  employeeCode: string | null;
+  emailId: string | null;
+  requestedBy: string | null;
+  branchId: string[];
+  departmentId: string[];
+  teamId: string[];
+  groupId: string[];
+  roleId: string[];
+  statusValue: UserRequestStatus[];
+  /** `YYYY-MM-DD` */
+  requestedFromDate: string | null;
+  requestedToDate: string | null;
 }
+
+/** Per-status totals returned alongside each search page. */
+export type UserRequestStatusCounts = Record<UserRequestStatus, number>;
 
 export interface UserRequestApproval {
   id: string;

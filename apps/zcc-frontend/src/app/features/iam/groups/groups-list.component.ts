@@ -4,8 +4,15 @@ import { firstValueFrom } from 'rxjs';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
-import { EntityStatus, GroupListItem, GroupStats } from '../../../shared/models/iam.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
+import {
+  EntityStatus,
+  GroupListItem,
+  GroupSearchCriteria,
+  GroupStats,
+  GroupType,
+} from '../../../shared/models/iam.model';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
+import { countActiveFilters, createSearchStore } from '../../../shared/search';
 import { StatusChipComponent } from '../../../shared/components/iam';
 import {
   DataTableCellDirective,
@@ -28,8 +35,6 @@ import {
   toGroupRequest,
 } from './group-dialog.config';
 
-type SortKey = 'name' | 'type' | 'status' | 'createdAt';
-
 interface GroupFilters {
   q: string;
   type: string;
@@ -38,7 +43,19 @@ interface GroupFilters {
 }
 
 const EMPTY_FILTERS: GroupFilters = { q: '', type: '', status: '', parentId: '' };
-const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof GroupFilters>;
+const toCriteria = (f: GroupFilters): GroupSearchCriteria => ({
+  groupName: f.q.trim() || null,
+  groupType: (f.type as GroupType) || null,
+  statusValue: (f.status as EntityStatus) || null,
+  parentGroupId: f.parentId || null,
+});
+
+const toFilters = (c: GroupSearchCriteria | null): GroupFilters => ({
+  q: c?.groupName ?? '',
+  type: c?.groupType ?? '',
+  status: c?.statusValue ?? '',
+  parentId: c?.parentGroupId ?? '',
+});
 const ANY: SelectControlOption = { value: '', label: '--Select--' };
 /** Enough for a parent picker; the API caps a page at 100. */
 const PARENT_PAGE_SIZE = 100;
@@ -121,25 +138,19 @@ export class GroupsListComponent {
   protected readonly groupId = (g: GroupListItem): string => g.id;
   protected readonly groupName = (g: GroupListItem): string => g.name;
 
-  protected readonly store = createListStore<GroupListItem>({
-    initialPageSize: 10,
-    // The constructor's pushFilters() issues the first load with the default sort.
-    autoLoad: false,
-    filterKeys: ['q', 'type', 'status', 'parentId', 'sort', 'order'],
-    loader: (query) => firstValueFrom(this.api.listGroups(query)).then(unwrap),
+  protected readonly store = createSearchStore<GroupSearchCriteria, GroupListItem>({
+    endpoint: SEARCH_ENDPOINTS.groups,
   });
 
   protected readonly filtersOpen = signal(false);
   protected readonly draft = signal<GroupFilters>({ ...EMPTY_FILTERS });
-  protected readonly applied = signal<GroupFilters>({ ...EMPTY_FILTERS });
-  protected readonly sort = signal<DataTableSort<SortKey>>({ key: 'name', dir: 'asc' });
+  /** Filters of the last search, in form shape. */
+  protected readonly applied = computed(() => toFilters(this.store.criteria()));
+  protected readonly sort = this.store.sort;
 
-  protected readonly activeFilterCount = computed(
-    () => FILTER_KEYS.filter((k) => this.applied()[k].trim()).length
-  );
+  protected readonly activeFilterCount = computed(() => countActiveFilters(this.store.criteria()));
 
   public constructor() {
-    this.pushFilters();
     void this.loadStats();
     void this.loadParents();
   }
@@ -165,32 +176,26 @@ export class GroupsListComponent {
   }
 
   protected search(): void {
-    this.applied.set({ ...this.draft() });
     this.filtersOpen.set(false);
-    this.pushFilters();
+    void this.store.search(toCriteria(this.draft()));
   }
 
   protected clear(): void {
     this.draft.set({ ...EMPTY_FILTERS });
-    this.applied.set({ ...EMPTY_FILTERS });
     this.filtersOpen.set(false);
-    this.pushFilters();
+    void this.store.reset();
   }
 
   protected onStatusChip(status: EntityStatus | null | undefined): void {
-    this.applied.update((f) => ({ ...f, status: status ?? '' }));
-    this.pushFilters();
+    void this.store.search({ statusValue: status ?? null });
   }
 
   protected onSort(sort: DataTableSort | null): void {
-    if (!sort) return;
-    this.sort.set(sort as DataTableSort<SortKey>);
-    this.pushFilters();
+    void this.store.sortBy(sort);
   }
 
   protected onPaginate({ page, pageSize }: PageChangeEvent): void {
-    if (pageSize !== this.store.pageSize()) this.store.setPageSize(pageSize);
-    else this.store.setPage(page);
+    void this.store.setPage(page, pageSize);
   }
 
   // ---------------------------------------------------------------------------
@@ -209,19 +214,6 @@ export class GroupsListComponent {
   // ---------------------------------------------------------------------------
   // Data
   // ---------------------------------------------------------------------------
-
-  private pushFilters(): void {
-    const f = this.applied();
-    const filters: Record<string, string | string[]> = {
-      sort: this.sort().key,
-      order: this.sort().dir,
-    };
-    if (f.type) filters['type'] = [f.type];
-    if (f.status) filters['status'] = [f.status];
-    if (f.parentId) filters['parentId'] = f.parentId;
-    if (f.q.trim()) filters['q'] = f.q.trim();
-    this.store.setFilters(filters);
-  }
 
   private async loadStats(): Promise<void> {
     try {

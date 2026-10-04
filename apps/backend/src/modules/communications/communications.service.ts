@@ -1,4 +1,5 @@
 import { AppError } from '../../middleware/error';
+import { dateRange } from '../../infrastructure/search/search';
 import { AuditService } from '../../infrastructure/audit';
 import { logger } from '../../infrastructure/logger';
 import { emailService } from '../../services/email.service';
@@ -116,7 +117,12 @@ export class CommunicationsService {
     const action = query.channel === 'email' ? EMAIL_ACTION : MESSAGE_ACTION;
     const { data, total } = await this.repo.history(
       organizationId,
-      action,
+      {
+        action,
+        subject: query.subject,
+        sentAt: dateRange(query.sentFrom, query.sentTo),
+        order: query.order,
+      },
       query.page,
       query.pageSize
     );

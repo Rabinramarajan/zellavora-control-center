@@ -164,6 +164,47 @@
     <h2 id="history-heading" class="mb-3 text-base font-semibold text-gray-900 dark:text-white">
       Recently sent
     </h2>
+    <form
+      class="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto]"
+      aria-label="Search sent items"
+      (submit)="searchHistory($event)"
+    >
+      <input
+        type="search"
+        name="historySubject"
+        [class]="inputClass + ' min-h-[42px]'"
+        [placeholder]="isEmail() ? 'Search by subject' : 'Search by title'"
+        [attr.aria-label]="isEmail() ? 'Subject' : 'Title'"
+        maxlength="200"
+        [value]="historySubject()"
+        (input)="historySubject.set($any($event.target).value)"
+      />
+      <input
+        type="date"
+        name="historyFrom"
+        [class]="inputClass + ' min-h-[42px]'"
+        aria-label="Sent from"
+        [max]="historyTo() || null"
+        [value]="historyFrom()"
+        (change)="historyFrom.set($any($event.target).value)"
+      />
+      <input
+        type="date"
+        name="historyTo"
+        [class]="inputClass + ' min-h-[42px]'"
+        aria-label="Sent to"
+        [min]="historyFrom() || null"
+        [value]="historyTo()"
+        (change)="historyTo.set($any($event.target).value)"
+      />
+      <div class="flex gap-2">
+        <button type="submit" [class]="btn.secondary" [disabled]="history.loading()">
+          <i class="pi pi-search text-xs" aria-hidden="true"></i>
+          Search
+        </button>
+        <button type="button" [class]="btn.secondary" (click)="resetHistory()">Reset</button>
+      </div>
+    </form>
     @if (history.loading() && !history.hasItems()) {
       <div class="space-y-2">
         @for (_ of [1, 2, 3]; track $index) {
@@ -206,13 +247,15 @@
         [page]="history.page()"
         [pageSize]="history.pageSize()"
         [showSummary]="false"
-        (pageChange)="history.setPage($event)"
+        (paginate)="onPaginate($event)"
       />
     } @else {
       <zcc-empty-state
         [icon]="isEmail() ? 'pi pi-envelope' : 'pi pi-comments'"
-        title="Nothing sent yet"
-        message="Sent items appear here."
+        [title]="historyFiltered() ? 'No matches' : 'Nothing sent yet'"
+        [message]="
+          historyFiltered() ? 'No sent items match these filters.' : 'Sent items appear here.'
+        "
       />
     }
   </section>

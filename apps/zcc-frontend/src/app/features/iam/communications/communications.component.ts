@@ -7,12 +7,17 @@ import {
   Audience,
   AudienceType,
   CommunicationHistoryItem,
+  CommunicationSearchCriteria,
   DeliverySummary,
   MessageType,
 } from '../../../shared/models/iam-admin.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
+import { countActiveFilters, createSearchStore } from '../../../shared/search';
 import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import {
+  PageChangeEvent,
+  PaginationComponent,
+} from '../../../shared/components/pagination/pagination.component';
 import {
   IAM_BTN,
   IAM_CARD,
@@ -64,9 +69,10 @@ export class CommunicationsComponent {
   protected readonly relative = relativeTime;
   protected readonly dateTime = formatDateTime;
 
+  private readonly route = inject(ActivatedRoute);
   protected readonly channel = toSignal(
-    inject(ActivatedRoute).data.pipe(map((d) => (d['channel'] as Channel) ?? 'in_app')),
-    { initialValue: 'in_app' as Channel }
+    this.route.data.pipe(map((d) => (d['channel'] as Channel) ?? 'in_app')),
+    { initialValue: (this.route.snapshot.data['channel'] as Channel) ?? 'in_app' }
   );
   protected readonly isEmail = computed(() => this.channel() === 'email');
   protected readonly subjectLimit = computed(() =>
@@ -85,11 +91,37 @@ export class CommunicationsComponent {
     () => AUDIENCES.find((a) => a.type === this.audienceType())?.noun ?? 'recipients'
   );
 
-  readonly history = createListStore<CommunicationHistoryItem>({
-    initialPageSize: 10,
-    loader: (query) =>
-      firstValueFrom(this.api.listCommunicationHistory({ ...query, channel: this.channel() })),
+  /** Message Search or Email Communication Search, by the route's channel. */
+  readonly history = createSearchStore<CommunicationSearchCriteria, CommunicationHistoryItem>({
+    endpoint: this.channel() === 'email' ? SEARCH_ENDPOINTS.emails : SEARCH_ENDPOINTS.messages,
   });
+
+  protected readonly historySubject = signal('');
+  protected readonly historyFrom = signal('');
+  protected readonly historyTo = signal('');
+  protected readonly historyFiltered = computed(
+    () => countActiveFilters(this.history.criteria()) > 0
+  );
+
+  protected searchHistory(event: Event): void {
+    event.preventDefault();
+    void this.history.search({
+      subject: this.historySubject().trim() || null,
+      sentFromDate: this.historyFrom() || null,
+      sentToDate: this.historyTo() || null,
+    });
+  }
+
+  protected resetHistory(): void {
+    this.historySubject.set('');
+    this.historyFrom.set('');
+    this.historyTo.set('');
+    void this.history.reset();
+  }
+
+  protected onPaginate({ page, pageSize }: PageChangeEvent): void {
+    void this.history.setPage(page, pageSize);
+  }
 
   protected setAudienceType(type: AudienceType): void {
     if (type === this.audienceType()) return;

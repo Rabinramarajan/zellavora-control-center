@@ -19,14 +19,6 @@ export interface AuditSearchItem {
   correlationId: string | null;
 }
 
-export interface AuditSearchResult {
-  content: AuditSearchItem[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-}
-
 export interface AuditChangeDiff {
   field: string;
   previousValue: unknown;
@@ -87,4 +79,20 @@ export interface AuditFilterCriteria {
   ipAddress?: string;
   correlationId?: string;
   searchText?: string;
+}
+
+/** Filters of the Audit Search (`POST /operations/audit-logs/search`). */
+export interface AuditSearchCriteria {
+  /** `YYYY-MM-DD` or ISO date-time */
+  fromDate: string | null;
+  toDate: string | null;
+  changedBy: string | null;
+  moduleName: string | null;
+  action: string | null;
+  resourceType: string | null;
+  resourceId: string | null;
+  statusValue: string | null;
+  ipAddress: string | null;
+  correlationId: string | null;
+  searchText: string | null;
 }

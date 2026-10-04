@@ -28,8 +28,12 @@ export const SendEmailSchema = z
 
 export const HistoryQuerySchema = z.object({
   channel: z.enum(['in_app', 'email']),
+  subject: z.string().trim().max(200).optional(),
+  sentFrom: z.coerce.date().optional(),
+  sentTo: z.coerce.date().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  order: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export type Audience = z.infer<typeof AudienceSchema>;

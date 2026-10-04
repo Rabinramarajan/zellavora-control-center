@@ -82,30 +82,6 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Permission policies, role inheritance, and assignments.',
       },
       {
-        name: 'administrationUsers',
-        description: 'Administrative user search and maintenance.',
-      },
-      {
-        name: 'administrationGroups',
-        description: 'Administrative group search and maintenance.',
-      },
-      {
-        name: 'administrationRoles',
-        description: 'Administrative role search and maintenance.',
-      },
-      {
-        name: 'administrationResources',
-        description: 'Administrative resource search and maintenance.',
-      },
-      {
-        name: 'administrationConfiguration',
-        description: 'Administrative configuration and regional metadata.',
-      },
-      {
-        name: 'administrationAuditLogs',
-        description: 'Administrative audit search and details.',
-      },
-      {
         name: 'dashboard',
         description: 'Operational overview and activity.',
       },
@@ -132,10 +108,6 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
       {
         name: 'timesheets',
         description: 'Timesheet entries, reporting, and approval.',
-      },
-      {
-        name: 'administrationBranches',
-        description: 'Administrative branch search and maintenance.',
       },
       {
         name: 'invitations',
@@ -180,10 +152,6 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
       {
         name: 'monthlySheets',
         description: 'Monthly work records, approval, and payment.',
-      },
-      {
-        name: 'administrationMessages',
-        description: 'Administrative message delivery.',
       },
     ],
     components: {

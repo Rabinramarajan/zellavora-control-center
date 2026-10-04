@@ -3,14 +3,22 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
-import { ResourceListItem } from '../../../shared/models/iam.model';
-import { createListStore } from '../../../shared/utils/create-list-store';
+import { SEARCH_ENDPOINTS } from '../../../core/api/search-endpoints';
+import {
+  ResourceListItem,
+  ResourceSearchCriteria,
+  ResourceType,
+} from '../../../shared/models/iam.model';
+import { createSearchStore } from '../../../shared/search';
 import {
   FilterBarComponent,
   StatusChipComponent,
   EmptyStateComponent,
 } from '../../../shared/components/iam';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import {
+  PageChangeEvent,
+  PaginationComponent,
+} from '../../../shared/components/pagination/pagination.component';
 import {
   DataTableColumn,
   DataTableComponent,
@@ -51,18 +59,19 @@ export class ResourcesListComponent {
   protected readonly canManage = inject(PermissionService).can('resources:manage');
   protected readonly btn = IAM_BTN;
 
-  readonly store = createListStore<ResourceListItem>({
-    filterKeys: ['type'],
-    loader: (query) => firstValueFrom(this.api.listResources(query)).then(unwrap),
+  readonly store = createSearchStore<ResourceSearchCriteria, ResourceListItem>({
+    endpoint: SEARCH_ENDPOINTS.resources,
   });
+
+  protected readonly query = computed(() => this.store.criteria()?.resourceName ?? '');
 
   readonly filters = () => [
     { key: 'type', label: 'Type', options: TYPE_OPTIONS, allLabel: 'All types' },
   ];
 
   readonly selectedFilters = computed<Record<string, string>>((): Record<string, string> => {
-    const t = this.store.filters()['type'];
-    return t ? { type: String(t) } : {};
+    const t = this.store.criteria()?.resourceType;
+    return t ? { type: t } : {};
   });
 
   readonly columns: DataTableColumn<unknown>[] = [
@@ -74,18 +83,19 @@ export class ResourcesListComponent {
   ];
 
   onSearch(q: string): void {
-    this.store.setQ(q);
+    void this.store.search({ resourceName: q.trim() || null });
   }
 
   onFiltersChange(next: Record<string, string>): void {
-    const filters: Record<string, unknown> = {};
-    if (next['type']) filters['type'] = next['type'];
-    this.store.setFilters(filters);
+    void this.store.search({ resourceType: (next['type'] as ResourceType) || null });
   }
 
   onReset(): void {
-    this.store.setFilters({});
-    this.store.setQ('');
+    void this.store.reset();
+  }
+
+  onPaginate({ page, pageSize }: PageChangeEvent): void {
+    void this.store.setPage(page, pageSize);
   }
 
   onRowClick(row: ResourceListItem): void {

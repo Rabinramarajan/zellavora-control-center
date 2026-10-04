@@ -1,9 +1,39 @@
 import { Router } from 'express';
+import { mountSearchRoutes } from '../../infrastructure/search/search';
+import { auditSearch } from './audit.search';
 import { AuditController } from './audit.controller';
 import { authenticate, requirePermission } from '../../middleware/auth';
 
 const router = Router();
 const controller = new AuditController();
+
+/**
+ * @swagger
+ * /api/v1/operations/audit-logs/search/criteria:
+ *   get:
+ *     summary: getAuditLogsSearchCriteria
+ *     operationId: getAuditLogsSearchCriteria
+ *     tags: [operations, auditLogs]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Default search request (filters, pageNumber, pageSize, orderByColumnName, ascending) }
+ * /api/v1/operations/audit-logs/search:
+ *   post:
+ *     summary: searchAuditLogs
+ *     operationId: postAuditLogsSearch
+ *     description: "Filtered, sorted, paginated audit records. orderByColumnName: createdAt, action, module, status, user, resourceType."
+ *     tags: [operations, auditLogs]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ pageNumber, pageSize, totalCount, items, msg }" }
+ *       400: { description: Invalid criteria }
+ */
+mountSearchRoutes(router, auditSearch(), [
+  authenticate,
+  requirePermission('AUDIT_LOG_VIEW', 'system:audit:read', 'system:rbac:read'),
+]);
 
 /**
  * @swagger
