@@ -1,7 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import type { AuthStat } from '../../models/nexus.models';
 
-/** Understated figures under the network graphic. Separators, not cards. */
+/**
+ * The figures closing the Nexus stage, as a slow marquee ticker.
+ *
+ * The track holds the same group twice and animates to -50%, which is what
+ * makes the loop seamless; the duplicate is aria-hidden so the figures are
+ * announced once. Hovering pauses it, and reduced motion drops the duplicate
+ * and leaves a static row.
+ */
 @Component({
   selector: 'app-auth-stats',
   standalone: true,
@@ -11,8 +18,8 @@ import type { AuthStat } from '../../models/nexus.models';
 })
 export class AuthStatsComponent {
   protected readonly stats: readonly AuthStat[] = [
-    { icon: 'teams', value: '200+', label: 'Happy Teams' },
-    { icon: 'uptime', value: '99.9%', label: 'Uptime' },
-    { icon: 'globe', value: 'Global Access', label: '' },
+    { value: '200', unit: '+', label: 'Happy teams' },
+    { value: '99.9', unit: '%', label: 'Uptime' },
+    { value: 'Global', label: 'Access' },
   ];
 }

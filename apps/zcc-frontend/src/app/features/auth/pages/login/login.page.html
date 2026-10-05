@@ -1,166 +1,89 @@
-<a class="nx-skip" href="#nx-signin">Skip to sign in</a>
-
-<div class="nx-page">
-  <div class="nx-page__grid" aria-hidden="true"></div>
-  <div class="nx-page__grain" aria-hidden="true"></div>
-
-  <!-- Left: the Nexus. Decorative on desktop, a compact header on mobile. -->
-  <section class="nx-visual" aria-labelledby="nx-visual-title">
-    <h2 id="nx-visual-title" class="nx-visual__title">
-      The Nexus — where organizations, teams, projects, timesheets and invoices connect.
-    </h2>
-
-    <header class="nx-visual__brand">
-      <app-nexus-logo size="md" />
+<app-nexus-shell contentId="nx-signin" skipTo="sign in" labelledBy="nx-signin-title">
+  <div class="nx-signin">
+    <header class="nx-signin__head">
+      <p class="nx-kicker">Sign in · Nexus</p>
+      <h2 class="nx-title" id="nx-signin-title">Welcome back</h2>
+      <p class="nx-intro">Enter your organization code and credentials to continue.</p>
     </header>
 
-    <div class="nx-visual__network">
-      <app-nexus-network />
-    </div>
+    @if (unverified()) {
+    <app-auth-alert tone="warning" heading="Verify your email to continue">
+      Check your inbox for the verification link.
+      <a class="nx-link" routerLink="/auth/resend-verification">Send a new link</a>
+    </app-auth-alert>
+    } @else if (formError()) {
+    <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
+    }
 
-    <app-auth-stats class="nx-visual__stats" />
-  </section>
+    <form class="nx-form" [formRoot]="form" aria-label="Sign in">
+      <app-auth-field
+        [formField]="form.clientCode"
+        label="Organization code"
+        type="text"
+        autocomplete="organization"
+        placeholder="e.g. acme"
+      />
 
-  <!-- Right: the authentication workspace. -->
-  <section class="nx-workspace">
-    <header class="nx-workspace__top">
-      <app-nexus-logo class="nx-workspace__brand" size="md" />
+      <app-auth-field
+        [formField]="form.email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        placeholder="you@company.com"
+      />
 
-      <nav class="nx-nav" aria-label="Product">
-        @for (link of navLinks; track link) {
-          <a class="nx-nav__link" href="https://zelavora.com" target="_blank" rel="noopener">{{
-            link
-          }}</a>
-        }
-      </nav>
-
-      <div class="nx-workspace__meta">
-        <app-system-status />
-        <button
-          type="button"
-          class="nx-theme-toggle"
-          [attr.aria-label]="isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
-          [attr.aria-pressed]="!isDark()"
-          (click)="toggleTheme()"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            @if (isDark()) {
-              <circle cx="12" cy="12" r="4.2" />
-              <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 4.6 4.6M19.4 19.4l-1.5-1.5M17.9 6.1l1.5-1.5M4.6 19.4l1.5-1.5" />
-            } @else {
-              <path d="M20 13.6A8.4 8.4 0 0 1 10.4 4a8.4 8.4 0 1 0 9.6 9.6z" />
-            }
-          </svg>
-        </button>
+      <div class="nx-form__password">
+        <app-auth-field
+          [formField]="form.password"
+          label="Password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Enter your password"
+        />
+        <a class="nx-link nx-link--quiet" routerLink="/auth/forgot-password">Forgot password?</a>
       </div>
-    </header>
 
-    <main id="nx-signin" class="nx-workspace__body" tabindex="-1">
-      <h1 class="nx-headline">
-        One Platform.<br />
-        <span class="nx-headline__accent">Infinite Possibilities.</span>
-      </h1>
+      <label class="nx-check">
+        <input type="checkbox" [formField]="form.rememberMe" />
+        <span class="nx-check__box" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m3.6 8.4 2.9 2.9 5.9-6.2" />
+          </svg>
+        </span>
+        <span class="nx-check__label">Keep me signed in on this device</span>
+      </label>
 
-      <p class="nx-lede">
-        Zelavora Nexus helps you manage your organization, teams and operations, securely,
-        efficiently and effortlessly.
-      </p>
-
-      <app-auth-value-points class="nx-workspace__values" />
-
-      @if (unverified()) {
-        <app-auth-alert tone="warning" heading="Verify your email to continue">
-          Check your inbox for the verification link.
-          <a class="nx-link" routerLink="/auth/resend-verification">Send a new link</a>
-        </app-auth-alert>
-      } @else if (formError()) {
-        <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
-      }
-
-      <form class="nx-form" [formRoot]="form" aria-label="Sign in">
-        <app-auth-field
-          [formField]="form.clientCode"
-          label="Organization code"
-          type="text"
-          autocomplete="organization"
-          placeholder="e.g. acme"
-        />
-
-        <app-auth-field
-          [formField]="form.email"
-          label="Email"
-          type="email"
-          autocomplete="email"
-          inputmode="email"
-          placeholder="you@company.com"
-        />
-
-        <div class="nx-form__password">
-          <app-auth-field
-            [formField]="form.password"
-            label="Password"
-            type="password"
-            autocomplete="current-password"
-            placeholder="Enter your password"
-          />
-          <a class="nx-link nx-link--quiet" routerLink="/auth/forgot-password">Forgot password?</a>
-        </div>
-
-        <label class="nx-check">
-          <input type="checkbox" [formField]="form.rememberMe" />
-          <span class="nx-check__box" aria-hidden="true">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m3.6 8.4 2.9 2.9 5.9-6.2" />
-            </svg>
-          </span>
-          <span class="nx-check__label">Keep me signed in on this device</span>
-        </label>
-
-        <button type="submit" class="nx-submit" [disabled]="form().submitting()">
-          @if (form().submitting()) {
-            <span class="nx-submit__spinner" aria-hidden="true"></span>
-            <span>Signing in…</span>
-          } @else {
-            <span>Sign in</span>
-            <svg
-              class="nx-submit__arrow"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          }
-        </button>
-
-        <p class="nx-form__status" aria-live="polite">
-          @if (form().submitting()) {
-            Signing in, please wait.
-          }
-        </p>
-      </form>
-
-      <p class="nx-switch">
-        @if (selfRegistration()) {
-          New to Nexus? <a class="nx-link" routerLink="/auth/register">Create an account</a>
+      <button type="submit" class="nx-submit" [disabled]="form().submitting()">
+        @if (form().submitting()) {
+        <span class="nx-submit__spinner" aria-hidden="true"></span>
+        <span>Signing in…</span>
         } @else {
-          Access is by invitation. Contact your administrator for an account.
+        <span>Sign in</span>
+        <svg
+          class="nx-submit__arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
         }
-      </p>
-    </main>
+      </button>
 
-    <app-auth-footer class="nx-workspace__footer" />
-  </section>
-</div>
+      <p class="nx-form__status" aria-live="polite">
+        @if (form().submitting()) { Signing in, please wait. }
+      </p>
+    </form>
+
+    <p class="nx-switch">
+      @if (selfRegistration()) { New to Nexus?
+      <a class="nx-link" routerLink="/auth/register">Create an account</a>
+      } @else { Access is by invitation. Contact your administrator for an account. }
+    </p>
+  </div>
+</app-nexus-shell>

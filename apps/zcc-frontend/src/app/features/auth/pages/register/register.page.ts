@@ -31,6 +31,7 @@ import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { PasswordRequirementsComponent } from '../../ui/password-requirements.component';
 import { PasswordRevealComponent } from '../../ui/password-reveal.component';
 import { RegistrationTypeCardsComponent } from '../../ui/registration-type-cards.component';
+import { NexusShellComponent } from '../../components/nexus-shell/nexus-shell.component';
 import {
   confirmPasswordRules,
   emailRules,
@@ -47,16 +48,10 @@ import {
 } from './registration-types';
 import { COUNTRIES, TIME_ZONES, detectCountry, detectTimeZone } from './registration-locale';
 
-interface Highlight {
-  readonly icon: 'shield' | 'chart' | 'layers';
-  readonly tone: 'cyan' | 'violet' | 'emerald';
-  readonly title: string;
-  readonly copy: string;
-}
-
 /**
- * Full-screen self-registration, sharing the sign-in showcase. Routed only
- * when the server enables it (registrationGuard).
+ * Full-screen self-registration, sharing the Nexus shell with sign-in so the
+ * two screens read as one product. Routed only when the server enables it
+ * (registrationGuard).
  *
  * The registration type is chosen on a pre-step rather than as stepper step 1:
  * the branches have different step counts, so a stepper that renumbered after
@@ -75,37 +70,16 @@ interface Highlight {
     PasswordRequirementsComponent,
     PasswordRevealComponent,
     RegistrationTypeCardsComponent,
+    NexusShellComponent,
   ],
   templateUrl: './register.page.html',
-  styleUrls: ['../../ui/auth-showcase.scss', './register.page.scss'],
+  styleUrl: './register.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
-
-  protected readonly year = new Date().getFullYear();
-  protected readonly highlights: readonly Highlight[] = [
-    {
-      icon: 'shield',
-      tone: 'violet',
-      title: 'Enterprise grade',
-      copy: 'Secure, compliant and audit ready',
-    },
-    {
-      icon: 'chart',
-      tone: 'cyan',
-      title: 'Built for scale',
-      copy: 'Grow your business without limits',
-    },
-    {
-      icon: 'layers',
-      tone: 'emerald',
-      title: 'Unified control',
-      copy: 'Everything you need in one place',
-    },
-  ];
 
   protected readonly policy = injectPasswordPolicy();
   protected readonly formError = signal<string | null>(null);

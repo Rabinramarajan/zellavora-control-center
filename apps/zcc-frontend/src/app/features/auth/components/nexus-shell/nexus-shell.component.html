@@ -1,0 +1,93 @@
+<a class="nx-skip" [href]="'#' + contentId()">Skip to {{ skipTo() }}</a>
+
+<div class="nx-page">
+  <div class="nx-page__grid" aria-hidden="true"></div>
+  <div class="nx-page__grain" aria-hidden="true"></div>
+
+  <!-- Left: the Nexus story. The graphic is decorative; the copy carries it. -->
+  <section class="nx-stage">
+    <p class="nx-sr">
+      The Nexus — where organizations, teams, projects, timesheets and invoices connect.
+    </p>
+
+    <div class="nx-stage__network">
+      <app-nexus-network />
+    </div>
+    <div class="nx-stage__scrim" aria-hidden="true"></div>
+
+    <header class="nx-stage__brand">
+      <app-nexus-logo size="md" />
+    </header>
+
+    <div class="nx-stage__copy">
+      <p class="nx-eyebrow">The Nexus · where everything connects</p>
+      <h1 class="nx-display">
+        One Platform.<br />
+        <span class="nx-display__accent">Infinite Possibilities.</span>
+      </h1>
+      <p class="nx-lede">
+        Zelavora Nexus helps you manage your organization, teams and operations, securely,
+        efficiently and effortlessly.
+      </p>
+      <app-auth-value-points class="nx-stage__values" />
+    </div>
+
+    <app-auth-stats class="nx-stage__stats" />
+  </section>
+
+  <!-- Right: the working panel, filled by the host page. -->
+  <section class="nx-panel">
+    <header class="nx-panel__top">
+      <app-nexus-logo class="nx-panel__brand" size="sm" />
+
+      <nav class="nx-nav" aria-label="Product">
+        @for (link of navLinks; track link) {
+          <a class="nx-nav__link" href="https://zelavora.com" target="_blank" rel="noopener">{{
+            link
+          }}</a>
+        }
+      </nav>
+
+      <div class="nx-panel__meta">
+        <app-system-status />
+        <button
+          type="button"
+          class="nx-theme-toggle"
+          [attr.aria-label]="isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+          [attr.aria-pressed]="!isDark()"
+          (click)="toggleTheme()"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            @if (isDark()) {
+              <circle cx="12" cy="12" r="4.2" />
+              <path
+                d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 4.6 4.6M19.4 19.4l-1.5-1.5M17.9 6.1l1.5-1.5M4.6 19.4l1.5-1.5"
+              />
+            } @else {
+              <path d="M20 13.6A8.4 8.4 0 0 1 10.4 4a8.4 8.4 0 1 0 9.6 9.6z" />
+            }
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main
+      [id]="contentId()"
+      class="nx-panel__body"
+      tabindex="-1"
+      [attr.aria-labelledby]="labelledBy()"
+    >
+      <ng-content />
+    </main>
+
+    <app-auth-footer class="nx-panel__footer" />
+  </section>
+</div>

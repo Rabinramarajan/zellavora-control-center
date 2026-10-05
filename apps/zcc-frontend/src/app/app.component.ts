@@ -34,13 +34,16 @@ export class AppComponent {
   });
 
   /**
-   * Auth screens that exist only in dark. Sign-in is the exception: the Nexus
-   * composition ships both themes, so it follows the chosen one.
+   * Auth screens that exist only in dark. Sign-in and registration are the
+   * exceptions: the Nexus composition ships both themes and offers a toggle,
+   * so those routes follow the chosen one.
    * Kept in step with the pre-bootstrap theme script in index.html.
    */
   private readonly darkOnlyScreen = computed(() => {
     const url = this.currentUrl();
-    return !this.showAdminLayout() && !url.startsWith('/auth/login');
+    return (
+      !this.showAdminLayout() && !url.startsWith('/auth/login') && !url.startsWith('/auth/register')
+    );
   });
 
   constructor() {

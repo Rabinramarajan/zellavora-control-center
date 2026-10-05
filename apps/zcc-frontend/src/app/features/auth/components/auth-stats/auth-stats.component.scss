@@ -1,77 +1,115 @@
+@use '../../styles/nexus-tokens' as nx;
+
 :host {
   display: block;
 }
 
-.nx-stats {
+/* The mask fades both ends so figures enter and leave instead of being cut. */
+.nx-ticker {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--nx-space-5, 20px) 0;
+  height: 64px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+}
+
+.nx-ticker__track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: nx-marquee 36s linear infinite;
+}
+
+.nx-ticker:hover .nx-ticker__track {
+  animation-play-state: paused;
+}
+
+.nx-ticker__group {
+  display: flex;
+  align-items: center;
   margin: 0;
   padding: 0;
   list-style: none;
-  font-family: var(--nx-font-ui);
 }
 
-.nx-stats__item {
+.nx-ticker__item {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--nx-space-3, 12px);
-  padding-inline: clamp(16px, 2.6vw, 34px);
-
-  /* Hairline separators instead of boxes. */
-  + .nx-stats__item {
-    border-left: 1px solid var(--nx-border-subtle);
-  }
+  padding-inline: clamp(18px, 2.4vw, 34px);
+  white-space: nowrap;
 }
 
-.nx-stats__icon {
-  display: grid;
-  place-items: center;
-  color: var(--nx-primary);
-
-  svg {
-    width: 22px;
-    height: 22px;
-  }
-}
-
-.nx-stats__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.nx-stats__value {
+.nx-ticker__value {
+  /* Flex, so the formatter is free to put the unit on its own line: whitespace
+     between flex items is dropped and "99.9" and "%" stay one figure. */
+  display: inline-flex;
+  align-items: baseline;
   font-family: var(--nx-font-display);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: clamp(19px, 1.8vw, 26px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
   color: var(--nx-text-primary);
 }
 
-.nx-stats__label {
-  font-size: 12px;
-  color: var(--nx-text-muted);
+.nx-ticker__unit {
+  font-style: normal;
+  color: var(--nx-primary-ink);
 }
 
-/* Centre the value when a stat carries no caption. */
-.nx-stats__item--single .nx-stats__value {
-  font-size: 15px;
+.nx-ticker__label {
+  font-family: var(--nx-font-display);
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--nx-text-secondary);
 }
 
-@media (max-width: 640px) {
-  .nx-stats__item {
-    padding-inline: 14px;
+.nx-ticker__sep {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--nx-primary-ink);
+  border-radius: 50%;
+}
+
+@keyframes nx-marquee {
+  to {
+    translate: -50% 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .nx-ticker {
+    height: 46px;
   }
 
-  .nx-stats__value {
-    font-size: 15px;
+  .nx-ticker__item {
+    gap: var(--nx-space-2, 8px);
+    padding-inline: 16px;
   }
 
-  .nx-stats__label {
-    font-size: 11px;
+  .nx-ticker__label {
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+  }
+
+  .nx-ticker__sep {
+    width: 5px;
+    height: 5px;
+  }
+}
+
+@include nx.nexus-reduced-motion {
+  .nx-ticker__track {
+    animation: none;
+  }
+
+  /* Without the scroll the duplicate would just repeat the figures on screen. */
+  .nx-ticker__group[aria-hidden] {
+    display: none;
   }
 }

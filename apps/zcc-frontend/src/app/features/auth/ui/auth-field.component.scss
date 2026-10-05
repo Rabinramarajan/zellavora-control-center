@@ -43,18 +43,19 @@
     background 0.15s ease;
 }
 
-/* Chrome paints autofilled inputs near-white; repaint them to the dark field surface. */
+/* Chrome paints autofilled inputs near-white; repaint them to the field surface.
+   Reads the token, not a fixed colour: the Nexus screens ship light as well. */
 .auth-field__input:-webkit-autofill,
 .auth-field__input:-webkit-autofill:hover {
   -webkit-text-fill-color: var(--auth-text-strong);
   caret-color: var(--auth-text-strong);
-  -webkit-box-shadow: 0 0 0 1000px #15142e inset;
+  -webkit-box-shadow: 0 0 0 1000px var(--auth-input-bg) inset;
   transition: background-color 9999s ease-out 0s;
 }
 .auth-field__input:-webkit-autofill:focus-visible {
   -webkit-box-shadow:
     0 0 0 3px var(--auth-accent-ring),
-    0 0 0 1000px #15142e inset;
+    0 0 0 1000px var(--auth-input-bg) inset;
 }
 
 .auth-field__input--toggle {

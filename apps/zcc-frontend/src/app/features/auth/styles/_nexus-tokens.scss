@@ -1,96 +1,115 @@
-/* Zelavora Nexus design tokens.
+/* Zelavora Nexus design tokens — the values from the Nexus design system.
  * Emitted on the host of each Nexus surface so the whole subtree inherits them;
  * nothing leaks into the admin shell, which runs on its own palette. */
 
 @mixin nexus-tokens-dark {
-  --nx-bg: #081120;
-  --nx-bg-elevated: #0f1b2e;
-  --nx-surface: #111f33;
-  --nx-surface-hover: #17263c;
-  --nx-surface-sunken: #0b1424;
+  --nx-bg: #090e1c;
+  --nx-bg-elevated: #111930;
+  --nx-surface: #161f3a;
+  --nx-surface-hover: #0e1529;
+  --nx-surface-sunken: #0b1122;
 
-  --nx-text-primary: #f7fafc;
-  --nx-text-secondary: #94a3b8;
-  --nx-text-muted: #64748b;
-  --nx-text-on-primary: #08130a;
+  --nx-text-primary: #eef2fa;
+  --nx-text-secondary: #a5b0cc;
+  --nx-text-muted: #8592b5;
+  --nx-text-on-primary: #090e1c;
 
-  --nx-border: #334155;
-  --nx-border-subtle: rgb(148 163 184 / 0.16);
-  --nx-border-strong: rgb(148 163 184 / 0.34);
+  --nx-border: #222c47;
+  --nx-border-subtle: #222c47;
+  --nx-border-strong: #5b6894;
 
-  --nx-primary: #b7f52a;
-  --nx-primary-hover: #c7ff3f;
-  --nx-primary-active: #a6df20;
-  --nx-primary-soft: rgb(183 245 42 / 0.12);
+  --nx-primary: #c8f135;
+  --nx-primary-hover: #d6ff5c;
+  --nx-primary-active: #b9e224;
+  --nx-primary-soft: rgb(200 241 53 / 0.12);
 
-  --nx-success: #22c55e;
-  --nx-error: #ef4444;
-  --nx-error-soft: rgb(239 68 68 / 0.12);
-  --nx-warning: #f59e0b;
+  /* The accent that text may sit on, and the filled-action pair. Dark keeps
+     the electric lime; light inverts both (see the light theme). */
+  --nx-primary-ink: #c8f135;
+  --nx-action-bg: #c8f135;
+  --nx-action-bg-hover: #d6ff5c;
+  --nx-action-fg: #090e1c;
 
-  --nx-node-org: #22c55e;
-  --nx-node-team: #3b82f6;
-  --nx-node-project: #f59e0b;
-  --nx-node-timesheet: #8b5cf6;
-  --nx-node-invoice: #06b6d4;
+  --nx-success: var(--nx-primary-ink);
+  --nx-error: #ff7a6b;
+  --nx-error-soft: rgb(255 122 107 / 0.12);
+  --nx-warning: #ffb547;
+  --nx-warning-soft: rgb(255 181 71 / 0.12);
+
+  /* The Nexus graphic reads as one system: the accent carries it, and only
+     the modules that need attention step out onto the signal colour. */
+  --nx-node-org: var(--nx-primary-ink);
+  --nx-node-team: var(--nx-primary-ink);
+  --nx-node-project: var(--nx-primary-ink);
+  --nx-node-timesheet: var(--nx-warning);
+  --nx-node-invoice: var(--nx-primary-ink);
 
   /* Decorative layers: the technical grid, the orbit strokes and the grain. */
-  --nx-grid-line: rgb(148 163 184 / 0.055);
-  --nx-orbit-line: rgb(148 163 184 / 0.3);
-  --nx-connector-line: rgb(148 163 184 / 0.46);
-  --nx-node-chip-bg: rgb(8 17 32 / 0.82);
+  --nx-grid-line: rgb(148 163 209 / 0.07);
+  --nx-orbit-line: rgb(165 176 204 / 0.22);
+  --nx-connector-line: rgb(165 176 204 / 0.34);
+  --nx-node-chip-bg: #161f3a;
+  --nx-scrim: rgb(9 14 28 / 0.88);
   --nx-glow-strength: 1;
-  --nx-grain-opacity: 0.035;
+  --nx-grain-opacity: 0.06;
   --nx-ring-offset: var(--nx-bg);
 }
 
 @mixin nexus-tokens-light {
-  --nx-bg: #f7f8f5;
+  --nx-bg: #f2f3ed;
   --nx-bg-elevated: #ffffff;
   --nx-surface: #ffffff;
-  --nx-surface-hover: #f1f4f9;
-  --nx-surface-sunken: #eef1f6;
+  --nx-surface-hover: #f1f3ec;
+  --nx-surface-sunken: #f7f8f4;
 
-  --nx-text-primary: #0d1b2f;
-  --nx-text-secondary: #4a5a70;
-  --nx-text-muted: #6b7a8f;
-  --nx-text-on-primary: #10220c;
+  --nx-text-primary: #0a0f1e;
+  --nx-text-secondary: #475270;
+  --nx-text-muted: #5a6582;
+  --nx-text-on-primary: #090e1c;
 
-  --nx-border: #c3cedd;
-  --nx-border-subtle: rgb(13 27 47 / 0.12);
-  --nx-border-strong: rgb(13 27 47 / 0.26);
+  --nx-border: #dde1e8;
+  --nx-border-subtle: #dde1e8;
+  --nx-border-strong: #7d879f;
+
+  --nx-primary: #c8f135;
+  --nx-primary-hover: #b9e224;
+  --nx-primary-active: #a8d016;
+  --nx-primary-soft: rgb(75 102 0 / 0.08);
 
   /* Lime on white fails AA as text, so the light theme keeps it to fills and
-     strokes and darkens the text-bearing accent. */
-  --nx-primary: #6f9c05;
-  --nx-primary-hover: #5e8504;
-  --nx-primary-active: #4f7003;
-  --nx-primary-soft: rgb(111 156 5 / 0.1);
-  --nx-primary-fill: #b7f52a;
+     darkens the text-bearing accent. The filled action inverts: ink ground,
+     lime label — which is what carries the brand on a light page. */
+  --nx-primary-ink: #4b6600;
+  --nx-action-bg: #0a0f1e;
+  --nx-action-bg-hover: #1c2643;
+  --nx-action-fg: #c8f135;
 
-  --nx-success: #15803d;
-  --nx-error: #c62828;
-  --nx-error-soft: rgb(198 40 40 / 0.08);
-  --nx-warning: #b45309;
+  --nx-success: var(--nx-primary-ink);
+  --nx-error: #c0331f;
+  --nx-error-soft: rgb(192 51 31 / 0.07);
+  --nx-warning: #9a5700;
+  --nx-warning-soft: rgb(154 87 0 / 0.08);
 
-  --nx-node-org: #15803d;
-  --nx-node-team: #1d4ed8;
-  --nx-node-project: #b45309;
-  --nx-node-timesheet: #6d28d9;
-  --nx-node-invoice: #0e7490;
+  --nx-node-org: var(--nx-primary-ink);
+  --nx-node-team: var(--nx-primary-ink);
+  --nx-node-project: var(--nx-primary-ink);
+  --nx-node-timesheet: var(--nx-warning);
+  --nx-node-invoice: var(--nx-primary-ink);
 
-  --nx-grid-line: rgb(13 27 47 / 0.05);
-  --nx-orbit-line: rgb(13 27 47 / 0.2);
-  --nx-connector-line: rgb(13 27 47 / 0.32);
-  --nx-node-chip-bg: rgb(255 255 255 / 0.92);
+  --nx-grid-line: rgb(10 15 30 / 0.06);
+  --nx-orbit-line: rgb(10 15 30 / 0.16);
+  --nx-connector-line: rgb(10 15 30 / 0.28);
+  --nx-node-chip-bg: #ffffff;
+  --nx-scrim: rgb(242 243 237 / 0.9);
   --nx-glow-strength: 0.35;
-  --nx-grain-opacity: 0.02;
+  --nx-grain-opacity: 0.05;
   --nx-ring-offset: var(--nx-bg);
 }
 
 @mixin nexus-scale {
-  --nx-radius-sm: 6px;
-  --nx-radius-md: 8px;
+  --nx-radius-xs: 5px;
+  --nx-radius-sm: 8px;
+  --nx-radius-md: 12px;
   --nx-radius-lg: 12px;
   --nx-radius-xl: 18px;
   --nx-radius-pill: 999px;
@@ -104,23 +123,34 @@
   --nx-space-8: 32px;
   --nx-space-10: 40px;
   --nx-space-12: 48px;
+  --nx-space-14: 56px;
   --nx-space-16: 64px;
 
-  --nx-font-display: 'Sora', 'Space Grotesk', 'Outfit', system-ui, sans-serif;
-  --nx-font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Controls and the panel share a fixed measure across both auth screens. */
+  --nx-control-height: 52px;
+  --nx-panel-width: 608px;
 
-  --nx-ease: cubic-bezier(0.2, 0.8, 0.3, 1);
-  --nx-dur-fast: 150ms;
-  --nx-dur-field: 170ms;
+  --nx-font-display: 'Space Grotesk', 'Sora', system-ui, sans-serif;
+  --nx-font-ui: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --nx-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --nx-dur-fast: 180ms;
+  --nx-dur-field: 200ms;
 }
 
-/* The accent that text may sit on. Dark keeps the electric lime; light steps
-   down to an AA-safe olive. */
+/* The filled action: lime on ink in dark, ink with a lime label in light. */
+@mixin nexus-action-fill {
+  background: var(--nx-action-bg);
+  color: var(--nx-action-fg);
+}
+
+/* Kept for the decorative fills that must stay lime in both themes. */
 @mixin nexus-primary-fill {
-  background: var(--nx-primary-fill, var(--nx-primary));
+  background: var(--nx-primary);
+  color: var(--nx-text-on-primary);
 }
 
-@mixin nexus-focus-ring($color: var(--nx-primary)) {
+@mixin nexus-focus-ring($color: var(--nx-primary-ink)) {
   outline: 2px solid #{$color};
   outline-offset: 2px;
 }

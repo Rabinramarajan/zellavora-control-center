@@ -2,10 +2,12 @@
   display: block;
 }
 
+/* Hairline-separated labels rather than cards: the stage already carries the
+   graphic, so these read as a caption line under the headline. */
 .nx-values {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--nx-space-6, 24px);
+  gap: var(--nx-space-2, 8px) 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -14,35 +16,36 @@
 .nx-values__item {
   display: flex;
   align-items: center;
-  gap: var(--nx-space-2, 8px);
+  gap: var(--nx-space-3, 12px);
+  padding: 2px clamp(14px, 1.6vw, 24px);
+  border-left: 1px solid var(--nx-border-subtle);
   font-family: var(--nx-font-ui);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--nx-text-secondary);
+  line-height: 20px;
+  color: var(--nx-text-primary);
+
+  &:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
 .nx-values__icon {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--nx-radius-md, 8px);
-  color: var(--nx-primary);
-  background: var(--nx-primary-soft);
-  border: 1px solid var(--nx-border-subtle);
+  flex: none;
+  color: var(--nx-primary-ink);
 
   svg {
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
   }
 }
 
-@media (max-width: 420px) {
-  .nx-values {
-    gap: var(--nx-space-3, 12px) var(--nx-space-4, 16px);
-  }
-
+@media (max-width: 1199px) {
   .nx-values__item {
-    font-size: 12px;
+    padding-inline: 16px;
+    font-size: 13px;
   }
 }

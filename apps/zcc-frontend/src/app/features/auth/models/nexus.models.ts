@@ -1,11 +1,6 @@
 /** Shared shapes for the Zelavora Nexus authentication surfaces. */
 
-export type NexusModuleId =
-  | 'organizations'
-  | 'teams'
-  | 'projects'
-  | 'timesheets'
-  | 'invoices';
+export type NexusModuleId = 'organizations' | 'teams' | 'projects' | 'timesheets' | 'invoices';
 
 /** A business module orbiting the Nexus hub. */
 export interface NexusNode {
@@ -23,9 +18,11 @@ export interface ValuePoint {
   readonly label: string;
 }
 
+/** One figure in the stats ticker. */
 export interface AuthStat {
-  readonly icon: 'teams' | 'uptime' | 'globe';
   readonly value: string;
+  /** Trailing unit, set in the accent so "200" and "+" read as one figure. */
+  readonly unit?: string;
   readonly label: string;
 }
 

@@ -1,697 +1,518 @@
-<a class="skip-link" href="#register-card">Skip to registration</a>
-
-<div class="login-shell register-shell">
-  <div class="aurora aurora--violet" aria-hidden="true"></div>
-  <div class="aurora aurora--cyan" aria-hidden="true"></div>
-  <div class="grid-sheen" aria-hidden="true"></div>
-
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true">Z</div>
-      <div>
-        <p class="brand-name">ZELLAVORA</p>
-        <p class="brand-sub">CONTROL CENTER</p>
-      </div>
-    </div>
-    <p class="trust-pill">
-      <span class="trust-pill__dot" aria-hidden="true"></span>
-      Trusted by growing teams
-    </p>
-  </header>
-
-  <section class="story" aria-label="About Zellavora Control Center">
-    <h2 class="headline reveal" style="--d: 0.05s">
-      One Platform.<br />
-      <span class="headline-accent">Infinite Possibilities.</span>
-    </h2>
-    <p class="story-copy reveal" style="--d: 0.15s">
-      Zellavora Control Center is the unified platform to manage, monitor and scale your
-      organization, teams and operations — securely and effortlessly.
-    </p>
-
-    <ul class="highlights" role="list">
-      @for (item of highlights; track item.title; let i = $index) {
-      <li class="highlight reveal" [style.--d]="0.25 + i * 0.08 + 's'">
-        <span class="highlight-icon highlight-icon--{{ item.tone }}" aria-hidden="true">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            @switch (item.icon) { @case ('shield') {
-            <path d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z" />
-            <path d="M9.2 12l2 2 3.6-3.8" />
-            } @case ('chart') {
-            <path d="M4 20h16M7 20v-6M11 20V8M15 20v-9M19 20V5" />
-            } @case ('layers') {
-            <path d="m12 3 9 5-9 5-9-5 9-5z" />
-            <path d="m3 13 9 5 9-5" />
-            <path d="m3 16.5 9 5 9-5" />
-            } }
-          </svg>
-        </span>
-        <div>
-          <p class="highlight-title">{{ item.title }}</p>
-          <p class="highlight-copy">{{ item.copy }}</p>
-        </div>
-      </li>
-      }
-    </ul>
-  </section>
-
-  <!-- Decorative product preview -->
-  <div class="device reveal" style="--d: 0.3s" aria-hidden="true">
-    <img
-      class="device-img"
-      src="assets/auth/login-dashboard.webp"
-      alt=""
-      width="1200"
-      height="800"
-      decoding="async"
-      fetchpriority="low"
-    />
-  </div>
-
-  <ul
-    class="stats stats--open reveal"
-    style="--d: 0.45s"
-    role="list"
-    aria-label="Platform at a glance"
-  >
-    <li>
-      <span class="stat-icon" aria-hidden="true">
+<app-nexus-shell contentId="nx-register" skipTo="registration" labelledBy="nx-register-title">
+  <div class="nx-register">
+    <!-- ================= Terminal states ================= -->
+    @if (submitted()) {
+    <div class="nx-done">
+      <span class="nx-done__icon" aria-hidden="true">
         <svg
-          width="20"
-          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          @switch (meta().terminal.icon) { @case ('mail') {
+          <rect x="3" y="5" width="18" height="14" rx="2.5" />
+          <path d="m4 7 8 6 8-6" />
+          } @case ('shield') {
+          <path d="M12 3.2 19 6v5.3c0 4.3-2.9 7.8-7 9-4.1-1.2-7-4.7-7-9V6z" />
+          <path d="m9 12 2.2 2.2L15.2 10" />
+          } @case ('building-plus') {
+          <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4" />
+          <path d="M3 21h11M7.5 9h3M7.5 13h3M7.5 17h3" />
+          <circle cx="17.5" cy="16.5" r="4.5" />
+          <path d="M17.5 14.3v4.4M15.3 16.5h4.4" />
+          } }
+        </svg>
+      </span>
+
+      <p class="nx-kicker">{{ meta().terminal.kicker }}</p>
+      <h2 id="nx-register-title" class="nx-title">
+        {{ meta().terminal.title }}
+        <span class="nx-title__accent">{{ meta().terminal.titleAccent }}</span>
+      </h2>
+
+      @switch (type()) { @case ('INDIVIDUAL') {
+      <p class="nx-intro">
+        We sent a link to <strong class="nx-done__value">{{ model().email }}</strong>. Open it to
+        activate your account.
+      </p>
+      <a class="nx-submit" routerLink="/auth/resend-verification">
+        <span>Resend verification</span>
+        <svg
+          class="nx-submit__arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </a>
+      <p class="nx-note">
+        Already verified? <a class="nx-link" routerLink="/auth/login">Sign in</a>
+      </p>
+      } @case ('CREATE_ORGANIZATION') {
+      <p class="nx-intro">
+        <strong class="nx-done__value">{{ model().orgName }}</strong> is awaiting review by the
+        Zelavora team. Verify your email in the meantime — we'll be in touch at
+        <strong class="nx-done__value">{{ model().businessEmail }}</strong>.
+      </p>
+      <a class="nx-submit" routerLink="/auth/login">
+        <span>Go to sign in</span>
+        <svg
+          class="nx-submit__arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </a>
+      <p class="nx-note">
+        A verification link was sent to your inbox.
+        <a class="nx-link" routerLink="/auth/resend-verification">Resend verification</a>
+      </p>
+      } @default {
+      <p class="nx-intro">
+        Your request for <strong class="nx-done__value">{{ model().email }}</strong> is with your
+        administrators. We'll email you once it's approved, and you can sign in from then on.
+      </p>
+      <a class="nx-submit" routerLink="/auth/login">
+        <span>Go to sign in</span>
+        <svg
+          class="nx-submit__arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </a>
+      <p class="nx-note">
+        A verification link was also sent to your inbox.
+        <a class="nx-link" routerLink="/auth/resend-verification">Resend verification</a>
+      </p>
+      } }
+    </div>
+    }
+
+    <!-- ================= Pre-step: how will you use Zelavora ================= -->
+    @else if (!type()) {
+    <header class="nx-register__head">
+      <p class="nx-kicker">Get started</p>
+      <h2 id="nx-register-title" class="nx-title">
+        Create your <span class="nx-title__accent">account</span>
+      </h2>
+      <p class="nx-intro">How will you use Zelavora?</p>
+    </header>
+
+    @if (formError()) {
+    <app-auth-alert tone="error" role="alert">{{ formError() }}</app-auth-alert>
+    }
+
+    <div class="nx-pane nx-pane--forward">
+      <!-- Not form-bound: the type is a mode, and you cannot leave this
+             screen without picking one, so there is nothing to validate. -->
+      <app-registration-type-cards
+        [value]="type() ?? ''"
+        [options]="availableTypes()"
+        legend="How will you use Zelavora?"
+        (chosen)="chooseType($event)"
+      />
+    </div>
+
+    <p class="nx-switch">
+      Already have an account? <a class="nx-link" routerLink="/auth/login">Sign in</a>
+    </p>
+    }
+
+    <!-- ================= Typed wizard ================= -->
+    @else {
+    <!-- The chosen type is a mode, so it stays visible and changeable rather
+           than disappearing into a step the person cannot get back to. -->
+    @if (availableTypes().length > 1) {
+    <div class="nx-chip">
+      <span class="nx-chip__icon" aria-hidden="true">
+        <svg
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="1.6"
           stroke-linecap="round"
-        >
-          <circle cx="9" cy="8" r="3.2" />
-          <path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5" />
-          <path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.3c1.6.6 2.7 2.2 3 4.7" />
-        </svg>
-      </span>
-      <div>
-        <p class="stat-value">200+</p>
-        <p class="stat-label">Happy Teams</p>
-      </div>
-    </li>
-    <li>
-      <span class="stat-icon stat-icon--emerald" aria-hidden="true">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
           stroke-linejoin="round"
         >
-          <path d="M13 3 5 13.5h5.5L11 21l8-10.5h-5.5L13 3z" />
+          @switch (meta().icon) { @case ('building') {
+          <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15" />
+          <path d="M14 10h5a1 1 0 0 1 1 1v10" />
+          <path d="M3 21h18M7.5 9h3M7.5 13h3M7.5 17h3" />
+          } @case ('user') {
+          <circle cx="12" cy="8" r="3.6" />
+          <path d="M5 20c.7-3.6 3.4-5.6 7-5.6s6.3 2 7 5.6" />
+          } @case ('plus') {
+          <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4" />
+          <path d="M3 21h11M7.5 9h3M7.5 13h3M7.5 17h3" />
+          <circle cx="17.5" cy="16.5" r="4.5" />
+          <path d="M17.5 14.3v4.4M15.3 16.5h4.4" />
+          } }
         </svg>
       </span>
-      <div>
-        <p class="stat-value">99.9%</p>
-        <p class="stat-label">Uptime</p>
-      </div>
-    </li>
-    <li>
-      <span class="stat-icon" aria-hidden="true">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-        >
-          <circle cx="12" cy="12" r="9" />
-          <path
-            d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"
-          />
-        </svg>
-      </span>
-      <div>
-        <p class="stat-value">Global</p>
-        <p class="stat-label">Access Anywhere</p>
-      </div>
-    </li>
-  </ul>
+      <span class="nx-chip__label">{{ meta().cardTitle }}</span>
+      <button type="button" class="nx-chip__change" (click)="changeType()">
+        Change<span class="sr-only"> account type</span>
+      </button>
+    </div>
+    }
 
-  <footer class="legal page-legal">
-    <span>© {{ year }} Zellavora</span>
-    <a href="https://zellavora.com/privacy" target="_blank" rel="noopener">Privacy</a>
-    <a href="https://zellavora.com/terms" target="_blank" rel="noopener">Terms</a>
-    <a href="mailto:support@zellavora.com">Support</a>
-  </footer>
+    <header class="nx-register__head">
+      <p class="nx-kicker">{{ meta().kicker }}</p>
+      <h2 id="nx-register-title" class="nx-title">
+        {{ meta().title }} <span class="nx-title__accent">{{ meta().titleAccent }}</span>
+      </h2>
+      <p class="nx-intro">{{ meta().lead }}</p>
+    </header>
 
-  <main id="register-card" class="card" tabindex="-1" aria-labelledby="register-title">
-    <div class="card-inner">
-      <!-- ================= Terminal states ================= -->
-      @if (submitted()) {
-      <div class="done">
-        <span class="done__icon done__icon--{{ meta().terminal.tone }}" aria-hidden="true">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            @switch (meta().terminal.icon) { @case ('mail') {
-            <rect x="3" y="5" width="18" height="14" rx="2.5" />
-            <path d="m4 7 8 6 8-6" />
-            } @case ('shield') {
-            <path d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z" />
-            <path d="M9.2 12l2 2 3.6-3.8" />
-            } @case ('building-plus') {
-            <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4" />
-            <path d="M3 21h11M7.5 9h3M7.5 13h3M7.5 17h3" />
-            <circle cx="17.5" cy="16.5" r="4.5" />
-            <path d="M17.5 14.3v4.4M15.3 16.5h4.4" />
-            } }
-          </svg>
-        </span>
-        <p class="kicker">{{ meta().terminal.kicker }}</p>
-        <h1 id="register-title" class="card-title">
-          {{ meta().terminal.title }}
-          <span class="title-accent">{{ meta().terminal.titleAccent }}</span>
-        </h1>
+    @if (formError()) {
+    <app-auth-alert tone="error" role="alert">{{ formError() }}</app-auth-alert>
+    }
 
-        @switch (type()) { @case ('INDIVIDUAL') {
-        <p class="card-lead">
-          We sent a link to <strong class="done__email">{{ model().email }}</strong>. Open it to
-          activate your account.
-        </p>
-        <a class="submit" routerLink="/auth/resend-verification">
-          <span>Resend verification</span>
-          <svg
-            class="submit-arrow"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </a>
-        <p class="note note--plain">
-          Already verified? <a class="auth-link" routerLink="/auth/login">Sign in</a>
-        </p>
-        } @case ('CREATE_ORGANIZATION') {
-        <p class="card-lead">
-          <strong class="done__email">{{ model().orgName }}</strong> is awaiting review by the
-          Zellavora team. Verify your email in the meantime — we'll be in touch at
-          <strong class="done__email">{{ model().businessEmail }}</strong>.
-        </p>
-        <a class="submit" routerLink="/auth/login">
-          <span>Go to sign in</span>
-          <svg
-            class="submit-arrow"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </a>
-        <p class="note note--plain">
-          A verification link was sent to your inbox.
-          <a class="auth-link" routerLink="/auth/resend-verification">Resend verification</a>
-        </p>
-        } @default {
-        <p class="card-lead">
-          Your request for <strong class="done__email">{{ model().email }}</strong> is with your
-          administrators. We'll email you once it's approved, and you can sign in from then on.
-        </p>
-        <a class="submit" routerLink="/auth/login">
-          <span>Go to sign in</span>
-          <svg
-            class="submit-arrow"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </a>
-        <p class="note note--plain">
-          A verification link was also sent to your inbox.
-          <a class="auth-link" routerLink="/auth/resend-verification">Resend verification</a>
-        </p>
-        } }
-      </div>
-      }
-
-      <!-- ================= Pre-step: how will you use Zellavora ================= -->
-      @else if (!type()) {
-      <p class="kicker">Get started</p>
-      <h1 id="register-title" class="card-title">
-        Create your <span class="title-accent">account</span>
-      </h1>
-      <p class="card-lead" id="register-chooser-lead">How will you use Zellavora?</p>
-
-      @if (formError()) {
-      <app-auth-alert tone="error" role="alert">{{ formError() }}</app-auth-alert>
-      }
-
-      <div class="chooser step-pane step-pane--forward">
-        <!-- Not form-bound: the type is a mode, and you cannot leave this
-             screen without picking one, so there is nothing to validate. -->
-        <app-registration-type-cards
-          [value]="type() ?? ''"
-          [options]="availableTypes()"
-          legend="How will you use Zellavora?"
-          (chosen)="chooseType($event)"
-        />
-      </div>
-
-      <p class="note">
-        Already have an account? <a class="auth-link" routerLink="/auth/login">Sign in</a>
+    <!-- Step count drives the layout; 3+ steps switch to the compact bar so
+           three labels never have to fit a 375px panel. -->
+    <div class="nx-stepper" [class.nx-stepper--compact]="steps().length > 2">
+      <p class="nx-stepper__status" aria-hidden="true">
+        Step {{ step() }} of {{ steps().length }} · {{ stepLabel() }}
       </p>
-      }
-
-      <!-- ================= Typed wizard ================= -->
-      @else {
-      <!-- The chosen type is a mode, so it stays visible and changeable rather
-           than disappearing into a step the person cannot get back to. -->
-      @if (availableTypes().length > 1) {
-      <div class="type-chip">
-        <span class="type-chip__icon type-chip__icon--{{ meta().accent }}" aria-hidden="true">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            @switch (meta().icon) { @case ('building') {
-            <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15" />
-            <path d="M14 10h5a1 1 0 0 1 1 1v10" />
-            <path d="M3 21h18M7.5 9h3M7.5 13h3M7.5 17h3" />
-            } @case ('user') {
-            <circle cx="12" cy="8" r="3.6" />
-            <path d="M5 20c.7-3.6 3.4-5.6 7-5.6s6.3 2 7 5.6" />
-            } @case ('plus') {
-            <path d="M4 21V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4" />
-            <path d="M3 21h11M7.5 9h3M7.5 13h3M7.5 17h3" />
-            <circle cx="17.5" cy="16.5" r="4.5" />
-            <path d="M17.5 14.3v4.4M15.3 16.5h4.4" />
-            } }
-          </svg>
-        </span>
-        <span class="type-chip__label">{{ meta().cardTitle }}</span>
-        <button type="button" class="type-chip__change" (click)="changeType()">
-          Change<span class="sr-only"> account type</span>
-        </button>
-      </div>
-      }
-
-      <p class="kicker">{{ meta().kicker }}</p>
-      <h1 id="register-title" class="card-title">
-        {{ meta().title }} <span class="title-accent">{{ meta().titleAccent }}</span>
-      </h1>
-      <p class="card-lead">{{ meta().lead }}</p>
-
-      @if (formError()) {
-      <app-auth-alert tone="error" role="alert">{{ formError() }}</app-auth-alert>
-      }
-
-      <!-- Step count drives the grid; 3+ steps switch to the compact bar so
-           three labels never have to fit a 375px card. -->
-      <div class="stepper-block" [class.stepper-block--compact]="steps().length > 2">
-        <p class="stepper-status" aria-hidden="true">
-          Step {{ step() }} of {{ steps().length }} · {{ stepLabel() }}
-        </p>
-        <ol
-          class="stepper"
-          aria-label="Registration progress"
-          [style.--step-count]="steps().length"
-        >
-          @for (s of steps(); track s.id) {
-          <li
-            class="stepper__item"
-            [class.stepper__item--active]="step() === s.id"
-            [class.stepper__item--done]="step() > s.id"
-            [attr.aria-current]="step() === s.id ? 'step' : null"
-          >
-            <span class="stepper__dot" aria-hidden="true">
-              @if (step() > s.id) {
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="m5 12.5 4.5 4.5L19 7.5" />
-              </svg>
-              } @else { {{ s.id }} }
-            </span>
-            <span class="stepper__label">
-              <span class="sr-only">Step {{ s.id }} of {{ steps().length }}: </span>{{ s.label }}
-            </span>
-          </li>
-          }
-        </ol>
-      </div>
-
-      @if (!isLastStep()) {
-      <form
-        class="auth-form step-pane step-pane--{{ direction() }}"
-        novalidate
-        (submit)="$event.preventDefault(); next()"
+      <ol
+        class="nx-stepper__list"
+        aria-label="Registration progress"
+        [style.--nx-step-count]="steps().length"
       >
-        <fieldset class="step-fields">
-          <legend class="sr-only">{{ stepLabel() }}</legend>
+        @for (s of steps(); track s.id) {
+        <li
+          class="nx-stepper__item"
+          [class.nx-stepper__item--active]="step() === s.id"
+          [class.nx-stepper__item--done]="step() > s.id"
+          [attr.aria-current]="step() === s.id ? 'step' : null"
+        >
+          <span class="nx-stepper__dot" aria-hidden="true">
+            @if (step() > s.id) {
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m5 12.5 4.5 4.5L19 7.5" />
+            </svg>
+            } @else { {{ s.id }} }
+          </span>
+          <span class="nx-stepper__label">
+            <span class="sr-only">Step {{ s.id }} of {{ steps().length }}: </span>{{ s.label }}
+          </span>
+        </li>
+        }
+      </ol>
+    </div>
 
-          @if (type() === 'CREATE_ORGANIZATION' && step() === 1) {
-          <app-form-input-control
-            [formField]="form.orgName"
-            label="Organization name"
-            icon="user"
-            placeholder="Acme Robotics"
-            (input)="onOrgNameInput()"
-          />
-          <div>
-            <app-form-input-control
-              [formField]="form.orgCode"
-              label="Organization code"
-              icon="list"
-              placeholder="acme-robotics"
-              hint="Used in your sign-in URL and invites. Derived from the name — edit it if you'd rather."
-              (input)="onOrgCodeInput()"
-              (focusout)="onOrgCodeBlur()"
-            />
-            <!-- Advisory: aria-live so it is announced, and polite so it does
-                 not interrupt someone still typing. -->
-            @if (codeStatus(); as status) {
-            <p class="code-status code-status--{{ status }}" role="status" aria-live="polite">
-              @switch (status) { @case ('checking') {
-              <span class="auth-spinner auth-spinner--sm" aria-hidden="true"></span>
-              <span>Checking availability…</span>
-              } @case ('available') {
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m5 12.5 4.5 4.5L19 7.5" />
-              </svg>
-              <span>{{ model().orgCode }} is available.</span>
-              } @case ('taken') {
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.4"
-                stroke-linecap="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7.5v5M12 16.2h0" />
-              </svg>
-              <span>{{ model().orgCode }} is taken. Try another.</span>
-              } }
-            </p>
-            }
-          </div>
-          <app-form-input-control
-            [formField]="form.businessEmail"
-            label="Business email"
-            type="email"
-            icon="email"
-            placeholder="billing@company.com"
-            hint="Billing and account notices go here. Can differ from your own."
-          />
-          <div class="auth-row">
-            <app-form-input-control
-              [formField]="form.country"
-              label="Country"
-              type="select"
-              icon="list"
-              placeholder="Select a country"
-              searchPlaceholder="Search countries…"
-              [options]="countryOptions"
-            />
-            <app-form-input-control
-              [formField]="form.timezone"
-              label="Time zone"
-              type="select"
-              icon="list"
-              placeholder="Select a time zone"
-              searchPlaceholder="Search time zones…"
-              [options]="timeZoneOptions"
-            />
-          </div>
-          <p class="field-note">Detected from your browser — change if this isn't right.</p>
-          }
+    @if (!isLastStep()) {
+    <form
+      class="nx-form nx-pane nx-pane--{{ direction() }}"
+      novalidate
+      (submit)="$event.preventDefault(); next()"
+    >
+      <fieldset class="nx-fields">
+        <legend class="sr-only">{{ stepLabel() }}</legend>
 
-          <!-- Organization member step 1 and create-organization step 2 both
-               collect the person; create-organization labels it as the admin. -->
-          @else { @if (type() === 'ORGANIZATION_MEMBER') {
+        @if (type() === 'CREATE_ORGANIZATION' && step() === 1) {
+        <app-form-input-control
+          [formField]="form.orgName"
+          label="Organization name"
+          icon="user"
+          placeholder="Acme Robotics"
+          (input)="onOrgNameInput()"
+        />
+        <div>
           <app-form-input-control
-            [formField]="form.clientCode"
-            label="Organization"
-            type="select"
+            [formField]="form.orgCode"
+            label="Organization code"
             icon="list"
-            [placeholder]="orgsLoading() ? 'Loading organizations…' : 'Select your organization'"
-            searchPlaceholder="Search organizations…"
-            [options]="orgOptions()"
+            placeholder="acme-robotics"
+            hint="Used in your sign-in URL and invites. Derived from the name — edit it if you'd rather."
+            (input)="onOrgCodeInput()"
+            (focusout)="onOrgCodeBlur()"
           />
-          } @if (type() === 'CREATE_ORGANIZATION') {
-          <p class="field-note">
-            This is your personal login for <strong>{{ model().orgName }}</strong>.
+          <!-- Advisory: aria-live so it is announced, and polite so it does
+                     not interrupt someone still typing. -->
+          @if (codeStatus(); as status) {
+          <p class="nx-code-status nx-code-status--{{ status }}" role="status" aria-live="polite">
+            @switch (status) { @case ('checking') {
+            <span class="nx-spinner nx-spinner--sm" aria-hidden="true"></span>
+            <span>Checking availability…</span>
+            } @case ('available') {
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m5 12.5 4.5 4.5L19 7.5" />
+            </svg>
+            <span>{{ model().orgCode }} is available.</span>
+            } @case ('taken') {
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7.5v5M12 16.2h0" />
+            </svg>
+            <span>{{ model().orgCode }} is taken. Try another.</span>
+            } }
           </p>
           }
-          <div class="auth-row">
-            <app-form-input-control
-              [formField]="form.firstName"
-              label="First name"
-              icon="user"
-              placeholder="First name"
-            />
-            <app-form-input-control
-              [formField]="form.lastName"
-              label="Last name"
-              icon="user"
-              placeholder="Last name"
-            />
-          </div>
+        </div>
+        <app-form-input-control
+          [formField]="form.businessEmail"
+          label="Business email"
+          type="email"
+          icon="email"
+          placeholder="billing@company.com"
+          hint="Billing and account notices go here. Can differ from your own."
+        />
+        <div class="nx-row">
           <app-form-input-control
-            [formField]="form.email"
-            [label]="type() === 'INDIVIDUAL' ? 'Email' : 'Work email'"
-            type="email"
-            icon="email"
-            [placeholder]="type() === 'INDIVIDUAL' ? 'you@example.com' : 'name@company.com'"
+            [formField]="form.country"
+            label="Country"
+            type="select"
+            icon="list"
+            placeholder="Select a country"
+            searchPlaceholder="Search countries…"
+            [options]="countryOptions"
           />
-          }
-        </fieldset>
+          <app-form-input-control
+            [formField]="form.timezone"
+            label="Time zone"
+            type="select"
+            icon="list"
+            placeholder="Select a time zone"
+            searchPlaceholder="Search time zones…"
+            [options]="timeZoneOptions"
+          />
+        </div>
+        <p class="nx-field-note">Detected from your browser — change if this isn't right.</p>
+        }
 
-        <div class="step-actions">
-          @if (step() > 1 || availableTypes().length > 1) {
-          <button type="button" class="back-btn" (click)="back()">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M19 12H5M11 6l-6 6 6 6" />
-            </svg>
-            <span>Back</span>
-          </button>
-          }
-          <button type="submit" class="submit">
-            <span>Continue</span>
-            <svg
-              class="submit-arrow"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
+        <!-- Organization member step 1 and create-organization step 2 both
+                 collect the person; create-organization labels it as the admin. -->
+        @else { @if (type() === 'ORGANIZATION_MEMBER') {
+        <app-form-input-control
+          [formField]="form.clientCode"
+          label="Organization"
+          type="select"
+          icon="list"
+          [placeholder]="orgsLoading() ? 'Loading organizations…' : 'Select your organization'"
+          searchPlaceholder="Search organizations…"
+          [options]="orgOptions()"
+        />
+        } @if (type() === 'CREATE_ORGANIZATION') {
+        <p class="nx-field-note">
+          This is your personal login for <strong>{{ model().orgName }}</strong>.
+        </p>
+        }
+        <div class="nx-row">
+          <app-form-input-control
+            [formField]="form.firstName"
+            label="First name"
+            icon="user"
+            placeholder="First name"
+          />
+          <app-form-input-control
+            [formField]="form.lastName"
+            label="Last name"
+            icon="user"
+            placeholder="Last name"
+          />
+        </div>
+        <app-form-input-control
+          [formField]="form.email"
+          [label]="type() === 'INDIVIDUAL' ? 'Email' : 'Work email'"
+          type="email"
+          icon="email"
+          [placeholder]="type() === 'INDIVIDUAL' ? 'you@example.com' : 'name@company.com'"
+        />
+        }
+      </fieldset>
+
+      <div class="nx-actions">
+        @if (step() > 1 || availableTypes().length > 1) {
+        <button type="button" class="nx-back" (click)="back()">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M19 12H5M11 6l-6 6 6 6" />
+          </svg>
+          <span>Back</span>
+        </button>
+        }
+        <button type="submit" class="nx-submit">
+          <span>Continue</span>
+          <svg
+            class="nx-submit__arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+    </form>
+    }
+
+    <!-- ================= Last step: security ================= -->
+    @else {
+    <form class="nx-form nx-pane nx-pane--{{ direction() }}" [formRoot]="form">
+      <fieldset class="nx-fields">
+        <legend class="sr-only">{{ stepLabel() }}</legend>
+
+        <div class="nx-summary">
+          <span class="nx-summary__avatar" aria-hidden="true">{{ initials() }}</span>
+          <div class="nx-summary__text">
+            <p class="nx-summary__name">{{ model().firstName }} {{ model().lastName }}</p>
+            <p class="nx-summary__email">{{ model().email }}</p>
+          </div>
+          <button type="button" class="nx-summary__edit" (click)="editStep(steps().length - 1)">
+            Edit<span class="sr-only"> your details</span>
           </button>
         </div>
-      </form>
-      }
 
-      <!-- ================= Last step: security ================= -->
-      @else {
-      <form class="auth-form step-pane step-pane--{{ direction() }}" [formRoot]="form">
-        <fieldset class="step-fields">
-          <legend class="sr-only">{{ stepLabel() }}</legend>
-
-          <div class="step-summary">
-            <span class="step-summary__avatar" aria-hidden="true">{{ initials() }}</span>
-            <div class="step-summary__text">
-              <p class="step-summary__name">{{ model().firstName }} {{ model().lastName }}</p>
-              <p class="step-summary__email">{{ model().email }}</p>
-            </div>
-            <button type="button" class="step-summary__edit" (click)="editStep(steps().length - 1)">
-              Edit<span class="sr-only"> your details</span>
-            </button>
-          </div>
-
-          <div>
-            <app-password-reveal #passwordReveal label="password">
-              <app-form-input-control
-                [formField]="form.password"
-                label="Password"
-                [type]="passwordReveal.visible() ? 'text' : 'password'"
-                icon="lock"
-                placeholder="Create a strong password"
-              />
-            </app-password-reveal>
-            <app-password-requirements [password]="model().password" [policy]="policy()" />
-          </div>
-          <app-password-reveal #confirmReveal label="confirmation password">
+        <div>
+          <app-password-reveal #passwordReveal label="password">
             <app-form-input-control
-              [formField]="form.confirmPassword"
-              label="Confirm password"
-              [type]="confirmReveal.visible() ? 'text' : 'password'"
+              [formField]="form.password"
+              label="Password"
+              [type]="passwordReveal.visible() ? 'text' : 'password'"
               icon="lock"
-              placeholder="Confirm your password"
+              placeholder="Create a strong password"
             />
           </app-password-reveal>
-
-          <div>
-            <label class="auth-check">
-              <input
-                type="checkbox"
-                [formField]="form.acceptTerms"
-                [attr.aria-invalid]="termsError() ? true : null"
-                [attr.aria-describedby]="termsError() ? 'terms-error' : null"
-              />
-              <span>
-                I agree to the
-                <a
-                  class="auth-link"
-                  href="https://zellavora.com/terms"
-                  target="_blank"
-                  rel="noopener"
-                  >Terms of Service</a
-                >
-                and
-                <a
-                  class="auth-link"
-                  href="https://zellavora.com/privacy"
-                  target="_blank"
-                  rel="noopener"
-                  >Privacy Policy</a
-                >.
-              </span>
-            </label>
-            @if (termsError()) {
-            <p id="terms-error" class="auth-inline-error" role="alert">{{ termsError() }}</p>
-            }
-          </div>
-        </fieldset>
-
-        <div class="step-actions">
-          <button type="button" class="back-btn" (click)="back()">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M19 12H5M11 6l-6 6 6 6" />
-            </svg>
-            <span>Back</span>
-          </button>
-          <button type="submit" class="submit" [disabled]="form().submitting()">
-            @if (form().submitting()) {
-            <span class="auth-spinner" aria-hidden="true"></span>
-            <span>Creating account…</span>
-            } @else {
-            <span
-              >{{ type() === 'CREATE_ORGANIZATION' ? 'Create organization' : 'Create account'
-              }}</span
-            >
-            <svg
-              class="submit-arrow"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-            }
-          </button>
+          <app-password-requirements [password]="model().password" [policy]="policy()" />
         </div>
-      </form>
-      }
+        <app-password-reveal #confirmReveal label="confirmation password">
+          <app-form-input-control
+            [formField]="form.confirmPassword"
+            label="Confirm password"
+            [type]="confirmReveal.visible() ? 'text' : 'password'"
+            icon="lock"
+            placeholder="Confirm your password"
+          />
+        </app-password-reveal>
 
-      <p class="note">
-        Already have an account? <a class="auth-link" routerLink="/auth/login">Sign in</a>
-      </p>
-      }
-    </div>
-  </main>
-</div>
+        <div>
+          <label class="nx-terms">
+            <input
+              type="checkbox"
+              [formField]="form.acceptTerms"
+              [attr.aria-invalid]="termsError() ? true : null"
+              [attr.aria-describedby]="termsError() ? 'terms-error' : null"
+            />
+            <span class="nx-terms__box" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m3.6 8.4 2.9 2.9 5.9-6.2" />
+              </svg>
+            </span>
+            <span class="nx-terms__label">
+              I agree to the
+              <a class="nx-link" href="https://zelavora.com/terms" target="_blank" rel="noopener"
+                >Terms of Service</a
+              >
+              and
+              <a class="nx-link" href="https://zelavora.com/privacy" target="_blank" rel="noopener"
+                >Privacy Policy</a
+              >.
+            </span>
+          </label>
+          @if (termsError()) {
+          <p id="terms-error" class="nx-inline-error" role="alert">{{ termsError() }}</p>
+          }
+        </div>
+      </fieldset>
+
+      <div class="nx-actions">
+        <button type="button" class="nx-back" (click)="back()">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M19 12H5M11 6l-6 6 6 6" />
+          </svg>
+          <span>Back</span>
+        </button>
+        <button type="submit" class="nx-submit" [disabled]="form().submitting()">
+          @if (form().submitting()) {
+          <span class="nx-spinner" aria-hidden="true"></span>
+          <span>Creating account…</span>
+          } @else {
+          <span
+            >{{ type() === 'CREATE_ORGANIZATION' ? 'Create organization' : 'Create account' }}</span
+          >
+          <svg
+            class="nx-submit__arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+          }
+        </button>
+      </div>
+    </form>
+    }
+
+    <p class="nx-switch">
+      Already have an account? <a class="nx-link" routerLink="/auth/login">Sign in</a>
+    </p>
+    }
+  </div>
+</app-nexus-shell>

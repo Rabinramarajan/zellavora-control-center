@@ -16,8 +16,8 @@
         try {
           pref = localStorage.getItem('zcc-theme') || 'dark';
         } catch (e) {}
-        // Sign-in ships both themes; the remaining auth screens are dark-only.
-        var onDarkOnlyAuthPage = /^\/auth(\/(?!login)|$)/.test(location.pathname);
+        // The Nexus screens (sign-in, registration) ship both themes; the remaining auth screens are dark-only.
+        var onDarkOnlyAuthPage = /^\/auth(\/(?!login|register)|$)/.test(location.pathname);
         var dark =
           onDarkOnlyAuthPage ||
           (pref === 'system'
@@ -33,7 +33,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
   </head>
