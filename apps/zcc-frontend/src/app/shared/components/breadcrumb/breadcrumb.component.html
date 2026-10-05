@@ -1,0 +1,50 @@
+@if (trail().length) {
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol class="breadcrumb__list">
+      @for (node of nodes(); track $index; let last = $last) {
+        <li class="breadcrumb__item">
+          @switch (node.kind) {
+            @case ('gap') {
+              <span class="breadcrumb__gap" aria-hidden="true">…</span>
+              <span class="breadcrumb__sr-only">{{ hiddenLabel() }}</span>
+            }
+            @case ('item') {
+              @if (node.item.url) {
+                <a
+                  class="breadcrumb__link"
+                  [routerLink]="node.item.url"
+                  [title]="node.item.label"
+                  >{{ node.item.label }}</a
+                >
+              } @else {
+                <span
+                  class="breadcrumb__current"
+                  [attr.aria-current]="last ? 'page' : null"
+                  [title]="node.item.label"
+                  >{{ node.item.label }}</span
+                >
+              }
+            }
+          }
+
+          @if (!last) {
+            <svg
+              class="breadcrumb__separator"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          }
+        </li>
+      }
+    </ol>
+  </nav>
+}

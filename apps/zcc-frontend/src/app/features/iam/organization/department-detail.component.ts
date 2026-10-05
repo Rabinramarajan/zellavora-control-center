@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
 import { DepartmentDetail, OrgMember } from '../../../shared/models/iam-admin.model';
 import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
@@ -50,6 +51,7 @@ export class DepartmentDetailComponent {
   protected readonly busyUserId = signal<string | null>(null);
 
   constructor() {
+    bindBreadcrumbLabel(() => this.dept()?.name);
     effect(() => {
       const id = this.id();
       if (id) void this.load(id);

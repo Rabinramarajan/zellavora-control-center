@@ -16,6 +16,7 @@ import { EmptyStateComponent } from '../../../shared/components/iam';
 import { IAM_BTN } from '../shared/iam-page-header.component';
 import { errorMessage } from '../shared/iam-feedback.service';
 import { formatDate } from '../shared/iam-format';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import { ActionMeta, REQUEST_CHANGE_META, RequestChangeType } from '../../users/user-actions';
 
 type SectionKey = 'user' | 'employment' | 'groups' | 'branches' | 'teams';
@@ -125,6 +126,7 @@ export class UsersDetailComponent {
   });
 
   public constructor() {
+    bindBreadcrumbLabel(() => this.user()?.personal.fullName);
     effect(() => {
       const id = this.userId();
       if (id) void this.load(id);

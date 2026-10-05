@@ -24,7 +24,7 @@ Angular 22 standalone components, signals, zoneless change detection, OnPush eve
 | `repositories/` | Thin caching layers over some APIs (audit, CMS builder, notifications, projects, system health)                                                                                                                                                                                                                                                 |
 | `rbac/`         | `PermissionService`, `PolicyStore`, `*hasPermission` structural directive, policy-version interceptor (refreshes permissions when the server's `X-Policy-Version` rises)                                                                                                                                                                        |
 | `theme/`        | `ThemeRuntimeService`: applies the organization theme (see [themes](themes.md))                                                                                                                                                                                                                                                                 |
-| `services/`     | `ThemeService` (light/dark/system, stored as `zcc-theme`; sign-in pages forced dark), `LayoutService` (sidebar state), `ApiIntegrationService` (settings page calls)                                                                                                                                                                            |
+| `services/`     | `ThemeService` (light/dark/system, stored as `zcc-theme`; sign-in pages forced dark), `LayoutService` (sidebar state), `BreadcrumbService` (route-derived breadcrumb trail), `ApiIntegrationService` (settings page calls)                                                                                                                                                                            |
 | `analytics/`    | `AnalyticsTrackerService`: posts a page view per navigation                                                                                                                                                                                                                                                                                     |
 | `config/`       | `ConfigService`: runtime configuration                                                                                                                                                                                                                                                                                                          |
 
@@ -61,9 +61,18 @@ The sidebar menu comes from the backend (`GET /auth/me`, built by `services/auth
 | `form-dialog`                                              | Schema-driven form in a dialog, with validation helpers                                                                                                                                             |
 | `filter-chips`, `date-range-picker`, `document-upload`     | Inputs                                                                                                                                                                                              |
 | `iam/`                                                     | `status-chip`, `empty-state`, `filter-bar`, `detail-tabs`, `json-diff-viewer`                                                                                                                       |
+| `breadcrumb`                                               | Route-derived breadcrumb trail used by the shell navbar (see Breadcrumbs below)                                                                                                                      |
 | `theme-toggle`                                             | Light/dark switch                                                                                                                                                                                   |
 
 Utilities: `brand-palette.ts` (shade generation, WCAG contrast), `create-list-store.ts` (signal-based list state), `csv-exporter.ts`, `form-patterns.ts`. Models for every API live in `shared/models/`.
+
+## Breadcrumbs
+
+`shared/components/breadcrumb` renders the trail for the active route and is mounted once, in the shell navbar. Pages never build a breadcrumb of their own.
+
+`core/services/breadcrumb` derives the trail from the activated route tree on every navigation, lazy routes included, and exposes it as a signal (`BreadcrumbService.items`). A route names its own crumb through `data.breadcrumb` (a string, or `{ label, link: false }` for a path with no screen of its own) and otherwise falls back, in order, to `data.title`, the route `title`, the segment dictionary in `shared/models/breadcrumb.model.ts`, and a humanised segment. Ids in the middle of a path (`/invoices/:id/edit`) are skipped; the last crumb is always plain text with `aria-current="page"`.
+
+Detail screens that only know their label after loading call `bindBreadcrumbLabel(() => this.user()?.personal.fullName)` from their constructor; the label is dropped on the next navigation. Long trails collapse around a `…` that names the hidden steps.
 
 ## Styling
 

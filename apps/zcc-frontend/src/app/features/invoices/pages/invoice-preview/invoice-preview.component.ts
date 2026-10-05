@@ -13,6 +13,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ErrorBus } from '../../../../core/error/error-bus';
+import { bindBreadcrumbLabel } from '../../../../core/services/breadcrumb';
 import { AppDialogService } from '../../../../shared/components/dialog';
 import { SheetRequestError } from '../../../freelancer-sheets/sheets.models';
 import { DownloadFormat, InvoicesApi, saveBlob } from '../../invoices.api';
@@ -62,6 +63,7 @@ export class InvoicePreviewComponent implements OnInit {
   protected readonly date = formatDateKey;
 
   public constructor() {
+    bindBreadcrumbLabel(() => this.invoice()?.invoiceNumber);
     this.destroyRef.onDestroy(() => this.revoke());
   }
 

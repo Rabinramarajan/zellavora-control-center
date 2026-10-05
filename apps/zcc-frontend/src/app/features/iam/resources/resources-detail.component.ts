@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import { ResourceAction, ResourceDetail } from '../../../shared/models/iam.model';
 import {
   DetailTabsComponent,
@@ -50,6 +51,7 @@ export class ResourcesDetailComponent {
   ];
 
   constructor() {
+    bindBreadcrumbLabel(() => this.resource()?.name);
     void this.load();
   }
 

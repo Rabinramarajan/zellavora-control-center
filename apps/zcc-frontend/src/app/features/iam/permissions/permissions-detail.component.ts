@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import { CatalogPermissionDetail } from '../../../shared/models/iam-admin.model';
 import {
   DetailTabsComponent,
@@ -39,6 +40,7 @@ export class PermissionsDetailComponent {
   ];
 
   constructor() {
+    bindBreadcrumbLabel(() => this.permission()?.name);
     void this.load();
   }
 

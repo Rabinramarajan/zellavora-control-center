@@ -30,34 +30,42 @@ export const portfolioRoutes: Routes = [
       {
         path: 'profile',
         component: ProfileEditorComponent,
+        data: { breadcrumb: 'Profile' },
       },
       {
         path: 'hero',
         component: HeroSectionComponent,
+        data: { breadcrumb: 'Hero Section' },
       },
       {
         path: 'about',
         component: AboutSectionComponent,
+        data: { breadcrumb: 'About Section' },
       },
       {
         path: 'skills',
         component: SkillsManagerComponent,
+        data: { breadcrumb: 'Skills' },
       },
       {
         path: 'experience',
         component: ExperienceSectionComponent,
+        data: { breadcrumb: 'Experience' },
       },
       {
         path: 'education',
         component: EducationSectionComponent,
+        data: { breadcrumb: 'Education' },
       },
       {
         path: 'services',
         component: ServicesSectionComponent,
+        data: { breadcrumb: 'Services' },
       },
       {
         path: 'testimonials',
         component: TestimonialsSectionComponent,
+        data: { breadcrumb: 'Testimonials' },
       },
       {
         path: '',

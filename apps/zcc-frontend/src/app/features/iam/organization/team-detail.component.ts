@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { IamAdminApiService } from '../../../core/api/iam-admin.api';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
 import { OrgMember, TeamDetail } from '../../../shared/models/iam-admin.model';
 import { EmptyStateComponent } from '../../../shared/components/iam';
@@ -40,6 +41,7 @@ export class TeamDetailComponent {
   protected readonly busyUserId = signal<string | null>(null);
 
   constructor() {
+    bindBreadcrumbLabel(() => this.team()?.name);
     effect(() => {
       const id = this.id();
       if (id) void this.load(id);

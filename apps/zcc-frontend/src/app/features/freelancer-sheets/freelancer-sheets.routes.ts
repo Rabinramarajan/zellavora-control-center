@@ -16,6 +16,7 @@ export const freelancerSheetsRoutes: Routes = [
     path: 'daily',
     loadComponent: () =>
       import('./pages/daily-sheets/daily-sheets.component').then((m) => m.DailySheetsComponent),
+    data: { breadcrumb: 'Daily Sheets' },
   },
   // Older links pointed at /daily/list.
   { path: 'daily/list', redirectTo: 'daily', pathMatch: 'full' },
@@ -44,6 +45,7 @@ export const freelancerSheetsRoutes: Routes = [
       import('./pages/monthly-sheets/monthly-sheets.component').then(
         (m) => m.MonthlySheetsComponent
       ),
+    data: { breadcrumb: 'Monthly Sheets' },
   },
   { path: 'monthly/list', redirectTo: 'monthly', pathMatch: 'full' },
   {
@@ -61,6 +63,7 @@ export const freelancerSheetsRoutes: Routes = [
       import('./pages/approval-queue/approval-queue.component').then(
         (m) => m.ApprovalQueueComponent
       ),
+    data: { breadcrumb: 'Approval Queue' },
   },
   { path: '', redirectTo: 'daily', pathMatch: 'full' },
 ];

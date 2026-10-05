@@ -12,6 +12,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { FormInputControl, SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { UserRequestsApiService } from '../../../core/api/user-requests.api';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import {
   AccessPreview,
   UserRequestAuditEntry,
@@ -361,6 +362,7 @@ export class UserRequestDetailComponent {
   });
 
   constructor() {
+    bindBreadcrumbLabel(() => this.request()?.refNo);
     effect(() => {
       const id = this.requestId();
       if (id) void this.load(id);

@@ -14,6 +14,7 @@ export const timesheetRoutes: Routes = [
           import('./components/timesheet-list/timesheet-list.component').then(
             (m) => m.TimesheetListComponent
           ),
+        data: { breadcrumb: 'Timesheets' },
       },
       {
         path: ':period',
@@ -21,6 +22,7 @@ export const timesheetRoutes: Routes = [
           import('./components/timesheet-grid/timesheet-grid.component').then(
             (m) => m.TimesheetGridComponent
           ),
+        data: { breadcrumb: 'Timesheet' },
       },
     ],
   },

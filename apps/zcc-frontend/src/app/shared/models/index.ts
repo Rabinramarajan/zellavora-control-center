@@ -357,3 +357,4 @@ export * from './system-health.model';
 export * from './cms-builder.model';
 export * from './iam.model';
 export * from './auth.model';
+export * from './breadcrumb.model';

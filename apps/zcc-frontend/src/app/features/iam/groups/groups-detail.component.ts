@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { IamApiService, unwrap } from '../../../core/api/iam.api';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
 import { GroupDetail } from '../../../shared/models/iam.model';
 import { EmptyStateComponent, StatusChipComponent } from '../../../shared/components/iam';
@@ -57,6 +58,7 @@ export class GroupsDetailComponent {
   protected readonly collapsed = signal<ReadonlySet<SectionKey>>(new Set());
 
   public constructor() {
+    bindBreadcrumbLabel(() => this.group()?.name);
     // Re-runs when navigating between groups (e.g. parent / child links).
     effect(() => {
       const id = this.groupId();

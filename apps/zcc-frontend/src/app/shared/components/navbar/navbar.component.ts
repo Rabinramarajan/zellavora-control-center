@@ -8,7 +8,7 @@ import {
   untracked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PermissionService } from '../../../core/rbac/services/permission.service';
 import { AppDialogService } from '../dialog';
@@ -16,6 +16,7 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { firstValueFrom } from 'rxjs';
 import { UserRole } from '../../models';
 import { LayoutService } from '../../../core/services/layout/layout.service';
+import { BreadcrumbComponent } from '../breadcrumb';
 
 type AccountMenuIcon = 'profile' | 'settings' | 'security' | 'sessions';
 
@@ -26,22 +27,16 @@ interface AccountMenuItem {
   icon: AccountMenuIcon;
 }
 
-interface BreadcrumbSegment {
-  label: string;
-  route: string;
-}
-
 @Component({
   selector: 'app-navbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, RouterLink, ThemeToggleComponent],
+  imports: [CommonModule, RouterLink, ThemeToggleComponent, BreadcrumbComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
 export class NavbarComponent {
   auth = inject(AuthService);
-  router = inject(Router);
   layoutService = inject(LayoutService);
   private readonly dialog = inject(AppDialogService);
   private readonly permissions = inject(PermissionService);
@@ -121,68 +116,6 @@ export class NavbarComponent {
     await firstValueFrom(this.auth.logout());
   }
 
-  getBreadcrumbs(): BreadcrumbSegment[] {
-    const url = this.router.url.split('?')[0]; // Strip query parameters
-    const segments = url.split('/').filter((s) => s);
-
-    if (segments.length === 0) {
-      return [{ label: 'Dashboard', route: '' }];
-    }
-
-    const labelMap: Record<string, string> = {
-      dashboard: 'Dashboard',
-      portfolio: 'Portfolio',
-      profile: 'Profile',
-      hero: 'Hero Section',
-      about: 'About Section',
-      experience: 'Experience',
-      education: 'Education',
-      skills: 'Skills',
-      services: 'Services',
-      testimonials: 'Testimonials',
-      projects: 'Projects',
-      blog: 'Blog',
-      media: 'Media',
-      analytics: 'Analytics',
-      users: 'Users',
-      settings: 'Settings',
-      admin: 'Admin Console',
-      roles: 'Manage Roles',
-      resources: 'Resources',
-      branches: 'Branches',
-      'theme-builder': 'Theme Builder',
-      notifications: 'Notifications',
-      'audit-logs': 'Audit Logs',
-      'system-health': 'System Health',
-      'cms-builder': 'CMS Builder',
-      iam: 'Identity & Access',
-      system: 'System',
-      configuration: 'Common Configuration',
-      'notification-management': 'Notification Management',
-      email: 'Email Communication',
-      new: 'New',
-    };
-
-    return segments.map((seg, idx) => {
-      const isLast = idx === segments.length - 1;
-      const path = '/' + segments.slice(0, idx + 1).join('/');
-
-      let label = labelMap[seg.toLowerCase()];
-      if (!label) {
-        if (/^[0-9a-fA-F-]+$/.test(seg) && seg.length > 8) {
-          label = 'Details';
-        } else {
-          label = this.capitalize(seg.replace(/-/g, ' '));
-        }
-      }
-
-      return {
-        label: label,
-        route: isLast ? '' : path,
-      };
-    });
-  }
-
   getInitials(name?: string): string {
     if (!name) return 'Z';
     return name
@@ -191,9 +124,5 @@ export class NavbarComponent {
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  }
-
-  private capitalize(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 }

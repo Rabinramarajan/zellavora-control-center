@@ -3,7 +3,7 @@
   class="h-16 bg-white/90 backdrop-blur border-b border-slate-200 dark:bg-[#05040e] dark:border-[#13112b] px-6 flex items-center justify-between sticky top-0 z-40 font-sans"
 >
   <!-- Left side: Logo, Hamburger and Breadcrumbs -->
-  <div class="flex items-center gap-4">
+  <div class="flex min-w-0 items-center gap-4">
     <!-- Hamburger Menu toggle -->
     <button
       (click)="layoutService.toggleSidebar()"
@@ -19,41 +19,8 @@
       </svg>
     </button>
 
-    <!-- Breadcrumbs trail -->
-    <nav class="flex items-center gap-2 text-xs font-semibold select-none ml-2">
-      @for (seg of getBreadcrumbs(); track seg; let last = $last) {
-        @if (seg.route) {
-          <a
-            [routerLink]="seg.route"
-            class="text-slate-500 hover:text-slate-900 dark:text-[#a3a1b8] dark:hover:text-white transition"
-          >
-            {{ seg.label }}
-          </a>
-        }
-        <!-- Active breadcrumb highlighted in vibrant violet/purple -->
-        @if (!seg.route) {
-          <span class="text-violet-600 dark:text-[#8B5CF6]">
-            {{ seg.label }}
-          </span>
-        }
-        <!-- Chevron separator -->
-        @if (!last) {
-          <svg
-            class="w-3 h-3 text-slate-300 dark:text-[#4e4b70] mx-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        }
-      }
-    </nav>
+    <!-- Breadcrumbs trail, derived from the active route -->
+    <app-breadcrumb class="ml-2 min-w-0"></app-breadcrumb>
   </div>
 
   <!-- Right side: Notifications & User profile dropdown -->

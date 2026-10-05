@@ -13,6 +13,7 @@ export const operationsRoutes: Routes = [
     canMatch: [canMatchPermission('OPERATIONS_SYSTEM_HEALTH_VIEW')],
     loadComponent: () =>
       import('./system-health/system-health.component').then((m) => m.SystemHealthComponent),
+    data: { breadcrumb: 'System Health' },
   },
   {
     path: 'audit-logs',
@@ -20,5 +21,6 @@ export const operationsRoutes: Routes = [
     canMatch: [canMatchPermission('AUDIT_LOG_VIEW')],
     loadComponent: () =>
       import('./audit-logs/audit-log-search.component').then((m) => m.AuditLogSearchComponent),
+    data: { breadcrumb: 'Audit Logs' },
   },
 ];

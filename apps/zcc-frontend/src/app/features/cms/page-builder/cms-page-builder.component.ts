@@ -9,6 +9,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom, catchError, of } from 'rxjs';
 import { CmsBuilderApiService } from '../../../core/api/cms-builder.api';
+import { bindBreadcrumbLabel } from '../../../core/services/breadcrumb';
 import { IamFeedbackService } from '../../iam/shared/iam-feedback.service';
 import { IAM_BTN } from '../../iam/shared/iam-page-header.component';
 import {
@@ -71,6 +72,11 @@ export class CmsPageBuilderComponent implements OnInit {
     { label: 'Tablet', value: 'tablet', icon: 'pi-tablet' },
     { label: 'Mobile', value: 'mobile', icon: 'pi-mobile' },
   ];
+
+  constructor() {
+    // The shell breadcrumb names the page being edited.
+    bindBreadcrumbLabel(() => this.page()?.title);
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');

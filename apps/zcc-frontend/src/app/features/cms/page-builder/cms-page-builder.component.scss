@@ -72,30 +72,6 @@
   }
 }
 
-.builder-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.875rem;
-  min-width: 0;
-}
-
-.builder-bc-parent {
-  color: #64748b;
-}
-
-.builder-bc-current {
-  font-weight: 600;
-  color: #0f172a;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  :host-context(.dark) & {
-    color: #f8fafc;
-  }
-}
-
 .builder-unsaved {
   display: inline-flex;
   align-items: center;
