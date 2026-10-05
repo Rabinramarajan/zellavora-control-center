@@ -1,0 +1,70 @@
+<div class="sheet-page">
+  <a class="back-link" routerLink="/invoices">‹ Invoices</a>
+
+  @if (invoice(); as inv) {
+    <header class="sheet-header">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          {{ inv.invoiceNumber ?? 'Draft invoice' }}
+        </h1>
+        <p class="text-sm text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
+          <span [class]="'pill ' + statusPill(inv.status)">{{ statusLabel(inv.status) }}</span>
+          {{ inv.clientName }} · {{ date(inv.invoiceDate) }}
+          @if (isOverdue(inv)) {
+            <span class="inv-overdue">Overdue since {{ date(inv.dueDate) }}</span>
+          }
+          @if (inv.cancelReason) {
+            <span>Cancelled: {{ inv.cancelReason }}</span>
+          }
+        </p>
+      </div>
+      <div class="inv-toolbar">
+        <button type="button" class="ghost-btn" [disabled]="!src()" (click)="print()">Print</button>
+        <button type="button" class="ghost-btn" [disabled]="busy()" (click)="download('pdf')">
+          Download PDF
+        </button>
+        <button type="button" class="ghost-btn" [disabled]="busy()" (click)="download('docx')">
+          Download Word
+        </button>
+        @switch (inv.status) {
+          @case ('DRAFT') {
+            <a class="ghost-btn" [routerLink]="['/invoices', inv.id, 'edit']">Edit</a>
+            <button type="button" class="primary-btn" [disabled]="busy()" (click)="issue()">
+              Issue
+            </button>
+            <button type="button" class="danger-btn" [disabled]="busy()" (click)="remove()">
+              Delete
+            </button>
+          }
+          @case ('ISSUED') {
+            <button type="button" class="primary-btn" [disabled]="busy()" (click)="markPaid()">
+              Mark paid
+            </button>
+            <button type="button" class="danger-btn" [disabled]="busy()" (click)="cancel()">
+              Cancel
+            </button>
+          }
+          @case ('PAID') {
+            <button type="button" class="danger-btn" [disabled]="busy()" (click)="cancel()">
+              Cancel
+            </button>
+          }
+        }
+      </div>
+    </header>
+  }
+
+  <div class="paper-wrap">
+    @if (src()) {
+      <iframe
+        #frame
+        class="paper"
+        title="Invoice preview"
+        sandbox="allow-modals allow-same-origin"
+        [src]="src()"
+      ></iframe>
+    } @else {
+      <p class="inv-empty">Loading preview…</p>
+    }
+  </div>
+</div>

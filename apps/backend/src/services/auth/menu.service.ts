@@ -251,6 +251,15 @@ const DEFAULT_MENU: MenuDef[] = [
         requiredPermission: 'timesheet:approve',
         requiresReviewQueue: true,
       },
+      {
+        id: 'invoices',
+        key: 'invoices',
+        label: 'Invoices',
+        icon: '🧾',
+        route: '/invoices',
+        requiredPermission: 'timesheet:read',
+        orderIndex: 5,
+      },
     ],
   },
   {

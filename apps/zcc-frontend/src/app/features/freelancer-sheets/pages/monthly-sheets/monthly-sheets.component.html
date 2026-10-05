@@ -58,6 +58,17 @@
           <span aria-hidden="true">＋</span> New Monthly Sheet
         </button>
       }
+      @if (monthlySheet(); as sheet) {
+        @if (sheet.status === 'approved' || sheet.status === 'paid') {
+          <a
+            class="ghost-btn"
+            routerLink="/invoices/new"
+            [queryParams]="{ monthlySheetId: sheet.id }"
+          >
+            <span aria-hidden="true">🧾</span> Create invoice
+          </a>
+        }
+      }
     </div>
   </header>
 

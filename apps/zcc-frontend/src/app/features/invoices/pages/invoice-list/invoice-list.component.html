@@ -1,0 +1,229 @@
+<div class="sheet-page">
+  <header class="sheet-header">
+    <div class="flex items-center gap-4">
+      <div class="sheet-header__icon" aria-hidden="true">🧾</div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Invoices</h1>
+        <p class="text-sm text-slate-400 mt-0.5">
+          Bills you send to clients, numbered by financial year.
+        </p>
+      </div>
+    </div>
+    <div class="inv-toolbar">
+      <a class="ghost-btn" routerLink="/invoices/clients">Clients</a>
+      <a class="ghost-btn" routerLink="/invoices/settings">Settings</a>
+      <button type="button" class="ghost-btn" (click)="exportRegister()">
+        <span aria-hidden="true">⭳</span> CSV register
+      </button>
+      <button
+        type="button"
+        class="ghost-btn"
+        [disabled]="selected().size === 0 || zipping()"
+        (click)="downloadZip()"
+      >
+        <span aria-hidden="true">⭳</span>
+        {{ zipping() ? 'Preparing ZIP…' : 'ZIP of PDFs (' + selected().size + ')' }}
+      </button>
+      <a class="primary-btn" routerLink="/invoices/new"
+        ><span aria-hidden="true">＋</span> New invoice</a
+      >
+    </div>
+  </header>
+
+  <section class="sheet-card">
+    <div class="sheet-card__body">
+      <div class="inv-tabs" role="group" aria-label="Filter by status">
+        @for (filter of statusFilters; track filter.value) {
+          <button
+            type="button"
+            class="inv-tab"
+            [attr.aria-pressed]="status === filter.value"
+            (click)="setStatus(filter.value)"
+          >
+            {{ filter.label }}
+          </button>
+        }
+      </div>
+
+      <div class="inv-grid inv-grid--3 mt-4">
+        <label class="field">
+          <span class="field__label">Client</span>
+          <select class="field__input" [(ngModel)]="clientId" (ngModelChange)="applyFilters()">
+            <option value="">All clients</option>
+            @for (client of clients(); track client.id) {
+              <option [value]="client.id">{{ client.name }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">From</span>
+          <input class="field__input" type="date" [(ngModel)]="from" (change)="applyFilters()" />
+        </label>
+        <label class="field">
+          <span class="field__label">To</span>
+          <input class="field__input" type="date" [(ngModel)]="to" (change)="applyFilters()" />
+        </label>
+      </div>
+    </div>
+
+    <div class="inv-scroll">
+      <table class="inv-table">
+        <caption class="sr-only">
+          Invoices
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" class="w-12">
+              <input
+                type="checkbox"
+                class="h-5 w-5"
+                [checked]="allSelected()"
+                (change)="toggleAll()"
+                aria-label="Select all invoices on this page"
+              />
+            </th>
+            <th scope="col">Bill No</th>
+            <th scope="col">Date</th>
+            <th scope="col">Client</th>
+            <th scope="col">Period</th>
+            <th scope="col" class="num">Grand total</th>
+            <th scope="col">Status</th>
+            <th scope="col">Due</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invoice of invoices(); track invoice.id) {
+            <tr>
+              <td>
+                <input
+                  type="checkbox"
+                  class="h-5 w-5"
+                  [checked]="selected().has(invoice.id)"
+                  (change)="toggle(invoice.id)"
+                  [attr.aria-label]="'Select ' + (invoice.invoiceNumber ?? 'draft')"
+                />
+              </td>
+              <td>
+                <a class="link-btn" [routerLink]="['/invoices', invoice.id]">
+                  {{ invoice.invoiceNumber ?? 'Draft' }}
+                </a>
+              </td>
+              <td>{{ date(invoice.invoiceDate) }}</td>
+              <td>{{ invoice.clientName }}</td>
+              <td class="inv-muted">{{ invoice.periodLabel ?? '—' }}</td>
+              <td class="num">₹{{ rupees(invoice.grandTotal) }}</td>
+              <td>
+                <span class="pill" [class]="'pill ' + statusPill(invoice.status)">
+                  {{ statusLabel(invoice.status) }}
+                </span>
+              </td>
+              <td>
+                @if (isOverdue(invoice)) {
+                  <span class="inv-overdue">Overdue · {{ date(invoice.dueDate) }}</span>
+                } @else {
+                  {{ date(invoice.dueDate) }}
+                }
+              </td>
+              <td>
+                <div class="inv-actions">
+                  <a
+                    class="inv-icon-btn grid place-items-center"
+                    [routerLink]="['/invoices', invoice.id]"
+                    [attr.aria-label]="'Preview ' + (invoice.invoiceNumber ?? 'draft')"
+                    >👁</a
+                  >
+                  @switch (invoice.status) {
+                    @case ('DRAFT') {
+                      <a class="ghost-btn" [routerLink]="['/invoices', invoice.id, 'edit']">Edit</a>
+                      <button
+                        type="button"
+                        class="primary-btn"
+                        [disabled]="busyId() === invoice.id"
+                        (click)="issue(invoice)"
+                      >
+                        Issue
+                      </button>
+                      <button
+                        type="button"
+                        class="link-btn link-btn--danger"
+                        [disabled]="busyId() === invoice.id"
+                        (click)="remove(invoice)"
+                      >
+                        Delete
+                      </button>
+                    }
+                    @case ('ISSUED') {
+                      <button
+                        type="button"
+                        class="ghost-btn"
+                        [disabled]="busyId() === invoice.id"
+                        (click)="markPaid(invoice)"
+                      >
+                        Mark paid
+                      </button>
+                      <button
+                        type="button"
+                        class="link-btn link-btn--danger"
+                        [disabled]="busyId() === invoice.id"
+                        (click)="cancel(invoice)"
+                      >
+                        Cancel
+                      </button>
+                    }
+                    @case ('PAID') {
+                      <button
+                        type="button"
+                        class="link-btn link-btn--danger"
+                        [disabled]="busyId() === invoice.id"
+                        (click)="cancel(invoice)"
+                      >
+                        Cancel
+                      </button>
+                    }
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9" class="inv-empty">
+                @if (loading()) {
+                  Loading invoices…
+                } @else {
+                  No invoices yet. Create one, or start from an approved month on Monthly Sheets.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="sheet-card__body flex items-center justify-between">
+        <span class="inv-muted"
+          >{{ total() }} invoices · page {{ page() }} of {{ totalPages() }}</span
+        >
+        <div class="inv-toolbar">
+          <button
+            type="button"
+            class="ghost-btn"
+            [disabled]="page() <= 1"
+            (click)="load(page() - 1)"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="ghost-btn"
+            [disabled]="page() >= totalPages()"
+            (click)="load(page() + 1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+</div>

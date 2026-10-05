@@ -130,6 +130,11 @@ export const appRoutes: Routes = [
       import('./features/timesheet/timesheet.routes').then((m) => m.timesheetRoutes),
   },
   {
+    path: 'invoices',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/invoices/invoices.routes').then((m) => m.invoiceRoutes),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },

@@ -1,0 +1,159 @@
+/* Layout shared by the invoice pages; colours and controls come from sheets-theme.scss. */
+
+.inv-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.inv-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--sheet-line);
+  white-space: nowrap;
+}
+
+.inv-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--sheet-line);
+  color: #e2e8f0;
+  vertical-align: middle;
+}
+
+.inv-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.inv-scroll {
+  overflow-x: auto;
+}
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .inv-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inv-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.inv-span-all {
+  grid-column: 1 / -1;
+}
+
+.inv-overdue {
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+.inv-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.inv-error {
+  color: #fca5a5;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.inv-muted {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.inv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.inv-tabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.inv-tab {
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--sheet-line);
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inv-tab[aria-pressed='true'] {
+  background: var(--sheet-accent-soft);
+  border-color: var(--sheet-accent);
+  color: #fff;
+}
+
+.inv-tab:focus-visible,
+.inv-icon-btn:focus-visible {
+  outline: 2px solid var(--sheet-accent);
+  outline-offset: 2px;
+}
+
+.inv-icon-btn {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--sheet-line);
+  background: transparent;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+
+.inv-icon-btn:hover:not(:disabled) {
+  border-color: var(--sheet-line-strong);
+  color: #fff;
+}
+
+.inv-totals {
+  margin-left: auto;
+  width: 100%;
+  max-width: 20rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.inv-totals > div {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+}
+
+.inv-totals__grand {
+  border-top: 1px solid var(--sheet-line-strong);
+  padding-top: 0.45rem;
+  font-weight: 700;
+  color: #fff !important;
+}

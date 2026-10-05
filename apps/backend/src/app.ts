@@ -43,6 +43,8 @@ app.use(
   cors({
     origin: config.corsOrigins,
     credentials: true,
+    // Downloads name themselves from this header, which cross-origin reads cannot see otherwise.
+    exposedHeaders: ['Content-Disposition'],
   })
 );
 

@@ -157,6 +157,10 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         name: 'approvalMode',
         description: 'Whether freelancer sheets need sign-off, and by whom.',
       },
+      {
+        name: 'invoices',
+        description: 'Owner-only bills: profile, clients, numbering, issue and export.',
+      },
     ],
     components: {
       securitySchemes: {

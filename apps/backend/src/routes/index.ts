@@ -37,6 +37,7 @@ import dailySheetsRoutes from '../modules/daily-sheets/daily-sheets.routes';
 import monthlySheetsRoutes from '../modules/monthly-sheets/monthly-sheets.routes';
 import timesheetsRoutes from '../modules/timesheets/timesheets.routes';
 import approvalModeRoutes from '../modules/approval-mode/approval-mode.routes';
+import invoicesRoutes from '../modules/invoices/invoices.routes';
 import cmsRoutes from '../modules/cms/cms.routes';
 
 import operationsHealthRoutes from '../modules/operations/health/health.routes';
@@ -99,4 +100,5 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/monthly-sheets', monthlySheetsRoutes);
   app.use('/api/v1/timesheets', timesheetsRoutes);
   app.use('/api/v1/approval-mode', approvalModeRoutes);
+  app.use('/api/v1/invoices', invoicesRoutes);
 }

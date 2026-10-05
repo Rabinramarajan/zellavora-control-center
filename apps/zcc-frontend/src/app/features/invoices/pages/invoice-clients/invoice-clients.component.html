@@ -1,0 +1,94 @@
+<div class="sheet-page">
+  <a class="back-link" routerLink="/invoices">‹ Invoices</a>
+  <header class="sheet-header">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Clients</h1>
+      <p class="text-sm text-slate-400 mt-0.5">Who you bill. Shown under "To," on each invoice.</p>
+    </div>
+    <button type="button" class="primary-btn" (click)="startAdd()">
+      <span aria-hidden="true">＋</span> New client
+    </button>
+  </header>
+
+  @if (editingId() !== null) {
+    <form class="sheet-card" [formGroup]="form" (ngSubmit)="save()">
+      <div class="sheet-card__head">
+        <h2>{{ editingId() ? 'Edit client' : 'New client' }}</h2>
+      </div>
+      <div class="sheet-card__body inv-grid inv-grid--2">
+        <label class="field">
+          <span class="field__label">Name *</span>
+          <input class="field__input" formControlName="name" />
+        </label>
+        <label class="field">
+          <span class="field__label">GST No</span>
+          <input class="field__input uppercase" formControlName="gstin" maxlength="15" />
+          @if (form.controls.gstin.invalid && form.controls.gstin.touched) {
+            <span class="inv-error">Not a valid GSTIN</span>
+          }
+        </label>
+        <label class="field inv-span-all">
+          <span class="field__label">Address (one line per row) *</span>
+          <textarea class="field__input" rows="3" formControlName="addressLines"></textarea>
+        </label>
+        <label class="field">
+          <span class="field__label">Attn name</span>
+          <input class="field__input" formControlName="attnName" placeholder="Mr. Kumar" />
+        </label>
+        <label class="field">
+          <span class="field__label">Attn designation</span>
+          <input class="field__input" formControlName="attnDesignation" />
+        </label>
+        <label class="field">
+          <span class="field__label">Email</span>
+          <input class="field__input" type="email" formControlName="email" />
+        </label>
+        <div class="inv-toolbar inv-span-all">
+          <button type="submit" class="primary-btn" [disabled]="saving()">Save client</button>
+          <button type="button" class="ghost-btn" (click)="editingId.set(null)">Close</button>
+        </div>
+      </div>
+    </form>
+  }
+
+  <section class="sheet-card">
+    <div class="inv-scroll">
+      <table class="inv-table">
+        <caption class="sr-only">
+          Clients
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">GST No</th>
+            <th scope="col">Attn</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (client of clients(); track client.id) {
+            <tr>
+              <td>{{ client.name }}</td>
+              <td>{{ client.gstin ?? '—' }}</td>
+              <td>{{ client.attnName ?? '—' }}</td>
+              <td>
+                <div class="inv-actions">
+                  <button type="button" class="ghost-btn" (click)="startEdit(client)">Edit</button>
+                  <button type="button" class="link-btn link-btn--danger" (click)="remove(client)">
+                    Remove
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="inv-empty">
+                {{ loading() ? 'Loading…' : 'No clients yet.' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

@@ -67,7 +67,12 @@ describe('selected menu access', () => {
     expect(childKeys('portfolio')).toHaveLength(8);
     expect(childKeys('content')).toEqual(['blog', 'media', 'cms-builder']);
     expect(childKeys('appearance')).toEqual(['theme-builder']);
-    expect(childKeys('freelancer')).toEqual(['daily-sheets', 'monthly-sheets', 'timesheets']);
+    expect(childKeys('freelancer')).toEqual([
+      'daily-sheets',
+      'monthly-sheets',
+      'timesheets',
+      'invoices',
+    ]);
   });
   it('gives the owner the full grouped sidebar with a single place for user admin', async () => {
     const menus = await MenuService.loadForUserWithPerms('owner', 'org', new Set(['*:*']));
@@ -151,6 +156,7 @@ describe('navigationPermissionDefs', () => {
       'monthly-sheets',
       'timesheets',
       'approval-queue',
+      'invoices',
     ]);
   });
 });
