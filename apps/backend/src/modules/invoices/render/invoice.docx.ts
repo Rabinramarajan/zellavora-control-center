@@ -1,178 +1,183 @@
 import {
   AlignmentType,
-  BorderStyle,
   Document,
+  HeightRule,
   Packer,
   Paragraph,
-  ShadingType,
   Table,
   TableCell,
+  TableLayoutType,
   TableRow,
   TextRun,
+  VerticalAlign,
   WidthType,
 } from 'docx';
-import { InvoiceViewModel } from './invoice.viewmodel';
+import {
+  InvoiceViewModel,
+  ITEM_AREA_ROWS,
+  TRAILING_BLANK_ROWS,
+  footerText,
+} from './invoice.viewmodel';
 
-/** Word output is built from the view-model directly; HTML-to-Word conversion renders poorly. */
+/** Word output follows the same grid as invoice.html.ts, built natively rather than converted. */
 
 type Align = (typeof AlignmentType)[keyof typeof AlignmentType];
 
-const p = (
-  text: string,
-  options: { bold?: boolean; align?: Align; color?: string } = {}
-): Paragraph =>
-  new Paragraph({
-    alignment: options.align,
-    children: [new TextRun({ text, bold: options.bold, color: options.color })],
-  });
+interface Run {
+  text: string;
+  bold?: boolean;
+  size?: number;
+}
 
-const labelled = (label: string, value: string, align?: Align): Paragraph =>
+/** A4 is 11906 twips wide; 850-twip (15 mm) margins leave this for the table. */
+const CONTENT_WIDTH = 10206;
+const COLUMN_SHARES = [0.083, 0.436, 0.148, 0.166, 0.167];
+const COLUMN_WIDTHS = COLUMN_SHARES.map((share) => Math.round(CONTENT_WIDTH * share));
+/** Blank rows keep the height they have on the paper bill (≈ 0.9 cm). */
+const BLANK_ROW_TWIPS = 500;
+
+const paragraph = (run: Run, align?: Align): Paragraph =>
   new Paragraph({
     alignment: align,
-    children: [new TextRun({ text: `${label}: `, bold: true }), new TextRun(value)],
+    children: [new TextRun({ text: run.text, bold: run.bold, size: run.size })],
   });
 
 const cell = (
-  paragraphs: Paragraph[],
-  options: { width?: number; header?: boolean } = {}
-): TableCell =>
-  new TableCell({
-    children: paragraphs,
-    width: options.width ? { size: options.width, type: WidthType.PERCENTAGE } : undefined,
-    shading: options.header
-      ? { type: ShadingType.CLEAR, color: 'auto', fill: 'F2F2F2' }
-      : undefined,
+  runs: (Run | null)[],
+  options: { align?: Align; span?: number; top?: boolean } = {}
+): TableCell => {
+  const present = runs.filter((run): run is Run => run !== null);
+  const span = options.span ?? 1;
+  return new TableCell({
+    columnSpan: span > 1 ? span : undefined,
+    verticalAlign: options.top ? VerticalAlign.TOP : VerticalAlign.CENTER,
+    margins: { top: 60, bottom: 60, left: 100, right: 100 },
+    children: (present.length ? present : [{ text: '' }]).map((run) =>
+      paragraph(run, options.align)
+    ),
   });
-
-const spacer = (): Paragraph => new Paragraph({ text: '' });
-
-const NO_BORDERS = {
-  top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-  bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-  left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-  right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-  insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-  insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
 };
 
-const boxed = (title: string, lines: string[]): Table =>
-  new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({
-        children: [cell([p(title, { bold: true }), ...lines.map((line) => p(line))])],
-      }),
-    ],
+const row = (cells: TableCell[], blank = false): TableRow =>
+  new TableRow({
+    cantSplit: true,
+    children: cells,
+    height: blank ? { value: BLANK_ROW_TWIPS, rule: HeightRule.ATLEAST } : undefined,
   });
+
+const blankRow = (): TableRow => row([cell([]), cell([]), cell([]), cell([]), cell([])], true);
+
+const amountRow = (label: string, value: string, bold: boolean, words?: string): TableRow =>
+  row([
+    cell([]),
+    cell([words ? { text: words } : null], { span: 2 }),
+    cell([{ text: label, bold }], { align: AlignmentType.RIGHT }),
+    cell([{ text: value, bold: true }], { align: AlignmentType.RIGHT }),
+  ]);
 
 export const renderInvoiceDocx = async (vm: InvoiceViewModel): Promise<Buffer> => {
-  const right = AlignmentType.RIGHT;
-  const headerCells = ['Sl.No', 'Description Of Service', 'Qty', 'Rate', 'Value'];
-  const widths = [8, 50, 10, 15, 17];
-
-  const itemTable = new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({
-        tableHeader: true,
-        children: headerCells.map((text, index) =>
-          cell([p(text, { bold: true, align: index >= 2 ? right : undefined })], {
-            width: widths[index],
-            header: true,
-          })
-        ),
-      }),
-      ...vm.items.map(
-        (item) =>
-          new TableRow({
-            cantSplit: true,
-            children: [
-              cell([p(String(item.slNo))]),
-              cell([
-                p(item.description),
-                ...(item.note ? [p(item.note, { color: '555555' })] : []),
-                ...(vm.periodLabel && item.slNo === 1
-                  ? [p(vm.periodLabel, { color: '555555' })]
-                  : []),
-              ]),
-              cell([p(item.qty, { align: right })]),
-              cell([p(item.rate, { align: right })]),
-              cell([p(item.value, { align: right })]),
-            ],
-          })
-      ),
-    ],
-  });
-
-  const heading = new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    borders: NO_BORDERS,
-    rows: [
-      new TableRow({
-        children: [
-          cell(
-            [
-              p('To,', { bold: true }),
-              p(vm.client.name),
-              ...vm.client.addressLines.map((line) => p(line)),
-              ...(vm.client.gstin ? [p(`GST No: ${vm.client.gstin}`)] : []),
-            ],
-            { width: 60 }
-          ),
-          cell(
-            [
-              labelled('Bill No', vm.number ?? 'DRAFT', right),
-              labelled('Date', vm.dateText, right),
-              ...(vm.dueDateText ? [labelled('Due', vm.dueDateText, right)] : []),
-            ],
-            { width: 40 }
-          ),
+  const center = AlignmentType.CENTER;
+  const rows: TableRow[] = [
+    row([
+      cell(
+        [
+          { text: 'To,' },
+          { text: vm.client.name, bold: true },
+          ...vm.client.addressLines.map((text) => ({ text })),
+          vm.client.gstin ? { text: `GST No: ${vm.client.gstin}`, bold: true } : null,
         ],
-      }),
-    ],
-  });
+        { span: 2, top: true }
+      ),
+      cell(
+        [
+          { text: `Bill No: ${vm.number ?? 'DRAFT'}`, bold: true },
+          { text: `Date: ${vm.dateText}`, bold: true },
+          { text: vm.seller.name, bold: true, size: 23 },
+          ...vm.seller.addressLines.map((text) => ({ text })),
+          vm.seller.pan ? { text: `PAN No: ${vm.seller.pan}`, bold: true } : null,
+          vm.seller.gstin ? { text: `GST No: ${vm.seller.gstin}`, bold: true } : null,
+        ],
+        { span: 3, top: true }
+      ),
+    ]),
+    row([
+      cell([vm.client.attn ? { text: `Attn: ${vm.client.attn}`, bold: true } : null], { span: 2 }),
+      cell([], { span: 3 }),
+    ]),
+    row([
+      cell([{ text: 'Sl.No', bold: true }], { align: center }),
+      cell([{ text: 'Description Of Service', bold: true }]),
+      cell([{ text: 'Qty', bold: true }], { align: center }),
+      cell([{ text: 'Rate', bold: true }], { align: center }),
+      cell([{ text: 'Value', bold: true }], { align: center }),
+    ]),
+    ...vm.items.map((item) =>
+      row([
+        cell([{ text: String(item.slNo) }], { align: center }),
+        cell([{ text: item.description, bold: true }, item.note ? { text: item.note } : null]),
+        cell([{ text: item.qty }], { align: center }),
+        cell([{ text: item.rate }], { align: center }),
+        cell([{ text: item.value, bold: true }], { align: center }),
+      ])
+    ),
+    ...Array.from({ length: Math.max(0, ITEM_AREA_ROWS - vm.items.length) }, blankRow),
+    row(
+      [cell([]), cell([{ text: vm.periodLabel ?? '', bold: true }]), cell([]), cell([]), cell([])],
+      true
+    ),
+    blankRow(),
+    amountRow('Total', vm.totals.subtotal, true),
+    ...(vm.totals.tax ? [amountRow(vm.totals.tax.label, vm.totals.tax.amount, false)] : []),
+    amountRow('Advance', vm.totals.advance, false, `Amount In Rupees: ${vm.amountInWords}`),
+    amountRow('Grand Total', vm.totals.grand, true),
+    ...Array.from({ length: TRAILING_BLANK_ROWS }, blankRow),
+    row([cell([]), cell([{ text: footerText(vm) }], { span: 4, align: AlignmentType.RIGHT })]),
+    row([
+      cell([]),
+      cell(
+        vm.bank
+          ? [
+              { text: 'Bank Details', bold: true },
+              { text: `Account Name: ${vm.bank.accountName}`, bold: true },
+              { text: `Bank: ${vm.bank.bank}` },
+              vm.bank.branch ? { text: `Branch: ${vm.bank.branch}` } : null,
+              { text: `Account Number: ${vm.bank.accountNumber}` },
+              { text: `IFSC Code: ${vm.bank.ifsc}` },
+            ]
+          : [],
+        { top: true }
+      ),
+      cell(
+        vm.terms
+          ? [
+              { text: 'Terms & Conditions:', bold: true },
+              ...vm.terms.split(/\r?\n/).map((text) => ({ text })),
+            ]
+          : [],
+        { span: 3, top: true }
+      ),
+    ]),
+  ];
 
   const stamp = vm.isDraft ? 'DRAFT' : vm.isCancelled ? 'CANCELLED' : null;
-
   const doc = new Document({
     title: `Invoice ${vm.number ?? 'Draft'}`,
     styles: { default: { document: { run: { font: 'Arial', size: 20 } } } },
     sections: [
       {
+        properties: {
+          page: { margin: { top: 1700, bottom: 850, left: 850, right: 850 } },
+        },
         children: [
           ...(stamp
-            ? [p(stamp, { bold: true, align: AlignmentType.CENTER, color: 'AAAAAA' })]
+            ? [paragraph({ text: stamp, bold: true, size: 36 }, AlignmentType.CENTER)]
             : []),
-          heading,
-          spacer(),
-          p(vm.seller.name, { bold: true }),
-          ...vm.seller.addressLines.map((line) => p(line)),
-          ...(vm.seller.pan ? [p(`PAN No: ${vm.seller.pan}`)] : []),
-          ...(vm.seller.gstin ? [p(`GST No: ${vm.seller.gstin}`)] : []),
-          ...(vm.client.attn ? [p(`Attn: ${vm.client.attn}`)] : []),
-          spacer(),
-          itemTable,
-          spacer(),
-          labelled('Total', vm.totals.subtotal, right),
-          ...(vm.totals.tax ? [labelled(vm.totals.tax.label, vm.totals.tax.amount, right)] : []),
-          labelled('Advance', vm.totals.advance, right),
-          labelled('Grand Total', vm.totals.grand, right),
-          spacer(),
-          labelled('Amount In Rupees', vm.amountInWords),
-          ...(vm.footerNote ? [p(vm.footerNote, { color: '555555' })] : []),
-          ...(vm.bank
-            ? [
-                spacer(),
-                boxed('Bank Details', [
-                  `Account Name: ${vm.bank.accountName}`,
-                  `Bank: ${vm.bank.bank}`,
-                  ...(vm.bank.branch ? [`Branch: ${vm.bank.branch}`] : []),
-                  `Account Number: ${vm.bank.accountNumber}`,
-                  `IFSC Code: ${vm.bank.ifsc}`,
-                ]),
-              ]
-            : []),
-          ...(vm.terms ? [spacer(), boxed('Terms & Conditions:', vm.terms.split(/\r?\n/))] : []),
+          new Table({
+            width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+            columnWidths: COLUMN_WIDTHS,
+            layout: TableLayoutType.FIXED,
+            rows,
+          }),
         ],
       },
     ],

@@ -1,11 +1,16 @@
 import pdfmake from 'pdfmake';
 import type { Content, TableCell, TDocumentDefinitions } from 'pdfmake/interfaces';
-import { InvoiceViewModel } from './invoice.viewmodel';
+import {
+  InvoiceViewModel,
+  ITEM_AREA_ROWS,
+  TRAILING_BLANK_ROWS,
+  footerText,
+} from './invoice.viewmodel';
 
 /*
  * pdfmake rather than a headless browser: the API runs on serverless hosts
- * without Chromium. The layout mirrors invoice.html.ts. PDFKit's built-in
- * Helvetica needs no font files; it has no ₹ glyph, so amounts stay plain.
+ * without Chromium. The grid mirrors invoice.html.ts row for row. PDFKit's
+ * built-in Helvetica needs no font files.
  */
 const HELVETICA = {
   normal: 'Helvetica',
@@ -20,166 +25,145 @@ pdfmake.setFonts({ Helvetica: HELVETICA });
 pdfmake.setUrlAccessPolicy(() => false);
 pdfmake.setLocalAccessPolicy((path) => BUILT_IN_FONTS.has(path));
 
-const BORDER = '#222222';
+/** Column shares of the paper bill: Sl.No, Description, Qty, Rate, Value. */
+const WIDTHS = ['8.3%', '43.6%', '14.8%', '16.6%', '16.7%'];
+/** Height a blank row keeps, in points (≈ 34px on the HTML bill). */
+const BLANK_ROW_HEIGHT = 18;
 
-const textLines = (values: (string | undefined)[]): string =>
-  values.filter((value): value is string => Boolean(value)).join('\n');
+type Line = { text: string; bold?: boolean; fontSize?: number };
 
-const itemCell = (vm: InvoiceViewModel, item: InvoiceViewModel['items'][number]): TableCell => ({
-  stack: [
-    { text: item.description },
-    ...(item.note ? [{ text: item.note, color: '#555555' }] : []),
-    ...(vm.periodLabel && item.slNo === 1 ? [{ text: vm.periodLabel, color: '#555555' }] : []),
-  ],
+const stack = (items: (Line | null)[]): TableCell => ({
+  stack: items.filter((item): item is Line => item !== null),
 });
 
-const totalRow = (label: string, value: string, bold = false): Content => ({
-  columns: [
-    { text: label, bold },
-    { text: value, alignment: 'right', bold },
-  ],
-  margin: [0, 2, 0, 2],
-});
+/** pdfmake wants a placeholder for every cell a span covers. */
+const span = (cell: TableCell, count: number): TableCell[] => [
+  { ...(cell as object), colSpan: count } as TableCell,
+  ...Array.from({ length: count - 1 }, () => ({}) as TableCell),
+];
 
-const box = (title: string, body: string): Content => ({
-  table: {
-    widths: ['*'],
-    body: [[{ stack: [{ text: title, bold: true }, { text: body }], margin: [4, 4, 4, 4] }]],
-  },
-  layout: { hLineColor: () => BORDER, vLineColor: () => BORDER },
-  margin: [0, 18, 0, 0],
-  unbreakable: true,
-});
+const empty = (): TableCell => ({ text: '' });
+const blank = (): TableCell[] => [empty(), empty(), empty(), empty(), empty()];
+
+const amountRow = (label: string, value: string, bold: boolean, words?: string): TableCell[] => [
+  empty(),
+  ...span({ text: words ?? '' }, 2),
+  { text: label, alignment: 'right', bold },
+  { text: value, alignment: 'right', bold: true },
+];
 
 export const buildPdfDefinition = (vm: InvoiceViewModel): TDocumentDefinitions => {
-  const header = ['Sl.No', 'Description Of Service', 'Qty', 'Rate', 'Value'].map(
-    (text, index): TableCell => ({
-      text,
-      bold: true,
-      fillColor: '#f2f2f2',
-      alignment: index >= 2 ? 'right' : 'left',
-    })
+  const body: TableCell[][] = [];
+  const blankIndexes = new Set<number>();
+  const addBlank = (): void => {
+    blankIndexes.add(body.length);
+    body.push(blank());
+  };
+
+  body.push([
+    ...span(
+      stack([
+        { text: 'To,' },
+        { text: vm.client.name, bold: true },
+        ...vm.client.addressLines.map((text) => ({ text })),
+        vm.client.gstin ? { text: `GST No: ${vm.client.gstin}`, bold: true } : null,
+      ]),
+      2
+    ),
+    ...span(
+      stack([
+        { text: `Bill No: ${vm.number ?? 'DRAFT'}`, bold: true },
+        { text: `Date: ${vm.dateText}`, bold: true },
+        { text: vm.seller.name, bold: true, fontSize: 11 },
+        ...vm.seller.addressLines.map((text) => ({ text })),
+        vm.seller.pan ? { text: `PAN No: ${vm.seller.pan}`, bold: true } : null,
+        vm.seller.gstin ? { text: `GST No: ${vm.seller.gstin}`, bold: true } : null,
+      ]),
+      3
+    ),
+  ]);
+  body.push([
+    ...span({ text: vm.client.attn ? `Attn: ${vm.client.attn}` : ' ', bold: true }, 2),
+    ...span(empty(), 3),
+  ]);
+  body.push([
+    { text: 'Sl.No', bold: true, alignment: 'center' },
+    { text: 'Description Of Service', bold: true },
+    { text: 'Qty', bold: true, alignment: 'center' },
+    { text: 'Rate', bold: true, alignment: 'center' },
+    { text: 'Value', bold: true, alignment: 'center' },
+  ]);
+  for (const item of vm.items) {
+    body.push([
+      { text: String(item.slNo), alignment: 'center' },
+      stack([{ text: item.description, bold: true }, item.note ? { text: item.note } : null]),
+      { text: item.qty, alignment: 'center' },
+      { text: item.rate, alignment: 'center' },
+      { text: item.value, alignment: 'center', bold: true },
+    ]);
+  }
+  for (let i = vm.items.length; i < ITEM_AREA_ROWS; i++) addBlank();
+  blankIndexes.add(body.length);
+  body.push([empty(), { text: vm.periodLabel ?? '', bold: true }, empty(), empty(), empty()]);
+  addBlank();
+  body.push(amountRow('Total', vm.totals.subtotal, true));
+  if (vm.totals.tax) body.push(amountRow(vm.totals.tax.label, vm.totals.tax.amount, false));
+  body.push(
+    amountRow('Advance', vm.totals.advance, false, `Amount In Rupees: ${vm.amountInWords}`)
   );
-  const rows: TableCell[][] = vm.items.map((item) => [
-    { text: String(item.slNo) },
-    itemCell(vm, item),
-    { text: item.qty, alignment: 'right' },
-    { text: item.rate, alignment: 'right' },
-    { text: item.value, alignment: 'right' },
+  body.push(amountRow('Grand Total', vm.totals.grand, true));
+  for (let i = 0; i < TRAILING_BLANK_ROWS; i++) addBlank();
+  body.push([empty(), ...span({ text: footerText(vm), alignment: 'right' }, 4)]);
+  body.push([
+    empty(),
+    vm.bank
+      ? stack([
+          { text: 'Bank Details', bold: true },
+          { text: `Account Name: ${vm.bank.accountName}`, bold: true },
+          { text: `Bank: ${vm.bank.bank}` },
+          vm.bank.branch ? { text: `Branch: ${vm.bank.branch}` } : null,
+          { text: `Account Number: ${vm.bank.accountNumber}` },
+          { text: `IFSC Code: ${vm.bank.ifsc}` },
+        ])
+      : empty(),
+    ...span(
+      vm.terms
+        ? stack([
+            { text: 'Terms & Conditions:', bold: true },
+            ...vm.terms.split(/\r?\n/).map((text) => ({ text })),
+          ])
+        : empty(),
+      3
+    ),
   ]);
 
   const stampText = vm.isDraft ? 'DRAFT' : vm.isCancelled ? 'CANCELLED' : undefined;
+  const table: Content = {
+    table: {
+      widths: WIDTHS,
+      body,
+      heights: (row: number) => (blankIndexes.has(row) ? BLANK_ROW_HEIGHT : 'auto'),
+      dontBreakRows: true,
+    },
+    layout: {
+      hLineWidth: () => 0.75,
+      vLineWidth: () => 0.75,
+      hLineColor: () => '#000000',
+      vLineColor: () => '#000000',
+      paddingLeft: () => 5,
+      paddingRight: () => 5,
+      paddingTop: () => 4,
+      paddingBottom: () => 4,
+    },
+  };
 
   return {
     pageSize: 'A4',
-    pageMargins: [42, 45, 42, 45],
-    defaultStyle: { font: 'Helvetica', fontSize: 10, lineHeight: 1.25, color: '#111111' },
+    pageMargins: [42, 85, 42, 42],
+    defaultStyle: { font: 'Helvetica', fontSize: 9.5, lineHeight: 1.15, color: '#000000' },
     info: { title: `Invoice ${vm.number ?? 'Draft'}` },
     watermark: stampText ? { text: stampText, opacity: 0.08, bold: true } : undefined,
-    content: [
-      {
-        columns: [
-          {
-            width: '*',
-            stack: [
-              { text: 'To,', bold: true },
-              {
-                text: textLines([
-                  vm.client.name,
-                  ...vm.client.addressLines,
-                  vm.client.gstin && `GST No: ${vm.client.gstin}`,
-                ]),
-              },
-            ],
-          },
-          {
-            width: 'auto',
-            alignment: 'right',
-            stack: [
-              { text: [{ text: 'Bill No: ', bold: true }, vm.number ?? 'DRAFT'] },
-              { text: [{ text: 'Date: ', bold: true }, vm.dateText] },
-              ...(vm.dueDateText
-                ? [{ text: [{ text: 'Due: ', bold: true }, vm.dueDateText] }]
-                : []),
-            ],
-          },
-        ],
-        columnGap: 30,
-      },
-      {
-        margin: [0, 16, 0, 0],
-        stack: [
-          { text: vm.seller.name, bold: true },
-          {
-            text: textLines([
-              ...vm.seller.addressLines,
-              vm.seller.pan && `PAN No: ${vm.seller.pan}`,
-              vm.seller.gstin && `GST No: ${vm.seller.gstin}`,
-              vm.client.attn && `Attn: ${vm.client.attn}`,
-            ]),
-          },
-        ],
-      },
-      {
-        margin: [0, 20, 0, 0],
-        table: {
-          headerRows: 1,
-          widths: [34, '*', 45, 72, 80],
-          body: [header, ...rows],
-          dontBreakRows: true,
-        },
-        layout: {
-          hLineColor: () => BORDER,
-          vLineColor: () => BORDER,
-          paddingLeft: () => 6,
-          paddingRight: () => 6,
-          paddingTop: () => 4,
-          paddingBottom: () => 4,
-        },
-      },
-      {
-        columns: [
-          { width: '*', text: '' },
-          {
-            width: 200,
-            margin: [0, 10, 0, 0],
-            stack: [
-              totalRow('Total', vm.totals.subtotal),
-              ...(vm.totals.tax ? [totalRow(vm.totals.tax.label, vm.totals.tax.amount)] : []),
-              totalRow('Advance', vm.totals.advance),
-              {
-                canvas: [
-                  { type: 'line', x1: 0, y1: 0, x2: 200, y2: 0, lineWidth: 1, lineColor: BORDER },
-                ],
-              },
-              totalRow('Grand Total', vm.totals.grand, true),
-            ],
-          },
-        ],
-      },
-      {
-        margin: [0, 14, 0, 0],
-        text: [{ text: 'Amount In Rupees: ', bold: true }, vm.amountInWords],
-      },
-      ...(vm.footerNote
-        ? [{ margin: [0, 8, 0, 0], text: vm.footerNote, color: '#555555' } as Content]
-        : []),
-      ...(vm.bank
-        ? [
-            box(
-              'Bank Details',
-              textLines([
-                `Account Name: ${vm.bank.accountName}`,
-                `Bank: ${vm.bank.bank}`,
-                vm.bank.branch && `Branch: ${vm.bank.branch}`,
-                `Account Number: ${vm.bank.accountNumber}`,
-                `IFSC Code: ${vm.bank.ifsc}`,
-              ])
-            ),
-          ]
-        : []),
-      ...(vm.terms ? [box('Terms & Conditions:', vm.terms)] : []),
-    ],
+    content: [table],
   };
 };
 

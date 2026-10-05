@@ -33,6 +33,8 @@ export interface ParsedInvoice {
   warnings: string[];
 }
 
+import { groupIntoLines, type PositionedText } from '../../freelancer-sheets/import/timesheet-pdf';
+
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 const AMOUNT = String.raw`(?:₹|Rs\.?|INR)?\s*(\d[\d,]*(?:\.\d{1,2})?)`;
 const GSTIN = /\b(\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z])\b/i;
@@ -46,6 +48,7 @@ const ITEM_ROW = new RegExp(
   String.raw`^(\d{1,3})[.)]?\s+(.+?)\s+(\d[\d,]*(?:\.\d+)?)\s+${AMOUNT}\s+${AMOUNT}\s*$`,
   'i'
 );
+const BILL_NO_LABEL = /^\s*(?:Bill|Invoice)\s*(?:No|Number|#)/i;
 const ITEMS_HEADER = /\bSl\.?\s*No\b/i;
 const TOTALS_START = /^(?:Sub\s*)?Total\b|^Grand\s*Total\b|^Amount\s+In\b/i;
 
@@ -105,7 +108,7 @@ const readClient = (lines: readonly string[]): ParsedInvoice['client'] => {
   if (attnLine) {
     const [name, ...designation] = attnLine
       .replace(/^.*?\bAttn\.?\s*[:\-]?\s*/i, '')
-      .split(',')
+      .split(/\s+[-–]\s+|,/)
       .map((part) => part.trim());
     client.attnName = name || null;
     client.attnDesignation = designation.join(', ') || null;
@@ -127,7 +130,7 @@ const readClient = (lines: readonly string[]): ParsedInvoice['client'] => {
     const line = stripHeaderLabels(raw);
     if (line) block.push(line);
     // Without a GST line the address ends at the seller's block; cap it.
-    if (block.length >= 5) break;
+    if (block.length >= 7) break;
   }
 
   client.name = block[0] ?? null;
@@ -224,6 +227,33 @@ export const parseInvoiceLines = (rawLines: readonly string[]): ParsedInvoice =>
   return parsed;
 };
 
+/**
+ * The bill's header is two boxes side by side (client left, seller right).
+ * Grouping by row alone would interleave them, so above the item table the
+ * text is split at the Qty column and each side read top to bottom.
+ */
+export const pdfPagesToLines = (pages: readonly (readonly PositionedText[])[]): string[] =>
+  pages.flatMap((items) => {
+    const header = items.find((item) => ITEMS_HEADER.test(item.text));
+    if (!header) return groupIntoLines(items);
+    // "Bill No" opens the right-hand box; "Qty" is centred in its column, so it is only a fallback.
+    const billNo = items.find((item) => item.y > header.y + 3 && BILL_NO_LABEL.test(item.text));
+    const qty = items.find((item) => /^Qty\b/i.test(item.text.trim()) && item.y <= header.y + 3);
+    const xs = items.map((item) => item.x);
+    const split = billNo
+      ? billNo.x - 2
+      : qty
+        ? qty.x - 40
+        : (Math.min(...xs) + Math.max(...xs)) / 2;
+    const above = items.filter((item) => item.y > header.y + 3);
+    const rest = items.filter((item) => item.y <= header.y + 3);
+    return [
+      ...groupIntoLines(above.filter((item) => item.x < split)),
+      ...groupIntoLines(above.filter((item) => item.x >= split)),
+      ...groupIntoLines(rest),
+    ];
+  });
+
 export type InvoiceFileKind = 'pdf' | 'docx';
 
 export const invoiceFileKind = (file: File): InvoiceFileKind | null => {
@@ -238,9 +268,10 @@ export const readInvoiceFile = async (file: File): Promise<ParsedInvoice> => {
   const kind = invoiceFileKind(file);
   if (!kind) throw new Error('Only PDF and Word (.docx) bills can be imported.');
   if (kind === 'pdf') {
-    const { readPdfLines, withTimeout } =
+    const { readPdfPages, withTimeout } =
       await import('../../freelancer-sheets/import/timesheet-pdf');
-    const lines = await withTimeout(readPdfLines(file), 20_000, 'The PDF took too long to read.');
+    const pages = await withTimeout(readPdfPages(file), 20_000, 'The PDF took too long to read.');
+    const lines = pdfPagesToLines(pages);
     if (lines.length === 0) {
       throw new Error('This PDF has no text layer (it may be a scan), so it cannot be read.');
     }

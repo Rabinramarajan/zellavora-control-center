@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -23,6 +23,9 @@ export class InvoiceClientsComponent implements OnInit {
   private readonly bus = inject(ErrorBus);
   private readonly dialog = inject(AppDialogService);
   private readonly fb = inject(NonNullableFormBuilder);
+
+  /** Shown inside the settings page, without the page header and back link. */
+  public readonly embedded = input(false);
 
   protected readonly clients = signal<InvoiceClient[]>([]);
   protected readonly loading = signal(true);
@@ -92,7 +95,7 @@ export class InvoiceClientsComponent implements OnInit {
         )
       );
       this.editingId.set(null);
-      this.bus.push({ kind: 'info', message: 'Client saved', ttl: 3000 });
+      this.bus.push({ kind: 'info', message: 'Company saved', ttl: 3000 });
     } catch (error) {
       this.report(error);
     } finally {

@@ -1,4 +1,4 @@
-import { parseInvoiceLines } from './invoice-import';
+import { parseInvoiceLines, pdfPagesToLines } from './invoice-import';
 
 /** Lines as pdf.js groups them: the right-hand column shares a row with the left. */
 const SAMPLE = [
@@ -85,5 +85,79 @@ describe('parseInvoiceLines', () => {
 
   it('rejects impossible dates', () => {
     expect(parseInvoiceLines(['Date: 31/02/2026']).invoiceDate).toBeNull();
+  });
+});
+
+describe('pdfPagesToLines (RSTACK bill)', () => {
+  const L = 60;
+  const R = 300;
+  const item = (text: string, x: number, y: number): { text: string; x: number; y: number } => ({
+    text,
+    x,
+    y,
+  });
+  // PDF y grows upwards; left and right header boxes share baselines.
+  const page = [
+    item('To,', L, 760),
+    item('Bill No: FY26-27/04', R, 760),
+    item('RSTACK Solutions Private Limited', L, 748),
+    item('Date: 05/10/2026', R, 748),
+    item('Gurudas Heritage, Block A, Ground Floor,', L, 736),
+    item('Rabin R', R, 736),
+    item('#59/2, Kadrenahalli, 100 Ft Ring Road,', L, 724),
+    item('Plot No. 02, Thejon Illam, Ram Krishna Raja Nagar,', R, 724),
+    item('Banashankari 2nd Stage,', L, 712),
+    item('2, Bazaar Main Road, Sastri Nagar, Madipakkam,', R, 712),
+    item('Bangalore, Karnataka – 560070', L, 700),
+    item('Chennai, Tamil Nadu- 600091', R, 700),
+    item('GST No: 29AAKCR1356H1Z4', L, 688),
+    item('PAN No: ETYPR9230L', R, 688),
+    item('Attn: Mr. Hemanth Kumar - Managing Director', L, 670),
+    item('Sl.No', 62, 650),
+    item('Description Of Service', 90, 650),
+    item('Qty', 330, 650),
+    item('Rate', 410, 650),
+    item('Value', 490, 650),
+    item('1', 65, 630),
+    item('Frontend Development Support', 90, 630),
+    item('1', 335, 630),
+    item('60000', 405, 630),
+    item('60000', 485, 630),
+    item("For the month of September '26", 90, 560),
+    item('Total', 420, 525),
+    item('60000', 485, 525),
+    item('Amount In Rupees: Sixty Thousand Only', 90, 505),
+    item('Advance', 415, 505),
+    item('0', 500, 505),
+    item('Grand Total', 405, 485),
+    item('60000', 485, 485),
+  ];
+
+  it('reads client and seller boxes separately and the bill cleanly', () => {
+    const parsed = parseInvoiceLines(pdfPagesToLines([page]));
+    expect(parsed.invoiceNumber).toBe('FY26-27/04');
+    expect(parsed.invoiceDate).toBe('2026-10-05');
+    expect(parsed.client.name).toBe('RSTACK Solutions Private Limited');
+    expect(parsed.client.addressLines).toEqual([
+      'Gurudas Heritage, Block A, Ground Floor,',
+      '#59/2, Kadrenahalli, 100 Ft Ring Road,',
+      'Banashankari 2nd Stage,',
+      'Bangalore, Karnataka – 560070',
+    ]);
+    expect(parsed.client.gstin).toBe('29AAKCR1356H1Z4');
+    expect(parsed.client.attnName).toBe('Mr. Hemanth Kumar');
+    expect(parsed.client.attnDesignation).toBe('Managing Director');
+    expect(parsed.items).toEqual([
+      {
+        description: 'Frontend Development Support',
+        note: null,
+        qty: 1,
+        rate: 60000,
+        amount: 60000,
+      },
+    ]);
+    expect(parsed.periodLabel).toBe("For the month of September '26");
+    expect([parsed.subtotal, parsed.advance, parsed.grandTotal]).toEqual([60000, 0, 60000]);
+    expect(parsed.warnings).toEqual([]);
   });
 });

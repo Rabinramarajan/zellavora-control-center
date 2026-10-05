@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ErrorBus } from '../../../../core/error/error-bus';
 import { SheetRequestError } from '../../../freelancer-sheets/sheets.models';
 import { InvoicesApi } from '../../invoices.api';
 import { InvoiceProfileInput } from '../../invoices.models';
+import { InvoiceClientsComponent } from '../invoice-clients/invoice-clients.component';
 
 const PAN = /^[A-Za-z]{5}\d{4}[A-Za-z]$/;
 const GSTIN = /^\d{2}[A-Za-z]{5}\d{4}[A-Za-z][1-9A-Za-z][Zz][0-9A-Za-z]$/;
@@ -14,7 +15,7 @@ const IFSC = /^[A-Za-z]{4}0[A-Za-z0-9]{6}$/;
 @Component({
   selector: 'app-invoice-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, InvoiceClientsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './invoice-settings.component.html',
   styleUrls: ['../../../freelancer-sheets/styles/sheets-theme.scss', '../../styles/invoices.scss'],
@@ -24,6 +25,10 @@ export class InvoiceSettingsComponent implements OnInit {
   private readonly bus = inject(ErrorBus);
   private readonly fb = inject(NonNullableFormBuilder);
 
+  /** `?tab=company` opens the companies you bill directly. */
+  protected readonly tab = signal<'you' | 'company'>(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('tab') === 'company' ? 'company' : 'you'
+  );
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly maskedAccount = signal<string | null>(null);

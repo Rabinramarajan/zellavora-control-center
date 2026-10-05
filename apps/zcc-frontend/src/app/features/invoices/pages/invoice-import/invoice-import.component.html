@@ -10,6 +10,19 @@
     </div>
   </header>
 
+  @if (hasProfile() === false) {
+    <div
+      class="notice notice--warning flex flex-wrap items-center justify-between gap-3"
+      role="alert"
+    >
+      <span>
+        Set up your invoice profile first. Your name, address and bank details are printed on every
+        imported bill.
+      </span>
+      <a class="primary-btn" routerLink="/invoices/settings">Open settings</a>
+    </div>
+  }
+
   <label
     class="sheet-card block cursor-pointer"
     [class.ring-2]="dragging()"
@@ -267,7 +280,7 @@
           <button
             type="submit"
             class="primary-btn"
-            [disabled]="draft.state === 'saving' || totals().grand < 0"
+            [disabled]="draft.state === 'saving' || totals().grand < 0 || hasProfile() === false"
           >
             Save invoice
           </button>

@@ -51,15 +51,15 @@ const source = (overrides: Partial<InvoiceRenderSource> = {}): InvoiceRenderSour
 describe('buildInvoiceViewModel', () => {
   it('formats Indian amounts and dd/MM/yyyy dates', () => {
     const vm = buildInvoiceViewModel(source());
-    expect(vm.totals.grand).toBe('60,000');
+    expect(vm.totals.grand).toBe('60000');
     expect(vm.dateText).toBe('05/10/2026');
-    expect(vm.client.attn).toBe('Mr. Kumar, Director');
+    expect(vm.client.attn).toBe('Mr. Kumar - Director');
     expect(vm.totals.tax).toBeUndefined();
   });
 
   it('shows a tax line only above zero', () => {
     const vm = buildInvoiceViewModel(source({ taxRate: D(18), taxAmount: D(10800) }));
-    expect(vm.totals.tax).toEqual({ label: 'Tax @ 18%', amount: '10,800' });
+    expect(vm.totals.tax).toEqual({ label: 'Tax @ 18%', amount: '10800' });
   });
 
   it('names files without slashes', () => {
@@ -98,7 +98,7 @@ describe('renderInvoiceHtml', () => {
       buildInvoiceViewModel(source({ status: 'DRAFT', invoiceNumber: null }))
     );
     expect(html).toContain('class="watermark">DRAFT');
-    expect(html).toContain('Bill No:</strong> DRAFT');
+    expect(html).toContain('<b>Bill No: DRAFT</b>');
   });
 
   it('carries the sample bill content', () => {
@@ -124,5 +124,46 @@ describe('binary exports', () => {
   it('produces a Word document (a zip)', async () => {
     const docx = await renderInvoiceDocx(buildInvoiceViewModel(source({ status: 'DRAFT' })));
     expect(docx.subarray(0, 2).toString()).toBe('PK');
+  });
+});
+
+describe('paper bill layout', () => {
+  const rstack = buildInvoiceViewModel(
+    source({
+      client: {
+        name: 'RSTACK Solutions Private Limited',
+        addressLines: ['Gurudas Heritage, Block A, Ground Floor,', 'Bangalore, Karnataka – 560070'],
+        gstin: '29AAKCR1356H1Z4',
+        attnName: 'Mr. Hemanth Kumar',
+        attnDesignation: 'Managing Director',
+      },
+      items: [
+        {
+          slNo: 1,
+          description: 'Frontend Development Support',
+          note: null,
+          qty: D(1),
+          rate: D(60000),
+          amount: D(60000),
+        },
+      ],
+    })
+  );
+  const html = renderInvoiceHtml(rstack);
+
+  it('prints plain figures and the Attn line as on the sample', () => {
+    expect(html).toContain('<b>60000</b>');
+    expect(html).not.toContain('60,000');
+    expect(html).toContain('Attn: Mr. Hemanth Kumar - Managing Director');
+    expect(html).toContain('<b>GST No: 29AAKCR1356H1Z4</b>');
+  });
+
+  it('pads the item area to four rows and keeps three blank rows before the note', () => {
+    expect(html.match(/<tr class="blank">/g)).toHaveLength(3 + 1 + 3);
+    expect(html).toContain('*Electronic bill signature not required');
+  });
+
+  it('puts the amount in words beside Advance', () => {
+    expect(html).toMatch(/Amount In Rupees: Sixty Thousand Only<\/td><td class="r">Advance/);
   });
 });

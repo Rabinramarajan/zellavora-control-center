@@ -74,6 +74,8 @@ export class InvoiceImportComponent implements OnInit {
   protected readonly activeKey = signal<number | null>(null);
   protected readonly fieldErrors = signal<Record<string, string>>({});
   protected readonly dragging = signal(false);
+  /** Imports print the seller and bank details, so saving waits for a profile. */
+  protected readonly hasProfile = signal<boolean | null>(null);
 
   protected readonly active = computed(
     () => this.drafts().find((draft) => draft.key === this.activeKey()) ?? null
@@ -121,7 +123,9 @@ export class InvoiceImportComponent implements OnInit {
 
   public async ngOnInit(): Promise<void> {
     try {
-      this.clients.set(await this.api.listClients());
+      const [clients, profile] = await Promise.all([this.api.listClients(), this.api.getProfile()]);
+      this.clients.set(clients);
+      this.hasProfile.set(profile !== null);
     } catch (error) {
       this.report(error);
     }

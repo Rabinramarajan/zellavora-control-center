@@ -10,10 +10,50 @@
     </div>
   </header>
 
-  @if (loading()) {
+  <div class="inv-tabs" role="tablist" aria-label="Settings sections">
+    <button
+      type="button"
+      role="tab"
+      class="inv-tab"
+      id="tab-you"
+      aria-controls="panel-you"
+      [attr.aria-selected]="tab() === 'you'"
+      [attr.aria-pressed]="tab() === 'you'"
+      (click)="tab.set('you')"
+    >
+      Your details
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="inv-tab"
+      id="tab-company"
+      aria-controls="panel-company"
+      [attr.aria-selected]="tab() === 'company'"
+      [attr.aria-pressed]="tab() === 'company'"
+      (click)="tab.set('company')"
+    >
+      Company details
+    </button>
+  </div>
+
+  @if (tab() === 'company') {
+    <section class="sheet-card" id="panel-company" role="tabpanel" aria-labelledby="tab-company">
+      <div class="sheet-card__body">
+        <app-invoice-clients [embedded]="true" />
+      </div>
+    </section>
+  } @else if (loading()) {
     <p class="inv-empty">Loading…</p>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="save()" class="grid gap-4">
+    <form
+      [formGroup]="form"
+      (ngSubmit)="save()"
+      class="grid gap-4"
+      id="panel-you"
+      role="tabpanel"
+      aria-labelledby="tab-you"
+    >
       <section class="sheet-card">
         <div class="sheet-card__head"><h2>Your details</h2></div>
         <div class="sheet-card__body inv-grid inv-grid--2">

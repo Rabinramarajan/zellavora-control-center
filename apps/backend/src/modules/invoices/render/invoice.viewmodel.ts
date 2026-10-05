@@ -90,14 +90,14 @@ export interface InvoiceViewModel {
   footerNote?: string;
 }
 
-const money = new Intl.NumberFormat('en-IN', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
-const quantity = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });
+/** Plain figures as on the paper bill: 60000, 1500.50; no grouping or symbol. */
+export const formatMoney = (value: Prisma.Decimal.Value): string => {
+  const amount = new Prisma.Decimal(value).toDecimalPlaces(2);
+  return amount.isInteger() ? amount.toFixed(0) : amount.toFixed(2);
+};
 
-export const formatMoney = (value: Prisma.Decimal.Value): string =>
-  money.format(new Prisma.Decimal(value).toNumber());
+const formatQuantity = (value: Prisma.Decimal.Value): string =>
+  new Prisma.Decimal(value).toDecimalPlaces(2).toString();
 
 /** dd/MM/yyyy from a UTC-midnight date. */
 export const formatDate = (date: Date): string => {
@@ -110,7 +110,9 @@ const optional = (value: string | null | undefined): string | undefined => value
 
 const attnText = (client: ClientSnapshot): string | undefined => {
   if (!client.attnName) return undefined;
-  return client.attnDesignation ? `${client.attnName}, ${client.attnDesignation}` : client.attnName;
+  return client.attnDesignation
+    ? `${client.attnName} - ${client.attnDesignation}`
+    : client.attnName;
 };
 
 export const splitLines = (text: string): string[] =>
@@ -145,7 +147,7 @@ export const buildInvoiceViewModel = (source: InvoiceRenderSource): InvoiceViewM
       slNo: item.slNo,
       description: item.description,
       note: optional(item.note),
-      qty: quantity.format(new Prisma.Decimal(item.qty).toNumber()),
+      qty: formatQuantity(item.qty),
       rate: formatMoney(item.rate),
       value: formatMoney(item.amount),
     })),
@@ -175,3 +177,14 @@ export const buildInvoiceViewModel = (source: InvoiceRenderSource): InvoiceViewM
 /** "Invoice_FY26-27-04_2026-10-05"; drafts use "Draft". */
 export const invoiceFileName = (vm: InvoiceViewModel): string =>
   `Invoice_${(vm.number ?? 'Draft').replace(/[^A-Za-z0-9-]+/g, '-')}_${vm.dateKey}`;
+
+/** Item rows on the bill, padded with blanks below the real lines. */
+export const ITEM_AREA_ROWS = 4;
+/** Blank rows between the totals and the signature note. */
+export const TRAILING_BLANK_ROWS = 3;
+
+/** The note above the bank block, starred as on the paper bill. */
+export const footerText = (vm: InvoiceViewModel): string => {
+  const note = vm.footerNote ?? 'Electronic bill signature not required';
+  return note.startsWith('*') ? note : `*${note}`;
+};

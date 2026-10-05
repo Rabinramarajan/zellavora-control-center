@@ -134,7 +134,7 @@ export const parseTimesheetLines = (lines: readonly string[]): ParsedTimesheet =
   };
 };
 
-interface PositionedText {
+export interface PositionedText {
   readonly text: string;
   readonly x: number;
   readonly y: number;
@@ -143,7 +143,7 @@ interface PositionedText {
 /** Items whose baselines sit this close (PDF units) are on the same visual row. */
 const ROW_TOLERANCE = 3;
 
-const groupIntoLines = (items: readonly PositionedText[]): string[] => {
+export const groupIntoLines = (items: readonly PositionedText[]): string[] => {
   const rows: { y: number; items: PositionedText[] }[] = [];
   for (const item of [...items].sort((a, b) => b.y - a.y)) {
     const row = rows.find((candidate) => Math.abs(candidate.y - item.y) <= ROW_TOLERANCE);
@@ -203,7 +203,8 @@ export const withTimeout = <T>(work: Promise<T>, ms: number, message: string): P
  * stays out of the main bundle; its worker runs in-thread, which is fine for a
  * one- or two-page timesheet and avoids serving a separate worker asset.
  */
-export const readPdfLines = async (file: File): Promise<string[]> => {
+/** Every text fragment with its position, one array per page. */
+export const readPdfPages = async (file: File): Promise<PositionedText[][]> => {
   ensurePromiseTry();
   // Importing the worker module registers `globalThis.pdfjsWorker`, which
   // pdf.js picks up instead of spawning a Worker from `workerSrc`.
@@ -215,7 +216,7 @@ export const readPdfLines = async (file: File): Promise<string[]> => {
   const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   const pdf = await task.promise;
   try {
-    const lines: string[] = [];
+    const pages: PositionedText[][] = [];
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
       const page = await pdf.getPage(pageNumber);
       const content = await page.getTextContent();
@@ -225,10 +226,13 @@ export const readPdfLines = async (file: File): Promise<string[]> => {
           items.push({ text: item.str, x: item.transform[4], y: item.transform[5] });
         }
       }
-      lines.push(...groupIntoLines(items));
+      pages.push(items);
     }
-    return lines;
+    return pages;
   } finally {
     void task.destroy();
   }
 };
+
+export const readPdfLines = async (file: File): Promise<string[]> =>
+  (await readPdfPages(file)).flatMap((items) => groupIntoLines(items));
