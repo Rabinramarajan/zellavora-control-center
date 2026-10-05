@@ -25,6 +25,12 @@ import {
   TimesheetEntry,
   formatPeriod,
 } from '../../data/timesheet.model';
+import {
+  DataTableCellDirective,
+  DataTableColumn,
+  DataTableComponent,
+  RowClassFn,
+} from '../../../../shared/components/data-table';
 import { TimePickerComponent } from '../../../../shared/components/time-picker/time-picker.component';
 import {
   hoursBetween,
@@ -54,6 +60,8 @@ interface GridRow {
     ToastModule,
     DayStatusPipe,
     TimePickerComponent,
+    DataTableComponent,
+    DataTableCellDirective,
     TimesheetReportPreviewComponent,
     TimesheetSummaryCardComponent,
     TimesheetApprovalPanelComponent,
@@ -178,13 +186,35 @@ export class TimesheetGridComponent {
     });
   }
 
-  protected rowClass(row: GridRow): string {
-    const status = row.entry.status;
-    if (status === 'LEAVE') return 'bg-amber-50 dark:bg-amber-950/20';
-    if (status === 'HOLIDAY') return 'bg-sky-50 dark:bg-sky-950/20';
-    if (status === 'WEEKEND_WORK') return 'bg-purple-50/60 dark:bg-purple-950/20';
-    return row.isWeekend ? 'bg-gray-50 dark:bg-gray-800/40' : '';
-  }
+  /** Every cell is a template; the definitions give headers, widths and CSV values. */
+  protected readonly columns: readonly DataTableColumn<GridRow>[] = [
+    {
+      id: 'date',
+      label: 'Date',
+      width: '6.5rem',
+      value: (row) => row.entry.entryDate.slice(0, 10),
+    },
+    { id: 'day', label: 'Day', width: '8rem', value: (row) => row.entry.dayOfWeek },
+    { id: 'start', label: 'Start Time', width: '10rem', value: (row) => row.entry.startTime },
+    { id: 'end', label: 'End Time', width: '10rem', value: (row) => row.entry.endTime },
+    { id: 'hours', label: 'Hours', width: '6.5rem', value: (row) => row.entry.hours },
+    {
+      id: 'statusNotes',
+      label: 'Status/Notes',
+      value: (row) => [row.entry.status, row.entry.notes].filter(Boolean).join(' — '),
+    },
+  ];
+
+  protected readonly rowId = (row: GridRow): string => row.entry.id;
+  protected readonly rowLabel = (row: GridRow): string => row.entry.entryDate.slice(0, 10);
+
+  /** Shading keys styled in this component's stylesheet. */
+  protected readonly rowClasses: RowClassFn<GridRow> = (row) => ({
+    'ts-row-leave': row.entry.status === 'LEAVE',
+    'ts-row-holiday': row.entry.status === 'HOLIDAY',
+    'ts-row-weekend-work': row.entry.status === 'WEEKEND_WORK',
+    'ts-row-weekend': row.isWeekend && !row.isNonWorking && row.entry.status !== 'WEEKEND_WORK',
+  });
 
   /** Empty input clears the cell rather than writing 0. */
   protected toHours(value: unknown): number | null {

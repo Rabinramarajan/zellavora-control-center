@@ -1,13 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   computed,
   inject,
   input,
   output,
   signal,
-  viewChild,
 } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MessageService } from 'primeng/api';
@@ -36,7 +34,6 @@ export class TimesheetReportPreviewComponent {
   private readonly exporter = inject(TimesheetExportService);
   private readonly messages = inject(MessageService);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly frame = viewChild<ElementRef<HTMLIFrameElement>>('frame');
 
   protected readonly busy = signal<ExportAction | null>(null);
 
@@ -74,10 +71,39 @@ export class TimesheetReportPreviewComponent {
     }
   }
 
+  /**
+   * Prints from a short-lived frame rather than the preview: the preview is
+   * sandboxed without scripts, and Chrome counts calling print() on it as
+   * script execution and blocks it. The document is the same escaped,
+   * script-free markup, so dropping the sandbox here grants nothing.
+   */
   private print(): void {
-    const view = this.frame()?.nativeElement.contentWindow;
-    if (!view) return;
-    view.focus();
-    view.print();
+    const frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.tabIndex = -1;
+    Object.assign(frame.style, {
+      position: 'fixed',
+      right: '0',
+      bottom: '0',
+      width: '0',
+      height: '0',
+      border: '0',
+      visibility: 'hidden',
+    });
+
+    frame.onload = () => {
+      const view = frame.contentWindow;
+      if (!view) {
+        frame.remove();
+        return;
+      }
+      // Removed only after the dialog closes; removing early cancels the print.
+      view.addEventListener('afterprint', () => frame.remove(), { once: true });
+      window.setTimeout(() => frame.isConnected && frame.remove(), 60_000);
+      view.focus();
+      view.print();
+    };
+    frame.srcdoc = reportToHtml(this.report());
+    document.body.appendChild(frame);
   }
 }

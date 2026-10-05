@@ -8,6 +8,8 @@
  * PermissionService.has().
  */
 import { PermissionService } from './permission.service';
+import { prisma } from '../../infrastructure/prisma';
+import { logger } from '../../infrastructure/logger';
 
 export interface MenuNode {
   id: string;
@@ -486,7 +488,67 @@ const toNode = (d: MenuDef): MenuNode => ({
   children: [],
 });
 
+export interface NavigationPermissionDef {
+  name: string;
+  key: string;
+  resource: 'navigation';
+  action: string;
+  description: string;
+}
+
+/**
+ * The navigation permissions the menu understands, derived from the menu
+ * itself so every entry can be granted from the Roles screen and a new menu
+ * item needs no migration or seed.
+ */
+export function navigationPermissionDefs(menu: readonly MenuDef[] = DEFAULT_MENU): NavigationPermissionDef[] {
+  const defs: NavigationPermissionDef[] = [
+    {
+      name: 'navigation:restricted',
+      key: 'navigation:restricted',
+      resource: 'navigation',
+      action: 'restricted',
+      description:
+        'Limit the sidebar to menu entries granted with navigation:<entry> permissions. Without it, every entry the role can use is shown.',
+    },
+  ];
+  const walk = (nodes: readonly MenuDef[], trail: string[]) => {
+    for (const node of nodes) {
+      const path = [...trail, node.label];
+      const group = node.children?.length ? ' and everything under it' : '';
+      defs.push({
+        name: `navigation:${node.key}`,
+        key: `navigation:${node.key}`,
+        resource: 'navigation',
+        action: node.key,
+        description: `Show "${path.join(' › ')}"${group} in the sidebar (applies with navigation:restricted).`,
+      });
+      if (node.children) walk(node.children, path);
+    }
+  };
+  walk(menu, []);
+  return defs;
+}
+
+let navigationSync: Promise<void> | null = null;
+
 export class MenuService {
+  /**
+   * Make sure every navigation permission exists in the catalog. Runs once
+   * per process; existing rows, and any edits to them, are left untouched.
+   */
+  static ensureNavigationPermissions(): Promise<void> {
+    navigationSync ??= prisma.permission
+      .createMany({ data: navigationPermissionDefs(), skipDuplicates: true })
+      .then(() => undefined)
+      .catch((error: unknown) => {
+        // Retry on the next request rather than caching the failure.
+        navigationSync = null;
+        logger.error('Navigation permission sync failed', error);
+      });
+    return navigationSync;
+  }
+
   /** Return the menu tree for a (user, org), filtered by what the user can see. */
   static async loadForUser(userId: string, orgId: string): Promise<MenuNode[]> {
     return this.loadForUserWithPerms(

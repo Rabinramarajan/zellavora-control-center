@@ -1,249 +1,246 @@
 <p-toast />
 
 <main class="timesheet-detail">
-  <header class="detail-heading">
-    <div class="title-block">
-      <button type="button" class="back-link" (click)="backToList()">
-        <i class="pi pi-arrow-left" aria-hidden="true"></i> All timesheets
-      </button>
-      <div class="title-line">
-        <h1>{{ periodLabel() }}</h1>
-        @if (service.timesheet(); as sheet) {
-          <span class="sheet-status" [attr.data-status]="sheet.status">
-            <i></i
-            >{{
-              sheet.status === 'SUBMITTED'
-                ? 'Awaiting review'
-                : sheet.status === 'REJECTED'
-                  ? 'Needs changes'
-                  : sheet.status.toLowerCase()
-            }}
-          </span>
-        }
-      </div>
-      <p>{{ statusLine() }}</p>
-    </div>
-
-    <div class="detail-actions">
-      @if (service.isSaving()) {
-        <span class="save-state"><i class="pi pi-spin pi-spinner"></i> Saving</span>
-      } @else if (service.canEdit()) {
-        <span class="save-state saved"><i class="pi pi-check-circle"></i> Changes saved</span>
-      }
-      <button
-        type="button"
-        class="ts-button ts-button-secondary"
-        [disabled]="!service.canEdit() || service.isLoading()"
-        (click)="autoFillOpen.set(true)"
-      >
-        <i class="pi pi-bolt" aria-hidden="true"></i><span>Auto-fill</span>
-      </button>
-      <button
-        type="button"
-        class="ts-button ts-button-secondary"
-        [disabled]="!service.canEdit() || service.isLoading() || service.isSaving()"
-        (click)="openImport()"
-      >
-        <i class="pi pi-upload" aria-hidden="true"></i><span>Import</span>
-      </button>
-      <button
-        type="button"
-        class="ts-button ts-button-secondary"
-        [disabled]="!service.timesheet() || service.isSaving() || isExporting()"
-        (click)="previewOpen.set(true)"
-      >
-        <i
-          class="pi"
-          [class.pi-spin]="isExporting()"
-          [class.pi-spinner]="isExporting()"
-          [class.pi-download]="!isExporting()"
-          aria-hidden="true"
-        ></i>
-        <span>{{ isExporting() ? 'Preparing' : 'Export' }}</span>
-      </button>
-      <button
-        type="button"
-        class="ts-button ts-button-primary"
-        [disabled]="!canSubmit()"
-        (click)="submit()"
-      >
-        <i class="pi pi-send" aria-hidden="true"></i><span>Submit for approval</span>
-      </button>
-    </div>
-  </header>
-
-  @if (rejectionReason(); as reason) {
-    <div class="rejection-note">
-      <i class="pi pi-exclamation-circle"></i>
-      <div>
-        <strong>Changes requested</strong>
-        <p>{{ reason }}</p>
-      </div>
-    </div>
-  }
-
-  @if (service.timesheet(); as sheet) {
-    <section class="sheet-details" aria-label="Timesheet details">
-      <div class="detail-field">
-        <label for="sheet-employee">Employee</label>
-        <input
-          id="sheet-employee"
-          class="ts-input"
-          maxlength="120"
-          autocomplete="name"
-          [placeholder]="sheet.user.fullName"
-          [disabled]="!service.canEdit()"
-          [ngModel]="sheet.employeeName ?? sheet.user.fullName"
-          (ngModelChange)="service.updateDetails({ employeeName: $event })"
-        />
-      </div>
-      <div class="detail-field">
-        <label for="sheet-department">Department</label>
-        <input
-          id="sheet-department"
-          class="ts-input"
-          maxlength="120"
-          autocomplete="organization-title"
-          [placeholder]="sheet.user.department || 'e.g. Engineering'"
-          [disabled]="!service.canEdit()"
-          [ngModel]="sheet.department ?? sheet.user.department ?? ''"
-          (ngModelChange)="service.updateDetails({ department: $event })"
-        />
-      </div>
-    </section>
-  }
-
-  <app-timesheet-summary-card [totals]="service.totals()" />
-
-  @if (service.isLoading()) {
-    <p class="py-12 text-center text-gray-500">Loading timesheet…</p>
-  } @else if (service.loadError()) {
-    <div
-      class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30"
-    >
-      <p class="text-sm text-red-800 dark:text-red-300">This timesheet could not be loaded.</p>
-      <button
-        type="button"
-        class="ts-button ts-button-secondary mt-3"
-        (click)="service.timesheetResource.reload()"
-      >
-        <i class="pi pi-refresh" aria-hidden="true"></i><span>Try again</span>
-      </button>
-    </div>
-  } @else {
-    <section class="ledger">
-      <div class="ledger-title">
-        <div>
-          <h2>Daily ledger</h2>
-          <p>Edit time, attendance status, and notes for each calendar day.</p>
+  <!-- Stays in view while the ledger scrolls, so totals and actions are always reachable. -->
+  <div class="sheet-head">
+    <header class="detail-heading">
+      <div class="title-block">
+        <button type="button" class="back-link" (click)="backToList()">
+          <i class="pi pi-arrow-left" aria-hidden="true"></i> All timesheets
+        </button>
+        <div class="title-line">
+          <h1>{{ periodLabel() }}</h1>
+          @if (service.timesheet(); as sheet) {
+            <span class="sheet-status" [attr.data-status]="sheet.status">
+              <i></i
+              >{{
+                sheet.status === 'SUBMITTED'
+                  ? 'Awaiting review'
+                  : sheet.status === 'REJECTED'
+                    ? 'Needs changes'
+                    : sheet.status.toLowerCase()
+              }}
+            </span>
+          }
         </div>
-        <span>{{ rows().length }} calendar days</span>
+        <p>{{ statusLine() }}</p>
       </div>
-      <div class="table-scroll">
-        <table class="w-full min-w-[56rem] text-sm">
-          <caption class="sr-only">
-            Daily entries for
-            {{
-              periodLabel()
-            }}
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" class="px-3 py-2 font-semibold">Date</th>
-              <th scope="col" class="px-3 py-2 font-semibold">Day</th>
-              <th scope="col" class="px-3 py-2 font-semibold">Start Time</th>
-              <th scope="col" class="px-3 py-2 font-semibold">End Time</th>
-              <th scope="col" class="px-3 py-2 text-right font-semibold">Hours</th>
-              <th scope="col" class="px-3 py-2 font-semibold">Status/Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows(); track row.entry.id) {
-              <tr [class]="rowClass(row)">
-                <td class="px-3 py-1.5 tabular-nums font-medium">
-                  {{ row.entry.entryDate | date: 'MMM d' : 'UTC' }}
-                </td>
-                <td class="px-3 py-1.5 text-gray-600 dark:text-gray-400">
-                  {{ row.entry.dayOfWeek }}
-                </td>
-                <td class="px-3 py-1.5">
-                  <app-time-picker
-                    placeholder="10:00 AM"
-                    [ariaLabel]="'Start time on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
-                    [disabled]="!service.canEdit() || row.isNonWorking"
-                    [ngModel]="row.entry.startTime"
-                    (ngModelChange)="setTime(row.entry, 'startTime', $event)"
-                  />
-                </td>
-                <td class="px-3 py-1.5">
-                  <app-time-picker
-                    placeholder="8:00 PM"
-                    [ariaLabel]="'End time on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
-                    [disabled]="!service.canEdit() || row.isNonWorking"
-                    [ngModel]="row.entry.endTime"
-                    (ngModelChange)="setTime(row.entry, 'endTime', $event)"
-                  />
-                </td>
-                <td class="px-3 py-1.5 text-right">
-                  <input
-                    type="number"
-                    class="ts-cell-input w-20 text-right"
-                    min="0"
-                    max="24"
-                    step="0.25"
-                    [attr.aria-label]="'Hours on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
-                    [disabled]="!service.canEdit() || row.isNonWorking"
-                    [ngModel]="row.entry.hours"
-                    (ngModelChange)="patch(row.entry, { hours: toHours($event) })"
-                  />
-                </td>
-                <td class="px-3 py-1.5">
-                  <div class="status-notes">
-                    @if (service.canEdit()) {
-                      <span class="status-select" [attr.data-status]="row.entry.status">
-                        <select
-                          [attr.aria-label]="
-                            'Status on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')
-                          "
-                          [ngModel]="row.entry.status"
-                          (ngModelChange)="patch(row.entry, { status: $event })"
-                        >
-                          @for (option of statusOptions; track option.value) {
-                            <option [ngValue]="option.value">
-                              {{ option.value === 'EMPTY' ? 'Not set' : option.label }}
-                            </option>
-                          }
-                        </select>
-                        <i class="pi pi-chevron-down" aria-hidden="true"></i>
-                      </span>
-                    } @else {
-                      <span
-                        class="inline-block rounded px-2 py-0.5 text-xs font-medium"
-                        [class]="row.entry.status | dayStatus: 'badgeClass'"
-                      >
-                        {{ row.entry.status | dayStatus: 'label' }}
-                      </span>
-                    }
-                    <input
-                      type="text"
-                      class="ts-cell-input notes-input"
-                      placeholder="Add a note"
-                      [attr.aria-label]="
-                        'Notes for ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')
-                      "
-                      [disabled]="!service.canEdit()"
-                      [ngModel]="row.entry.notes"
-                      (ngModelChange)="patch(row.entry, { notes: $event || null })"
-                    />
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
 
+      <div class="detail-actions">
+        @if (service.isSaving()) {
+          <span class="save-state"><i class="pi pi-spin pi-spinner"></i> Saving</span>
+        } @else if (service.canEdit()) {
+          <span class="save-state saved"><i class="pi pi-check-circle"></i> Changes saved</span>
+        }
+        <button
+          type="button"
+          class="ts-button ts-button-secondary"
+          [disabled]="!service.canEdit() || service.isLoading()"
+          (click)="autoFillOpen.set(true)"
+        >
+          <i class="pi pi-bolt" aria-hidden="true"></i><span>Auto-fill</span>
+        </button>
+        <button
+          type="button"
+          class="ts-button ts-button-secondary"
+          [disabled]="!service.canEdit() || service.isLoading() || service.isSaving()"
+          (click)="openImport()"
+        >
+          <i class="pi pi-upload" aria-hidden="true"></i><span>Import</span>
+        </button>
+        <button
+          type="button"
+          class="ts-button ts-button-secondary"
+          [disabled]="!service.timesheet() || service.isSaving() || isExporting()"
+          (click)="previewOpen.set(true)"
+        >
+          <i
+            class="pi"
+            [class.pi-spin]="isExporting()"
+            [class.pi-spinner]="isExporting()"
+            [class.pi-download]="!isExporting()"
+            aria-hidden="true"
+          ></i>
+          <span>{{ isExporting() ? 'Preparing' : 'Export' }}</span>
+        </button>
+        <button
+          type="button"
+          class="ts-button ts-button-primary"
+          [disabled]="!canSubmit()"
+          (click)="submit()"
+        >
+          <i class="pi pi-send" aria-hidden="true"></i><span>Submit for approval</span>
+        </button>
+      </div>
+    </header>
+
+    @if (rejectionReason(); as reason) {
+      <div class="rejection-note">
+        <i class="pi pi-exclamation-circle"></i>
+        <div>
+          <strong>Changes requested</strong>
+          <p>{{ reason }}</p>
+        </div>
+      </div>
+    }
+
+    @if (service.timesheet(); as sheet) {
+      <section class="sheet-details" aria-label="Timesheet details">
+        <div class="detail-field">
+          <label for="sheet-employee">Employee</label>
+          <input
+            id="sheet-employee"
+            class="ts-input"
+            maxlength="120"
+            autocomplete="name"
+            [placeholder]="sheet.user.fullName"
+            [disabled]="!service.canEdit()"
+            [ngModel]="sheet.employeeName ?? sheet.user.fullName"
+            (ngModelChange)="service.updateDetails({ employeeName: $event })"
+          />
+        </div>
+        <div class="detail-field">
+          <label for="sheet-department">Department</label>
+          <input
+            id="sheet-department"
+            class="ts-input"
+            maxlength="120"
+            autocomplete="organization-title"
+            [placeholder]="sheet.user.department || 'e.g. Engineering'"
+            [disabled]="!service.canEdit()"
+            [ngModel]="sheet.department ?? sheet.user.department ?? ''"
+            (ngModelChange)="service.updateDetails({ department: $event })"
+          />
+        </div>
+      </section>
+    }
+
+    <app-timesheet-summary-card [totals]="service.totals()" />
+  </div>
+
+  <section class="ledger">
+    <div class="ledger-title">
+      <div>
+        <h2>Daily ledger</h2>
+        <p>Edit time, attendance status, and notes for each calendar day.</p>
+      </div>
+      <span>{{ rows().length }} calendar days</span>
+    </div>
+
+    <app-data-table
+      class="ledger-table"
+      mode="client"
+      entityLabel="days"
+      emptyTitle="No days in this period"
+      errorTitle="This timesheet could not be loaded"
+      minWidth="58rem"
+      [bare]="true"
+      [paginated]="false"
+      [skeletonRows]="10"
+      [caption]="'Daily entries for ' + periodLabel()"
+      [rows]="rows()"
+      [columns]="columns"
+      [trackBy]="rowId"
+      [rowLabel]="rowLabel"
+      [rowClass]="rowClasses"
+      [loading]="service.isLoading()"
+      [error]="service.loadError() ? 'Check your connection and try again.' : null"
+      (retry)="service.timesheetResource.reload()"
+    >
+      <ng-template dtCell="date" let-row>
+        <span class="cell-date">{{ row.entry.entryDate | date: 'MMM d' : 'UTC' }}</span>
+      </ng-template>
+
+      <ng-template dtCell="day" let-row>
+        <span class="cell-muted">{{ row.entry.dayOfWeek }}</span>
+      </ng-template>
+
+      <ng-template dtCell="start" let-row>
+        @if (row.isNonWorking) {
+          <span class="cell-muted" aria-hidden="true">—</span>
+        } @else {
+          <app-time-picker
+            placeholder="10:00 AM"
+            [ariaLabel]="'Start time on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
+            [disabled]="!service.canEdit()"
+            [ngModel]="row.entry.startTime"
+            (ngModelChange)="setTime(row.entry, 'startTime', $event)"
+          />
+        }
+      </ng-template>
+
+      <ng-template dtCell="end" let-row>
+        @if (row.isNonWorking) {
+          <span class="cell-muted" aria-hidden="true">—</span>
+        } @else {
+          <app-time-picker
+            placeholder="8:00 PM"
+            [ariaLabel]="'End time on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
+            [disabled]="!service.canEdit()"
+            [ngModel]="row.entry.endTime"
+            (ngModelChange)="setTime(row.entry, 'endTime', $event)"
+          />
+        }
+      </ng-template>
+
+      <ng-template dtCell="hours" let-row>
+        @if (row.isNonWorking) {
+          <span class="cell-muted" aria-hidden="true">—</span>
+        } @else {
+          <input
+            type="number"
+            class="ts-cell-input hours-input"
+            min="0"
+            max="24"
+            step="0.25"
+            [attr.aria-label]="'Hours on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
+            [disabled]="!service.canEdit()"
+            [ngModel]="row.entry.hours"
+            (ngModelChange)="patch(row.entry, { hours: toHours($event) })"
+          />
+        }
+      </ng-template>
+
+      <ng-template dtCell="statusNotes" let-row>
+        <div class="status-notes">
+          @if (service.canEdit()) {
+            <span class="status-select" [attr.data-status]="row.entry.status">
+              <select
+                [attr.aria-label]="'Status on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
+                [ngModel]="row.entry.status"
+                (ngModelChange)="patch(row.entry, { status: $event })"
+              >
+                @for (option of statusOptions; track option.value) {
+                  <option [ngValue]="option.value">
+                    {{ option.value === 'EMPTY' ? 'Not set' : option.label }}
+                  </option>
+                }
+              </select>
+              <i class="pi pi-chevron-down" aria-hidden="true"></i>
+            </span>
+          } @else {
+            <span
+              class="inline-block rounded px-2 py-0.5 text-xs font-medium"
+              [class]="row.entry.status | dayStatus: 'badgeClass'"
+            >
+              {{ row.entry.status | dayStatus: 'label' }}
+            </span>
+          }
+          <input
+            type="text"
+            class="ts-cell-input notes-input"
+            placeholder="Add a note"
+            [attr.aria-label]="'Notes for ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
+            [disabled]="!service.canEdit()"
+            [ngModel]="row.entry.notes"
+            (ngModelChange)="patch(row.entry, { notes: $event || null })"
+          />
+        </div>
+      </ng-template>
+    </app-data-table>
+  </section>
+
+  @if (!service.isLoading() && !service.loadError()) {
     <!-- Live totals, recomputed from the entries signal on every edit. -->
     <div class="ledger-total">
       <span>

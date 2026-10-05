@@ -1,6 +1,7 @@
 import { AppError } from '../../middleware/error';
 import { AuditService } from '../../infrastructure/audit';
 import { PermissionRepository } from './permission.repository';
+import { MenuService } from '../../services/auth/menu.service';
 import {
   CreateIamPermissionDto,
   CreatePermissionGroupDto,
@@ -34,6 +35,7 @@ export class PermissionCatalogService {
   constructor(private readonly repo = new PermissionRepository()) {}
 
   async list(query: IamPermissionListQuery) {
+    await MenuService.ensureNavigationPermissions();
     const [{ data, total }, resources] = await Promise.all([
       this.repo.search(query),
       this.repo.distinctResources(),

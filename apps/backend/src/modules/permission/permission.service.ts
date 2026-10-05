@@ -1,9 +1,12 @@
 import { PermissionRepository } from './permission.repository';
+import { MenuService } from '../../services/auth/menu.service';
 
 export class PermissionService {
   private readonly repo = new PermissionRepository();
 
   async getAllPermissions() {
+    // Menu entries are grantable from the Roles screen only once they exist here.
+    await MenuService.ensureNavigationPermissions();
     return this.repo.listAll();
   }
 

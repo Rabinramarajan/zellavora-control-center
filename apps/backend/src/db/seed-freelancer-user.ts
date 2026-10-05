@@ -38,13 +38,18 @@ const FREELANCER_PERMISSIONS = [
     description: 'Show the Dashboard menu entry',
   },
   {
-    name: 'navigation:freelancer-sheets',
-    key: 'navigation:freelancer-sheets',
+    // Must match the menu node key in menu.service.ts ("freelancer"); the
+    // group's children (sheets, timesheets, approval queue) then show too.
+    name: 'navigation:freelancer',
+    key: 'navigation:freelancer',
     resource: 'navigation',
-    action: 'freelancer-sheets',
-    description: 'Show the Freelancer Sheets menu entry',
+    action: 'freelancer',
+    description: 'Show the Freelancer menu group',
   },
 ];
+
+/** Granted by earlier versions of this script; it matched no menu node. */
+const RETIRED_PERMISSION_KEYS = ['navigation:freelancer-sheets'];
 
 async function main() {
   const organization = await prisma.organization.findUnique({
@@ -67,6 +72,14 @@ async function main() {
       },
     });
   }
+
+  await prisma.rolePermission.deleteMany({
+    where: {
+      organizationId: organization.id,
+      roleId: role.id,
+      permission: { key: { in: RETIRED_PERMISSION_KEYS } },
+    },
+  });
 
   for (const perm of FREELANCER_PERMISSIONS) {
     const permission = await prisma.permission.upsert({

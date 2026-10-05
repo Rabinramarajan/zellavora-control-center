@@ -1,4 +1,7 @@
 jest.mock('../../infrastructure/audit', () => ({ AuditService: { log: jest.fn() } }));
+jest.mock('../../services/auth/menu.service', () => ({
+  MenuService: { ensureNavigationPermissions: jest.fn().mockResolvedValue(undefined) },
+}));
 
 import { PermissionCatalogService } from './permission-catalog.service';
 import type { PermissionRepository } from './permission.repository';

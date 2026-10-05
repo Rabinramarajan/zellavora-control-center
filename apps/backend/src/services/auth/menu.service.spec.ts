@@ -1,5 +1,5 @@
 jest.mock('../../infrastructure/prisma', () => ({ prisma: {} }));
-import { MenuService } from './menu.service';
+import { MenuService, navigationPermissionDefs } from './menu.service';
 import { INDIVIDUAL_PERMISSIONS } from '../../modules/auth/individual-role';
 
 describe('selected menu access', () => {
@@ -112,5 +112,39 @@ describe('selected menu access', () => {
         .children.map((menu) => menu.key);
     expect(await iamKeys(['users:read', 'users:manage'])).not.toContain('iam-sessions');
     expect(await iamKeys(['users:read', 'sessions:view'])).toContain('iam-sessions');
+  });
+});
+
+describe('navigationPermissionDefs', () => {
+  const defs = navigationPermissionDefs();
+  const keys = defs.map((def) => def.key);
+
+  it('offers a grantable permission for every menu entry, groups and children alike', () => {
+    expect(keys).toContain('navigation:restricted');
+    expect(keys).toContain('navigation:freelancer');
+    expect(keys).toContain('navigation:timesheets');
+    expect(keys).toContain('navigation:approval-queue');
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('labels entries with their place in the menu for the Roles screen', () => {
+    const timesheets = defs.find((def) => def.key === 'navigation:timesheets');
+    expect(timesheets?.description).toContain('Freelancer › Timesheets');
+    expect(defs.every((def) => def.resource === 'navigation')).toBe(true);
+  });
+
+  it('shows a granted group with all its children', async () => {
+    const menu = await MenuService.loadForUserWithPerms(
+      'u',
+      'o',
+      new Set(['navigation:restricted', 'navigation:freelancer', 'timesheet:read', 'timesheet:approve'])
+    );
+    const freelancer = menu.find((node) => node.key === 'freelancer');
+    expect(freelancer?.children.map((child) => child.key)).toEqual([
+      'daily-sheets',
+      'monthly-sheets',
+      'timesheets',
+      'approval-queue',
+    ]);
   });
 });

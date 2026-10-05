@@ -252,6 +252,24 @@ app-time-picker {
 app-timesheet-summary-card {
   margin-bottom: 1rem;
 }
+// Pinned only where there is room: on short or narrow screens it would
+// leave too little of the ledger visible.
+@media (min-width: 861px) and (min-height: 760px) {
+  .sheet-head {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    // Bleed over the page padding so rows never show at its edges.
+    margin: -1.5rem -1.5rem 1rem;
+    padding: 1.5rem 1.5rem 0.1rem;
+    background: #f5f7f6;
+    border-bottom: 1px solid #e3e9e6;
+    box-shadow: 0 10px 24px -18px rgba(15, 28, 23, 0.35);
+  }
+  .sheet-head app-timesheet-summary-card {
+    margin-bottom: 0.9rem;
+  }
+}
 .rejection-note {
   display: flex;
   align-items: flex-start;
@@ -295,29 +313,35 @@ app-timesheet-summary-card {
   color: #718079;
   font-size: 0.75rem;
 }
-.table-scroll {
-  overflow-x: auto;
+// The table itself is the shared app-data-table; only cell content and
+// row shading are styled here.
+.cell-date {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
-.ledger table {
-  border-collapse: collapse;
-}
-.ledger thead {
+.cell-muted {
   color: #6d7973;
-  background: #f8faf9;
-  text-align: left;
-  font-size: 0.72rem;
 }
-.ledger th {
-  height: 2.8rem;
+.hours-input {
+  width: 4.75rem;
+  text-align: right;
 }
-.ledger tbody tr {
-  border-top: 1px solid #edf0ee;
-}
-.ledger tbody td {
-  height: 3.7rem;
-}
-.ledger tbody tr:hover {
-  background-color: #f8faf9;
+:host ::ng-deep .ledger-table {
+  tr.ts-row-leave td {
+    background: rgba(245, 158, 11, 0.08);
+  }
+  tr.ts-row-holiday td {
+    background: rgba(14, 165, 233, 0.08);
+  }
+  tr.ts-row-weekend-work td {
+    background: rgba(139, 92, 246, 0.08);
+  }
+  tr.ts-row-weekend td {
+    background: rgba(100, 116, 139, 0.07);
+  }
+  td {
+    vertical-align: middle;
+  }
 }
 .ledger-total {
   position: sticky;
@@ -488,6 +512,8 @@ app-timesheet-summary-card {
 :host ::ng-deep .p-dialog-mask {
   position: fixed;
   inset: 0;
+  // Above the pinned sheet header.
+  z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -702,6 +728,11 @@ app-time-picker.dialog-time {
     color: #edf5f1;
     background: #101714;
   }
+  .sheet-head {
+    background: #101714;
+    border-color: #24302b;
+    box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.6);
+  }
   .title-block > p,
   .detail-field label,
   .ledger-title p {
@@ -712,16 +743,11 @@ app-time-picker.dialog-time {
     background: #18211d;
     border-color: #2c3933;
   }
-  .ledger-title,
-  .ledger tbody tr {
+  .ledger-title {
     border-color: #2a3631;
   }
-  .ledger thead {
-    color: #a7b3ad;
-    background: #131b18;
-  }
-  .ledger tbody tr:hover {
-    background-color: #1d2924;
+  .cell-muted {
+    color: #9ba8a1;
   }
   .back-link {
     color: #94c5b3;

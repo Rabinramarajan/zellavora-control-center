@@ -47,6 +47,10 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "prettier": "^3.0.3",
+    "prisma": "^8.0.0-rc.19",
     "typescript": "~6.0.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.10.0"
   }
 }
