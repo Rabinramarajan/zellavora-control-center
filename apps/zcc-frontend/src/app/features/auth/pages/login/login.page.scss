@@ -1,0 +1,585 @@
+@use '../../styles/nexus-tokens' as nx;
+
+/* ========================================================================
+   Zelavora Nexus — sign in
+   Tokens are emitted on the host, so every child component in this subtree
+   inherits them. The shared auth primitives (app-auth-field, app-auth-alert)
+   are driven by --auth-*, so those are remapped onto the Nexus scale here
+   rather than restyled.
+   ===================================================================== */
+
+:host {
+  @include nx.nexus-scale;
+  @include nx.nexus-tokens-dark;
+
+  display: block;
+  /* The sign-in screen is viewport-locked: it fills the window exactly and
+     never scrolls the document. Columns scroll internally if they must. */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--nx-bg);
+  color: var(--nx-text-primary);
+  font-family: var(--nx-font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+:host-context(html.light) {
+  @include nx.nexus-tokens-light;
+}
+
+:host {
+  --auth-bg: var(--nx-bg);
+  --auth-surface: var(--nx-surface-sunken);
+  --auth-surface-raised: var(--nx-surface);
+  --auth-input-bg: var(--nx-surface);
+  --auth-input-bg-focus: var(--nx-surface-hover);
+  --auth-border: var(--nx-border-subtle);
+  --auth-border-strong: var(--nx-border-strong);
+  --auth-text-strong: var(--nx-text-primary);
+  --auth-text: var(--nx-text-secondary);
+  --auth-text-muted: var(--nx-text-muted);
+  --auth-text-faint: var(--nx-text-muted);
+  --auth-accent: var(--nx-primary);
+  --auth-accent-strong: var(--nx-primary);
+  --auth-accent-ring: color-mix(in srgb, var(--nx-primary) 26%, transparent);
+  --auth-link: var(--nx-primary);
+  --auth-danger: var(--nx-error);
+  --auth-danger-text: var(--nx-error);
+  --auth-danger-ring: color-mix(in srgb, var(--nx-error) 22%, transparent);
+  --auth-success: var(--nx-success);
+  --auth-success-text: var(--nx-success);
+  --auth-warning: var(--nx-warning);
+  --auth-info: var(--nx-node-invoice);
+}
+
+/* --- Shell -------------------------------------------------------------- */
+
+.nx-page {
+  position: relative;
+  display: grid;
+  grid-template-columns: 54fr 46fr;
+  height: 100%;
+  isolation: isolate;
+}
+
+/* Fine technical grid over the whole page. */
+.nx-page__grid {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    linear-gradient(var(--nx-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--nx-grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 120% 90% at 30% 40%, #000 35%, transparent 100%);
+}
+
+/* Barely-there film grain; an inline SVG turbulence keeps it request-free. */
+.nx-page__grain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--nx-grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.nx-skip {
+  position: absolute;
+  left: -9999px;
+  z-index: 10;
+  padding: 12px 18px;
+  border-radius: var(--nx-radius-md);
+  background: var(--nx-primary);
+  color: var(--nx-text-on-primary);
+  font-weight: 600;
+
+  &:focus {
+    left: var(--nx-space-4);
+    top: var(--nx-space-4);
+  }
+}
+
+/* --- Left: Nexus visual ------------------------------------------------- */
+
+.nx-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* min-height:0 lets the network shrink inside the locked viewport instead of
+     pushing the column past it. */
+  min-height: 0;
+  padding: clamp(28px, 3vw, 48px) clamp(24px, 3.4vw, 64px) clamp(28px, 3vw, 44px);
+}
+
+.nx-visual__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nx-visual__network {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding-block: clamp(12px, 2vw, 32px);
+}
+
+/* The graphic is square, so capping its width by the height left over in a
+   viewport-locked column is what keeps it inside the screen on short windows. */
+.nx-visual__network app-nexus-network {
+  width: min(100%, calc(100dvh - 280px));
+}
+
+.nx-visual__stats {
+  padding-top: clamp(16px, 2vw, 28px);
+  border-top: 1px solid var(--nx-border-subtle);
+}
+
+/* --- Right: authentication workspace ------------------------------------ */
+
+.nx-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2.2vh, 30px);
+  padding: clamp(18px, 3vh, 44px) clamp(24px, 4vw, 86px) clamp(16px, 2.4vh, 36px);
+  background: var(--nx-bg-elevated);
+  border-left: 1px solid var(--nx-border-subtle);
+  /* Short windows scroll the form column, not the page. */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nx-workspace__top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(16px, 2vw, 32px);
+  flex-wrap: wrap;
+}
+
+/* The brand sits over the visual on desktop; the workspace shows it on mobile. */
+.nx-workspace__brand {
+  display: none;
+  margin-right: auto;
+}
+
+.nx-workspace__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3);
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.nx-nav {
+  display: flex;
+  gap: clamp(14px, 1.6vw, 26px);
+}
+
+.nx-nav__link {
+  padding-block: 11px;
+  color: var(--nx-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--nx-dur-fast) var(--nx-ease);
+
+  &:hover {
+    color: var(--nx-text-primary);
+  }
+
+  &:focus-visible {
+    @include nx.nexus-focus-ring;
+    border-radius: 4px;
+  }
+}
+
+.nx-theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--nx-border-subtle);
+  border-radius: var(--nx-radius-md);
+  background: transparent;
+  color: var(--nx-text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--nx-dur-fast) var(--nx-ease),
+    border-color var(--nx-dur-fast) var(--nx-ease);
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--nx-text-primary);
+    border-color: var(--nx-border-strong);
+  }
+
+  &:focus-visible {
+    @include nx.nexus-focus-ring;
+  }
+}
+
+.nx-workspace__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.9vh, 22px);
+  max-width: 460px;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+/* --- Headline ----------------------------------------------------------- */
+
+.nx-headline {
+  margin: 0;
+  font-family: var(--nx-font-display);
+  font-size: clamp(28px, min(3.3vw, 5.6vh), 58px);
+  font-weight: 700;
+  line-height: 1.03;
+  letter-spacing: -0.025em;
+  color: var(--nx-text-primary);
+}
+
+.nx-headline__accent {
+  color: var(--nx-primary);
+}
+
+.nx-lede {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--nx-text-secondary);
+}
+
+.nx-workspace__values {
+  padding-bottom: 0;
+}
+
+/* --- Form --------------------------------------------------------------- */
+
+.nx-form {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 18px);
+}
+
+.nx-form__password {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.nx-form__password app-auth-field {
+  width: 100%;
+}
+
+/* Visually hidden: the button label already shows the state, this narrates it. */
+.nx-form__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.nx-link {
+  color: var(--nx-primary);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    @include nx.nexus-focus-ring;
+    border-radius: 3px;
+  }
+}
+
+.nx-link--quiet {
+  font-size: 13px;
+  font-weight: 500;
+  /* Keeps a 44px target under the password field without visual bulk. */
+  padding-block: 11px;
+}
+
+/* --- Checkbox ----------------------------------------------------------- */
+
+.nx-check {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3);
+  min-height: 44px;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+.nx-check__box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--nx-border-strong);
+  border-radius: var(--nx-radius-sm);
+  background: var(--nx-surface);
+  color: transparent;
+  transition:
+    background var(--nx-dur-fast) var(--nx-ease),
+    border-color var(--nx-dur-fast) var(--nx-ease);
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.nx-check:hover .nx-check__box {
+  border-color: var(--nx-primary);
+}
+
+.nx-check input:checked + .nx-check__box {
+  @include nx.nexus-primary-fill;
+  border-color: var(--nx-primary-fill, var(--nx-primary));
+  color: var(--nx-text-on-primary);
+}
+
+.nx-check input:focus-visible + .nx-check__box {
+  @include nx.nexus-focus-ring;
+}
+
+.nx-check__label {
+  font-size: 13px;
+  color: var(--nx-text-secondary);
+}
+
+/* --- Submit ------------------------------------------------------------- */
+
+.nx-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nx-space-2);
+  width: 100%;
+  min-height: 48px;
+  padding-inline: var(--nx-space-5);
+  border: 0;
+  border-radius: var(--nx-radius-md);
+  @include nx.nexus-primary-fill;
+  color: var(--nx-text-on-primary);
+  font-family: var(--nx-font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--nx-dur-fast) var(--nx-ease),
+    translate var(--nx-dur-fast) var(--nx-ease);
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--nx-primary-hover);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--nx-primary-active);
+    translate: 0 1px;
+  }
+
+  &:focus-visible {
+    @include nx.nexus-focus-ring;
+  }
+
+  /* Loading and disabled share one look; the width never changes, so the
+     layout holds still while authentication runs. */
+  &:disabled {
+    background: var(--nx-surface-hover);
+    color: var(--nx-text-muted);
+    cursor: not-allowed;
+  }
+}
+
+.nx-submit__arrow {
+  transition: translate var(--nx-dur-fast) var(--nx-ease);
+}
+
+.nx-submit:hover:not(:disabled) .nx-submit__arrow {
+  translate: 3px 0;
+}
+
+.nx-submit__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: nx-spin 0.7s linear infinite;
+}
+
+@keyframes nx-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* --- Switch + footer ---------------------------------------------------- */
+
+.nx-switch {
+  position: relative;
+  margin: 0;
+  padding-top: clamp(12px, 1.8vh, 20px);
+  max-width: 460px;
+  font-size: 13px;
+  color: var(--nx-text-secondary);
+  border-top: 1px solid var(--nx-border-subtle);
+}
+
+.nx-workspace__footer {
+  padding-top: clamp(10px, 1.6vh, 18px);
+  border-top: 1px solid var(--nx-border-subtle);
+}
+
+/* --- Responsive --------------------------------------------------------- */
+
+/* Tablet landscape: rebalance the columns and lighten the visual. */
+@media (max-width: 1100px) {
+  .nx-page {
+    grid-template-columns: 46fr 54fr;
+  }
+
+  .nx-workspace {
+    padding-inline: clamp(24px, 4vw, 48px);
+  }
+}
+
+/* Tablet and below: one column, the Nexus becomes a header. */
+@media (max-width: 767px) {
+  /* Stacked, the content exceeds a phone viewport, so the shell itself scrolls
+     — the page stays exactly 100vh and the document never scrolls. */
+  .nx-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .nx-workspace {
+    overflow: visible;
+  }
+
+  .nx-visual {
+    padding: var(--nx-space-5) var(--nx-space-5) 0;
+  }
+
+  /* The workspace carries the brand once the visual stops being a column. */
+  .nx-visual__brand {
+    display: none;
+  }
+
+  .nx-visual__network {
+    flex: none;
+    padding-block: var(--nx-space-2);
+  }
+
+  /* The compact graphic sets its own height; drop the desktop width cap. */
+  .nx-visual__network app-nexus-network {
+    width: 100%;
+  }
+
+  .nx-visual__stats {
+    padding-block: var(--nx-space-4);
+  }
+
+  .nx-workspace {
+    border-left: 0;
+    border-top: 1px solid var(--nx-border-subtle);
+    padding-top: var(--nx-space-5);
+  }
+
+  .nx-workspace__brand {
+    display: inline-flex;
+  }
+
+  .nx-workspace__top {
+    justify-content: space-between;
+  }
+
+  .nx-workspace__meta {
+    width: auto;
+  }
+
+  .nx-workspace__body,
+  .nx-switch {
+    max-width: 520px;
+    margin-inline: auto;
+  }
+
+  .nx-workspace__footer {
+    max-width: 520px;
+    margin-inline: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .nx-headline {
+    font-size: clamp(30px, 8vw, 34px);
+  }
+
+  /* Secondary navigation is noise at this width; the status line stays. */
+  .nx-nav {
+    display: none;
+  }
+
+  .nx-page__grid {
+    background-size: 44px 44px;
+  }
+}
+
+@media (max-width: 400px) {
+  .nx-visual,
+  .nx-workspace {
+    padding-inline: var(--nx-space-4);
+  }
+}
+
+@include nx.nexus-reduced-motion {
+  .nx-submit__spinner {
+    animation-duration: 1.6s;
+  }
+
+  .nx-submit:hover:not(:disabled) .nx-submit__arrow {
+    translate: 0;
+  }
+}

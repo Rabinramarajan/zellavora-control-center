@@ -12,20 +12,58 @@ describe('DashboardStore', () => {
     success: true,
     data: {
       generatedAt: new Date().toISOString(),
-      kpis: {
-        organizations: 12,
-        members: 340,
-        activeSessions: 58,
-        pendingInvitations: 7,
-        auditEvents24h: 890,
-        criticalAlerts24h: 2,
-      },
+      scope: 'organization',
+      kpis: [
+        {
+          key: 'organizations',
+          label: 'Organizations',
+          value: 12,
+          hint: 'Active tenants',
+          series: 'primary',
+        },
+        {
+          key: 'members',
+          label: 'Members',
+          value: 340,
+          hint: 'Active accounts',
+          series: 'secondary',
+        },
+        {
+          key: 'activeSessions',
+          label: 'Active Sessions',
+          value: 58,
+          hint: 'Live sessions',
+          series: null,
+        },
+        {
+          key: 'pendingInvitations',
+          label: 'Pending Invites',
+          value: 7,
+          hint: 'Awaiting acceptance',
+          series: null,
+        },
+        {
+          key: 'auditEvents24h',
+          label: 'Audit Events',
+          value: 890,
+          hint: 'Last 24 hours',
+          series: 'activity',
+        },
+        {
+          key: 'criticalAlerts24h',
+          label: 'Critical Alerts',
+          value: 2,
+          hint: 'Last 24 hours',
+          series: null,
+        },
+      ],
+      trendLegend: { primary: 'Organizations', secondary: 'Members' },
       trends: {
-        organizations: [
+        primary: [
           { date: '2026-07-01', count: 1 },
           { date: '2026-07-02', count: 2 },
         ],
-        members: [
+        secondary: [
           { date: '2026-07-01', count: 10 },
           { date: '2026-07-02', count: 12 },
         ],
@@ -45,6 +83,14 @@ describe('DashboardStore', () => {
           createdAt: new Date().toISOString(),
         },
       ],
+      panel: {
+        title: 'Plan Distribution',
+        subtitle: 'Organization subscription plans.',
+        chip: 'Organizations',
+        totalLabel: 'Total Organizations',
+        emptyTitle: 'No plans',
+        emptyHint: 'No organization plans recorded.',
+      },
       planDistribution: [
         { plan: 'free', count: 4 },
         { plan: 'enterprise', count: 8 },
@@ -100,17 +146,22 @@ describe('DashboardStore', () => {
 
     expect(store.hasOverview()).toBe(true);
     expect(store.isStale()).toBe(false);
-    expect(store.kpis()?.organizations).toBe(12);
-    expect(store.kpis()?.members).toBe(340);
-    expect(store.kpis()?.activeSessions).toBe(58);
-    expect(store.kpis()?.pendingInvitations).toBe(7);
-    expect(store.kpis()?.auditEvents24h).toBe(890);
-    expect(store.kpis()?.criticalAlerts24h).toBe(2);
+    expect(store.scope()).toBe('organization');
+    expect(store.kpis().map((k) => [k.key, k.value])).toEqual([
+      ['organizations', 12],
+      ['members', 340],
+      ['activeSessions', 58],
+      ['pendingInvitations', 7],
+      ['auditEvents24h', 890],
+      ['criticalAlerts24h', 2],
+    ]);
 
     expect(store.trendLabels().length).toBe(2);
     expect(store.activitySeries()).toEqual([40, 55]);
-    expect(store.membersSeries()).toEqual([10, 12]);
-    expect(store.orgsSeries()).toEqual([1, 2]);
+    expect(store.secondarySeries()).toEqual([10, 12]);
+    expect(store.primarySeries()).toEqual([1, 2]);
+    expect(store.seriesFor('activity')).toEqual([40, 55]);
+    expect(store.seriesFor(null)).toEqual([]);
     expect(store.recentActivity().length).toBe(1);
     expect(store.planDistribution()).toEqual([
       { plan: 'free', count: 4 },

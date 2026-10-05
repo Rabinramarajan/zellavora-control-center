@@ -16,10 +16,23 @@ Base path `/api/v1/dashboard`; both routes need `dashboard:read`.
 
 | Method | Path        | Query                                             | Returns                                                                                                                                                                                 |
 | ------ | ----------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/overview` | `range` = `7`, `30` (default) or `90` days        | KPIs (organizations, members, active sessions, pending invitations, audit events and critical alerts in the last day), trend series (organization sign-ups and more), plan distribution |
-| GET    | `/activity` | `range`, `page`, `pageSize`, `action`, `severity` | Recent audit entries for the feed                                                                                                                                                       |
+| GET    | `/overview` | `range` = `7`, `30` (default) or `90` days        | Scope marker, a KPI list, trend series (`primary`, `secondary`, `activity`), donut panel copy and its slices |
+| GET    | `/activity` | `range`, `page`, `pageSize`, `action`, `severity` | Recent audit entries for the feed, narrowed to the caller's scope                                            |
 
-Results are cached per range in Redis when it is configured; `invalidate(range, scope)` clears them.
+### Scoping
+
+`dashboard.scope.ts` derives the scope from verified JWT claims only — a client-supplied tenant id or role is never read, so a caller cannot widen their own view.
+
+| Scope          | Who                               | Narrowed by                        | KPI set                                                                            |
+| -------------- | --------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `organization` | any non-`Individual` role         | `organizationId` = `req.tenantId`  | organizations, members, active sessions, pending invites, audit events, critical alerts |
+| `individual`   | role `Individual`                 | `organizationId` **and** `userId`  | projects, sheets, media, active sessions, own activity, critical alerts            |
+
+INDIVIDUAL accounts all join the same default organization, so a tenant filter alone would still expose their peers; their aggregations are additionally narrowed to their own user id, and their audit feed to rows they produced (`actorId`).
+
+The API also supplies the KPI labels, trend legend and donut panel copy, so the client renders both scopes through one code path.
+
+Results are cached per range **and per scope** (`org:<tenant>` or `ind:<tenant>:<user>`) in Redis when it is configured; `invalidate(range, scope)` clears them.
 
 ## Analytics API
 
@@ -54,5 +67,5 @@ The tracker listens to router navigation and posts a page view for each route ch
 
 ## Review notes
 
-- **The dashboard is platform-wide.** Counts and the activity feed are not filtered by organization, so a tenant user with `dashboard:read` sees every organization's members, sessions and audit entries (review **H5**). Either scope it to `req.tenantId` or reserve it for platform operators.
+- ~~**The dashboard is platform-wide.**~~ Resolved (review **H5**): every aggregation is now narrowed by `resolveScope()`, and individual accounts receive a personal KPI set scoped to their own user id. See **Scoping** above.
 - Analytics events are posted with the user's token, so only signed-in usage is measured; that matches the stated purpose.

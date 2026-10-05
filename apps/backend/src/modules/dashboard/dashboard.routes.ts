@@ -11,7 +11,11 @@ const controller = new DashboardController();
  *   get:
  *     summary: getDashboardOverview
  *     operationId: getDashboardOverview
- *     description: Aggregated KPIs, trends, recent activity and plan distribution for the caller's tenant.
+ *     description: >
+ *       Aggregated KPIs, trends, recent activity and a distribution panel for the
+ *       caller's scope. Organization accounts receive tenant-wide metrics;
+ *       INDIVIDUAL accounts receive a personal set scoped to their own user id.
+ *       The scope is derived from the verified JWT and cannot be widened by the client.
  *     tags: [dashboard]
  *     security:
  *       - bearerAuth: []
@@ -39,7 +43,9 @@ router.get('/overview', authenticate, requirePermission('dashboard:read'), contr
  *   get:
  *     summary: getDashboardActivity
  *     operationId: getDashboardActivity
- *     description: Paginated, filterable audit activity feed for the caller's tenant.
+ *     description: >
+ *       Paginated, filterable audit activity feed. Narrowed to the caller's
+ *       organization, or to their own actions for an INDIVIDUAL account.
  *     tags: [dashboard]
  *     security:
  *       - bearerAuth: []

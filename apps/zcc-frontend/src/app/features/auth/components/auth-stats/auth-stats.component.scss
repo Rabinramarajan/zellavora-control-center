@@ -1,0 +1,77 @@
+:host {
+  display: block;
+}
+
+.nx-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--nx-space-5, 20px) 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--nx-font-ui);
+}
+
+.nx-stats__item {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3, 12px);
+  padding-inline: clamp(16px, 2.6vw, 34px);
+
+  /* Hairline separators instead of boxes. */
+  + .nx-stats__item {
+    border-left: 1px solid var(--nx-border-subtle);
+  }
+}
+
+.nx-stats__icon {
+  display: grid;
+  place-items: center;
+  color: var(--nx-primary);
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.nx-stats__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nx-stats__value {
+  font-family: var(--nx-font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--nx-text-primary);
+}
+
+.nx-stats__label {
+  font-size: 12px;
+  color: var(--nx-text-muted);
+}
+
+/* Centre the value when a stat carries no caption. */
+.nx-stats__item--single .nx-stats__value {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .nx-stats__item {
+    padding-inline: 14px;
+  }
+
+  .nx-stats__value {
+    font-size: 15px;
+  }
+
+  .nx-stats__label {
+    font-size: 11px;
+  }
+}

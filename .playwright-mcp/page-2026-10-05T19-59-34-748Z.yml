@@ -1,0 +1,25 @@
+- generic [ref=f7e5]:
+  - complementary "Navigation sidebar" [ref=f7e8]:
+    - generic [ref=f7e9]:
+      - generic [ref=f7e10]:
+        - generic [ref=f7e11]: Z
+        - generic [ref=f7e13]:
+          - generic [ref=f7e14]: ZELLAVORA
+          - generic [ref=f7e15]: CONTROL CENTER
+      - navigation [ref=f7e16]
+  - generic [ref=f7e17]:
+    - banner [ref=f7e19]:
+      - generic [ref=f7e20]:
+        - button [ref=f7e21] [cursor=pointer]
+        - navigation "Breadcrumb" [ref=f7e25]:
+          - list [ref=f7e26]:
+            - listitem [ref=f7e27]:
+              - generic "Dashboard" [ref=f7e28]
+      - generic [ref=f7e29]:
+        - button "Switch to light mode" [pressed] [ref=f7e31] [cursor=pointer]
+        - button "Rabin R Rabin R Super Admin" [ref=f7e38] [cursor=pointer]:
+          - img "Rabin R" [ref=f7e42]
+          - generic [ref=f7e44]:
+            - generic [ref=f7e45]: Rabin R
+            - generic [ref=f7e46]: Super Admin
+    - main [ref=f7e49]

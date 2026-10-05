@@ -1,0 +1,35 @@
+@use '../../styles/nexus-tokens' as nx;
+
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nx-space-2, 8px);
+  font-family: var(--nx-font-ui);
+  font-size: 13px;
+  color: var(--nx-text-secondary);
+}
+
+.nx-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nx-success);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--nx-success) 55%, transparent);
+  animation: nx-status-pulse 2.6s ease-out infinite;
+}
+
+@keyframes nx-status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--nx-success) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--nx-success) 0%, transparent);
+  }
+}
+
+@include nx.nexus-reduced-motion {
+  .nx-status__dot {
+    animation: none;
+  }
+}

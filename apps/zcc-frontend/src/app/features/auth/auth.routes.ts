@@ -8,7 +8,7 @@ export const authRoutes: Routes = [
   {
     // Sign-in and registration own a full-screen composition, so they skip the shared layout.
     path: 'login',
-    title: 'Sign in · ZCC',
+    title: 'Sign in · Zelavora Nexus',
     canActivate: [guestGuard],
     loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },

@@ -93,6 +93,28 @@ const QUICK_ACTIONS: QuickAction[] = [
   },
 ];
 
+/** Presentation for each KPI key the API can return, across both scopes. */
+const KPI_STYLES: Record<string, { icon: DashboardIconName; tone: KpiTone }> = {
+  organizations: { icon: 'building', tone: 'purple' },
+  members: { icon: 'users', tone: 'blue' },
+  projects: { icon: 'folder', tone: 'purple' },
+  sheets: { icon: 'sheet', tone: 'blue' },
+  mediaFiles: { icon: 'upload', tone: 'amber' },
+  activeSessions: { icon: 'bolt', tone: 'emerald' },
+  pendingInvitations: { icon: 'mail', tone: 'amber' },
+  auditEvents24h: { icon: 'file', tone: 'pink' },
+  criticalAlerts24h: { icon: 'siren', tone: 'red' },
+};
+
+const KPI_STYLE_FALLBACK: { icon: DashboardIconName; tone: KpiTone } = {
+  icon: 'file',
+  tone: 'purple',
+};
+
+// Individual accounts hold no IAM or workspace-settings permissions, so these
+// tiles would only lead to a 403.
+const INDIVIDUAL_HIDDEN_ACTIONS = new Set(['Invite Member', 'Settings']);
+
 const SEVERITY_TONE: Record<AuditSeverity, string> = {
   debug: 'bg-slate-500/15 text-slate-300 ring-slate-400/20',
   info: 'bg-blue-500/15 text-blue-300 ring-blue-400/25',
@@ -136,7 +158,6 @@ export class DashboardComponent implements OnInit {
   readonly ranges = RANGES;
   readonly severityOptions = SEVERITY_OPTIONS;
   readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-  readonly quickActions = QUICK_ACTIONS;
 
   readonly greeting = computed(() => {
     const hour = new Date().getHours();
@@ -147,67 +168,25 @@ export class DashboardComponent implements OnInit {
 
   readonly firstName = computed(() => this.auth.user()?.fullName?.trim().split(/\s+/)[0] ?? '');
 
-  readonly kpiCards = computed<KpiView[]>(() => {
-    const k = this.store.kpis();
-    const t = this.store.trends();
-    if (!k) return [];
-    return [
-      {
-        label: 'Organizations',
-        value: k.organizations,
-        hint: 'Active tenants',
-        icon: 'building',
-        tone: 'purple',
-        delta: halfOverHalf(t?.organizations),
-        series: this.store.orgsSeries(),
-      },
-      {
-        label: 'Members',
-        value: k.members,
-        hint: 'Active accounts',
-        icon: 'users',
-        tone: 'blue',
-        delta: halfOverHalf(t?.members),
-        series: this.store.membersSeries(),
-      },
-      {
-        label: 'Active Sessions',
-        value: k.activeSessions,
-        hint: 'Live sessions',
-        icon: 'bolt',
-        tone: 'emerald',
-        delta: null,
-        series: [],
-      },
-      {
-        label: 'Pending Invites',
-        value: k.pendingInvitations,
-        hint: 'Awaiting acceptance',
-        icon: 'mail',
-        tone: 'amber',
-        delta: null,
-        series: [],
-      },
-      {
-        label: 'Audit Events',
-        value: k.auditEvents24h,
-        hint: 'Last 24 hours',
-        icon: 'file',
-        tone: 'pink',
-        delta: halfOverHalf(t?.activity),
-        series: this.store.activitySeries(),
-      },
-      {
-        label: 'Critical Alerts',
-        value: k.criticalAlerts24h,
-        hint: 'Last 24 hours',
-        icon: 'siren',
-        tone: 'red',
-        delta: null,
-        series: [],
-      },
-    ];
-  });
+  /**
+   * The API decides which KPIs apply to the caller's scope; the client only
+   * supplies presentation. Unknown keys fall back to a neutral style rather
+   * than dropping the card.
+   */
+  readonly kpiCards = computed<KpiView[]>(() =>
+    this.store.kpis().map((k) => {
+      const style = KPI_STYLES[k.key] ?? KPI_STYLE_FALLBACK;
+      return {
+        label: k.label,
+        value: k.value,
+        hint: k.hint,
+        icon: style.icon,
+        tone: style.tone,
+        delta: k.series ? halfOverHalf(this.store.pointsFor(k.series)) : null,
+        series: this.store.seriesFor(k.series),
+      };
+    })
+  );
 
   readonly hasTrendData = computed(() => (this.store.trends()?.activity.length ?? 0) > 0);
 
@@ -215,8 +194,27 @@ export class DashboardComponent implements OnInit {
 
   readonly trendSeries = computed<TrendSeries[]>(() => [
     { name: 'Activity', color: '#a855f7', data: this.store.activitySeries() },
-    { name: 'Members', color: '#3b82f6', data: this.store.membersSeries() },
+    {
+      name: this.store.trendLegend().secondary,
+      color: '#3b82f6',
+      data: this.store.secondarySeries(),
+    },
   ]);
+
+  readonly isIndividual = computed(() => this.store.scope() === 'individual');
+
+  readonly trendSubtitle = computed(() =>
+    this.isIndividual()
+      ? 'Your activity and daily sheets over time.'
+      : 'Audit activity and member sign-ups over time.'
+  );
+
+  /** Org-only destinations are dropped for personal accounts that cannot reach them. */
+  readonly visibleQuickActions = computed(() =>
+    this.isIndividual()
+      ? QUICK_ACTIONS.filter((a) => !INDIVIDUAL_HIDDEN_ACTIONS.has(a.title))
+      : QUICK_ACTIONS
+  );
 
   readonly rangeStart = computed(() => {
     const a = this.store.activity();

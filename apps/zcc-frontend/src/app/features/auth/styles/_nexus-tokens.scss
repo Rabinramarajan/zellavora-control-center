@@ -1,0 +1,132 @@
+/* Zelavora Nexus design tokens.
+ * Emitted on the host of each Nexus surface so the whole subtree inherits them;
+ * nothing leaks into the admin shell, which runs on its own palette. */
+
+@mixin nexus-tokens-dark {
+  --nx-bg: #081120;
+  --nx-bg-elevated: #0f1b2e;
+  --nx-surface: #111f33;
+  --nx-surface-hover: #17263c;
+  --nx-surface-sunken: #0b1424;
+
+  --nx-text-primary: #f7fafc;
+  --nx-text-secondary: #94a3b8;
+  --nx-text-muted: #64748b;
+  --nx-text-on-primary: #08130a;
+
+  --nx-border: #334155;
+  --nx-border-subtle: rgb(148 163 184 / 0.16);
+  --nx-border-strong: rgb(148 163 184 / 0.34);
+
+  --nx-primary: #b7f52a;
+  --nx-primary-hover: #c7ff3f;
+  --nx-primary-active: #a6df20;
+  --nx-primary-soft: rgb(183 245 42 / 0.12);
+
+  --nx-success: #22c55e;
+  --nx-error: #ef4444;
+  --nx-error-soft: rgb(239 68 68 / 0.12);
+  --nx-warning: #f59e0b;
+
+  --nx-node-org: #22c55e;
+  --nx-node-team: #3b82f6;
+  --nx-node-project: #f59e0b;
+  --nx-node-timesheet: #8b5cf6;
+  --nx-node-invoice: #06b6d4;
+
+  /* Decorative layers: the technical grid, the orbit strokes and the grain. */
+  --nx-grid-line: rgb(148 163 184 / 0.055);
+  --nx-orbit-line: rgb(148 163 184 / 0.18);
+  --nx-connector-line: rgb(148 163 184 / 0.3);
+  --nx-node-chip-bg: rgb(8 17 32 / 0.82);
+  --nx-glow-strength: 1;
+  --nx-grain-opacity: 0.035;
+  --nx-ring-offset: var(--nx-bg);
+}
+
+@mixin nexus-tokens-light {
+  --nx-bg: #f7f8f5;
+  --nx-bg-elevated: #ffffff;
+  --nx-surface: #ffffff;
+  --nx-surface-hover: #f1f4f9;
+  --nx-surface-sunken: #eef1f6;
+
+  --nx-text-primary: #0d1b2f;
+  --nx-text-secondary: #4a5a70;
+  --nx-text-muted: #6b7a8f;
+  --nx-text-on-primary: #10220c;
+
+  --nx-border: #c3cedd;
+  --nx-border-subtle: rgb(13 27 47 / 0.12);
+  --nx-border-strong: rgb(13 27 47 / 0.26);
+
+  /* Lime on white fails AA as text, so the light theme keeps it to fills and
+     strokes and darkens the text-bearing accent. */
+  --nx-primary: #6f9c05;
+  --nx-primary-hover: #5e8504;
+  --nx-primary-active: #4f7003;
+  --nx-primary-soft: rgb(111 156 5 / 0.1);
+  --nx-primary-fill: #b7f52a;
+
+  --nx-success: #15803d;
+  --nx-error: #c62828;
+  --nx-error-soft: rgb(198 40 40 / 0.08);
+  --nx-warning: #b45309;
+
+  --nx-node-org: #15803d;
+  --nx-node-team: #1d4ed8;
+  --nx-node-project: #b45309;
+  --nx-node-timesheet: #6d28d9;
+  --nx-node-invoice: #0e7490;
+
+  --nx-grid-line: rgb(13 27 47 / 0.05);
+  --nx-orbit-line: rgb(13 27 47 / 0.12);
+  --nx-connector-line: rgb(13 27 47 / 0.2);
+  --nx-node-chip-bg: rgb(255 255 255 / 0.92);
+  --nx-glow-strength: 0.35;
+  --nx-grain-opacity: 0.02;
+  --nx-ring-offset: var(--nx-bg);
+}
+
+@mixin nexus-scale {
+  --nx-radius-sm: 6px;
+  --nx-radius-md: 8px;
+  --nx-radius-lg: 12px;
+  --nx-radius-xl: 18px;
+  --nx-radius-pill: 999px;
+
+  --nx-space-1: 4px;
+  --nx-space-2: 8px;
+  --nx-space-3: 12px;
+  --nx-space-4: 16px;
+  --nx-space-5: 20px;
+  --nx-space-6: 24px;
+  --nx-space-8: 32px;
+  --nx-space-10: 40px;
+  --nx-space-12: 48px;
+  --nx-space-16: 64px;
+
+  --nx-font-display: 'Sora', 'Space Grotesk', 'Outfit', system-ui, sans-serif;
+  --nx-font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --nx-ease: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --nx-dur-fast: 150ms;
+  --nx-dur-field: 170ms;
+}
+
+/* The accent that text may sit on. Dark keeps the electric lime; light steps
+   down to an AA-safe olive. */
+@mixin nexus-primary-fill {
+  background: var(--nx-primary-fill, var(--nx-primary));
+}
+
+@mixin nexus-focus-ring($color: var(--nx-primary)) {
+  outline: 2px solid #{$color};
+  outline-offset: 2px;
+}
+
+@mixin nexus-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}

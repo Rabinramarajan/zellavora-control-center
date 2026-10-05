@@ -162,6 +162,8 @@ When `JWT_SECRET` or `REFRESH_TOKEN_SECRET` is unset, the app signs and verifies
 
 **Fix.** Filter through `userTenants: { some: { organizationId: req.tenantId } }` in list, get, stats and every action; pass `req.tenantId` into the dashboard repository; or declare IAM and the dashboard a platform-operator console and gate it behind a platform permission that tenant admins never receive.
 
+**Status — dashboard half fixed.** `modules/dashboard/dashboard.scope.ts` derives the scope from verified JWT claims and every repository method now takes it, so `/overview` and `/activity` are narrowed to the caller's organization. Because INDIVIDUAL accounts all share the default organization, that scope additionally narrows to their own `userId` and serves a personal KPI set. The IAM directory half (`iam-user.repository.ts`) is still open.
+
 #### H6. Permission checks ignore role status, deny rules and group roles
 
 `apps/backend/src/services/auth/permission.service.ts:15`

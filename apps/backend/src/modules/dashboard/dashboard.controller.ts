@@ -3,15 +3,16 @@ import Redis from 'ioredis';
 import { config } from '../../config/env';
 import { DashboardService } from './dashboard.service';
 import { ActivityQuerySchema, OverviewQuerySchema } from './dashboard.dto';
+import { resolveScope } from './dashboard.scope';
 import type { AuthRequest } from '../../middleware/auth';
 
 /**
  * Controller for the Operations Dashboard.
  *
- * Tenant isolation: every aggregation is scoped to the caller's tenant
- * (from the verified JWT) so one organization can never observe another's
- * metrics. The optional `scope` param is validated server-side and never
- * trusts a client-claimed tenant id.
+ * Scoping: every aggregation is narrowed by resolveScope(), which reads the
+ * verified JWT only. Organization accounts see their own tenant; INDIVIDUAL
+ * accounts share the default tenant, so they are narrowed further to their own
+ * user id and receive a personal KPI set instead of the org-wide one.
  */
 export class DashboardController {
   private readonly service: DashboardService;
@@ -37,10 +38,7 @@ export class DashboardController {
   overview = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const parsed = OverviewQuerySchema.parse(req.query);
-      // Scope: prefer the verified JWT tenant; fall back to the header for
-      // platform-level views only when the caller is allowed to (owner/admin).
-      const scope = req.tenantId ?? 'platform';
-      const data = await this.service.getOverview(parsed.range, scope);
+      const data = await this.service.getOverview(parsed.range, resolveScope(req));
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -50,10 +48,13 @@ export class DashboardController {
   activity = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const parsed = ActivityQuerySchema.parse(req.query);
-      const data = await this.service.getActivityFeed(parsed.range, parsed.page, parsed.pageSize, {
-        action: parsed.action,
-        severity: parsed.severity,
-      });
+      const data = await this.service.getActivityFeed(
+        parsed.range,
+        parsed.page,
+        parsed.pageSize,
+        resolveScope(req),
+        { action: parsed.action, severity: parsed.severity }
+      );
       res.json({ success: true, data });
     } catch (err) {
       next(err);

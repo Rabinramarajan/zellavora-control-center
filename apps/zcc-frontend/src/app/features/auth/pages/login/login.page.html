@@ -1,235 +1,166 @@
-<a class="skip-link" href="#login-card">Skip to sign in</a>
+<a class="nx-skip" href="#nx-signin">Skip to sign in</a>
 
-<div class="login-shell">
-  <div class="aurora aurora--violet" aria-hidden="true"></div>
-  <div class="aurora aurora--cyan" aria-hidden="true"></div>
-  <div class="grid-sheen" aria-hidden="true"></div>
+<div class="nx-page">
+  <div class="nx-page__grid" aria-hidden="true"></div>
+  <div class="nx-page__grain" aria-hidden="true"></div>
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true">Z</div>
-      <div>
-        <p class="brand-name">ZELLAVORA</p>
-        <p class="brand-sub">CONTROL CENTER</p>
-      </div>
-    </div>
-    <p class="tagline" aria-hidden="true">Manage <span>·</span> Monitor <span>·</span> Scale</p>
-  </header>
-
-  <section class="story" aria-label="About Zellavora Control Center">
-    <h2 class="headline reveal" style="--d: 0.05s">
-      One Platform.<br />
-      <span class="headline-accent">Infinite Possibilities.</span>
+  <!-- Left: the Nexus. Decorative on desktop, a compact header on mobile. -->
+  <section class="nx-visual" aria-labelledby="nx-visual-title">
+    <h2 id="nx-visual-title" class="nx-visual__title">
+      The Nexus — where organizations, teams, projects, timesheets and invoices connect.
     </h2>
-    <p class="story-copy reveal" style="--d: 0.15s">
-      Zellavora Control Center helps you manage your organization, teams and operations — securely,
-      efficiently and effortlessly.
-    </p>
 
-    <ul class="highlights" role="list">
-      @for (item of highlights; track item.title; let i = $index) {
-      <li class="highlight reveal" [style.--d]="0.25 + i * 0.08 + 's'">
-        <span class="highlight-icon highlight-icon--{{ item.tone }}" aria-hidden="true">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            @switch (item.icon) { @case ('shield') {
-            <path d="M12 3l7.5 3v5.5c0 4.5-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5-7.5-9.5V6L12 3z" />
-            <circle cx="12" cy="11.5" r="2.2" />
-            <path d="M12 13.7V16" />
-            } @case ('chart') {
-            <path d="M4 20h16M7 20v-6M11 20V8M15 20v-9M19 20V5" />
-            } @case ('layers') {
-            <path d="m12 3 9 5-9 5-9-5 9-5z" />
-            <path d="m3 13 9 5 9-5" />
-            <path d="m3 16.5 9 5 9-5" />
-            } }
-          </svg>
-        </span>
-        <div>
-          <p class="highlight-title">{{ item.title }}</p>
-          <p class="highlight-copy">{{ item.copy }}</p>
-        </div>
-      </li>
-      }
-    </ul>
+    <header class="nx-visual__brand">
+      <app-nexus-logo size="md" />
+    </header>
+
+    <div class="nx-visual__network">
+      <app-nexus-network />
+    </div>
+
+    <app-auth-stats class="nx-visual__stats" />
   </section>
 
-  <!-- Decorative product preview -->
-  <div class="device reveal" style="--d: 0.3s" aria-hidden="true">
-    <img
-      class="device-img"
-      src="assets/auth/login-dashboard.webp"
-      alt=""
-      width="1200"
-      height="800"
-      decoding="async"
-      fetchpriority="low"
-    />
-  </div>
+  <!-- Right: the authentication workspace. -->
+  <section class="nx-workspace">
+    <header class="nx-workspace__top">
+      <app-nexus-logo class="nx-workspace__brand" size="md" />
 
-  <ul class="stats reveal" style="--d: 0.45s" role="list" aria-label="Platform at a glance">
-    <li>
-      <span class="stat-icon" aria-hidden="true">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="round"
+      <nav class="nx-nav" aria-label="Product">
+        @for (link of navLinks; track link) {
+          <a class="nx-nav__link" href="https://zelavora.com" target="_blank" rel="noopener">{{
+            link
+          }}</a>
+        }
+      </nav>
+
+      <div class="nx-workspace__meta">
+        <app-system-status />
+        <button
+          type="button"
+          class="nx-theme-toggle"
+          [attr.aria-label]="isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+          [attr.aria-pressed]="!isDark()"
+          (click)="toggleTheme()"
         >
-          <circle cx="9" cy="8" r="3.2" />
-          <path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5" />
-          <path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.3c1.6.6 2.7 2.2 3 4.7" />
-        </svg>
-      </span>
-      <div>
-        <p class="stat-value">200+</p>
-        <p class="stat-label">Happy Teams</p>
-      </div>
-    </li>
-    <li>
-      <span class="stat-icon" aria-hidden="true">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linejoin="round"
-        >
-          <path d="M13 3 5 13.5h5.5L11 21l8-10.5h-5.5L13 3z" />
-        </svg>
-      </span>
-      <div>
-        <p class="stat-value">99.9%</p>
-        <p class="stat-label">Uptime</p>
-      </div>
-    </li>
-    <li>
-      <span class="stat-icon stat-icon--teal" aria-hidden="true">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-        >
-          <circle cx="12" cy="12" r="9" />
-          <path
-            d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"
-          />
-        </svg>
-      </span>
-      <div>
-        <p class="stat-value">Global</p>
-        <p class="stat-label">Access Anywhere</p>
-      </div>
-    </li>
-  </ul>
-
-  <main id="login-card" class="card" tabindex="-1" aria-labelledby="login-title">
-    <div class="card-inner">
-      <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Welcome back</p>
-      <h1 id="login-title" class="card-title">Sign in to your account</h1>
-      <p class="card-lead">Access your workspace and continue where you left off.</p>
-
-      @if (unverified()) {
-      <app-auth-alert tone="warning" heading="Verify your email to continue">
-        Check your inbox for the verification link.
-        <a class="auth-link" routerLink="/auth/resend-verification">Send a new link</a>
-      </app-auth-alert>
-      } @else if (formError()) {
-      <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
-      }
-
-      <form class="auth-form" [formRoot]="form" aria-labelledby="login-title">
-        <app-auth-field
-          [formField]="form.clientCode"
-          label="Organization code"
-          type="text"
-          icon="building"
-          autocomplete="organization"
-          placeholder="e.g. ACME"
-        />
-
-        <app-auth-field
-          [formField]="form.email"
-          label="Email address"
-          type="email"
-          icon="mail"
-          autocomplete="username"
-          inputmode="email"
-          placeholder="name@company.com"
-        />
-
-        <app-auth-field
-          [formField]="form.password"
-          label="Password"
-          type="password"
-          icon="lock"
-          autocomplete="current-password"
-          placeholder="Enter your password"
-        >
-          <a fieldAction class="auth-link auth-link--small" routerLink="/auth/forgot-password">
-            Forgot password?
-          </a>
-        </app-auth-field>
-
-        <label class="auth-check">
-          <input type="checkbox" [formField]="form.rememberMe" />
-          <span>Keep me signed in on this device</span>
-        </label>
-
-        <button type="submit" class="submit" [disabled]="form().submitting()">
-          @if (form().submitting()) {
-          <span class="auth-spinner" aria-hidden="true"></span>
-          <span>Signing in…</span>
-          } @else {
-          <span>Sign in</span>
           <svg
-            class="submit-arrow"
-            width="18"
-            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1.7"
             stroke-linecap="round"
             stroke-linejoin="round"
             aria-hidden="true"
           >
-            <path d="M5 12h14M13 6l6 6-6 6" />
+            @if (isDark()) {
+              <circle cx="12" cy="12" r="4.2" />
+              <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.1 6.1 4.6 4.6M19.4 19.4l-1.5-1.5M17.9 6.1l1.5-1.5M4.6 19.4l1.5-1.5" />
+            } @else {
+              <path d="M20 13.6A8.4 8.4 0 0 1 10.4 4a8.4 8.4 0 1 0 9.6 9.6z" />
+            }
           </svg>
-          }
         </button>
-      </form>
+      </div>
+    </header>
 
-      @if (selfRegistration()) {
-      <p class="note">
-        New to ZCC? <a class="auth-link" routerLink="/auth/register">Create an account</a>
+    <main id="nx-signin" class="nx-workspace__body" tabindex="-1">
+      <h1 class="nx-headline">
+        One Platform.<br />
+        <span class="nx-headline__accent">Infinite Possibilities.</span>
+      </h1>
+
+      <p class="nx-lede">
+        Zelavora Nexus helps you manage your organization, teams and operations, securely,
+        efficiently and effortlessly.
       </p>
-      } @else {
-      <p class="note">Access is by invitation. Contact your administrator for an account.</p>
+
+      <app-auth-value-points class="nx-workspace__values" />
+
+      @if (unverified()) {
+        <app-auth-alert tone="warning" heading="Verify your email to continue">
+          Check your inbox for the verification link.
+          <a class="nx-link" routerLink="/auth/resend-verification">Send a new link</a>
+        </app-auth-alert>
+      } @else if (formError()) {
+        <app-auth-alert tone="error">{{ formError() }}</app-auth-alert>
       }
 
-      <footer class="legal">
-        <span>© {{ year }} Zellavora</span>
-        <a href="https://zellavora.com/privacy" target="_blank" rel="noopener">Privacy</a>
-        <a href="https://zellavora.com/terms" target="_blank" rel="noopener">Terms</a>
-        <a href="mailto:support@zellavora.com">Support</a>
-      </footer>
-    </div>
-  </main>
+      <form class="nx-form" [formRoot]="form" aria-label="Sign in">
+        <app-auth-field
+          [formField]="form.clientCode"
+          label="Organization code"
+          type="text"
+          autocomplete="organization"
+          placeholder="e.g. acme"
+        />
+
+        <app-auth-field
+          [formField]="form.email"
+          label="Email"
+          type="email"
+          autocomplete="email"
+          inputmode="email"
+          placeholder="you@company.com"
+        />
+
+        <div class="nx-form__password">
+          <app-auth-field
+            [formField]="form.password"
+            label="Password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+          />
+          <a class="nx-link nx-link--quiet" routerLink="/auth/forgot-password">Forgot password?</a>
+        </div>
+
+        <label class="nx-check">
+          <input type="checkbox" [formField]="form.rememberMe" />
+          <span class="nx-check__box" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m3.6 8.4 2.9 2.9 5.9-6.2" />
+            </svg>
+          </span>
+          <span class="nx-check__label">Keep me signed in on this device</span>
+        </label>
+
+        <button type="submit" class="nx-submit" [disabled]="form().submitting()">
+          @if (form().submitting()) {
+            <span class="nx-submit__spinner" aria-hidden="true"></span>
+            <span>Signing in…</span>
+          } @else {
+            <span>Sign in</span>
+            <svg
+              class="nx-submit__arrow"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          }
+        </button>
+
+        <p class="nx-form__status" aria-live="polite">
+          @if (form().submitting()) {
+            Signing in, please wait.
+          }
+        </p>
+      </form>
+
+      <p class="nx-switch">
+        @if (selfRegistration()) {
+          New to Nexus? <a class="nx-link" routerLink="/auth/register">Create an account</a>
+        } @else {
+          Access is by invitation. Contact your administrator for an account.
+        }
+      </p>
+    </main>
+
+    <app-auth-footer class="nx-workspace__footer" />
+  </section>
 </div>

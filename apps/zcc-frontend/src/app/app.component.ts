@@ -33,12 +33,21 @@ export class AppComponent {
     return !(url === '/auth' || url.startsWith('/auth/') || url.startsWith('/auth?'));
   });
 
+  /**
+   * Auth screens that exist only in dark. Sign-in is the exception: the Nexus
+   * composition ships both themes, so it follows the chosen one.
+   * Kept in step with the pre-bootstrap theme script in index.html.
+   */
+  private readonly darkOnlyScreen = computed(() => {
+    const url = this.currentUrl();
+    return !this.showAdminLayout() && !url.startsWith('/auth/login');
+  });
+
   constructor() {
     inject(AnalyticsTrackerService).start();
     // Constructed eagerly so the organization theme applies right after sign-in.
     inject(ThemeRuntimeService);
     const theme = inject(ThemeService);
-    // The sign-in screens are designed dark-only; the chosen theme applies inside the app shell.
-    effect(() => theme.forcedTheme.set(this.showAdminLayout() ? null : 'dark'));
+    effect(() => theme.forcedTheme.set(this.darkOnlyScreen() ? 'dark' : null));
   }
 }

@@ -1,0 +1,32 @@
+<span class="nx-logo__mark" [class.nx-logo__mark--glow]="glow()">
+  <svg viewBox="0 0 32 32" role="img" [attr.aria-label]="wordmark() ? null : 'Zelavora Nexus'">
+    @if (wordmark()) {
+      <title>Zelavora Nexus</title>
+    }
+    <g
+      class="nx-logo__glyph"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M10.5 10.5h11L10.5 21.5h11" />
+    </g>
+    @if (showNodes()) {
+      <g class="nx-logo__nodes" fill="currentColor">
+        <circle cx="10.5" cy="10.5" r="2.3" />
+        <circle cx="21.5" cy="10.5" r="2.3" />
+        <circle cx="10.5" cy="21.5" r="2.3" />
+        <circle cx="21.5" cy="21.5" r="2.3" />
+      </g>
+    }
+  </svg>
+</span>
+
+@if (wordmark()) {
+  <span class="nx-logo__text">
+    <span class="nx-logo__name">ZELAVORA</span>
+    <span class="nx-logo__sub">NEXUS</span>
+  </span>
+}

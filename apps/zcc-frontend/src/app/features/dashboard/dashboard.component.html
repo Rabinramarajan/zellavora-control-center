@@ -108,7 +108,7 @@
       <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
         <div>
           <h2 class="dash-title">Activity &amp; Growth</h2>
-          <p class="dash-subtitle">Audit activity and member sign-ups over time.</p>
+          <p class="dash-subtitle">{{ trendSubtitle() }}</p>
         </div>
         <div class="flex items-center gap-4 text-[13px] text-slate-300">
           <span class="flex items-center gap-2"
@@ -121,7 +121,7 @@
             ><span
               class="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px] shadow-blue-500"
             ></span
-            >Members</span
+            >{{ store.trendLegend().secondary }}</span
           >
           <span class="dash-chip">Daily</span>
         </div>
@@ -150,10 +150,10 @@
     >
       <div class="flex items-start justify-between gap-3 mb-6">
         <div>
-          <h2 class="dash-title">Plan Distribution</h2>
-          <p class="dash-subtitle">Organization subscription plans.</p>
+          <h2 class="dash-title">{{ store.panel()?.title ?? 'Plan Distribution' }}</h2>
+          <p class="dash-subtitle">{{ store.panel()?.subtitle }}</p>
         </div>
-        <span class="dash-chip">Organizations</span>
+        <span class="dash-chip">{{ store.panel()?.chip }}</span>
       </div>
 
       @if (store.loadingOverview() && !store.hasOverview()) {
@@ -169,14 +169,14 @@
           <app-plan-donut
             class="w-full"
             [data]="store.planDistribution()"
-            totalLabel="Total Organizations"
+            [totalLabel]="store.panel()?.totalLabel ?? 'Total'"
           />
         </div>
       } @else {
         <div class="dash-empty flex-1 min-h-[200px]">
           <app-dashboard-icon name="building" [size]="22" />
-          <p class="font-medium text-slate-200">No plans</p>
-          <p>No organization plans recorded.</p>
+          <p class="font-medium text-slate-200">{{ store.panel()?.emptyTitle ?? 'Nothing yet' }}</p>
+          <p>{{ store.panel()?.emptyHint }}</p>
         </div>
       }
     </div>
@@ -337,7 +337,7 @@
     <div class="dash-card dash-reveal xl:col-span-4 p-5 sm:p-6" style="animation-delay: 460ms">
       <h2 class="dash-title mb-5">Quick Actions</h2>
       <div class="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
-        @for (a of quickActions; track a.title) {
+        @for (a of visibleQuickActions(); track a.title) {
           <a [routerLink]="a.link" class="dash-action" [attr.data-tone]="a.tone">
             <span class="dash-action-icon">
               <app-dashboard-icon [name]="a.icon" [size]="20" />

@@ -7,6 +7,8 @@ import {
   ActivityFeedPage,
   DashboardOverview,
   DashboardRange,
+  TrendPoint,
+  TrendSeriesKey,
 } from './dashboard.models';
 
 export interface DashboardStoreState {
@@ -62,10 +64,15 @@ export class DashboardStore {
     return t === null || Date.now() - t > 5 * 60 * 1000;
   });
 
-  readonly kpis = computed(() => this.state().overview?.kpis ?? null);
+  readonly kpis = computed(() => this.state().overview?.kpis ?? []);
   readonly trends = computed(() => this.state().overview?.trends ?? null);
   readonly recentActivity = computed(() => this.state().overview?.activity ?? []);
   readonly planDistribution = computed(() => this.state().overview?.planDistribution ?? []);
+  readonly scope = computed(() => this.state().overview?.scope ?? 'organization');
+  readonly panel = computed(() => this.state().overview?.panel ?? null);
+  readonly trendLegend = computed(
+    () => this.state().overview?.trendLegend ?? { primary: 'Primary', secondary: 'Secondary' }
+  );
 
   // Derived chart-ready series
   readonly trendLabels = computed(() => {
@@ -73,8 +80,22 @@ export class DashboardStore {
     return t?.activity.map((p) => this.formatLabel(p.date)) ?? [];
   });
   readonly activitySeries = computed(() => this.trends()?.activity.map((p) => p.count) ?? []);
-  readonly membersSeries = computed(() => this.trends()?.members.map((p) => p.count) ?? []);
-  readonly orgsSeries = computed(() => this.trends()?.organizations.map((p) => p.count) ?? []);
+  readonly primarySeries = computed(() => this.trends()?.primary.map((p) => p.count) ?? []);
+  readonly secondarySeries = computed(() => this.trends()?.secondary.map((p) => p.count) ?? []);
+
+  /** Resolve a KPI's sparkline from the series key the API attached to it. */
+  seriesFor(key: TrendSeriesKey | null): number[] {
+    if (key === 'primary') return this.primarySeries();
+    if (key === 'secondary') return this.secondarySeries();
+    if (key === 'activity') return this.activitySeries();
+    return [];
+  }
+
+  /** Raw points behind the same key, for delta computation. */
+  pointsFor(key: TrendSeriesKey | null): TrendPoint[] {
+    const t = this.trends();
+    return t && key ? t[key] : [];
+  }
 
   // --- Actions --------------------------------------------------------------
   setRange(range: DashboardRange): void {

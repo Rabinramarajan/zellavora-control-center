@@ -1,0 +1,35 @@
+<ul class="nx-values" role="list">
+  @for (point of points; track point.label) {
+    <li class="nx-values__item">
+      <span class="nx-values__icon" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          @switch (point.icon) {
+            @case ('shield') {
+              <path d="M12 3.2 19 6v5.3c0 4.3-2.9 7.8-7 9-4.1-1.2-7-4.7-7-9V6z" />
+              <path d="m9 12 2.2 2.2L15.2 10" />
+            }
+            @case ('scale') {
+              <path d="M4 19.5h16" />
+              <path d="M7 19.5v-5M11.6 19.5V9.5M16.2 19.5v-8" />
+              <path d="M5.5 7 10 4.2l3.6 2.4L19 3.5" />
+            }
+            @case ('control') {
+              <rect x="3.6" y="3.6" width="7" height="7" rx="1.8" />
+              <rect x="13.4" y="3.6" width="7" height="7" rx="1.8" />
+              <rect x="3.6" y="13.4" width="7" height="7" rx="1.8" />
+              <rect x="13.4" y="13.4" width="7" height="7" rx="1.8" />
+            }
+          }
+        </svg>
+      </span>
+      <span class="nx-values__label">{{ point.label }}</span>
+    </li>
+  }
+</ul>

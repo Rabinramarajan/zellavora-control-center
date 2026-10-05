@@ -58,6 +58,23 @@ export function emailRules(path: StringPath): void {
   maxLength(path, 254, { message: 'Email must be 254 characters or fewer.' });
 }
 
+/**
+ * Optional organization code. Mirrors `clientCode` in auth.dto.ts: 2-16
+ * characters, letters, digits and hyphens. Blank means "resolve from the email".
+ */
+export function clientCodeRules(path: StringPath): void {
+  maxLength(path, 16, { message: 'Organization code must be 16 characters or fewer.' });
+  validate(path, ({ value }) => {
+    const trimmed = value().trim();
+    if (!trimmed) return null;
+    if (trimmed.length < 2)
+      return { kind: 'minLength', message: 'Organization code must be at least 2 characters.' };
+    if (!/^[A-Za-z0-9-]+$/.test(trimmed))
+      return { kind: 'pattern', message: 'Use letters, numbers and hyphens only.' };
+    return null;
+  });
+}
+
 export function nameRules(path: StringPath, label: string): void {
   required(path, { message: `Enter your ${label.toLowerCase()}.` });
   maxLength(path, 100, { message: `${label} must be 100 characters or fewer.` });
