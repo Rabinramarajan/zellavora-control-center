@@ -234,7 +234,7 @@ router.post(
  *         description: Operation response
  *   delete:
  *     summary: deleteInvoice
- *     description: Soft delete; drafts only.
+ *     description: Soft delete; drafts and cancelled invoices only. A cancelled bill frees its number.
  *     operationId: deleteInvoicesById
  *     tags: [invoices]
  *     parameters:

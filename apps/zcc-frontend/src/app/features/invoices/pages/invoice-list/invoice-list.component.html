@@ -184,6 +184,16 @@
                         Cancel
                       </button>
                     }
+                    @case ('CANCELLED') {
+                      <button
+                        type="button"
+                        class="link-btn link-btn--danger"
+                        [disabled]="busyId() === invoice.id"
+                        (click)="remove(invoice)"
+                      >
+                        Delete
+                      </button>
+                    }
                   }
                 </div>
               </td>

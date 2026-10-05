@@ -127,8 +127,14 @@ export class InvoicePreviewComponent implements OnInit {
     if (!invoice) return;
     const ok = await firstValueFrom(
       this.dialog.confirm({
-        title: 'Delete this draft?',
-        message: 'The draft is removed. No bill number was used.',
+        title:
+          invoice.status === 'DRAFT'
+            ? 'Delete this draft?'
+            : `Delete ${invoice.invoiceNumber ?? 'this invoice'}?`,
+        message:
+          invoice.status === 'DRAFT'
+            ? 'The draft is removed. No bill number was used.'
+            : 'The cancelled invoice is removed and its bill number is freed, so a corrected copy can be imported under it.',
         confirmText: 'Delete',
         variant: 'danger',
       })
@@ -136,7 +142,7 @@ export class InvoicePreviewComponent implements OnInit {
     if (!ok) return;
     try {
       await this.api.delete(invoice.id);
-      this.bus.push({ kind: 'info', message: 'Draft deleted', ttl: 3000 });
+      this.bus.push({ kind: 'info', message: 'Invoice deleted', ttl: 3000 });
       await this.router.navigate(['/invoices']);
     } catch (error) {
       this.report(error);

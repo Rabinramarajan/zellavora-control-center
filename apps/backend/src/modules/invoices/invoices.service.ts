@@ -371,12 +371,26 @@ export class InvoicesService {
     return toView(invoice);
   }
 
+  /**
+   * Soft delete a draft or a cancelled invoice. Issued and paid bills must be
+   * cancelled first. A cancelled bill's number is released (and kept in the
+   * audit log) so a corrected copy can be imported under it again.
+   */
   public async delete(id: string, actor: InvoiceActor): Promise<{ id: string }> {
-    assertDraft(await this.find(id, actor));
-    await prisma.invoice.update({
+    const invoice = await this.find(id, actor);
+    if (invoice.status !== 'DRAFT' && invoice.status !== 'CANCELLED') {
+      throw new AppError('Cancel this invoice before deleting it', 409, 'INVOICE_LOCKED');
+    }
+    const deleted = await prisma.invoice.update({
       where: { id },
-      data: { deletedAt: new Date(), updatedBy: actor.userId },
+      data: { deletedAt: new Date(), invoiceNumber: null, updatedBy: actor.userId },
+      include: invoiceInclude,
     });
+    if (invoice.status === 'CANCELLED') {
+      await this.audit('invoice.deleted', deleted, actor, {
+        invoiceNumber: invoice.invoiceNumber,
+      });
+    }
     return { id };
   }
 

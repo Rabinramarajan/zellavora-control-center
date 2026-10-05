@@ -49,6 +49,11 @@
               Cancel
             </button>
           }
+          @case ('CANCELLED') {
+            <button type="button" class="danger-btn" [disabled]="busy()" (click)="remove()">
+              Delete
+            </button>
+          }
         }
       </div>
     </header>
