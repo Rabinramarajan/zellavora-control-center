@@ -1,5 +1,5 @@
-import { applyPatch, computeTotals } from './timesheet.service';
-import { EntryStatus, TimesheetEntry } from './timesheet.model';
+import { applyPatch, computeTotals, normalizeTimesheet } from './timesheet.service';
+import { EntryStatus, Timesheet, TimesheetEntry } from './timesheet.model';
 
 const entry = (status: EntryStatus, hours: number | null): TimesheetEntry => ({
   id: `${status}-${hours}`,
@@ -78,5 +78,22 @@ describe('applyPatch', () => {
     const original = entry('WORKING', 8);
     applyPatch(original, { status: 'LEAVE' });
     expect(original.hours).toBe(8);
+  });
+});
+
+describe('normalizeTimesheet', () => {
+  it('turns Prisma Decimal strings into numbers so totals add rather than concatenate', () => {
+    const sheet = normalizeTimesheet({
+      totalHours: '16.5',
+      entries: [
+        { ...entry('WORKING', null), hours: '8.5' },
+        { ...entry('WORKING', null), hours: '8' },
+        { ...entry('LEAVE', null), hours: null },
+      ],
+    } as unknown as Timesheet);
+
+    expect(sheet.totalHours).toBe(16.5);
+    expect(sheet.entries.map((e) => e.hours)).toEqual([8.5, 8, null]);
+    expect(computeTotals(sheet.entries).totalHours.toFixed(2)).toBe('16.50');
   });
 });

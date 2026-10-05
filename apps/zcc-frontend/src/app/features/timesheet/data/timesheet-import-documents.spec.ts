@@ -64,14 +64,17 @@ const WORD_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/200
 
 describe('gridToCsv', () => {
   it('finds a header row below a title block and maps column aliases', () => {
-    const csv = gridToCsv([
-      ['Monthly timesheet'],
-      ['Employee', 'Ada'],
-      ['Work date', 'Time in', 'Time out', 'Hrs', 'Remarks'],
-      ['2026-10-01', '9:00:00 AM', '5:30 PM', '8 h', 'Release'],
-      ['3 Oct 2026', '', '', '4', ''],
-      ['Total', '', '', '12', ''],
-    ]);
+    const csv = gridToCsv(
+      [
+        ['Monthly timesheet'],
+        ['Employee', 'Ada'],
+        ['Work date', 'Time in', 'Time out', 'Hrs', 'Remarks'],
+        ['2026-10-01', '9:00:00 AM', '5:30 PM', '8 h', 'Release'],
+        ['3 Oct 2026', '', '', '4', ''],
+        ['Total', '', '', '12', ''],
+      ],
+      '2026-10'
+    );
 
     const preview = parseCsvImport(csv, '2026-10');
     expect(preview.errors).toEqual([]);
@@ -98,17 +101,84 @@ describe('gridToCsv', () => {
 
   it('converts Excel date serials and time fractions', () => {
     // 46296 = 2026-10-01; 0.375 = 09:00; 0.7291666 = 17:30.
-    const csv = gridToCsv([
-      ['Date', 'Start', 'End', 'Hours', 'Status'],
-      [46296, 0.375, 0.7291666667, 8, 'Working'],
-    ]);
+    const csv = gridToCsv(
+      [
+        ['Date', 'Start', 'End', 'Hours', 'Status'],
+        [46296, 0.375, 0.7291666667, 8, 'Working'],
+      ],
+      '2026-10'
+    );
     expect(parseCsvImport(csv, '2026-10').entries[0]).toEqual(
       jasmine.objectContaining({ date: '2026-10-01', startTime: '09:00', endTime: '17:30' })
     );
   });
 
+  it('gives yearless and day-only dates the open period, not the browser default of 2001', () => {
+    const csv = gridToCsv(
+      [
+        ['Date', 'Hours', 'Status'],
+        ['Mon, Sep 1', '8:30', 'Working'],
+        ['2nd Sep', '7h 45m', 'Working'],
+        ['3', '8', 'Working'],
+        ['04-Sep-26', '8,5', 'Working'],
+      ],
+      '2026-09'
+    );
+
+    const preview = parseCsvImport(csv, '2026-09');
+    expect(preview.errors).toEqual([]);
+    expect(preview.entries.map(({ date, hours }) => [date, hours])).toEqual([
+      ['2026-09-01', 8.5],
+      ['2026-09-02', 7.75],
+      ['2026-09-03', 8],
+      ['2026-09-04', 8.5],
+    ]);
+  });
+
+  it('keeps an explicit year so a wrong-month file is reported, not silently moved', () => {
+    const csv = gridToCsv(
+      [
+        ['Date', 'Hours'],
+        ['1 Aug 2026', '8'],
+        ['2 Aug 2026', '8'],
+        ['3 Aug 2026', '8'],
+      ],
+      '2026-09'
+    );
+    expect(parseCsvImport(csv, '2026-09').errors).toEqual([
+      '3 rows are for August 2026 (2026-08-01 to 2026-08-03), but the open timesheet is ' +
+        'September 2026. Open the matching month, or correct the dates in the file.',
+    ]);
+  });
+
+  it('reads LEAVE or Holiday written in the time and hours cells as the day status', () => {
+    const csv = gridToCsv(
+      [
+        ['Date', 'Start', 'End', 'Hours', 'Status'],
+        ['Sep 1', '9:00 AM', '5:30 PM', '8', ''],
+        ['Sep 2', 'LEAVE', 'LEAVE', 'LEAVE', ''],
+        ['Sep 3', '-', '-', 'Holiday', ''],
+        ['Sep 4', '-', '-', '8', ''],
+        ['Sep 7', '', '', '', 'Sick'],
+      ],
+      '2026-09'
+    );
+
+    const preview = parseCsvImport(csv, '2026-09');
+    expect(preview.errors).toEqual([]);
+    expect(preview.entries.map(({ date, hours, status }) => [date, hours, status])).toEqual([
+      ['2026-09-01', 8, 'WORKING'],
+      ['2026-09-02', null, 'LEAVE'],
+      ['2026-09-03', null, 'HOLIDAY'],
+      ['2026-09-04', 8, 'WORKING'],
+      ['2026-09-07', null, 'LEAVE'],
+    ]);
+  });
+
   it('explains a missing header row', () => {
-    expect(() => gridToCsv([['Name', 'Value']])).toThrowError(/No timesheet table was found/);
+    expect(() => gridToCsv([['Name', 'Value']], '2026-10')).toThrowError(
+      /No timesheet table was found/
+    );
   });
 });
 
@@ -207,7 +277,7 @@ describe('documentToCsv', () => {
       </w:body></w:document>`,
     });
 
-    const csv = await documentToCsv(fileOf(bytes, 'october.docx'), 'docx');
+    const csv = await documentToCsv(fileOf(bytes, 'october.docx'), 'docx', '2026-10');
     const preview = parseCsvImport(csv, '2026-10');
 
     expect(preview.errors).toEqual([]);

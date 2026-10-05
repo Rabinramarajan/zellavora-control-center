@@ -1,4 +1,4 @@
-import { BulkEntryPatch, EntryStatus } from './timesheet.model';
+import { BulkEntryPatch, EntryStatus, formatPeriod } from './timesheet.model';
 
 export interface TimesheetImportPreview {
   entries: BulkEntryPatch[];
@@ -77,7 +77,7 @@ export async function readTimesheetImport(
     } else {
       // Loaded on demand: most imports are CSV, and the PDF reader is large.
       const { documentToCsv } = await import('./timesheet-import-documents');
-      content = await documentToCsv(file, sourceFormat);
+      content = await documentToCsv(file, sourceFormat, expectedPeriod);
     }
   } catch (error) {
     // Converter errors are written for the user; anything else is not.
@@ -148,6 +148,7 @@ function validateRows(
   const errors: string[] = [];
   const entries: BulkEntryPatch[] = [];
   const dates = new Set<string>();
+  const outside: { rowNumber: number; date: string }[] = [];
 
   if (sourcePeriod && sourcePeriod !== expectedPeriod) {
     errors.push(`This file is for ${sourcePeriod}, but the open timesheet is ${expectedPeriod}.`);
@@ -168,7 +169,7 @@ function validateRows(
       errors.push(`Row ${rowNumber}: date must be formatted as YYYY-MM-DD.`);
     } else {
       if (!date.startsWith(`${expectedPeriod}-`)) {
-        errors.push(`Row ${rowNumber}: ${date} is outside ${expectedPeriod}.`);
+        outside.push({ rowNumber, date });
       }
       if (dates.has(date)) {
         errors.push(`Row ${rowNumber}: ${date} appears more than once.`);
@@ -179,8 +180,12 @@ function validateRows(
     if (startTime && !TIME_PATTERN.test(startTime))
       errors.push(`Row ${rowNumber}: invalid start time.`);
     if (endTime && !TIME_PATTERN.test(endTime)) errors.push(`Row ${rowNumber}: invalid end time.`);
-    if (hours === undefined) errors.push(`Row ${rowNumber}: hours must be between 0 and 24.`);
-    if (!status) errors.push(`Row ${rowNumber}: unknown status.`);
+    if (hours === undefined) {
+      errors.push(
+        `Row ${rowNumber}: hours "${String(row['hours']).trim()}" must be a number between 0 and 24.`
+      );
+    }
+    if (!status) errors.push(`Row ${rowNumber}: unknown status "${stringValue(row, 'status')}".`);
     if ((notes?.length ?? 0) > 2000)
       errors.push(`Row ${rowNumber}: notes exceed 2,000 characters.`);
 
@@ -189,7 +194,35 @@ function validateRows(
     }
   });
 
+  // A file for the wrong month fails on every row; say that once, up front.
+  const periodErrors = describeOutsideDates(outside, expectedPeriod);
+  errors.unshift(...periodErrors);
+
   return { entries: errors.length ? [] : entries, errors, sourcePeriod };
+}
+
+const OUTSIDE_SUMMARY_THRESHOLD = 3;
+
+function describeOutsideDates(
+  outside: readonly { rowNumber: number; date: string }[],
+  expectedPeriod: string
+): string[] {
+  if (outside.length < OUTSIDE_SUMMARY_THRESHOLD) {
+    return outside.map(
+      ({ rowNumber, date }) =>
+        `Row ${rowNumber}: ${date} is outside ${formatPeriod(expectedPeriod)}.`
+    );
+  }
+
+  const periods = [...new Set(outside.map(({ date }) => date.slice(0, 7)))];
+  const where =
+    periods.length === 1 ? `are for ${formatPeriod(periods[0])}` : `fall outside this month`;
+  const first = outside[0].date;
+  const last = outside[outside.length - 1].date;
+  return [
+    `${outside.length} rows ${where} (${first} to ${last}), but the open timesheet is ` +
+      `${formatPeriod(expectedPeriod)}. Open the matching month, or correct the dates in the file.`,
+  ];
 }
 
 function parseCsv(text: string): string[][] {

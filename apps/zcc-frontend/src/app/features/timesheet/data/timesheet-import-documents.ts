@@ -45,14 +45,18 @@ export class DocumentImportError extends Error {
  * Reads a document and returns CSV text with the canonical import columns.
  * Every failure surfaces as a DocumentImportError with a readable message.
  */
-export async function documentToCsv(file: File, format: DocumentFormat): Promise<string> {
+export async function documentToCsv(
+  file: File,
+  format: DocumentFormat,
+  period: string
+): Promise<string> {
   try {
     const buffer = new Uint8Array(await file.arrayBuffer());
     switch (format) {
       case 'xlsx':
-        return gridToCsv(await readSpreadsheetGrid(buffer));
+        return gridToCsv(await readSpreadsheetGrid(buffer), period);
       case 'docx':
-        return gridToCsv(await readWordGrid(buffer));
+        return gridToCsv(await readWordGrid(buffer), period);
       case 'pdf':
         return pdfLinesToCsv(await withTimeout(readPdfLines(file), PDF_READ_TIMEOUT_MS, 'timeout'));
     }
@@ -77,7 +81,7 @@ type Cell = string | number;
  * Finds the header row anywhere in the grid (sheets often start with a title
  * block) and rewrites the rows beneath it under the canonical column names.
  */
-export function gridToCsv(grid: readonly Cell[][]): string {
+export function gridToCsv(grid: readonly Cell[][], period: string): string {
   const headerIndex = grid.findIndex((row) => {
     const columns = mapHeader(row);
     return columns.has('date') && (columns.has('hours') || columns.has('status'));
@@ -95,17 +99,24 @@ export function gridToCsv(grid: readonly Cell[][]): string {
       const index = columns.get(column);
       return index === undefined ? '' : (row[index] ?? '');
     };
-    const date = toDateKey(value('date'));
+    const date = toDateKey(value('date'), period);
     // Title rows, totals and signature lines below the table have no date.
     if (!date) continue;
 
-    const hours = toHours(value('hours'));
+    // Hand-made sheets often write "LEAVE" or "Holiday" across the time and
+    // hours cells instead of using a status column.
+    const marker = [value('hours'), value('start'), value('end')]
+      .map(dayMarker)
+      .find((found) => found !== null);
+    const hours = marker ? '' : toHours(value('hours'));
+    const rawStatus = String(value('status')).trim();
+    const status = dayMarker(rawStatus) ?? rawStatus;
     records.push([
       date,
-      toClock(value('start')),
-      toClock(value('end')),
+      marker ? '' : toClock(value('start')),
+      marker ? '' : toClock(value('end')),
       hours,
-      inferStatus(String(value('status')).trim(), hours, date),
+      status || marker || inferStatus(status, hours, date),
       String(value('notes')).trim(),
     ]);
   }
@@ -127,7 +138,7 @@ function mapHeader(row: readonly Cell[]): Map<Column, number> {
 }
 
 /** Excel stores dates as days since 1899-12-30; text dates are parsed as written. */
-function toDateKey(value: Cell): string {
+function toDateKey(value: Cell, period: string): string {
   if (typeof value === 'number') {
     if (value < 1 || value > 2_958_465) return '';
     return new Date(Math.round((value - 25569) * 86_400_000)).toISOString().slice(0, 10);
@@ -139,15 +150,55 @@ function toDateKey(value: Cell): string {
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(text);
   if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`;
 
-  // Only month-name dates ("3 Aug 2026", "Aug 3, 2026"): 03/08/2026 is ambiguous.
-  if (!/[a-z]{3}/i.test(text)) return text;
-  const parsed = new Date(text.replace(/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*,?\s+/i, ''));
-  if (Number.isNaN(parsed.getTime())) return text;
-  return [
-    parsed.getFullYear(),
-    String(parsed.getMonth() + 1).padStart(2, '0'),
-    String(parsed.getDate()).padStart(2, '0'),
-  ].join('-');
+  const [periodYear, periodMonth] = period.split('-').map(Number);
+  // A bare day number in a monthly sheet means that day of the open month.
+  if (/^\d{1,2}$/.test(text)) return dateKeyOf(periodYear, periodMonth, Number(text)) ?? text;
+
+  // Month-name dates only ("3 Aug 2026", "Mon, Sep 1"); 03/08/2026 is ambiguous.
+  // Parsed by hand: browsers fill a missing year with 2001.
+  const cleaned = text
+    .replace(/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*\.?,?\s*/i, '')
+    .replace(/(\d)(st|nd|rd|th)\b/gi, '$1')
+    .trim();
+  const dayFirst = /^(\d{1,2})[\s./-]*([a-z]{3,})\.?(?:[\s,./-]+(\d{2}|\d{4}))?$/i.exec(cleaned);
+  const monthFirst = /^([a-z]{3,})\.?[\s./-]*(\d{1,2})(?:[\s,./-]+(\d{2}|\d{4}))?$/i.exec(cleaned);
+  const parts = dayFirst
+    ? { day: dayFirst[1], month: dayFirst[2], year: dayFirst[3] }
+    : monthFirst
+      ? { day: monthFirst[2], month: monthFirst[1], year: monthFirst[3] }
+      : null;
+  if (!parts) return text;
+
+  const month = MONTH_NAMES.indexOf(parts.month.slice(0, 3).toLowerCase()) + 1;
+  if (month === 0) return text;
+  const year = !parts.year
+    ? periodYear
+    : parts.year.length === 2
+      ? 2000 + Number(parts.year)
+      : Number(parts.year);
+  return dateKeyOf(year, month, Number(parts.day)) ?? text;
+}
+
+const MONTH_NAMES = [
+  'jan',
+  'feb',
+  'mar',
+  'apr',
+  'may',
+  'jun',
+  'jul',
+  'aug',
+  'sep',
+  'oct',
+  'nov',
+  'dec',
+];
+
+/** "YYYY-MM-DD", or null when the day does not exist in that month. */
+function dateKeyOf(year: number, month: number, day: number): string | null {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  return date.toISOString().slice(0, 10);
 }
 
 /** Excel stores a time of day as a fraction of 24 hours. */
@@ -165,8 +216,31 @@ function toClock(value: Cell): string {
 
 function toHours(value: Cell): string {
   if (typeof value === 'number') return String(Math.round(value * 100) / 100);
-  const text = value.trim().replace(/\s*(h|hrs?|hours?)$/i, '');
-  return text === '-' || text === '—' ? '' : text;
+  const text = value.trim();
+  if (text === '-' || text === '—') return '';
+
+  // Durations written as a clock or in words: "8:30", "8h 30m", "7 hrs 45 mins".
+  const duration =
+    /^(\d{1,2}):([0-5]\d)(?::\d{2})?$/.exec(text) ??
+    /^(\d{1,2})\s*h(?:rs?|ours?)?\s*(?:([0-5]?\d)\s*m(?:ins?|inutes?)?)?$/i.exec(text);
+  if (duration) {
+    const hours = Number(duration[1]) + Number(duration[2] ?? 0) / 60;
+    return String(Math.round(hours * 100) / 100);
+  }
+  return text.replace(/\s*(h|hrs?|hours?)$/i, '').replace(',', '.');
+}
+
+/** Words that stand in for hours on a non-working day, mapped to a status label. */
+const DAY_MARKERS: readonly [RegExp, string][] = [
+  [/^(leave|on leave|annual leave|sick( leave)?|pto|vacation|l)$/i, 'Leave'],
+  [/^(holiday|public holiday|bank holiday|ph|h)$/i, 'Holiday'],
+];
+
+/** The status a marker word implies, or null when the cell is not a marker. */
+function dayMarker(value: Cell): string | null {
+  if (typeof value !== 'string') return null;
+  const text = value.trim();
+  return DAY_MARKERS.find(([pattern]) => pattern.test(text))?.[1] ?? null;
 }
 
 /** Hand-made sheets often skip the status; hours on a day mean it was worked. */

@@ -43,6 +43,20 @@ const importErrors = (error: unknown): string[] => {
   return [body?.message ?? normalized?.message ?? 'The import failed. Please try again.'];
 };
 
+/** Prisma Decimal columns arrive as JSON strings ("8.5"); the grid does arithmetic on them. */
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+/** Coerce the sheet's decimal fields to numbers once, where API data enters the app. */
+export const normalizeTimesheet = (sheet: Timesheet): Timesheet => ({
+  ...sheet,
+  totalHours: toNumberOrNull(sheet.totalHours) ?? 0,
+  entries: sheet.entries.map((entry) => ({ ...entry, hours: toNumberOrNull(entry.hours) })),
+});
+
 /** Roll entries up into the figures the summary card and totals bar show. */
 export const computeTotals = (entries: readonly TimesheetEntry[]): TimesheetTotals =>
   entries.reduce<TimesheetTotals>(
@@ -135,7 +149,7 @@ export class TimesheetService {
     const params: Record<string, string> = { period };
     if (employeeId) params['employeeId'] = employeeId;
     return firstValueFrom(this.api.getData<ApiEnvelope<Timesheet>>('/timesheets', params)).then(
-      (response) => response.data
+      (response) => normalizeTimesheet(response.data)
     );
   }
 
@@ -185,7 +199,7 @@ export class TimesheetService {
         )
       );
       this.rollbacks.delete(entryId);
-      this.timesheetResource.set(response.data);
+      this.timesheetResource.set(normalizeTimesheet(response.data));
     } catch (error) {
       if (snapshot) this.writeEntry(snapshot);
       this.rollbacks.delete(entryId);
@@ -220,7 +234,7 @@ export class TimesheetService {
           entries: patches,
         })
       );
-      this.timesheetResource.set(response.data);
+      this.timesheetResource.set(normalizeTimesheet(response.data));
     } catch (error) {
       this.timesheetResource.set(snapshot);
       this.showError('Could not apply those changes', error);
@@ -260,7 +274,7 @@ export class TimesheetService {
           { hideFullSpinner: true }
         )
       );
-      this.timesheetResource.set(response.data);
+      this.timesheetResource.set(normalizeTimesheet(response.data));
       const count = response.meta.importedCount;
       this.messages.add({
         severity: 'success',
@@ -358,7 +372,7 @@ export class TimesheetService {
       const response = await firstValueFrom(
         this.api.postData<ApiEnvelope<Timesheet>>(`/timesheets/${sheet.id}/${action}`, body)
       );
-      this.timesheetResource.set(response.data);
+      this.timesheetResource.set(normalizeTimesheet(response.data));
       this.messages.add({ severity: 'success', summary: 'Done', detail: successDetail });
     } catch (error) {
       this.showError(`Could not ${action} the timesheet`, error);
