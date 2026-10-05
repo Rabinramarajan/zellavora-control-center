@@ -176,7 +176,6 @@
   display: flex;
   align-items: center;
   gap: var(--nx-space-3);
-  width: 100%;
   justify-content: flex-end;
 }
 
@@ -238,7 +237,7 @@
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 1.9vh, 22px);
-  max-width: 460px;
+  max-width: 600px;
   width: 100%;
 
   &:focus {
@@ -264,7 +263,7 @@
 
 .nx-lede {
   margin: 0;
-  max-width: 44ch;
+  max-width: 52ch;
   font-size: 15px;
   line-height: 1.6;
   color: var(--nx-text-secondary);
@@ -459,7 +458,7 @@
   position: relative;
   margin: 0;
   padding-top: clamp(12px, 1.8vh, 20px);
-  max-width: 460px;
+  max-width: 600px;
   font-size: 13px;
   color: var(--nx-text-secondary);
   border-top: 1px solid var(--nx-border-subtle);
@@ -564,6 +563,42 @@
 
   .nx-page__grid {
     background-size: 44px 44px;
+  }
+}
+
+/* Short windows (1366x768 laptops and resized browsers): tighten the vertical
+   rhythm so the whole workspace still fits the locked viewport. Nothing is
+   removed — only spacing and type steps down. */
+@media (min-width: 768px) and (max-height: 820px) {
+  .nx-workspace {
+    padding-block: clamp(10px, 2.2vh, 44px);
+    gap: clamp(8px, 1.6vh, 30px);
+  }
+
+  .nx-workspace__body {
+    gap: clamp(6px, 1.4vh, 22px);
+  }
+
+  .nx-headline {
+    font-size: clamp(26px, min(3.3vw, 4.6vh), 58px);
+  }
+
+  .nx-lede {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .nx-form {
+    gap: clamp(6px, 1.3vh, 18px);
+  }
+
+  /* Pointer-only at this size, so the 44px touch floor can relax. */
+  .nx-link--quiet {
+    padding-block: 4px;
+  }
+
+  .nx-check {
+    min-height: 34px;
   }
 }
 
