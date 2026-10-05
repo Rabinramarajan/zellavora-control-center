@@ -1,0 +1,178 @@
+// Themeable through custom properties; defaults match the timesheet palette.
+// The list renders in the CDK overlay container, outside :host, so the
+// tokens are applied to the panel as well.
+@mixin light-tokens {
+  --tp-height: 2.4rem;
+  --tp-radius: 0.6rem;
+  --tp-text: #17211d;
+  --tp-muted: #6d7973;
+  --tp-placeholder: #a3aea8;
+  --tp-surface: #fff;
+  --tp-border: #d5ddd9;
+  --tp-border-hover: #9eb9ad;
+  --tp-accent: #2f7a60;
+  --tp-ring: rgba(38, 126, 95, 0.18);
+  --tp-option-hover: #eef5f1;
+  --tp-shadow: 0 14px 34px rgba(15, 28, 23, 0.16), 0 2px 6px rgba(15, 28, 23, 0.08);
+}
+
+@mixin dark-tokens {
+  --tp-text: #edf5f1;
+  --tp-muted: #9ba8a1;
+  --tp-placeholder: #6f7d76;
+  --tp-surface: #131b18;
+  --tp-border: #34433c;
+  --tp-border-hover: #587368;
+  --tp-accent: #6fc3a2;
+  --tp-ring: rgba(111, 195, 162, 0.2);
+  --tp-option-hover: #1d2924;
+  --tp-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+}
+
+:host {
+  @include light-tokens;
+
+  display: inline-block;
+  width: 8.5rem;
+}
+
+.tp-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.tp-input {
+  width: 100%;
+  min-height: var(--tp-height);
+  padding: 0 2.1rem 0 0.75rem;
+  color: var(--tp-text);
+  background: var(--tp-surface);
+  border: 1px solid var(--tp-border);
+  border-radius: var(--tp-radius);
+  font: inherit;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.tp-input::placeholder {
+  color: var(--tp-placeholder);
+}
+.tp-input:hover:not(:disabled) {
+  border-color: var(--tp-border-hover);
+}
+.tp-input:focus,
+:host(.tp-open) .tp-input {
+  outline: none;
+  border-color: var(--tp-accent);
+  box-shadow: 0 0 0 3px var(--tp-ring);
+}
+
+.tp-toggle {
+  position: absolute;
+  right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  color: var(--tp-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0.45rem;
+  cursor: pointer;
+}
+.tp-toggle:hover:not(:disabled) {
+  color: var(--tp-accent);
+  background: var(--tp-option-hover);
+}
+.tp-toggle i {
+  font-size: 0.8rem;
+}
+
+:host(.tp-disabled) .tp-input {
+  color: #9aa59f;
+  background: transparent;
+  border-color: transparent;
+  cursor: not-allowed;
+}
+:host(.tp-disabled) .tp-toggle {
+  visibility: hidden;
+}
+
+// The panel renders in the CDK overlay container but keeps this component's styles.
+.tp-panel {
+  overflow: hidden;
+  color: var(--tp-text);
+  background: var(--tp-surface);
+  border: 1px solid var(--tp-border);
+  border-radius: 0.75rem;
+  box-shadow: var(--tp-shadow);
+}
+.tp-list {
+  max-height: 15rem;
+  margin: 0;
+  padding: 0.3rem;
+  overflow-y: auto;
+  list-style: none;
+  overscroll-behavior: contain;
+}
+.tp-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.tp-option-active {
+  background: var(--tp-option-hover);
+}
+.tp-option[aria-selected='true'] {
+  color: var(--tp-accent);
+  font-weight: 650;
+}
+.tp-option i {
+  font-size: 0.7rem;
+}
+.tp-clear {
+  display: block;
+  width: 100%;
+  min-height: 2.4rem;
+  color: var(--tp-muted);
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--tp-border);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.tp-clear:hover {
+  color: var(--tp-text);
+  background: var(--tp-option-hover);
+}
+
+:host-context(.dark) {
+  @include dark-tokens;
+}
+.tp-panel {
+  @include light-tokens;
+}
+// Emulated encapsulation would scope `.dark` itself; the theme class lives on <html>.
+::ng-deep .dark .tp-panel {
+  @include dark-tokens;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-input {
+    transition: none;
+  }
+}

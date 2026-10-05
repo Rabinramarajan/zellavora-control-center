@@ -31,7 +31,13 @@ export interface ExportModel {
   id: string;
   period: string;
   status: string;
-  employee: { id: string; name: string; email: string; jobTitle: string | null };
+  employee: {
+    id: string;
+    name: string;
+    email: string;
+    jobTitle: string | null;
+    department: string | null;
+  };
   approver: { id: string; name: string } | null;
   submittedAt: string | null;
   approvedAt: string | null;
@@ -56,9 +62,11 @@ export const buildExportModel = (sheet: TimesheetWithEntries): ExportModel => ({
   status: sheet.status,
   employee: {
     id: sheet.user.id,
-    name: sheet.user.fullName,
+    // The sheet's own values win; the profile fills in what was left blank.
+    name: sheet.employeeName ?? sheet.user.fullName,
     email: sheet.user.email,
     jobTitle: sheet.user.jobTitle,
+    department: sheet.department ?? sheet.user.department ?? null,
   },
   approver: sheet.approver ? { id: sheet.approver.id, name: sheet.approver.fullName } : null,
   submittedAt: sheet.submittedAt?.toISOString() ?? null,
@@ -166,6 +174,7 @@ export const toPrintableHtml = (model: ExportModel): string => {
   <section class="info">
     <div><span>Employee</span><span>${escapeHtml(model.employee.name)}</span></div>
     <div><span>Email</span><span>${escapeHtml(model.employee.email)}</span></div>
+    <div><span>Department</span><span>${escapeHtml(model.employee.department) || '—'}</span></div>
     <div><span>Role</span><span>${escapeHtml(model.employee.jobTitle) || '—'}</span></div>
     <div><span>Period</span><span>${escapeHtml(model.period)}</span></div>
     <div><span>Submitted</span><span>${formatDateTime(model.submittedAt)}</span></div>

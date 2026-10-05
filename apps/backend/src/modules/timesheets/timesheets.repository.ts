@@ -4,7 +4,7 @@ import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 /** A timesheet with its entries in calendar order plus the names we render. */
 export const timesheetInclude = {
   entries: { orderBy: { entryDate: 'asc' } },
-  user: { select: { id: true, fullName: true, email: true, jobTitle: true } },
+  user: { select: { id: true, fullName: true, email: true, jobTitle: true, department: true } },
   approver: { select: { id: true, fullName: true, email: true } },
 } satisfies Prisma.TimesheetInclude;
 

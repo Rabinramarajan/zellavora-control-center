@@ -51,6 +51,21 @@ export const BulkUpsertEntriesSchema = z.object({
     .max(31),
 });
 
+/** An empty string clears the value, so the sheet falls back to the user profile. */
+const SheetLabelSchema = z
+  .string()
+  .trim()
+  .max(120)
+  .nullable()
+  .optional()
+  .transform((value) => (value === '' ? null : value));
+
+export const UpdateTimesheetDetailsSchema = z
+  .object({ employeeName: SheetLabelSchema, department: SheetLabelSchema })
+  .refine((dto) => dto.employeeName !== undefined || dto.department !== undefined, {
+    message: 'Send employeeName or department',
+  });
+
 /** 1 MB of text comfortably holds a month of rows with long notes. */
 export const MAX_IMPORT_BYTES = 1024 * 1024;
 
@@ -89,6 +104,7 @@ export const ListTimesheetsQuerySchema = z.object({
 export type GetTimesheetQueryDTO = z.infer<typeof GetTimesheetQuerySchema>;
 export type UpdateEntryDTO = z.infer<typeof UpdateEntrySchema>;
 export type BulkUpsertEntriesDTO = z.infer<typeof BulkUpsertEntriesSchema>;
+export type UpdateTimesheetDetailsDTO = z.infer<typeof UpdateTimesheetDetailsSchema>;
 export type ImportTimesheetDTO = z.infer<typeof ImportTimesheetSchema>;
 export type RejectTimesheetDTO = z.infer<typeof RejectTimesheetSchema>;
 export type ExportQueryDTO = z.infer<typeof ExportQuerySchema>;

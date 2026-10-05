@@ -8,6 +8,7 @@ import {
   BulkEntryPatch,
   EntryPatch,
   Timesheet,
+  TimesheetDetails,
   TimesheetEntry,
   TimesheetTotals,
   TimesheetYearSummary,
@@ -145,6 +146,10 @@ export class TimesheetService {
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly rollbacks = new Map<string, TimesheetEntry>();
 
+  private detailsTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingDetails: TimesheetDetails = {};
+  private detailsRollback: TimesheetDetails | null = null;
+
   private fetchTimesheet(employeeId: string | null, period: string): Promise<Timesheet> {
     const params: Record<string, string> = { period };
     if (employeeId) params['employeeId'] = employeeId;
@@ -204,6 +209,57 @@ export class TimesheetService {
       if (snapshot) this.writeEntry(snapshot);
       this.rollbacks.delete(entryId);
       this.showError('Could not save that change', error);
+    } finally {
+      this.pendingSaves.update((count) => count - 1);
+    }
+  }
+
+  /**
+   * Edit the employee and department shown on the sheet. Saved after a short
+   * pause, like cells; a failed save restores the values from before the edit.
+   */
+  updateDetails(patch: TimesheetDetails): void {
+    const sheet = this.timesheetResource.value();
+    if (!sheet) return;
+
+    this.detailsRollback ??= { employeeName: sheet.employeeName, department: sheet.department };
+    this.pendingDetails = { ...this.pendingDetails, ...patch };
+    this.timesheetResource.set({ ...sheet, ...patch });
+
+    if (this.detailsTimer) clearTimeout(this.detailsTimer);
+    this.detailsTimer = setTimeout(() => {
+      this.detailsTimer = null;
+      void this.flushDetails(sheet.id);
+    }, AUTOSAVE_DEBOUNCE_MS);
+  }
+
+  private async flushDetails(timesheetId: string): Promise<void> {
+    const patch = this.pendingDetails;
+    const rollback = this.detailsRollback;
+    this.pendingDetails = {};
+    this.detailsRollback = null;
+
+    this.pendingSaves.update((count) => count + 1);
+    try {
+      const response = await firstValueFrom(
+        this.api.patchData<ApiEnvelope<Timesheet>>(`/timesheets/${timesheetId}`, patch)
+      );
+      // Take only the header fields: cell edits may still be in flight.
+      const saved = response.data;
+      this.timesheetResource.update((sheet) =>
+        sheet
+          ? {
+              ...sheet,
+              employeeName: saved.employeeName,
+              department: saved.department,
+              updatedAt: saved.updatedAt,
+            }
+          : sheet
+      );
+    } catch (error) {
+      if (rollback)
+        this.timesheetResource.update((sheet) => (sheet ? { ...sheet, ...rollback } : sheet));
+      this.showError('Could not save the sheet details', error);
     } finally {
       this.pendingSaves.update((count) => count - 1);
     }

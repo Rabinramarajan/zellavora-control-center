@@ -30,6 +30,7 @@ import { parseTimesheetImport } from './timesheets.import';
 import {
   BulkUpsertEntriesDTO,
   ImportTimesheetDTO,
+  UpdateTimesheetDetailsDTO,
   ListTimesheetsQueryDTO,
   RejectTimesheetDTO,
   SummaryQueryDTO,
@@ -270,6 +271,24 @@ export class TimesheetsService {
     const sheet = await this.getById(timesheetId, organizationId);
     assertEntriesEditable(sheet, actorUserId);
     return this.applyEntries(sheet, dto.entries, organizationId, actorUserId);
+  }
+
+  /** Employee and department as printed on the sheet; editable while entries are. */
+  async updateDetails(
+    timesheetId: string,
+    dto: UpdateTimesheetDetailsDTO,
+    organizationId: string,
+    actorUserId: string
+  ): Promise<TimesheetWithEntries> {
+    const sheet = await this.getById(timesheetId, organizationId);
+    assertEntriesEditable(sheet, actorUserId);
+
+    await this.repo.update(timesheetId, {
+      ...(dto.employeeName !== undefined && { employeeName: dto.employeeName }),
+      ...(dto.department !== undefined && { department: dto.department }),
+      updatedBy: actorUserId,
+    });
+    return this.getById(timesheetId, organizationId);
   }
 
   /**

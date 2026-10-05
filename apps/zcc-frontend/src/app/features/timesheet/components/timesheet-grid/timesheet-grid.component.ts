@@ -25,6 +25,11 @@ import {
   TimesheetEntry,
   formatPeriod,
 } from '../../data/timesheet.model';
+import { TimePickerComponent } from '../../../../shared/components/time-picker/time-picker.component';
+import {
+  hoursBetween,
+  parseTime,
+} from '../../../../shared/components/time-picker/time-picker.utils';
 import { DayStatusPipe, ENTRY_STATUS_OPTIONS } from '../../pipes/day-status.pipe';
 import { TimesheetSummaryCardComponent } from '../timesheet-summary-card/timesheet-summary-card.component';
 import { TimesheetApprovalPanelComponent } from '../timesheet-approval-panel/timesheet-approval-panel.component';
@@ -46,6 +51,7 @@ interface GridRow {
     DialogModule,
     ToastModule,
     DayStatusPipe,
+    TimePickerComponent,
     TimesheetSummaryCardComponent,
     TimesheetApprovalPanelComponent,
   ],
@@ -80,8 +86,8 @@ export class TimesheetGridComponent {
       !this.isImporting()
     );
   });
-  protected readonly fillStart = signal('09:00');
-  protected readonly fillEnd = signal('17:30');
+  protected readonly fillStart = signal('9:00 AM');
+  protected readonly fillEnd = signal('5:30 PM');
   protected readonly fillHours = signal(8);
 
   /** Two-way binding target for p-dialog's `visible`. */
@@ -181,6 +187,32 @@ export class TimesheetGridComponent {
     }
   ): void {
     this.service.updateEntry(entry.id, patch);
+  }
+
+  /**
+   * Set a clock time. Once both ends are known and no hours were entered,
+   * the hours are filled in from the span so the common case needs one less edit.
+   */
+  protected setTime(
+    entry: TimesheetEntry,
+    field: 'startTime' | 'endTime',
+    value: string | null
+  ): void {
+    const next = { ...entry, [field]: value };
+    const start = parseTime(next.startTime);
+    const end = parseTime(next.endTime);
+    const fillHours = start !== null && end !== null && (entry.hours === null || entry.hours === 0);
+    this.patch(entry, {
+      [field]: value,
+      ...(fillHours && { hours: hoursBetween(start, end) }),
+      ...(fillHours && entry.status === 'EMPTY' && { status: this.workedStatus(entry) }),
+    });
+  }
+
+  private workedStatus(entry: TimesheetEntry): EntryStatus {
+    return entry.dayOfWeek === 'Saturday' || entry.dayOfWeek === 'Sunday'
+      ? 'WEEKEND_WORK'
+      : 'WORKING';
   }
 
   protected submit(): void {

@@ -983,6 +983,9 @@ model Timesheet {
   userId          String           @map("user_id") @db.Uuid
   period          String           @map("period") @db.VarChar(7)
   status          TimesheetStatus  @default(DRAFT) @map("status")
+  /// Shown on the sheet and its exports; null falls back to the user profile.
+  employeeName    String?          @map("employee_name") @db.VarChar(120)
+  department      String?          @map("department") @db.VarChar(120)
   totalHours      Decimal          @default(0) @map("total_hours") @db.Decimal(7, 2)
   submittedAt     DateTime?        @map("submitted_at") @db.Timestamptz(6)
   approvedById    String?          @map("approved_by") @db.Uuid

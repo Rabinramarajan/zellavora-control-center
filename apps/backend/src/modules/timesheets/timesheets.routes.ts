@@ -316,6 +316,44 @@ router.post(
  *       403:
  *         description: Only the owning employee may edit entries
  */
+/**
+ * @swagger
+ * /api/v1/timesheets/{id}:
+ *   patch:
+ *     summary: updateTimesheetDetails
+ *     operationId: patchTimesheetsById
+ *     description: >
+ *       Set the employee name and department printed on the sheet. An empty
+ *       string or null clears a value so the user profile is shown instead.
+ *     tags: [timesheets]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employeeName: { type: string, nullable: true, maxLength: 120 }
+ *               department: { type: string, nullable: true, maxLength: 120 }
+ *     responses:
+ *       200:
+ *         description: The updated timesheet
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/TimesheetEnvelope' }
+ *       409:
+ *         description: The timesheet is locked for editing
+ */
+router.patch(
+  '/:id',
+  handle((req, res) => controller.updateDetails(req, res))
+);
+
 router.patch(
   '/:id/entries/:entryId',
   handle((req, res) => controller.updateEntry(req, res))

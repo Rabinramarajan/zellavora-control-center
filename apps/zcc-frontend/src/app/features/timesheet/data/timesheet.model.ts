@@ -42,6 +42,7 @@ export interface TimesheetPerson {
   fullName: string;
   email: string;
   jobTitle?: string | null;
+  department?: string | null;
 }
 
 export interface Timesheet {
@@ -51,6 +52,9 @@ export interface Timesheet {
   /** "YYYY-MM" */
   period: string;
   status: TimesheetStatus;
+  /** As printed on the sheet; null falls back to the user profile. */
+  employeeName: string | null;
+  department: string | null;
   totalHours: number;
   submittedAt: string | null;
   approvedAt: string | null;
@@ -128,3 +132,9 @@ export const formatPeriod = (period: string): string => {
 /** "YYYY-MM" for a date, used to seed the period picker. */
 export const periodOf = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+/** Editable header fields of a sheet. */
+export interface TimesheetDetails {
+  employeeName?: string | null;
+  department?: string | null;
+}

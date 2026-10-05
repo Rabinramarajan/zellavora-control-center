@@ -1,5 +1,11 @@
 :host {
-  display: block;
+  // Fill the layout's flex column so the page background reaches the bottom
+  // even when there are only a few rows.
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  // Cancel the admin layout's p-6 gutter so the page surface runs edge to edge.
+  margin: -1.5rem;
 }
 
 :host .ts-button {
@@ -52,8 +58,8 @@
   font-size: 0.75rem;
 }
 .timesheets-page {
-  min-height: 100%;
-  padding: 2rem;
+  flex: 1 0 auto;
+  padding: 1.5rem;
   color: #16211d;
   background: #f5f7f6;
 }
@@ -62,7 +68,6 @@
   align-items: end;
   justify-content: space-between;
   gap: 2rem;
-  max-width: 92rem;
   margin: 0 auto 1.5rem;
 }
 .heading-copy h1 {
@@ -102,7 +107,6 @@
 .year-strip {
   display: grid;
   grid-template-columns: 1.3fr repeat(4, 1fr);
-  max-width: 92rem;
   margin: 0 auto 1.25rem;
   overflow: hidden;
   color: #e9f1ed;
@@ -141,7 +145,6 @@
   color: #8fdec2;
 }
 .browser-panel {
-  max-width: 92rem;
   margin: auto;
   border: 1px solid #dde4e0;
   border-radius: 1.1rem;

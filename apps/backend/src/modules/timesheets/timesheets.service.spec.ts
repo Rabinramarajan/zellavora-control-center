@@ -223,6 +223,28 @@ describe('TimesheetsService', () => {
     });
   });
 
+  describe('updateDetails', () => {
+    it('saves only the fields sent', async () => {
+      repo.findById.mockResolvedValue(sheet());
+
+      await service.updateDetails('sheet-1', { department: 'Engineering' }, ORG_A, EMPLOYEE);
+
+      expect(repo.update).toHaveBeenCalledWith('sheet-1', {
+        department: 'Engineering',
+        updatedBy: EMPLOYEE,
+      });
+    });
+
+    it('refuses edits once the sheet is submitted', async () => {
+      repo.findById.mockResolvedValue(sheet({ status: TimesheetStatus.SUBMITTED }));
+
+      await expect(
+        service.updateDetails('sheet-1', { employeeName: 'Ada L.' }, ORG_A, EMPLOYEE)
+      ).rejects.toThrow(/locked for editing/);
+      expect(repo.update).not.toHaveBeenCalled();
+    });
+  });
+
   describe('importEntries', () => {
     const csv = [
       'Date,Day,Start,End,Hours,Status,Notes',

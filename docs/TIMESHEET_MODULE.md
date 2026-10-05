@@ -46,6 +46,7 @@ OpenAPI spec is generated from the `@swagger` blocks in
 | GET | `/timesheets?employeeId&year&status` | Without `period`, lists sheets. |
 | GET | `/timesheets/summary?employeeId&year` | Yearly rollup for reports. |
 | GET | `/timesheets/:id` | One sheet with its entries. |
+| PATCH | `/timesheets/:id` | Set `employeeName` / `department` shown on the sheet (owner, while editable). Empty clears back to the profile. |
 | GET | `/timesheets/:id/export?format=json\|csv\|html` | See *Exports*. |
 | POST | `/timesheets/:id/entries/bulk` | Upsert up to 31 entries at once. |
 | POST | `/timesheets/:id/import` | Import a CSV or JSON export. See *Imports*. |
@@ -119,6 +120,19 @@ plain table with Tailwind classes and `p-select` for the status column.
 There is no server-side PDF renderer in this repo and no Reports module to
 reuse. If one is added, render it from `buildExportModel` rather than
 re-deriving the figures.
+
+## Sheet details and time entry
+
+Each sheet stores its own `employeeName` and `department` (migration
+`20261005150000_timesheet_employee_department`). Null falls back to the user
+profile, in the grid and in exports. Both are edited at the top of the grid and
+saved after a short pause, like cells.
+
+The grid columns are Date, Day, Start Time, End Time, Hours and Status/Notes.
+Start and End use the shared `app-time-picker`
+(`shared/components/time-picker`): type ("930p", "21:30") or pick from a
+15-minute list. When both times are set on a day with no hours, the hours are
+filled in from the span and a blank status becomes Working or Weekend work.
 
 ## Imports
 

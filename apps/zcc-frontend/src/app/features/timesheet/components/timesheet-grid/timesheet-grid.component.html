@@ -83,17 +83,32 @@
   }
 
   @if (service.timesheet(); as sheet) {
-    <section class="person-strip" aria-label="Timesheet owner">
-      <span class="person-avatar">{{ sheet.user.fullName.charAt(0) }}</span>
-      <div class="person-copy">
-        <strong>{{ sheet.user.fullName }}</strong
-        ><span>{{ sheet.user.jobTitle || sheet.user.email }}</span>
+    <section class="sheet-details" aria-label="Timesheet details">
+      <div class="detail-field">
+        <label for="sheet-employee">Employee</label>
+        <input
+          id="sheet-employee"
+          class="ts-input"
+          maxlength="120"
+          autocomplete="name"
+          [placeholder]="sheet.user.fullName"
+          [disabled]="!service.canEdit()"
+          [ngModel]="sheet.employeeName ?? sheet.user.fullName"
+          (ngModelChange)="service.updateDetails({ employeeName: $event })"
+        />
       </div>
-      <div class="person-meta">
-        <span>Period</span><strong>{{ periodLabel() }}</strong>
-      </div>
-      <div class="person-meta">
-        <span>Last updated</span><strong>{{ sheet.updatedAt | date: 'd MMM, h:mm a' }}</strong>
+      <div class="detail-field">
+        <label for="sheet-department">Department</label>
+        <input
+          id="sheet-department"
+          class="ts-input"
+          maxlength="120"
+          autocomplete="organization-title"
+          [placeholder]="sheet.user.department || 'e.g. Engineering'"
+          [disabled]="!service.canEdit()"
+          [ngModel]="sheet.department ?? sheet.user.department ?? ''"
+          (ngModelChange)="service.updateDetails({ department: $event })"
+        />
       </div>
     </section>
   }
@@ -136,44 +151,37 @@
             <tr>
               <th scope="col" class="px-3 py-2 font-semibold">Date</th>
               <th scope="col" class="px-3 py-2 font-semibold">Day</th>
-              <th scope="col" class="px-3 py-2 font-semibold">Start</th>
-              <th scope="col" class="px-3 py-2 font-semibold">End</th>
+              <th scope="col" class="px-3 py-2 font-semibold">Start Time</th>
+              <th scope="col" class="px-3 py-2 font-semibold">End Time</th>
               <th scope="col" class="px-3 py-2 text-right font-semibold">Hours</th>
-              <th scope="col" class="px-3 py-2 font-semibold">Status</th>
-              <th scope="col" class="px-3 py-2 font-semibold">Notes</th>
+              <th scope="col" class="px-3 py-2 font-semibold">Status/Notes</th>
             </tr>
           </thead>
           <tbody>
             @for (row of rows(); track row.entry.id) {
               <tr [class]="rowClass(row)">
-                <td class="px-3 py-1.5 tabular-nums">
-                  {{ row.entry.entryDate | date: 'd MMM' : 'UTC' }}
+                <td class="px-3 py-1.5 tabular-nums font-medium">
+                  {{ row.entry.entryDate | date: 'MMM d' : 'UTC' }}
                 </td>
                 <td class="px-3 py-1.5 text-gray-600 dark:text-gray-400">
                   {{ row.entry.dayOfWeek }}
                 </td>
                 <td class="px-3 py-1.5">
-                  <input
-                    type="text"
-                    class="ts-cell-input w-24"
-                    inputmode="numeric"
-                    placeholder="09:00"
-                    [attr.aria-label]="'Start time on ' + row.entry.dayOfWeek"
+                  <app-time-picker
+                    placeholder="10:00 AM"
+                    [ariaLabel]="'Start time on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
                     [disabled]="!service.canEdit() || row.isNonWorking"
                     [ngModel]="row.entry.startTime"
-                    (ngModelChange)="patch(row.entry, { startTime: $event || null })"
+                    (ngModelChange)="setTime(row.entry, 'startTime', $event)"
                   />
                 </td>
                 <td class="px-3 py-1.5">
-                  <input
-                    type="text"
-                    class="ts-cell-input w-24"
-                    inputmode="numeric"
-                    placeholder="17:30"
-                    [attr.aria-label]="'End time on ' + row.entry.dayOfWeek"
+                  <app-time-picker
+                    placeholder="8:00 PM"
+                    [ariaLabel]="'End time on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
                     [disabled]="!service.canEdit() || row.isNonWorking"
                     [ngModel]="row.entry.endTime"
-                    (ngModelChange)="patch(row.entry, { endTime: $event || null })"
+                    (ngModelChange)="setTime(row.entry, 'endTime', $event)"
                   />
                 </td>
                 <td class="px-3 py-1.5 text-right">
@@ -183,51 +191,51 @@
                     min="0"
                     max="24"
                     step="0.25"
-                    [attr.aria-label]="'Hours on ' + row.entry.dayOfWeek"
+                    [attr.aria-label]="'Hours on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')"
                     [disabled]="!service.canEdit() || row.isNonWorking"
                     [ngModel]="row.entry.hours"
                     (ngModelChange)="patch(row.entry, { hours: toHours($event) })"
                   />
                 </td>
                 <td class="px-3 py-1.5">
-                  @if (service.canEdit()) {
-                    <span class="status-select" [attr.data-status]="row.entry.status">
-                      <select
-                        [attr.aria-label]="
-                          'Status on ' +
-                          row.entry.dayOfWeek +
-                          ' ' +
-                          (row.entry.entryDate | date: 'd MMM' : 'UTC')
-                        "
-                        [ngModel]="row.entry.status"
-                        (ngModelChange)="patch(row.entry, { status: $event })"
+                  <div class="status-notes">
+                    @if (service.canEdit()) {
+                      <span class="status-select" [attr.data-status]="row.entry.status">
+                        <select
+                          [attr.aria-label]="
+                            'Status on ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')
+                          "
+                          [ngModel]="row.entry.status"
+                          (ngModelChange)="patch(row.entry, { status: $event })"
+                        >
+                          @for (option of statusOptions; track option.value) {
+                            <option [ngValue]="option.value">
+                              {{ option.value === 'EMPTY' ? 'Not set' : option.label }}
+                            </option>
+                          }
+                        </select>
+                        <i class="pi pi-chevron-down" aria-hidden="true"></i>
+                      </span>
+                    } @else {
+                      <span
+                        class="inline-block rounded px-2 py-0.5 text-xs font-medium"
+                        [class]="row.entry.status | dayStatus: 'badgeClass'"
                       >
-                        @for (option of statusOptions; track option.value) {
-                          <option [ngValue]="option.value">
-                            {{ option.value === 'EMPTY' ? 'Not set' : option.label }}
-                          </option>
-                        }
-                      </select>
-                      <i class="pi pi-chevron-down" aria-hidden="true"></i>
-                    </span>
-                  } @else {
-                    <span
-                      class="inline-block rounded px-2 py-0.5 text-xs font-medium"
-                      [class]="row.entry.status | dayStatus: 'badgeClass'"
-                    >
-                      {{ row.entry.status | dayStatus: 'label' }}
-                    </span>
-                  }
-                </td>
-                <td class="px-3 py-1.5">
-                  <input
-                    type="text"
-                    class="ts-cell-input w-full min-w-[12rem]"
-                    [attr.aria-label]="'Notes for ' + row.entry.dayOfWeek"
-                    [disabled]="!service.canEdit()"
-                    [ngModel]="row.entry.notes"
-                    (ngModelChange)="patch(row.entry, { notes: $event || null })"
-                  />
+                        {{ row.entry.status | dayStatus: 'label' }}
+                      </span>
+                    }
+                    <input
+                      type="text"
+                      class="ts-cell-input notes-input"
+                      placeholder="Add a note"
+                      [attr.aria-label]="
+                        'Notes for ' + (row.entry.entryDate | date: 'MMM d' : 'UTC')
+                      "
+                      [disabled]="!service.canEdit()"
+                      [ngModel]="row.entry.notes"
+                      (ngModelChange)="patch(row.entry, { notes: $event || null })"
+                    />
+                  </div>
                 </td>
               </tr>
             }
@@ -264,11 +272,11 @@
   <div class="dialog-fields">
     <div class="dialog-field">
       <label for="fill-start">Start</label>
-      <input id="fill-start" class="ts-input" [(ngModel)]="fillStart" />
+      <app-time-picker class="dialog-time" inputId="fill-start" [(ngModel)]="fillStart" />
     </div>
     <div class="dialog-field">
       <label for="fill-end">End</label>
-      <input id="fill-end" class="ts-input" [(ngModel)]="fillEnd" />
+      <app-time-picker class="dialog-time" inputId="fill-end" [(ngModel)]="fillEnd" />
     </div>
     <div class="dialog-field dialog-field-full">
       <label for="fill-hours">Hours per day</label>

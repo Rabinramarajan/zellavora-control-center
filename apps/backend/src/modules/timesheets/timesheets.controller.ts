@@ -11,6 +11,7 @@ import {
   ExportQuerySchema,
   GetTimesheetQuerySchema,
   ImportTimesheetSchema,
+  UpdateTimesheetDetailsSchema,
   ListTimesheetsQuerySchema,
   RejectTimesheetSchema,
   SummaryQuerySchema,
@@ -104,6 +105,23 @@ export class TimesheetsController {
       res.json({ success: true, data: sheet });
     } catch (error) {
       logger.error('Bulk upsert timesheet entries failed', error);
+      throw error;
+    }
+  }
+
+  async updateDetails(req: AuthRequest, res: Response) {
+    try {
+      const { organizationId, actorUserId } = this.context(req);
+      const dto = UpdateTimesheetDetailsSchema.parse(req.body);
+      const sheet = await this.service.updateDetails(
+        req.params.id,
+        dto,
+        organizationId,
+        actorUserId
+      );
+      res.json({ success: true, data: sheet });
+    } catch (error) {
+      logger.error('Update timesheet details failed', error);
       throw error;
     }
   }
