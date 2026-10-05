@@ -50,7 +50,7 @@
         type="button"
         class="ts-button ts-button-secondary"
         [disabled]="!service.timesheet() || service.isSaving() || isExporting()"
-        (click)="openExport('html')"
+        (click)="previewOpen.set(true)"
       >
         <i
           class="pi"
@@ -416,4 +416,16 @@
       <span>{{ isImporting() ? 'Importing' : 'Import rows' }}</span>
     </button>
   </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Export timesheet"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '62rem', maxWidth: 'calc(100vw - 2rem)' }"
+  [(visible)]="previewOpenModel"
+>
+  @if (previewOpen() && report(); as report) {
+    <app-timesheet-report-preview [report]="report" (csvRequested)="downloadCsv()" />
+  }
 </p-dialog>

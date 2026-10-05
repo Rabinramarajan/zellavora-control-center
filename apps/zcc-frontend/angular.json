@@ -37,7 +37,7 @@
             "sourceMap": true,
             "optimization": false,
             "extractLicenses": false,
-            "allowedCommonJsDependencies": []
+            "allowedCommonJsDependencies": ["core-js", "raf", "rgbcolor", "html2canvas"]
           },
           "configurations": {
             "production": {

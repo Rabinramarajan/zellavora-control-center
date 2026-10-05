@@ -30,6 +30,8 @@ import {
   hoursBetween,
   parseTime,
 } from '../../../../shared/components/time-picker/time-picker.utils';
+import { buildTimesheetReport } from '../../data/timesheet-report';
+import { TimesheetReportPreviewComponent } from '../timesheet-report-preview/timesheet-report-preview.component';
 import { DayStatusPipe, ENTRY_STATUS_OPTIONS } from '../../pipes/day-status.pipe';
 import { TimesheetSummaryCardComponent } from '../timesheet-summary-card/timesheet-summary-card.component';
 import { TimesheetApprovalPanelComponent } from '../timesheet-approval-panel/timesheet-approval-panel.component';
@@ -52,6 +54,7 @@ interface GridRow {
     ToastModule,
     DayStatusPipe,
     TimePickerComponent,
+    TimesheetReportPreviewComponent,
     TimesheetSummaryCardComponent,
     TimesheetApprovalPanelComponent,
   ],
@@ -70,6 +73,13 @@ export class TimesheetGridComponent {
   protected readonly autoFillOpen = signal(false);
   protected readonly isExporting = signal(false);
   protected readonly importOpen = signal(false);
+  protected readonly previewOpen = signal(false);
+
+  /** Rebuilt from the live sheet, so the preview follows edits saved meanwhile. */
+  protected readonly report = computed(() => {
+    const sheet = this.service.timesheet();
+    return sheet ? buildTimesheetReport(sheet) : null;
+  });
   protected readonly isReadingImport = signal(false);
   protected readonly isImporting = signal(false);
   protected readonly importAccept = IMPORT_ACCEPT;
@@ -96,6 +106,13 @@ export class TimesheetGridComponent {
   }
   protected set autoFillOpenModel(value: boolean) {
     this.autoFillOpen.set(value);
+  }
+
+  protected get previewOpenModel(): boolean {
+    return this.previewOpen();
+  }
+  protected set previewOpenModel(value: boolean) {
+    this.previewOpen.set(value);
   }
 
   protected get importOpenModel(): boolean {
@@ -219,32 +236,14 @@ export class TimesheetGridComponent {
     void this.service.submitForApproval();
   }
 
-  protected async openExport(format: 'json' | 'csv' | 'html'): Promise<void> {
+  /** CSV comes from the API so it stays importable; PDF and Word are built in the preview. */
+  protected async downloadCsv(): Promise<void> {
     if (this.isExporting()) return;
-
-    // Open synchronously while the click still has browser user activation.
-    // Navigating it after the authenticated request avoids popup blockers.
-    const preview = format === 'html' ? window.open('', '_blank') : null;
-    if (preview) preview.opener = null;
-
     this.isExporting.set(true);
     try {
-      const file = await this.service.exportFile(format);
-      if (!file) {
-        preview?.close();
-        return;
-      }
-
+      const file = await this.service.exportFile('csv');
+      if (!file) return;
       const url = URL.createObjectURL(file.blob);
-      if (preview) {
-        preview.location.replace(url);
-        // Keep the object URL alive long enough for the new tab to finish loading.
-        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-        return;
-      }
-
-      // If a preview window was blocked, downloading the HTML still gives the
-      // user the complete export instead of making the button appear inert.
       const link = document.createElement('a');
       link.href = url;
       link.download = file.filename;

@@ -134,6 +134,28 @@ Start and End use the shared `app-time-picker`
 15-minute list. When both times are set on a day with no hours, the hours are
 filled in from the span and a blank status becomes Working or Weekend work.
 
+## Export preview, PDF and Word
+
+The grid's **Export** button opens a preview with **Download PDF**, **Download
+Word**, **Print** and **CSV**.
+
+- `buildTimesheetReport(sheet)` (`data/timesheet-report.ts`) computes everything
+  shown: header (employee, department, period, total hours), daily rows, summary
+  (working days, leave and holiday dates, total), work-schedule notes (regular
+  hours, overtime above a configurable threshold, default 8 h, weekend work,
+  leave) and warnings (missing start or end times, worked days without hours, a
+  saved total that disagrees with the rows). Only the signature lines are blank.
+- `TimesheetExportService` renders that report with jsPDF + jspdf-autotable and
+  with `docx`. Both are imported on first use, so the initial bundle is unchanged.
+  Files are named `Timesheet_<Employee>_<YYYY-MM>.pdf` or `.docx`.
+- The preview and Print share one self-contained HTML document
+  (`timesheet-report-html.ts`) shown in a sandboxed iframe without scripts. All
+  values are escaped.
+- Row shading is the same in all three: leave red, weekend work yellow, holidays
+  blue, empty weekends grey.
+- CSV still comes from `GET /timesheets/:id/export?format=csv` so it stays
+  importable.
+
 ## Imports
 
 `POST /timesheets/:id/import` takes `{ format: 'csv' | 'json', filename?, content }`,
