@@ -344,7 +344,9 @@ describe('AuthService', () => {
         expect(repo.ensureMembership).toHaveBeenCalledWith(
           'new-user-1',
           'zellavora-org',
-          expect.anything()
+          expect.anything(),
+          'member',
+          'NONE'
         );
         expect(onSelfRegistration).not.toHaveBeenCalled();
       });

@@ -1,41 +1,23 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../infrastructure/prisma';
 import { DailySheetsService, computeAmounts, resolveHours } from './daily-sheets.service';
-import { assertCanDecide, hoursBetween } from './sheets.shared';
+import { hoursBetween } from './sheets.shared';
+import { ApprovalModeService } from '../approval-mode/approval-mode.service';
 
-describe('owner self-review exception', () => {
-  it('allows an authorized owner to review their own sheet', () => {
-    expect(() =>
-      assertCanDecide(
-        { userId: 'owner' },
-        {
-          userId: 'owner',
-          canReview: true,
-          canReviewOwn: true,
-        }
-      )
-    ).not.toThrow();
-  });
-
-  it('still requires review permission', () => {
-    expect(() =>
-      assertCanDecide(
-        { userId: 'owner' },
-        {
-          userId: 'owner',
-          canReview: false,
-          canReviewOwn: true,
-        }
-      )
-    ).toThrow('Insufficient permission');
-  });
-});
+jest.mock('../approval-mode/approval-mode.service', () => ({
+  ApprovalModeService: { forMember: jest.fn().mockResolvedValue('EXTERNAL') },
+}));
+jest.mock('../../infrastructure/audit', () => ({
+  AuditService: { log: jest.fn().mockResolvedValue(undefined) },
+}));
 
 jest.mock('../../infrastructure/prisma', () => ({
   prisma: {
+    monthlySheet: { findFirst: jest.fn() },
     dailySheet: {
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
@@ -47,7 +29,11 @@ jest.mock('../../infrastructure/prisma', () => ({
 }));
 
 const db = prisma as unknown as {
-  dailySheet: Record<'create' | 'update' | 'findFirst' | 'findMany' | 'count', jest.Mock>;
+  monthlySheet: { findFirst: jest.Mock };
+  dailySheet: Record<
+    'create' | 'update' | 'updateMany' | 'findFirst' | 'findMany' | 'count',
+    jest.Mock
+  >;
   dailySheetLineItem: { deleteMany: jest.Mock };
   project: { findMany: jest.Mock; findFirst: jest.Mock };
   $transaction: jest.Mock;
@@ -58,6 +44,11 @@ const OWNER = 'owner-1';
 const MANAGER = 'manager-1';
 const SELF = { userId: OWNER, canReview: false };
 const REVIEWER = { userId: MANAGER, canReview: true };
+
+/** The approval mode every service call sees until a test changes it. */
+const useMode = (mode: 'NONE' | 'SELF' | 'EXTERNAL'): void => {
+  (ApprovalModeService.forMember as jest.Mock).mockResolvedValue(mode);
+};
 
 const record = (overrides: Record<string, unknown> = {}) => ({
   id: 'sheet-1',
@@ -158,6 +149,7 @@ describe('DailySheetsService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service = new DailySheetsService();
+    useMode('EXTERNAL');
     db.project.findMany.mockResolvedValue([]);
     db.dailySheet.findMany.mockResolvedValue([]);
     db.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(db));
@@ -432,6 +424,98 @@ describe('DailySheetsService', () => {
 
       await expect(service.approve('sheet-1', { approved: true }, ORG, REVIEWER)).rejects.toThrow(
         /Only submitted/
+      );
+    });
+  });
+
+  describe('approval modes', () => {
+    it('submits for review when a reviewer signs off', async () => {
+      db.dailySheet.findFirst.mockResolvedValue(record());
+      db.dailySheet.update.mockResolvedValue(record({ status: 'submitted' }));
+
+      await service.submitForApproval('sheet-1', ORG, SELF);
+
+      expect(db.dailySheet.update.mock.calls[0][0].data).toMatchObject({ status: 'submitted' });
+    });
+
+    it('finalizes on submit when approval is off', async () => {
+      useMode('NONE');
+      db.dailySheet.findFirst.mockResolvedValue(record());
+      db.dailySheet.update.mockResolvedValue(record({ status: 'approved' }));
+
+      await service.submitForApproval('sheet-1', ORG, SELF);
+
+      expect(db.dailySheet.update.mock.calls[0][0].data).toMatchObject({
+        status: 'approved',
+        approvedBy: OWNER,
+        approvedAt: expect.any(Date),
+      });
+    });
+
+    it('refuses approve and reject when approval is off', async () => {
+      useMode('NONE');
+      db.dailySheet.findFirst.mockResolvedValue(record({ status: 'submitted' }));
+
+      await expect(service.approve('sheet-1', { approved: true }, ORG, REVIEWER)).rejects.toThrow(
+        /Approval is turned off/
+      );
+    });
+
+    it('lets an owner with the permission approve their own sheet in SELF mode', async () => {
+      useMode('SELF');
+      db.dailySheet.findFirst.mockResolvedValue(record({ status: 'submitted' }));
+      db.dailySheet.update.mockResolvedValue(record({ status: 'approved' }));
+
+      await service.approve('sheet-1', { approved: true }, ORG, { userId: OWNER, canReview: true });
+
+      expect(db.dailySheet.update.mock.calls[0][0].data.approvedBy).toBe(OWNER);
+    });
+
+    it('submits every editable sheet in a range at once', async () => {
+      useMode('NONE');
+      db.dailySheet.updateMany.mockResolvedValue({ count: 3 });
+
+      const result = await service.submitAll(
+        { startDate: '2026-09-01', endDate: '2026-09-30' },
+        ORG,
+        SELF
+      );
+
+      expect(result).toEqual({ count: 3, status: 'approved' });
+      const { where, data } = db.dailySheet.updateMany.mock.calls[0][0];
+      expect(where).toMatchObject({ userId: OWNER, status: { in: ['draft', 'rejected'] } });
+      expect(data).toMatchObject({ status: 'approved', approvedBy: OWNER });
+    });
+
+    it('reopens an approved sheet to draft', async () => {
+      useMode('NONE');
+      db.dailySheet.findFirst.mockResolvedValue(record({ status: 'approved' }));
+      db.monthlySheet.findFirst.mockResolvedValue(null);
+      db.dailySheet.update.mockResolvedValue(record());
+
+      await service.reopen('sheet-1', { reason: 'Typo in hours' }, ORG, SELF);
+
+      expect(db.dailySheet.update.mock.calls[0][0].data).toMatchObject({
+        status: 'draft',
+        approvedBy: null,
+      });
+    });
+
+    it('will not reopen a day already counted in a closed month', async () => {
+      useMode('NONE');
+      db.dailySheet.findFirst.mockResolvedValue(record({ status: 'approved' }));
+      db.monthlySheet.findFirst.mockResolvedValue({ month: 9, year: 2026, status: 'paid' });
+
+      await expect(service.reopen('sheet-1', { reason: 'x' }, ORG, SELF)).rejects.toThrow(
+        /reopen that month first/
+      );
+    });
+
+    it('leaves reopening to the reviewer under external approval', async () => {
+      db.dailySheet.findFirst.mockResolvedValue(record({ status: 'approved' }));
+
+      await expect(service.reopen('sheet-1', { reason: 'x' }, ORG, SELF)).rejects.toThrow(
+        /reviewer rejecting/
       );
     });
   });

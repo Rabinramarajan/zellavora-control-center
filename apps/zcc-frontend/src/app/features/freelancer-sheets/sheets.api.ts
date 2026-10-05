@@ -94,6 +94,26 @@ export class SheetsApi {
     );
   }
 
+  /** Submit every draft and rejected sheet of the caller's in a date range. */
+  public submitAllDaily(
+    startDate: string,
+    endDate: string
+  ): Promise<{ count: number; status: 'submitted' | 'approved' }> {
+    return this.unwrap(
+      this.http.post<Envelope<{ count: number; status: 'submitted' | 'approved' }>>(
+        `${this.base}/daily-sheets/submit-all`,
+        { startDate, endDate }
+      )
+    );
+  }
+
+  /** Approved → draft, for owners who sign off their own sheets. */
+  public reopenDaily(id: string, reason: string): Promise<DailySheet> {
+    return this.unwrap(
+      this.http.post<Envelope<DailySheet>>(`${this.base}/daily-sheets/${id}/reopen`, { reason })
+    );
+  }
+
   public reviewDaily(id: string, approved: boolean, rejectionReason?: string): Promise<DailySheet> {
     return this.unwrap(
       this.http.post<Envelope<DailySheet>>(`${this.base}/daily-sheets/${id}/approve`, {
@@ -169,6 +189,14 @@ export class SheetsApi {
       this.http.post<Envelope<MonthlySheet>>(`${this.base}/monthly-sheets/${id}/approve`, {
         approved,
         rejectionReason,
+      })
+    );
+  }
+
+  public reopenMonthly(id: string, reason: string): Promise<MonthlySheet> {
+    return this.unwrap(
+      this.http.post<Envelope<MonthlySheet>>(`${this.base}/monthly-sheets/${id}/reopen`, {
+        reason,
       })
     );
   }

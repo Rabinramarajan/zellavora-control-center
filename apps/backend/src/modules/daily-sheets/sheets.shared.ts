@@ -1,13 +1,15 @@
+import { ApprovalMode } from '@prisma/client';
 import { NextFunction, RequestHandler, Response } from 'express';
 import { ZodError } from 'zod';
 import { AuthRequest } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
 import { PermissionService } from '../../services/auth/permission.service';
 import { REVIEW_PERMISSION, TimesheetViewer } from '../timesheets/timesheets.rules';
+import { assertReviewAllowed } from '../approval-mode/approval-mode.rules';
 
 /** Rules shared by daily and monthly freelancer sheets. */
 
-export type SheetViewer = TimesheetViewer & { canReviewOwn?: boolean };
+export type SheetViewer = TimesheetViewer;
 
 /** Statuses in which the owner may still change or delete a sheet. */
 export const EDITABLE_SHEET_STATUSES = ['draft', 'rejected'] as const;
@@ -61,8 +63,6 @@ export const resolveViewer = async (req: AuthRequest): Promise<SheetViewer> => {
   return {
     userId,
     canReview: PermissionService.has(req.permissions, REVIEW_PERMISSION),
-    // Role is attached by authenticate from the verified access token.
-    canReviewOwn: req.role === 'owner',
   };
 };
 
@@ -92,15 +92,12 @@ export const assertOwnerCanChange = (
   }
 };
 
-/** Only the workspace owner may review their own sheets. */
-export const assertCanDecide = (sheet: { userId: string }, viewer: SheetViewer): void => {
-  if (!viewer.canReview) {
-    throw new AppError('Insufficient permission', 403, 'FORBIDDEN_PERMISSION');
-  }
-  if (sheet.userId === viewer.userId && !viewer.canReviewOwn) {
-    throw new AppError('You cannot review your own sheet', 403, 'SELF_REVIEW_FORBIDDEN');
-  }
-};
+/** Whether a review may happen at all, and by whom, follows the owner's approval mode. */
+export const assertCanDecide = (
+  sheet: { userId: string },
+  viewer: SheetViewer,
+  mode: ApprovalMode
+): void => assertReviewAllowed(mode, sheet, viewer);
 
 /** Creating or listing on behalf of someone else is a reviewer-only act. */
 export const assertCanActFor = (targetUserId: string | undefined, viewer: SheetViewer): void => {

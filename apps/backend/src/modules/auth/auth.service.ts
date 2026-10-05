@@ -36,6 +36,7 @@ import { recordStatusChange } from '../users/account-status';
 import type { LoginPolicy } from '../security-policy/security-policy.dto';
 import { AuthRepository } from './auth.repository';
 import { INDIVIDUAL_PERMISSIONS, INDIVIDUAL_ROLE_NAME } from './individual-role';
+import { ApprovalModeService } from '../approval-mode/approval-mode.service';
 import type {
   AcceptInvitationDto,
   LoginDto,
@@ -200,7 +201,8 @@ export class AuthService {
       );
     }
     await this.repo.updateUser(userId, { tenantId: org.id, role: INDIVIDUAL_ROLE_NAME }, tx);
-    await this.repo.ensureMembership(userId, org.id, tx);
+    // Nobody reviews an individual's sheets, so submitting finalizes them.
+    await this.repo.ensureMembership(userId, org.id, tx, 'member', 'NONE');
     await this.repo.assignOrganizationRole(
       {
         userId,
@@ -316,14 +318,19 @@ export class AuthService {
   // ===========================================================================
 
   async me(actor: AuthenticatedActor) {
-    const [user, tenant, permissions] = await Promise.all([
+    const [user, tenant, permissions, approval] = await Promise.all([
       this.repo.findUserById(actor.userId),
       TenantService.getById(actor.tenantId),
       PermissionService.loadForUser(actor.userId, actor.tenantId),
+      ApprovalModeService.view(actor.userId, actor.tenantId),
     ]);
     if (!user || user.isDeleted) throw new AppError('Session expired', 401, 'SESSION_REVOKED');
     if (!tenant) throw new AppError('Organization not found', 404, 'TENANT_NOT_FOUND');
-    const menu = await MenuService.loadForUserWithPerms(actor.userId, actor.tenantId, permissions);
+    // A reviewer who finalizes their own sheets may still review a team's.
+    const reviewQueue = approval.organizationMode !== 'NONE' || approval.effectiveMode !== 'NONE';
+    const menu = await MenuService.loadForUserWithPerms(actor.userId, actor.tenantId, permissions, {
+      reviewQueue,
+    });
 
     return {
       user: {
@@ -343,6 +350,7 @@ export class AuthService {
       tenant: { ...toTenantView(tenant), plan: tenant.plan, enforce2fa: tenant.enforce2fa },
       mfaSetupRequired: tenant.enforce2fa && !user.mfaEnabled,
       permissions: Array.from(permissions),
+      approval: { ...approval, reviewQueue },
       menu,
     };
   }

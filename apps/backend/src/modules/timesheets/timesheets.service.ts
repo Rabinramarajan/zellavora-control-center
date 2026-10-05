@@ -4,6 +4,13 @@ import { logger } from '../../infrastructure/logger';
 import { AppError } from '../../middleware/error';
 import { AuditService } from '../../infrastructure/audit';
 import { NotificationService } from '../notification/notification.service';
+import { ApprovalModeService } from '../approval-mode/approval-mode.service';
+import {
+  assertCanReopen,
+  assertReviewAllowed,
+  autoApproves,
+} from '../approval-mode/approval-mode.rules';
+import { ReopenSheetDTO } from '../approval-mode/approval-mode.dto';
 import {
   TimesheetsRepository,
   TimesheetWithEntries,
@@ -20,7 +27,6 @@ import {
   assertCanQueryEmployee,
   assertCanView,
   assertEntriesEditable,
-  assertNotOwnSheet,
   assertTransition,
   normalizeEntry,
   EntryValues,
@@ -398,25 +404,88 @@ export class TimesheetsService {
       );
     }
     assertTransition(sheet.status, TimesheetStatus.SUBMITTED);
+    const finalize = autoApproves(
+      await ApprovalModeService.forMember(sheet.userId, organizationId)
+    );
+    const now = new Date();
 
     const updated = await this.repo.runInTransaction(async (tx) => {
       await this.repo.update(
         timesheetId,
         {
-          status: TimesheetStatus.SUBMITTED,
-          submittedAt: new Date(),
+          submittedAt: now,
           // A resubmission clears the rejection it is answering.
           rejectedAt: null,
           rejectionReason: null,
           updatedBy: actorUserId,
+          // Without a reviewer, submitting is the sign-off.
+          ...(finalize
+            ? { status: TimesheetStatus.APPROVED, approvedById: actorUserId, approvedAt: now }
+            : { status: TimesheetStatus.SUBMITTED }),
         },
         tx
       );
+      if (finalize) {
+        await AuditService.log(
+          {
+            action: 'timesheet.auto_approved',
+            resource: 'timesheet',
+            resourceId: timesheetId,
+            organizationId,
+            actorId: actorUserId,
+            metadata: { period: sheet.period },
+          },
+          tx
+        );
+      }
       return this.recalculateAndReturn(timesheetId, organizationId, actorUserId, tx);
     });
 
-    await this.notify(updated, 'submitted');
+    // Nobody else is involved when the owner finalizes, so there is no one to tell.
+    if (!finalize) await this.notify(updated, 'submitted');
     return updated;
+  }
+
+  /** Approved → draft, for owners who sign off their own timesheets. */
+  async reopen(
+    timesheetId: string,
+    dto: ReopenSheetDTO,
+    organizationId: string,
+    actorUserId: string
+  ): Promise<TimesheetWithEntries> {
+    const sheet = await this.getById(timesheetId, organizationId);
+    const mode = await ApprovalModeService.forMember(sheet.userId, organizationId);
+    assertCanReopen(
+      mode,
+      { userId: sheet.userId, approved: sheet.status === TimesheetStatus.APPROVED },
+      actorUserId
+    );
+
+    await this.repo.runInTransaction(async (tx) => {
+      await this.repo.update(
+        timesheetId,
+        {
+          status: TimesheetStatus.DRAFT,
+          submittedAt: null,
+          approvedById: null,
+          approvedAt: null,
+          updatedBy: actorUserId,
+        },
+        tx
+      );
+      await AuditService.log(
+        {
+          action: 'timesheet.reopened',
+          resource: 'timesheet',
+          resourceId: timesheetId,
+          organizationId,
+          actorId: actorUserId,
+          metadata: { period: sheet.period, reason: dto.reason },
+        },
+        tx
+      );
+    });
+    return this.getById(timesheetId, organizationId);
   }
 
   async approve(
@@ -425,7 +494,11 @@ export class TimesheetsService {
     approverUserId: string
   ): Promise<TimesheetWithEntries> {
     const sheet = await this.getById(timesheetId, organizationId);
-    assertNotOwnSheet(sheet, approverUserId);
+    // The route already required the review permission.
+    assertReviewAllowed(await ApprovalModeService.forMember(sheet.userId, organizationId), sheet, {
+      userId: approverUserId,
+      canReview: true,
+    });
     assertTransition(sheet.status, TimesheetStatus.APPROVED);
 
     await this.repo.update(timesheetId, {
@@ -447,7 +520,11 @@ export class TimesheetsService {
     approverUserId: string
   ): Promise<TimesheetWithEntries> {
     const sheet = await this.getById(timesheetId, organizationId);
-    assertNotOwnSheet(sheet, approverUserId);
+    // The route already required the review permission.
+    assertReviewAllowed(await ApprovalModeService.forMember(sheet.userId, organizationId), sheet, {
+      userId: approverUserId,
+      canReview: true,
+    });
     assertTransition(sheet.status, TimesheetStatus.REJECTED);
 
     await this.repo.update(timesheetId, {

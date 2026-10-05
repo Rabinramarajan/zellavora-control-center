@@ -346,6 +346,7 @@ export class AuthService {
           user: me.user,
           tenant: me.tenant,
           permissions: me.permissions,
+          approval: me.approval,
           menu: me.menu,
           mfaSetupRequired: me.mfaSetupRequired,
         });

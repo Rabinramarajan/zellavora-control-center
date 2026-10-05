@@ -3,7 +3,6 @@ import {
   assertCanQueryEmployee,
   assertCanView,
   assertEntriesEditable,
-  assertNotOwnSheet,
   assertTransition,
   canTransition,
   isEditableStatus,
@@ -50,16 +49,6 @@ describe('timesheet rules', () => {
       expect(() =>
         assertCanQueryEmployee('peer', { userId: OWNER, canReview: true })
       ).not.toThrow();
-    });
-  });
-
-  describe('assertNotOwnSheet', () => {
-    it('refuses a self review', () => {
-      expect(() => assertNotOwnSheet({ userId: OWNER }, OWNER)).toThrow(/your own timesheet/);
-    });
-
-    it('allows reviewing someone else', () => {
-      expect(() => assertNotOwnSheet({ userId: OWNER }, 'manager')).not.toThrow();
     });
   });
 

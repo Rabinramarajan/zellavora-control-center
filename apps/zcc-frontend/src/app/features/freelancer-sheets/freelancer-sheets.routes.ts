@@ -1,6 +1,6 @@
 import { Type } from '@angular/core';
 import { CanDeactivateFn, Routes } from '@angular/router';
-import { permissionGuard } from '../../core/auth/auth.guard';
+import { permissionGuard, reviewQueueGuard } from '../../core/auth/auth.guard';
 import type { DailySheetFormComponent } from './pages/daily-sheet-form/daily-sheet-form.component';
 
 const loadForm = (): Promise<Type<DailySheetFormComponent>> =>
@@ -56,7 +56,7 @@ export const freelancerSheetsRoutes: Routes = [
   },
   {
     path: 'approval',
-    canActivate: [permissionGuard('timesheet:approve')],
+    canActivate: [permissionGuard('timesheet:approve'), reviewQueueGuard],
     loadComponent: () =>
       import('./pages/approval-queue/approval-queue.component').then(
         (m) => m.ApprovalQueueComponent

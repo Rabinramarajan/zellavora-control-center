@@ -8,8 +8,10 @@ import {
   UpdateDailySheetSchema,
   ApproveDailySheetSchema,
   DailySheetQuerySchema,
+  SubmitAllDailySheetsSchema,
 } from './daily-sheets.dto';
 import { requestContext, resolveViewer } from './sheets.shared';
+import { ReopenSheetSchema } from '../approval-mode/approval-mode.dto';
 
 export class DailySheetsController {
   private readonly service = new DailySheetsService();
@@ -86,6 +88,25 @@ export class DailySheetsController {
       await resolveViewer(req)
     );
     res.json({ success: true, data: sheet });
+  }
+
+  public async reopen(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = ReopenSheetSchema.parse(req.body);
+    const sheet = await this.service.reopen(
+      req.params.id,
+      dto,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
+  }
+
+  public async submitAll(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = SubmitAllDailySheetsSchema.parse(req.body);
+    const result = await this.service.submitAll(dto, organizationId, await resolveViewer(req));
+    res.json({ success: true, data: result });
   }
 
   public async approve(req: AuthRequest, res: Response): Promise<void> {

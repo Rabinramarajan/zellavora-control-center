@@ -345,8 +345,16 @@ export class TimesheetService {
     }
   }
 
+  /** Finalizes in one step when the owner's approval mode is NONE. */
   submitForApproval(): Promise<void> {
-    return this.transition('submit', {}, 'Timesheet submitted for approval');
+    return this.transition('submit', {}, (sheet) =>
+      sheet.status === 'APPROVED' ? 'Timesheet finalized' : 'Timesheet submitted for approval'
+    );
+  }
+
+  /** Approved → draft, for owners who sign off their own timesheets. */
+  reopen(reason: string): Promise<void> {
+    return this.transition('reopen', { reason }, 'Timesheet reopened for editing');
   }
 
   approve(): Promise<void> {
@@ -417,9 +425,9 @@ export class TimesheetService {
   }
 
   private async transition(
-    action: 'submit' | 'approve' | 'reject',
+    action: 'submit' | 'approve' | 'reject' | 'reopen',
     body: Record<string, unknown>,
-    successDetail: string
+    successDetail: string | ((sheet: Timesheet) => string)
   ): Promise<void> {
     const sheet = this.timesheetResource.value();
     if (!sheet) return;
@@ -428,8 +436,10 @@ export class TimesheetService {
       const response = await firstValueFrom(
         this.api.postData<ApiEnvelope<Timesheet>>(`/timesheets/${sheet.id}/${action}`, body)
       );
-      this.timesheetResource.set(normalizeTimesheet(response.data));
-      this.messages.add({ severity: 'success', summary: 'Done', detail: successDetail });
+      const updated = normalizeTimesheet(response.data);
+      this.timesheetResource.set(updated);
+      const detail = typeof successDetail === 'string' ? successDetail : successDetail(updated);
+      this.messages.add({ severity: 'success', summary: 'Done', detail });
     } catch (error) {
       this.showError(`Could not ${action} the timesheet`, error);
     }

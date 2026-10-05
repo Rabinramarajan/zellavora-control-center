@@ -71,17 +71,6 @@ export const assertCanQueryEmployee = (
   }
 };
 
-/** Separation of duties: nobody signs off their own hours. */
-export const assertNotOwnSheet = (sheet: { userId: string }, reviewerUserId: string): void => {
-  if (sheet.userId === reviewerUserId) {
-    throw new AppError(
-      'You cannot approve or reject your own timesheet',
-      403,
-      'SELF_REVIEW_FORBIDDEN'
-    );
-  }
-};
-
 /** Allowed status moves. Anything absent here is rejected. */
 const TRANSITIONS: Record<TimesheetStatus, TimesheetStatus[]> = {
   [TimesheetStatus.DRAFT]: [TimesheetStatus.SUBMITTED],

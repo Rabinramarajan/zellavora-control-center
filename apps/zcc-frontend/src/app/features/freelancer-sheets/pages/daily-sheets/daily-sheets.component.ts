@@ -18,17 +18,22 @@ import {
   DataTableSort,
 } from '../../../../shared/components/data-table';
 import { SheetsStore } from '../../sheets.store';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { AppDialogService } from '../../../../shared/components/dialog';
+import { askReopenReason } from '../../sheets.reopen';
 import { TimesheetImportDialogComponent } from '../../components/timesheet-import-dialog/timesheet-import-dialog.component';
 import { DailySheet } from '../../sheets.models';
 import { isDayKey, parseDayKey } from '../../sheets.time';
 import {
   SheetStatus,
+  approvalCopy,
   initialsOf,
   isoDay,
   isoMonth,
   paletteFor,
   statusLabel,
   statusPill,
+  statusesFor,
 } from '../../sheets.presentation';
 
 interface EntryRow {
@@ -63,9 +68,7 @@ interface Slice {
 
 const PAGE_SIZE_OPTIONS = [6, 12, 24, 50];
 
-const STATUS_OPTIONS: { value: SheetStatus; label: string }[] = (
-  ['draft', 'submitted', 'approved', 'rejected'] as const
-).map((status) => ({ value: status, label: statusLabel(status) }));
+const DAILY_STATUSES = ['draft', 'submitted', 'approved', 'rejected'] as const;
 
 const ENTRY_COLUMNS: DataTableColumn<EntryRow>[] = [
   {
@@ -120,6 +123,12 @@ export class DailySheetsComponent implements OnInit {
   private readonly store = inject(SheetsStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthStore);
+  private readonly dialog = inject(AppDialogService);
+
+  /** Button words and what the owner may do follow how sheets are signed off. */
+  public readonly approvalMode = this.auth.approvalMode;
+  public readonly copy = computed(() => approvalCopy(this.approvalMode()));
 
   public readonly isLoading = this.store.isLoading;
   public readonly error = this.store.error;
@@ -148,10 +157,13 @@ export class DailySheetsComponent implements OnInit {
   // ---- entries table ----------------------------------------------------
 
   public readonly columns = ENTRY_COLUMNS;
-  public readonly statusOptions: SelectControlOption[] = [
+  public readonly statusOptions = computed<SelectControlOption[]>(() => [
     { value: '', label: 'All Status' },
-    ...STATUS_OPTIONS,
-  ];
+    ...statusesFor(DAILY_STATUSES, this.approvalMode()).map((status) => ({
+      value: status,
+      label: statusLabel(status, this.approvalMode()),
+    })),
+  ]);
   public readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   public readonly filters = signal<DataTableFilters>({ project: '', status: '' });
@@ -325,6 +337,41 @@ export class DailySheetsComponent implements OnInit {
     }
   }
 
+  /** Every draft and rejected sheet in the selected month, in one request. */
+  public async submitAllDrafts(): Promise<void> {
+    const date = this.selectedDate();
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    this.submittingAll.set(true);
+    try {
+      await this.store.submitAllDailySheets(isoDay(start), isoDay(end));
+      await this.load();
+    } catch {
+      // The store has already told the user why.
+    } finally {
+      this.submittingAll.set(false);
+    }
+  }
+
+  public readonly submittingAll = signal(false);
+
+  public async reopenSheet(row: EntryRow): Promise<void> {
+    const reason = await askReopenReason(this.dialog, `the entry for ${row.dateLabel}`);
+    if (!reason) return;
+    this.busy.update((ids) => new Set(ids).add(row.id));
+    try {
+      await this.store.reopenDailySheet(row.id, reason);
+    } catch {
+      // The store has already told the user why.
+    } finally {
+      this.busy.update((ids) => {
+        const next = new Set(ids);
+        next.delete(row.id);
+        return next;
+      });
+    }
+  }
+
   public isBusy(id: string): boolean {
     return this.busy().has(id);
   }
@@ -407,7 +454,7 @@ export class DailySheetsComponent implements OnInit {
       breakLabel: sheet.breakMinutes ? `${sheet.breakMinutes}m` : '—',
       hours: round(sheet.hoursWorked),
       status: sheet.status,
-      statusLabel: statusLabel(sheet.status),
+      statusLabel: statusLabel(sheet.status, this.approvalMode()),
       editable: sheet.status === 'draft' || sheet.status === 'rejected',
       rejectionReason: sheet.rejectionReason,
     };

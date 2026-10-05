@@ -29,7 +29,14 @@ interface MenuDef {
   route: string | null;
   orderIndex: number;
   requiredPermission?: string;
+  /** Shown only while someone in the workspace signs off sheets. */
+  requiresReviewQueue?: boolean;
   children?: MenuDef[];
+}
+
+export interface MenuOptions {
+  /** False when sheets finalize on submit, so there is nothing to review. */
+  reviewQueue: boolean;
 }
 
 const DEFAULT_MENU: MenuDef[] = [
@@ -242,6 +249,7 @@ const DEFAULT_MENU: MenuDef[] = [
         route: '/freelancer-sheets/approval',
         orderIndex: 4,
         requiredPermission: 'timesheet:approve',
+        requiresReviewQueue: true,
       },
     ],
   },
@@ -599,13 +607,15 @@ export class MenuService {
   static async loadForUserWithPerms(
     userId: string,
     orgId: string,
-    perms: Set<string>
+    perms: Set<string>,
+    options: MenuOptions = { reviewQueue: true }
   ): Promise<MenuNode[]> {
     const restricted = perms.has('navigation:restricted');
     const visible = (node: MenuDef, parentSelected = false): MenuNode | null => {
       if (node.requiredPermission && !PermissionService.has(perms, node.requiredPermission)) {
         return null;
       }
+      if (node.requiresReviewQueue && !options.reviewQueue) return null;
       const selected = !restricted || parentSelected || perms.has(`navigation:${node.key}`);
       const children = (node.children ?? [])
         .map((child) => visible(child, selected))

@@ -408,6 +408,28 @@ router.post(
  *       403:
  *         description: Missing the timesheet:approve permission
  */
+/**
+ * @swagger
+ * /api/v1/timesheets/{id}/reopen:
+ *   post:
+ *     summary: reopenTimesheet
+ *     description: Approved → draft with a reason. Only when the owner signs off (approval mode NONE or SELF).
+ *     operationId: postTimesheetsByIdReopen
+ *     tags: [timesheets]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(
+  '/:id/reopen',
+  handle((req, res) => controller.reopen(req, res))
+);
+
 router.post(
   '/:id/approve',
   requirePermission('timesheet:approve'),

@@ -1,4 +1,4 @@
-import type { OrganizationRole, User } from '@prisma/client';
+import type { ApprovalMode, OrganizationRole, User } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 
 export type AuthChallengePurpose = 'mfa_login' | 'mfa_enrollment';
@@ -36,11 +36,12 @@ export class AuthRepository extends BaseRepository {
     userId: string,
     tenantId: string,
     tx?: TxClient,
-    role: OrganizationRole = 'member'
+    role: OrganizationRole = 'member',
+    approvalMode: ApprovalMode | null = null
   ) {
     return this.getDb(tx).userTenant.upsert({
       where: { userId_tenantId: { userId, tenantId } },
-      create: { userId, tenantId, isDefault: true, role },
+      create: { userId, tenantId, isDefault: true, role, approvalMode },
       update: {},
     });
   }

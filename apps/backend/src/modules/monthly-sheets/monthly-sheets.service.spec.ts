@@ -1,6 +1,14 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../infrastructure/prisma';
 import { MonthlySheetsService, rollUpMonth } from './monthly-sheets.service';
+import { ApprovalModeService } from '../approval-mode/approval-mode.service';
+
+jest.mock('../approval-mode/approval-mode.service', () => ({
+  ApprovalModeService: { forMember: jest.fn().mockResolvedValue('EXTERNAL') },
+}));
+jest.mock('../../infrastructure/audit', () => ({
+  AuditService: { log: jest.fn().mockResolvedValue(undefined) },
+}));
 
 jest.mock('../../infrastructure/prisma', () => ({
   prisma: {
@@ -25,6 +33,11 @@ const OWNER = 'owner-1';
 const MANAGER = 'manager-1';
 const SELF = { userId: OWNER, canReview: false };
 const REVIEWER = { userId: MANAGER, canReview: true };
+
+/** The approval mode every service call sees until a test changes it. */
+const useMode = (mode: 'NONE' | 'SELF' | 'EXTERNAL'): void => {
+  (ApprovalModeService.forMember as jest.Mock).mockResolvedValue(mode);
+};
 
 const daily = (date: string, hours: number, amount: number, isBillable = true) => ({
   id: `daily-${date}-${hours}`,
@@ -96,6 +109,7 @@ describe('MonthlySheetsService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service = new MonthlySheetsService();
+    useMode('EXTERNAL');
     db.dailySheet.findMany.mockResolvedValue([]);
   });
 
@@ -196,6 +210,40 @@ describe('MonthlySheetsService', () => {
 
       await expect(service.approve('month-1', { approved: true }, ORG, REVIEWER)).rejects.toThrow(
         /your own sheet/
+      );
+    });
+
+    it('finalizes on submit and lets the owner mark it paid when approval is off', async () => {
+      useMode('NONE');
+      db.monthlySheet.findFirst.mockResolvedValueOnce(record());
+      db.monthlySheet.update.mockResolvedValue(record({ status: 'approved' }));
+      await service.submitForApproval('month-1', ORG, SELF);
+      expect(db.monthlySheet.update.mock.calls[0][0].data).toMatchObject({
+        status: 'approved',
+        approvedBy: OWNER,
+      });
+
+      db.monthlySheet.findFirst.mockResolvedValueOnce(record({ status: 'approved' }));
+      await service.markAsPaid('month-1', {}, ORG, SELF);
+      expect(db.monthlySheet.update.mock.calls[1][0].data).toMatchObject({ status: 'paid' });
+    });
+
+    it('keeps mark-paid with reviewers under external approval', async () => {
+      db.monthlySheet.findFirst.mockResolvedValue(record({ status: 'approved' }));
+
+      await expect(service.markAsPaid('month-1', {}, ORG, SELF)).rejects.toThrow(/permission/);
+    });
+
+    it('reopens an approved month but never a paid one', async () => {
+      useMode('SELF');
+      db.monthlySheet.findFirst.mockResolvedValueOnce(record({ status: 'approved' }));
+      db.monthlySheet.update.mockResolvedValue(record());
+      await service.reopen('month-1', { reason: 'Missing a day' }, ORG, SELF);
+      expect(db.monthlySheet.update.mock.calls[0][0].data.status).toBe('draft');
+
+      db.monthlySheet.findFirst.mockResolvedValueOnce(record({ status: 'paid' }));
+      await expect(service.reopen('month-1', { reason: 'x' }, ORG, SELF)).rejects.toThrow(
+        /Paid sheets/
       );
     });
 

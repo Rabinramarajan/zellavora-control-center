@@ -28,7 +28,8 @@ import { SheetsApi } from '../../sheets.api';
 import { SheetsStore } from '../../sheets.store';
 import { DailySheet, DailySheetInput, EntryType, SheetRequestError } from '../../sheets.models';
 import { isDayKey, isWeekendDayKey, parseDayKey, previewSheet, todayKey } from '../../sheets.time';
-import { statusLabel, statusPill } from '../../sheets.presentation';
+import { approvalCopy, statusLabel, statusPill } from '../../sheets.presentation';
+import { askReopenReason } from '../../sheets.reopen';
 import { rememberRate, rememberedRate } from '../../sheets.preferences';
 
 /** Work-only rules are skipped for leave and holiday days, which carry no hours. */
@@ -206,12 +207,29 @@ export class DailySheetFormComponent implements OnInit {
     );
   });
 
+  protected readonly approvalMode = this.auth.approvalMode;
+  protected readonly copy = computed(() => approvalCopy(this.approvalMode()));
+
+  /** The owner may take an approved sheet back when nobody else signs it off. */
+  protected readonly canReopen = computed(() => {
+    const sheet = this.sheet();
+    return (
+      !!sheet &&
+      sheet.userId === this.auth.user()?.id &&
+      sheet.status === 'approved' &&
+      this.copy().canReopen
+    );
+  });
+
   protected readonly title = computed(() => {
     if (this.isNew()) return 'New Daily Sheet';
     return this.readOnly() ? 'Daily Sheet' : 'Edit Daily Sheet';
   });
 
-  protected readonly statusLabel = statusLabel;
+  protected statusLabel(status: DailySheet['status']): string {
+    return statusLabel(status, this.approvalMode());
+  }
+
   protected readonly statusPill = statusPill;
 
   public get lineItems(): FormArray<LineItemGroup> {
@@ -330,6 +348,23 @@ export class DailySheetFormComponent implements OnInit {
       const submitted = await this.store.submitDailySheet(sheet.id);
       this.sheet.set(submitted);
       this.form.disable({ emitEvent: false });
+    } catch (error) {
+      this.formError.set((error as SheetRequestError).message);
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async reopen(): Promise<void> {
+    const sheet = this.sheet();
+    if (!sheet) return;
+    const reason = await askReopenReason(this.dialog, 'this sheet');
+    if (!reason) return;
+    this.saving.set(true);
+    try {
+      const reopened = await this.store.reopenDailySheet(sheet.id, reason);
+      this.saved = true;
+      await this.router.navigate(['/freelancer-sheets/daily', reopened.id, 'edit']);
     } catch (error) {
       this.formError.set((error as SheetRequestError).message);
     } finally {

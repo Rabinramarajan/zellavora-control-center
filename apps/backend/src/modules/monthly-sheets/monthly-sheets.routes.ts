@@ -195,10 +195,32 @@ router.post(
  *       default:
  *         description: Operation response
  */
+// Who may mark a month paid depends on the owner's approval mode; the service decides.
 router.post(
   '/:id/mark-paid',
-  requirePermission(REVIEW_PERMISSION),
   asyncRoute((req, res) => controller.markAsPaid(req, res))
+);
+
+/**
+ * @swagger
+ * /api/v1/monthly-sheets/{id}/reopen:
+ *   post:
+ *     summary: reopenMonthlySheet
+ *     description: Approved → draft with a reason. Only when the owner signs off (approval mode NONE or SELF); paid sheets stay closed.
+ *     operationId: postMonthlySheetsByIdReopen
+ *     tags: [monthlySheets]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(
+  '/:id/reopen',
+  asyncRoute((req, res) => controller.reopen(req, res))
 );
 
 /**

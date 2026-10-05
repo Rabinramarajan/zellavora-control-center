@@ -1,6 +1,10 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../infrastructure/prisma';
+import { AuditService } from '../../infrastructure/audit';
 import { AppError } from '../../middleware/error';
+import { ApprovalModeService } from '../approval-mode/approval-mode.service';
+import { assertCanReopen, autoApproves } from '../approval-mode/approval-mode.rules';
+import { ReopenSheetDTO } from '../approval-mode/approval-mode.dto';
 import {
   ApproveDailySheetDTO,
   CreateDailySheetDTO,
@@ -8,6 +12,7 @@ import {
   DailySheetQueryDTO,
   ENTRY_TYPES,
   EntryType,
+  SubmitAllDailySheetsDTO,
   UpdateDailySheetDTO,
 } from './daily-sheets.dto';
 import {
@@ -19,6 +24,7 @@ import {
   assertCanListScope,
   assertCanViewSheet,
   assertOwnerCanChange,
+  EDITABLE_SHEET_STATUSES,
   hoursBetween,
   toDateKey,
 } from './sheets.shared';
@@ -406,16 +412,132 @@ export class DailySheetsService {
   ): Promise<DailySheetView> {
     const sheet = await this.find(id, organizationId);
     assertOwnerCanChange(sheet, viewer.userId);
+    const mode = await ApprovalModeService.forMember(sheet.userId, organizationId);
+    const now = new Date();
+
+    // Without a reviewer, submitting is the sign-off: one write, no waiting state.
+    const updated = await prisma.dailySheet.update({
+      where: { id },
+      data: {
+        submittedAt: now,
+        rejectionReason: null,
+        updatedBy: viewer.userId,
+        ...(autoApproves(mode)
+          ? { status: 'approved', approvedBy: viewer.userId, approvedAt: now }
+          : { status: 'submitted' }),
+      },
+      include: dailySheetInclude,
+    });
+    if (autoApproves(mode)) {
+      await AuditService.log({
+        action: 'daily_sheet.auto_approved',
+        resource: 'daily_sheet',
+        resourceId: id,
+        organizationId,
+        actorId: viewer.userId,
+        metadata: { sheetDate: toDateKey(sheet.sheetDate) },
+      });
+    }
+    return this.present(updated, organizationId);
+  }
+
+  /**
+   * Submit the caller's editable sheets in a date range in one go, so a
+   * month of entries does not need a click per day.
+   */
+  public async submitAll(
+    dto: SubmitAllDailySheetsDTO,
+    organizationId: string,
+    viewer: SheetViewer
+  ): Promise<{ count: number; status: 'submitted' | 'approved' }> {
+    const mode = await ApprovalModeService.forMember(viewer.userId, organizationId);
+    const now = new Date();
+    const status = autoApproves(mode) ? 'approved' : 'submitted';
+    const { count } = await prisma.dailySheet.updateMany({
+      where: {
+        organizationId,
+        userId: viewer.userId,
+        deletedAt: null,
+        status: { in: [...EDITABLE_SHEET_STATUSES] },
+        sheetDate: {
+          gte: new Date(`${dto.startDate}T00:00:00.000Z`),
+          lte: new Date(`${dto.endDate}T00:00:00.000Z`),
+        },
+      },
+      data: {
+        status,
+        submittedAt: now,
+        rejectionReason: null,
+        updatedBy: viewer.userId,
+        ...(status === 'approved' ? { approvedBy: viewer.userId, approvedAt: now } : {}),
+      },
+    });
+    if (count > 0) {
+      await AuditService.log({
+        action: status === 'approved' ? 'daily_sheet.auto_approved' : 'daily_sheet.submitted',
+        resource: 'daily_sheet',
+        organizationId,
+        actorId: viewer.userId,
+        metadata: { bulk: true, count, startDate: dto.startDate, endDate: dto.endDate },
+      });
+    }
+    return { count, status };
+  }
+
+  /**
+   * Take an approved sheet back to draft. A day already counted in a month
+   * that has moved past draft must wait until that month is reopened, or the
+   * month's totals would no longer match its days.
+   */
+  public async reopen(
+    id: string,
+    dto: ReopenSheetDTO,
+    organizationId: string,
+    viewer: SheetViewer
+  ): Promise<DailySheetView> {
+    const sheet = await this.find(id, organizationId);
+    const mode = await ApprovalModeService.forMember(sheet.userId, organizationId);
+    assertCanReopen(
+      mode,
+      { userId: sheet.userId, approved: sheet.status === 'approved' },
+      viewer.userId
+    );
+
+    const month = await prisma.monthlySheet.findFirst({
+      where: {
+        organizationId,
+        deletedAt: null,
+        dailySheetIds: { has: id },
+        status: { in: ['submitted', 'approved', 'paid'] },
+      },
+      select: { month: true, year: true, status: true },
+    });
+    if (month) {
+      throw new AppError(
+        `This day is part of the ${month.year}-${String(month.month).padStart(2, '0')} monthly sheet (${month.status}); reopen that month first`,
+        409,
+        'SHEET_IN_MONTH'
+      );
+    }
 
     const updated = await prisma.dailySheet.update({
       where: { id },
       data: {
-        status: 'submitted',
-        submittedAt: new Date(),
-        rejectionReason: null,
+        status: 'draft',
+        approvedBy: null,
+        approvedAt: null,
+        submittedAt: null,
         updatedBy: viewer.userId,
       },
       include: dailySheetInclude,
+    });
+    await AuditService.log({
+      action: 'daily_sheet.reopened',
+      resource: 'daily_sheet',
+      resourceId: id,
+      organizationId,
+      actorId: viewer.userId,
+      metadata: { reason: dto.reason, sheetDate: toDateKey(sheet.sheetDate) },
     });
     return this.present(updated, organizationId);
   }
@@ -427,7 +549,11 @@ export class DailySheetsService {
     viewer: SheetViewer
   ): Promise<DailySheetView> {
     const sheet = await this.find(id, organizationId);
-    assertCanDecide(sheet, viewer);
+    assertCanDecide(
+      sheet,
+      viewer,
+      await ApprovalModeService.forMember(sheet.userId, organizationId)
+    );
     if (sheet.status !== 'submitted') {
       throw new AppError(
         `Only submitted sheets can be reviewed (this one is ${sheet.status})`,

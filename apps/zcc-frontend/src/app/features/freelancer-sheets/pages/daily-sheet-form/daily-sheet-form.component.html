@@ -13,7 +13,7 @@
             @if (current.user && readOnly()) {
               <span>{{ current.user.fullName }}</span>
             }
-            @if (current.approver && current.status === 'approved') {
+            @if (current.approver && current.status === 'approved' && approvalMode() !== 'NONE') {
               <span>Approved by {{ current.approver.fullName }}</span>
             }
           </p>
@@ -406,8 +406,9 @@
                 [disabled]="saving()"
                 (click)="save(true)"
               >
-                Save &amp; submit for approval
+                Save &amp; {{ approvalMode() === 'NONE' ? 'finalize' : 'submit for approval' }}
               </button>
+              <p class="text-[0.68rem] text-slate-500">{{ copy().submitHint }}</p>
               <a routerLink="/freelancer-sheets/daily" class="ghost-btn justify-center">Cancel</a>
 
               @if (sheet() && canEditExisting()) {
@@ -456,8 +457,25 @@
                 [disabled]="saving()"
                 (click)="submitExisting()"
               >
-                Submit for approval
+                {{ approvalMode() === 'NONE' ? copy().submit : 'Submit for approval' }}
               </button>
+            </div>
+          </section>
+        } @else if (canReopen()) {
+          <section class="sheet-card">
+            <div class="sheet-card__body flex flex-col gap-2">
+              <button
+                type="button"
+                class="ghost-btn justify-center"
+                [disabled]="saving()"
+                (click)="reopen()"
+              >
+                Reopen to edit
+              </button>
+              <p class="text-[0.68rem] text-slate-500">
+                Moves the sheet back to draft. A day already in a finalized month needs that month
+                reopened first.
+              </p>
             </div>
           </section>
         }

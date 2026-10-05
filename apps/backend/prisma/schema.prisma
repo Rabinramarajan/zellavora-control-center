@@ -30,6 +30,8 @@ model Organization {
   pincode                  String?                @map("pincode")
   plan                     String                 @default("free") @map("plan")
   enforce2fa               Boolean                @default(false) @map("enforce_2fa")
+  /// How freelancer sheets are signed off; a member's own mode overrides it.
+  approvalMode             ApprovalMode           @default(EXTERNAL) @map("approval_mode")
   allowedDomains           Json?                  @map("allowed_domains")
   isVerified               Boolean                @default(false) @map("is_verified")
   verifiedAt               DateTime?              @map("verified_at") @db.Timestamptz(6)
@@ -206,6 +208,8 @@ model UserTenant {
   role         OrganizationRole @default(member) @map("role")
   departmentId String?          @map("department_id") @db.Uuid
   isDefault    Boolean          @default(false) @map("is_default")
+  /// Overrides the organization's approval mode for this member; null inherits it.
+  approvalMode ApprovalMode?    @map("approval_mode")
   joinedAt     DateTime?        @default(now()) @map("joined_at") @db.Timestamptz(6)
   department   Department?      @relation(fields: [departmentId], references: [id])
   tenant       Organization     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1434,6 +1438,14 @@ model EmailSetting {
   updatedBy      String?   @map("updated_by") @db.Uuid
 
   @@map("email_settings")
+}
+
+/// NONE: submitting finalizes. SELF: the owner signs off their own sheets.
+/// EXTERNAL: a reviewer other than the owner signs off.
+enum ApprovalMode {
+  NONE
+  SELF
+  EXTERNAL
 }
 
 enum OrganizationRole {

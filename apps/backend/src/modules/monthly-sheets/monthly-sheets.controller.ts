@@ -10,6 +10,7 @@ import {
   MonthlySheetQuerySchema,
 } from './monthly-sheets.dto';
 import { requestContext, resolveViewer } from '../daily-sheets/sheets.shared';
+import { ReopenSheetSchema } from '../approval-mode/approval-mode.dto';
 
 export class MonthlySheetsController {
   private readonly service = new MonthlySheetsService();
@@ -71,6 +72,18 @@ export class MonthlySheetsController {
     const { organizationId } = requestContext(req);
     const dto = ApproveMonthlySheetSchema.parse(req.body);
     const sheet = await this.service.approve(
+      req.params.id,
+      dto,
+      organizationId,
+      await resolveViewer(req)
+    );
+    res.json({ success: true, data: sheet });
+  }
+
+  public async reopen(req: AuthRequest, res: Response): Promise<void> {
+    const { organizationId } = requestContext(req);
+    const dto = ReopenSheetSchema.parse(req.body);
+    const sheet = await this.service.reopen(
       req.params.id,
       dto,
       organizationId,

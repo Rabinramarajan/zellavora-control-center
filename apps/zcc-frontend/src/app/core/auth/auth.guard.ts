@@ -7,6 +7,7 @@
  *   registrationGuard   — /auth/register only when self-registration is enabled
  *   permissionGuard     — signed in AND holds a permission (CanActivate)
  *   canMatchPermission  — signed in AND holds a permission (CanMatch)
+ *   reviewQueueGuard    — the Approval Queue has something to review (approval not off)
  */
 import { inject } from '@angular/core';
 import { CanActivateFn, CanMatchFn, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
@@ -68,6 +69,15 @@ const authenticatedAndAllowed = (
   }
   return decide();
 };
+
+/**
+ * When sheets finalize on submit there is nothing to review, so the queue is
+ * closed even to a typed-in URL — hiding the menu entry alone is not enough.
+ */
+export const reviewQueueGuard: CanActivateFn = () =>
+  inject(AuthStore).approval().reviewQueue
+    ? true
+    : inject(Router).createUrlTree(['/freelancer-sheets/daily']);
 
 /** Usage: `canActivate: [permissionGuard('resources:read')]` */
 export const permissionGuard =

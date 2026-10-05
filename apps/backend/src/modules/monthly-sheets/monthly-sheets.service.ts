@@ -1,6 +1,14 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../infrastructure/prisma';
+import { AuditService } from '../../infrastructure/audit';
 import { AppError } from '../../middleware/error';
+import { ApprovalModeService } from '../approval-mode/approval-mode.service';
+import {
+  assertCanMarkPaid,
+  assertCanReopen,
+  autoApproves,
+} from '../approval-mode/approval-mode.rules';
+import { ReopenSheetDTO } from '../approval-mode/approval-mode.dto';
 import {
   ApproveMonthlySheetDTO,
   CreateMonthlySheetDTO,
@@ -245,15 +253,71 @@ export class MonthlySheetsService {
       );
     }
 
+    const mode = await ApprovalModeService.forMember(sheet.userId, organizationId);
+    const now = new Date();
+
     const updated = await prisma.monthlySheet.update({
       where: { id },
       data: {
-        status: 'submitted',
-        submittedAt: new Date(),
+        submittedAt: now,
         rejectionReason: null,
+        updatedBy: viewer.userId,
+        ...(autoApproves(mode)
+          ? { status: 'approved', approvedBy: viewer.userId, approvedAt: now }
+          : { status: 'submitted' }),
+      },
+      include: monthlySheetInclude,
+    });
+    if (autoApproves(mode)) {
+      await AuditService.log({
+        action: 'monthly_sheet.auto_approved',
+        resource: 'monthly_sheet',
+        resourceId: id,
+        organizationId,
+        actorId: viewer.userId,
+        metadata: { month: sheet.month, year: sheet.year },
+      });
+    }
+    return this.present(updated);
+  }
+
+  /** Take an approved, unpaid month back to draft so its days can be corrected. */
+  public async reopen(
+    id: string,
+    dto: ReopenSheetDTO,
+    organizationId: string,
+    viewer: SheetViewer
+  ): Promise<MonthlySheetView> {
+    const sheet = await this.find(id, organizationId);
+    const mode = await ApprovalModeService.forMember(sheet.userId, organizationId);
+    assertCanReopen(
+      mode,
+      {
+        userId: sheet.userId,
+        approved: sheet.status === 'approved',
+        paid: sheet.status === 'paid',
+      },
+      viewer.userId
+    );
+
+    const updated = await prisma.monthlySheet.update({
+      where: { id },
+      data: {
+        status: 'draft',
+        approvedBy: null,
+        approvedAt: null,
+        submittedAt: null,
         updatedBy: viewer.userId,
       },
       include: monthlySheetInclude,
+    });
+    await AuditService.log({
+      action: 'monthly_sheet.reopened',
+      resource: 'monthly_sheet',
+      resourceId: id,
+      organizationId,
+      actorId: viewer.userId,
+      metadata: { reason: dto.reason, month: sheet.month, year: sheet.year },
     });
     return this.present(updated);
   }
@@ -265,7 +329,11 @@ export class MonthlySheetsService {
     viewer: SheetViewer
   ): Promise<MonthlySheetView> {
     const sheet = await this.find(id, organizationId);
-    assertCanDecide(sheet, viewer);
+    assertCanDecide(
+      sheet,
+      viewer,
+      await ApprovalModeService.forMember(sheet.userId, organizationId)
+    );
     if (sheet.status !== 'submitted') {
       throw new AppError(
         `Only submitted sheets can be reviewed (this one is ${sheet.status})`,
@@ -303,7 +371,11 @@ export class MonthlySheetsService {
     viewer: SheetViewer
   ): Promise<MonthlySheetView> {
     const sheet = await this.find(id, organizationId);
-    assertCanDecide(sheet, viewer);
+    assertCanMarkPaid(
+      await ApprovalModeService.forMember(sheet.userId, organizationId),
+      sheet,
+      viewer
+    );
     if (sheet.status !== 'approved') {
       throw new AppError('Only approved sheets can be marked as paid', 409, 'SHEET_NOT_APPROVED');
     }

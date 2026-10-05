@@ -143,7 +143,30 @@ export class SheetsStore {
     return this.mutate(
       () => this.api.submitDaily(id),
       (sheet) => this.upsertDaily(sheet),
-      'Submitted for approval'
+      (sheet) => (sheet.status === 'approved' ? 'Sheet finalized' : 'Submitted for approval')
+    );
+  }
+
+  /** Resolves with how many sheets moved; the page reloads its list afterwards. */
+  public submitAllDailySheets(
+    startDate: string,
+    endDate: string
+  ): Promise<{ count: number; status: 'submitted' | 'approved' }> {
+    return this.mutate(
+      () => this.api.submitAllDaily(startDate, endDate),
+      () => undefined,
+      ({ count, status }) =>
+        count === 0
+          ? 'No draft sheets in this range'
+          : `${count} sheet${count === 1 ? '' : 's'} ${status === 'approved' ? 'finalized' : 'submitted for approval'}`
+    );
+  }
+
+  public reopenDailySheet(id: string, reason: string): Promise<DailySheet> {
+    return this.mutate(
+      () => this.api.reopenDaily(id, reason),
+      (sheet) => this.upsertDaily(sheet),
+      'Sheet reopened for editing'
     );
   }
 
@@ -201,7 +224,18 @@ export class SheetsStore {
     return this.mutate(
       () => this.api.submitMonthly(id),
       (sheet) => this.upsertMonthly(sheet),
-      'Monthly sheet submitted for approval'
+      (sheet) =>
+        sheet.status === 'approved'
+          ? 'Monthly sheet finalized'
+          : 'Monthly sheet submitted for approval'
+    );
+  }
+
+  public reopenMonthlySheet(id: string, reason: string): Promise<MonthlySheet> {
+    return this.mutate(
+      () => this.api.reopenMonthly(id, reason),
+      (sheet) => this.upsertMonthly(sheet),
+      'Monthly sheet reopened for editing'
     );
   }
 
@@ -236,12 +270,13 @@ export class SheetsStore {
   private async mutate<T>(
     call: () => Promise<T>,
     apply: (result: T) => void,
-    successMessage: string
+    successMessage: string | ((result: T) => string)
   ): Promise<T> {
     try {
       const result = await call();
       apply(result);
-      this.bus.push({ kind: 'info', message: successMessage, ttl: 3000 });
+      const message = typeof successMessage === 'string' ? successMessage : successMessage(result);
+      this.bus.push({ kind: 'info', message, ttl: 3000 });
       return result;
     } catch (error) {
       const failure = error as SheetRequestError;

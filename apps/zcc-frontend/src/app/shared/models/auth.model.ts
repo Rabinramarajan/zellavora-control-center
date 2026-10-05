@@ -198,11 +198,28 @@ export interface AuthUser {
   createdAt?: string;
 }
 
+/**
+ * How freelancer sheets are signed off. NONE: submitting finalizes.
+ * SELF: the owner approves their own. EXTERNAL: a reviewer approves.
+ */
+export type ApprovalMode = 'NONE' | 'SELF' | 'EXTERNAL';
+
+export interface ApprovalSettings {
+  organizationMode: ApprovalMode;
+  /** The caller's own override; null inherits the organization's. */
+  memberMode: ApprovalMode | null;
+  /** The mode that governs the caller's own sheets. */
+  effectiveMode: ApprovalMode;
+  /** Whether the Approval Queue has anything to offer this caller. */
+  reviewQueue: boolean;
+}
+
 export interface MeResponse {
   user: AuthUser;
   tenant: TenantSummary & { plan: string; enforce2fa: boolean };
   mfaSetupRequired: boolean;
   permissions: string[];
+  approval: ApprovalSettings;
   menu: MenuNode[];
 }
 

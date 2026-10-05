@@ -269,7 +269,9 @@ export class SettingsComponent {
   }: SaveOptions<T>): Promise<boolean> {
     setBusy(true);
     try {
-      onSuccess?.(await firstValueFrom(request));
+      // Await first: `onSuccess?.(await …)` skips the request when no callback is given.
+      const result = await firstValueFrom(request);
+      onSuccess?.(result);
       this.toast('success', 'Saved', success);
       return true;
     } catch (err) {

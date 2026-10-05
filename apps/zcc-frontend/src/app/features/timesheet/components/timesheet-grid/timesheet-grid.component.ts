@@ -14,6 +14,10 @@ import { map } from 'rxjs/operators';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { TimesheetService } from '../../data/timesheet.service';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { AppDialogService } from '../../../../shared/components/dialog';
+import { askReopenReason } from '../../../freelancer-sheets/sheets.reopen';
+import { approvalCopy } from '../../../freelancer-sheets/sheets.presentation';
 import {
   IMPORT_ACCEPT,
   TimesheetImportFile,
@@ -74,6 +78,27 @@ export class TimesheetGridComponent {
   protected readonly service = inject(TimesheetService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthStore);
+  private readonly dialog = inject(AppDialogService);
+
+  protected readonly approvalMode = this.auth.approvalMode;
+  protected readonly copy = computed(() => approvalCopy(this.approvalMode()));
+
+  private readonly isOwnSheet = computed(
+    () => this.service.timesheet()?.userId === this.auth.user()?.id
+  );
+
+  /**
+   * Your own sheet follows your own mode: no review at all in NONE, only by a
+   * reviewer in EXTERNAL. Someone else's sheet is the reviewer's to decide.
+   */
+  protected readonly showApprovalPanel = computed(() =>
+    this.isOwnSheet() ? this.approvalMode() === 'SELF' : this.auth.approval().reviewQueue
+  );
+
+  protected readonly canReopen = computed(
+    () => this.isOwnSheet() && this.service.status() === 'APPROVED' && this.copy().canReopen
+  );
 
   // p-select takes a mutable array, so the shared readonly list is copied.
   protected readonly statusOptions = [...ENTRY_STATUS_OPTIONS];
@@ -150,6 +175,9 @@ export class TimesheetGridComponent {
       case 'SUBMITTED':
         return 'Submitted and awaiting approval. Entries are locked.';
       case 'APPROVED':
+        if (this.isOwnSheet() && this.approvalMode() === 'NONE') {
+          return 'Finalized. Entries are locked; reopen the sheet to change them.';
+        }
         return `Approved${sheet.approver ? ` by ${sheet.approver.fullName}` : ''}. Entries are locked.`;
       case 'REJECTED':
         return 'Sent back for changes — edit and resubmit.';
@@ -264,6 +292,11 @@ export class TimesheetGridComponent {
 
   protected submit(): void {
     void this.service.submitForApproval();
+  }
+
+  protected async reopen(): Promise<void> {
+    const reason = await askReopenReason(this.dialog, `the ${this.periodLabel()} timesheet`);
+    if (reason) await this.service.reopen(reason);
   }
 
   /** CSV comes from the API so it stays importable; PDF and Word are built in the preview. */

@@ -5,6 +5,7 @@ import { logger } from '../../infrastructure/logger';
 import { PermissionService } from '../../services/auth/permission.service';
 import { TimesheetsService } from './timesheets.service';
 import { REVIEW_PERMISSION, TimesheetViewer } from './timesheets.rules';
+import { ReopenSheetSchema } from '../approval-mode/approval-mode.dto';
 import { buildExportModel, toCsv, toPrintableHtml } from './timesheets.export';
 import {
   BulkUpsertEntriesSchema,
@@ -168,6 +169,18 @@ export class TimesheetsController {
       res.json({ success: true, data: sheet });
     } catch (error) {
       logger.error('Submit timesheet failed', error);
+      throw error;
+    }
+  }
+
+  async reopen(req: AuthRequest, res: Response) {
+    try {
+      const { organizationId, actorUserId } = this.context(req);
+      const dto = ReopenSheetSchema.parse(req.body);
+      const sheet = await this.service.reopen(req.params.id, dto, organizationId, actorUserId);
+      res.json({ success: true, data: sheet });
+    } catch (error) {
+      logger.error('Reopen timesheet failed', error);
       throw error;
     }
   }

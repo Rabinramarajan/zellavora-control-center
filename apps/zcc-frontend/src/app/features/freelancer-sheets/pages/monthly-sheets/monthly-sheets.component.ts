@@ -17,9 +17,13 @@ import {
   DataTableSort,
 } from '../../../../shared/components/data-table';
 import { SheetsStore } from '../../sheets.store';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { AppDialogService } from '../../../../shared/components/dialog';
+import { askReopenReason } from '../../sheets.reopen';
 import { DailySheet, MonthlySheet } from '../../sheets.models';
 import {
   SheetStatus,
+  approvalCopy,
   initialsOf,
   isoDay,
   isoMonth,
@@ -109,6 +113,12 @@ const CALENDAR_LEGEND: { label: string; status: CellStatus }[] = [
   { label: 'Weekend (off)', status: 'weekend' },
 ];
 
+/** Nothing is ever pending when submitting finalizes, so that swatch goes. */
+const NO_APPROVAL_LEGEND: { label: string; status: CellStatus }[] = [
+  { label: 'Finalized', status: 'approved' },
+  ...CALENDAR_LEGEND.filter((item) => item.status !== 'approved' && item.status !== 'submitted'),
+];
+
 @Component({
   selector: 'app-monthly-sheets',
   standalone: true,
@@ -127,6 +137,15 @@ const CALENDAR_LEGEND: { label: string; status: CellStatus }[] = [
 export class MonthlySheetsComponent implements OnInit {
   private readonly store = inject(SheetsStore);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthStore);
+  private readonly dialog = inject(AppDialogService);
+
+  public readonly approvalMode = this.auth.approvalMode;
+  public readonly copy = computed(() => approvalCopy(this.approvalMode()));
+  /** What a signed-off sheet is called under the current mode. */
+  public readonly doneWord = computed(() =>
+    this.approvalMode() === 'NONE' ? 'finalized' : 'approved'
+  );
 
   public readonly isLoading = this.store.isLoading;
   public readonly error = this.store.error;
@@ -172,11 +191,16 @@ export class MonthlySheetsComponent implements OnInit {
     );
   });
 
-  public readonly monthlyStatusLabel = statusLabel;
+  public monthlyStatusLabel(status: SheetStatus): string {
+    return statusLabel(status, this.approvalMode());
+  }
+
   public readonly monthlyStatusPill = statusPill;
 
   public readonly weekdays = WEEKDAYS;
-  public readonly legend = CALENDAR_LEGEND;
+  public readonly legend = computed(() =>
+    this.approvalMode() === 'NONE' ? NO_APPROVAL_LEGEND : CALENDAR_LEGEND
+  );
   public readonly projectColumns = PROJECT_COLUMNS;
   public readonly projectSort = signal<DataTableSort | null>({ key: 'totalHours', dir: 'desc' });
   public readonly trackProject = (row: ProjectRow): string => row.name;
@@ -434,6 +458,22 @@ export class MonthlySheetsComponent implements OnInit {
       : Promise.resolve();
   }
 
+  /** Without a reviewer the owner records their own payment. */
+  public markPaid(): Promise<void> {
+    const sheet = this.monthlySheet();
+    return sheet
+      ? this.runAction(() => this.store.markMonthlySheetAsPaid(sheet.id))
+      : Promise.resolve();
+  }
+
+  public async reopenMonthly(): Promise<void> {
+    const sheet = this.monthlySheet();
+    if (!sheet) return;
+    const reason = await askReopenReason(this.dialog, `the ${this.monthLabel()} sheet`);
+    if (!reason) return;
+    await this.runAction(() => this.store.reopenMonthlySheet(sheet.id, reason));
+  }
+
   public deleteMonthly(): Promise<void> {
     const sheet = this.monthlySheet();
     return sheet
@@ -456,7 +496,7 @@ export class MonthlySheetsComponent implements OnInit {
   public statusText(status: CellStatus): string {
     if (status === 'none') return 'No entry';
     if (status === 'weekend') return 'Weekend, off';
-    return statusLabel(status);
+    return statusLabel(status, this.approvalMode());
   }
 
   /** The previous month is loaded too, for the month-over-month comparison. */

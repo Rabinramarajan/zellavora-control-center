@@ -5,7 +5,7 @@
  * Form-level loading and error state lives in the components that own the form.
  */
 import { Injectable, computed, signal } from '@angular/core';
-import type { AuthUser, MenuNode, TenantSummary } from '../../shared/models';
+import type { ApprovalSettings, AuthUser, MenuNode, TenantSummary } from '../../shared/models';
 import { UserRole } from '../../shared/models';
 
 export interface AuthStoreState {
@@ -13,6 +13,7 @@ export interface AuthStoreState {
   tenant: TenantSummary | null;
   availableTenants: TenantSummary[];
   permissions: Set<string>;
+  approval: ApprovalSettings;
   menu: MenuNode[];
   accessToken: string | null;
   refreshToken: string | null;
@@ -25,11 +26,20 @@ export interface AuthStoreState {
   isInitialized: boolean;
 }
 
+/** Until the profile loads, assume the reviewer-based flow the API defaults to. */
+const DEFAULT_APPROVAL: ApprovalSettings = {
+  organizationMode: 'EXTERNAL',
+  memberMode: null,
+  effectiveMode: 'EXTERNAL',
+  reviewQueue: true,
+};
+
 const initial: AuthStoreState = {
   user: null,
   tenant: null,
   availableTenants: [],
   permissions: new Set<string>(),
+  approval: DEFAULT_APPROVAL,
   menu: [],
   accessToken: null,
   refreshToken: null,
@@ -50,6 +60,9 @@ export class AuthStore {
   readonly tenants = computed(() => this.state().availableTenants);
   readonly permissions = computed(() => this.state().permissions);
   readonly menu = computed(() => this.state().menu);
+  readonly approval = computed(() => this.state().approval);
+  /** The mode that governs the signed-in user's own sheets. */
+  readonly approvalMode = computed(() => this.state().approval.effectiveMode);
   readonly accessToken = computed(() => this.state().accessToken);
   readonly refreshToken = computed(() => this.state().refreshToken);
   readonly accessTokenExpiresAt = computed(() => this.state().accessTokenExpiresAt);
@@ -100,6 +113,7 @@ export class AuthStore {
     user: AuthUser;
     tenant: TenantSummary;
     permissions: string[];
+    approval?: ApprovalSettings;
     menu: MenuNode[];
     mfaSetupRequired: boolean;
   }): void {
@@ -108,6 +122,7 @@ export class AuthStore {
       user: input.user,
       tenant: input.tenant,
       permissions: new Set(input.permissions),
+      approval: input.approval ?? DEFAULT_APPROVAL,
       menu: input.menu,
       mfaSetupRequired: input.mfaSetupRequired,
       isAuthenticated: true,

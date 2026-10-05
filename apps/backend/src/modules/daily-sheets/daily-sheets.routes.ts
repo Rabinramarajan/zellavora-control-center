@@ -9,10 +9,39 @@ const controller = new DailySheetsController();
 
 router.use(authGuard);
 
+/**
+ * @swagger
+ * /api/v1/daily-sheets/bulk-approve:
+ *   post:
+ *     summary: bulkApproveDailySheets
+ *     description: Approve or reject many submitted sheets; per-sheet failures are returned, not thrown.
+ *     operationId: postDailySheetsBulkApprove
+ *     tags: [dailySheets]
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
 router.post(
   '/bulk-approve',
   requirePermission(REVIEW_PERMISSION),
   asyncRoute((req, res) => controller.approveBulk(req, res))
+);
+
+/**
+ * @swagger
+ * /api/v1/daily-sheets/submit-all:
+ *   post:
+ *     summary: submitAllDailySheets
+ *     description: Submit the caller's draft and rejected sheets between startDate and endDate; auto-approves when approval mode is NONE.
+ *     operationId: postDailySheetsSubmitAll
+ *     tags: [dailySheets]
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(
+  '/submit-all',
+  asyncRoute((req, res) => controller.submitAll(req, res))
 );
 
 /**
@@ -174,6 +203,28 @@ router.post(
   '/:id/approve',
   requirePermission(REVIEW_PERMISSION),
   asyncRoute((req, res) => controller.approve(req, res))
+);
+
+/**
+ * @swagger
+ * /api/v1/daily-sheets/{id}/reopen:
+ *   post:
+ *     summary: reopenDailySheet
+ *     description: Approved → draft with a reason. Only when the owner signs off (approval mode NONE or SELF); paid sheets stay closed.
+ *     operationId: postDailySheetsByIdReopen
+ *     tags: [dailySheets]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(
+  '/:id/reopen',
+  asyncRoute((req, res) => controller.reopen(req, res))
 );
 
 /**

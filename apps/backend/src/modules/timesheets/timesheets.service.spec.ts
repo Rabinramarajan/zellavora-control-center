@@ -2,8 +2,12 @@ import { Prisma, TimesheetStatus, TimesheetEntryStatus } from '@prisma/client';
 import { TimesheetsService, computeTotals } from './timesheets.service';
 import { TimesheetsRepository } from './timesheets.repository';
 import { AuditService } from '../../infrastructure/audit';
+import { ApprovalModeService } from '../approval-mode/approval-mode.service';
 
 jest.mock('./timesheets.repository');
+jest.mock('../approval-mode/approval-mode.service', () => ({
+  ApprovalModeService: { forMember: jest.fn().mockResolvedValue('EXTERNAL') },
+}));
 jest.mock('../../infrastructure/audit', () => ({
   AuditService: { log: jest.fn().mockResolvedValue(undefined) },
 }));
@@ -64,6 +68,11 @@ const sheet = (overrides: Partial<Record<string, unknown>> = {}) =>
     ...overrides,
   }) as any;
 
+/** The approval mode every service call sees until a test changes it. */
+const useMode = (mode: 'NONE' | 'SELF' | 'EXTERNAL'): void => {
+  (ApprovalModeService.forMember as jest.Mock).mockResolvedValue(mode);
+};
+
 describe('TimesheetsService', () => {
   let service: TimesheetsService;
   let repo: jest.Mocked<TimesheetsRepository>;
@@ -72,6 +81,7 @@ describe('TimesheetsService', () => {
 
   beforeEach(() => {
     repo = new TimesheetsRepository() as jest.Mocked<TimesheetsRepository>;
+    useMode('EXTERNAL');
     service = new TimesheetsService();
     (service as any).repo = repo;
 
@@ -402,6 +412,57 @@ describe('TimesheetsService', () => {
     });
   });
 
+  describe('approval modes', () => {
+    it('finalizes on submit and audits it when approval is off', async () => {
+      useMode('NONE');
+      repo.findById.mockResolvedValue(sheet());
+
+      await service.submit('sheet-1', ORG_A, EMPLOYEE);
+
+      expect(repo.update).toHaveBeenCalledWith(
+        'sheet-1',
+        expect.objectContaining({ status: TimesheetStatus.APPROVED, approvedById: EMPLOYEE }),
+        expect.anything()
+      );
+      expect(AuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'timesheet.auto_approved' }),
+        expect.anything()
+      );
+    });
+
+    it('refuses a self review under external approval', async () => {
+      repo.findById.mockResolvedValue(sheet({ status: TimesheetStatus.SUBMITTED }));
+
+      await expect(service.approve('sheet-1', ORG_A, EMPLOYEE)).rejects.toThrow(/your own sheet/);
+    });
+
+    it('allows a self review in SELF mode', async () => {
+      useMode('SELF');
+      repo.findById.mockResolvedValue(sheet({ status: TimesheetStatus.SUBMITTED }));
+
+      await service.approve('sheet-1', ORG_A, EMPLOYEE);
+
+      expect(repo.update).toHaveBeenCalledWith(
+        'sheet-1',
+        expect.objectContaining({ status: TimesheetStatus.APPROVED, approvedById: EMPLOYEE })
+      );
+    });
+
+    it('reopens an approved sheet to draft for its owner', async () => {
+      useMode('NONE');
+      repo.findById.mockResolvedValue(sheet({ status: TimesheetStatus.APPROVED }));
+      repo.runInTransaction.mockImplementation((fn: any) => fn({}));
+
+      await service.reopen('sheet-1', { reason: 'Wrong Friday' }, ORG_A, EMPLOYEE);
+
+      expect(repo.update).toHaveBeenCalledWith(
+        'sheet-1',
+        expect.objectContaining({ status: TimesheetStatus.DRAFT, approvedById: null }),
+        expect.anything()
+      );
+    });
+  });
+
   describe('submit → reject → re-edit → resubmit', () => {
     it('stores the reason and clears any stale approval', async () => {
       repo.findById.mockResolvedValue(sheet({ status: TimesheetStatus.SUBMITTED }));
@@ -535,7 +596,7 @@ describe('TimesheetsService', () => {
           ? service.approve('sheet-1', ORG_A, MANAGER)
           : service.reject('sheet-1', { rejectionReason: 'x' }, ORG_A, MANAGER);
 
-      await expect(attempt).rejects.toThrow(/your own timesheet/);
+      await expect(attempt).rejects.toThrow(/your own sheet/);
       expect(repo.update).not.toHaveBeenCalled();
     });
   });

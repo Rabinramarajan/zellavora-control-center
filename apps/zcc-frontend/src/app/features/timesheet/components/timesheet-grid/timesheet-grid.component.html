@@ -69,8 +69,14 @@
           [disabled]="!canSubmit()"
           (click)="submit()"
         >
-          <i class="pi pi-send" aria-hidden="true"></i><span>Submit for approval</span>
+          <i class="pi pi-send" aria-hidden="true"></i
+          ><span>{{ approvalMode() === 'NONE' ? copy().submit : 'Submit for approval' }}</span>
         </button>
+        @if (canReopen()) {
+          <button type="button" class="ts-button ts-button-secondary" (click)="reopen()">
+            <i class="pi pi-lock-open" aria-hidden="true"></i><span>Reopen</span>
+          </button>
+        }
       </div>
     </header>
 
@@ -252,7 +258,9 @@
       </span>
     </div>
 
-    <app-timesheet-approval-panel />
+    @if (showApprovalPanel()) {
+      <app-timesheet-approval-panel />
+    }
   }
 </main>
 

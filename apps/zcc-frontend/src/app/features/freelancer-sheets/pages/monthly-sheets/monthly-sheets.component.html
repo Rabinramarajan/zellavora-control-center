@@ -79,9 +79,10 @@
           Monthly Sheet — {{ monthLabel() }}
         </h2>
         <p class="text-xs text-slate-400 mt-0.5">
-          Built from your approved daily sheets. {{ approvedDailyCount() }} approved
+          Built from your {{ doneWord() }} daily sheets. {{ approvedDailyCount() }} {{ doneWord() }}
           @if (unsettledDailyCount() > 0) {
-            · {{ unsettledDailyCount() }} still draft or pending
+            · {{ unsettledDailyCount() }} still
+            {{ approvalMode() === 'NONE' ? 'draft' : 'draft or pending' }}
           }
         </p>
       </div>
@@ -101,8 +102,8 @@
         }
         @if (isStale()) {
           <div class="notice notice--info mb-4" role="status">
-            Your approved daily sheets have changed since this sheet was generated. Refresh it
-            before submitting.
+            Your {{ doneWord() }} daily sheets have changed since this sheet was generated. Refresh
+            it before {{ approvalMode() === 'NONE' ? 'finalizing' : 'submitting' }}.
           </div>
         }
 
@@ -137,7 +138,7 @@
               [disabled]="busy() || sheet.totalSheets === 0 || isStale()"
               (click)="submitMonthly()"
             >
-              Submit for approval
+              {{ approvalMode() === 'NONE' ? copy().submit : 'Submit for approval' }}
             </button>
             <button type="button" class="ghost-btn" [disabled]="busy()" (click)="regenerate()">
               ↻ Refresh from daily sheets
@@ -165,6 +166,16 @@
               </button>
             }
           }
+          @if (sheet.status === 'approved' && approvalMode() === 'NONE') {
+            <button type="button" class="primary-btn" [disabled]="busy()" (click)="markPaid()">
+              Mark as paid
+            </button>
+          }
+          @if (sheet.status === 'approved' && copy().canReopen) {
+            <button type="button" class="ghost-btn" [disabled]="busy()" (click)="reopenMonthly()">
+              Reopen
+            </button>
+          }
           <a
             class="ghost-btn"
             routerLink="/freelancer-sheets/monthly/timesheet"
@@ -175,8 +186,8 @@
         </div>
         @if (sheet.totalSheets === 0 && (sheet.status === 'draft' || sheet.status === 'rejected')) {
           <p class="text-xs text-slate-400 mt-3">
-            No approved daily sheets yet. Once your daily sheets are approved, refresh this sheet
-            and submit it.
+            No {{ doneWord() }} daily sheets yet. Once your daily sheets are {{ doneWord() }},
+            refresh this sheet and {{ approvalMode() === 'NONE' ? 'finalize' : 'submit' }} it.
           </p>
         }
       } @else {
@@ -186,8 +197,9 @@
             No monthly sheet for {{ monthLabel() }} yet
           </p>
           <p class="text-xs">
-            Create one to roll up your {{ approvedDailyCount() }} approved daily
-            {{ approvedDailyCount() === 1 ? 'sheet' : 'sheets' }} and send it for approval.
+            Create one to roll up your {{ approvedDailyCount() }} {{ doneWord() }} daily
+            {{ approvedDailyCount() === 1 ? 'sheet' : 'sheets'
+            }}{{ approvalMode() === 'NONE' ? '.' : ' and send it for approval.' }}
           </p>
           <button
             type="button"
@@ -309,7 +321,7 @@
       <div class="sheet-card__head">
         <h2 class="text-base font-semibold text-white">Monthly Calendar</h2>
         <ul class="flex flex-wrap items-center gap-3">
-          @for (item of legend; track item.status) {
+          @for (item of legend(); track item.status) {
             <li class="flex items-center gap-1.5 text-[0.68rem] text-slate-400">
               <span class="legend-dot" [class]="'legend-dot legend-dot--' + item.status"></span>
               {{ item.label }}

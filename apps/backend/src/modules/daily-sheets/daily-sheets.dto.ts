@@ -74,6 +74,14 @@ export const ApproveDailySheetSchema = z
     path: ['rejectionReason'],
   });
 
+/** Submit every draft and rejected sheet of the caller's within a date range. */
+export const SubmitAllDailySheetsSchema = z
+  .object({ startDate: z.string().date(), endDate: z.string().date() })
+  .refine((dto) => dto.startDate <= dto.endDate, {
+    message: 'startDate must not be after endDate',
+    path: ['endDate'],
+  });
+
 /** Query strings arrive as text, so numbers are coerced before validation. */
 export const DailySheetQuerySchema = z.object({
   /** `team` lists everyone's sheets and requires the review permission. */
@@ -90,5 +98,6 @@ export const DailySheetQuerySchema = z.object({
 export type CreateDailySheetDTO = z.infer<typeof CreateDailySheetSchema>;
 export type UpdateDailySheetDTO = z.infer<typeof UpdateDailySheetSchema>;
 export type ApproveDailySheetDTO = z.infer<typeof ApproveDailySheetSchema>;
+export type SubmitAllDailySheetsDTO = z.infer<typeof SubmitAllDailySheetsSchema>;
 export type DailySheetQueryDTO = z.infer<typeof DailySheetQuerySchema>;
 export type DailySheetLineItemDTO = z.infer<typeof LineItemSchema>;

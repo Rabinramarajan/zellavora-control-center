@@ -22,6 +22,8 @@ import { DailySheet, MonthlySheet } from '../../sheets.models';
 import { initialsOf, paletteFor, statusLabel, statusPill } from '../../sheets.presentation';
 import { parseDayKey } from '../../sheets.time';
 import { AuthStore } from '../../../../core/auth/auth.store';
+import { AppDialogService } from '../../../../shared/components/dialog';
+import { firstValueFrom } from 'rxjs';
 
 interface DailyRow {
   status: DailySheet['status'];
@@ -143,10 +145,30 @@ const MONTHLY_COLUMNS: DataTableColumn<MonthlyRow>[] = [
 export class ApprovalQueueComponent implements OnInit {
   private readonly store = inject(SheetsStore);
   private readonly auth = inject(AuthStore);
+  private readonly dialog = inject(AppDialogService);
 
+  /**
+   * Your own sheets follow your own approval mode: only in SELF mode do you
+   * sign them off yourself. Anyone else's sheet is yours to review.
+   */
   public canReviewOwner(userId: string): boolean {
     const currentUserId = this.auth.user()?.id;
-    return !!currentUserId && (userId !== currentUserId || this.auth.role() === 'owner');
+    return !!currentUserId && (userId !== currentUserId || this.auth.approvalMode() === 'SELF');
+  }
+
+  /** Approving your own hours is deliberate, so it is confirmed first. */
+  private async confirmOwnApproval(userIds: readonly string[]): Promise<boolean> {
+    const me = this.auth.user()?.id;
+    if (!me || !userIds.includes(me)) return true;
+    return firstValueFrom(
+      this.dialog.confirm({
+        title: 'Approve your own sheet?',
+        message:
+          'You are signing off your own hours. Approved sheets count towards your monthly sheet and can be reopened later if needed.',
+        confirmText: 'Approve',
+        variant: 'warning',
+      })
+    );
   }
 
   public readonly isLoading = this.store.isLoading;
@@ -367,6 +389,12 @@ export class ApprovalQueueComponent implements OnInit {
         )
     );
     if (!eligible.length) return;
+    if (approved) {
+      const owners = this.dailyRows()
+        .filter((row) => eligible.includes(row.id))
+        .map((row) => row.userId);
+      if (!(await this.confirmOwnApproval(owners))) return;
+    }
     this.busyIds.update((busy) => new Set([...busy, ...eligible]));
     try {
       await this.store.reviewDailyBulk(eligible, approved, reason);
@@ -389,17 +417,20 @@ export class ApprovalQueueComponent implements OnInit {
     );
   }
 
-  public approveMonthly(id: string): void {
-    if (
-      !this.monthlyRows().some(
-        (row) => row.id === id && row.status === 'submitted' && this.canReviewOwner(row.userId)
-      )
-    )
-      return;
+  public async approveMonthly(id: string): Promise<void> {
+    const row = this.monthlyRows().find(
+      (candidate) =>
+        candidate.id === id &&
+        candidate.status === 'submitted' &&
+        this.canReviewOwner(candidate.userId)
+    );
+    if (!row || !(await this.confirmOwnApproval([row.userId]))) return;
     void this.decide(id, () => this.store.reviewMonthlySheet(id, true));
   }
 
   public markPaid(id: string): void {
+    const row = this.monthlyRows().find((candidate) => candidate.id === id);
+    if (!row || !this.canReviewOwner(row.userId)) return;
     void this.decide(id, () => this.store.markMonthlySheetAsPaid(id));
   }
 
