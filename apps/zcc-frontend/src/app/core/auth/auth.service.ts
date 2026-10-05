@@ -61,6 +61,8 @@ const STORAGE = {
 } as const;
 
 const AUTH_API = '/api/v1/auth';
+/** Everyone, including INDIVIDUAL accounts, signs in to this organization by default. */
+const DEFAULT_CLIENT_CODE = 'zellavora-inc';
 const LOW_RECOVERY_CODE_THRESHOLD = 3;
 
 /** Only same-app, non-auth paths may be restored after sign-in (no open redirects). */
@@ -176,7 +178,7 @@ export class AuthService {
   }
 
   get lastClientCode(): string {
-    return localStorage.getItem(STORAGE.clientCode) ?? '';
+    return localStorage.getItem(STORAGE.clientCode) || DEFAULT_CLIENT_CODE;
   }
 
   // ---------------------------------------------------------------------------

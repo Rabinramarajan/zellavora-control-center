@@ -14,6 +14,7 @@ import { config } from '../../config/env';
 import { AppError } from '../../middleware/error';
 import { addQueueJob } from '../../infrastructure/queue';
 import { logger } from '../../infrastructure/logger';
+import type { TxClient } from '../../infrastructure/prisma';
 import {
   AuditService,
   EncryptionService,
@@ -34,6 +35,7 @@ import { UserRequestService } from '../user-requests/user-request.service';
 import { recordStatusChange } from '../users/account-status';
 import type { LoginPolicy } from '../security-policy/security-policy.dto';
 import { AuthRepository } from './auth.repository';
+import { INDIVIDUAL_PERMISSIONS, INDIVIDUAL_ROLE_NAME } from './individual-role';
 import type {
   AcceptInvitationDto,
   LoginDto,
@@ -135,7 +137,9 @@ export class AuthService {
   async login(dto: LoginDto, meta: RequestMeta): Promise<LoginResult> {
     await RateLimitService.assertIpAllowed(meta.ipAddress);
 
-    const tenant = await TenantService.findByClientCode(dto.clientCode);
+    const tenant = await TenantService.findByClientCode(
+      dto.clientCode ?? config.defaultOrganizationCode
+    );
     const { login: loginPolicy } = await SecurityPolicyService.forOrganization(tenant?.id);
     await RateLimitService.assertAccountAllowed(dto.email, loginPolicy);
 
@@ -180,6 +184,33 @@ export class AuthService {
     }
 
     return this.completeLogin(user, tenant, dto.rememberMe, meta);
+  }
+
+  /**
+   * INDIVIDUAL accounts join the default organization with the Individual role,
+   * which carries only personal-workspace permissions.
+   */
+  private async joinDefaultOrganization(userId: string, tx: TxClient): Promise<string> {
+    const org = await this.repo.organizationCodeTaken(config.defaultOrganizationCode, tx);
+    if (!org) {
+      throw new AppError(
+        'Individual registration is not available right now.',
+        503,
+        'DEFAULT_ORGANIZATION_MISSING'
+      );
+    }
+    await this.repo.updateUser(userId, { tenantId: org.id, role: INDIVIDUAL_ROLE_NAME }, tx);
+    await this.repo.ensureMembership(userId, org.id, tx);
+    await this.repo.assignOrganizationRole(
+      {
+        userId,
+        organizationId: org.id,
+        name: INDIVIDUAL_ROLE_NAME,
+        permissionKeys: INDIVIDUAL_PERMISSIONS,
+      },
+      tx
+    );
+    return org.id;
   }
 
   async verifyMfa(mfaToken: string, code: string, meta: RequestMeta): Promise<LoginSuccess> {
@@ -466,7 +497,7 @@ export class AuthService {
   }
 
   /**
-   * A standalone personal account: no organization, no membership, no approval.
+   * A personal account in the default organization with the Individual role, no approval.
    * Created ACTIVE — the email-verification gate in `login` is what withholds
    * access until the address is proven, so status stays a statement about the
    * account rather than a stand-in for verification.
@@ -506,10 +537,11 @@ export class AuthService {
         tx
       );
       await this.repo.addPasswordHistory(created.id, passwordHash, tx);
-      return created;
+      const organizationId = await this.joinDefaultOrganization(created.id, tx);
+      return { ...created, tenantId: organizationId };
     });
 
-    await this.audit('user_registered', null, user.id, meta);
+    await this.audit('user_registered', user.tenantId, user.id, meta);
     await this.sendVerificationEmail(user).catch((e) =>
       logger.error(`[auth] verification email failed: ${(e as Error).message}`)
     );

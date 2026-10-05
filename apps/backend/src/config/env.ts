@@ -75,6 +75,9 @@ export const config = {
           .split(',')
           .map((e) => e.trim().toLowerCase())
           .filter(Boolean),
+  // The organization everyone signs in to when no code is given, and that
+  // INDIVIDUAL accounts join.
+  defaultOrganizationCode: process.env.DEFAULT_ORGANIZATION_CODE || 'zellavora-inc',
   // Public self-registration is off by default: ZCC onboards users by invitation.
   selfRegistrationEnabled: process.env.ALLOW_SELF_REGISTRATION === 'true',
   // Which registration types the public form offers, narrowing the global flag.

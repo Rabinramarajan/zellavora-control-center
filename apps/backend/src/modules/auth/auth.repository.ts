@@ -84,6 +84,63 @@ export class AuthRepository extends BaseRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Individual role
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Assigns the organization's system role of this name, creating it with
+   * exactly the given permission keys the first time it is needed.
+   */
+  async assignOrganizationRole(
+    input: {
+      userId: string;
+      organizationId: string;
+      name: string;
+      permissionKeys: readonly string[];
+    },
+    tx?: TxClient
+  ) {
+    const db = this.getDb(tx);
+    const key = `${input.organizationId}_${input.name.toLowerCase()}`;
+    let role = await db.role.findUnique({ where: { key } });
+    if (!role) {
+      const created = await db.role.create({
+        data: {
+          name: input.name,
+          key,
+          organizationId: input.organizationId,
+          description: 'Personal portfolio, content, projects and sheets only',
+          isSystem: true,
+        },
+      });
+      const permissions = await db.permission.findMany({
+        where: { key: { in: [...input.permissionKeys] } },
+        select: { id: true },
+      });
+      await db.rolePermission.createMany({
+        data: permissions.map((p) => ({
+          organizationId: input.organizationId,
+          roleId: created.id,
+          permissionId: p.id,
+          effect: 'allow',
+        })),
+        skipDuplicates: true,
+      });
+      role = created;
+    }
+    await db.userRoleAssignment.create({
+      data: {
+        userId: input.userId,
+        roleId: role.id,
+        organizationId: input.organizationId,
+        resourceType: 'tenant',
+        resourceId: input.organizationId,
+      },
+    });
+    return role;
+  }
+
+  // ---------------------------------------------------------------------------
   // Password history
   // ---------------------------------------------------------------------------
 

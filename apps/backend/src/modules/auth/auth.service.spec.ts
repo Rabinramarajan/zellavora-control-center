@@ -1,6 +1,7 @@
 import { AuthService } from './auth.service';
 import type { AuthRepository } from './auth.repository';
 import type { RegisterDto } from './auth.dto';
+import { INDIVIDUAL_PERMISSIONS } from './individual-role';
 import {
   MfaService,
   PasswordService,
@@ -153,6 +154,7 @@ function makeRepo(overrides: Partial<Record<keyof AuthRepository, jest.Mock>> = 
       ...data,
     })),
     ensureMembership: jest.fn(),
+    assignOrganizationRole: jest.fn(),
     addPasswordHistory: jest.fn(),
     createEmailVerification: jest.fn(),
     invalidateEmailVerifications: jest.fn(),
@@ -327,25 +329,59 @@ describe('AuthService', () => {
         acceptTerms: true,
       };
 
-      it('creates an ACTIVE account with no organization and no approval request', async () => {
+      it('joins zellavora-inc as an ACTIVE member with no approval request', async () => {
         const repo = registerRepo();
+        (repo.organizationCodeTaken as jest.Mock).mockResolvedValue({ id: 'zellavora-org' });
         await new AuthService(repo).register(individualDto, meta);
 
-        expect(repo.createUser).toHaveBeenCalledWith(
-          expect.objectContaining({
-            status: 'ACTIVE',
-            tenantId: null,
-            registrationType: 'INDIVIDUAL',
-            emailVerified: false,
-          }),
+        expect(repo.organizationCodeTaken).toHaveBeenCalledWith('zellavora-inc', expect.anything());
+        expect(repo.createOrganization).not.toHaveBeenCalled();
+        expect(repo.updateUser).toHaveBeenCalledWith(
+          'new-user-1',
+          { tenantId: 'zellavora-org', role: 'Individual' },
           expect.anything()
         );
-        expect(repo.ensureMembership).not.toHaveBeenCalled();
+        expect(repo.ensureMembership).toHaveBeenCalledWith(
+          'new-user-1',
+          'zellavora-org',
+          expect.anything()
+        );
         expect(onSelfRegistration).not.toHaveBeenCalled();
       });
 
+      it('grants only the personal-workspace permissions', async () => {
+        const repo = registerRepo();
+        (repo.organizationCodeTaken as jest.Mock).mockResolvedValue({ id: 'zellavora-org' });
+        await new AuthService(repo).register(individualDto, meta);
+
+        expect(repo.assignOrganizationRole).toHaveBeenCalledWith(
+          expect.objectContaining({
+            organizationId: 'zellavora-org',
+            name: 'Individual',
+            permissionKeys: INDIVIDUAL_PERMISSIONS,
+          }),
+          expect.anything()
+        );
+        for (const adminKey of [
+          'users:read',
+          'roles:read',
+          'settings:manage',
+          'timesheet:approve',
+        ]) {
+          expect(INDIVIDUAL_PERMISSIONS).not.toContain(adminKey);
+        }
+      });
+
+      it('fails clearly when the default organization does not exist', async () => {
+        await expect(
+          new AuthService(registerRepo()).register(individualDto, meta)
+        ).rejects.toMatchObject({ code: 'DEFAULT_ORGANIZATION_MISSING' });
+      });
+
       it('tells the person to verify their email rather than wait for approval', async () => {
-        const result = await new AuthService(registerRepo()).register(individualDto, meta);
+        const repo = registerRepo();
+        (repo.organizationCodeTaken as jest.Mock).mockResolvedValue({ id: 'zellavora-org' });
+        const result = await new AuthService(repo).register(individualDto, meta);
 
         expect(result.message).not.toMatch(/approval/i);
         expect(result.outcome).toBe('PENDING_EMAIL_VERIFICATION');
@@ -434,6 +470,12 @@ describe('AuthService', () => {
         mfaSetupRequired: false,
       });
       expect(RateLimitService.clearForEmail).toHaveBeenCalledWith(baseUser.email);
+    });
+
+    it('signs in to zellavora-inc when no organization code is given', async () => {
+      const { clientCode: _omitted, ...withoutCode } = loginDto;
+      await new AuthService(makeRepo()).login(withoutCode, meta);
+      expect(TenantService.findByClientCode).toHaveBeenCalledWith('zellavora-inc');
     });
 
     describe('organization login policy', () => {

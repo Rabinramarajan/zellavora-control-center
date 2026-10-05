@@ -33,7 +33,8 @@ const opaqueToken = z.string().trim().min(20).max(256);
 const presentedPassword = z.string().min(1, 'Password is required').max(128);
 
 export const LoginSchema = z.object({
-  clientCode,
+  /** Omitted means the default organization (zellavora-inc). */
+  clientCode: z.preprocess((v) => (v === '' || v === null ? undefined : v), clientCode.optional()),
   email,
   password: presentedPassword,
   rememberMe: z.boolean().optional().default(false),

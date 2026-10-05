@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { FormField, FormRoot, form, required } from '@angular/forms/signals';
+import { FormField, FormRoot, form } from '@angular/forms/signals';
 import { catchError, firstValueFrom, map, of } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { apiErrorCode } from '../../../../core/auth/auth-errors';
@@ -75,7 +75,6 @@ export class LoginPage {
   protected readonly form = form(
     this.model,
     (path) => {
-      required(path.clientCode, { message: 'Enter your organization code.' });
       emailRules(path.email);
       currentPasswordRules(path.password);
     },

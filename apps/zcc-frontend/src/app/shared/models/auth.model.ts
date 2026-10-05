@@ -30,6 +30,7 @@ export interface AuthConfig {
 // ============================================================================
 
 export interface LoginRequest {
+  /** Empty signs in to the default organization (zellavora-inc). */
   clientCode: string;
   email: string;
   password: string;

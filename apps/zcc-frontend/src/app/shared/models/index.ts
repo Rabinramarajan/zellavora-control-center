@@ -22,6 +22,8 @@ export enum UserRole {
   MEMBER = 'member',
   EDITOR = 'editor',
   VIEWER = 'viewer',
+  /** INDIVIDUAL accounts: personal workspace permissions only. */
+  INDIVIDUAL = 'Individual',
 }
 
 export enum ProjectStatus {

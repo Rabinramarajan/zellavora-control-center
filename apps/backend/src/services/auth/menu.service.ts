@@ -46,6 +46,7 @@ const DEFAULT_MENU: MenuDef[] = [
     label: 'Portfolio',
     icon: '🎨',
     route: '/portfolio',
+    requiredPermission: 'portfolio:read',
     orderIndex: 2,
     children: [
       {
@@ -54,6 +55,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Profile',
         icon: '👤',
         route: '/portfolio/profile',
+        requiredPermission: 'portfolio:read',
         orderIndex: 1,
       },
       {
@@ -62,6 +64,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Hero',
         icon: '🌟',
         route: '/portfolio/hero',
+        requiredPermission: 'portfolio:read',
         orderIndex: 2,
       },
       {
@@ -70,6 +73,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'About',
         icon: '📝',
         route: '/portfolio/about',
+        requiredPermission: 'portfolio:read',
         orderIndex: 3,
       },
       {
@@ -78,6 +82,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Skills',
         icon: '🧠',
         route: '/portfolio/skills',
+        requiredPermission: 'portfolio:read',
         orderIndex: 4,
       },
       {
@@ -86,6 +91,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Experience',
         icon: '💼',
         route: '/portfolio/experience',
+        requiredPermission: 'portfolio:read',
         orderIndex: 5,
       },
       {
@@ -94,6 +100,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Education',
         icon: '🎓',
         route: '/portfolio/education',
+        requiredPermission: 'portfolio:read',
         orderIndex: 6,
       },
       {
@@ -102,6 +109,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Services',
         icon: '🛠️',
         route: '/portfolio/services',
+        requiredPermission: 'portfolio:read',
         orderIndex: 7,
       },
       {
@@ -110,6 +118,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Testimonials',
         icon: '💬',
         route: '/portfolio/testimonials',
+        requiredPermission: 'portfolio:read',
         orderIndex: 8,
       },
     ],
@@ -120,6 +129,7 @@ const DEFAULT_MENU: MenuDef[] = [
     label: 'Projects',
     icon: '🗂️',
     route: '/projects',
+    requiredPermission: 'projects:read',
     orderIndex: 3,
   },
   {
@@ -145,6 +155,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Media Library',
         icon: '🖼️',
         route: '/media',
+        requiredPermission: 'media:read',
         orderIndex: 2,
       },
       {
@@ -153,6 +164,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'CMS Builder',
         icon: '🧱',
         route: '/cms-builder',
+        requiredPermission: 'cms:read',
         orderIndex: 3,
       },
     ],
@@ -199,6 +211,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Daily Sheets',
         icon: '📅',
         route: '/freelancer-sheets/daily',
+        requiredPermission: 'timesheet:read',
         orderIndex: 1,
       },
       {
@@ -207,6 +220,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Monthly Sheets',
         icon: '📊',
         route: '/freelancer-sheets/monthly',
+        requiredPermission: 'timesheet:read',
         orderIndex: 2,
       },
       {
@@ -215,6 +229,7 @@ const DEFAULT_MENU: MenuDef[] = [
         label: 'Timesheets',
         icon: '⏱️',
         route: '/timesheets',
+        requiredPermission: 'timesheet:read',
         orderIndex: 3,
       },
       {
@@ -382,6 +397,7 @@ const DEFAULT_MENU: MenuDef[] = [
     label: 'Notifications',
     icon: '🔔',
     route: '/notifications',
+    requiredPermission: 'notifications:read',
     orderIndex: 9,
   },
   {

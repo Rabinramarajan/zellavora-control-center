@@ -9,6 +9,11 @@ export const accountRoutes: Routes = [
     loadComponent: () => import('./pages/security/security.page').then((m) => m.SecurityPage),
   },
   {
+    path: 'sessions',
+    title: 'Active sessions · ZCC',
+    loadComponent: () => import('./pages/sessions/sessions.page').then((m) => m.SessionsPage),
+  },
+  {
     path: 'change-password',
     title: 'Change password · ZCC',
     loadComponent: () =>

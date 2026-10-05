@@ -264,6 +264,27 @@ async function main() {
       action: 'manage',
       description: 'Provision and revoke system access roles',
     },
+    // Personal-workspace pages. Keys match the menu gates and the Individual role.
+    ...(
+      [
+        ['portfolio', 'read', 'View and edit the portfolio'],
+        ['projects', 'read', 'View projects'],
+        ['projects', 'create', 'Create projects'],
+        ['projects', 'write', 'Edit projects'],
+        ['projects', 'delete', 'Delete projects'],
+        ['media', 'read', 'View the media library'],
+        ['cms', 'read', 'View CMS pages'],
+        ['cms', 'manage', 'Build and publish CMS pages'],
+        ['timesheet', 'read', 'Keep daily, monthly and time sheets'],
+        ['notifications', 'read', 'View your notifications'],
+      ] as const
+    ).map(([resource, action, description]) => ({
+      name: `${action}:${resource}`,
+      key: `${resource}:${action}`,
+      resource,
+      action,
+      description,
+    })),
     // Identity & Access console. Keys match the requirePermission() gates and the IAM menu.
     ...(
       [
@@ -361,6 +382,34 @@ async function main() {
     }
   }
   console.log();
+
+  // Every member works in their own portfolio, projects, content and sheets.
+  const memberKeys = new Set([
+    'portfolio:read',
+    'projects:read',
+    'media:read',
+    'cms:read',
+    'timesheet:read',
+    'notifications:read',
+  ]);
+  for (const role of [adminRole, userRole]) {
+    for (const perm of permissionsList.filter((p) => memberKeys.has(p.key))) {
+      const existing = await prisma.rolePermission.findFirst({
+        where: { organizationId: tenant.id, roleId: role.id, permissionId: perm.id },
+      });
+      if (!existing) {
+        await prisma.rolePermission.create({
+          data: {
+            organizationId: tenant.id,
+            roleId: role.id,
+            permissionId: perm.id,
+            effect: 'allow',
+          },
+        });
+      }
+    }
+  }
+  console.log('  ✅ Member page keys assigned to Admin and User roles');
 
   // Admins manage content, so they get the media library keys as well.
   for (const perm of permissionsList.filter((p) => p.key.startsWith('media:'))) {

@@ -1,5 +1,6 @@
 jest.mock('../../infrastructure/prisma', () => ({ prisma: {} }));
 import { MenuService } from './menu.service';
+import { INDIVIDUAL_PERMISSIONS } from '../../modules/auth/individual-role';
 
 describe('selected menu access', () => {
   it('shows exactly the selected Galaxy Sofas menus', async () => {
@@ -10,6 +11,8 @@ describe('selected menu access', () => {
       'navigation:cms-builder',
       'navigation:settings',
       'dashboard:read',
+      'media:read',
+      'cms:read',
       'settings:manage',
     ]);
     const menus = await MenuService.loadForUserWithPerms('galaxy-user', 'galaxy', permissions);
@@ -17,11 +20,11 @@ describe('selected menu access', () => {
     expect(menus[1].children.map((menu) => menu.key)).toEqual(['media', 'cms-builder']);
     expect(menus[2].children.map((menu) => menu.key)).toEqual(['settings']);
   });
-  it('does not grant other menus that have no required permission', async () => {
+  it('does not grant other menus the role holds when they are not selected', async () => {
     const menus = await MenuService.loadForUserWithPerms(
       'user',
       'org',
-      new Set(['navigation:restricted', 'navigation:media'])
+      new Set(['navigation:restricted', 'navigation:media', 'media:read', 'portfolio:read'])
     );
     expect(menus.map((menu) => menu.key)).toEqual(['content']);
     expect(menus[0].children.map((menu) => menu.key)).toEqual(['media']);
@@ -35,12 +38,36 @@ describe('selected menu access', () => {
     expect(menus).toEqual([]);
   });
   it('hides a group when none of its children are permitted', async () => {
-    const menus = await MenuService.loadForUserWithPerms('member', 'org', new Set());
+    const menus = await MenuService.loadForUserWithPerms('member', 'org', new Set(['cms:read']));
     const keys = menus.map((menu) => menu.key);
     expect(keys).not.toContain('iam');
     expect(keys).not.toContain('operations');
     expect(keys).not.toContain('system');
-    expect(keys).toContain('content');
+    expect(keys).not.toContain('portfolio');
+    expect(keys).toEqual(['content']);
+  });
+  it('gives the Individual role its personal pages and no administration', async () => {
+    const menus = await MenuService.loadForUserWithPerms(
+      'individual',
+      'personal',
+      new Set(INDIVIDUAL_PERMISSIONS)
+    );
+    expect(menus.map((menu) => menu.key)).toEqual([
+      'dashboard',
+      'portfolio',
+      'projects',
+      'content',
+      'appearance',
+      'analytics',
+      'freelancer',
+      'notifications',
+    ]);
+    const childKeys = (key: string) =>
+      menus.find((menu) => menu.key === key)?.children.map((menu) => menu.key);
+    expect(childKeys('portfolio')).toHaveLength(8);
+    expect(childKeys('content')).toEqual(['blog', 'media', 'cms-builder']);
+    expect(childKeys('appearance')).toEqual(['theme-builder']);
+    expect(childKeys('freelancer')).toEqual(['daily-sheets', 'monthly-sheets', 'timesheets']);
   });
   it('gives the owner the full grouped sidebar with a single place for user admin', async () => {
     const menus = await MenuService.loadForUserWithPerms('owner', 'org', new Set(['*:*']));
