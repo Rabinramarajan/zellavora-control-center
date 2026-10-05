@@ -20,6 +20,7 @@ import themeRoutes from '../modules/themes/theme.routes';
 import blogRoutes from '../modules/blog/blog.routes';
 import resourceRoutes from '../modules/resources/resource.routes';
 import roleRoutes from '../modules/roles/role.routes';
+import menuAccessRoutes from '../modules/menu-access/menu-access.routes';
 import groupRoutes from '../modules/groups/group.routes';
 import userRequestRoutes from '../modules/user-requests/user-request.routes';
 import iamUserRoutes from '../modules/users/iam-user.routes';
@@ -70,6 +71,7 @@ export function registerApiRoutes(app: Express): void {
   // IAM Admin Console — RBAC modules (Resources first; Roles, Groups, Users follow)
   app.use('/api/v1/iam/resources', resourceRoutes);
   app.use('/api/v1/iam/roles', roleRoutes);
+  app.use('/api/v1/iam/menu-access', menuAccessRoutes);
   app.use('/api/v1/iam/groups', groupRoutes);
   app.use('/api/v1/iam/users', iamUserRoutes);
   app.use('/api/v1/iam/user-requests', userRequestRoutes);

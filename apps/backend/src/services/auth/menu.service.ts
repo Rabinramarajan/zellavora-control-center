@@ -290,6 +290,16 @@ const DEFAULT_MENU: MenuDef[] = [
         requiredPermission: 'roles:read',
       },
       {
+        id: 'iam-menu-access',
+        key: 'iam-menu-access',
+        label: 'Menu Access',
+        icon: '🧭',
+        route: '/iam/menu-access',
+        // Sits right after Roles without renumbering the entries below.
+        orderIndex: 4.5,
+        requiredPermission: 'roles:read',
+      },
+      {
         id: 'iam-permissions',
         key: 'iam-permissions',
         label: 'Permissions',
@@ -488,6 +498,31 @@ const toNode = (d: MenuDef): MenuNode => ({
   children: [],
 });
 
+/** One menu entry as the Menu Access screen shows it. */
+export interface MenuDefinitionNode {
+  key: string;
+  label: string;
+  icon: string | null;
+  route: string | null;
+  /** Permission the entry needs besides its navigation grant. */
+  requiredPermission: string | null;
+  children: MenuDefinitionNode[];
+}
+
+/** The full menu, unfiltered, in display order. */
+export function menuDefinition(menu: readonly MenuDef[] = DEFAULT_MENU): MenuDefinitionNode[] {
+  return [...menu]
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+    .map((node) => ({
+      key: node.key,
+      label: node.label,
+      icon: node.icon,
+      route: node.route,
+      requiredPermission: node.requiredPermission ?? null,
+      children: menuDefinition(node.children ?? []),
+    }));
+}
+
 export interface NavigationPermissionDef {
   name: string;
   key: string;
@@ -501,7 +536,9 @@ export interface NavigationPermissionDef {
  * itself so every entry can be granted from the Roles screen and a new menu
  * item needs no migration or seed.
  */
-export function navigationPermissionDefs(menu: readonly MenuDef[] = DEFAULT_MENU): NavigationPermissionDef[] {
+export function navigationPermissionDefs(
+  menu: readonly MenuDef[] = DEFAULT_MENU
+): NavigationPermissionDef[] {
   const defs: NavigationPermissionDef[] = [
     {
       name: 'navigation:restricted',

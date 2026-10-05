@@ -1,0 +1,265 @@
+<zcc-iam-page-header
+  title="Menu Access"
+  icon="pi pi-sitemap"
+  description="Choose which menus and sub-menus each role sees in the sidebar. Only navigation is changed here; what a role can do is set in Roles."
+>
+  @if (canManage() && saved()) {
+    <button
+      type="button"
+      [class]="btn.secondary"
+      [disabled]="!dirty() || saving()"
+      (click)="reset()"
+    >
+      <i class="pi pi-undo text-xs" aria-hidden="true"></i>
+      Reset
+    </button>
+    <button type="button" [class]="btn.primary" [disabled]="!dirty() || saving()" (click)="save()">
+      <i
+        class="pi text-xs"
+        [class.pi-spin]="saving()"
+        [class.pi-spinner]="saving()"
+        [class.pi-check]="!saving()"
+        aria-hidden="true"
+      ></i>
+      {{ saving() ? 'Saving' : 'Save changes' }}
+    </button>
+  }
+</zcc-iam-page-header>
+
+@if (loading()) {
+  <div class="ma-state" role="status">
+    <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+    <span>Loading menu…</span>
+  </div>
+} @else if (loadError()) {
+  <div class="ma-state ma-state-error" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <span>{{ loadError() }}</span>
+  </div>
+} @else {
+  <section class="ma-controls" aria-label="Role and mode">
+    <div class="ma-field">
+      <label for="ma-role">Role</label>
+      <select
+        #roleSelect
+        id="ma-role"
+        [class]="inputClass + ' min-h-[42px]'"
+        [value]="roleId() ?? ''"
+        [disabled]="saving()"
+        (change)="selectRole(roleSelect)"
+      >
+        @for (r of roles(); track r.id) {
+          <option [value]="r.id">{{ r.name }}{{ r.isSystem ? ' (system)' : '' }}</option>
+        }
+      </select>
+    </div>
+
+    <label class="ma-switch" [class.is-disabled]="readonly() || !saved()">
+      <input
+        type="checkbox"
+        role="switch"
+        [checked]="draft().restricted"
+        [disabled]="readonly() || !saved()"
+        (change)="setRestricted($any($event.target).checked)"
+      />
+      <span class="ma-switch-track" aria-hidden="true"><span></span></span>
+      <span class="ma-switch-text">
+        <strong>Restrict sidebar to selected entries</strong>
+        <small>
+          {{
+            draft().restricted
+              ? 'Only the ticked menus show.'
+              : 'Off: every menu the role’s permissions allow is shown; ticks take effect when this is on.'
+          }}
+        </small>
+      </span>
+    </label>
+
+    @if (dirty()) {
+      <span class="ma-dirty"
+        ><i class="pi pi-circle-fill" aria-hidden="true"></i> Unsaved changes</span
+      >
+    }
+  </section>
+
+  @if (role()?.isSystem) {
+    <p class="ma-note">
+      <i class="pi pi-shield" aria-hidden="true"></i>
+      {{ role()?.name }} is a system role: you can add menus, but menus it already has can’t be
+      removed.
+    </p>
+  }
+  @if (!canManage()) {
+    <p class="ma-note">
+      <i class="pi pi-eye" aria-hidden="true"></i>
+      You can view menu access. Changing it needs the roles:manage permission.
+    </p>
+  }
+
+  <div class="ma-layout" [class.is-busy]="loadingRole()" [attr.aria-busy]="loadingRole()">
+    <section class="ma-card" aria-labelledby="ma-tree-title">
+      <header class="ma-card-head">
+        <div>
+          <h2 id="ma-tree-title">Menus and sub-menus</h2>
+          <p>{{ selectedCount() }} selected · ticking a menu includes everything under it.</p>
+        </div>
+        @if (!readonly()) {
+          <div class="ma-bulk">
+            <button type="button" class="ma-link" (click)="selectAll(true)">Select all</button>
+            <button type="button" class="ma-link" (click)="selectAll(false)">Clear</button>
+          </div>
+        }
+      </header>
+
+      <ul class="ma-tree" role="tree" aria-labelledby="ma-tree-title">
+        @for (entry of menu(); track entry.key) {
+          <ng-container
+            [ngTemplateOutlet]="node"
+            [ngTemplateOutletContext]="{ $implicit: entry, parent: null, depth: 0 }"
+          />
+        }
+      </ul>
+    </section>
+
+    <aside class="ma-card ma-preview" aria-labelledby="ma-preview-title">
+      <header class="ma-card-head">
+        <div>
+          <h2 id="ma-preview-title">Sidebar preview</h2>
+          <p>What {{ role()?.name ?? 'this role' }} will see after saving.</p>
+        </div>
+      </header>
+
+      @if (preview().length) {
+        <ul class="ma-preview-list">
+          @for (entry of preview(); track entry.key) {
+            <li>
+              <span class="ma-preview-item">
+                <span aria-hidden="true">{{ entry.icon }}</span
+                >{{ entry.label }}
+              </span>
+              @if (entry.children.length) {
+                <ul>
+                  @for (child of entry.children; track child.key) {
+                    <li class="ma-preview-item ma-preview-child">
+                      <span aria-hidden="true">{{ child.icon }}</span
+                      >{{ child.label }}
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="ma-empty">The sidebar will be empty for this role.</p>
+      }
+
+      @if (blocked().length) {
+        <div class="ma-warning" role="status">
+          <strong>Ticked but still hidden</strong>
+          <ul>
+            @for (item of blocked(); track item.label) {
+              <li>
+                {{ item.label }} needs <code>{{ item.permission }}</code
+                >. Grant it in Roles.
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </aside>
+  </div>
+}
+
+<ng-template #node let-entry let-parent="parent" let-depth="depth">
+  @let group = entry.children.length > 0;
+  @let checkState = state(entry);
+  @let inheritedFromParent = inherited(parent);
+  @let locked = lockedKeys().has(entry.key);
+  <li
+    role="treeitem"
+    [attr.aria-expanded]="group ? !collapsed().has(entry.key) : null"
+    [attr.aria-selected]="checkState === 'all' || inheritedFromParent"
+  >
+    <div class="ma-row" [style.--depth]="depth" [class.is-group]="group">
+      @if (group) {
+        <button
+          type="button"
+          class="ma-caret"
+          [attr.aria-label]="(collapsed().has(entry.key) ? 'Expand ' : 'Collapse ') + entry.label"
+          (click)="toggleCollapsed(entry.key)"
+        >
+          <i
+            class="pi"
+            [class.pi-chevron-right]="collapsed().has(entry.key)"
+            [class.pi-chevron-down]="!collapsed().has(entry.key)"
+            aria-hidden="true"
+          ></i>
+        </button>
+      } @else {
+        <span class="ma-caret-space" aria-hidden="true"></span>
+      }
+
+      <label class="ma-check">
+        <input
+          type="checkbox"
+          [checked]="checkState === 'all' || inheritedFromParent"
+          [indeterminate]="checkState === 'some' && !inheritedFromParent"
+          [disabled]="readonly() || inheritedFromParent || (locked && checkState === 'all')"
+          (change)="toggle(entry, $any($event.target).checked)"
+        />
+        <span class="ma-icon" aria-hidden="true">{{ entry.icon }}</span>
+        <span class="ma-label">
+          <strong>{{ entry.label }}</strong>
+          <small>
+            @if (entry.route) {
+              {{ entry.route }}
+            } @else {
+              {{ entry.children.length }} sub-menus
+            }
+          </small>
+        </span>
+      </label>
+
+      <span class="ma-tags">
+        @if (inheritedFromParent) {
+          <span class="ma-tag">Included with {{ parent.label }}</span>
+        }
+        @if (locked) {
+          <span class="ma-tag"><i class="pi pi-lock" aria-hidden="true"></i> System</span>
+        }
+        @if (entry.requiredPermission) {
+          <span
+            class="ma-tag"
+            [class.is-missing]="missing(entry)"
+            [class.is-ok]="!missing(entry)"
+            [title]="
+              missing(entry)
+                ? 'The role lacks ' + entry.requiredPermission + ', so this entry stays hidden.'
+                : 'The role has ' + entry.requiredPermission + '.'
+            "
+          >
+            <i
+              class="pi"
+              [class.pi-check]="!missing(entry)"
+              [class.pi-exclamation-triangle]="missing(entry)"
+              aria-hidden="true"
+            ></i>
+            {{ entry.requiredPermission }}
+          </span>
+        }
+      </span>
+    </div>
+
+    @if (group && !collapsed().has(entry.key)) {
+      <ul role="group">
+        @for (child of entry.children; track child.key) {
+          <ng-container
+            [ngTemplateOutlet]="node"
+            [ngTemplateOutletContext]="{ $implicit: child, parent: entry, depth: depth + 1 }"
+          />
+        }
+      </ul>
+    }
+  </li>
+</ng-template>

@@ -218,3 +218,24 @@ Messages create one `notifications` row per active recipient. Email is sent indi
 recipient (addresses are never shared) as escaped plain text. Sends are capped at 1,000 recipients
 and 30 sends per user per hour, and each send is recorded once in the audit log, which is also the
 send history shown in the UI.
+
+## Menu Access
+
+**IAM → Menu Access** (`/iam/menu-access`) sets which sidebar menus and sub-menus
+each role sees. It needs `roles:read` to view and `roles:manage` to save.
+
+- **Restrict sidebar to selected entries** stores `navigation:restricted` on the
+  role. When it is off, the role sees every menu its permissions allow.
+- Each ticked entry is stored as `navigation:<menu key>`. Ticking a menu group
+  includes all of its sub-menus.
+- An entry still needs its own permission (for example Timesheets needs
+  `timesheet:read`). The screen marks ticked entries the role can't use yet, and
+  the sidebar preview shows exactly what the role will get.
+- Saving replaces only the role's `navigation:*` grants. Its other permissions
+  are untouched. System roles can gain menus but not lose them. Every save is
+  audited as `role.menu_access.set`.
+- The navigation permissions are generated from the menu in
+  `services/auth/menu.service.ts`, so a new menu item appears here without a
+  seed or migration.
+
+API: `GET /api/v1/iam/menu-access/tree`, `GET` and `PUT /api/v1/iam/menu-access/roles/:roleId`.

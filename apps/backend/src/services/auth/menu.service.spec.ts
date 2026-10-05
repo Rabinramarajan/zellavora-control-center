@@ -91,6 +91,7 @@ describe('selected menu access', () => {
       'iam-user-requests',
       'iam-groups',
       'iam-roles',
+      'iam-menu-access',
       'iam-permissions',
       'iam-resources',
       'iam-organization',
@@ -137,7 +138,12 @@ describe('navigationPermissionDefs', () => {
     const menu = await MenuService.loadForUserWithPerms(
       'u',
       'o',
-      new Set(['navigation:restricted', 'navigation:freelancer', 'timesheet:read', 'timesheet:approve'])
+      new Set([
+        'navigation:restricted',
+        'navigation:freelancer',
+        'timesheet:read',
+        'timesheet:approve',
+      ])
     );
     const freelancer = menu.find((node) => node.key === 'freelancer');
     expect(freelancer?.children.map((child) => child.key)).toEqual([

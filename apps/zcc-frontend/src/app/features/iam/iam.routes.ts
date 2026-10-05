@@ -44,6 +44,13 @@ export const iamRoutes: Routes = [
         loadChildren: () => import('./roles/roles.routes').then((m) => m.rolesRoutes),
       },
       {
+        path: 'menu-access',
+        canMatch: [canMatchPermission('roles:read')],
+        loadComponent: () =>
+          import('./menu-access/menu-access.component').then((m) => m.MenuAccessComponent),
+        data: { title: 'Menu Access' },
+      },
+      {
         path: 'permissions',
         canMatch: [canMatchPermission('roles:read')],
         children: [
