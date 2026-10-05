@@ -413,6 +413,45 @@ app-timesheet-summary-card {
 .import-dropzone-busy {
   cursor: wait;
 }
+.import-formats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+.import-formats em {
+  padding: 0.15rem 0.45rem;
+  color: #3e6658;
+  background: #e6efeb;
+  border-radius: 0.35rem;
+  font-size: 0.64rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.import-help {
+  color: #5d6b64;
+  font-size: 0.76rem;
+}
+.import-help summary {
+  width: fit-content;
+  color: #2f6f58;
+  font-weight: 650;
+  cursor: pointer;
+}
+.import-help summary:focus-visible {
+  outline: 3px solid rgba(38, 126, 95, 0.24);
+  outline-offset: 2px;
+  border-radius: 0.3rem;
+}
+.import-help ul {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+  line-height: 1.5;
+}
 .import-result {
   padding: 0.85rem 1rem;
   border: 1px solid;
@@ -449,6 +488,185 @@ app-timesheet-summary-card {
   margin-top: 0.15rem;
   color: #5f746b;
   font-size: 0.72rem;
+}
+// The app registers PrimeNG without a theme preset, so dialogs render
+// unstyled. These rules give the grid's dialogs their full chrome.
+:host ::ng-deep .p-dialog-mask {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 28, 23, 0.46);
+  backdrop-filter: blur(3px);
+}
+:host ::ng-deep .p-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  color: #17211d;
+  background: #fff;
+  border: 1px solid #dfe5e2;
+  border-radius: 1rem;
+  box-shadow:
+    0 24px 60px rgba(15, 28, 23, 0.22),
+    0 2px 6px rgba(15, 28, 23, 0.08);
+}
+:host ::ng-deep .p-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.1rem 0.4rem 1.4rem;
+}
+:host ::ng-deep .p-dialog-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+:host ::ng-deep .p-dialog-close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+}
+:host ::ng-deep .p-dialog-content {
+  padding: 0.5rem 1.4rem 1.2rem;
+  overflow-y: auto;
+}
+:host ::ng-deep .p-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.9rem 1.4rem;
+  border-top: 1px solid #edf0ee;
+  background: #f8faf9;
+}
+.dialog-intro {
+  margin: 0 0 1rem;
+  color: #66736d;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.dialog-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+.dialog-field {
+  display: grid;
+  gap: 0.35rem;
+}
+.dialog-field-full {
+  grid-column: 1 / -1;
+}
+.dialog-field label {
+  color: #3b4842;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+.dialog-hint {
+  margin: 0.9rem 0 0;
+  color: #718079;
+  font-size: 0.74rem;
+}
+.ts-input,
+.ts-cell-input,
+.status-select select {
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  color: #17211d;
+  background: #fff;
+  border: 1px solid #d5ddd9;
+  border-radius: 0.6rem;
+  font: inherit;
+  font-size: 0.82rem;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+.ts-input {
+  width: 100%;
+}
+.ts-cell-input {
+  min-height: 2.4rem;
+  font-variant-numeric: tabular-nums;
+}
+.ts-input::placeholder,
+.ts-cell-input::placeholder {
+  color: #a3aea8;
+}
+.ts-input:hover,
+.ts-cell-input:hover:not(:disabled),
+.status-select select:hover {
+  border-color: #9eb9ad;
+}
+.ts-input:focus,
+.ts-cell-input:focus,
+.status-select select:focus {
+  outline: none;
+  border-color: #2f7a60;
+  box-shadow: 0 0 0 3px rgba(38, 126, 95, 0.18);
+}
+.ts-cell-input:disabled {
+  color: #9aa59f;
+  background: transparent;
+  border-color: transparent;
+  cursor: not-allowed;
+}
+.status-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 9.5rem;
+}
+.status-select select {
+  width: 100%;
+  min-height: 2.4rem;
+  padding-right: 2rem;
+  appearance: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.status-select i {
+  position: absolute;
+  right: 0.7rem;
+  color: #6d7973;
+  font-size: 0.65rem;
+  pointer-events: none;
+}
+// A coloured edge makes each day's kind scannable down the column.
+.status-select[data-status='EMPTY'] select {
+  color: #8a958f;
+  font-weight: 500;
+}
+.status-select[data-status='WORKING'] select {
+  border-left: 3px solid #2f7a60;
+}
+.status-select[data-status='EXTENDED'] select {
+  border-left: 3px solid #4f6bd8;
+}
+.status-select[data-status='WEEKEND_WORK'] select {
+  border-left: 3px solid #8b5cc7;
+}
+.status-select[data-status='LEAVE'] select {
+  border-left: 3px solid #d08a1e;
+}
+.status-select[data-status='HOLIDAY'] select {
+  border-left: 3px solid #2f8fbf;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ts-input,
+  .ts-cell-input,
+  .status-select select,
+  :host .ts-button {
+    transition: none;
+  }
 }
 @media (max-width: 860px) {
   .detail-heading {
@@ -556,6 +774,16 @@ app-timesheet-summary-card {
     border-color: #628477;
     background: #1b2923;
   }
+  .import-formats em {
+    color: #b9d8cc;
+    background: #22342c;
+  }
+  .import-help {
+    color: #9ba8a1;
+  }
+  .import-help summary {
+    color: #94c5b3;
+  }
   .import-result-ready {
     color: #bce5d5;
     border-color: #365d4e;
@@ -565,5 +793,44 @@ app-timesheet-summary-card {
     color: #f2b7ba;
     border-color: #6e393c;
     background: #2b191b;
+  }
+  ::ng-deep .p-dialog {
+    color: #edf5f1;
+    background: #18211d;
+    border-color: #2c3933;
+  }
+  ::ng-deep .p-dialog-footer {
+    background: #131b18;
+    border-color: #2a3631;
+  }
+  ::ng-deep .p-dialog-close-button {
+    color: #a9b8b1;
+  }
+  .dialog-intro,
+  .dialog-hint {
+    color: #9ba8a1;
+  }
+  .dialog-field label {
+    color: #c7d4ce;
+  }
+  .ts-input,
+  .ts-cell-input,
+  .status-select select {
+    color: #edf5f1;
+    background: #131b18;
+    border-color: #34433c;
+  }
+  .ts-cell-input:disabled {
+    color: #6f7d76;
+    background: transparent;
+    border-color: transparent;
+  }
+  .status-select i {
+    color: #9ba8a1;
+  }
+}
+@media (max-width: 600px) {
+  .dialog-fields {
+    grid-template-columns: 1fr;
   }
 }

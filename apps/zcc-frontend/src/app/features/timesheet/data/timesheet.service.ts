@@ -15,7 +15,7 @@ import {
   isNonWorking,
   periodOf,
 } from './timesheet.model';
-import { TimesheetImportFormat } from './timesheet-import';
+import { TimesheetImportFormat, TimesheetSourceFormat } from './timesheet-import';
 
 const AUTOSAVE_DEBOUNCE_MS = 400;
 
@@ -230,14 +230,16 @@ export class TimesheetService {
   }
 
   /**
-   * Send an exported CSV or JSON file to the server, which re-validates it
+   * Send a timesheet file (Excel, Word and PDF arrive here already converted to
+   * CSV) to the server, which re-validates it
    * and writes every row in one transaction. Rejected files come back with
    * one message per problem so the dialog can list them.
    */
   async importFile(
     content: string,
     format: TimesheetImportFormat,
-    filename: string
+    filename: string,
+    sourceFormat: TimesheetSourceFormat
   ): Promise<TimesheetImportResult> {
     const sheet = this.timesheetResource.value();
     if (!sheet) return { ok: false, errors: ['The timesheet is not loaded yet.'] };
@@ -254,7 +256,7 @@ export class TimesheetService {
       const response = await firstValueFrom(
         this.api.postData<ApiEnvelope<Timesheet> & { meta: { importedCount: number } }>(
           `/timesheets/${sheet.id}/import`,
-          { format, filename, content },
+          { format, sourceFormat, filename, content },
           { hideFullSpinner: true }
         )
       );

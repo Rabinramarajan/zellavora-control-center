@@ -56,6 +56,8 @@ export const MAX_IMPORT_BYTES = 1024 * 1024;
 
 export const ImportTimesheetSchema = z.object({
   format: z.enum(['csv', 'json']),
+  /** The file the user picked; Excel, Word and PDF are converted to CSV in the browser. */
+  sourceFormat: z.enum(['csv', 'json', 'xlsx', 'docx', 'pdf']).optional(),
   filename: z.string().trim().max(255).optional(),
   content: z
     .string()

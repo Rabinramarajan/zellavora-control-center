@@ -12,11 +12,13 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { TimesheetService } from '../../data/timesheet.service';
-import { TimesheetImportFile, readTimesheetImport } from '../../data/timesheet-import';
+import {
+  IMPORT_ACCEPT,
+  TimesheetImportFile,
+  readTimesheetImport,
+} from '../../data/timesheet-import';
 import {
   BulkEntryPatch,
   EntryStatus,
@@ -42,8 +44,6 @@ interface GridRow {
     DatePipe,
     FormsModule,
     DialogModule,
-    InputTextModule,
-    SelectModule,
     ToastModule,
     DayStatusPipe,
     TimesheetSummaryCardComponent,
@@ -66,6 +66,7 @@ export class TimesheetGridComponent {
   protected readonly importOpen = signal(false);
   protected readonly isReadingImport = signal(false);
   protected readonly isImporting = signal(false);
+  protected readonly importAccept = IMPORT_ACCEPT;
   protected readonly importFilename = signal('');
   protected readonly importPreview = signal<TimesheetImportFile | null>(null);
   protected readonly canApplyImport = computed(() => {
@@ -256,7 +257,8 @@ export class TimesheetGridComponent {
       const result = await this.service.importFile(
         preview.content,
         preview.format,
-        this.importFilename()
+        this.importFilename(),
+        preview.sourceFormat ?? preview.format
       );
       if (result.ok) {
         this.importOpen.set(false);

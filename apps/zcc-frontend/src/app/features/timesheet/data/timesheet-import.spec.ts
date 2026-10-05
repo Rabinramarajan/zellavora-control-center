@@ -15,11 +15,11 @@ describe('readTimesheetImport', () => {
   });
 
   it('refuses other file types and empty files before reading them', async () => {
-    const pdf = await readTimesheetImport(new File(['x'], 'sheet.pdf'), '2026-10');
+    const text = await readTimesheetImport(new File(['x'], 'sheet.txt'), '2026-10');
     const empty = await readTimesheetImport(new File([], 'sheet.csv'), '2026-10');
 
-    expect(pdf.errors).toEqual(['Choose a CSV or JSON timesheet export.']);
-    expect(pdf.format).toBeNull();
+    expect(text.errors).toEqual(['Choose a CSV, JSON, Excel (.xlsx), Word (.docx) or PDF file.']);
+    expect(text.format).toBeNull();
     expect(empty.errors).toEqual(['The selected file is empty.']);
   });
 

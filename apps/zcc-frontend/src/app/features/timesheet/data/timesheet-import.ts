@@ -6,15 +6,30 @@ export interface TimesheetImportPreview {
   sourcePeriod: string | null;
 }
 
+/** What is uploaded: Excel, Word and PDF files are converted to CSV first. */
 export type TimesheetImportFormat = 'csv' | 'json';
+export type TimesheetSourceFormat = TimesheetImportFormat | 'xlsx' | 'docx' | 'pdf';
 
 /** A checked file, kept with its text so exactly what was previewed is uploaded. */
 export interface TimesheetImportFile extends TimesheetImportPreview {
   format: TimesheetImportFormat | null;
+  sourceFormat: TimesheetSourceFormat | null;
   content: string;
 }
 
-const MAX_FILE_BYTES = 1024 * 1024;
+export const IMPORT_ACCEPT =
+  '.csv,.json,.xlsx,.docx,.pdf,text/csv,application/json,application/pdf,' +
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,' +
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+const TEXT_MAX_BYTES = 1024 * 1024;
+// Office and PDF files carry styling and fonts, so they are allowed to be larger.
+const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+const SOURCE_FORMATS: readonly TimesheetSourceFormat[] = ['csv', 'json', 'xlsx', 'docx', 'pdf'];
+const LEGACY_FORMATS: Record<string, string> = {
+  xls: 'Save the Excel file as .xlsx (Excel Workbook) and import that.',
+  doc: 'Save the Word file as .docx (Word Document) and import that.',
+};
 const TIME_PATTERN = /^(0?[1-9]|1[0-2]):[0-5]\d\s?(AM|PM)$|^([01]\d|2[0-3]):[0-5]\d$/i;
 const STATUS_BY_LABEL: Record<string, EntryStatus> = {
   '': 'EMPTY',
@@ -34,32 +49,51 @@ export async function readTimesheetImport(
   file: File,
   expectedPeriod: string
 ): Promise<TimesheetImportFile> {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  const sourceFormat = SOURCE_FORMATS.find((format) => format === extension) ?? null;
   const unreadable = (error: string): TimesheetImportFile => ({
     ...emptyPreview(error),
     format: null,
+    sourceFormat,
     content: '',
   });
 
+  if (!sourceFormat) {
+    return unreadable(
+      LEGACY_FORMATS[extension] ?? 'Choose a CSV, JSON, Excel (.xlsx), Word (.docx) or PDF file.'
+    );
+  }
   if (file.size === 0) return unreadable('The selected file is empty.');
-  if (file.size > MAX_FILE_BYTES) return unreadable('The import file must be 1 MB or smaller.');
 
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  if (extension !== 'csv' && extension !== 'json') {
-    return unreadable('Choose a CSV or JSON timesheet export.');
+  const isText = sourceFormat === 'csv' || sourceFormat === 'json';
+  if (file.size > (isText ? TEXT_MAX_BYTES : DOCUMENT_MAX_BYTES)) {
+    return unreadable(`The import file must be ${isText ? '1' : '10'} MB or smaller.`);
   }
 
   let content: string;
   try {
-    content = (await file.text()).replace(/^\uFEFF/, '');
-  } catch {
-    return unreadable('The selected file could not be read.');
+    if (isText) {
+      content = (await file.text()).replace(/^\uFEFF/, '');
+    } else {
+      // Loaded on demand: most imports are CSV, and the PDF reader is large.
+      const { documentToCsv } = await import('./timesheet-import-documents');
+      content = await documentToCsv(file, sourceFormat);
+    }
+  } catch (error) {
+    // Converter errors are written for the user; anything else is not.
+    return unreadable(
+      error instanceof Error && error.name === 'DocumentImportError'
+        ? error.message
+        : 'The selected file could not be read.'
+    );
   }
 
+  const format: TimesheetImportFormat = sourceFormat === 'json' ? 'json' : 'csv';
   const preview =
-    extension === 'json'
+    format === 'json'
       ? parseJsonImport(content, expectedPeriod)
       : parseCsvImport(content, expectedPeriod);
-  return { ...preview, format: extension, content };
+  return { ...preview, format, sourceFormat, content };
 }
 
 export function parseCsvImport(text: string, expectedPeriod: string): TimesheetImportPreview {

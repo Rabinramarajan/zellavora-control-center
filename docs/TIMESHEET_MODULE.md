@@ -140,8 +140,24 @@ where `content` is the text of a file the export endpoint produced (at most 1 MB
   into a `DRAFT` or `REJECTED` sheet. Each import writes a `timesheet.imported`
   audit event.
 
-The grid's **Import** dialog parses the file in the browser (`timesheet-import.ts`)
-for an instant preview, then uploads the same text. The server's answer is
+The grid's **Import** dialog also accepts Excel (`.xlsx`), Word (`.docx`) and PDF
+files, up to 10 MB. `timesheet-import-documents.ts` converts them to the canonical
+CSV in the browser, so the server only ever validates CSV or JSON. `sourceFormat`
+is recorded in the audit event.
+
+- `.xlsx` and `.docx` are unzipped with `DecompressionStream` and read with
+  `DOMParser`; no Office library is bundled. The first worksheet, or every Word
+  table, is scanned for a header row with `Date` and `Hours` or `Status`
+  (common aliases such as *Time in*, *Hrs* and *Remarks* are recognised). Excel
+  date serials and time fractions are converted. Rows with hours but no status
+  become *Working*, or *Weekend work* on a Saturday or Sunday.
+- PDFs are read with the on-demand pdf.js loader from freelancer sheets. They
+  can be the printable Zellavora export or one-row-per-day layouts
+  ("Aug 3 Mon 9:00 AM …"). Scanned images contain no text and are refused.
+- Legacy `.xls` and `.doc` files are refused with a "save as .xlsx/.docx" hint.
+
+The dialog parses the file in the browser (`timesheet-import.ts`) for an instant
+preview, then uploads the same text. The server's answer is
 final. If it rejects the file, its messages replace the preview.
 
 ## Notifications

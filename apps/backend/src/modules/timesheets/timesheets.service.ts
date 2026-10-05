@@ -303,6 +303,7 @@ export class TimesheetsService {
       metadata: {
         period: sheet.period,
         format: dto.format,
+        sourceFormat: dto.sourceFormat ?? dto.format,
         filename: dto.filename ?? null,
         importedCount: entries.length,
         totalHours: Number(timesheet.totalHours),

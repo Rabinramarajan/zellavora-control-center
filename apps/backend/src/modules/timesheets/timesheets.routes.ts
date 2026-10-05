@@ -254,6 +254,11 @@ router.post(
  *             required: [format, content]
  *             properties:
  *               format: { type: string, enum: [csv, json] }
+ *               sourceFormat:
+ *                 type: string
+ *                 enum: [csv, json, xlsx, docx, pdf]
+ *                 description: The file the user picked; Excel, Word and PDF are sent as CSV
+
  *               filename: { type: string, maxLength: 255 }
  *               content: { type: string, description: "File text, at most 1 MB" }
  *     responses:

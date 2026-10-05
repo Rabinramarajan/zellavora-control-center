@@ -154,9 +154,8 @@
                 </td>
                 <td class="px-3 py-1.5">
                   <input
-                    pInputText
                     type="text"
-                    class="w-24"
+                    class="ts-cell-input w-24"
                     inputmode="numeric"
                     placeholder="09:00"
                     [attr.aria-label]="'Start time on ' + row.entry.dayOfWeek"
@@ -167,9 +166,8 @@
                 </td>
                 <td class="px-3 py-1.5">
                   <input
-                    pInputText
                     type="text"
-                    class="w-24"
+                    class="ts-cell-input w-24"
                     inputmode="numeric"
                     placeholder="17:30"
                     [attr.aria-label]="'End time on ' + row.entry.dayOfWeek"
@@ -180,9 +178,8 @@
                 </td>
                 <td class="px-3 py-1.5 text-right">
                   <input
-                    pInputText
                     type="number"
-                    class="w-20 text-right"
+                    class="ts-cell-input w-20 text-right"
                     min="0"
                     max="24"
                     step="0.25"
@@ -194,15 +191,25 @@
                 </td>
                 <td class="px-3 py-1.5">
                   @if (service.canEdit()) {
-                    <p-select
-                      [options]="statusOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      appendTo="body"
-                      [ariaLabel]="'Status on ' + row.entry.dayOfWeek"
-                      [ngModel]="row.entry.status"
-                      (ngModelChange)="patch(row.entry, { status: $event })"
-                    />
+                    <span class="status-select" [attr.data-status]="row.entry.status">
+                      <select
+                        [attr.aria-label]="
+                          'Status on ' +
+                          row.entry.dayOfWeek +
+                          ' ' +
+                          (row.entry.entryDate | date: 'd MMM' : 'UTC')
+                        "
+                        [ngModel]="row.entry.status"
+                        (ngModelChange)="patch(row.entry, { status: $event })"
+                      >
+                        @for (option of statusOptions; track option.value) {
+                          <option [ngValue]="option.value">
+                            {{ option.value === 'EMPTY' ? 'Not set' : option.label }}
+                          </option>
+                        }
+                      </select>
+                      <i class="pi pi-chevron-down" aria-hidden="true"></i>
+                    </span>
                   } @else {
                     <span
                       class="inline-block rounded px-2 py-0.5 text-xs font-medium"
@@ -214,9 +221,8 @@
                 </td>
                 <td class="px-3 py-1.5">
                   <input
-                    pInputText
                     type="text"
-                    class="w-full min-w-[12rem]"
+                    class="ts-cell-input w-full min-w-[12rem]"
                     [attr.aria-label]="'Notes for ' + row.entry.dayOfWeek"
                     [disabled]="!service.canEdit()"
                     [ngModel]="row.entry.notes"
@@ -248,31 +254,39 @@
 <p-dialog
   header="Auto-fill weekdays"
   [modal]="true"
-  [style]="{ width: '24rem' }"
+  [style]="{ width: '26rem', maxWidth: 'calc(100vw - 2rem)' }"
+  [dismissableMask]="true"
   [(visible)]="autoFillOpenModel"
 >
-  <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+  <p class="dialog-intro">
     Applies to every weekday that has no hours yet. Days already filled in are left alone.
   </p>
-  <div class="space-y-3">
-    <label class="block text-sm font-medium" for="fill-start">Start</label>
-    <input pInputText id="fill-start" class="w-full" [(ngModel)]="fillStart" />
-
-    <label class="block text-sm font-medium" for="fill-end">End</label>
-    <input pInputText id="fill-end" class="w-full" [(ngModel)]="fillEnd" />
-
-    <label class="block text-sm font-medium" for="fill-hours">Hours</label>
-    <input
-      pInputText
-      id="fill-hours"
-      type="number"
-      min="0"
-      max="24"
-      step="0.25"
-      class="w-full"
-      [(ngModel)]="fillHours"
-    />
+  <div class="dialog-fields">
+    <div class="dialog-field">
+      <label for="fill-start">Start</label>
+      <input id="fill-start" class="ts-input" [(ngModel)]="fillStart" />
+    </div>
+    <div class="dialog-field">
+      <label for="fill-end">End</label>
+      <input id="fill-end" class="ts-input" [(ngModel)]="fillEnd" />
+    </div>
+    <div class="dialog-field dialog-field-full">
+      <label for="fill-hours">Hours per day</label>
+      <input
+        id="fill-hours"
+        class="ts-input"
+        type="number"
+        min="0"
+        max="24"
+        step="0.25"
+        [(ngModel)]="fillHours"
+      />
+    </div>
   </div>
+  <p class="dialog-hint">
+    {{ blankWeekdayCount() }} blank {{ blankWeekdayCount() === 1 ? 'weekday' : 'weekdays' }} will be
+    filled.
+  </p>
   <ng-template pTemplate="footer">
     <button type="button" class="ts-button ts-button-quiet" (click)="autoFillOpen.set(false)">
       Cancel
@@ -298,14 +312,14 @@
 >
   <div class="import-dialog">
     <p class="import-intro">
-      Import a CSV or JSON file exported by Zellavora. Valid rows replace the matching dates in
+      Import a Zellavora export or your own timesheet. Valid rows replace the matching dates in
       {{ periodLabel() }}; all other dates remain unchanged.
     </p>
 
     <label class="import-dropzone" [class.import-dropzone-busy]="isReadingImport()">
       <input
         type="file"
-        accept=".csv,.json,text/csv,application/json"
+        [accept]="importAccept"
         [disabled]="isReadingImport() || isImporting()"
         (change)="selectImportFile($event)"
       />
@@ -316,9 +330,31 @@
         [class.pi-upload]="!isReadingImport()"
         aria-hidden="true"
       ></i>
-      <strong>{{ isReadingImport() ? 'Checking file…' : 'Choose CSV or JSON' }}</strong>
-      <span>{{ importFilename() || 'Maximum file size: 1 MB' }}</span>
+      <strong>{{ isReadingImport() ? 'Reading file…' : 'Choose a timesheet file' }}</strong>
+      <span>{{ importFilename() || 'Excel, Word, PDF, CSV or JSON' }}</span>
+      @if (!importFilename()) {
+        <span class="import-formats" aria-hidden="true">
+          <em>XLSX</em><em>DOCX</em><em>PDF</em><em>CSV</em><em>JSON</em>
+        </span>
+      }
     </label>
+
+    <details class="import-help">
+      <summary>What can be imported?</summary>
+      <ul>
+        <li>
+          <strong>Excel or Word:</strong> a table with a header row containing <em>Date</em> and
+          <em>Hours</em> or <em>Status</em>. <em>Start</em>, <em>End</em> and <em>Notes</em> are
+          optional. Days with hours but no status are counted as worked.
+        </li>
+        <li>
+          <strong>PDF:</strong> the printable Zellavora export, or a one-row-per-day sheet such as
+          “Aug 3 Mon 9:00 AM 5:30 PM 8”. The PDF must contain text, not a scanned image.
+        </li>
+        <li><strong>CSV or JSON:</strong> files from the Export button.</li>
+        <li>Up to 10 MB for Excel, Word and PDF; 1 MB for CSV and JSON.</li>
+      </ul>
+    </details>
 
     @if (importPreview(); as preview) {
       @if (preview.errors.length) {
@@ -334,8 +370,13 @@
         <div class="import-result import-result-ready">
           <i class="pi pi-check-circle" aria-hidden="true"></i>
           <div>
-            <strong>{{ preview.entries.length }} rows ready to import</strong>
-            <span>Existing values on those dates will be replaced.</span>
+            <strong>
+              {{ preview.entries.length }} {{ preview.entries.length === 1 ? 'row' : 'rows' }} ready
+              to import
+            </strong>
+            <span>
+              Read from {{ importFilename() }}. Existing values on those dates will be replaced.
+            </span>
           </div>
         </div>
       }
