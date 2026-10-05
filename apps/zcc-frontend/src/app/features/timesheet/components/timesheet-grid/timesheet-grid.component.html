@@ -41,7 +41,8 @@
         label="Export"
         icon="pi pi-download"
         styleClass="ts-button ts-button-secondary"
-        [disabled]="!service.timesheet()"
+        [loading]="isExporting()"
+        [disabled]="!service.timesheet() || service.isSaving() || isExporting()"
         (onClick)="openExport('html')"
       />
       <p-button

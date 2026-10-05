@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, resource, signal } from '@angular/core';
+import { HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ApiDataService } from '../../../core/http/api-data.service';
@@ -16,6 +17,11 @@ import {
 } from './timesheet.model';
 
 const AUTOSAVE_DEBOUNCE_MS = 400;
+
+export interface TimesheetExport {
+  blob: Blob;
+  filename: string;
+}
 
 /** Roll entries up into the figures the summary card and totals bar show. */
 export const computeTotals = (entries: readonly TimesheetEntry[]): TimesheetTotals =>
@@ -229,10 +235,49 @@ export class TimesheetService {
     }
   }
 
-  /** Absolute URL for an export, opened in a new tab by the toolbar. */
-  exportUrl(format: 'json' | 'csv' | 'html'): string | null {
+  /**
+   * Fetches an export through HttpClient so the authentication interceptor can
+   * attach the access token. Direct browser navigation to this protected API
+   * endpoint would otherwise be rejected in token-authenticated deployments.
+   */
+  async exportFile(format: 'json' | 'csv' | 'html'): Promise<TimesheetExport | null> {
     const sheet = this.timesheet();
-    return sheet ? `/api/v1/timesheets/${sheet.id}/export?format=${format}` : null;
+    if (!sheet) return null;
+
+    try {
+      const response = await firstValueFrom(
+        this.api.getData<HttpResponse<Blob>>(
+          `/timesheets/${sheet.id}/export`,
+          { format },
+          { responseType: 'blob', hideFullSpinner: true }
+        )
+      );
+      if (!response.body) throw new Error('The server returned an empty export.');
+
+      const fallback = `timesheet-${sheet.period}.${format}`;
+      return {
+        blob: response.body,
+        filename: this.exportFilename(response.headers.get('content-disposition'), fallback),
+      };
+    } catch (error) {
+      this.showError('Could not export the timesheet', error);
+      return null;
+    }
+  }
+
+  private exportFilename(contentDisposition: string | null, fallback: string): string {
+    if (!contentDisposition) return fallback;
+
+    const encoded = /filename\*=UTF-8''([^;]+)/i.exec(contentDisposition)?.[1];
+    if (encoded) {
+      try {
+        return decodeURIComponent(encoded);
+      } catch {
+        // Fall through to the plain filename or the safe local fallback.
+      }
+    }
+
+    return /filename="?([^";]+)"?/i.exec(contentDisposition)?.[1] ?? fallback;
   }
 
   private async transition(
