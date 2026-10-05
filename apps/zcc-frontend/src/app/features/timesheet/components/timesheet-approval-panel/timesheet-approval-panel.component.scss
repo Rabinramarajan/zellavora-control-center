@@ -1,0 +1,67 @@
+:host ::ng-deep .ts-button.p-button {
+  min-height: 2.75rem;
+  padding: 0.68rem 1rem;
+  gap: 0.48rem;
+  border: 1px solid transparent;
+  border-radius: 0.68rem;
+  font-size: 0.8rem;
+  font-weight: 680;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+:host ::ng-deep .ts-button-approve.p-button {
+  color: #fff;
+  background: #1d684e;
+  border-color: #1d684e;
+  box-shadow: 0 5px 14px rgba(29, 104, 78, 0.18);
+}
+
+:host ::ng-deep .ts-button-approve.p-button:hover:not(:disabled) {
+  background: #14543e;
+  border-color: #14543e;
+}
+
+:host ::ng-deep .ts-button-danger.p-button {
+  color: #9d3e42;
+  background: #fff;
+  border-color: #e6bfc1;
+}
+
+:host ::ng-deep .ts-button-danger.p-button:hover:not(:disabled) {
+  color: #842f34;
+  background: #fff2f2;
+  border-color: #d99b9e;
+}
+
+:host ::ng-deep .ts-button.p-button:focus-visible {
+  outline: 3px solid rgba(38, 126, 95, 0.28);
+  outline-offset: 2px;
+}
+
+:host ::ng-deep .ts-button-danger.p-button:focus-visible {
+  outline-color: rgba(181, 68, 73, 0.25);
+}
+
+:host ::ng-deep .ts-button.p-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+:host-context(.dark) ::ng-deep .ts-button-danger.p-button {
+  color: #f2b3b6;
+  background: #21191a;
+  border-color: #674044;
+}
+
+:host-context(.dark) ::ng-deep .ts-button-danger.p-button:hover:not(:disabled) {
+  color: #ffd5d7;
+  background: #352123;
+  border-color: #8b5559;
+}

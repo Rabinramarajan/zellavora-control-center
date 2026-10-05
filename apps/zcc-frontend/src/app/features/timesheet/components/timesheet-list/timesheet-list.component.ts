@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ToastModule } from 'primeng/toast';
 import { TimesheetService } from '../../data/timesheet.service';
@@ -26,7 +27,7 @@ const STATUS_BADGES: Record<TimesheetStatus, string> = {
 @Component({
   selector: 'app-timesheet-list',
   standalone: true,
-  imports: [ButtonModule, SelectControl, ToastModule],
+  imports: [ButtonModule, InputTextModule, SelectControl, ToastModule],
   templateUrl: './timesheet-list.component.html',
   styleUrl: './timesheet-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +55,37 @@ export class TimesheetListComponent {
   protected readonly month = signal(new Date().getMonth() + 1);
   protected readonly loading = signal(true);
   protected readonly rows = signal<readonly TimesheetPeriodSummary[]>([]);
+  protected readonly query = signal('');
+  protected readonly statusFilter = signal<TimesheetStatus | 'ALL'>('ALL');
+
+  protected readonly filteredRows = computed(() => {
+    const query = this.query().trim().toLocaleLowerCase();
+    const status = this.statusFilter();
+    return this.rows().filter(
+      (row) =>
+        (status === 'ALL' || row.status === status) &&
+        (!query || this.label(row.period).toLocaleLowerCase().includes(query))
+    );
+  });
+
+  protected readonly yearTotals = computed(() =>
+    this.rows().reduce(
+      (totals, row) => ({
+        hours: totals.hours + row.totalHours,
+        submitted: totals.submitted + (row.status === 'SUBMITTED' ? 1 : 0),
+        approved: totals.approved + (row.status === 'APPROVED' ? 1 : 0),
+      }),
+      { hours: 0, submitted: 0, approved: 0 }
+    )
+  );
+
+  protected readonly statusOptions: { label: string; value: TimesheetStatus | 'ALL' }[] = [
+    { label: 'All', value: 'ALL' },
+    { label: 'Draft', value: 'DRAFT' },
+    { label: 'Awaiting review', value: 'SUBMITTED' },
+    { label: 'Approved', value: 'APPROVED' },
+    { label: 'Needs changes', value: 'REJECTED' },
+  ];
 
   protected readonly selectedPeriod = computed(
     () => `${this.year()}-${String(this.month()).padStart(2, '0')}`
@@ -69,6 +101,14 @@ export class TimesheetListComponent {
 
   protected badgeClass(status: TimesheetStatus): string {
     return STATUS_BADGES[status];
+  }
+
+  protected statusLabel(status: TimesheetStatus): string {
+    return status === 'SUBMITTED'
+      ? 'Awaiting review'
+      : status === 'REJECTED'
+        ? 'Needs changes'
+        : status.charAt(0) + status.slice(1).toLowerCase();
   }
 
   protected selectYear(year: number): void {

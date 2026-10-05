@@ -1,0 +1,446 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep .ts-button.p-button {
+  min-height: 2.75rem;
+  padding: 0.68rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+:host ::ng-deep .ts-button-primary.p-button {
+  color: #fff;
+  background: #1d5946;
+  border-color: #1d5946;
+  box-shadow: 0 5px 14px rgba(29, 89, 70, 0.18);
+}
+
+:host ::ng-deep .ts-button-primary.p-button:hover:not(:disabled) {
+  background: #154937;
+  border-color: #154937;
+  box-shadow: 0 7px 18px rgba(29, 89, 70, 0.24);
+}
+
+:host ::ng-deep .ts-button.p-button:focus-visible {
+  outline: 3px solid rgba(38, 126, 95, 0.28);
+  outline-offset: 2px;
+}
+
+:host ::ng-deep .ts-button.p-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+:host ::ng-deep .ts-button .p-button-icon {
+  font-size: 0.75rem;
+}
+.timesheets-page {
+  min-height: 100%;
+  padding: 2rem;
+  color: #16211d;
+  background: #f5f7f6;
+}
+.page-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  max-width: 92rem;
+  margin: 0 auto 1.5rem;
+}
+.heading-copy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-weight: 720;
+}
+.heading-copy p {
+  margin: 0.7rem 0 0;
+  color: #66736d;
+  font-size: 0.95rem;
+}
+.period-picker {
+  display: flex;
+  align-items: end;
+  gap: 0.65rem;
+  padding: 0.7rem;
+  border: 1px solid #dfe5e2;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(28, 49, 40, 0.06);
+}
+.year-select {
+  width: 7.5rem;
+}
+.month-select {
+  width: 10.5rem;
+}
+.year-strip {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(4, 1fr);
+  max-width: 92rem;
+  margin: 0 auto 1.25rem;
+  overflow: hidden;
+  color: #e9f1ed;
+  background: #173d32;
+  border-radius: 1.1rem;
+  box-shadow: 0 18px 40px rgba(23, 61, 50, 0.13);
+}
+.year-title,
+.year-stat {
+  min-height: 7rem;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.year-title span {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+.year-title small,
+.year-stat span {
+  color: #a9beb6;
+  font-size: 0.75rem;
+}
+.year-stat strong {
+  font-size: 1.55rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.year-stat.attention strong {
+  color: #ffd38a;
+}
+.year-stat.approved strong {
+  color: #8fdec2;
+}
+.browser-panel {
+  max-width: 92rem;
+  margin: auto;
+  border: 1px solid #dde4e0;
+  border-radius: 1.1rem;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 12px 38px rgba(27, 43, 36, 0.05);
+}
+.browser-toolbar {
+  min-height: 5.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e7ebe9;
+}
+.search-box {
+  position: relative;
+  width: min(23rem, 100%);
+}
+.search-box > i {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #718079;
+}
+.search-box input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding-left: 2.6rem;
+  padding-right: 2.5rem;
+  border-color: #dbe2df;
+  border-radius: 0.7rem;
+}
+.search-box button {
+  position: absolute;
+  right: 0.35rem;
+  top: 0.32rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 0;
+  background: transparent;
+  color: #66736d;
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+.status-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: #f2f5f3;
+  border-radius: 0.7rem;
+}
+.status-tabs button {
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: #63706a;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 180ms,
+    color 180ms,
+    box-shadow 180ms;
+}
+.status-tabs button.active {
+  color: #173d32;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(20, 49, 40, 0.1);
+}
+.list-heading,
+.period-row {
+  display: grid;
+  grid-template-columns: minmax(13rem, 1.6fr) minmax(9rem, 1.2fr) 0.8fr 0.7fr 0.75fr 2.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.4rem;
+}
+.list-heading {
+  min-height: 2.8rem;
+  color: #7b8781;
+  background: #fafbfa;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+.period-row {
+  width: 100%;
+  min-height: 5rem;
+  border: 0;
+  border-top: 1px solid #edf0ee;
+  color: inherit;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms;
+}
+.period-row:hover {
+  background: #f7faf8;
+}
+.period-row:focus-visible,
+.status-tabs button:focus-visible,
+.search-box button:focus-visible {
+  outline: 3px solid rgba(31, 126, 95, 0.3);
+  outline-offset: -3px;
+}
+.period-name {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.month-mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.65rem;
+  color: #226149;
+  background: #e5f2ec;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+.period-name strong {
+  font-size: 0.92rem;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+.status-dot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+}
+.metric {
+  display: flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  font-variant-numeric: tabular-nums;
+}
+.metric small,
+.hours small {
+  color: #89938e;
+  font-size: 0.7rem;
+}
+.hours {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.open-icon {
+  color: #6f7b75;
+  text-align: right;
+}
+.empty-state,
+.loading-state {
+  min-height: 20rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+.empty-state.compact {
+  min-height: 15rem;
+}
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  color: #286e55;
+  background: #e6f2ed;
+  border-radius: 0.8rem;
+}
+.empty-state h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.empty-state p {
+  margin: 0.45rem 0 1.25rem;
+  color: #6c7872;
+  font-size: 0.85rem;
+}
+.loading-state {
+  flex-direction: row;
+  gap: 0.7rem;
+  color: #68756f;
+}
+@media (max-width: 900px) {
+  .page-heading,
+  .browser-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .period-picker {
+    align-self: stretch;
+  }
+  .year-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .year-title {
+    grid-column: 1 / -1;
+  }
+  .year-title,
+  .year-stat {
+    min-height: 5.5rem;
+  }
+  .list-heading {
+    display: none;
+  }
+  .period-row {
+    grid-template-columns: 1.5fr 1fr 0.5fr;
+    padding: 1rem;
+  }
+  .metric {
+    display: none;
+  }
+  .open-icon {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+@media (max-width: 600px) {
+  .timesheets-page {
+    padding: 1rem;
+  }
+  .period-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .year-select,
+  .month-select {
+    width: 100%;
+  }
+  .period-picker p-button {
+    grid-column: 1 / -1;
+  }
+  :host ::ng-deep .period-picker .ts-button.p-button {
+    width: 100%;
+    justify-content: center;
+  }
+  .status-tabs {
+    overflow-x: auto;
+  }
+  .status-tabs button {
+    white-space: nowrap;
+  }
+  .year-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+  .period-row {
+    grid-template-columns: 1fr auto;
+    gap: 0.7rem;
+  }
+  .hours {
+    grid-column: 1;
+    padding-left: 3.4rem;
+  }
+  .open-icon {
+    grid-column: 2;
+  }
+}
+:host-context(.dark) {
+  .timesheets-page {
+    color: #edf5f1;
+    background: #101714;
+  }
+  .period-picker,
+  .browser-panel,
+  .period-row {
+    background: #18211d;
+    border-color: #2b3933;
+  }
+  .heading-copy p,
+  .metric small,
+  .hours small {
+    color: #98a69f;
+  }
+  .browser-toolbar,
+  .period-row {
+    border-color: #2a3631;
+  }
+  .list-heading,
+  .status-tabs {
+    background: #121a17;
+  }
+  .status-tabs button.active {
+    color: #dff4eb;
+    background: #294238;
+  }
+  .period-row:hover {
+    background: #1d2a24;
+  }
+  .search-box input {
+    color: #edf5f1;
+    background: #121a17;
+    border-color: #34433d;
+  }
+}

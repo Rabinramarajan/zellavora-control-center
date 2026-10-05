@@ -25,11 +25,17 @@
       ></textarea>
 
       <div class="flex flex-wrap gap-2">
-        <p-button label="Approve" severity="success" [disabled]="busy()" (onClick)="approve()" />
         <p-button
-          label="Reject"
-          severity="danger"
-          [outlined]="true"
+          label="Approve timesheet"
+          icon="pi pi-check"
+          styleClass="ts-button ts-button-approve"
+          [disabled]="busy()"
+          (onClick)="approve()"
+        />
+        <p-button
+          label="Request changes"
+          icon="pi pi-replay"
+          styleClass="ts-button ts-button-danger"
           [disabled]="busy() || !reason().trim()"
           (onClick)="reject()"
         />

@@ -1,0 +1,428 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep .ts-button.p-button {
+  min-height: 2.7rem;
+  padding: 0.65rem 0.95rem;
+  gap: 0.48rem;
+  border: 1px solid transparent;
+  border-radius: 0.68rem;
+  font-size: 0.79rem;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+:host ::ng-deep .ts-button-primary.p-button {
+  color: #fff;
+  background: #1d5946;
+  border-color: #1d5946;
+  box-shadow: 0 5px 14px rgba(29, 89, 70, 0.18);
+}
+
+:host ::ng-deep .ts-button-primary.p-button:hover:not(:disabled) {
+  background: #154937;
+  border-color: #154937;
+  box-shadow: 0 7px 18px rgba(29, 89, 70, 0.24);
+}
+
+:host ::ng-deep .ts-button-secondary.p-button {
+  color: #365c4f;
+  background: #fff;
+  border-color: #cfd9d4;
+  box-shadow: 0 2px 5px rgba(25, 47, 38, 0.05);
+}
+
+:host ::ng-deep .ts-button-secondary.p-button:hover:not(:disabled) {
+  color: #1d5946;
+  background: #f0f6f3;
+  border-color: #9eb9ad;
+}
+
+:host ::ng-deep .ts-button-quiet.p-button {
+  color: #596760;
+  background: transparent;
+  border-color: transparent;
+}
+
+:host ::ng-deep .ts-button-quiet.p-button:hover:not(:disabled) {
+  color: #243d34;
+  background: #edf2ef;
+}
+
+:host ::ng-deep .ts-button.p-button:focus-visible {
+  outline: 3px solid rgba(38, 126, 95, 0.28);
+  outline-offset: 2px;
+}
+
+:host ::ng-deep .ts-button.p-button:disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+:host ::ng-deep .ts-button .p-button-icon {
+  font-size: 0.73rem;
+}
+.timesheet-detail {
+  min-height: 100%;
+  padding: 2rem;
+  color: #17211d;
+  background: #f5f7f6;
+}
+.detail-heading,
+.person-strip,
+app-timesheet-summary-card,
+.ledger,
+.ledger-total,
+app-timesheet-approval-panel,
+.rejection-note {
+  display: block;
+  max-width: 92rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.detail-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.2rem;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  margin-left: -0.65rem;
+  padding: 0 0.65rem;
+  border: 0;
+  border-radius: 0.55rem;
+  color: #41665a;
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.back-link:hover {
+  background: #e6eeea;
+}
+.back-link:focus-visible {
+  outline: 3px solid rgba(31, 126, 95, 0.3);
+}
+.title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.title-line h1 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+.title-block > p {
+  margin: 0.65rem 0 0;
+  color: #6d7873;
+  font-size: 0.86rem;
+}
+.sheet-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  color: #5f5540;
+  background: #fff1ce;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.sheet-status i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+.sheet-status[data-status='APPROVED'] {
+  color: #24634e;
+  background: #dff1e9;
+}
+.sheet-status[data-status='DRAFT'] {
+  color: #53615b;
+  background: #e9eeeb;
+}
+.sheet-status[data-status='REJECTED'] {
+  color: #9a3f42;
+  background: #fbe4e4;
+}
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+.save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #6f7a75;
+  font-size: 0.75rem;
+}
+.save-state.saved {
+  color: #39705c;
+}
+.person-strip {
+  display: grid;
+  grid-template-columns: auto minmax(12rem, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #dfe5e2;
+  border-radius: 1rem;
+  background: #fff;
+}
+.person-avatar {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  color: #eaf6f1;
+  background: #245f4c;
+  border-radius: 0.8rem;
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+.person-copy {
+  display: flex;
+  flex-direction: column;
+}
+.person-copy strong {
+  font-size: 0.92rem;
+}
+.person-copy span {
+  margin-top: 0.2rem;
+  color: #718079;
+  font-size: 0.75rem;
+}
+.person-meta {
+  min-width: 10rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid #e5e9e7;
+  display: flex;
+  flex-direction: column;
+}
+.person-meta span {
+  color: #849089;
+  font-size: 0.68rem;
+}
+.person-meta strong {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+}
+app-timesheet-summary-card {
+  margin-bottom: 1rem;
+}
+.rejection-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  color: #883a3e;
+  border: 1px solid #efc8c9;
+  border-radius: 0.8rem;
+  background: #fff3f3;
+  font-size: 0.83rem;
+}
+.rejection-note p {
+  margin: 0.2rem 0 0;
+}
+.ledger {
+  overflow: hidden;
+  border: 1px solid #dfe5e2;
+  border-radius: 1rem;
+  background: #fff;
+}
+.ledger-title {
+  min-height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e7ebe9;
+}
+.ledger-title h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.ledger-title p {
+  margin: 0.3rem 0 0;
+  color: #748079;
+  font-size: 0.75rem;
+}
+.ledger-title > span {
+  color: #718079;
+  font-size: 0.75rem;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.ledger table {
+  border-collapse: collapse;
+}
+.ledger thead {
+  color: #6d7973;
+  background: #f8faf9;
+  text-align: left;
+  font-size: 0.72rem;
+}
+.ledger th {
+  height: 2.8rem;
+}
+.ledger tbody tr {
+  border-top: 1px solid #edf0ee;
+}
+.ledger tbody td {
+  height: 3.7rem;
+}
+.ledger tbody tr:hover {
+  background-color: #f8faf9;
+}
+.ledger-total {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1.1rem;
+  color: #c9d9d2;
+  background: rgba(23, 61, 50, 0.96);
+  border: 1px solid #315a4c;
+  border-radius: 0.85rem;
+  box-shadow: 0 12px 35px rgba(23, 61, 50, 0.18);
+  backdrop-filter: blur(12px);
+  font-size: 0.76rem;
+}
+.total-hours {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.total-hours small {
+  color: #a9beb6;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+@media (max-width: 860px) {
+  .detail-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .detail-actions {
+    justify-content: flex-start;
+  }
+  .person-strip {
+    grid-template-columns: auto 1fr;
+  }
+  .person-meta {
+    padding: 0.8rem 0 0;
+    border-top: 1px solid #e5e9e7;
+    border-left: 0;
+  }
+}
+@media (max-width: 600px) {
+  .timesheet-detail {
+    padding: 1rem;
+  }
+  .detail-actions p-button {
+    flex: 1 1 auto;
+  }
+  .title-line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .person-strip {
+    grid-template-columns: auto 1fr;
+  }
+  .person-meta {
+    grid-column: 1 / -1;
+  }
+  .ledger-total {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ledger-title > span {
+    display: none;
+  }
+}
+:host-context(.dark) {
+  .timesheet-detail {
+    color: #edf5f1;
+    background: #101714;
+  }
+  .title-block > p,
+  .person-copy span,
+  .ledger-title p {
+    color: #9ba8a1;
+  }
+  .person-strip,
+  .ledger {
+    background: #18211d;
+    border-color: #2c3933;
+  }
+  .person-meta,
+  .ledger-title,
+  .ledger tbody tr {
+    border-color: #2a3631;
+  }
+  .ledger thead {
+    color: #a7b3ad;
+    background: #131b18;
+  }
+  .ledger tbody tr:hover {
+    background-color: #1d2924;
+  }
+  .back-link {
+    color: #94c5b3;
+  }
+  .back-link:hover {
+    background: #1d2c26;
+  }
+  :host ::ng-deep .ts-button-secondary.p-button {
+    color: #c7d9d1;
+    background: #18241f;
+    border-color: #3b4c45;
+  }
+  :host ::ng-deep .ts-button-secondary.p-button:hover:not(:disabled) {
+    color: #e8f5ef;
+    background: #22342c;
+    border-color: #587368;
+  }
+  :host ::ng-deep .ts-button-quiet.p-button {
+    color: #a9b8b1;
+  }
+  :host ::ng-deep .ts-button-quiet.p-button:hover:not(:disabled) {
+    color: #eef6f2;
+    background: #22302a;
+  }
+}
