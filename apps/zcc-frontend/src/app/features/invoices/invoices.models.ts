@@ -114,3 +114,10 @@ export interface FromMonthlySheetInput {
   description: string;
   invoiceDate?: string;
 }
+
+/** A bill issued before this system, saved under its own number. */
+export interface ImportInvoiceInput extends InvoiceInput {
+  invoiceNumber: string;
+  status: 'ISSUED' | 'PAID';
+  paidOn: string | null;
+}

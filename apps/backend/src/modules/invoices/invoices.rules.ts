@@ -141,3 +141,13 @@ export const assertDraft = (invoice: { status: string }): void => {
     );
   }
 };
+
+/** "FY26-27/04" → its year and counter; any other numbering returns null. */
+export const parseInvoiceNumber = (
+  invoiceNumber: string
+): { fyLabel: string; sequenceNo: number } | null => {
+  const match = /^(FY\d{2}-\d{2})\/(\d{1,6})$/i.exec(invoiceNumber.trim());
+  if (!match) return null;
+  const sequenceNo = Number(match[2]);
+  return sequenceNo > 0 ? { fyLabel: match[1].toUpperCase(), sequenceNo } : null;
+};

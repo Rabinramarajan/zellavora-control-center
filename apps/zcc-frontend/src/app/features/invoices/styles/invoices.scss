@@ -157,3 +157,12 @@
   font-weight: 700;
   color: #fff !important;
 }
+
+.notice--warning {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.1);
+  color: #fde68a;
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+}

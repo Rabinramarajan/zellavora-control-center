@@ -9,6 +9,7 @@ import {
   formatInvoiceNumber,
   monthPeriodLabel,
   parseDateKey,
+  parseInvoiceNumber,
 } from './invoices.rules';
 
 describe('financialYearLabel', () => {
@@ -98,5 +99,17 @@ describe('assertDraft', () => {
     expect(error).toBeInstanceOf(AppError);
     expect((error as AppError).status).toBe(409);
     expect((error as AppError).code).toBe('INVOICE_LOCKED');
+  });
+});
+
+describe('parseInvoiceNumber', () => {
+  it('reads the financial-year series', () => {
+    expect(parseInvoiceNumber('FY26-27/04')).toEqual({ fyLabel: 'FY26-27', sequenceNo: 4 });
+    expect(parseInvoiceNumber(' fy26-27/123 ')).toEqual({ fyLabel: 'FY26-27', sequenceNo: 123 });
+  });
+
+  it('ignores other numbering', () => {
+    expect(parseInvoiceNumber('INV-2024-001')).toBeNull();
+    expect(parseInvoiceNumber('FY26-27/00')).toBeNull();
   });
 });

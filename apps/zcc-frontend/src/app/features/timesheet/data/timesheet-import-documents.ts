@@ -518,3 +518,46 @@ function textOf(element: Element, namespace: string, tag: string): string {
     .map((node) => node.textContent ?? '')
     .join('');
 }
+
+/**
+ * The text of a Word document in reading order, one entry per paragraph and
+ * one per table row (cells joined by two spaces, like the PDF line reader).
+ */
+export async function readWordLines(file: File): Promise<string[]> {
+  const zip = await readZip(new Uint8Array(await file.arrayBuffer()), 'Word document');
+  if (!zip.has('word/document.xml')) {
+    throw new DocumentImportError('The Word file does not contain a document body.');
+  }
+  const body = xml(await zip.text('word/document.xml')).getElementsByTagNameNS(WORD_NS, 'body')[0];
+  const lines: string[] = [];
+  const paragraphText = (element: Element): string => textOf(element, WORD_NS, 't').trim();
+
+  const walk = (parent: Element): void => {
+    for (const child of Array.from(parent.children)) {
+      if (child.namespaceURI !== WORD_NS) continue;
+      if (child.localName === 'p') {
+        const text = paragraphText(child);
+        if (text) lines.push(text);
+      } else if (child.localName === 'tbl') {
+        for (const row of Array.from(child.children).filter((el) => el.localName === 'tr')) {
+          const cells = Array.from(row.children)
+            .filter((el) => el.localName === 'tc')
+            .map((cell) =>
+              Array.from(cell.getElementsByTagNameNS(WORD_NS, 'p'))
+                .map(paragraphText)
+                .filter(Boolean)
+            );
+          // A table used for layout (one cell per row) reads as paragraphs.
+          if (cells.length === 1) lines.push(...cells[0]);
+          else if (cells.some((cell) => cell.length))
+            lines.push(cells.map((c) => c.join(' ')).join('  '));
+        }
+      } else if (child.localName === 'sdt') {
+        const content = child.getElementsByTagNameNS(WORD_NS, 'sdtContent')[0];
+        if (content) walk(content);
+      }
+    }
+  };
+  if (body) walk(body);
+  return lines;
+}

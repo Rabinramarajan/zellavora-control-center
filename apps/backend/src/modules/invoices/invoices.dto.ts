@@ -110,6 +110,16 @@ export const SaveInvoiceSchema = z.object({
   items: z.array(InvoiceItemSchema).min(1).max(100),
 });
 
+/**
+ * A bill issued before this system existed. It keeps its own number and goes
+ * straight to ISSUED or PAID; the totals are still recomputed from the items.
+ */
+export const ImportInvoiceSchema = SaveInvoiceSchema.extend({
+  invoiceNumber: z.string().trim().min(1).max(32),
+  status: z.enum(['ISSUED', 'PAID']).default('ISSUED'),
+  paidOn: dateKey.optional().nullable(),
+});
+
 export const InvoiceQuerySchema = z.object({
   status: z.enum(['DRAFT', 'ISSUED', 'PAID', 'CANCELLED']).optional(),
   clientId: z.string().uuid().optional(),
@@ -151,6 +161,7 @@ export const RegisterQuerySchema = InvoiceQuerySchema.omit({ page: true, pageSiz
 export type UpsertInvoiceProfileDTO = Parsed<z.infer<typeof UpsertInvoiceProfileSchema>>;
 export type InvoiceClientDTO = Parsed<z.infer<typeof InvoiceClientSchema>>;
 export type SaveInvoiceDTO = Parsed<z.infer<typeof SaveInvoiceSchema>>;
+export type ImportInvoiceDTO = Parsed<z.infer<typeof ImportInvoiceSchema>>;
 export type InvoiceQueryDTO = Parsed<z.infer<typeof InvoiceQuerySchema>>;
 export type FromMonthlySheetDTO = Parsed<z.infer<typeof FromMonthlySheetSchema>>;
 export type MarkPaidDTO = Parsed<z.infer<typeof MarkPaidSchema>>;

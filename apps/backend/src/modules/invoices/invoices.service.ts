@@ -7,6 +7,7 @@ import { Paged } from '../daily-sheets/sheets.shared';
 import {
   CancelInvoiceDTO,
   FromMonthlySheetDTO,
+  ImportInvoiceDTO,
   InvoiceClientDTO,
   InvoiceQueryDTO,
   MarkPaidDTO,
@@ -21,6 +22,7 @@ import {
   computeTotals,
   financialYearLabel,
   formatInvoiceNumber,
+  parseInvoiceNumber,
   monthPeriodLabel,
   parseDateKey,
   Totals,
@@ -494,6 +496,86 @@ export class InvoicesService {
     return toView(issued);
   }
 
+  /**
+   * Record a bill issued outside the system under its own number. When the
+   * number follows the FYxx-yy/NN series, the counter is moved past it so the
+   * next issued invoice continues the sequence instead of reusing the number.
+   */
+  public async import(dto: ImportInvoiceDTO, actor: InvoiceActor): Promise<InvoiceView> {
+    const client = await this.findClient(dto.clientId, actor);
+    const profile = await this.findProfile(actor);
+    if (!profile) {
+      throw new AppError(
+        'Set up your invoice profile and bank details before importing',
+        422,
+        'INVOICE_PROFILE_MISSING'
+      );
+    }
+    const invoiceNumber = dto.invoiceNumber.toUpperCase();
+    const taken = await prisma.invoice.findFirst({
+      where: { ...this.owned(actor), invoiceNumber },
+      select: { id: true },
+    });
+    if (taken) {
+      throw new AppError(
+        `Bill number ${invoiceNumber} already exists`,
+        409,
+        'INVOICE_NUMBER_TAKEN',
+        {
+          id: taken.id,
+        }
+      );
+    }
+
+    const { items, money } = priced(dto);
+    const invoiceDate = parseDateKey(dto.invoiceDate);
+    const series = parseInvoiceNumber(invoiceNumber);
+    const now = new Date();
+
+    try {
+      const imported = await prisma.$transaction(async (tx) => {
+        if (series) await this.advanceSequence(tx, actor, series.fyLabel, series.sequenceNo);
+        return tx.invoice.create({
+          data: {
+            ...this.owned(actor),
+            clientId: dto.clientId,
+            invoiceNumber,
+            fyLabel: series?.fyLabel ?? financialYearLabel(invoiceDate),
+            sequenceNo: series?.sequenceNo ?? null,
+            invoiceDate,
+            dueDate: dto.dueDate
+              ? parseDateKey(dto.dueDate)
+              : addDays(invoiceDate, profile.paymentTermsDays),
+            periodLabel: dto.periodLabel,
+            ...money,
+            status: dto.status,
+            issuedAt: invoiceDate,
+            paidAt: dto.status === 'PAID' ? (dto.paidOn ? parseDateKey(dto.paidOn) : now) : null,
+            sellerSnapshot: sellerOf(profile) as unknown as Prisma.InputJsonValue,
+            clientSnapshot: clientOf(client) as unknown as Prisma.InputJsonValue,
+            bankSnapshot: bankOf(profile) as unknown as Prisma.InputJsonValue,
+            terms: dto.terms ?? profile.defaultTerms,
+            footerNote: dto.footerNote ?? profile.footerNote,
+            createdBy: actor.userId,
+            items: { create: items },
+          },
+          include: invoiceInclude,
+        });
+      });
+      await this.audit('invoice.imported', imported, actor, { invoiceNumber });
+      return toView(imported);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new AppError(
+          `Bill number ${invoiceNumber} already exists`,
+          409,
+          'INVOICE_NUMBER_TAKEN'
+        );
+      }
+      throw error;
+    }
+  }
+
   public async markPaid(id: string, dto: MarkPaidDTO, actor: InvoiceActor): Promise<InvoiceView> {
     const invoice = await this.find(id, actor);
     if (invoice.status !== 'ISSUED') {
@@ -701,6 +783,20 @@ export class InvoicesService {
       DO UPDATE SET "last_number" = "invoice_sequences"."last_number" + 1, "updated_at" = now()
       RETURNING "last_number"`;
     return Number(row.last_number);
+  }
+
+  /** Move the counter up to an imported number; never down, so issued numbers stay unique. */
+  private async advanceSequence(
+    tx: TxClient,
+    actor: InvoiceActor,
+    fyLabel: string,
+    sequenceNo: number
+  ): Promise<void> {
+    await tx.$executeRaw`
+      INSERT INTO "invoice_sequences" ("id", "organization_id", "user_id", "fy_label", "last_number", "updated_at")
+      VALUES (gen_random_uuid(), ${actor.organizationId}::uuid, ${actor.userId}::uuid, ${fyLabel}, ${sequenceNo}, now())
+      ON CONFLICT ("organization_id", "user_id", "fy_label")
+      DO UPDATE SET "last_number" = GREATEST("invoice_sequences"."last_number", ${sequenceNo}), "updated_at" = now()`;
   }
 
   private presentProfile(profile: InvoiceProfile): InvoiceProfileView {

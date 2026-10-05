@@ -5,6 +5,7 @@ import { toSheetError } from '../freelancer-sheets/sheets.api';
 import { Paged } from '../freelancer-sheets/sheets.models';
 import {
   FromMonthlySheetInput,
+  ImportInvoiceInput,
   Invoice,
   InvoiceClient,
   InvoiceClientInput,
@@ -105,6 +106,10 @@ export class InvoicesApi {
 
   public issue(id: string): Promise<Invoice> {
     return this.unwrap(this.http.post<Envelope<Invoice>>(`${this.base}/${id}/issue`, {}));
+  }
+
+  public importInvoice(input: ImportInvoiceInput): Promise<Invoice> {
+    return this.unwrap(this.http.post<Envelope<Invoice>>(`${this.base}/import`, input));
   }
 
   public markPaid(id: string): Promise<Invoice> {

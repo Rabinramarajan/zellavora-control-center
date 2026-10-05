@@ -138,6 +138,26 @@ router.post(
 
 /**
  * @swagger
+ * /api/v1/invoices/import:
+ *   post:
+ *     summary: importInvoice
+ *     description: >
+ *       Record a bill issued outside the system under its own number, as ISSUED
+ *       or PAID. A FYxx-yy/NN number moves the counter past it. 409
+ *       INVOICE_NUMBER_TAKEN when the number exists.
+ *     operationId: postInvoicesImport
+ *     tags: [invoices]
+ *     responses:
+ *       default:
+ *         description: Operation response
+ */
+router.post(
+  '/import',
+  asyncRoute((req, res) => controller.import(req, res))
+);
+
+/**
+ * @swagger
  * /api/v1/invoices/from-monthly-sheet/{sheetId}:
  *   post:
  *     summary: createInvoiceFromMonthlySheet

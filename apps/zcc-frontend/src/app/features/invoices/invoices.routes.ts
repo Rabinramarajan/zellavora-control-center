@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-// Static segments come before `:id` so "new", "settings" and "clients" are not read as ids.
+// Static segments come before `:id` so "new", "import", "settings" and "clients" are not read as ids.
 export const invoiceRoutes: Routes = [
   {
     path: '',
@@ -29,6 +29,14 @@ export const invoiceRoutes: Routes = [
         (m) => m.InvoiceClientsComponent
       ),
     title: 'Invoice Clients',
+  },
+  {
+    path: 'import',
+    loadComponent: () =>
+      import('./pages/invoice-import/invoice-import.component').then(
+        (m) => m.InvoiceImportComponent
+      ),
+    title: 'Import Invoices',
   },
   {
     path: ':id/edit',

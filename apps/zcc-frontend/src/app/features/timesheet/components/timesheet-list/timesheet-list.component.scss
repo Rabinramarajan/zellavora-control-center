@@ -4,8 +4,6 @@
   display: flex;
   flex: 1 0 auto;
   flex-direction: column;
-  // Cancel the admin layout's p-6 gutter so the page surface runs edge to edge.
-  margin: -1.5rem;
 }
 
 :host .ts-button {
@@ -61,7 +59,6 @@
 // One set of surfaces, text and accent colours for the whole page, swapped as
 // a set for dark mode, so every card, row and control stays consistent.
 :host {
-  --ts-page: #f5f7f6;
   --ts-surface: #ffffff;
   --ts-surface-sunken: #f3f6f4;
   --ts-border: #e1e7e4;
@@ -82,11 +79,10 @@
 }
 
 :host-context(.dark) {
-  --ts-page: #0f1513;
-  --ts-surface: #161e1b;
-  --ts-surface-sunken: #111916;
-  --ts-border: #25312c;
-  --ts-border-strong: #33423b;
+  --ts-surface: #07051a;
+  --ts-surface-sunken: #05040e;
+  --ts-border: rgba(255, 255, 255, 0.1);
+  --ts-border-strong: rgba(255, 255, 255, 0.16);
   --ts-text: #e9f2ee;
   --ts-text-muted: #a3b2ab;
   --ts-text-faint: #7e8d86;
@@ -94,7 +90,7 @@
   --ts-accent-soft: rgba(63, 174, 132, 0.14);
   --ts-accent-text: #8fdec2;
   --ts-amber: #f3c06b;
-  --ts-hover: #1b2521;
+  --ts-hover: rgba(255, 255, 255, 0.04);
   --zv-accent-ring: rgba(63, 174, 132, 0.25);
 }
 
@@ -105,9 +101,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 2rem 1.5rem;
   color: var(--ts-text);
-  background: var(--ts-page);
 }
 
 // Heading, overview and panel share the page's full width, so their edges line up.
@@ -548,7 +542,6 @@
 }
 @media (max-width: 600px) {
   .timesheets-page {
-    padding: 1.25rem 1rem;
     gap: 1.25rem;
   }
   .period-picker {

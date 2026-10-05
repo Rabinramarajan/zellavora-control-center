@@ -8,6 +8,7 @@ import {
   parse,
   ExportQuerySchema,
   FromMonthlySheetSchema,
+  ImportInvoiceSchema,
   InvoiceClientSchema,
   InvoiceQuerySchema,
   MarkPaidSchema,
@@ -98,6 +99,11 @@ export class InvoicesController {
 
   public async issue(req: AuthRequest, res: Response): Promise<void> {
     res.json({ success: true, data: await this.service.issue(req.params.id, actorOf(req)) });
+  }
+
+  public async import(req: AuthRequest, res: Response): Promise<void> {
+    const dto = parse(ImportInvoiceSchema, req.body);
+    res.status(201).json({ success: true, data: await this.service.import(dto, actorOf(req)) });
   }
 
   public async markPaid(req: AuthRequest, res: Response): Promise<void> {
