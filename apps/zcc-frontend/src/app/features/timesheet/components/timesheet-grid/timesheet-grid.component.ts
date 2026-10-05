@@ -11,12 +11,12 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
-import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { TimesheetService } from '../../data/timesheet.service';
+import { TimesheetImportFile, readTimesheetImport } from '../../data/timesheet-import';
 import {
   BulkEntryPatch,
   EntryStatus,
@@ -41,7 +41,6 @@ interface GridRow {
   imports: [
     DatePipe,
     FormsModule,
-    ButtonModule,
     DialogModule,
     InputTextModule,
     SelectModule,
@@ -64,6 +63,22 @@ export class TimesheetGridComponent {
 
   protected readonly autoFillOpen = signal(false);
   protected readonly isExporting = signal(false);
+  protected readonly importOpen = signal(false);
+  protected readonly isReadingImport = signal(false);
+  protected readonly isImporting = signal(false);
+  protected readonly importFilename = signal('');
+  protected readonly importPreview = signal<TimesheetImportFile | null>(null);
+  protected readonly canApplyImport = computed(() => {
+    const preview = this.importPreview();
+    return (
+      !!preview?.format &&
+      preview.errors.length === 0 &&
+      preview.entries.length > 0 &&
+      this.service.canEdit() &&
+      !this.isReadingImport() &&
+      !this.isImporting()
+    );
+  });
   protected readonly fillStart = signal('09:00');
   protected readonly fillEnd = signal('17:30');
   protected readonly fillHours = signal(8);
@@ -74,6 +89,13 @@ export class TimesheetGridComponent {
   }
   protected set autoFillOpenModel(value: boolean) {
     this.autoFillOpen.set(value);
+  }
+
+  protected get importOpenModel(): boolean {
+    return this.importOpen();
+  }
+  protected set importOpenModel(value: boolean) {
+    this.importOpen.set(value);
   }
 
   protected readonly rows = computed<GridRow[]>(() =>
@@ -199,6 +221,52 @@ export class TimesheetGridComponent {
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
     } finally {
       this.isExporting.set(false);
+    }
+  }
+
+  protected openImport(): void {
+    this.importFilename.set('');
+    this.importPreview.set(null);
+    this.importOpen.set(true);
+  }
+
+  protected async selectImportFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.item(0);
+    // Clear the input so choosing the same file again, after fixing it, still fires `change`.
+    input.value = '';
+    this.importFilename.set(file?.name ?? '');
+    this.importPreview.set(null);
+    if (!file) return;
+
+    this.isReadingImport.set(true);
+    try {
+      this.importPreview.set(await readTimesheetImport(file, this.service.period()));
+    } finally {
+      this.isReadingImport.set(false);
+    }
+  }
+
+  protected async applyImport(): Promise<void> {
+    const preview = this.importPreview();
+    if (!this.canApplyImport() || !preview?.format) return;
+
+    this.isImporting.set(true);
+    try {
+      const result = await this.service.importFile(
+        preview.content,
+        preview.format,
+        this.importFilename()
+      );
+      if (result.ok) {
+        this.importOpen.set(false);
+        this.importPreview.set(null);
+      } else {
+        // The server is the authority; show its reasons in place of the local preview.
+        this.importPreview.set({ ...preview, entries: [], errors: result.errors });
+      }
+    } finally {
+      this.isImporting.set(false);
     }
   }
 

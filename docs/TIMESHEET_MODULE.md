@@ -48,6 +48,7 @@ OpenAPI spec is generated from the `@swagger` blocks in
 | GET | `/timesheets/:id` | One sheet with its entries. |
 | GET | `/timesheets/:id/export?format=json\|csv\|html` | See *Exports*. |
 | POST | `/timesheets/:id/entries/bulk` | Upsert up to 31 entries at once. |
+| POST | `/timesheets/:id/import` | Import a CSV or JSON export. See *Imports*. |
 | PATCH | `/timesheets/:id/entries/:entryId` | Update one entry. |
 | POST | `/timesheets/:id/submit` | Employee submits → `SUBMITTED`. |
 | POST | `/timesheets/:id/approve` | Manager approves → `APPROVED`. |
@@ -118,6 +119,30 @@ plain table with Tailwind classes and `p-select` for the status column.
 There is no server-side PDF renderer in this repo and no Reports module to
 reuse. If one is added, render it from `buildExportModel` rather than
 re-deriving the figures.
+
+## Imports
+
+`POST /timesheets/:id/import` takes `{ format: 'csv' | 'json', filename?, content }`,
+where `content` is the text of a file the export endpoint produced (at most 1 MB).
+`timesheets.import.ts` is the inverse of `timesheets.export.ts`:
+
+- CSV needs the `Date, Start, End, Hours, Status, Notes` columns; `Day` is
+  ignored. Status accepts the export labels (`Working`, `Weekend work`, `—`, …)
+  or the enum values.
+- JSON accepts the bare export model or the `{ success, data }` envelope. A
+  file whose `period` differs from the sheet's is refused.
+- Validation is all-or-nothing. Any bad row (date outside the period, a
+  repeated date, an invalid time, hours outside 0–24, an unknown status, or
+  notes over 2,000 characters) rejects the file with `422
+  INVALID_TIMESHEET_IMPORT`, and `error.errors` lists one message per problem.
+- Valid rows replace those days in one transaction and other days are left
+  alone. The usual editing guards apply: only the owner can import, and only
+  into a `DRAFT` or `REJECTED` sheet. Each import writes a `timesheet.imported`
+  audit event.
+
+The grid's **Import** dialog parses the file in the browser (`timesheet-import.ts`)
+for an instant preview, then uploads the same text. The server's answer is
+final. If it rejects the file, its messages replace the preview.
 
 ## Notifications
 

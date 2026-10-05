@@ -231,6 +231,49 @@ router.post(
 
 /**
  * @swagger
+ * /api/v1/timesheets/{id}/import:
+ *   post:
+ *     summary: importTimesheetEntries
+ *     operationId: postTimesheetsByIdImport
+ *     description: >
+ *       Replace the matching days with the rows of a CSV or JSON file produced
+ *       by the export endpoint. The file is validated as a whole; any invalid
+ *       row rejects the import and nothing is written.
+ *     tags: [timesheets]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [format, content]
+ *             properties:
+ *               format: { type: string, enum: [csv, json] }
+ *               filename: { type: string, maxLength: 255 }
+ *               content: { type: string, description: "File text, at most 1 MB" }
+ *     responses:
+ *       200:
+ *         description: The updated timesheet; meta.importedCount is the number of rows written
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/TimesheetEnvelope' }
+ *       409:
+ *         description: The timesheet is locked for editing
+ *       422:
+ *         description: The file has errors; error.errors lists one message per problem
+ */
+router.post(
+  '/:id/import',
+  handle((req, res) => controller.importEntries(req, res))
+);
+
+/**
+ * @swagger
  * /api/v1/timesheets/{id}/entries/{entryId}:
  *   patch:
  *     summary: updateTimesheetEntry

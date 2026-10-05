@@ -15,6 +15,7 @@ import {
   isNonWorking,
   periodOf,
 } from './timesheet.model';
+import { TimesheetImportFormat } from './timesheet-import';
 
 const AUTOSAVE_DEBOUNCE_MS = 400;
 
@@ -22,6 +23,25 @@ export interface TimesheetExport {
   blob: Blob;
   filename: string;
 }
+
+export type TimesheetImportResult =
+  { ok: true; importedCount: number } | { ok: false; errors: string[] };
+
+/**
+ * The error interceptor rethrows `{ message, original: HttpErrorResponse }`;
+ * a rejected import carries its row-level problems in `error.errors`.
+ */
+const importErrors = (error: unknown): string[] => {
+  const normalized = error as {
+    message?: string;
+    original?: { error?: { error?: { errors?: unknown; message?: string } } };
+  };
+  const body = normalized?.original?.error?.error;
+  if (Array.isArray(body?.errors) && body.errors.every((item) => typeof item === 'string')) {
+    return body.errors as string[];
+  }
+  return [body?.message ?? normalized?.message ?? 'The import failed. Please try again.'];
+};
 
 /** Roll entries up into the figures the summary card and totals bar show. */
 export const computeTotals = (entries: readonly TimesheetEntry[]): TimesheetTotals =>
@@ -204,6 +224,50 @@ export class TimesheetService {
     } catch (error) {
       this.timesheetResource.set(snapshot);
       this.showError('Could not apply those changes', error);
+    } finally {
+      this.pendingSaves.update((count) => count - 1);
+    }
+  }
+
+  /**
+   * Send an exported CSV or JSON file to the server, which re-validates it
+   * and writes every row in one transaction. Rejected files come back with
+   * one message per problem so the dialog can list them.
+   */
+  async importFile(
+    content: string,
+    format: TimesheetImportFormat,
+    filename: string
+  ): Promise<TimesheetImportResult> {
+    const sheet = this.timesheetResource.value();
+    if (!sheet) return { ok: false, errors: ['The timesheet is not loaded yet.'] };
+
+    // Save cell edits still waiting on their debounce first; landing after
+    // the import they would overwrite the imported value for that day.
+    const pending = [...this.timers.entries()];
+    this.timers.clear();
+    pending.forEach(([, timer]) => clearTimeout(timer));
+    await Promise.all(pending.map(([entryId]) => this.flushEntry(sheet.id, entryId)));
+
+    this.pendingSaves.update((count) => count + 1);
+    try {
+      const response = await firstValueFrom(
+        this.api.postData<ApiEnvelope<Timesheet> & { meta: { importedCount: number } }>(
+          `/timesheets/${sheet.id}/import`,
+          { format, filename, content },
+          { hideFullSpinner: true }
+        )
+      );
+      this.timesheetResource.set(response.data);
+      const count = response.meta.importedCount;
+      this.messages.add({
+        severity: 'success',
+        summary: 'Import complete',
+        detail: `${count} timesheet ${count === 1 ? 'row was' : 'rows were'} imported.`,
+      });
+      return { ok: true, importedCount: count };
+    } catch (error) {
+      return { ok: false, errors: importErrors(error) };
     } finally {
       this.pendingSaves.update((count) => count - 1);
     }

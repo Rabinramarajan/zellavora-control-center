@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
 import { TextareaModule } from 'primeng/textarea';
 import { HasPermissionDirective } from '../../../../core/rbac';
 import { TimesheetService } from '../../data/timesheet.service';
@@ -16,7 +15,7 @@ import { formatPeriod } from '../../data/timesheet.model';
 @Component({
   selector: 'app-timesheet-approval-panel',
   standalone: true,
-  imports: [FormsModule, ButtonModule, TextareaModule, HasPermissionDirective],
+  imports: [FormsModule, TextareaModule, HasPermissionDirective],
   templateUrl: './timesheet-approval-panel.component.html',
   styleUrl: './timesheet-approval-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

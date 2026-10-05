@@ -10,6 +10,7 @@ import {
   BulkUpsertEntriesSchema,
   ExportQuerySchema,
   GetTimesheetQuerySchema,
+  ImportTimesheetSchema,
   ListTimesheetsQuerySchema,
   RejectTimesheetSchema,
   SummaryQuerySchema,
@@ -103,6 +104,23 @@ export class TimesheetsController {
       res.json({ success: true, data: sheet });
     } catch (error) {
       logger.error('Bulk upsert timesheet entries failed', error);
+      throw error;
+    }
+  }
+
+  async importEntries(req: AuthRequest, res: Response) {
+    try {
+      const { organizationId, actorUserId } = this.context(req);
+      const dto = ImportTimesheetSchema.parse(req.body);
+      const { timesheet, importedCount } = await this.service.importEntries(
+        req.params.id,
+        dto,
+        organizationId,
+        actorUserId
+      );
+      res.json({ success: true, data: timesheet, meta: { importedCount } });
+    } catch (error) {
+      logger.error('Import timesheet entries failed', error);
       throw error;
     }
   }

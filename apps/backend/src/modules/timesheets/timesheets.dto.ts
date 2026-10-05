@@ -51,6 +51,20 @@ export const BulkUpsertEntriesSchema = z.object({
     .max(31),
 });
 
+/** 1 MB of text comfortably holds a month of rows with long notes. */
+export const MAX_IMPORT_BYTES = 1024 * 1024;
+
+export const ImportTimesheetSchema = z.object({
+  format: z.enum(['csv', 'json']),
+  filename: z.string().trim().max(255).optional(),
+  content: z
+    .string()
+    .min(1, 'The import file is empty')
+    .refine((value) => Buffer.byteLength(value, 'utf8') <= MAX_IMPORT_BYTES, {
+      message: 'The import file must be 1 MB or smaller',
+    }),
+});
+
 export const RejectTimesheetSchema = z.object({
   rejectionReason: z.string().trim().min(1).max(2000),
 });
@@ -73,6 +87,7 @@ export const ListTimesheetsQuerySchema = z.object({
 export type GetTimesheetQueryDTO = z.infer<typeof GetTimesheetQuerySchema>;
 export type UpdateEntryDTO = z.infer<typeof UpdateEntrySchema>;
 export type BulkUpsertEntriesDTO = z.infer<typeof BulkUpsertEntriesSchema>;
+export type ImportTimesheetDTO = z.infer<typeof ImportTimesheetSchema>;
 export type RejectTimesheetDTO = z.infer<typeof RejectTimesheetSchema>;
 export type ExportQueryDTO = z.infer<typeof ExportQuerySchema>;
 export type SummaryQueryDTO = z.infer<typeof SummaryQuerySchema>;

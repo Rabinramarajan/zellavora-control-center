@@ -30,29 +30,45 @@
       } @else if (service.canEdit()) {
         <span class="save-state saved"><i class="pi pi-check-circle"></i> Changes saved</span>
       }
-      <p-button
-        label="Auto-fill weekdays"
-        icon="pi pi-bolt"
-        styleClass="ts-button ts-button-secondary"
+      <button
+        type="button"
+        class="ts-button ts-button-secondary"
         [disabled]="!service.canEdit() || service.isLoading()"
-        (onClick)="autoFillOpen.set(true)"
-      />
-      <p-button
-        label="Export"
-        icon="pi pi-download"
-        styleClass="ts-button ts-button-secondary"
-        [loading]="isExporting()"
+        (click)="autoFillOpen.set(true)"
+      >
+        <i class="pi pi-bolt" aria-hidden="true"></i><span>Auto-fill</span>
+      </button>
+      <button
+        type="button"
+        class="ts-button ts-button-secondary"
+        [disabled]="!service.canEdit() || service.isLoading() || service.isSaving()"
+        (click)="openImport()"
+      >
+        <i class="pi pi-upload" aria-hidden="true"></i><span>Import</span>
+      </button>
+      <button
+        type="button"
+        class="ts-button ts-button-secondary"
         [disabled]="!service.timesheet() || service.isSaving() || isExporting()"
-        (onClick)="openExport('html')"
-      />
-      <p-button
-        label="Submit for approval"
-        icon="pi pi-send"
-        iconPos="right"
-        styleClass="ts-button ts-button-primary"
+        (click)="openExport('html')"
+      >
+        <i
+          class="pi"
+          [class.pi-spin]="isExporting()"
+          [class.pi-spinner]="isExporting()"
+          [class.pi-download]="!isExporting()"
+          aria-hidden="true"
+        ></i>
+        <span>{{ isExporting() ? 'Preparing' : 'Export' }}</span>
+      </button>
+      <button
+        type="button"
+        class="ts-button ts-button-primary"
         [disabled]="!canSubmit()"
-        (onClick)="submit()"
-      />
+        (click)="submit()"
+      >
+        <i class="pi pi-send" aria-hidden="true"></i><span>Submit for approval</span>
+      </button>
     </div>
   </header>
 
@@ -91,14 +107,13 @@
       class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30"
     >
       <p class="text-sm text-red-800 dark:text-red-300">This timesheet could not be loaded.</p>
-      <p-button
-        class="mt-3 inline-block"
-        label="Retry"
-        icon="pi pi-refresh"
-        size="small"
-        styleClass="ts-button ts-button-secondary"
-        (onClick)="service.timesheetResource.reload()"
-      />
+      <button
+        type="button"
+        class="ts-button ts-button-secondary mt-3"
+        (click)="service.timesheetResource.reload()"
+      >
+        <i class="pi pi-refresh" aria-hidden="true"></i><span>Try again</span>
+      </button>
     </div>
   } @else {
     <section class="ledger">
@@ -259,17 +274,97 @@
     />
   </div>
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cancel"
-      styleClass="ts-button ts-button-quiet"
-      (onClick)="autoFillOpen.set(false)"
-    />
-    <p-button
-      label="Apply to weekdays"
-      icon="pi pi-check"
-      styleClass="ts-button ts-button-primary"
+    <button type="button" class="ts-button ts-button-quiet" (click)="autoFillOpen.set(false)">
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="ts-button ts-button-primary"
       [disabled]="blankWeekdayCount() === 0"
-      (onClick)="applyAutoFill()"
-    />
+      (click)="applyAutoFill()"
+    >
+      <i class="pi pi-check" aria-hidden="true"></i><span>Apply schedule</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Import timesheet"
+  [modal]="true"
+  [style]="{ width: '31rem', maxWidth: 'calc(100vw - 2rem)' }"
+  [closable]="!isImporting()"
+  [closeOnEscape]="!isImporting()"
+  [(visible)]="importOpenModel"
+>
+  <div class="import-dialog">
+    <p class="import-intro">
+      Import a CSV or JSON file exported by Zellavora. Valid rows replace the matching dates in
+      {{ periodLabel() }}; all other dates remain unchanged.
+    </p>
+
+    <label class="import-dropzone" [class.import-dropzone-busy]="isReadingImport()">
+      <input
+        type="file"
+        accept=".csv,.json,text/csv,application/json"
+        [disabled]="isReadingImport() || isImporting()"
+        (change)="selectImportFile($event)"
+      />
+      <i
+        class="pi"
+        [class.pi-spin]="isReadingImport()"
+        [class.pi-spinner]="isReadingImport()"
+        [class.pi-upload]="!isReadingImport()"
+        aria-hidden="true"
+      ></i>
+      <strong>{{ isReadingImport() ? 'Checking file…' : 'Choose CSV or JSON' }}</strong>
+      <span>{{ importFilename() || 'Maximum file size: 1 MB' }}</span>
+    </label>
+
+    @if (importPreview(); as preview) {
+      @if (preview.errors.length) {
+        <div class="import-result import-result-error" role="alert">
+          <strong>Import cannot continue</strong>
+          <ul>
+            @for (error of preview.errors; track $index) {
+              <li>{{ error }}</li>
+            }
+          </ul>
+        </div>
+      } @else {
+        <div class="import-result import-result-ready">
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
+          <div>
+            <strong>{{ preview.entries.length }} rows ready to import</strong>
+            <span>Existing values on those dates will be replaced.</span>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      type="button"
+      class="ts-button ts-button-quiet"
+      [disabled]="isImporting()"
+      (click)="importOpen.set(false)"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="ts-button ts-button-primary"
+      [disabled]="!canApplyImport()"
+      (click)="applyImport()"
+    >
+      <i
+        class="pi"
+        [class.pi-spin]="isImporting()"
+        [class.pi-spinner]="isImporting()"
+        [class.pi-upload]="!isImporting()"
+        aria-hidden="true"
+      ></i>
+      <span>{{ isImporting() ? 'Importing' : 'Import rows' }}</span>
+    </button>
   </ng-template>
 </p-dialog>

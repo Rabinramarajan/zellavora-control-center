@@ -1,8 +1,12 @@
 import { Prisma, TimesheetStatus, TimesheetEntryStatus } from '@prisma/client';
 import { TimesheetsService, computeTotals } from './timesheets.service';
 import { TimesheetsRepository } from './timesheets.repository';
+import { AuditService } from '../../infrastructure/audit';
 
 jest.mock('./timesheets.repository');
+jest.mock('../../infrastructure/audit', () => ({
+  AuditService: { log: jest.fn().mockResolvedValue(undefined) },
+}));
 jest.mock('../notification/notification.service', () => ({
   NotificationService: jest.fn().mockImplementation(() => ({
     sendNotification: jest.fn().mockResolvedValue(undefined),
@@ -197,6 +201,119 @@ describe('TimesheetsService', () => {
         )
       ).rejects.toThrow(/outside period 2026-08/);
       expect(repo.upsertEntry).not.toHaveBeenCalled();
+    });
+
+    it('rejects a bulk write that repeats a date', async () => {
+      repo.findById.mockResolvedValue(sheet());
+
+      await expect(
+        service.bulkUpsertEntries(
+          'sheet-1',
+          {
+            entries: [
+              { date: '2026-08-03', hours: 8 },
+              { date: '2026-08-03', hours: 4 },
+            ],
+          },
+          ORG_A,
+          EMPLOYEE
+        )
+      ).rejects.toThrow(/appears more than once/);
+      expect(repo.upsertEntry).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('importEntries', () => {
+    const csv = [
+      'Date,Day,Start,End,Hours,Status,Notes',
+      '2026-08-03,Monday,09:00,17:00,8,Working,Kickoff',
+      '2026-08-04,Tuesday,,,,Leave,',
+    ].join('\r\n');
+
+    beforeEach(() => (AuditService.log as jest.Mock).mockClear());
+
+    it('writes every row in one transaction, recalculates and audits', async () => {
+      repo.findById.mockResolvedValue(sheet());
+      repo.sumHours.mockResolvedValue(new Prisma.Decimal(8));
+
+      const result = await service.importEntries(
+        'sheet-1',
+        { format: 'csv', filename: 'august.csv', content: csv },
+        ORG_A,
+        EMPLOYEE
+      );
+
+      expect(result.importedCount).toBe(2);
+      expect(repo.runInTransaction).toHaveBeenCalledTimes(1);
+      expect(repo.upsertEntry).toHaveBeenCalledTimes(2);
+      expect(repo.upsertEntry).toHaveBeenCalledWith(
+        'sheet-1',
+        new Date('2026-08-03T00:00:00.000Z'),
+        expect.objectContaining({
+          dayOfWeek: 'Monday',
+          startTime: '09:00',
+          hours: new Prisma.Decimal(8),
+          status: TimesheetEntryStatus.WORKING,
+          notes: 'Kickoff',
+        }),
+        expect.anything()
+      );
+      expect(repo.update).toHaveBeenCalledWith(
+        'sheet-1',
+        expect.objectContaining({ totalHours: new Prisma.Decimal(8) }),
+        expect.anything()
+      );
+      expect(AuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'timesheet.imported',
+          resourceId: 'sheet-1',
+          organizationId: ORG_A,
+          actorId: EMPLOYEE,
+          metadata: expect.objectContaining({ importedCount: 2, filename: 'august.csv' }),
+        })
+      );
+    });
+
+    it('rejects an invalid file whole, with every problem listed', async () => {
+      repo.findById.mockResolvedValue(sheet());
+      const bad = `${csv}\r\n2026-09-01,Tuesday,,,99,Working,`;
+
+      const attempt = service.importEntries(
+        'sheet-1',
+        { format: 'csv', content: bad },
+        ORG_A,
+        EMPLOYEE
+      );
+
+      await expect(attempt).rejects.toMatchObject({
+        status: 422,
+        code: 'INVALID_TIMESHEET_IMPORT',
+        details: {
+          errors: [
+            'Row 4: 2026-09-01 is outside 2026-08.',
+            'Row 4: hours must be between 0 and 24.',
+          ],
+        },
+      });
+      expect(repo.upsertEntry).not.toHaveBeenCalled();
+      expect(AuditService.log).not.toHaveBeenCalled();
+    });
+
+    it('refuses to import into a locked sheet', async () => {
+      repo.findById.mockResolvedValue(sheet({ status: TimesheetStatus.APPROVED }));
+
+      await expect(
+        service.importEntries('sheet-1', { format: 'csv', content: csv }, ORG_A, EMPLOYEE)
+      ).rejects.toThrow(/locked for editing/);
+      expect(repo.upsertEntry).not.toHaveBeenCalled();
+    });
+
+    it("refuses to import into a colleague's sheet", async () => {
+      repo.findById.mockResolvedValue(sheet());
+
+      await expect(
+        service.importEntries('sheet-1', { format: 'csv', content: csv }, ORG_A, MANAGER)
+      ).rejects.toThrow(/Only the owning employee/);
     });
   });
 

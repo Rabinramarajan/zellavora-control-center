@@ -2,11 +2,16 @@
   display: block;
 }
 
-:host ::ng-deep .ts-button.p-button {
+:host .ts-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
   min-height: 2.75rem;
   padding: 0.68rem 1rem;
   border: 1px solid transparent;
   border-radius: 0.7rem;
+  font-family: inherit;
   font-size: 0.82rem;
   font-weight: 680;
   letter-spacing: -0.01em;
@@ -19,31 +24,31 @@
     box-shadow 180ms ease;
 }
 
-:host ::ng-deep .ts-button-primary.p-button {
+:host .ts-button-primary {
   color: #fff;
   background: #1d5946;
   border-color: #1d5946;
   box-shadow: 0 5px 14px rgba(29, 89, 70, 0.18);
 }
 
-:host ::ng-deep .ts-button-primary.p-button:hover:not(:disabled) {
+:host .ts-button-primary:hover:not(:disabled) {
   background: #154937;
   border-color: #154937;
   box-shadow: 0 7px 18px rgba(29, 89, 70, 0.24);
 }
 
-:host ::ng-deep .ts-button.p-button:focus-visible {
+:host .ts-button:focus-visible {
   outline: 3px solid rgba(38, 126, 95, 0.28);
   outline-offset: 2px;
 }
 
-:host ::ng-deep .ts-button.p-button:disabled {
+:host .ts-button:disabled {
   opacity: 0.48;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-:host ::ng-deep .ts-button .p-button-icon {
+:host .ts-button i {
   font-size: 0.75rem;
 }
 .timesheets-page {
@@ -82,8 +87,11 @@
   background: #fff;
   box-shadow: 0 8px 30px rgba(28, 49, 40, 0.06);
 }
-:host ::ng-deep .period-picker .ts-button.p-button {
-  min-height: var(--zv-control-height, 3rem);
+.period-picker .ts-button {
+  height: 3.25rem;
+  min-height: 3.25rem;
+  padding-inline: 1.15rem;
+  border-radius: 0.8rem;
 }
 .year-select {
   width: 7.5rem;
@@ -183,31 +191,44 @@
 }
 .status-tabs {
   display: flex;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  background: #f2f5f3;
-  border-radius: 0.7rem;
+  align-self: stretch;
+  gap: 0.2rem;
 }
 .status-tabs button {
-  min-height: 2.25rem;
-  padding: 0 0.85rem;
+  position: relative;
+  min-height: 3rem;
+  padding: 0 0.75rem;
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: 0;
   color: #63706a;
   background: transparent;
   font: inherit;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  transition: color 180ms;
+}
+.status-tabs button::after {
+  position: absolute;
+  right: 0.75rem;
+  bottom: -1rem;
+  left: 0.75rem;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: #276d54;
+  content: '';
+  opacity: 0;
+  transform: scaleX(0.5);
   transition:
-    background 180ms,
-    color 180ms,
-    box-shadow 180ms;
+    opacity 180ms,
+    transform 180ms;
 }
 .status-tabs button.active {
   color: #173d32;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(20, 49, 40, 0.1);
+}
+.status-tabs button.active::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 .list-heading,
 .period-row {
@@ -382,10 +403,10 @@
   .month-select {
     width: 100%;
   }
-  .period-picker p-button {
+  .period-picker .ts-button {
     grid-column: 1 / -1;
   }
-  :host ::ng-deep .period-picker .ts-button.p-button {
+  .period-picker .ts-button {
     width: 100%;
     justify-content: center;
   }
@@ -430,13 +451,11 @@
   .period-row {
     border-color: #2a3631;
   }
-  .list-heading,
-  .status-tabs {
+  .list-heading {
     background: #121a17;
   }
   .status-tabs button.active {
     color: #dff4eb;
-    background: #294238;
   }
   .period-row:hover {
     background: #1d2a24;

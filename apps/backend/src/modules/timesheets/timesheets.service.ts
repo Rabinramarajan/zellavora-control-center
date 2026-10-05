@@ -2,6 +2,7 @@ import { Prisma, TimesheetStatus, TimesheetEntryStatus } from '@prisma/client';
 import { TxClient } from '../../infrastructure/prisma';
 import { logger } from '../../infrastructure/logger';
 import { AppError } from '../../middleware/error';
+import { AuditService } from '../../infrastructure/audit';
 import { NotificationService } from '../notification/notification.service';
 import {
   TimesheetsRepository,
@@ -25,8 +26,10 @@ import {
   EntryValues,
   TimesheetViewer,
 } from './timesheets.rules';
+import { parseTimesheetImport } from './timesheets.import';
 import {
   BulkUpsertEntriesDTO,
+  ImportTimesheetDTO,
   ListTimesheetsQueryDTO,
   RejectTimesheetDTO,
   SummaryQueryDTO,
@@ -266,8 +269,61 @@ export class TimesheetsService {
   ): Promise<TimesheetWithEntries> {
     const sheet = await this.getById(timesheetId, organizationId);
     assertEntriesEditable(sheet, actorUserId);
+    return this.applyEntries(sheet, dto.entries, organizationId, actorUserId);
+  }
 
-    for (const item of dto.entries) {
+  /**
+   * Replace the matching days with the rows of an exported CSV or JSON file.
+   * The whole file is validated before anything is written and every row
+   * lands in one transaction, so a bad file never leaves a half-imported sheet.
+   */
+  async importEntries(
+    timesheetId: string,
+    dto: ImportTimesheetDTO,
+    organizationId: string,
+    actorUserId: string
+  ): Promise<{ timesheet: TimesheetWithEntries; importedCount: number }> {
+    const sheet = await this.getById(timesheetId, organizationId);
+    assertEntriesEditable(sheet, actorUserId);
+
+    const { entries, errors } = parseTimesheetImport(dto.format, dto.content, sheet.period);
+    if (errors.length) {
+      throw new AppError('The import file has errors', 422, 'INVALID_TIMESHEET_IMPORT', {
+        errors,
+      });
+    }
+
+    const timesheet = await this.applyEntries(sheet, entries, organizationId, actorUserId);
+    await AuditService.log({
+      action: 'timesheet.imported',
+      resource: 'timesheet',
+      resourceId: timesheetId,
+      organizationId,
+      actorId: actorUserId,
+      metadata: {
+        period: sheet.period,
+        format: dto.format,
+        filename: dto.filename ?? null,
+        importedCount: entries.length,
+        totalHours: Number(timesheet.totalHours),
+      },
+    });
+    return { timesheet, importedCount: entries.length };
+  }
+
+  /**
+   * Shared write path for bulk edits and imports: one transaction, one
+   * recalculated total. Callers have already checked the sheet is editable.
+   */
+  private async applyEntries(
+    sheet: TimesheetWithEntries,
+    entries: BulkUpsertEntriesDTO['entries'],
+    organizationId: string,
+    actorUserId: string
+  ): Promise<TimesheetWithEntries> {
+    const timesheetId = sheet.id;
+    const seen = new Set<string>();
+    for (const item of entries) {
       if (!isDateInPeriod(sheet.period, item.date)) {
         throw new AppError(
           `Date ${item.date} is outside period ${sheet.period}`,
@@ -275,12 +331,16 @@ export class TimesheetsService {
           'DATE_OUTSIDE_PERIOD'
         );
       }
+      if (seen.has(item.date)) {
+        throw new AppError(`Date ${item.date} appears more than once`, 400, 'DUPLICATE_ENTRY_DATE');
+      }
+      seen.add(item.date);
     }
 
     const existingByDate = new Map(sheet.entries.map((e) => [dateKey(e.entryDate), e]));
 
     return this.repo.runInTransaction(async (tx) => {
-      for (const { date, ...patch } of dto.entries) {
+      for (const { date, ...patch } of entries) {
         const current = existingByDate.get(date);
         const values = normalizeEntry(
           {

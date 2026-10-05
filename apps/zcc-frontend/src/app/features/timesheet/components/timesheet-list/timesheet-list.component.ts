@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectControl, SelectControlOption } from '@zellavoras/ui';
 import { ToastModule } from 'primeng/toast';
@@ -27,7 +26,7 @@ const STATUS_BADGES: Record<TimesheetStatus, string> = {
 @Component({
   selector: 'app-timesheet-list',
   standalone: true,
-  imports: [ButtonModule, InputTextModule, SelectControl, ToastModule],
+  imports: [InputTextModule, SelectControl, ToastModule],
   templateUrl: './timesheet-list.component.html',
   styleUrl: './timesheet-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -2,12 +2,16 @@
   display: block;
 }
 
-:host ::ng-deep .ts-button.p-button {
+:host .ts-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 2.7rem;
   padding: 0.65rem 0.95rem;
   gap: 0.48rem;
   border: 1px solid transparent;
   border-radius: 0.68rem;
+  font-family: inherit;
   font-size: 0.79rem;
   font-weight: 680;
   letter-spacing: -0.01em;
@@ -20,56 +24,77 @@
     box-shadow 180ms ease;
 }
 
-:host ::ng-deep .ts-button-primary.p-button {
+:host .ts-button-primary {
   color: #fff;
   background: #1d5946;
   border-color: #1d5946;
   box-shadow: 0 5px 14px rgba(29, 89, 70, 0.18);
 }
 
-:host ::ng-deep .ts-button-primary.p-button:hover:not(:disabled) {
+:host .ts-button-primary:hover:not(:disabled) {
   background: #154937;
   border-color: #154937;
   box-shadow: 0 7px 18px rgba(29, 89, 70, 0.24);
 }
 
-:host ::ng-deep .ts-button-secondary.p-button {
+:host .ts-button-secondary {
   color: #365c4f;
   background: #fff;
   border-color: #cfd9d4;
   box-shadow: 0 2px 5px rgba(25, 47, 38, 0.05);
 }
 
-:host ::ng-deep .ts-button-secondary.p-button:hover:not(:disabled) {
+:host .ts-button-secondary:hover:not(:disabled) {
   color: #1d5946;
   background: #f0f6f3;
   border-color: #9eb9ad;
 }
 
-:host ::ng-deep .ts-button-quiet.p-button {
+:host .ts-button-quiet {
   color: #596760;
   background: transparent;
   border-color: transparent;
 }
 
-:host ::ng-deep .ts-button-quiet.p-button:hover:not(:disabled) {
+:host .ts-button-quiet:hover:not(:disabled) {
   color: #243d34;
   background: #edf2ef;
 }
 
-:host ::ng-deep .ts-button.p-button:focus-visible {
+:host .ts-button:focus-visible {
   outline: 3px solid rgba(38, 126, 95, 0.28);
   outline-offset: 2px;
 }
 
-:host ::ng-deep .ts-button.p-button:disabled {
+:host .ts-button:disabled {
   opacity: 0.46;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-:host ::ng-deep .ts-button .p-button-icon {
+:host .ts-button i {
   font-size: 0.73rem;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-close-button {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.6rem;
+  color: #69766f;
+  background: transparent;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-close-button:hover {
+  color: #233c33;
+  background: #edf2ef;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-close-button:focus-visible {
+  outline: 3px solid rgba(38, 126, 95, 0.28);
+  outline-offset: 1px;
 }
 .timesheet-detail {
   min-height: 100%;
@@ -333,6 +358,98 @@ app-timesheet-summary-card {
   font-size: 0.7rem;
   font-weight: 500;
 }
+.import-dialog {
+  display: grid;
+  gap: 1rem;
+}
+.import-intro {
+  margin: 0;
+  color: #66736d;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.import-dropzone {
+  display: grid;
+  place-items: center;
+  min-height: 9rem;
+  padding: 1.25rem;
+  border: 1px dashed #aabbb3;
+  border-radius: 0.85rem;
+  color: #315d4e;
+  background: #f7faf8;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+.import-dropzone:hover {
+  border-color: #39765f;
+  background: #f0f6f3;
+}
+.import-dropzone:focus-within {
+  outline: 3px solid rgba(38, 126, 95, 0.24);
+  outline-offset: 2px;
+}
+.import-dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.import-dropzone i {
+  margin-bottom: 0.55rem;
+  font-size: 1.35rem;
+}
+.import-dropzone strong {
+  font-size: 0.9rem;
+}
+.import-dropzone span {
+  margin-top: 0.25rem;
+  color: #718079;
+  font-size: 0.73rem;
+}
+.import-dropzone-busy {
+  cursor: wait;
+}
+.import-result {
+  padding: 0.85rem 1rem;
+  border: 1px solid;
+  border-radius: 0.75rem;
+  font-size: 0.79rem;
+}
+.import-result-error {
+  color: #8c373b;
+  border-color: #efc8c9;
+  background: #fff4f4;
+}
+.import-result-error ul {
+  max-height: 9rem;
+  margin: 0.55rem 0 0;
+  padding-left: 1.2rem;
+  overflow: auto;
+}
+.import-result-ready {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #245f4c;
+  border-color: #bcd9cd;
+  background: #eff8f4;
+}
+.import-result-ready i {
+  font-size: 1.2rem;
+}
+.import-result-ready div {
+  display: flex;
+  flex-direction: column;
+}
+.import-result-ready span {
+  margin-top: 0.15rem;
+  color: #5f746b;
+  font-size: 0.72rem;
+}
 @media (max-width: 860px) {
   .detail-heading {
     align-items: stretch;
@@ -354,7 +471,7 @@ app-timesheet-summary-card {
   .timesheet-detail {
     padding: 1rem;
   }
-  .detail-actions p-button {
+  .detail-actions .ts-button {
     flex: 1 1 auto;
   }
   .title-line {
@@ -408,21 +525,45 @@ app-timesheet-summary-card {
   .back-link:hover {
     background: #1d2c26;
   }
-  :host ::ng-deep .ts-button-secondary.p-button {
+  .ts-button-secondary {
     color: #c7d9d1;
     background: #18241f;
     border-color: #3b4c45;
   }
-  :host ::ng-deep .ts-button-secondary.p-button:hover:not(:disabled) {
+  .ts-button-secondary:hover:not(:disabled) {
     color: #e8f5ef;
     background: #22342c;
     border-color: #587368;
   }
-  :host ::ng-deep .ts-button-quiet.p-button {
+  .ts-button-quiet {
     color: #a9b8b1;
   }
-  :host ::ng-deep .ts-button-quiet.p-button:hover:not(:disabled) {
+  .ts-button-quiet:hover:not(:disabled) {
     color: #eef6f2;
     background: #22302a;
+  }
+  .import-intro,
+  .import-dropzone span,
+  .import-result-ready span {
+    color: #9ba8a1;
+  }
+  .import-dropzone {
+    color: #c7e2d8;
+    border-color: #466057;
+    background: #141e1a;
+  }
+  .import-dropzone:hover {
+    border-color: #628477;
+    background: #1b2923;
+  }
+  .import-result-ready {
+    color: #bce5d5;
+    border-color: #365d4e;
+    background: #172b23;
+  }
+  .import-result-error {
+    color: #f2b7ba;
+    border-color: #6e393c;
+    background: #2b191b;
   }
 }
