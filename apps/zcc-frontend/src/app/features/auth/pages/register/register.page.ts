@@ -29,6 +29,7 @@ import type {
 } from '../../../../shared/models/auth.model';
 import { AuthAlertComponent } from '../../ui/auth-alert.component';
 import { PasswordRequirementsComponent } from '../../ui/password-requirements.component';
+import { PasswordRevealComponent } from '../../ui/password-reveal.component';
 import { RegistrationTypeCardsComponent } from '../../ui/registration-type-cards.component';
 import {
   confirmPasswordRules,
@@ -72,6 +73,7 @@ interface Highlight {
     FormInputControl,
     AuthAlertComponent,
     PasswordRequirementsComponent,
+    PasswordRevealComponent,
     RegistrationTypeCardsComponent,
   ],
   templateUrl: './register.page.html',

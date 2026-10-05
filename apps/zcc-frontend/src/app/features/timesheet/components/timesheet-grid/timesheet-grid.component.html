@@ -27,15 +27,45 @@
       </div>
 
       <div class="detail-actions">
+        @if (service.canEdit()) {
+          <label class="autosave-switch">
+            <input
+              type="checkbox"
+              role="switch"
+              [checked]="service.autoSave()"
+              [attr.aria-checked]="service.autoSave()"
+              (change)="service.setAutoSave($any($event.target).checked)"
+            />
+            <span class="autosave-switch__track" aria-hidden="true"
+              ><span class="autosave-switch__thumb"></span
+            ></span>
+            <span class="autosave-switch__label">Auto-save</span>
+          </label>
+        }
         @if (service.isSaving()) {
-          <span class="save-state"><i class="pi pi-spin pi-spinner"></i> Saving</span>
+          <span class="save-state" role="status"
+            ><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Saving</span
+          >
+        } @else if (service.hasUnsavedChanges()) {
+          <span class="save-state unsaved" role="status"
+            ><i class="pi pi-circle-fill" aria-hidden="true"></i> Unsaved changes</span
+          >
+          <button type="button" class="ts-button ts-button-secondary" (click)="discard()">
+            <span>Discard</span>
+          </button>
+          <button type="button" class="ts-button ts-button-primary" (click)="service.saveChanges()">
+            <i class="pi pi-save" aria-hidden="true"></i><span>Save</span>
+          </button>
         } @else if (service.canEdit()) {
-          <span class="save-state saved"><i class="pi pi-check-circle"></i> Changes saved</span>
+          <span class="save-state saved" role="status"
+            ><i class="pi pi-check-circle" aria-hidden="true"></i> Changes saved</span
+          >
         }
         <button
           type="button"
           class="ts-button ts-button-secondary"
-          [disabled]="!service.canEdit() || service.isLoading()"
+          [disabled]="!service.canEdit() || service.isLoading() || service.hasUnsavedChanges()"
+          [attr.title]="service.hasUnsavedChanges() ? 'Save or discard your changes first' : null"
           (click)="autoFillOpen.set(true)"
         >
           <i class="pi pi-bolt" aria-hidden="true"></i><span>Auto-fill</span>
@@ -43,7 +73,13 @@
         <button
           type="button"
           class="ts-button ts-button-secondary"
-          [disabled]="!service.canEdit() || service.isLoading() || service.isSaving()"
+          [disabled]="
+            !service.canEdit() ||
+            service.isLoading() ||
+            service.isSaving() ||
+            service.hasUnsavedChanges()
+          "
+          [attr.title]="service.hasUnsavedChanges() ? 'Save or discard your changes first' : null"
           (click)="openImport()"
         >
           <i class="pi pi-upload" aria-hidden="true"></i><span>Import</span>
@@ -51,7 +87,13 @@
         <button
           type="button"
           class="ts-button ts-button-secondary"
-          [disabled]="!service.timesheet() || service.isSaving() || isExporting()"
+          [disabled]="
+            !service.timesheet() ||
+            service.isSaving() ||
+            service.hasUnsavedChanges() ||
+            isExporting()
+          "
+          [attr.title]="service.hasUnsavedChanges() ? 'Save or discard your changes first' : null"
           (click)="previewOpen.set(true)"
         >
           <i

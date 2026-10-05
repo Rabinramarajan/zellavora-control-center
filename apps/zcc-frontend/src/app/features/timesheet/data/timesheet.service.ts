@@ -20,6 +20,17 @@ import { TimesheetImportFormat, TimesheetSourceFormat } from './timesheet-import
 
 const AUTOSAVE_DEBOUNCE_MS = 400;
 
+/** Where the auto-save preference is remembered, per browser. */
+const AUTOSAVE_STORAGE_KEY = 'zcc.timesheet.autosave';
+
+const readAutoSavePreference = (): boolean => {
+  try {
+    return localStorage.getItem(AUTOSAVE_STORAGE_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+};
+
 export interface TimesheetExport {
   blob: Blob;
   filename: string;
@@ -142,6 +153,17 @@ export class TimesheetService {
   readonly isSaving = computed(() => this.pendingSaves() > 0);
   private readonly pendingSaves = signal(0);
 
+  /**
+   * On: edits are saved a moment after typing stops. Off: they stay local
+   * until `saveChanges()` (or are dropped by `discardChanges()`).
+   */
+  readonly autoSave = signal(readAutoSavePreference());
+
+  /** Rows edited while auto-save was off, waiting for an explicit save. */
+  private readonly dirtyEntries = signal<ReadonlySet<string>>(new Set());
+  private readonly detailsDirty = signal(false);
+  readonly hasUnsavedChanges = computed(() => this.dirtyEntries().size > 0 || this.detailsDirty());
+
   /** Per-entry debounce timers, and the row to restore if a save fails. */
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly rollbacks = new Map<string, TimesheetEntry>();
@@ -170,6 +192,11 @@ export class TimesheetService {
 
     if (!this.rollbacks.has(entryId)) this.rollbacks.set(entryId, current);
     this.writeEntry(applyPatch(current, patch));
+
+    if (!this.autoSave()) {
+      this.dirtyEntries.update((ids) => new Set(ids).add(entryId));
+      return;
+    }
 
     const existingTimer = this.timers.get(entryId);
     if (existingTimer) clearTimeout(existingTimer);
@@ -226,6 +253,11 @@ export class TimesheetService {
     this.pendingDetails = { ...this.pendingDetails, ...patch };
     this.timesheetResource.set({ ...sheet, ...patch });
 
+    if (!this.autoSave()) {
+      this.detailsDirty.set(true);
+      return;
+    }
+
     if (this.detailsTimer) clearTimeout(this.detailsTimer);
     this.detailsTimer = setTimeout(() => {
       this.detailsTimer = null;
@@ -263,6 +295,50 @@ export class TimesheetService {
     } finally {
       this.pendingSaves.update((count) => count - 1);
     }
+  }
+
+  /** Turning auto-save back on saves whatever was waiting. */
+  setAutoSave(enabled: boolean): void {
+    this.autoSave.set(enabled);
+    try {
+      localStorage.setItem(AUTOSAVE_STORAGE_KEY, enabled ? 'on' : 'off');
+    } catch {
+      // The preference simply won't outlive this page.
+    }
+    if (enabled) void this.saveChanges();
+  }
+
+  /** Persist every edit made while auto-save was off. */
+  async saveChanges(): Promise<void> {
+    const sheet = this.timesheetResource.value();
+    if (!sheet || !this.hasUnsavedChanges()) return;
+
+    const entryIds = [...this.dirtyEntries()];
+    const details = this.detailsDirty();
+    this.dirtyEntries.set(new Set());
+    this.detailsDirty.set(false);
+
+    await Promise.all([
+      ...entryIds.map((entryId) => this.flushEntry(sheet.id, entryId)),
+      ...(details ? [this.flushDetails(sheet.id)] : []),
+    ]);
+  }
+
+  /** Throw away local edits and put the rows back as they were last saved. */
+  discardChanges(): void {
+    for (const entryId of this.dirtyEntries()) {
+      const snapshot = this.rollbacks.get(entryId);
+      if (snapshot) this.writeEntry(snapshot);
+      this.rollbacks.delete(entryId);
+    }
+    if (this.detailsDirty() && this.detailsRollback) {
+      const rollback = this.detailsRollback;
+      this.timesheetResource.update((sheet) => (sheet ? { ...sheet, ...rollback } : sheet));
+    }
+    this.pendingDetails = {};
+    this.detailsRollback = null;
+    this.dirtyEntries.set(new Set());
+    this.detailsDirty.set(false);
   }
 
   /**
@@ -346,7 +422,10 @@ export class TimesheetService {
   }
 
   /** Finalizes in one step when the owner's approval mode is NONE. */
-  submitForApproval(): Promise<void> {
+  async submitForApproval(): Promise<void> {
+    // Never submit a sheet that differs from what is on screen.
+    await this.saveChanges();
+    if (this.hasUnsavedChanges()) return;
     return this.transition('submit', {}, (sheet) =>
       sheet.status === 'APPROVED' ? 'Timesheet finalized' : 'Timesheet submitted for approval'
     );

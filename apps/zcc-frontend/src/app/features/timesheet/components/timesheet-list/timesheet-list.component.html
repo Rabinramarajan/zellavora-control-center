@@ -28,27 +28,26 @@
     </div>
   </header>
 
-  <section class="year-strip" aria-label="{{ year() }} summary">
-    <div class="year-title">
-      <span>{{ year() }}</span>
-      <small>Year overview</small>
-    </div>
-    <div class="year-stat">
-      <strong>{{ yearTotals().hours.toFixed(1) }}</strong>
-      <span>hours logged</span>
-    </div>
-    <div class="year-stat">
-      <strong>{{ rows().length }}</strong>
-      <span>active periods</span>
-    </div>
-    <div class="year-stat attention">
-      <strong>{{ yearTotals().submitted }}</strong>
-      <span>awaiting review</span>
-    </div>
-    <div class="year-stat approved">
-      <strong>{{ yearTotals().approved }}</strong>
-      <span>approved</span>
-    </div>
+  <section class="year-strip" aria-labelledby="year-overview-title">
+    <h2 id="year-overview-title" class="section-label">{{ year() }} overview</h2>
+    <dl class="stat-grid">
+      <div class="stat-card">
+        <dt><i class="pi pi-clock" aria-hidden="true"></i>Hours logged</dt>
+        <dd>{{ yearTotals().hours.toFixed(1) }}<small>h</small></dd>
+      </div>
+      <div class="stat-card">
+        <dt><i class="pi pi-calendar" aria-hidden="true"></i>Active periods</dt>
+        <dd>{{ rows().length }}</dd>
+      </div>
+      <div class="stat-card attention">
+        <dt><i class="pi pi-hourglass" aria-hidden="true"></i>Awaiting review</dt>
+        <dd>{{ yearTotals().submitted }}</dd>
+      </div>
+      <div class="stat-card approved">
+        <dt><i class="pi pi-check-circle" aria-hidden="true"></i>Approved</dt>
+        <dd>{{ yearTotals().approved }}</dd>
+      </div>
+    </dl>
   </section>
 
   <section class="browser-panel">
@@ -70,11 +69,12 @@
           </button>
         }
       </div>
-      <div class="status-tabs" aria-label="Filter by status">
+      <div class="status-tabs" role="group" aria-label="Filter by status">
         @for (option of statusOptions; track option.value) {
           <button
             type="button"
             [class.active]="statusFilter() === option.value"
+            [attr.aria-pressed]="statusFilter() === option.value"
             (click)="statusFilter.set(option.value)"
           >
             {{ option.label }}
@@ -105,8 +105,8 @@
     } @else {
       <div class="period-list">
         <div class="list-heading" aria-hidden="true">
-          <span>Period</span><span>Status</span><span>Working days</span><span>Leave</span
-          ><span>Hours</span><span></span>
+          <span>Period</span><span>Status</span><span class="num">Working days</span
+          ><span class="num">Leave</span><span class="num">Hours</span><span></span>
         </div>
         @for (row of filteredRows(); track row.period) {
           <button type="button" class="period-row" (click)="open(row.period)">
@@ -119,16 +119,18 @@
                 ><i class="status-dot"></i>{{ statusLabel(row.status) }}</span
               ></span
             >
-            <span class="metric"
+            <span class="metric num"
               ><strong>{{ row.workingDays }}</strong
-              ><small>days</small></span
+              ><small>{{ row.workingDays === 1 ? 'day' : 'days' }}</small></span
             >
-            <span class="metric"
+            <span class="metric num"
               ><strong>{{ row.leaveDays }}</strong
-              ><small>days</small></span
+              ><small>{{ row.leaveDays === 1 ? 'day' : 'days' }}</small></span
             >
-            <span class="hours">{{ row.totalHours.toFixed(1) }}<small>h</small></span>
-            <span class="open-icon"><i class="pi pi-arrow-right"></i></span>
+            <span class="metric hours num"
+              ><strong>{{ row.totalHours.toFixed(1) }}</strong><small>h</small></span
+            >
+            <span class="open-icon"><i class="pi pi-chevron-right" aria-hidden="true"></i></span>
           </button>
         }
       </div>

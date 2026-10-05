@@ -211,6 +211,70 @@ app-timesheet-approval-panel,
 .save-state.saved {
   color: #39705c;
 }
+.save-state.unsaved {
+  color: #b26a00;
+}
+.save-state.unsaved i {
+  font-size: 0.45rem;
+}
+
+// Auto-save switch: a real checkbox (keyboard + screen readers) drawn as a slider.
+.autosave-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+  padding: 0 0.35rem;
+  color: #55635c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+.autosave-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+.autosave-switch__track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: #c9d3ce;
+  transition: background-color 180ms ease;
+}
+.autosave-switch__thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 180ms ease;
+}
+.autosave-switch input:checked + .autosave-switch__track {
+  background: #1f7a5a;
+}
+.autosave-switch input:checked + .autosave-switch__track .autosave-switch__thumb {
+  transform: translateX(1rem);
+}
+.autosave-switch input:focus-visible + .autosave-switch__track {
+  outline: 2px solid #3fae84;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .autosave-switch__track,
+  .autosave-switch__thumb {
+    transition: none;
+  }
+}
 .sheet-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -724,6 +788,18 @@ app-time-picker.dialog-time {
   }
 }
 :host-context(.dark) {
+  .autosave-switch {
+    color: #a3b2ab;
+  }
+  .autosave-switch__track {
+    background: #33423b;
+  }
+  .autosave-switch input:checked + .autosave-switch__track {
+    background: #3fae84;
+  }
+  .save-state.unsaved {
+    color: #f3c06b;
+  }
   .timesheet-detail {
     color: #edf5f1;
     background: #101714;

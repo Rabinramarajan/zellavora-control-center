@@ -588,22 +588,26 @@
           </div>
 
           <div>
-            <app-form-input-control
-              [formField]="form.password"
-              label="Password"
-              type="password"
-              icon="lock"
-              placeholder="Create a strong password"
-            />
+            <app-password-reveal #passwordReveal label="password">
+              <app-form-input-control
+                [formField]="form.password"
+                label="Password"
+                [type]="passwordReveal.visible() ? 'text' : 'password'"
+                icon="lock"
+                placeholder="Create a strong password"
+              />
+            </app-password-reveal>
             <app-password-requirements [password]="model().password" [policy]="policy()" />
           </div>
-          <app-form-input-control
-            [formField]="form.confirmPassword"
-            label="Confirm password"
-            type="password"
-            icon="lock"
-            placeholder="Confirm your password"
-          />
+          <app-password-reveal #confirmReveal label="confirmation password">
+            <app-form-input-control
+              [formField]="form.confirmPassword"
+              label="Confirm password"
+              [type]="confirmReveal.visible() ? 'text' : 'password'"
+              icon="lock"
+              placeholder="Confirm your password"
+            />
+          </app-password-reveal>
 
           <div>
             <label class="auth-check">

@@ -10,6 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
@@ -57,6 +58,7 @@ interface GridRow {
 @Component({
   selector: 'app-timesheet-grid',
   standalone: true,
+  host: { '(window:beforeunload)': 'warnBeforeUnload($event)' },
   imports: [
     DatePipe,
     FormsModule,
@@ -366,8 +368,31 @@ export class TimesheetGridComponent {
     }
   }
 
-  protected backToList(): void {
+  protected async backToList(): Promise<void> {
+    if (this.service.hasUnsavedChanges() && !(await this.confirmDiscard())) return;
+    this.service.discardChanges();
     void this.router.navigate(['/timesheets']);
+  }
+
+  protected async discard(): Promise<void> {
+    if (await this.confirmDiscard()) this.service.discardChanges();
+  }
+
+  /** The browser's own "leave site?" prompt, only while edits are unsaved. */
+  protected warnBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.service.hasUnsavedChanges()) event.preventDefault();
+  }
+
+  private confirmDiscard(): Promise<boolean> {
+    return firstValueFrom(
+      this.dialog.confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Auto-save is off and some edits have not been saved. They will be lost.',
+        confirmText: 'Discard',
+        cancelText: 'Keep editing',
+        variant: 'warning',
+      })
+    );
   }
 
   protected applyAutoFill(): void {
