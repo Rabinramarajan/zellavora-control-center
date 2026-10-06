@@ -242,7 +242,9 @@ app.get('/info', (_req, res) => {
   });
 });
 
-// Legacy gettoken paths used by external frontends — aliases for /api/v1/auth/gettoken
+// Legacy gettoken paths used by external frontends — aliases for /api/v1/auth/gettoken.
+// Returns Latin-1 (binary) strings: the frontend uses CryptoJS Latin1.parse() to
+// reconstruct the key bytes, so the encoding must stay as Latin-1.
 app.get(
   [
     '/api/v1/admin/api/Authentication/gettoken',
@@ -250,7 +252,7 @@ app.get(
     '/api/admin/Authentication/gettoken',
   ],
   (_req, res) => {
-    res.json([crypto.randomBytes(32).toString('base64'), crypto.randomBytes(16).toString('base64')]);
+    res.json([crypto.randomBytes(32).toString('binary'), crypto.randomBytes(16).toString('binary')]);
   },
 );
 

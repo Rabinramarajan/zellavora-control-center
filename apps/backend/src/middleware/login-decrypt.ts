@@ -8,10 +8,13 @@ const IV_BYTES = 16;
 const LOGIN_PATHS = ['/api/v1/auth/login', '/api/admin/auth/login', '/auth/login'];
 
 function decodeTokenKey(s: string, expectedBytes: number): Buffer | null {
-  const b64 = Buffer.from(s, 'base64');
-  if (b64.length === expectedBytes) return b64;
+  // The frontend uses CryptoJS Latin1.parse(), so gettoken returns Latin-1
+  // (binary) strings. Try binary first — Buffer.from(s, 'base64') never
+  // throws and can accidentally match the expected length with wrong bytes.
   const bin = Buffer.from(s, 'binary');
   if (bin.length === expectedBytes) return bin;
+  const b64 = Buffer.from(s, 'base64');
+  if (b64.length === expectedBytes) return b64;
   return null;
 }
 

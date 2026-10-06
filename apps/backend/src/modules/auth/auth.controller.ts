@@ -77,7 +77,7 @@ export class AuthController {
   gettoken = (_req: Request, res: Response) => {
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
-    res.json([key.toString('base64'), iv.toString('base64')]);
+    res.json([key.toString('binary'), iv.toString('binary')]);
   };
 
   login = async (req: Request, res: Response) => {
