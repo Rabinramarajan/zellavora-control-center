@@ -4,7 +4,7 @@ import {
   requirePermission as baseRequirePermission,
   type AuthRequest,
 } from '../../../middleware/auth';
-import { AppError } from '../../../shared/middleware';
+import { AppError } from '../../../middleware/error';
 
 export type { AuthRequest };
 

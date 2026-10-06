@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
-import crypto, { createDecipheriv } from 'crypto';
-import { z } from 'zod';
+import crypto from 'crypto';
 import type { AuthRequest } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
 import { AuthService } from './auth.service';
@@ -10,7 +9,6 @@ import {
   ChangePasswordSchema,
   EmailOnlySchema,
   InvitationTokenSchema,
-  LegacyLoginSchema,
   LoginSchema,
   MfaDisableSchema,
   MfaEnrollConfirmSchema,
@@ -83,53 +81,10 @@ export class AuthController {
   };
 
   login = async (req: Request, res: Response) => {
-    const dto = this.resolveLoginDto(req.body);
-    noStore(res).json(await this.service.login(dto, meta(req)));
+    // loginDecryptMiddleware (app.ts) has already decrypted any AES-encrypted
+    // credentials before this handler runs, so body is always plain-text here.
+    noStore(res).json(await this.service.login(LoginSchema.parse(req.body), meta(req)));
   };
-
-  private resolveLoginDto(body: unknown): LoginDto {
-    if (body && typeof body === 'object' && 'tokenkeys' in body) {
-      const b = body as Record<string, unknown>;
-      const tokenkeys = b['tokenkeys'] as string[];
-      // Decode as base64 (current gettoken encoding). Fall back to binary for
-      // any in-flight tokens issued before the base64 migration.
-      const decodeKey = (s: string, expectedBytes: number): Buffer => {
-        const b64 = Buffer.from(s, 'base64');
-        return b64.length === expectedBytes ? b64 : Buffer.from(s, 'binary');
-      };
-      const key = decodeKey(tokenkeys[0], 32);
-      const iv  = decodeKey(tokenkeys[1], 16);
-
-      const decrypt = (value: string): string => {
-        const decipher = createDecipheriv('aes-256-cbc', key, iv);
-        return decipher.update(value, 'base64', 'utf8') + decipher.final('utf8');
-      };
-
-      // Legacy format: userLoginId holds the encrypted email
-      if ('userLoginId' in b) {
-        const legacy = LegacyLoginSchema.parse(body);
-        return LoginSchema.parse({
-          clientCode: legacy.clientCode || undefined,
-          email:      decrypt(legacy.userLoginId),
-          password:   decrypt(legacy.password),
-          rememberMe: false,
-        });
-      }
-
-      // Standard format with tokenkeys: email and password are AES-encrypted.
-      // Parse with email as a plain string first (ciphertext won't pass email validation),
-      // then decrypt and re-validate the full DTO.
-      const raw = LoginSchema.extend({ email: z.string().min(1) }).parse(body);
-      return LoginSchema.parse({
-        clientCode: raw.clientCode,
-        email:      decrypt(raw.email),
-        password:   decrypt(raw.password),
-        rememberMe: raw.rememberMe,
-      });
-    }
-
-    return LoginSchema.parse(body);
-  }
 
   verifyMfa = async (req: Request, res: Response) => {
     const { mfaToken, code } = MfaVerifySchema.parse(req.body);

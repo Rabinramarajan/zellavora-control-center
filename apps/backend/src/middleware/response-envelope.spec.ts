@@ -32,7 +32,11 @@ describe('responseEnvelope', () => {
     const response = await fetch(`${baseUrl}/object`);
     expect(await response.json()).toEqual({
       data: { id: 1 },
-      msg: { errorMessage: [], infoMessage: { id: 0, msg: '', msgType: 'Information' } },
+      msg: {
+        errorMessage: [],
+        hasError: false,
+        infoMessage: { msgID: 0, msgType: 0, msgDescription: '' },
+      },
     });
   });
 
