@@ -45,22 +45,24 @@ export function registerSwaggerRoutes(app: Express): void {
   // Swagger UI assets are served from CDN — swagger-ui-dist reads files from
   // disk at request time, which Vercel's build tracer never bundles.
 
-  // ── Combined (all routes) ──────────────────────────────────────────────────
-  app.get(['/swagger/swagger.json', '/swagger.json'], (_req, res) => res.json(swaggerSpec));
-  app.get(['/swagger', '/swagger/', '/swagger/index.html'], (_req, res) => {
-    res.type('html').send(swaggerHtml('Zellavora Control Center API', '/swagger/swagger.json'));
-  });
-
-  // ── Application API (/api/app) ─────────────────────────────────────────────
+  // ── Per-domain spec JSON ───────────────────────────────────────────────────
   app.get('/swagger/app.json', (_req, res) => res.json(applicationSpec));
-  app.get(['/swagger/app', '/swagger/app/'], (_req, res) => {
-    res.type('html').send(swaggerHtml('Zellavora Application API', '/swagger/app.json'));
-  });
-
-  // ── Admin API (/api/admin) ─────────────────────────────────────────────────
   app.get('/swagger/admin.json', (_req, res) => res.json(adminSpec));
-  app.get(['/swagger/admin', '/swagger/admin/'], (_req, res) => {
-    res.type('html').send(swaggerHtml('Zellavora Admin API', '/swagger/admin.json'));
+  app.get(['/swagger/swagger.json', '/swagger.json'], (_req, res) => res.json(swaggerSpec));
+
+  // ── Swagger UI — hostname-aware ────────────────────────────────────────────
+  // api.zellavora.com      → Application API spec
+  // admin-api.zellavora.com → Admin API spec
+  // anything else (local / combined)  → full spec
+  app.get(['/swagger', '/swagger/', '/swagger/index.html'], (req, res) => {
+    const host = req.hostname ?? '';
+    if (host.startsWith('admin-api.')) {
+      res.type('html').send(swaggerHtml('Zellavora Admin API', '/swagger/admin.json'));
+    } else if (host.startsWith('api.')) {
+      res.type('html').send(swaggerHtml('Zellavora Application API', '/swagger/app.json'));
+    } else {
+      res.type('html').send(swaggerHtml('Zellavora Control Center API', '/swagger/swagger.json'));
+    }
   });
 
   app.get('/', (_req, res) => res.redirect(302, '/swagger/index.html'));
