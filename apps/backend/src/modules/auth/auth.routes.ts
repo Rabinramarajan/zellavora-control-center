@@ -118,9 +118,15 @@ router.get(
  *                 required: [email, password]
  *                 properties:
  *                   clientCode: { type: string, example: ZCC }
- *                   email: { type: string, format: email, example: user@example.com }
- *                   password: { type: string, format: password, example: "P@ssw0rd!" }
+ *                   email: { type: string, format: email, example: user@example.com, description: "Plain email, or base64 AES-encrypted when tokenkeys is present" }
+ *                   password: { type: string, format: password, example: "P@ssw0rd!", description: "Plain password, or base64 AES-encrypted when tokenkeys is present" }
  *                   rememberMe: { type: boolean, default: false }
+ *                   tokenkeys:
+ *                     type: array
+ *                     description: "Optional [key, iv] binary strings from GET /api/v1/Authentication/gettoken. When present, email and password must be AES-256-CBC encrypted."
+ *                     items: { type: string }
+ *                     minItems: 2
+ *                     maxItems: 2
  *               - title: Legacy encrypted login
  *                 type: object
  *                 required: [userLoginId, password, tokenkeys]

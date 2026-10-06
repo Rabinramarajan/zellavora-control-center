@@ -38,6 +38,12 @@ export const LoginSchema = z.object({
   email,
   password: presentedPassword,
   rememberMe: z.boolean().optional().default(false),
+  /**
+   * Optional AES-256-CBC key pair from GET /api/v1/Authentication/gettoken.
+   * When present, `email` and `password` are treated as base64-encrypted values
+   * and decrypted before authentication.
+   */
+  tokenkeys: z.array(z.string()).length(2).optional(),
 });
 
 /** Legacy AES-encrypted login payload sent by external frontends. */

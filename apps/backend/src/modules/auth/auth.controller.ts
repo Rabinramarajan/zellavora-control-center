@@ -82,22 +82,37 @@ export class AuthController {
 
   private resolveLoginDto(body: unknown): LoginDto {
     if (body && typeof body === 'object' && 'tokenkeys' in body) {
-      const legacy = LegacyLoginSchema.parse(body);
-      const key = Buffer.from(legacy.tokenkeys[0], 'binary');
-      const iv  = Buffer.from(legacy.tokenkeys[1], 'binary');
+      const b = body as Record<string, unknown>;
+      const tokenkeys = b['tokenkeys'] as string[];
+      const key = Buffer.from(tokenkeys[0], 'binary');
+      const iv  = Buffer.from(tokenkeys[1], 'binary');
 
       const decrypt = (value: string): string => {
         const decipher = createDecipheriv('aes-256-cbc', key, iv);
         return decipher.update(value, 'base64', 'utf8') + decipher.final('utf8');
       };
 
-      return LoginSchema.parse({
-        clientCode: legacy.clientCode || undefined,
-        email:      decrypt(legacy.userLoginId),
-        password:   decrypt(legacy.password),
-        rememberMe: false,
-      });
+      // Legacy format: userLoginId holds the encrypted email
+      if ('userLoginId' in b) {
+        const legacy = LegacyLoginSchema.parse(body);
+        return LoginSchema.parse({
+          clientCode: legacy.clientCode || undefined,
+          email:      decrypt(legacy.userLoginId),
+          password:   decrypt(legacy.password),
+          rememberMe: false,
+        });
+      }
+
+      // Standard format with tokenkeys: email and password are AES-encrypted
+      const parsed = LoginSchema.parse(body);
+      return {
+        ...parsed,
+        email:    decrypt(parsed.email),
+        password: decrypt(parsed.password),
+        tokenkeys: undefined,
+      };
     }
+
     return LoginSchema.parse(body);
   }
 
