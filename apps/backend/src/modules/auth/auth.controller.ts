@@ -85,8 +85,8 @@ export class AuthController {
     if (body && typeof body === 'object' && 'tokenkeys' in body) {
       const b = body as Record<string, unknown>;
       const tokenkeys = b['tokenkeys'] as string[];
-      const key = Buffer.from(tokenkeys[0], 'binary');
-      const iv  = Buffer.from(tokenkeys[1], 'binary');
+      const key = Buffer.from(tokenkeys[0], 'base64');
+      const iv  = Buffer.from(tokenkeys[1], 'base64');
 
       const decrypt = (value: string): string => {
         const decipher = createDecipheriv('aes-256-cbc', key, iv);
