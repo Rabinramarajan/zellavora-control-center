@@ -51,6 +51,33 @@ router.get('/config', asyncHandler(controller.config));
 
 /**
  * @swagger
+ * /api/v1/auth/gettoken:
+ *   get:
+ *     summary: getAesToken
+ *     operationId: getAesToken
+ *     description: >
+ *       Returns a one-time [key, iv] pair (base64-encoded) for AES-256-CBC
+ *       encryption of login credentials. Pass the returned array back as
+ *       `tokenkeys` in the login request body, with `email` and `password`
+ *       encrypted using this key/iv pair.
+ *     tags: [authentication]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: "[base64Key, base64Iv] — 32-byte key and 16-byte IV"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { type: string }
+ *               minItems: 2
+ *               maxItems: 2
+ *               example: ["<base64-encoded 32-byte key>", "<base64-encoded 16-byte IV>"]
+ */
+router.get('/gettoken', tokenLimiter, asyncHandler(controller.gettoken));
+
+/**
+ * @swagger
  * /api/v1/auth/registration/organizations:
  *   get:
  *     summary: listOrganizationsOpenToRegistration

@@ -76,6 +76,12 @@ export class AuthController {
     noStore(res).json(await this.service.checkOrganizationCode(code));
   };
 
+  gettoken = (_req: Request, res: Response) => {
+    const key = crypto.randomBytes(32);
+    const iv = crypto.randomBytes(16);
+    res.json([key.toString('base64'), iv.toString('base64')]);
+  };
+
   login = async (req: Request, res: Response) => {
     const dto = this.resolveLoginDto(req.body);
     noStore(res).json(await this.service.login(dto, meta(req)));
@@ -85,8 +91,14 @@ export class AuthController {
     if (body && typeof body === 'object' && 'tokenkeys' in body) {
       const b = body as Record<string, unknown>;
       const tokenkeys = b['tokenkeys'] as string[];
-      const key = Buffer.from(tokenkeys[0], 'binary');
-      const iv  = Buffer.from(tokenkeys[1], 'binary');
+      // Decode as base64 (current gettoken encoding). Fall back to binary for
+      // any in-flight tokens issued before the base64 migration.
+      const decodeKey = (s: string, expectedBytes: number): Buffer => {
+        const b64 = Buffer.from(s, 'base64');
+        return b64.length === expectedBytes ? b64 : Buffer.from(s, 'binary');
+      };
+      const key = decodeKey(tokenkeys[0], 32);
+      const iv  = decodeKey(tokenkeys[1], 16);
 
       const decrypt = (value: string): string => {
         const decipher = createDecipheriv('aes-256-cbc', key, iv);

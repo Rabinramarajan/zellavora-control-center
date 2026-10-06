@@ -13,7 +13,6 @@ import { responseEnvelope } from './middleware/response-envelope';
 import { createRateLimiter } from './middleware/rate-limit';
 import { requestContext } from './middleware/request-context';
 import { loginDecryptMiddleware } from './middleware/login-decrypt';
-import crypto from 'crypto';
 import os from 'os';
 import { prisma } from './infrastructure/prisma';
 import { buildRbac } from './rbac';
@@ -241,27 +240,6 @@ app.get('/info', (_req, res) => {
     },
   });
 });
-
-// Compatibility route for PRIMS Member Portal token format
-app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (_req, res) => {
-  const key = crypto.randomBytes(32);
-  const iv = crypto.randomBytes(16);
-  res.json([key.toString('binary'), iv.toString('binary')]);
-});
-
-// Compatibility routes for Authentication token format (all known path variants)
-app.get(
-  [
-    '/api/v1/admin/api/Authentication/gettoken',
-    '/api/v1/Authentication/gettoken',
-    '/api/admin/Authentication/gettoken',
-  ],
-  (_req, res) => {
-    const key = crypto.randomBytes(32);
-    const iv = crypto.randomBytes(16);
-    res.json([key.toString('binary'), iv.toString('binary')]);
-  }
-);
 
 registerApiRoutes(app);
 
