@@ -13,6 +13,7 @@ import { responseEnvelope } from './middleware/response-envelope';
 import { createRateLimiter } from './middleware/rate-limit';
 import { requestContext } from './middleware/request-context';
 import { loginDecryptMiddleware } from './middleware/login-decrypt';
+import crypto from 'crypto';
 import os from 'os';
 import { prisma } from './infrastructure/prisma';
 import { buildRbac } from './rbac';
@@ -240,6 +241,18 @@ app.get('/info', (_req, res) => {
     },
   });
 });
+
+// Legacy gettoken paths used by external frontends — aliases for /api/v1/auth/gettoken
+app.get(
+  [
+    '/api/v1/admin/api/Authentication/gettoken',
+    '/api/v1/Authentication/gettoken',
+    '/api/admin/Authentication/gettoken',
+  ],
+  (_req, res) => {
+    res.json([crypto.randomBytes(32).toString('base64'), crypto.randomBytes(16).toString('base64')]);
+  },
+);
 
 registerApiRoutes(app);
 

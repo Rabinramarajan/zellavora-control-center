@@ -58,6 +58,10 @@ export function loginDecryptMiddleware(req: Request, _res: Response, next: NextF
     }
   } catch (err) {
     console.error('Login decryption failed:', err);
+    // Don't pass encrypted body to the controller — it will fail Zod email validation.
+    // Surface a clear 400 instead of a confusing 500 or validation error.
+    _res.status(400).json({ error: { message: 'Invalid credentials payload', status: 400 } });
+    return;
   }
 
   next();
