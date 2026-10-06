@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import crypto, { createDecipheriv } from 'crypto';
+import { z } from 'zod';
 import type { AuthRequest } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
 import { AuthService } from './auth.service';
@@ -103,14 +104,16 @@ export class AuthController {
         });
       }
 
-      // Standard format with tokenkeys: email and password are AES-encrypted
-      const parsed = LoginSchema.parse(body);
-      return {
-        ...parsed,
-        email:    decrypt(parsed.email),
-        password: decrypt(parsed.password),
-        tokenkeys: undefined,
-      };
+      // Standard format with tokenkeys: email and password are AES-encrypted.
+      // Parse with email as a plain string first (ciphertext won't pass email validation),
+      // then decrypt and re-validate the full DTO.
+      const raw = LoginSchema.extend({ email: z.string().min(1) }).parse(body);
+      return LoginSchema.parse({
+        clientCode: raw.clientCode,
+        email:      decrypt(raw.email),
+        password:   decrypt(raw.password),
+        rememberMe: raw.rememberMe,
+      });
     }
 
     return LoginSchema.parse(body);
