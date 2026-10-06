@@ -1,7 +1,6 @@
 import { Router, type Router as ExpressRouter } from 'express';
 
 // Application Feature Routes
-import authRoutes from '../auth/auth.routes';
 import projectRoutes from '../../routes/projects';
 import portfolioRoutes from '../../routes/portfolio';
 import galleryRoutes from '../../routes/gallery';
@@ -15,9 +14,6 @@ import monthlySheetsRoutes from '../monthly-sheets/monthly-sheets.routes';
 import timesheetsRoutes from '../timesheets/timesheets.routes';
 
 const router: ExpressRouter = Router();
-
-// Member and public authentication
-router.use('/auth', authRoutes);
 
 // Portfolio & content reader
 router.use('/projects', projectRoutes);

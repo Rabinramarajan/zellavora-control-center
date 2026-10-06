@@ -1,6 +1,9 @@
 import { Router, type Router as ExpressRouter } from 'express';
 import { adminAuthGuard } from './middleware/admin-auth';
 
+// Authentication
+import authRoutes from '../auth/auth.routes';
+
 // Operations & System Health
 import operationsHealthRoutes from '../operations/health/health.routes';
 import auditLogRoutes from '../audit/audit.routes';
@@ -39,6 +42,9 @@ import storageRoutes from '../storage/storage.routes';
 import lookupRoutes from '../ddl/ddl.routes';
 
 const router: ExpressRouter = Router();
+
+// Auth must be mounted before adminAuthGuard — you cannot require a token to obtain one
+router.use('/auth', authRoutes);
 
 // Enforce admin authentication across all admin submodules
 router.use(adminAuthGuard);

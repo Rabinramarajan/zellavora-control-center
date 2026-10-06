@@ -7,7 +7,6 @@ import { existsSync } from 'fs';
  * Mirror this list whenever application.routes.ts gains or loses a router.
  */
 const APPLICATION_MODULE_DIRS = [
-  'modules/auth',
   'modules/themes',
   'modules/blog',
   'modules/notification',
