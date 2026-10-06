@@ -25,7 +25,7 @@ import {
   UpdateAvatarSchema,
   VerifyEmailSchema,
 } from './auth.dto';
-import type { LoginDto, RegisterDto } from './auth.dto';
+import type { RegisterDto } from './auth.dto';
 
 // Routes wrap every handler in asyncHandler, which forwards rejections to the error
 // middleware, so handlers stay free of try/catch boilerplate.
