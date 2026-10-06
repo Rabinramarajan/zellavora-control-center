@@ -56,7 +56,7 @@ router.get('/config', asyncHandler(controller.config));
  *     summary: getAesToken
  *     operationId: getAesToken
  *     description: >
- *       Returns a one-time [key, iv] pair (base64-encoded) for AES-256-CBC
+ *       Returns a one-time [key, iv] pair (hex-encoded) for AES-256-CBC
  *       encryption of login credentials. Pass the returned array back as
  *       `tokenkeys` in the login request body, with `email` and `password`
  *       encrypted using this key/iv pair.
@@ -64,15 +64,15 @@ router.get('/config', asyncHandler(controller.config));
  *     security: []
  *     responses:
  *       200:
- *         description: "[base64Key, base64Iv] — 32-byte key and 16-byte IV"
+ *         description: "[hexKey, hexIv] — 32-byte key (64 hex chars) and 16-byte IV (32 hex chars)"
  *         content:
  *           application/json:
  *             schema:
  *               type: array
- *               items: { type: string }
+ *               items: { type: string, pattern: '^[0-9a-f]+$' }
  *               minItems: 2
  *               maxItems: 2
- *               example: ["<base64-encoded 32-byte key>", "<base64-encoded 16-byte IV>"]
+ *               example: ["a1b2c3...64 hex chars", "d4e5f6...32 hex chars"]
  */
 router.get('/gettoken', tokenLimiter, asyncHandler(controller.gettoken));
 

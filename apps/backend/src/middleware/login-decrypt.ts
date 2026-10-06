@@ -7,14 +7,14 @@ const IV_BYTES = 16;
 
 const LOGIN_PATHS = ['/api/v1/auth/login', '/api/admin/auth/login', '/auth/login'];
 
-type Encoding = 'binary' | 'base64';
+type Encoding = 'hex' | 'binary' | 'base64';
 
 function tryDecode(s: string, expectedBytes: number): Array<{ buf: Buffer; enc: Encoding }> {
   const results: Array<{ buf: Buffer; enc: Encoding }> = [];
-  const bin = Buffer.from(s, 'binary');
-  if (bin.length === expectedBytes) results.push({ buf: bin, enc: 'binary' });
-  const b64 = Buffer.from(s, 'base64');
-  if (b64.length === expectedBytes) results.push({ buf: b64, enc: 'base64' });
+  for (const enc of ['hex', 'binary', 'base64'] as const) {
+    const buf = Buffer.from(s, enc);
+    if (buf.length === expectedBytes) results.push({ buf, enc });
+  }
   return results;
 }
 
