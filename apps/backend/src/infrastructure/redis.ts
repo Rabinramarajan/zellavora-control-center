@@ -33,10 +33,13 @@ export function getRedis(): Redis | null {
   if (!client) {
     client = new Redis(config.redisUrl as string, {
       lazyConnect: true,
-      // Serverless: fail fast rather than retrying past the function timeout.
-      maxRetriesPerRequest: 2,
-      connectTimeout: 5000,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
       enableOfflineQueue: false,
+      retryStrategy(times) {
+        if (times > 3) return null;
+        return Math.min(times * 500, 2000);
+      },
     });
 
     // Attach before the first command so ioredis never emits an unhandled
