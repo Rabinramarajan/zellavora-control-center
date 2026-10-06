@@ -7,20 +7,42 @@ const IV_BYTES = 16;
 
 const LOGIN_PATHS = ['/api/v1/auth/login', '/api/admin/auth/login', '/auth/login'];
 
-function decodeTokenKey(s: string, expectedBytes: number): Buffer | null {
-  // The frontend uses CryptoJS Latin1.parse(), so gettoken returns Latin-1
-  // (binary) strings. Try binary first — Buffer.from(s, 'base64') never
-  // throws and can accidentally match the expected length with wrong bytes.
+type Encoding = 'binary' | 'base64';
+
+function tryDecode(s: string, expectedBytes: number): Array<{ buf: Buffer; enc: Encoding }> {
+  const results: Array<{ buf: Buffer; enc: Encoding }> = [];
   const bin = Buffer.from(s, 'binary');
-  if (bin.length === expectedBytes) return bin;
+  if (bin.length === expectedBytes) results.push({ buf: bin, enc: 'binary' });
   const b64 = Buffer.from(s, 'base64');
-  if (b64.length === expectedBytes) return b64;
-  return null;
+  if (b64.length === expectedBytes) results.push({ buf: b64, enc: 'base64' });
+  return results;
 }
 
 function decryptField(encryptedData: string, key: Buffer, iv: Buffer): string {
   const decipher = crypto.createDecipheriv(ALGO, key, iv);
   return decipher.update(encryptedData, 'base64', 'utf8') + decipher.final('utf8');
+}
+
+function tryDecrypt(
+  fields: { email: string; password: string },
+  tokenkeys: [string, string],
+): { email: string; password: string } | null {
+  const keyCandidates = tryDecode(tokenkeys[0], KEY_BYTES);
+  const ivCandidates = tryDecode(tokenkeys[1], IV_BYTES);
+
+  for (const k of keyCandidates) {
+    for (const v of ivCandidates) {
+      try {
+        return {
+          email: decryptField(fields.email, k.buf, v.buf),
+          password: decryptField(fields.password, k.buf, v.buf),
+        };
+      } catch {
+        // Try next combination
+      }
+    }
+  }
+  return null;
 }
 
 export function loginDecryptMiddleware(req: Request, _res: Response, next: NextFunction): void {
@@ -33,36 +55,36 @@ export function loginDecryptMiddleware(req: Request, _res: Response, next: NextF
     return next();
   }
 
-  const key = decodeTokenKey(body.tokenkeys[0], KEY_BYTES);
-  const iv  = decodeTokenKey(body.tokenkeys[1], IV_BYTES);
-  if (!key || !iv) return next();
+  const tokenkeys = body.tokenkeys as [string, string];
 
-  try {
-    // Legacy format: encrypted email is in userLoginId
-    if (typeof body.userLoginId === 'string' && typeof body.password === 'string') {
+  // Legacy format: encrypted email is in userLoginId
+  if (typeof body.userLoginId === 'string' && typeof body.password === 'string') {
+    const result = tryDecrypt({ email: body.userLoginId, password: body.password }, tokenkeys);
+    if (result) {
       req.body = {
         clientCode: body.clientCode,
-        email:      decryptField(body.userLoginId, key, iv),
-        password:   decryptField(body.password, key, iv),
+        email: result.email,
+        password: result.password,
         rememberMe: false,
       };
       return next();
     }
+    _res.status(400).json({ error: { message: 'Invalid credentials payload', status: 400 } });
+    return;
+  }
 
-    // Standard format: email and password are encrypted in-place
-    if (typeof body.email === 'string' && typeof body.password === 'string') {
+  // Standard format: email and password are encrypted in-place
+  if (typeof body.email === 'string' && typeof body.password === 'string') {
+    const result = tryDecrypt({ email: body.email, password: body.password }, tokenkeys);
+    if (result) {
       req.body = {
         clientCode: body.clientCode,
-        email:      decryptField(body.email, key, iv),
-        password:   decryptField(body.password, key, iv),
+        email: result.email,
+        password: result.password,
         rememberMe: body.rememberMe,
       };
       return next();
     }
-  } catch (err) {
-    console.error('Login decryption failed:', err);
-    // Don't pass encrypted body to the controller — it will fail Zod email validation.
-    // Surface a clear 400 instead of a confusing 500 or validation error.
     _res.status(400).json({ error: { message: 'Invalid credentials payload', status: 400 } });
     return;
   }
