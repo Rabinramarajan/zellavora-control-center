@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 export interface AppSettings {
   logLevel: string;
   supabaseFunctions: string;
+  applicationPath: string;
   adminPath: string;
   encrypt: boolean;
   serverDateFormat: string;
@@ -34,7 +35,8 @@ export interface AppSettings {
 const DEFAULT_SETTINGS: AppSettings = {
   logLevel: 'info',
   supabaseFunctions: 'https://api.zellavora.com/api/v1',
-  adminPath: 'https://api.zellavora.com/api/v1/admin',
+  applicationPath: 'https://api.zellavora.com/api/app',
+  adminPath: 'https://admin-api.zellavora.com/api/admin',
   encrypt: true,
   serverDateFormat: 'YYYY-MM-DD',
   serverDateTimeFormat: 'YYYY-MM-DD HH:mm:ss',

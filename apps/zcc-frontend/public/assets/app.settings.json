@@ -1,7 +1,8 @@
 {
   "logLevel": "info",
   "supabaseFunctions": "https://api.zellavora.com/api/v1",
-  "adminPath": "https://api.zellavora.com/api/v1/admin",
+  "applicationPath": "https://api.zellavora.com/api/app",
+  "adminPath": "https://admin-api.zellavora.com/api/admin",
   "encrypt": true,
   "serverDateFormat": "YYYY-MM-DD",
   "serverDateTimeFormat": "YYYY-MM-DD HH:mm:ss",

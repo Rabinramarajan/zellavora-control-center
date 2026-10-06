@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { AppSettingsService } from '../services/app-settings/app-settings.service';
 
 export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
-  // Do not intercept static asset requests or fully qualified URLs
+  // Pass through fully qualified URLs and static assets unchanged
   if (
     req.url.startsWith('http://') ||
     req.url.startsWith('https://') ||
@@ -12,85 +12,27 @@ export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  const { supabaseFunctions, adminPath } = inject(AppSettingsService).environment;
-  const supabaseFunctionsUrl = supabaseFunctions.replace(/\/+$/, '');
-  const adminApiUrl = adminPath.replace(/\/+$/, '');
+  const { applicationPath, adminPath, supabaseFunctions } =
+    inject(AppSettingsService).environment;
 
-  let rewrittenUrl = req.url;
+  const appBase = applicationPath.replace(/\/+$/, '');
+  const adminBase = adminPath.replace(/\/+$/, '');
+  const legacyBase = supabaseFunctions.replace(/\/+$/, '');
 
-  const isAdminRequest =
-    rewrittenUrl.startsWith('/api/v1/admin') ||
-    rewrittenUrl.startsWith('/api/user') ||
-    rewrittenUrl.startsWith('/api/role') ||
-    rewrittenUrl.startsWith('/api/resource') ||
-    rewrittenUrl.startsWith('/api/Branch') ||
-    rewrittenUrl.startsWith('/api/MAsterConfig') ||
-    rewrittenUrl.startsWith('/api/auditlog') ||
-    rewrittenUrl.startsWith('/api/config') ||
-    rewrittenUrl.startsWith('/api/group') ||
-    rewrittenUrl.startsWith('/user') ||
-    rewrittenUrl.startsWith('/role') ||
-    rewrittenUrl.startsWith('/resource') ||
-    rewrittenUrl.startsWith('/Branch') ||
-    rewrittenUrl.startsWith('/MAsterConfig') ||
-    rewrittenUrl.startsWith('/auditlog') ||
-    rewrittenUrl.startsWith('/config') ||
-    rewrittenUrl.startsWith('/group');
+  let url = req.url;
 
-  if (isAdminRequest) {
-    let normalizedPath: string;
-    if (rewrittenUrl.startsWith('/api/v1/admin')) {
-      normalizedPath = rewrittenUrl.slice('/api/v1/admin'.length);
-    } else {
-      const legacyPath = rewrittenUrl.startsWith('/api') ? rewrittenUrl : '/api' + rewrittenUrl;
-      normalizedPath = legacyPath.replace(/^\/api/, '');
-    }
-    rewrittenUrl = `${adminApiUrl}${normalizedPath}`;
-  } else if (rewrittenUrl.startsWith('/api/v1')) {
-    const rest = rewrittenUrl.slice('/api/v1'.length); // e.g. "/auth/login", "/projects/123/gallery"
-
-    // Perform routing mapping to individual Edge Functions
-    if (rest.startsWith('/auth')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else if (rest.startsWith('/projects') && rest.includes('/gallery')) {
-      // Map /projects/:projectId/gallery/:imageId -> /gallery/projects/:projectId/:imageId
-      const parts = rest.split('/'); // ["", "projects", "projectId", "gallery", "imageId" (optional)]
-      const projectId = parts[2];
-      const imageId = parts[4] ? `/${parts[4]}` : '';
-      rewrittenUrl = `${supabaseFunctionsUrl}/gallery/projects/${projectId}${imageId}`;
-    } else if (rest.startsWith('/projects') && rest.includes('/technologies')) {
-      // Map /projects/:projectId/technologies/:techId -> /technologies/projects/:projectId/:techId
-      const parts = rest.split('/'); // ["", "projects", "projectId", "technologies", "techId" (optional)]
-      const projectId = parts[2];
-      const techId = parts[4] ? `/${parts[4]}` : '';
-      rewrittenUrl = `${supabaseFunctionsUrl}/technologies/projects/${projectId}${techId}`;
-    } else if (rest.startsWith('/projects')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else if (rest.startsWith('/technologies')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else if (rest.startsWith('/portfolio')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else if (rest.startsWith('/rbac')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else if (rest.startsWith('/menus')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else if (rest.startsWith('/permissions')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else if (rest.startsWith('/organizations') && rest.includes('/license')) {
-      // Map /organizations/:orgId/license/... -> /licensing/:orgId/license/...
-      const restLicensing = rest.replace('/organizations', '');
-      rewrittenUrl = `${supabaseFunctionsUrl}/licensing${restLicensing}`;
-    } else if (rest.startsWith('/licensing')) {
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    } else {
-      // Fallback catch-all
-      rewrittenUrl = `${supabaseFunctionsUrl}${rest}`;
-    }
+  if (url.startsWith('/api/app/') || url === '/api/app') {
+    // New canonical application path: /api/app/* → applicationPath/*
+    url = appBase + url.slice('/api/app'.length);
+  } else if (url.startsWith('/api/admin/') || url === '/api/admin') {
+    // New canonical admin path: /api/admin/* → adminPath/*
+    url = adminBase + url.slice('/api/admin'.length);
+  } else if (url.startsWith('/api/v1')) {
+    // Legacy path — forward to application base for backward compatibility
+    url = legacyBase + url.slice('/api/v1'.length);
   } else {
-    rewrittenUrl = `${supabaseFunctionsUrl}${rewrittenUrl}`;
+    url = legacyBase + url;
   }
 
-  req = req.clone({ url: rewrittenUrl });
-
-  return next(req);
+  return next(req.clone({ url }));
 };
