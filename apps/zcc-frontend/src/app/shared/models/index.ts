@@ -353,7 +353,6 @@ export type WrappedResponse<T> = T & {
 
 export * from './theme-builder.model';
 export * from './notification.model';
-export * from './system-health.model';
 export * from './cms-builder.model';
 export * from './iam.model';
 export * from './auth.model';
