@@ -2,14 +2,49 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import { existsSync } from 'fs';
 
-function resolveModuleRoot(): string | null {
+/**
+ * Sub-modules mounted by admin.routes.ts.
+ * Mirror this list whenever admin.routes.ts gains or loses a router.
+ */
+const ADMIN_MODULE_DIRS = [
+  'modules/operations',
+  'modules/audit',
+  'modules/dashboard',
+  'modules/analytics',
+  'modules/resources',
+  'modules/roles',
+  'modules/menu-access',
+  'modules/groups',
+  'modules/users',
+  'modules/user-requests',
+  'modules/permission',
+  'modules/departments',
+  'modules/teams',
+  'modules/sessions',
+  'modules/security-policy',
+  'modules/configuration',
+  'modules/communications',
+  'modules/invitation',
+  'modules/organization',
+  'modules/branch',
+  'modules/settings',
+  'modules/email-settings',
+  'modules/registration-settings',
+  'modules/approval-mode',
+  'modules/invoices',
+  'modules/cms',
+  'modules/storage',
+  'modules/ddl',
+];
+
+function resolveSrcRoot(): string | null {
   const here = __dirname;
   const candidates = [
-    path.resolve(here, '..', 'modules', 'admin'),
-    path.resolve(process.cwd(), 'src', 'modules', 'admin'),
-    path.resolve(process.cwd(), 'dist', 'src', 'modules', 'admin'),
+    path.resolve(here, '..'),
+    path.resolve(process.cwd(), 'src'),
+    path.resolve(process.cwd(), 'dist', 'src'),
   ];
-  return candidates.find((c) => existsSync(c)) ?? null;
+  return candidates.find((c) => existsSync(path.join(c, 'app.ts')) || existsSync(path.join(c, 'app.js'))) ?? null;
 }
 
 const definition: swaggerJsdoc.Options['definition'] = {
@@ -50,14 +85,16 @@ Access is enforced by the \`adminAuthGuard\` middleware.
 };
 
 function buildAdminSpec(): object {
-  const root = resolveModuleRoot();
-  if (!root) {
-    console.warn('[swagger/admin] Admin module root not found; serving base definition only');
+  const srcRoot = resolveSrcRoot();
+  if (!srcRoot) {
+    console.warn('[swagger/admin] Source root not found; serving base definition only');
     return definition as object;
   }
 
-  const dir = root.replace(/\\/g, '/');
-  const apis = [`${dir}/**/*.ts`, `${dir}/**/*.js`];
+  const apis = ADMIN_MODULE_DIRS.flatMap((rel) => {
+    const dir = path.join(srcRoot, rel).replace(/\\/g, '/');
+    return [`${dir}/**/*.ts`, `${dir}/**/*.js`];
+  });
 
   try {
     const spec = swaggerJsdoc({ definition, apis }) as { paths?: Record<string, unknown> };

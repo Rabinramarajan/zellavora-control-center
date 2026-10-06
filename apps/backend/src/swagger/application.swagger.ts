@@ -2,18 +2,29 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import { existsSync } from 'fs';
 
-function resolveModuleRoot(): string | null {
+/**
+ * Sub-modules mounted by application.routes.ts.
+ * Mirror this list whenever application.routes.ts gains or loses a router.
+ */
+const APPLICATION_MODULE_DIRS = [
+  'modules/auth',
+  'modules/themes',
+  'modules/blog',
+  'modules/notification',
+  'modules/daily-sheets',
+  'modules/monthly-sheets',
+  'modules/timesheets',
+  'routes', // projects, portfolio, gallery, technologies, settings legacy route files
+];
+
+function resolveSrcRoot(): string | null {
   const here = __dirname;
   const candidates = [
-    // dev (tsx): __dirname = src/swagger → src/modules/application
-    path.resolve(here, '..', 'modules', 'application'),
-    // compiled (tsc): __dirname = dist/src/swagger → dist/src/modules/application
-    path.resolve(here, '..', 'modules', 'application'),
-    // Vercel bundle: cwd/src/modules/application
-    path.resolve(process.cwd(), 'src', 'modules', 'application'),
-    path.resolve(process.cwd(), 'dist', 'src', 'modules', 'application'),
+    path.resolve(here, '..'),                               // dev: src/swagger → src
+    path.resolve(process.cwd(), 'src'),                     // Vercel bundle
+    path.resolve(process.cwd(), 'dist', 'src'),
   ];
-  return candidates.find((c) => existsSync(c)) ?? null;
+  return candidates.find((c) => existsSync(path.join(c, 'app.ts')) || existsSync(path.join(c, 'app.js'))) ?? null;
 }
 
 const definition: swaggerJsdoc.Options['definition'] = {
@@ -52,14 +63,16 @@ Pass a Bearer JWT obtained via \`POST /api/app/auth/login\`:
 };
 
 function buildApplicationSpec(): object {
-  const root = resolveModuleRoot();
-  if (!root) {
-    console.warn('[swagger/app] Application module root not found; serving base definition only');
+  const srcRoot = resolveSrcRoot();
+  if (!srcRoot) {
+    console.warn('[swagger/app] Source root not found; serving base definition only');
     return definition as object;
   }
 
-  const dir = root.replace(/\\/g, '/');
-  const apis = [`${dir}/**/*.ts`, `${dir}/**/*.js`];
+  const apis = APPLICATION_MODULE_DIRS.flatMap((rel) => {
+    const dir = path.join(srcRoot, rel).replace(/\\/g, '/');
+    return [`${dir}/**/*.ts`, `${dir}/**/*.js`];
+  });
 
   try {
     const spec = swaggerJsdoc({ definition, apis }) as { paths?: Record<string, unknown> };
