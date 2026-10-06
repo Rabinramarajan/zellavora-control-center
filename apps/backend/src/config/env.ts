@@ -140,7 +140,10 @@ export const config = {
   // ============================================================================
   apiUrl: process.env.VITE_API_URL || 'http://localhost:3000/api/v1',
   apiVersion: process.env.API_VERSION || 'v1',
-  corsOrigins: (process.env.VITE_CORS_ORIGINS || 'http://localhost:4200').split(','),
+  corsOrigins: (
+    process.env.VITE_CORS_ORIGINS ||
+    'http://localhost:2000,http://localhost:4200,http://localhost:3000'
+  ).split(',').map((o) => o.trim()),
 
   // ============================================================================
   // Logging
