@@ -51,6 +51,10 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         url: 'https://api.zellavora.com',
         description: 'Production server',
       },
+      {
+        url: 'https://admin-api.zellavora.com',
+        description: 'Production Admin API server',
+      },
     ],
     tags: [
       {

@@ -42,8 +42,15 @@ import cmsRoutes from '../modules/cms/cms.routes';
 
 import operationsHealthRoutes from '../modules/operations/health/health.routes';
 
+import adminRoutes from '../modules/admin/admin.routes';
+import appRoutes from '../modules/application/application.routes';
+
 /** Register canonical API namespaces first, retaining historical paths as compatibility aliases. */
 export function registerApiRoutes(app: Express): void {
+  // Dedicated Module Route Groups
+  app.use('/api/app', appRoutes);
+  app.use('/api/admin', adminRoutes);
+
   // Core routes
   app.use('/api/v1/auth', authRoutes);
 
@@ -102,3 +109,4 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/approval-mode', approvalModeRoutes);
   app.use('/api/v1/invoices', invoicesRoutes);
 }
+

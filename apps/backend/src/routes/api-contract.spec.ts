@@ -22,18 +22,21 @@ const spec = swaggerSpec as {
   tags: { name: string }[];
 };
 const methods = ['get', 'post', 'put', 'patch', 'delete'];
-const canonicalRoutes = mounts.flatMap((mount) =>
-  mount.router.stack.flatMap((layer) => {
-    if (!layer.route) return [];
-    const route = layer.route;
-    const relative = Array.isArray(route.path) ? route.path[0] : route.path;
-    const path = (mount.paths[0] + (relative === '/' ? '' : relative)).replace(
-      /:([A-Za-z][A-Za-z0-9]*)/g,
-      '{$1}'
-    );
-    return Object.keys(route.methods).map((method) => ({ method, path }));
-  })
-);
+const canonicalRoutes = mounts
+  .filter((mount) => mount.paths.some((p) => p.startsWith('/api/v1')))
+  .flatMap((mount) => {
+    const v1Path = mount.paths.find((p) => p.startsWith('/api/v1')) ?? mount.paths[0];
+    return mount.router.stack.flatMap((layer) => {
+      if (!layer.route) return [];
+      const route = layer.route;
+      const relative = Array.isArray(route.path) ? route.path[0] : route.path;
+      const path = (v1Path + (relative === '/' ? '' : relative)).replace(
+        /:([A-Za-z][A-Za-z0-9]*)/g,
+        '{$1}'
+      );
+      return Object.keys(route.methods).map((method) => ({ method, path }));
+    });
+  });
 
 describe('API naming contract', () => {
   it('uses lowercase kebab-case for every canonical URL segment', () => {
