@@ -1,62 +1,67 @@
 import type { Express } from 'express';
 import { swaggerSpec } from '../config/swagger';
+import { applicationSpec } from '../swagger/application.swagger';
+import { adminSpec } from '../swagger/admin.swagger';
+
+const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14';
+
+function swaggerHtml(title: string, specUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${title}</title>
+    <link rel="icon" href="/favicon.png" />
+    <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css" />
+    <style>
+      html, body { margin: 0; padding: 0; }
+      .swagger-ui .topbar-wrapper .logo { filter: invert(1); }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="${SWAGGER_UI_CDN}/swagger-ui-bundle.js" crossorigin></script>
+    <script src="${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js" crossorigin></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: '${specUrl}',
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          tagsSorter: 'alpha',
+          operationsSorter: 'alpha',
+          displayOperationId: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: 'StandaloneLayout',
+        });
+      };
+    </script>
+  </body>
+</html>`;
+}
 
 export function registerSwaggerRoutes(app: Express): void {
-  // Swagger UI (BEFORE any body parsing middleware).
-  //
-  // `swaggerUi.serve` cannot be used on Vercel: swagger-ui-dist's assets are
-  // read from disk at request time, so the build tracer never bundles them and
-  // every /swagger/*.js request falls through to the HTML 404 handler, which the
-  // browser reports as "Unexpected token '<'". Serve the spec as JSON and load
-  // the UI assets from a CDN instead.
-  const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14';
+  // Swagger UI assets are served from CDN — swagger-ui-dist reads files from
+  // disk at request time, which Vercel's build tracer never bundles.
 
-  app.get(['/swagger/swagger.json', '/swagger.json'], (_req, res) => {
-    res.json(swaggerSpec);
-  });
-
+  // ── Combined (all routes) ──────────────────────────────────────────────────
+  app.get(['/swagger/swagger.json', '/swagger.json'], (_req, res) => res.json(swaggerSpec));
   app.get(['/swagger', '/swagger/', '/swagger/index.html'], (_req, res) => {
-    res.type('html').send(`<!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Zellavora Control Center API</title>
-      <link rel="icon" href="/favicon.png" />
-      <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css" />
-      <style>
-        html, body {
-          margin: 0;
-          padding: 0;
-        }
-        .swagger-ui .topbar-wrapper .logo {
-          filter: invert(1);
-        }
-      </style>
-    </head>
-    <body>
-      <div id="swagger-ui"></div>
-      <script src="${SWAGGER_UI_CDN}/swagger-ui-bundle.js" crossorigin></script>
-      <script src="${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js" crossorigin></script>
-      <script>
-        window.onload = () => {
-          window.ui = SwaggerUIBundle({
-            url: '/swagger/swagger.json',
-            dom_id: '#swagger-ui',
-            deepLinking: true,
-            tagsSorter: 'alpha',
-            operationsSorter: 'alpha',
-            displayOperationId: true,
-            presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-            layout: 'StandaloneLayout',
-          });
-        };
-      </script>
-    </body>
-  </html>`);
+    res.type('html').send(swaggerHtml('Zellavora Control Center API', '/swagger/swagger.json'));
   });
 
-  app.get('/', (_req, res) => {
-    res.redirect(302, '/swagger/index.html');
+  // ── Application API (/api/app) ─────────────────────────────────────────────
+  app.get('/swagger/app.json', (_req, res) => res.json(applicationSpec));
+  app.get(['/swagger/app', '/swagger/app/'], (_req, res) => {
+    res.type('html').send(swaggerHtml('Zellavora Application API', '/swagger/app.json'));
   });
+
+  // ── Admin API (/api/admin) ─────────────────────────────────────────────────
+  app.get('/swagger/admin.json', (_req, res) => res.json(adminSpec));
+  app.get(['/swagger/admin', '/swagger/admin/'], (_req, res) => {
+    res.type('html').send(swaggerHtml('Zellavora Admin API', '/swagger/admin.json'));
+  });
+
+  app.get('/', (_req, res) => res.redirect(302, '/swagger/index.html'));
 }
