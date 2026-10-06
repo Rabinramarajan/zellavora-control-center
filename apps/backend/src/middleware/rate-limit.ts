@@ -71,6 +71,7 @@ export function createRateLimiter(options: RateLimiterOptions): RateLimitRequest
       ? { message: options.message }
       : { handler: options.handler ?? defaultHandler }),
     // A store outage must not become a 500 on every throttled route.
+    // Silently allow the request through without logging on every hit.
     passOnStoreError: true,
     ...(redis ? { store: buildRedisStore(redis, options.bucket) } : {}),
   });
