@@ -246,7 +246,7 @@ app.get('/info', (_req, res) => {
 app.get('/api/memberportal/api/MemberPortalLogin/gettoken', (_req, res) => {
   const key = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
-  res.json([key.toString('base64'), iv.toString('base64')]);
+  res.json([key.toString('binary'), iv.toString('binary')]);
 });
 
 // Compatibility routes for Authentication token format (all known path variants)
@@ -259,7 +259,7 @@ app.get(
   (_req, res) => {
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
-    res.json([key.toString('base64'), iv.toString('base64')]);
+    res.json([key.toString('binary'), iv.toString('binary')]);
   }
 );
 
