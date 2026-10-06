@@ -99,7 +99,12 @@ router.get(
  *   post:
  *     summary: signInWithEmailAndPassword
  *     operationId: postAuthLogin
- *     description: Returns tokens, or a 2FA challenge when the account has 2FA enabled.
+ *     description: >
+ *       Returns tokens, or a 2FA challenge when the account has 2FA enabled.
+ *       Accepts two formats: plain JSON credentials, or a legacy AES-encrypted
+ *       payload. For the encrypted format, first obtain tokenkeys via
+ *       GET /api/v1/Authentication/gettoken, AES-256-CBC encrypt the email
+ *       (userLoginId) and password fields using those keys, then submit.
  *     tags: [authentication]
  *     security: []
  *     requestBody:
@@ -107,13 +112,45 @@ router.get(
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [clientCode, email, password]
- *             properties:
- *               clientCode: { type: string }
- *               email: { type: string, format: email, maxLength: 254 }
- *               password: { type: string, format: password, maxLength: 128 }
- *               rememberMe: { type: boolean }
+ *             oneOf:
+ *               - title: Standard login
+ *                 type: object
+ *                 required: [email, password]
+ *                 properties:
+ *                   clientCode: { type: string, example: ZCC }
+ *                   email: { type: string, format: email, example: user@example.com }
+ *                   password: { type: string, format: password, example: "P@ssw0rd!" }
+ *                   rememberMe: { type: boolean, default: false }
+ *               - title: Legacy encrypted login
+ *                 type: object
+ *                 required: [userLoginId, password, tokenkeys]
+ *                 properties:
+ *                   clientCode: { type: string, example: DC }
+ *                   userSerialId: { type: integer, example: 0 }
+ *                   userLoginId: { type: string, description: "AES-256-CBC encrypted email (base64)", example: "PBBGqsrivLTBEI4O7aErOQ==" }
+ *                   companyId: { type: integer, example: 0 }
+ *                   emailId: { type: string, example: "" }
+ *                   applicationEmailUrl: { type: string, example: "" }
+ *                   mPin: { type: string, example: "" }
+ *                   screenName: { type: string, example: "" }
+ *                   newPassword: { type: string, example: "" }
+ *                   confirmPassword: { type: string, example: "" }
+ *                   isPasswordValidation: { type: boolean, example: true }
+ *                   tokenkeys:
+ *                     type: array
+ *                     description: "[key, iv] binary strings from GET /api/v1/Authentication/gettoken"
+ *                     items: { type: string }
+ *                     minItems: 2
+ *                     maxItems: 2
+ *                   isPinValidation: { type: boolean, example: false }
+ *                   pin: { type: string, example: "" }
+ *                   password: { type: string, description: "AES-256-CBC encrypted password (base64)", example: "iBB4q715Y760U3cCuHzgiA==" }
+ *                   isAdmin: { type: boolean, example: true }
+ *                   urlDate: { type: string, example: "" }
+ *                   confirmMPin: { type: integer, example: 0 }
+ *                   language_preference: { type: string, example: "" }
+ *                   oldPassWord: { type: string, example: "" }
+ *                   clientName: { type: integer, example: 0 }
  *     responses:
  *       200:
  *         description: Signed in, or 2FA challenge issued (mfaRequired=true)

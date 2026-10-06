@@ -40,6 +40,35 @@ export const LoginSchema = z.object({
   rememberMe: z.boolean().optional().default(false),
 });
 
+/** Legacy AES-encrypted login payload sent by external frontends. */
+export const LegacyLoginSchema = z.object({
+  clientCode: z.string().optional(),
+  userSerialId: z.number().optional(),
+  userLoginId: z.string().min(1, 'Encrypted email is required'),
+  companyId: z.number().optional(),
+  emailId: z.string().optional(),
+  applicationEmailUrl: z.string().optional(),
+  mPin: z.string().optional(),
+  screenName: z.string().optional(),
+  newPassword: z.string().optional(),
+  confirmPassword: z.string().optional(),
+  isPasswordValidation: z.boolean().optional(),
+  tokenkeys: z
+    .array(z.string())
+    .length(2, 'tokenkeys must contain exactly [key, iv]'),
+  isPinValidation: z.boolean().optional(),
+  pin: z.string().optional(),
+  password: z.string().min(1, 'Encrypted password is required'),
+  isAdmin: z.boolean().optional(),
+  urlDate: z.string().optional(),
+  confirmMPin: z.number().optional(),
+  language_preference: z.string().optional(),
+  oldPassWord: z.string().optional(),
+  clientName: z.union([z.string(), z.number()]).optional(),
+});
+
+export type LegacyLoginDto = z.infer<typeof LegacyLoginSchema>;
+
 export const MfaVerifySchema = z.object({
   mfaToken: opaqueToken,
   code: z

@@ -17,7 +17,8 @@ function decryptField(encryptedData: string, key: Buffer, iv: Buffer): string {
 }
 
 export function loginDecryptMiddleware(req: Request, _res: Response, next: NextFunction): void {
-  if (req.path === '/api/v1/auth/login' && req.method === 'POST') {
+  const LOGIN_PATHS = ['/api/v1/auth/login', '/api/admin/auth/login', '/auth/login'];
+  if (LOGIN_PATHS.some((p) => req.path === p || req.originalUrl.startsWith(p)) && req.method === 'POST') {
     const body = req.body;
     if (
       body &&

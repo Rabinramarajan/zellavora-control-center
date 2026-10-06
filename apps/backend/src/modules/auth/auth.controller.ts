@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import crypto from 'crypto';
+import crypto, { createDecipheriv } from 'crypto';
 import type { AuthRequest } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
 import { AuthService } from './auth.service';
@@ -9,6 +9,7 @@ import {
   ChangePasswordSchema,
   EmailOnlySchema,
   InvitationTokenSchema,
+  LegacyLoginSchema,
   LoginSchema,
   MfaDisableSchema,
   MfaEnrollConfirmSchema,
@@ -25,7 +26,7 @@ import {
   UpdateAvatarSchema,
   VerifyEmailSchema,
 } from './auth.dto';
-import type { RegisterDto } from './auth.dto';
+import type { LoginDto, RegisterDto } from './auth.dto';
 
 // Routes wrap every handler in asyncHandler, which forwards rejections to the error
 // middleware, so handlers stay free of try/catch boilerplate.
@@ -75,9 +76,30 @@ export class AuthController {
   };
 
   login = async (req: Request, res: Response) => {
-    const dto = LoginSchema.parse(req.body);
+    const dto = this.resolveLoginDto(req.body);
     noStore(res).json(await this.service.login(dto, meta(req)));
   };
+
+  private resolveLoginDto(body: unknown): LoginDto {
+    if (body && typeof body === 'object' && 'tokenkeys' in body) {
+      const legacy = LegacyLoginSchema.parse(body);
+      const key = Buffer.from(legacy.tokenkeys[0], 'binary');
+      const iv  = Buffer.from(legacy.tokenkeys[1], 'binary');
+
+      const decrypt = (value: string): string => {
+        const decipher = createDecipheriv('aes-256-cbc', key, iv);
+        return decipher.update(value, 'base64', 'utf8') + decipher.final('utf8');
+      };
+
+      return LoginSchema.parse({
+        clientCode: legacy.clientCode || undefined,
+        email:      decrypt(legacy.userLoginId),
+        password:   decrypt(legacy.password),
+        rememberMe: false,
+      });
+    }
+    return LoginSchema.parse(body);
+  }
 
   verifyMfa = async (req: Request, res: Response) => {
     const { mfaToken, code } = MfaVerifySchema.parse(req.body);
