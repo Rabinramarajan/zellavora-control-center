@@ -21,15 +21,15 @@ import { ErrorBus } from '../error/error-bus';
 
 /** Public auth endpoints: never carry a bearer token and never trigger refresh. */
 const PUBLIC_AUTH_PATHS = [
-  '/api/v1/auth/config',
-  '/api/v1/auth/login',
-  '/api/v1/auth/refresh',
-  '/api/v1/auth/register',
-  '/api/v1/auth/invitations/',
-  '/api/v1/auth/verify-email',
-  '/api/v1/auth/resend-verification',
-  '/api/v1/auth/forgot-password',
-  '/api/v1/auth/reset-password',
+  '/api/admin/auth/config',
+  '/api/admin/auth/login',
+  '/api/admin/auth/refresh',
+  '/api/admin/auth/register',
+  '/api/admin/auth/invitations/',
+  '/api/admin/auth/verify-email',
+  '/api/admin/auth/resend-verification',
+  '/api/admin/auth/forgot-password',
+  '/api/admin/auth/reset-password',
 ];
 
 const isPublicAuth = (url: string): boolean => PUBLIC_AUTH_PATHS.some((p) => url.includes(p));
