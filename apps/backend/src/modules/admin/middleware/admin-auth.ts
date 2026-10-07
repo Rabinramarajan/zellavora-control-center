@@ -23,12 +23,9 @@ export const adminAuthGuard = async (
     if (err) return next(err);
 
     const role = (req.role || '').toLowerCase();
-    const isAdminRole = ['admin', 'owner', 'superadmin', 'platform_admin'].includes(role);
 
-    // If caller doesn't have an explicit admin role, verify they at least have tenant context
-    // and let granular permissions (requireAdminPermission) govern specific actions.
-    if (!isAdminRole && role === 'individual') {
-      return next(new AppError('Forbidden: Admin access required', 403, 'FORBIDDEN_ADMIN_ACCESS'));
+    if (!role) {
+      return next(new AppError('Forbidden: No role assigned', 403, 'FORBIDDEN_NO_ROLE'));
     }
 
     next();
