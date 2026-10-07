@@ -6,7 +6,6 @@
  */
 import Redis from 'ioredis';
 import { config } from '../config/env';
-import { logger } from './logger';
 
 let client: Redis | null = null;
 let initialized = false;
