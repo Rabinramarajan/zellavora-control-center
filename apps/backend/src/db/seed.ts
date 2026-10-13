@@ -267,7 +267,8 @@ async function main() {
     // Personal-workspace pages. Keys match the menu gates and the Individual role.
     ...(
       [
-        ['portfolio', 'read', 'View and edit the portfolio'],
+        ['portfolio', 'read', 'View the portfolio'],
+        ['portfolio', 'manage', 'Create, edit and delete portfolio sections'],
         ['projects', 'read', 'View projects'],
         ['projects', 'create', 'Create projects'],
         ['projects', 'write', 'Edit projects'],
@@ -386,6 +387,7 @@ async function main() {
   // Every member works in their own portfolio, projects, content and sheets.
   const memberKeys = new Set([
     'portfolio:read',
+    'portfolio:manage',
     'projects:read',
     'media:read',
     'cms:read',

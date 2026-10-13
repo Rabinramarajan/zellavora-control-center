@@ -1,7 +1,8 @@
 import type { Express } from 'express';
 import authRoutes from '../modules/auth/auth.routes';
 import projectRoutes from './projects';
-import portfolioRoutes from './portfolio';
+import portfolioRoutes from '../modules/portfolio/portfolio.routes';
+import publicPortfolioRoutes from '../modules/portfolio/portfolio.public.routes';
 import galleryRoutes from './gallery';
 import techRoutes from './technologies';
 import settingsRoutes from './settings';
@@ -96,7 +97,8 @@ export function registerApiRoutes(app: Express): void {
   // Mounted under /projects: this router declares bare '/' and '/:id' paths, which at
   // the /api/v1 root would swallow every other top-level route (daily-sheets, etc).
   app.use('/api/v1/projects', projectRoutes);
-  app.use('/api/v1', portfolioRoutes);
+  app.use('/api/v1/portfolio', portfolioRoutes);
+  app.use('/api/v1/public/portfolios', publicPortfolioRoutes);
   app.use('/api/v1', galleryRoutes);
   app.use('/api/v1', techRoutes);
   app.use('/api/v1', settingsRoutes);

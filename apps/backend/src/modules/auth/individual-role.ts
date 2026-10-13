@@ -11,6 +11,7 @@ export const INDIVIDUAL_ROLE_NAME = 'Individual';
 export const INDIVIDUAL_PERMISSIONS = [
   'dashboard:read',
   'portfolio:read',
+  'portfolio:manage',
   'projects:read',
   'projects:create',
   'projects:write',

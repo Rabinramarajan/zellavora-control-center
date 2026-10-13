@@ -188,6 +188,12 @@ model User {
   userTenants             UserTenant[]
   passwordHistory         PasswordHistory[]
   profiles                Profile?
+  portfolioProfiles       PortfolioProfile[]
+  portfolioSkills         PortfolioSkill[]
+  portfolioExperiences    PortfolioExperience[]
+  portfolioEducation      PortfolioEducation[]
+  portfolioServices       PortfolioServiceItem[]
+  portfolioTestimonials   PortfolioTestimonial[]
   timesheetApprovals      Timesheet[]          @relation("ApprovedTimesheets")
   timesheets              Timesheet[]          @relation("TimesheetUser")
   emailLogs               UserEmailLog[]
@@ -1656,4 +1662,149 @@ model InvoiceItem {
 
   @@index([invoiceId])
   @@map("invoice_items")
+}
+
+/// Portfolio: one singleton row per owner holds the Profile, Hero and About
+/// sections, so each section saves independently without a second round trip.
+model PortfolioProfile {
+  id                    String   @id @default(uuid()) @db.Uuid
+  organizationId        String   @map("organization_id") @db.Uuid
+  userId                String   @map("user_id") @db.Uuid
+  isPublic              Boolean  @default(false) @map("is_public")
+  displayName           String?  @map("display_name") @db.VarChar(120)
+  headline              String?  @db.VarChar(160)
+  location              String?  @db.VarChar(120)
+  email                 String?  @db.VarChar(254)
+  phone                 String?  @db.VarChar(30)
+  website               String?  @db.VarChar(500)
+  github                String?  @db.VarChar(500)
+  linkedin              String?  @db.VarChar(500)
+  twitter               String?  @db.VarChar(500)
+  avatarUrl             String?  @map("avatar_url") @db.VarChar(1000)
+  resumeUrl             String?  @map("resume_url") @db.VarChar(1000)
+  heroGreeting          String?  @map("hero_greeting") @db.VarChar(80)
+  heroTitle             String?  @map("hero_title") @db.VarChar(160)
+  heroSubtitle          String?  @map("hero_subtitle") @db.VarChar(400)
+  heroPrimaryCtaLabel   String?  @map("hero_primary_cta_label") @db.VarChar(40)
+  heroPrimaryCtaUrl     String?  @map("hero_primary_cta_url") @db.VarChar(500)
+  heroSecondaryCtaLabel String?  @map("hero_secondary_cta_label") @db.VarChar(40)
+  heroSecondaryCtaUrl   String?  @map("hero_secondary_cta_url") @db.VarChar(500)
+  heroImageUrl          String?  @map("hero_image_url") @db.VarChar(1000)
+  aboutBody             String?  @map("about_body") @db.Text
+  aboutImageUrl         String?  @map("about_image_url") @db.VarChar(1000)
+  createdBy             String?  @map("created_by") @db.Uuid
+  updatedBy             String?  @map("updated_by") @db.Uuid
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([isPublic, updatedAt])
+  @@map("portfolio_profiles")
+}
+
+model PortfolioSkill {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  name           String    @db.VarChar(60)
+  category       String?   @db.VarChar(60)
+  level          Int?
+  sortOrder      Int       @default(0) @map("sort_order")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId, deletedAt, sortOrder])
+  @@map("portfolio_skills")
+}
+
+model PortfolioExperience {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  role           String    @db.VarChar(160)
+  company        String    @db.VarChar(160)
+  location       String?   @db.VarChar(120)
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  isCurrent      Boolean   @default(false) @map("is_current")
+  description    String?   @db.Text
+  sortOrder      Int       @default(0) @map("sort_order")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId, deletedAt, sortOrder])
+  @@map("portfolio_experiences")
+}
+
+model PortfolioEducation {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  institution    String    @db.VarChar(160)
+  degree         String    @db.VarChar(160)
+  field          String?   @db.VarChar(160)
+  grade          String?   @db.VarChar(60)
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  description    String?   @db.Text
+  sortOrder      Int       @default(0) @map("sort_order")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId, deletedAt, sortOrder])
+  @@map("portfolio_education")
+}
+
+model PortfolioServiceItem {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  title          String    @db.VarChar(120)
+  description    String?   @db.VarChar(1000)
+  icon           String?   @db.VarChar(40)
+  sortOrder      Int       @default(0) @map("sort_order")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId, deletedAt, sortOrder])
+  @@map("portfolio_services")
+}
+
+model PortfolioTestimonial {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  authorName     String    @map("author_name") @db.VarChar(120)
+  authorRole     String?   @map("author_role") @db.VarChar(160)
+  company        String?   @db.VarChar(160)
+  quote          String    @db.Text
+  avatarUrl      String?   @map("avatar_url") @db.VarChar(1000)
+  rating         Int?
+  sortOrder      Int       @default(0) @map("sort_order")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId, deletedAt, sortOrder])
+  @@map("portfolio_testimonials")
 }

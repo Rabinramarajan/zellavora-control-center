@@ -319,30 +319,43 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 
 ## portfolio
 
-| Method | URL                         | Name                             | Operation ID             |
-| ------ | --------------------------- | -------------------------------- | ------------------------ |
-| GET    | `/api/v1/education`         | listEducationEntriesForUser | `getEducation`           |
-| POST   | `/api/v1/education`         | createEducationEntry | `postEducation`          |
-| DELETE | `/api/v1/education/{id}`    | deleteEducationEntry | `deleteEducationById`    |
-| PUT    | `/api/v1/education/{id}`    | updateEducationEntry | `putEducationById`       |
-| GET    | `/api/v1/experience`        | listExperienceEntriesForUser | `getExperience`          |
-| POST   | `/api/v1/experience`        | createExperienceEntry | `postExperience`         |
-| DELETE | `/api/v1/experience/{id}`   | deleteExperienceEntry | `deleteExperienceById`   |
-| PUT    | `/api/v1/experience/{id}`   | updateExperienceEntry | `putExperienceById`      |
-| GET    | `/api/v1/profile`           | getUserProfile | `getProfile`             |
-| PUT    | `/api/v1/profile`           | updateCurrentUserProfile | `putProfile`             |
-| GET    | `/api/v1/services`          | listServicesForUser | `getServices`            |
-| POST   | `/api/v1/services`          | createService | `postServices`           |
-| DELETE | `/api/v1/services/{id}`     | deleteService | `deleteServicesById`     |
-| PUT    | `/api/v1/services/{id}`     | updateService | `putServicesById`        |
-| GET    | `/api/v1/skills`            | listSkillsForUser | `getSkills`              |
-| POST   | `/api/v1/skills`            | createSkill | `postSkills`             |
-| DELETE | `/api/v1/skills/{id}`       | deleteSkill | `deleteSkillsById`       |
-| PUT    | `/api/v1/skills/{id}`       | updateSkill | `putSkillsById`          |
-| GET    | `/api/v1/testimonials`      | listTestimonialsForUser | `getTestimonials`        |
-| POST   | `/api/v1/testimonials`      | createTestimonial | `postTestimonials`       |
-| DELETE | `/api/v1/testimonials/{id}` | deleteTestimonial | `deleteTestimonialsById` |
-| PUT    | `/api/v1/testimonials/{id}` | updateTestimonial | `putTestimonialsById`    |
+Owner API for the signed-in user's portfolio, plus the public read. Owner routes need a Bearer token. Reads need `portfolio:read`, writes need `portfolio:manage`. Full contract and examples: [PORTFOLIO_FRONTEND_HANDOFF.md](PORTFOLIO_FRONTEND_HANDOFF.md).
+
+| Method | URL | Name | Operation ID | Permission |
+| --- | --- | --- | --- | --- |
+| GET | `/api/v1/portfolio/about` | getPortfolioAbout | `getPortfolioAbout` | portfolio:read |
+| PUT | `/api/v1/portfolio/about` | updatePortfolioAbout | `putPortfolioAbout` | portfolio:manage |
+| GET | `/api/v1/portfolio/education` | listPortfolioEducation | `getPortfolioEducation` | portfolio:read |
+| POST | `/api/v1/portfolio/education` | createPortfolioEducation | `postPortfolioEducation` | portfolio:manage |
+| DELETE | `/api/v1/portfolio/education/{id}` | deletePortfolioEducation | `deletePortfolioEducationById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/education/{id}` | updatePortfolioEducation | `putPortfolioEducationById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/education/reorder` | reorderPortfolioEducation | `putPortfolioEducationReorder` | portfolio:manage |
+| GET | `/api/v1/portfolio/experiences` | listPortfolioExperiences | `getPortfolioExperiences` | portfolio:read |
+| POST | `/api/v1/portfolio/experiences` | createPortfolioExperience | `postPortfolioExperiences` | portfolio:manage |
+| DELETE | `/api/v1/portfolio/experiences/{id}` | deletePortfolioExperience | `deletePortfolioExperiencesById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/experiences/{id}` | updatePortfolioExperience | `putPortfolioExperiencesById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/experiences/reorder` | reorderPortfolioExperiences | `putPortfolioExperiencesReorder` | portfolio:manage |
+| GET | `/api/v1/portfolio/hero` | getPortfolioHero | `getPortfolioHero` | portfolio:read |
+| PUT | `/api/v1/portfolio/hero` | updatePortfolioHero | `putPortfolioHero` | portfolio:manage |
+| GET | `/api/v1/portfolio/profile` | getPortfolioProfile | `getPortfolioProfile` | portfolio:read |
+| PUT | `/api/v1/portfolio/profile` | updatePortfolioProfile | `putPortfolioProfile` | portfolio:manage |
+| GET | `/api/v1/portfolio/services` | listPortfolioServices | `getPortfolioServices` | portfolio:read |
+| POST | `/api/v1/portfolio/services` | createPortfolioService | `postPortfolioServices` | portfolio:manage |
+| DELETE | `/api/v1/portfolio/services/{id}` | deletePortfolioService | `deletePortfolioServicesById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/services/{id}` | updatePortfolioService | `putPortfolioServicesById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/services/reorder` | reorderPortfolioServices | `putPortfolioServicesReorder` | portfolio:manage |
+| GET | `/api/v1/portfolio/skills` | listPortfolioSkills | `getPortfolioSkills` | portfolio:read |
+| POST | `/api/v1/portfolio/skills` | createPortfolioSkill | `postPortfolioSkills` | portfolio:manage |
+| DELETE | `/api/v1/portfolio/skills/{id}` | deletePortfolioSkill | `deletePortfolioSkillsById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/skills/{id}` | updatePortfolioSkill | `putPortfolioSkillsById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/skills/reorder` | reorderPortfolioSkills | `putPortfolioSkillsReorder` | portfolio:manage |
+| GET | `/api/v1/portfolio/testimonials` | listPortfolioTestimonials | `getPortfolioTestimonials` | portfolio:read |
+| POST | `/api/v1/portfolio/testimonials` | createPortfolioTestimonial | `postPortfolioTestimonials` | portfolio:manage |
+| DELETE | `/api/v1/portfolio/testimonials/{id}` | deletePortfolioTestimonial | `deletePortfolioTestimonialsById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/testimonials/{id}` | updatePortfolioTestimonial | `putPortfolioTestimonialsById` | portfolio:manage |
+| PUT | `/api/v1/portfolio/testimonials/reorder` | reorderPortfolioTestimonials | `putPortfolioTestimonialsReorder` | portfolio:manage |
+| GET | `/api/v1/public/portfolios/{username}` | getPublicPortfolio | `getPublicPortfolio` | portfolio:read |
+
 
 ## projectGallery
 

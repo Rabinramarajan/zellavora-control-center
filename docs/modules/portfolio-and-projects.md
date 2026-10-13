@@ -41,17 +41,22 @@ Mounted at `/api/v1`.
 
 ## Portfolio API
 
-Mounted at `/api/v1` (not `/api/v1/portfolio`).
+Now served by `modules/portfolio` on Prisma. The old Supabase router (`routes/portfolio.ts`) is removed. Full contract, field limits and examples: [PORTFOLIO_FRONTEND_HANDOFF.md](../PORTFOLIO_FRONTEND_HANDOFF.md). Operation list: [API_REFERENCE.md](../API_REFERENCE.md#portfolio).
 
-| Method            | Path                                                                                                             | Guard                                  |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| GET               | `/profile?userId=…`, `/skills`, `/experience`, `/education`, `/services`, `/testimonials` (each with `?userId=`) | Public                                 |
-| PUT               | `/profile`                                                                                                       | signed in (own profile)                |
-| POST, PUT, DELETE | `/skills[/:id]`, `/experience[/:id]`, `/education[/:id]`, `/services[/:id]`, `/testimonials[/:id]`               | signed in (rows filtered by `user_id`) |
+| Method            | Path                                                                  | Guard                                                  |
+| ----------------- | --------------------------------------------------------------------- | ------------------------------------------------------ |
+| GET               | `/api/v1/portfolio/profile`, `/hero`, `/about`                        | `portfolio:read`, own row                              |
+| PUT               | `/api/v1/portfolio/profile`, `/hero`, `/about`                        | `portfolio:manage`, own row, partial update            |
+| GET, POST         | `/api/v1/portfolio/{skills,experiences,education,services,testimonials}` | `portfolio:read` / `portfolio:manage`, own rows only   |
+| PUT               | `/api/v1/portfolio/{section}/reorder`                                 | `portfolio:manage`, must list every live id            |
+| PUT, DELETE       | `/api/v1/portfolio/{section}/{id}`                                    | `portfolio:manage`, soft delete                        |
+| GET               | `/api/v1/public/portfolios/{username}`                                | Public when `isPublic`; rate limited; 60 s cache       |
 
 ## Data model
 
-Prisma: `PortfolioProject` (organization, title, slug, description, content, category, status, cover and thumbnail, GitHub/demo/website links, view and download counts, `publishedAt`), `Project`, `Profile`. Supabase-only: `skills`, `experience`, `education`, `services`, `testimonials`, `technologies`, `project_technologies`, `project_gallery`.
+Prisma: `portfolio_profiles` (one row per user and tenant: Profile, Hero and About columns), `portfolio_skills`, `portfolio_experiences`, `portfolio_education`, `portfolio_services`, `portfolio_testimonials`. All are owner and tenant scoped, soft delete via `deleted_at`, capped at 100 live items per collection. Migration `20261013120000_portfolio_module`.
+
+Prisma (projects): `PortfolioProject` (organization, title, slug, description, content, category, status, cover and thumbnail, GitHub/demo/website links, view and download counts, `publishedAt`), `Project`, `Profile` (legacy, unused by the portfolio module). Supabase-only, still used by gallery and technologies: `technologies`, `project_technologies`, `project_gallery`, and the `projects` table they reference.
 
 ## Frontend
 

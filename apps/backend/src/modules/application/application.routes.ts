@@ -2,7 +2,7 @@ import { Router, type Router as ExpressRouter } from 'express';
 
 // Application Feature Routes
 import projectRoutes from '../../routes/projects';
-import portfolioRoutes from '../../routes/portfolio';
+import portfolioRoutes from '../portfolio/portfolio.routes';
 import galleryRoutes from '../../routes/gallery';
 import techRoutes from '../../routes/technologies';
 import settingsRoutes from '../../routes/settings';

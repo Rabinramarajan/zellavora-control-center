@@ -181,6 +181,28 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
           description: 'Internal service API key (for background jobs)',
         },
       },
+      responses: {
+        Unauthorized: {
+          description: 'Missing, invalid or revoked access token',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+        },
+        Forbidden: {
+          description: 'The caller lacks the required permission',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+        },
+        ValidationError: {
+          description: 'Request body or parameters failed validation; `error.fields` names each bad field',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+        },
+        NotFound: {
+          description: 'No such record for this caller',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+        },
+        LimitReached: {
+          description: 'The section already holds the maximum number of items',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+        },
+      },
       schemas: {
         // ── Generic ──────────────────────────────────────────────
         OkResponse: {
@@ -332,85 +354,6 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
             name: { type: 'string', example: 'TypeScript' },
             icon: { type: 'string', nullable: true },
             color: { type: 'string', nullable: true },
-          },
-        },
-        // ── Portfolio ────────────────────────────────────────────
-        Profile: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            user_id: { type: 'string', format: 'uuid' },
-            bio: { type: 'string', nullable: true },
-            headline: { type: 'string', nullable: true },
-            location: { type: 'string', nullable: true },
-            website: { type: 'string', nullable: true },
-            github: { type: 'string', nullable: true },
-            linkedin: { type: 'string', nullable: true },
-            twitter: { type: 'string', nullable: true },
-          },
-        },
-        Skill: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            user_id: { type: 'string', format: 'uuid' },
-            name: { type: 'string' },
-            level: { type: 'integer', minimum: 0, maximum: 100 },
-            category: { type: 'string', nullable: true },
-            order_index: { type: 'integer' },
-          },
-        },
-        Experience: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            user_id: { type: 'string', format: 'uuid' },
-            title: { type: 'string' },
-            company: { type: 'string' },
-            location: { type: 'string', nullable: true },
-            start_date: { type: 'string', format: 'date' },
-            end_date: { type: 'string', format: 'date', nullable: true },
-            current: { type: 'boolean' },
-            description: { type: 'string', nullable: true },
-            order_index: { type: 'integer' },
-          },
-        },
-        Education: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            user_id: { type: 'string', format: 'uuid' },
-            institution: { type: 'string' },
-            degree: { type: 'string' },
-            field: { type: 'string', nullable: true },
-            start_date: { type: 'string', format: 'date' },
-            end_date: { type: 'string', format: 'date', nullable: true },
-            order_index: { type: 'integer' },
-          },
-        },
-        ServiceItem: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            user_id: { type: 'string', format: 'uuid' },
-            title: { type: 'string' },
-            description: { type: 'string', nullable: true },
-            icon: { type: 'string', nullable: true },
-            price: { type: 'number', nullable: true },
-            order_index: { type: 'integer' },
-          },
-        },
-        Testimonial: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            user_id: { type: 'string', format: 'uuid' },
-            author_name: { type: 'string' },
-            author_title: { type: 'string', nullable: true },
-            author_avatar: { type: 'string', nullable: true },
-            content: { type: 'string' },
-            rating: { type: 'integer', minimum: 1, maximum: 5, nullable: true },
-            order_index: { type: 'integer' },
           },
         },
         // ── RBAC ─────────────────────────────────────────────────
