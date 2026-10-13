@@ -17,10 +17,10 @@ const actorOf = (req: AuthRequest): AdminActor => {
 };
 
 const handle =
-  (fn: (req: AuthRequest, actor: AdminActor) => Promise<unknown>, status = 200) =>
+  (message: string, fn: (req: AuthRequest, actor: AdminActor) => Promise<unknown>, status = 200) =>
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      res.status(status).json({ success: true, data: await fn(req, actorOf(req)) });
+      res.status(status).json({ success: true, message, data: await fn(req, actorOf(req)) });
     } catch (err) {
       next(err);
     }
@@ -30,24 +30,43 @@ const handle =
 export class UserAdminController {
   constructor(private readonly service = new UserAdminService()) {}
 
-  profile = handle((req, actor) => this.service.profile(req.params.id, actor));
-  access = handle((req, actor) => this.service.access(req.params.id, actor.organizationId));
-  sessions = handle((req, actor) => this.service.sessions(req.params.id, actor));
-  revokeSession = handle((req, actor) =>
+  profile = handle('User profile retrieved successfully', (req, actor) =>
+    this.service.profile(req.params.id, actor)
+  );
+  access = handle('User access retrieved successfully', (req, actor) =>
+    this.service.access(req.params.id, actor.organizationId)
+  );
+  sessions = handle('User sessions retrieved successfully', (req, actor) =>
+    this.service.sessions(req.params.id, actor)
+  );
+  revokeSession = handle('Session revoked successfully', (req, actor) =>
     this.service.revokeSession(req.params.id, req.params.sessionId, actor)
   );
-  revokeAllSessions = handle((req, actor) => this.service.revokeAllSessions(req.params.id, actor));
-  notes = handle((req) => this.service.notes(req.params.id));
+  revokeAllSessions = handle('All user sessions revoked successfully', (req, actor) =>
+    this.service.revokeAllSessions(req.params.id, actor)
+  );
+  notes = handle('User notes retrieved successfully', (req) => this.service.notes(req.params.id));
   addNote = handle(
+    'Note added successfully',
     (req, actor) => this.service.addNote(req.params.id, AddUserNoteSchema.parse(req.body), actor),
     201
   );
-  requests = handle((req, actor) =>
+  requests = handle('User requests retrieved successfully', (req, actor) =>
     this.service.requestHistory(req.params.id, actor.organizationId)
   );
-  statusHistory = handle((req) => this.service.statusHistory(req.params.id));
-  emails = handle((req) => this.service.emailHistory(req.params.id));
-  audit = handle((req) => this.service.audit(req.params.id));
-  sendPasswordReset = handle((req, actor) => this.service.sendPasswordReset(req.params.id, actor));
-  resendInvitation = handle((req, actor) => this.service.resendInvitation(req.params.id, actor));
+  statusHistory = handle('User status history retrieved successfully', (req) =>
+    this.service.statusHistory(req.params.id)
+  );
+  emails = handle('User email history retrieved successfully', (req) =>
+    this.service.emailHistory(req.params.id)
+  );
+  audit = handle('User audit trail retrieved successfully', (req) =>
+    this.service.audit(req.params.id)
+  );
+  sendPasswordReset = handle('Password reset email sent successfully', (req, actor) =>
+    this.service.sendPasswordReset(req.params.id, actor)
+  );
+  resendInvitation = handle('Invitation resent successfully', (req, actor) =>
+    this.service.resendInvitation(req.params.id, actor)
+  );
 }

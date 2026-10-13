@@ -29,7 +29,11 @@ router.get(
   '/',
   asyncRoute(async (req, res) => {
     const { organizationId, userId } = requestContext(req);
-    res.json({ success: true, data: await ApprovalModeService.view(userId, organizationId) });
+    res.json({
+      success: true,
+      message: 'Approval mode retrieved successfully',
+      data: await ApprovalModeService.view(userId, organizationId),
+    });
   })
 );
 
@@ -59,7 +63,11 @@ router.put(
     const { organizationId, userId } = requestContext(req);
     const { mode } = SetOrganizationModeSchema.parse(req.body);
     const updated = await ApprovalModeService.setOrganizationMode(organizationId, mode, userId);
-    res.json({ success: true, data: { organizationMode: updated } });
+    res.json({
+      success: true,
+      message: 'Approval mode updated successfully',
+      data: { organizationMode: updated },
+    });
   })
 );
 
@@ -93,7 +101,7 @@ router.put(
       mode,
       userId
     );
-    res.json({ success: true, data: view });
+    res.json({ success: true, message: 'Approval settings retrieved successfully', data: view });
   })
 );
 

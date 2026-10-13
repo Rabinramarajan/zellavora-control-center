@@ -20,7 +20,7 @@ export class GroupController {
     try {
       const query = GroupListQuerySchema.parse(req.query);
       const data = await this.service.list(query);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Groups retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -29,7 +29,7 @@ export class GroupController {
   tree = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.tree();
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Group tree retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -38,7 +38,7 @@ export class GroupController {
   stats = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.stats();
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Group statistics retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -47,7 +47,7 @@ export class GroupController {
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.getById(req.params.id);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Group retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -57,7 +57,7 @@ export class GroupController {
     try {
       const dto = CreateGroupSchema.parse(req.body);
       const data = await this.service.create(dto, req.userId);
-      res.status(201).json({ success: true, data });
+      res.status(201).json({ success: true, message: 'Group created successfully', data });
     } catch (err) {
       next(err);
     }
@@ -67,7 +67,7 @@ export class GroupController {
     try {
       const dto = UpdateGroupSchema.parse(req.body);
       const data = await this.service.update(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Group updated successfully', data });
     } catch (err) {
       next(err);
     }
@@ -76,7 +76,7 @@ export class GroupController {
   delete = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.delete(req.params.id, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Group deleted successfully', data });
     } catch (err) {
       next(err);
     }
@@ -86,7 +86,7 @@ export class GroupController {
     try {
       const dto = AddGroupMembersSchema.parse(req.body);
       const data = await this.service.addMembers(req.params.id, dto, req.userId);
-      res.status(201).json({ success: true, data });
+      res.status(201).json({ success: true, message: 'Group members added successfully', data });
     } catch (err) {
       next(err);
     }
@@ -95,7 +95,7 @@ export class GroupController {
   removeMember = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.removeMember(req.params.id, req.params.userId, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Group member removed successfully', data });
     } catch (err) {
       next(err);
     }
@@ -105,7 +105,7 @@ export class GroupController {
     try {
       const dto = SetGroupRolesSchema.parse(req.body);
       const data = await this.service.setRoles(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Group roles updated successfully', data });
     } catch (err) {
       next(err);
     }

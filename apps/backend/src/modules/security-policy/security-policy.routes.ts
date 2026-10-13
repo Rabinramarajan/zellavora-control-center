@@ -43,7 +43,11 @@ router.get(
   requirePermission('settings:manage'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = orgContextOf(req);
-    res.json({ success: true, data: await service.getAll(organizationId) });
+    res.json({
+      success: true,
+      message: 'Security policies retrieved successfully',
+      data: await service.getAll(organizationId),
+    });
   })
 );
 
@@ -78,7 +82,11 @@ router.put(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const dto = PasswordPolicySchema.parse(req.body) as PasswordPolicy;
-    res.json({ success: true, data: await service.updatePassword(organizationId, dto, actorId) });
+    res.json({
+      success: true,
+      message: 'Password policy updated successfully',
+      data: await service.updatePassword(organizationId, dto, actorId),
+    });
   })
 );
 
@@ -103,7 +111,11 @@ router.put(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const dto = LoginPolicySchema.parse(req.body) as LoginPolicy;
-    res.json({ success: true, data: await service.updateLogin(organizationId, dto, actorId) });
+    res.json({
+      success: true,
+      message: 'Login policy updated successfully',
+      data: await service.updateLogin(organizationId, dto, actorId),
+    });
   })
 );
 
@@ -128,7 +140,11 @@ router.put(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const dto = MfaPolicySchema.parse(req.body) as MfaPolicy;
-    res.json({ success: true, data: await service.updateMfa(organizationId, dto, actorId) });
+    res.json({
+      success: true,
+      message: 'MFA policy updated successfully',
+      data: await service.updateMfa(organizationId, dto, actorId),
+    });
   })
 );
 
@@ -157,7 +173,11 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = orgContextOf(req);
     const query = MfaComplianceQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.mfaCompliance(organizationId, query) });
+    res.json({
+      success: true,
+      message: 'MFA compliance report retrieved successfully',
+      data: await service.mfaCompliance(organizationId, query),
+    });
   })
 );
 

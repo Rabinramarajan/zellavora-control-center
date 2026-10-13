@@ -9,7 +9,7 @@ export class NotificationController {
     try {
       const orgId = req.query.organizationId as string;
       const list = await this.service.getNotifications(orgId);
-      res.json({ success: true, data: list });
+      res.json({ success: true, message: 'Notifications retrieved successfully', data: list });
     } catch (err) {
       next(err);
     }
@@ -25,7 +25,7 @@ export class NotificationController {
         channels?: string[];
       };
       const result = await this.service.sendNotification(data);
-      res.json({ success: true, data: result });
+      res.json({ success: true, message: 'Notification sent successfully', data: result });
     } catch (err) {
       next(err);
     }

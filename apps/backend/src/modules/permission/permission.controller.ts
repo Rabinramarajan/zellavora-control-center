@@ -8,7 +8,7 @@ export class PermissionController {
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const perms = await this.service.getAllPermissions();
-      res.json({ success: true, data: perms });
+      res.json({ success: true, message: 'Permissions retrieved successfully', data: perms });
     } catch (err) {
       next(err);
     }
@@ -22,7 +22,7 @@ export class PermissionController {
         groupId?: string | null;
       };
       const perm = await this.service.createPermission(data);
-      res.json({ success: true, data: perm });
+      res.json({ success: true, message: 'Permission created successfully', data: perm });
     } catch (err) {
       next(err);
     }
@@ -37,7 +37,7 @@ export class PermissionController {
         data.effect,
         data.organizationId
       );
-      res.json({ success: true, data: result });
+      res.json({ success: true, message: 'Permission assigned successfully', data: result });
     } catch (err) {
       next(err);
     }

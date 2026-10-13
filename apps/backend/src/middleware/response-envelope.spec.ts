@@ -11,6 +11,9 @@ describe('responseEnvelope', () => {
     const app = express();
     app.use(responseEnvelope);
     app.get('/object', (_req, res) => res.json({ data: { id: 1 } }));
+    app.get('/success', (_req, res) =>
+      res.json({ success: true, message: 'Search completed successfully.', data: [] })
+    );
     app.get('/error', (_req, res) => res.status(400).json({ error: { message: 'Invalid input' } }));
     app.get('/existing', (_req, res) => res.json({ msg: { errorMessage: ['Original'] } }));
     app.get('/array', (_req, res) => res.json(['key', 'iv']));
@@ -35,7 +38,18 @@ describe('responseEnvelope', () => {
       msg: {
         errorMessage: [],
         hasError: false,
-        infoMessage: { msgID: 0, msgType: 0, msgDescription: '' },
+        infoMessage: { id: 0, msg: null, msgType: 'Information' },
+      },
+    });
+  });
+
+  it('reports the success message in infoMessage', async () => {
+    const response = await fetch(`${baseUrl}/success`);
+    expect(await response.json()).toMatchObject({
+      msg: {
+        errorMessage: [],
+        hasError: false,
+        infoMessage: { id: 0, msg: 'Search completed successfully.', msgType: 'Information' },
       },
     });
   });
@@ -43,7 +57,13 @@ describe('responseEnvelope', () => {
   it('preserves error status and copies the error message', async () => {
     const response = await fetch(`${baseUrl}/error`);
     expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({ msg: { errorMessage: ['Invalid input'] } });
+    expect(await response.json()).toMatchObject({
+      msg: {
+        errorMessage: [{ id: 0, msg: 'Invalid input', msgType: 'Error' }],
+        hasError: true,
+        infoMessage: { id: 0, msg: null, msgType: 'Information' },
+      },
+    });
   });
 
   it('preserves an existing message envelope', async () => {

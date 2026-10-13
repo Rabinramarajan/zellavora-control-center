@@ -43,6 +43,7 @@ export const errorHandler = (
       fields[key] ??= issue.message;
     }
     res.status(400).json({
+      success: false,
       error: {
         message: error.issues[0]?.message ?? 'Invalid request',
         code: 'VALIDATION_ERROR',
@@ -55,6 +56,7 @@ export const errorHandler = (
 
   if (error instanceof AppError) {
     res.status(error.status).json({
+      success: false,
       error: {
         message: error.message,
         code: error.code,
@@ -66,6 +68,7 @@ export const errorHandler = (
   }
 
   res.status(500).json({
+    success: false,
     error: {
       message: config.nodeEnv === 'production' ? 'Internal server error' : error.message,
       code: 'INTERNAL_SERVER_ERROR',

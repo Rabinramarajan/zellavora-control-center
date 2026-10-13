@@ -33,27 +33,34 @@ export class DailySheetsController {
         });
       }
     }
-    res.json({ success: true, data: { sheets, errors } });
+    res.json({
+      success: true,
+      message: 'Daily sheets review processed successfully',
+      data: { sheets, errors },
+    });
   }
 
   public async create(req: AuthRequest, res: Response): Promise<void> {
     const { organizationId } = requestContext(req);
     const dto = CreateDailySheetSchema.parse(req.body);
     const sheet = await this.service.create(dto, organizationId, await resolveViewer(req));
-    res.status(201).json({ success: true, data: sheet });
+    res
+      .status(201)
+      .json({ success: true, message: 'Daily sheet created successfully', data: sheet });
   }
 
   public async list(req: AuthRequest, res: Response): Promise<void> {
     const { organizationId } = requestContext(req);
     const dto = DailySheetQuerySchema.parse(req.query);
     const sheets = await this.service.list(organizationId, dto, await resolveViewer(req));
-    res.json({ success: true, data: sheets });
+    res.json({ success: true, message: 'Daily sheets retrieved successfully', data: sheets });
   }
 
   public async projects(req: AuthRequest, res: Response): Promise<void> {
     const { organizationId, userId } = requestContext(req);
     res.json({
       success: true,
+      message: 'Project suggestions retrieved successfully',
       data: await this.service.projectSuggestions(organizationId, userId),
     });
   }
@@ -65,7 +72,7 @@ export class DailySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Daily sheet retrieved successfully', data: sheet });
   }
 
   public async update(req: AuthRequest, res: Response): Promise<void> {
@@ -77,7 +84,7 @@ export class DailySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Daily sheet updated successfully', data: sheet });
   }
 
   public async submit(req: AuthRequest, res: Response): Promise<void> {
@@ -87,7 +94,7 @@ export class DailySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Daily sheet submitted successfully', data: sheet });
   }
 
   public async reopen(req: AuthRequest, res: Response): Promise<void> {
@@ -99,14 +106,14 @@ export class DailySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Daily sheet reopened successfully', data: sheet });
   }
 
   public async submitAll(req: AuthRequest, res: Response): Promise<void> {
     const { organizationId } = requestContext(req);
     const dto = SubmitAllDailySheetsSchema.parse(req.body);
     const result = await this.service.submitAll(dto, organizationId, await resolveViewer(req));
-    res.json({ success: true, data: result });
+    res.json({ success: true, message: 'Daily sheets submitted successfully', data: result });
   }
 
   public async approve(req: AuthRequest, res: Response): Promise<void> {
@@ -118,7 +125,7 @@ export class DailySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Daily sheet approved successfully', data: sheet });
   }
 
   public async delete(req: AuthRequest, res: Response): Promise<void> {
@@ -128,6 +135,6 @@ export class DailySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: result });
+    res.json({ success: true, message: 'Daily sheet deleted successfully', data: result });
   }
 }

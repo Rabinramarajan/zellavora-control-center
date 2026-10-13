@@ -50,7 +50,11 @@ router.get(
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const query = PostListQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.list(orgContextOf(req), query) });
+    res.json({
+      success: true,
+      message: 'Blog posts retrieved successfully',
+      data: await service.list(orgContextOf(req), query),
+    });
   })
 );
 
@@ -72,7 +76,11 @@ router.get(
   '/stats',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.stats(orgContextOf(req)) });
+    res.json({
+      success: true,
+      message: 'Blog statistics retrieved successfully',
+      data: await service.stats(orgContextOf(req)),
+    });
   })
 );
 
@@ -94,7 +102,11 @@ router.get(
   '/categories',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.categories(orgContextOf(req)) });
+    res.json({
+      success: true,
+      message: 'Blog categories retrieved successfully',
+      data: await service.categories(orgContextOf(req)),
+    });
   })
 );
 
@@ -117,7 +129,13 @@ router.post(
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = CreatePostSchema.parse(req.body);
-    res.status(201).json({ success: true, data: await service.create(orgContextOf(req), dto) });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: 'Blog post created successfully',
+        data: await service.create(orgContextOf(req), dto),
+      });
   })
 );
 
@@ -140,7 +158,11 @@ router.get(
   '/posts/:id',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.get(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'Blog post retrieved successfully',
+      data: await service.get(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -165,7 +187,11 @@ router.patch(
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = UpdatePostSchema.parse(req.body);
-    res.json({ success: true, data: await service.update(orgContextOf(req), req.params.id, dto) });
+    res.json({
+      success: true,
+      message: 'Blog post updated successfully',
+      data: await service.update(orgContextOf(req), req.params.id, dto),
+    });
   })
 );
 
@@ -188,7 +214,11 @@ router.delete(
   '/posts/:id',
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.remove(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'Blog post deleted successfully',
+      data: await service.remove(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -215,6 +245,7 @@ router.post(
     const { publishAt } = PublishPostSchema.parse(req.body ?? {});
     res.json({
       success: true,
+      message: 'Blog post published successfully',
       data: await service.publish(orgContextOf(req), req.params.id, publishAt),
     });
   })
@@ -240,7 +271,11 @@ router.post(
   '/posts/:id/unpublish',
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.unpublish(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'Blog post unpublished successfully',
+      data: await service.unpublish(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -266,7 +301,11 @@ router.post(
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     res
       .status(201)
-      .json({ success: true, data: await service.duplicate(orgContextOf(req), req.params.id) });
+      .json({
+        success: true,
+        message: 'Blog post duplicated successfully',
+        data: await service.duplicate(orgContextOf(req), req.params.id),
+      });
   })
 );
 

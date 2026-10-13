@@ -86,7 +86,11 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = orgContextOf(req);
     const query = ConfigurationListQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.list(organizationId, query) });
+    res.json({
+      success: true,
+      message: 'Configuration entries retrieved successfully',
+      data: await service.list(organizationId, query),
+    });
   })
 );
 
@@ -97,7 +101,11 @@ router.put(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const dto = UpsertConfigurationSchema.parse(req.body);
-    res.json({ success: true, data: await service.upsert(organizationId, dto, actorId) });
+    res.json({
+      success: true,
+      message: 'Configuration saved successfully',
+      data: await service.upsert(organizationId, dto, actorId),
+    });
   })
 );
 
@@ -126,7 +134,11 @@ router.delete(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const { key } = KeyParamSchema.parse(req.params);
-    res.json({ success: true, data: await service.remove(organizationId, key, actorId) });
+    res.json({
+      success: true,
+      message: 'Configuration entry deleted successfully',
+      data: await service.remove(organizationId, key, actorId),
+    });
   })
 );
 

@@ -52,7 +52,11 @@ router.get(
   authenticate,
   requirePermission('settings:manage'),
   asyncHandler(async (_req: AuthRequest, res: Response) => {
-    res.json({ success: true, data: await service.get() });
+    res.json({
+      success: true,
+      message: 'Email settings retrieved successfully',
+      data: await service.get(),
+    });
   })
 );
 
@@ -84,7 +88,11 @@ router.put(
   requirePermission('settings:manage'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const input = EmailSettingsSchema.parse(req.body);
-    res.json({ success: true, data: await service.update(input, req.userId ?? null) });
+    res.json({
+      success: true,
+      message: 'Email settings updated successfully',
+      data: await service.update(input, req.userId ?? null),
+    });
   })
 );
 
@@ -113,7 +121,11 @@ router.post(
   testLimiter,
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { to } = TestEmailSchema.parse(req.body);
-    res.json({ success: true, data: await service.sendTest(to, req.userId ?? null) });
+    res.json({
+      success: true,
+      message: 'Test email sent successfully',
+      data: await service.sendTest(to, req.userId ?? null),
+    });
   })
 );
 

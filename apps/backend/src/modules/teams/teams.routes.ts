@@ -55,7 +55,11 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = orgContextOf(req);
     const query = TeamListQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.list(organizationId, query) });
+    res.json({
+      success: true,
+      message: 'Teams retrieved successfully',
+      data: await service.list(organizationId, query),
+    });
   })
 );
 
@@ -68,7 +72,11 @@ router.post(
     const dto = CreateTeamSchema.parse(req.body);
     res
       .status(201)
-      .json({ success: true, data: await service.create(organizationId, dto, actorId) });
+      .json({
+        success: true,
+        message: 'Team created successfully',
+        data: await service.create(organizationId, dto, actorId),
+      });
   })
 );
 
@@ -110,7 +118,11 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = orgContextOf(req);
     const { id } = IdParamSchema.parse(req.params);
-    res.json({ success: true, data: await service.get(organizationId, id) });
+    res.json({
+      success: true,
+      message: 'Team retrieved successfully',
+      data: await service.get(organizationId, id),
+    });
   })
 );
 
@@ -122,7 +134,11 @@ router.put(
     const { organizationId, actorId } = orgContextOf(req);
     const { id } = IdParamSchema.parse(req.params);
     const dto = UpdateTeamSchema.parse(req.body);
-    res.json({ success: true, data: await service.update(organizationId, id, dto, actorId) });
+    res.json({
+      success: true,
+      message: 'Team updated successfully',
+      data: await service.update(organizationId, id, dto, actorId),
+    });
   })
 );
 
@@ -133,7 +149,11 @@ router.delete(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const { id } = IdParamSchema.parse(req.params);
-    res.json({ success: true, data: await service.remove(organizationId, id, actorId) });
+    res.json({
+      success: true,
+      message: 'Team deleted successfully',
+      data: await service.remove(organizationId, id, actorId),
+    });
   })
 );
 
@@ -170,6 +190,7 @@ router.post(
     const { userIds } = TeamMembersSchema.parse(req.body);
     res.json({
       success: true,
+      message: 'Team members added successfully',
       data: await service.addMembers(organizationId, id, userIds, actorId),
     });
   })
@@ -184,6 +205,7 @@ router.delete(
     const { id, userId } = MemberParamSchema.parse(req.params);
     res.json({
       success: true,
+      message: 'Team member removed successfully',
       data: await service.removeMember(organizationId, id, userId, actorId),
     });
   })

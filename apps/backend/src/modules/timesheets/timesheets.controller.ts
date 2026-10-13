@@ -61,7 +61,7 @@ export class TimesheetsController {
         organizationId,
         viewer
       );
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet retrieved successfully', data: sheet });
     } catch (error) {
       logger.error('Get timesheet failed', error);
       throw error;
@@ -74,7 +74,7 @@ export class TimesheetsController {
       const viewer = await this.viewer(req);
       const dto = ListTimesheetsQuerySchema.parse(req.query);
       const sheets = await this.service.list(organizationId, dto, viewer);
-      res.json({ success: true, data: sheets });
+      res.json({ success: true, message: 'Timesheets retrieved successfully', data: sheets });
     } catch (error) {
       logger.error('List timesheets failed', error);
       throw error;
@@ -86,7 +86,7 @@ export class TimesheetsController {
       const { organizationId } = this.context(req);
       const viewer = await this.viewer(req);
       const sheet = await this.service.getVisible(req.params.id, organizationId, viewer);
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet retrieved successfully', data: sheet });
     } catch (error) {
       logger.error('Get timesheet by id failed', error);
       throw error;
@@ -103,7 +103,7 @@ export class TimesheetsController {
         organizationId,
         actorUserId
       );
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet entries saved successfully', data: sheet });
     } catch (error) {
       logger.error('Bulk upsert timesheet entries failed', error);
       throw error;
@@ -120,7 +120,7 @@ export class TimesheetsController {
         organizationId,
         actorUserId
       );
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet details updated successfully', data: sheet });
     } catch (error) {
       logger.error('Update timesheet details failed', error);
       throw error;
@@ -137,7 +137,12 @@ export class TimesheetsController {
         organizationId,
         actorUserId
       );
-      res.json({ success: true, data: timesheet, meta: { importedCount } });
+      res.json({
+        success: true,
+        message: 'Timesheet entries imported successfully',
+        data: timesheet,
+        meta: { importedCount },
+      });
     } catch (error) {
       logger.error('Import timesheet entries failed', error);
       throw error;
@@ -155,7 +160,7 @@ export class TimesheetsController {
         organizationId,
         actorUserId
       );
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet entry updated successfully', data: sheet });
     } catch (error) {
       logger.error('Update timesheet entry failed', error);
       throw error;
@@ -166,7 +171,7 @@ export class TimesheetsController {
     try {
       const { organizationId, actorUserId } = this.context(req);
       const sheet = await this.service.submit(req.params.id, organizationId, actorUserId);
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet submitted successfully', data: sheet });
     } catch (error) {
       logger.error('Submit timesheet failed', error);
       throw error;
@@ -178,7 +183,7 @@ export class TimesheetsController {
       const { organizationId, actorUserId } = this.context(req);
       const dto = ReopenSheetSchema.parse(req.body);
       const sheet = await this.service.reopen(req.params.id, dto, organizationId, actorUserId);
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet reopened successfully', data: sheet });
     } catch (error) {
       logger.error('Reopen timesheet failed', error);
       throw error;
@@ -189,7 +194,7 @@ export class TimesheetsController {
     try {
       const { organizationId, actorUserId } = this.context(req);
       const sheet = await this.service.approve(req.params.id, organizationId, actorUserId);
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet approved successfully', data: sheet });
     } catch (error) {
       logger.error('Approve timesheet failed', error);
       throw error;
@@ -201,7 +206,7 @@ export class TimesheetsController {
       const { organizationId, actorUserId } = this.context(req);
       const dto = RejectTimesheetSchema.parse(req.body);
       const sheet = await this.service.reject(req.params.id, dto, organizationId, actorUserId);
-      res.json({ success: true, data: sheet });
+      res.json({ success: true, message: 'Timesheet rejected successfully', data: sheet });
     } catch (error) {
       logger.error('Reject timesheet failed', error);
       throw error;
@@ -238,7 +243,7 @@ export class TimesheetsController {
       }
 
       res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
-      res.json({ success: true, data: model });
+      res.json({ success: true, message: 'Timesheet export generated successfully', data: model });
     } catch (error) {
       logger.error('Export timesheet failed', error);
       throw error;
@@ -251,7 +256,11 @@ export class TimesheetsController {
       const viewer = await this.viewer(req);
       const dto = SummaryQuerySchema.parse(req.query);
       const summary = await this.service.summary(organizationId, dto, viewer);
-      res.json({ success: true, data: summary });
+      res.json({
+        success: true,
+        message: 'Timesheet summary retrieved successfully',
+        data: summary,
+      });
     } catch (error) {
       logger.error('Timesheet summary failed', error);
       throw error;

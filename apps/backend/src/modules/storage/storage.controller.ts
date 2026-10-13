@@ -42,7 +42,7 @@ export class StorageController {
     try {
       const data = UploadFileSchema.parse(req.body);
       const result = await this.service.uploadFile(data.fileName, data.base64Data);
-      res.json({ success: true, data: result });
+      res.json({ success: true, message: 'File uploaded successfully', data: result });
     } catch (err) {
       next(err);
     }
@@ -53,6 +53,7 @@ export class StorageController {
       const query = ListMediaQuerySchema.parse(req.query);
       res.json({
         success: true,
+        message: 'Media files retrieved successfully',
         data: await this.service.listMedia(query, req.tenantId as string, publicBaseUrl(req)),
       });
     } catch (err) {
@@ -69,7 +70,7 @@ export class StorageController {
         req.userId,
         publicBaseUrl(req)
       );
-      res.status(201).json({ success: true, data: item });
+      res.status(201).json({ success: true, message: 'Media uploaded successfully', data: item });
     } catch (err) {
       next(err);
     }
@@ -101,7 +102,11 @@ export class StorageController {
     try {
       const query = MediaPathQuerySchema.parse(req.query);
       await this.service.deleteMedia(query, req.tenantId as string);
-      res.json({ success: true, data: { pathname: query.pathname } });
+      res.json({
+        success: true,
+        message: 'Media deleted successfully',
+        data: { pathname: query.pathname },
+      });
     } catch (err) {
       next(err);
     }

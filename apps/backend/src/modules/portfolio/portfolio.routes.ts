@@ -196,7 +196,11 @@ router.get(
   '/profile',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.getProfile(orgContextOf(req)) });
+    res.json({
+      success: true,
+      message: 'Portfolio profile retrieved successfully',
+      data: await service.getProfile(orgContextOf(req)),
+    });
   })
 );
 
@@ -205,7 +209,11 @@ router.put(
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = ProfileUpdateSchema.parse(req.body);
-    res.json({ success: true, data: await service.updateProfile(orgContextOf(req), dto) });
+    res.json({
+      success: true,
+      message: 'Portfolio profile updated successfully',
+      data: await service.updateProfile(orgContextOf(req), dto),
+    });
   })
 );
 
@@ -247,7 +255,11 @@ router.get(
   '/hero',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.getHero(orgContextOf(req)) });
+    res.json({
+      success: true,
+      message: 'Portfolio hero retrieved successfully',
+      data: await service.getHero(orgContextOf(req)),
+    });
   })
 );
 
@@ -256,7 +268,11 @@ router.put(
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = HeroUpdateSchema.parse(req.body);
-    res.json({ success: true, data: await service.updateHero(orgContextOf(req), dto) });
+    res.json({
+      success: true,
+      message: 'Portfolio hero updated successfully',
+      data: await service.updateHero(orgContextOf(req), dto),
+    });
   })
 );
 
@@ -298,7 +314,11 @@ router.get(
   '/about',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.getAbout(orgContextOf(req)) });
+    res.json({
+      success: true,
+      message: 'Portfolio about retrieved successfully',
+      data: await service.getAbout(orgContextOf(req)),
+    });
   })
 );
 
@@ -307,7 +327,11 @@ router.put(
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = AboutUpdateSchema.parse(req.body);
-    res.json({ success: true, data: await service.updateAbout(orgContextOf(req), dto) });
+    res.json({
+      success: true,
+      message: 'Portfolio about updated successfully',
+      data: await service.updateAbout(orgContextOf(req), dto),
+    });
   })
 );
 
@@ -332,11 +356,16 @@ function mountCollection<C extends ZodTypeAny, U extends ZodTypeAny, D>(
   schemas: { create: C; update: U },
   handlers: CollectionHandlers<C, U, D>
 ): void {
+  const label = path.charAt(0).toUpperCase() + path.slice(1);
   router.get(
     `/${path}`,
     read,
     asyncHandler<AuthRequest>(async (req, res: Response) => {
-      res.json({ success: true, data: await handlers.list(orgContextOf(req)) });
+      res.json({
+        success: true,
+        message: `${label} retrieved successfully`,
+        data: await handlers.list(orgContextOf(req)),
+      });
     })
   );
 
@@ -345,7 +374,11 @@ function mountCollection<C extends ZodTypeAny, U extends ZodTypeAny, D>(
     manage,
     asyncHandler<AuthRequest>(async (req, res: Response) => {
       const dto = schemas.create.parse(req.body);
-      res.status(201).json({ success: true, data: await handlers.create(orgContextOf(req), dto) });
+      res.status(201).json({
+        success: true,
+        message: `${label} item created successfully`,
+        data: await handlers.create(orgContextOf(req), dto),
+      });
     })
   );
 
@@ -354,7 +387,11 @@ function mountCollection<C extends ZodTypeAny, U extends ZodTypeAny, D>(
     manage,
     asyncHandler<AuthRequest>(async (req, res: Response) => {
       const dto = ReorderSchema.parse(req.body);
-      res.json({ success: true, data: await handlers.reorder(orgContextOf(req), dto) });
+      res.json({
+        success: true,
+        message: `${label} reordered successfully`,
+        data: await handlers.reorder(orgContextOf(req), dto),
+      });
     })
   );
 
@@ -365,6 +402,7 @@ function mountCollection<C extends ZodTypeAny, U extends ZodTypeAny, D>(
       const dto = schemas.update.parse(req.body);
       res.json({
         success: true,
+        message: `${label} item updated successfully`,
         data: await handlers.update(orgContextOf(req), String(req.params.id), dto),
       });
     })

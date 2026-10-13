@@ -18,7 +18,7 @@ export class DdlController {
   getAll = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.getAll();
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'All DDL options retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -33,7 +33,7 @@ export class DdlController {
         .map((t) => t.trim())
         .filter((t) => t.length > 0);
       const data = await this.service.getByTypes(types);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'DDL options retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -48,7 +48,7 @@ export class DdlController {
         return;
       }
       const data = await this.service.getByType(type);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'DDL options for type retrieved successfully', data });
     } catch (err) {
       next(err);
     }

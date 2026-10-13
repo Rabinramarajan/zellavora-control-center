@@ -57,7 +57,11 @@ router.get(
   requirePermission('roles:read'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const query = IamPermissionListQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.list(query) });
+    res.json({
+      success: true,
+      message: 'Permissions retrieved successfully',
+      data: await service.list(query),
+    });
   })
 );
 
@@ -70,7 +74,11 @@ router.post(
     const dto = CreateIamPermissionSchema.parse(req.body);
     res
       .status(201)
-      .json({ success: true, data: await service.create(dto, actorId, organizationId) });
+      .json({
+        success: true,
+        message: 'Permission created successfully',
+        data: await service.create(dto, actorId, organizationId),
+      });
   })
 );
 
@@ -101,7 +109,11 @@ router.get(
   authenticate,
   requirePermission('roles:read'),
   asyncHandler(async (_req: AuthRequest, res: Response) => {
-    res.json({ success: true, data: await service.listGroups() });
+    res.json({
+      success: true,
+      message: 'Permission groups retrieved successfully',
+      data: await service.listGroups(),
+    });
   })
 );
 
@@ -114,7 +126,11 @@ router.post(
     const dto = CreatePermissionGroupSchema.parse(req.body);
     res
       .status(201)
-      .json({ success: true, data: await service.createGroup(dto, actorId, organizationId) });
+      .json({
+        success: true,
+        message: 'Permission group created successfully',
+        data: await service.createGroup(dto, actorId, organizationId),
+      });
   })
 );
 
@@ -157,7 +173,11 @@ router.get(
   requirePermission('roles:read'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = IdParamSchema.parse(req.params);
-    res.json({ success: true, data: await service.get(id) });
+    res.json({
+      success: true,
+      message: 'Permission retrieved successfully',
+      data: await service.get(id),
+    });
   })
 );
 
@@ -169,7 +189,11 @@ router.put(
     const { organizationId, actorId } = orgContextOf(req);
     const { id } = IdParamSchema.parse(req.params);
     const dto = UpdateIamPermissionSchema.parse(req.body);
-    res.json({ success: true, data: await service.update(id, dto, actorId, organizationId) });
+    res.json({
+      success: true,
+      message: 'Permission updated successfully',
+      data: await service.update(id, dto, actorId, organizationId),
+    });
   })
 );
 
@@ -180,7 +204,11 @@ router.delete(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const { id } = IdParamSchema.parse(req.params);
-    res.json({ success: true, data: await service.remove(id, actorId, organizationId) });
+    res.json({
+      success: true,
+      message: 'Permission deleted successfully',
+      data: await service.remove(id, actorId, organizationId),
+    });
   })
 );
 

@@ -70,6 +70,7 @@ router.get(
     const scope = await scopeOf(req, organizationId, actorId);
     res.json({
       success: true,
+      message: 'Sessions retrieved successfully',
       data: await service.list(organizationId, query, scope, req.sessionId),
     });
   })
@@ -95,7 +96,11 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const scope = await scopeOf(req, organizationId, actorId);
-    res.json({ success: true, data: await service.stats(organizationId, scope) });
+    res.json({
+      success: true,
+      message: 'Session statistics retrieved successfully',
+      data: await service.stats(organizationId, scope),
+    });
   })
 );
 
@@ -127,6 +132,7 @@ router.delete(
     const { userId } = UserIdParamSchema.parse(req.params);
     res.json({
       success: true,
+      message: 'User sessions revoked successfully',
       data: await service.revokeAllForUser(
         organizationId,
         userId,
@@ -165,6 +171,7 @@ router.delete(
     const { id } = SessionIdParamSchema.parse(req.params);
     res.json({
       success: true,
+      message: 'Session revoked successfully',
       data: await service.revoke(
         organizationId,
         id,

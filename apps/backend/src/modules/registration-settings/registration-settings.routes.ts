@@ -56,7 +56,11 @@ router.get(
   authenticate,
   requirePermission('settings:manage'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
-    res.json({ success: true, data: await service.get(callerOrg(req)) });
+    res.json({
+      success: true,
+      message: 'Registration settings retrieved successfully',
+      data: await service.get(callerOrg(req)),
+    });
   })
 );
 
@@ -85,7 +89,7 @@ router.put(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const dto = RegistrationSettingsSchema.parse(req.body);
     const data = await service.update(callerOrg(req), dto, req.userId ?? null);
-    res.json({ success: true, data });
+    res.json({ success: true, message: 'Registration settings updated successfully', data });
   })
 );
 

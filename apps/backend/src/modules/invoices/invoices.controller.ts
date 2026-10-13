@@ -37,68 +37,121 @@ export class InvoicesController {
   private readonly service = new InvoicesService();
 
   public async getProfile(req: AuthRequest, res: Response): Promise<void> {
-    res.json({ success: true, data: await this.service.getProfile(actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice profile retrieved successfully',
+      data: await this.service.getProfile(actorOf(req)),
+    });
   }
 
   public async upsertProfile(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(UpsertInvoiceProfileSchema, req.body);
-    res.json({ success: true, data: await this.service.upsertProfile(dto, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice profile saved successfully',
+      data: await this.service.upsertProfile(dto, actorOf(req)),
+    });
   }
 
   public async listClients(req: AuthRequest, res: Response): Promise<void> {
-    res.json({ success: true, data: await this.service.listClients(actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice clients retrieved successfully',
+      data: await this.service.listClients(actorOf(req)),
+    });
   }
 
   public async createClient(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(InvoiceClientSchema, req.body);
     res
       .status(201)
-      .json({ success: true, data: await this.service.createClient(dto, actorOf(req)) });
+      .json({
+        success: true,
+        message: 'Invoice client created successfully',
+        data: await this.service.createClient(dto, actorOf(req)),
+      });
   }
 
   public async updateClient(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(InvoiceClientSchema, req.body);
     res.json({
       success: true,
+      message: 'Invoice client updated successfully',
       data: await this.service.updateClient(req.params.id, dto, actorOf(req)),
     });
   }
 
   public async deleteClient(req: AuthRequest, res: Response): Promise<void> {
-    res.json({ success: true, data: await this.service.deleteClient(req.params.id, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice client deleted successfully',
+      data: await this.service.deleteClient(req.params.id, actorOf(req)),
+    });
   }
 
   public async list(req: AuthRequest, res: Response): Promise<void> {
     const query = parse(InvoiceQuerySchema, req.query);
-    res.json({ success: true, data: await this.service.list(query, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoices retrieved successfully',
+      data: await this.service.list(query, actorOf(req)),
+    });
   }
 
   public async get(req: AuthRequest, res: Response): Promise<void> {
-    res.json({ success: true, data: await this.service.get(req.params.id, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice retrieved successfully',
+      data: await this.service.get(req.params.id, actorOf(req)),
+    });
   }
 
   public async create(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(SaveInvoiceSchema, req.body);
-    res.status(201).json({ success: true, data: await this.service.create(dto, actorOf(req)) });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: 'Invoice created successfully',
+        data: await this.service.create(dto, actorOf(req)),
+      });
   }
 
   public async update(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(SaveInvoiceSchema, req.body);
-    res.json({ success: true, data: await this.service.update(req.params.id, dto, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice updated successfully',
+      data: await this.service.update(req.params.id, dto, actorOf(req)),
+    });
   }
 
   public async delete(req: AuthRequest, res: Response): Promise<void> {
-    res.json({ success: true, data: await this.service.delete(req.params.id, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice deleted successfully',
+      data: await this.service.delete(req.params.id, actorOf(req)),
+    });
   }
 
   public async fromMonthlySheet(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(FromMonthlySheetSchema, req.body);
     const invoice = await this.service.fromMonthlySheet(req.params.sheetId, dto, actorOf(req));
-    res.status(201).json({ success: true, data: invoice });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: 'Invoice created from monthly sheet successfully',
+        data: invoice,
+      });
   }
 
   public async issue(req: AuthRequest, res: Response): Promise<void> {
-    res.json({ success: true, data: await this.service.issue(req.params.id, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice issued successfully',
+      data: await this.service.issue(req.params.id, actorOf(req)),
+    });
   }
 
   public async import(req: AuthRequest, res: Response): Promise<void> {
@@ -110,13 +163,18 @@ export class InvoicesController {
     const dto = parse(MarkPaidSchema, req.body ?? {});
     res.json({
       success: true,
+      message: 'Invoice marked as paid successfully',
       data: await this.service.markPaid(req.params.id, dto, actorOf(req)),
     });
   }
 
   public async cancel(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(CancelInvoiceSchema, req.body);
-    res.json({ success: true, data: await this.service.cancel(req.params.id, dto, actorOf(req)) });
+    res.json({
+      success: true,
+      message: 'Invoice cancelled successfully',
+      data: await this.service.cancel(req.params.id, dto, actorOf(req)),
+    });
   }
 
   public async export(req: AuthRequest, res: Response): Promise<void> {
@@ -135,7 +193,9 @@ export class InvoicesController {
         attachment(res, DOCX_TYPE, `${base}.docx`).send(await renderInvoiceDocx(vm));
         return;
       case 'json':
-        res.set('Cache-Control', 'no-store').json({ success: true, data: vm });
+        res
+          .set('Cache-Control', 'no-store')
+          .json({ success: true, message: 'Invoice data exported successfully', data: vm });
         return;
     }
   }

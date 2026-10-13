@@ -43,7 +43,11 @@ router.get(
   '/pages/stats',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.stats(orgContextOf(req)) });
+    res.json({
+      success: true,
+      message: 'CMS statistics retrieved successfully',
+      data: await service.stats(orgContextOf(req)),
+    });
   })
 );
 
@@ -68,7 +72,11 @@ router.get(
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const { slug, excludeId } = SlugCheckSchema.parse(req.query);
-    res.json({ success: true, data: await service.checkSlug(orgContextOf(req), slug, excludeId) });
+    res.json({
+      success: true,
+      message: 'Slug availability checked successfully',
+      data: await service.checkSlug(orgContextOf(req), slug, excludeId),
+    });
   })
 );
 
@@ -98,7 +106,11 @@ router.get(
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const query = PageListQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.list(orgContextOf(req), query) });
+    res.json({
+      success: true,
+      message: 'CMS pages retrieved successfully',
+      data: await service.list(orgContextOf(req), query),
+    });
   })
 );
 
@@ -120,7 +132,13 @@ router.post(
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = CreatePageSchema.parse(req.body);
-    res.status(201).json({ success: true, data: await service.create(orgContextOf(req), dto) });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: 'CMS page created successfully',
+        data: await service.create(orgContextOf(req), dto),
+      });
   })
 );
 
@@ -143,7 +161,11 @@ router.get(
   '/pages/:id',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.get(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'CMS page retrieved successfully',
+      data: await service.get(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -167,7 +189,11 @@ router.patch(
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = UpdatePageSchema.parse(req.body);
-    res.json({ success: true, data: await service.update(orgContextOf(req), req.params.id, dto) });
+    res.json({
+      success: true,
+      message: 'CMS page updated successfully',
+      data: await service.update(orgContextOf(req), req.params.id, dto),
+    });
   })
 );
 
@@ -190,7 +216,11 @@ router.delete(
   '/pages/:id',
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.remove(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'CMS page deleted successfully',
+      data: await service.remove(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -213,7 +243,11 @@ router.get(
   '/pages/:id/builder',
   read,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.get(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'Page builder data retrieved successfully',
+      data: await service.get(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -239,6 +273,7 @@ router.put(
     const dto = SaveBuilderSchema.parse(req.body);
     res.json({
       success: true,
+      message: 'Page builder saved successfully',
       data: await service.saveBuilder(orgContextOf(req), req.params.id, dto),
     });
   })
@@ -263,7 +298,11 @@ router.post(
   '/pages/:id/publish',
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.publish(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'CMS page published successfully',
+      data: await service.publish(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -286,7 +325,11 @@ router.post(
   '/pages/:id/unpublish',
   manage,
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.unpublish(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'CMS page unpublished successfully',
+      data: await service.unpublish(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -312,6 +355,7 @@ router.post(
     const { scheduledAt } = SchedulePageSchema.parse(req.body);
     res.json({
       success: true,
+      message: 'CMS page scheduled successfully',
       data: await service.schedule(orgContextOf(req), req.params.id, scheduledAt),
     });
   })
@@ -338,7 +382,11 @@ router.post(
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     res
       .status(201)
-      .json({ success: true, data: await service.duplicate(orgContextOf(req), req.params.id) });
+      .json({
+        success: true,
+        message: 'CMS page duplicated successfully',
+        data: await service.duplicate(orgContextOf(req), req.params.id),
+      });
   })
 );
 
@@ -363,6 +411,7 @@ router.get(
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     res.json({
       success: true,
+      message: 'Page version history retrieved successfully',
       data: await service.getVersions(orgContextOf(req), req.params.id),
     });
   })
@@ -390,11 +439,8 @@ router.post(
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     res.json({
       success: true,
-      data: await service.restoreVersion(
-        orgContextOf(req),
-        req.params.id,
-        req.params.versionId
-      ),
+      message: 'Page version restored successfully',
+      data: await service.restoreVersion(orgContextOf(req), req.params.id, req.params.versionId),
     });
   })
 );

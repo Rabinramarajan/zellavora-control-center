@@ -17,7 +17,7 @@ export class AuditController {
       const organizationId = req.tenantId;
 
       const result = await this.service.searchLogs(organizationId, parsed);
-      res.json(result);
+      res.json({ message: 'Audit logs retrieved successfully', ...result });
     } catch (err) {
       next(err);
     }
@@ -30,7 +30,7 @@ export class AuditController {
     try {
       const organizationId = req.tenantId;
       const options = await this.service.getFilterOptions(organizationId);
-      res.json(options);
+      res.json({ message: 'Audit filter options retrieved successfully', ...options });
     } catch (err) {
       next(err);
     }
@@ -62,7 +62,10 @@ export class AuditController {
       }
 
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="audit-logs-${new Date().toISOString().slice(0, 10)}.csv"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="audit-logs-${new Date().toISOString().slice(0, 10)}.csv"`
+      );
       res.send(csvContent);
     } catch (err) {
       next(err);
@@ -85,7 +88,7 @@ export class AuditController {
         throw new AppError('Audit log entry not found', 404, 'NOT_FOUND');
       }
 
-      res.json(detail);
+      res.json({ message: 'Audit log retrieved successfully', ...detail });
     } catch (err) {
       next(err);
     }
@@ -98,7 +101,7 @@ export class AuditController {
     try {
       const data = CreateAuditRecordSchema.parse(req.body);
       const log = await this.service.logActivity(data);
-      res.json({ success: true, data: log });
+      res.json({ success: true, message: 'Audit event logged successfully', data: log });
     } catch (err) {
       next(err);
     }

@@ -42,7 +42,11 @@ router.get(
   '/active',
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     if (!req.tenantId) throw new AppError('No organization selected', 403, 'TENANT_REQUIRED');
-    res.json({ success: true, data: await service.active(req.tenantId) });
+    res.json({
+      success: true,
+      message: 'Active theme retrieved successfully',
+      data: await service.active(req.tenantId),
+    });
   })
 );
 
@@ -67,7 +71,11 @@ router.put(
   requirePermission('themes:manage'),
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = SaveActiveThemeSchema.parse(req.body);
-    res.json({ success: true, data: await service.saveActive(orgContextOf(req), dto) });
+    res.json({
+      success: true,
+      message: 'Active theme saved successfully',
+      data: await service.saveActive(orgContextOf(req), dto),
+    });
   })
 );
 
@@ -95,7 +103,11 @@ router.get(
   requirePermission('themes:read'),
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const query = ThemeListQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.list(orgContextOf(req), query) });
+    res.json({
+      success: true,
+      message: 'Themes retrieved successfully',
+      data: await service.list(orgContextOf(req), query),
+    });
   })
 );
 
@@ -118,7 +130,13 @@ router.post(
   requirePermission('themes:manage'),
   asyncHandler<AuthRequest>(async (req, res: Response) => {
     const dto = CreateThemeSchema.parse(req.body);
-    res.status(201).json({ success: true, data: await service.create(orgContextOf(req), dto) });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: 'Theme created successfully',
+        data: await service.create(orgContextOf(req), dto),
+      });
   })
 );
 
@@ -141,7 +159,11 @@ router.get(
   '/:id',
   requirePermission('themes:read'),
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.get(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'Theme retrieved successfully',
+      data: await service.get(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -170,6 +192,7 @@ router.patch(
     const dto = UpdateThemeSchema.parse(req.body);
     res.json({
       success: true,
+      message: 'Theme updated successfully',
       data: await service.update(orgContextOf(req), req.params.id, dto),
     });
   })
@@ -195,7 +218,11 @@ router.delete(
   '/:id',
   requirePermission('themes:manage'),
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.remove(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'Theme deleted successfully',
+      data: await service.remove(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -219,7 +246,11 @@ router.post(
   '/:id/activate',
   requirePermission('themes:manage'),
   asyncHandler<AuthRequest>(async (req, res: Response) => {
-    res.json({ success: true, data: await service.activate(orgContextOf(req), req.params.id) });
+    res.json({
+      success: true,
+      message: 'Theme activated successfully',
+      data: await service.activate(orgContextOf(req), req.params.id),
+    });
   })
 );
 
@@ -246,6 +277,7 @@ router.post(
     const { name } = DuplicateThemeSchema.parse(req.body);
     res.status(201).json({
       success: true,
+      message: 'Theme duplicated successfully',
       data: await service.duplicate(orgContextOf(req), req.params.id, name),
     });
   })

@@ -12,7 +12,7 @@ export class SettingsController {
       const orgId = tenantContext(req, req.query.organizationId);
       const key = req.params.key;
       const config = await this.service.getSetting(orgId, key);
-      res.json({ success: true, data: config });
+      res.json({ success: true, message: 'Setting retrieved successfully', data: config });
     } catch (err) {
       next(err);
     }
@@ -22,7 +22,7 @@ export class SettingsController {
     try {
       const orgId = tenantContext(req, req.query.organizationId);
       const configs = await this.service.getSettingsForOrg(orgId);
-      res.json({ success: true, data: configs });
+      res.json({ success: true, message: 'Settings retrieved successfully', data: configs });
     } catch (err) {
       next(err);
     }
@@ -38,7 +38,7 @@ export class SettingsController {
         data.value,
         data.category
       );
-      res.json({ success: true, data: config });
+      res.json({ success: true, message: 'Setting saved successfully', data: config });
     } catch (err) {
       next(err);
     }

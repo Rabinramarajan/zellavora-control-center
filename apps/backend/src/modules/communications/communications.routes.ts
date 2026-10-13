@@ -98,7 +98,11 @@ router.post(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const dto = SendMessageSchema.parse(req.body);
-    res.json({ success: true, data: await service.sendMessage(organizationId, dto, actorId) });
+    res.json({
+      success: true,
+      message: 'Message sent successfully',
+      data: await service.sendMessage(organizationId, dto, actorId),
+    });
   })
 );
 
@@ -124,7 +128,11 @@ router.post(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId, actorId } = orgContextOf(req);
     const dto = SendEmailSchema.parse(req.body);
-    res.json({ success: true, data: await service.sendEmail(organizationId, dto, actorId) });
+    res.json({
+      success: true,
+      message: 'Email sent successfully',
+      data: await service.sendEmail(organizationId, dto, actorId),
+    });
   })
 );
 
@@ -153,7 +161,11 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = orgContextOf(req);
     const query = HistoryQuerySchema.parse(req.query);
-    res.json({ success: true, data: await service.history(organizationId, query) });
+    res.json({
+      success: true,
+      message: 'Communication history retrieved successfully',
+      data: await service.history(organizationId, query),
+    });
   })
 );
 

@@ -27,11 +27,11 @@ const actorOf = (req: AuthRequest): RequestActor => {
 type Handler = (req: AuthRequest, actor: RequestActor) => Promise<unknown>;
 
 const handle =
-  (fn: Handler, status = 200) =>
+  (message: string, fn: Handler, status = 200) =>
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await fn(req, actorOf(req));
-      res.status(status).json({ success: true, data });
+      res.status(status).json({ success: true, message, data });
     } catch (err) {
       next(err);
     }
@@ -40,51 +40,63 @@ const handle =
 export class UserRequestController {
   constructor(private readonly service = new UserRequestService()) {}
 
-  list = handle((req, actor) =>
+  list = handle('Requests retrieved successfully', (req, actor) =>
     this.service.list(actor.organizationId, UserRequestListQuerySchema.parse(req.query))
   );
-  lookups = handle((_req, actor) => this.service.lookups(actor.organizationId));
-  preview = handle((req, actor) =>
+  lookups = handle('Request lookups retrieved successfully', (_req, actor) =>
+    this.service.lookups(actor.organizationId)
+  );
+  preview = handle('Access preview generated successfully', (req, actor) =>
     this.service.preview(AccessPreviewSchema.parse(req.body), actor.organizationId)
   );
-  getById = handle((req, actor) => this.service.getById(req.params.id, actor));
-  requestPreview = handle((req, actor) =>
+  getById = handle('Request retrieved successfully', (req, actor) =>
+    this.service.getById(req.params.id, actor)
+  );
+  requestPreview = handle('Request access preview generated successfully', (req, actor) =>
     this.service.previewForRequest(req.params.id, actor.organizationId)
   );
-  audit = handle((req, actor) => this.service.audit(req.params.id, actor.organizationId));
+  audit = handle('Request audit trail retrieved successfully', (req, actor) =>
+    this.service.audit(req.params.id, actor.organizationId)
+  );
   create = handle(
+    'Request created successfully',
     (req, actor) => this.service.create(CreateUserRequestSchema.parse(req.body), actor),
     201
   );
-  update = handle((req, actor) =>
+  update = handle('Request updated successfully', (req, actor) =>
     this.service.update(req.params.id, UpdateUserRequestSchema.parse(req.body), actor)
   );
-  submit = handle((req, actor) => this.service.submit(req.params.id, actor));
-  approve = handle((req, actor) =>
+  submit = handle('Request submitted successfully', (req, actor) =>
+    this.service.submit(req.params.id, actor)
+  );
+  approve = handle('Request approved successfully', (req, actor) =>
     this.service.approve(req.params.id, ActionCommentSchema.parse(req.body ?? {}).comments, actor)
   );
-  setApprovalProvisioning = handle((req, actor) =>
+  setApprovalProvisioning = handle('Approval provisioning updated successfully', (req, actor) =>
     this.service.setApprovalProvisioning(
       req.params.id,
       ApprovalProvisioningSchema.parse(req.body),
       actor
     )
   );
-  reject = handle((req, actor) =>
+  reject = handle('Request rejected successfully', (req, actor) =>
     this.service.reject(req.params.id, RequiredCommentSchema.parse(req.body).comments, actor)
   );
-  sendBack = handle((req, actor) =>
+  sendBack = handle('Request sent back for changes', (req, actor) =>
     this.service.sendBack(req.params.id, RequiredCommentSchema.parse(req.body).comments, actor)
   );
-  cancel = handle((req, actor) =>
+  cancel = handle('Request cancelled successfully', (req, actor) =>
     this.service.cancel(req.params.id, ActionCommentSchema.parse(req.body ?? {}).comments, actor)
   );
-  retryProvisioning = handle((req, actor) => this.service.retryProvisioning(req.params.id, actor));
+  retryProvisioning = handle('Provisioning retry started successfully', (req, actor) =>
+    this.service.retryProvisioning(req.params.id, actor)
+  );
   addNote = handle(
+    'Note added successfully',
     (req, actor) => this.service.addNote(req.params.id, AddNoteSchema.parse(req.body), actor),
     201
   );
-  retryEmail = handle((req, actor) =>
+  retryEmail = handle('Email retry sent successfully', (req, actor) =>
     this.service.retryEmail(req.params.id, req.params.emailId, actor)
   );
 }

@@ -8,7 +8,7 @@ export class OrganizationController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const org = await this.service.getOrganization(req.params.id);
-      res.json({ success: true, data: org });
+      res.json({ success: true, message: 'Organization retrieved successfully', data: org });
     } catch (err) {
       next(err);
     }
@@ -22,7 +22,7 @@ export class OrganizationController {
         logoUrl?: string | null;
       };
       const org = await this.service.createOrganization(data);
-      res.json({ success: true, data: org });
+      res.json({ success: true, message: 'Organization created successfully', data: org });
     } catch (err) {
       next(err);
     }
@@ -32,7 +32,7 @@ export class OrganizationController {
     try {
       const data = UpdateOrganizationSchema.parse(req.body);
       const org = await this.service.updateOrganization(req.params.id, data);
-      res.json({ success: true, data: org });
+      res.json({ success: true, message: 'Organization updated successfully', data: org });
     } catch (err) {
       next(err);
     }

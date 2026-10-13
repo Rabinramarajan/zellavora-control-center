@@ -20,7 +20,7 @@ export class RoleController {
     try {
       const query = RoleListQuerySchema.parse(req.query);
       const data = await this.service.list(query);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Roles retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -29,7 +29,7 @@ export class RoleController {
   listAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.listAll();
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'All roles retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -38,7 +38,7 @@ export class RoleController {
   stats = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.stats();
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Role statistics retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -47,7 +47,7 @@ export class RoleController {
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.getById(req.params.id);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Role retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -56,7 +56,7 @@ export class RoleController {
   listPermissions = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.listPermissions(req.params.id);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Role permissions retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -66,7 +66,7 @@ export class RoleController {
     try {
       const dto = CreateRoleSchema.parse(req.body);
       const data = await this.service.create(dto, req.userId, req.tenantId);
-      res.status(201).json({ success: true, data });
+      res.status(201).json({ success: true, message: 'Role created successfully', data });
     } catch (err) {
       next(err);
     }
@@ -76,7 +76,7 @@ export class RoleController {
     try {
       const dto = UpdateRoleSchema.parse(req.body);
       const data = await this.service.update(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Role updated successfully', data });
     } catch (err) {
       next(err);
     }
@@ -85,7 +85,7 @@ export class RoleController {
   delete = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.delete(req.params.id, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Role deleted successfully', data });
     } catch (err) {
       next(err);
     }
@@ -95,7 +95,7 @@ export class RoleController {
     try {
       const dto = SetRolePermissionsSchema.parse(req.body);
       const data = await this.service.setPermissions(req.params.id, dto, req.userId, req.tenantId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Role permissions updated successfully', data });
     } catch (err) {
       next(err);
     }
@@ -105,7 +105,7 @@ export class RoleController {
     try {
       const dto = CopyRoleSchema.parse(req.body);
       const data = await this.service.copy(req.params.id, dto, req.userId);
-      res.status(201).json({ success: true, data });
+      res.status(201).json({ success: true, message: 'Role copied successfully', data });
     } catch (err) {
       next(err);
     }

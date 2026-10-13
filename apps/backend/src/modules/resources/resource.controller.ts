@@ -19,7 +19,7 @@ export class ResourceController {
     try {
       const query = ResourceListQuerySchema.parse(req.query);
       const data = await this.service.list(query);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Resources retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -28,7 +28,7 @@ export class ResourceController {
   tree = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.tree();
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Resource tree retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -37,7 +37,7 @@ export class ResourceController {
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.getById(req.params.id);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Resource retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -46,7 +46,7 @@ export class ResourceController {
   getByKey = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.getByKey(req.params.key);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Resource retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -56,7 +56,7 @@ export class ResourceController {
     try {
       const dto = CreateResourceSchema.parse(req.body);
       const data = await this.service.create(dto, req.userId);
-      res.status(201).json({ success: true, data });
+      res.status(201).json({ success: true, message: 'Resource created successfully', data });
     } catch (err) {
       next(err);
     }
@@ -66,7 +66,7 @@ export class ResourceController {
     try {
       const dto = UpdateResourceSchema.parse(req.body);
       const data = await this.service.update(req.params.id, dto, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Resource updated successfully', data });
     } catch (err) {
       next(err);
     }
@@ -76,7 +76,7 @@ export class ResourceController {
     try {
       const dto = AddResourceActionSchema.parse(req.body);
       const data = await this.service.addAction(req.params.id, dto, req.userId);
-      res.status(201).json({ success: true, data });
+      res.status(201).json({ success: true, message: 'Resource action added successfully', data });
     } catch (err) {
       next(err);
     }
@@ -85,7 +85,11 @@ export class ResourceController {
   removeAction = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       await this.service.removeAction(req.params.id, req.params.actionId, req.userId);
-      res.json({ success: true, data: { id: req.params.actionId } });
+      res.json({
+        success: true,
+        message: 'Resource action removed successfully',
+        data: { id: req.params.actionId },
+      });
     } catch (err) {
       next(err);
     }
@@ -94,7 +98,7 @@ export class ResourceController {
   delete = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await this.service.delete(req.params.id, req.userId);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Resource deleted successfully', data });
     } catch (err) {
       next(err);
     }

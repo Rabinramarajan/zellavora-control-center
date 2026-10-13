@@ -60,7 +60,11 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { organizationId } = actorOf(req);
     const query = ListSchema.parse(req.query) as Parameters<InvitationService['list']>[1];
-    res.json({ success: true, data: await service.list(organizationId, query) });
+    res.json({
+      success: true,
+      message: 'Invitations retrieved successfully',
+      data: await service.list(organizationId, query),
+    });
   })
 );
 
@@ -97,7 +101,12 @@ router.post(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     // tsconfig is non-strict, so zod widens required keys to optional; the schema enforces them.
     const dto = InviteSchema.parse(req.body) as InviteInput;
-    res.status(201).json(await service.invite(dto, actorOf(req)));
+    res
+      .status(201)
+      .json({
+        message: 'Invitation sent successfully',
+        ...(await service.invite(dto, actorOf(req))),
+      });
   })
 );
 
@@ -126,7 +135,10 @@ router.post(
   requirePermission('users:manage'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { invitationId } = IdSchema.parse(req.params);
-    res.json(await service.resend(invitationId, actorOf(req)));
+    res.json({
+      message: 'Invitation resent successfully',
+      ...(await service.resend(invitationId, actorOf(req))),
+    });
   })
 );
 
@@ -154,7 +166,10 @@ router.post(
   requirePermission('users:manage'),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { invitationId } = IdSchema.parse(req.params);
-    res.json(await service.revoke(invitationId, actorOf(req)));
+    res.json({
+      message: 'Invitation revoked successfully',
+      ...(await service.revoke(invitationId, actorOf(req))),
+    });
   })
 );
 

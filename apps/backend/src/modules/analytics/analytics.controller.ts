@@ -59,18 +59,26 @@ export class AnalyticsController {
 
   overview = async (req: AuthRequest, res: Response) => {
     const { range } = AnalyticsOverviewQuerySchema.parse(req.query);
-    res.json({ success: true, data: await this.service.getOverview(tenantOf(req), range) });
+    res.json({
+      success: true,
+      message: 'Analytics overview retrieved successfully',
+      data: await this.service.getOverview(tenantOf(req), range),
+    });
   };
 
   top = (dimension: Dimension) => async (req: AuthRequest, res: Response) => {
     const { range, limit } = AnalyticsTopQuerySchema.parse(req.query);
     const data = await this.service.getTop(tenantOf(req), range, dimension, limit);
-    res.json({ success: true, data });
+    res.json({ success: true, message: 'Top analytics retrieved successfully', data });
   };
 
   devices = async (req: AuthRequest, res: Response) => {
     const { range } = AnalyticsDevicesQuerySchema.parse(req.query);
-    res.json({ success: true, data: await this.service.getDeviceBreakdown(tenantOf(req), range) });
+    res.json({
+      success: true,
+      message: 'Device analytics retrieved successfully',
+      data: await this.service.getDeviceBreakdown(tenantOf(req), range),
+    });
   };
 
   track = async (req: AuthRequest, res: Response) => {
@@ -82,7 +90,7 @@ export class AnalyticsController {
       country: header(req, 'x-vercel-ip-country') ?? header(req, 'cf-ipcountry'),
       city: header(req, 'x-vercel-ip-city'),
     });
-    res.status(202).json({ success: true });
+    res.status(202).json({ success: true, message: 'Analytics event recorded successfully' });
   };
 
   export = async (req: AuthRequest, res: Response) => {
@@ -97,7 +105,7 @@ export class AnalyticsController {
       return;
     }
     res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
-    res.json({ success: true, data: overview });
+    res.json({ success: true, message: 'Analytics export generated successfully', data: overview });
   };
 
   private toCsv(o: AnalyticsOverview): string {

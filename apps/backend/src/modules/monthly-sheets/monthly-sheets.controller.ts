@@ -19,21 +19,27 @@ export class MonthlySheetsController {
     const { organizationId } = requestContext(req);
     const dto = CreateMonthlySheetSchema.parse(req.body);
     const sheet = await this.service.create(dto, organizationId, await resolveViewer(req));
-    res.status(201).json({ success: true, data: sheet });
+    res
+      .status(201)
+      .json({ success: true, message: 'Monthly sheet created successfully', data: sheet });
   }
 
   public async list(req: AuthRequest, res: Response): Promise<void> {
     const { organizationId } = requestContext(req);
     const dto = MonthlySheetQuerySchema.parse(req.query);
     const sheets = await this.service.list(organizationId, dto, await resolveViewer(req));
-    res.json({ success: true, data: sheets });
+    res.json({ success: true, message: 'Monthly sheets retrieved successfully', data: sheets });
   }
 
   public async document(req: AuthRequest, res: Response): Promise<void> {
     const { organizationId } = requestContext(req);
     const dto = MonthlyDocumentQuerySchema.parse(req.query);
     const document = await this.service.document(dto, organizationId, await resolveViewer(req));
-    res.json({ success: true, data: document });
+    res.json({
+      success: true,
+      message: 'Monthly sheet document retrieved successfully',
+      data: document,
+    });
   }
 
   public async getById(req: AuthRequest, res: Response): Promise<void> {
@@ -43,7 +49,7 @@ export class MonthlySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Monthly sheet retrieved successfully', data: sheet });
   }
 
   /** PUT regenerates the totals from the month's approved daily sheets. */
@@ -55,7 +61,7 @@ export class MonthlySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Monthly sheet updated successfully', data: sheet });
   }
 
   public async submit(req: AuthRequest, res: Response): Promise<void> {
@@ -65,7 +71,7 @@ export class MonthlySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Monthly sheet submitted successfully', data: sheet });
   }
 
   public async approve(req: AuthRequest, res: Response): Promise<void> {
@@ -77,7 +83,7 @@ export class MonthlySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Monthly sheet approved successfully', data: sheet });
   }
 
   public async reopen(req: AuthRequest, res: Response): Promise<void> {
@@ -89,7 +95,7 @@ export class MonthlySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Monthly sheet reopened successfully', data: sheet });
   }
 
   public async markAsPaid(req: AuthRequest, res: Response): Promise<void> {
@@ -101,7 +107,7 @@ export class MonthlySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: sheet });
+    res.json({ success: true, message: 'Monthly sheet marked as paid successfully', data: sheet });
   }
 
   public async delete(req: AuthRequest, res: Response): Promise<void> {
@@ -111,6 +117,6 @@ export class MonthlySheetsController {
       organizationId,
       await resolveViewer(req)
     );
-    res.json({ success: true, data: result });
+    res.json({ success: true, message: 'Monthly sheet deleted successfully', data: result });
   }
 }

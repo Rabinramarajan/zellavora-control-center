@@ -58,20 +58,32 @@ export class AuthController {
   // --- Public ---------------------------------------------------------------
 
   config = (_req: Request, res: Response) => {
-    res.json(this.service.getPublicConfig());
+    res.json({
+      message: 'Public configuration retrieved successfully',
+      ...this.service.getPublicConfig(),
+    });
   };
 
   tenants = async (_req: Request, res: Response) => {
-    noStore(res).json({ tenants: await this.service.listTenants() });
+    noStore(res).json({
+      message: 'Tenants retrieved successfully',
+      tenants: await this.service.listTenants(),
+    });
   };
 
   registrationOrganizations = async (_req: Request, res: Response) => {
-    noStore(res).json({ tenants: await this.service.listOrganizationsOpenToRegistration() });
+    noStore(res).json({
+      message: 'Registration organizations retrieved successfully',
+      tenants: await this.service.listOrganizationsOpenToRegistration(),
+    });
   };
 
   organizationCodeAvailability = async (req: Request, res: Response) => {
     const { code } = OrganizationCodeSchema.parse(req.query);
-    noStore(res).json(await this.service.checkOrganizationCode(code));
+    noStore(res).json({
+      message: 'Organization code availability checked successfully',
+      ...(await this.service.checkOrganizationCode(code)),
+    });
   };
 
   gettoken = (_req: Request, res: Response) => {
@@ -83,136 +95,217 @@ export class AuthController {
   login = async (req: Request, res: Response) => {
     // loginDecryptMiddleware (app.ts) has already decrypted any AES-encrypted
     // credentials before this handler runs, so body is always plain-text here.
-    noStore(res).json(await this.service.login(LoginSchema.parse(req.body), meta(req)));
+    noStore(res).json({
+      message: 'Sign-in processed successfully',
+      ...(await this.service.login(LoginSchema.parse(req.body), meta(req))),
+    });
   };
 
   verifyMfa = async (req: Request, res: Response) => {
     const { mfaToken, code } = MfaVerifySchema.parse(req.body);
-    noStore(res).json(await this.service.verifyMfa(mfaToken, code, meta(req)));
+    noStore(res).json({
+      message: 'Two-factor verification successful',
+      ...(await this.service.verifyMfa(mfaToken, code, meta(req))),
+    });
   };
 
   verifyRecoveryCode = async (req: Request, res: Response) => {
     const { mfaToken, code } = RecoveryCodeSchema.parse(req.body);
-    noStore(res).json(await this.service.verifyRecoveryCode(mfaToken, code, meta(req)));
+    noStore(res).json({
+      message: 'Recovery code accepted',
+      ...(await this.service.verifyRecoveryCode(mfaToken, code, meta(req))),
+    });
   };
 
   refresh = async (req: Request, res: Response) => {
     const { refreshToken } = RefreshSchema.parse(req.body);
-    noStore(res).json(await this.service.refresh(refreshToken));
+    noStore(res).json({
+      message: 'Session refreshed successfully',
+      ...(await this.service.refresh(refreshToken)),
+    });
   };
 
   register = async (req: Request, res: Response) => {
     // The cast is the schema-to-type boundary: zod has validated the shape, but
     // its inferred type is all-optional under this tsconfig (see RegisterDto).
     const dto = RegisterSchema.parse(req.body) as RegisterDto;
-    res.status(202).json(await this.service.register(dto, meta(req)));
+    res
+      .status(202)
+      .json({
+        message: 'Registration submitted successfully',
+        ...(await this.service.register(dto, meta(req))),
+      });
   };
 
   previewInvitation = async (req: Request, res: Response) => {
     const { token } = InvitationTokenSchema.parse(req.body);
-    noStore(res).json(await this.service.previewInvitation(token));
+    noStore(res).json({
+      message: 'Invitation details retrieved successfully',
+      ...(await this.service.previewInvitation(token)),
+    });
   };
 
   acceptInvitation = async (req: Request, res: Response) => {
     const dto = AcceptInvitationSchema.parse(req.body);
-    res.json(await this.service.acceptInvitation(dto, meta(req)));
+    res.json({
+      message: 'Invitation accepted successfully',
+      ...(await this.service.acceptInvitation(dto, meta(req))),
+    });
   };
 
   verifyEmail = async (req: Request, res: Response) => {
     const { token } = VerifyEmailSchema.parse(req.body);
-    res.json(await this.service.verifyEmail(token, meta(req)));
+    res.json({
+      message: 'Email verified successfully',
+      ...(await this.service.verifyEmail(token, meta(req))),
+    });
   };
 
   resendVerification = async (req: Request, res: Response) => {
     const { email } = EmailOnlySchema.parse(req.body);
-    res.status(202).json(await this.service.resendVerification(email));
+    res
+      .status(202)
+      .json({
+        message: 'Verification email resent successfully',
+        ...(await this.service.resendVerification(email)),
+      });
   };
 
   forgotPassword = async (req: Request, res: Response) => {
     const { email } = EmailOnlySchema.parse(req.body);
-    res.status(202).json(await this.service.forgotPassword(email, meta(req)));
+    res
+      .status(202)
+      .json({
+        message: 'Password reset requested successfully',
+        ...(await this.service.forgotPassword(email, meta(req))),
+      });
   };
 
   validateResetToken = async (req: Request, res: Response) => {
     const { token } = ResetTokenSchema.parse(req.body);
-    noStore(res).json(await this.service.validateResetToken(token));
+    noStore(res).json({
+      message: 'Reset token is valid',
+      ...(await this.service.validateResetToken(token)),
+    });
   };
 
   resetPassword = async (req: Request, res: Response) => {
     const { token, newPassword } = ResetPasswordSchema.parse(req.body);
-    res.json(await this.service.resetPassword(token, newPassword, meta(req)));
+    res.json({
+      message: 'Password reset successfully',
+      ...(await this.service.resetPassword(token, newPassword, meta(req))),
+    });
   };
 
   // --- Authenticated ----------------------------------------------------------
 
   logout = async (req: AuthRequest, res: Response) => {
     await this.service.logout(actor(req));
-    res.json({ ok: true });
+    res.json({ message: 'Logged out successfully', ok: true });
   };
 
   logoutAll = async (req: AuthRequest, res: Response) => {
     const { password } = PasswordConfirmSchema.parse(req.body);
     await this.service.logoutAll(actor(req), password);
-    res.json({ ok: true });
+    res.json({ message: 'All sessions logged out successfully', ok: true });
   };
 
   me = async (req: AuthRequest, res: Response) => {
-    noStore(res).json(await this.service.me(actor(req)));
+    noStore(res).json({
+      message: 'Profile retrieved successfully',
+      ...(await this.service.me(actor(req))),
+    });
   };
 
   userTenants = async (req: AuthRequest, res: Response) => {
-    res.json({ tenants: await this.service.listUserTenants(actor(req).userId) });
+    res.json({
+      message: 'User organizations retrieved successfully',
+      tenants: await this.service.listUserTenants(actor(req).userId),
+    });
   };
 
   switchTenant = async (req: AuthRequest, res: Response) => {
     const { organizationId } = SwitchTenantSchema.parse(req.body);
-    noStore(res).json(await this.service.switchTenant(actor(req), organizationId));
+    noStore(res).json({
+      message: 'Organization switched successfully',
+      ...(await this.service.switchTenant(actor(req), organizationId)),
+    });
   };
 
   updateAvatar = async (req: AuthRequest, res: Response) => {
     const { avatar } = UpdateAvatarSchema.parse(req.body);
-    res.json(await this.service.updateAvatar(actor(req), avatar));
+    res.json({
+      message: 'Avatar updated successfully',
+      ...(await this.service.updateAvatar(actor(req), avatar)),
+    });
   };
 
   changePassword = async (req: AuthRequest, res: Response) => {
     const { currentPassword, newPassword } = ChangePasswordSchema.parse(req.body);
-    res.json(await this.service.changePassword(actor(req), currentPassword, newPassword));
+    res.json({
+      message: 'Password changed successfully',
+      ...(await this.service.changePassword(actor(req), currentPassword, newPassword)),
+    });
   };
 
   security = async (req: AuthRequest, res: Response) => {
-    noStore(res).json(await this.service.securityOverview(actor(req)));
+    noStore(res).json({
+      message: 'Security overview retrieved successfully',
+      ...(await this.service.securityOverview(actor(req))),
+    });
   };
 
   startMfaEnrollment = async (req: AuthRequest, res: Response) => {
     const { password } = PasswordConfirmSchema.parse(req.body);
-    noStore(res).json(await this.service.startMfaEnrollment(actor(req), password));
+    noStore(res).json({
+      message: 'MFA enrollment started successfully',
+      ...(await this.service.startMfaEnrollment(actor(req), password)),
+    });
   };
 
   confirmMfaEnrollment = async (req: AuthRequest, res: Response) => {
     const { enrollmentToken, code } = MfaEnrollConfirmSchema.parse(req.body);
-    noStore(res).json(await this.service.confirmMfaEnrollment(actor(req), enrollmentToken, code));
+    noStore(res).json({
+      message: 'MFA enabled successfully',
+      ...(await this.service.confirmMfaEnrollment(actor(req), enrollmentToken, code)),
+    });
   };
 
   disableMfa = async (req: AuthRequest, res: Response) => {
     const { password, code } = MfaDisableSchema.parse(req.body);
-    res.json(await this.service.disableMfa(actor(req), password, code));
+    res.json({
+      message: 'MFA disabled successfully',
+      ...(await this.service.disableMfa(actor(req), password, code)),
+    });
   };
 
   regenerateRecoveryCodes = async (req: AuthRequest, res: Response) => {
     const { password } = PasswordConfirmSchema.parse(req.body);
-    noStore(res).json(await this.service.regenerateRecoveryCodes(actor(req), password));
+    noStore(res).json({
+      message: 'Recovery codes regenerated successfully',
+      ...(await this.service.regenerateRecoveryCodes(actor(req), password)),
+    });
   };
 
   sessions = async (req: AuthRequest, res: Response) => {
-    noStore(res).json(await this.service.listSessions(actor(req)));
+    noStore(res).json({
+      message: 'Sessions retrieved successfully',
+      ...(await this.service.listSessions(actor(req))),
+    });
   };
 
   revokeSession = async (req: AuthRequest, res: Response) => {
     const { sessionId } = SessionIdSchema.parse(req.params);
-    res.json(await this.service.revokeSession(actor(req), sessionId));
+    res.json({
+      message: 'Session revoked successfully',
+      ...(await this.service.revokeSession(actor(req), sessionId)),
+    });
   };
 
   revokeOtherSessions = async (req: AuthRequest, res: Response) => {
-    res.json(await this.service.revokeOtherSessions(actor(req)));
+    res.json({
+      message: 'Other sessions revoked successfully',
+      ...(await this.service.revokeOtherSessions(actor(req))),
+    });
   };
 }

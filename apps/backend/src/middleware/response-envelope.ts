@@ -1,35 +1,36 @@
 import type { RequestHandler } from 'express';
 
-/** Mirror of entMsgDetail in the frontend. */
+/** One entry of the message envelope, as the frontend reads it. */
 export interface MsgDetail {
-  msgID: number;
-  msgType: number;
-  msgDescription: string;
+  id: number;
+  msg: string | null;
+  msgType: 'Error' | 'Information';
 }
 
-/** Mirror of entIEMessage in the frontend. */
+/** Envelope attached under `msg` to every object response. */
 export interface IEMessage {
   infoMessage: MsgDetail;
-  errorMessage: any[];
+  errorMessage: MsgDetail[];
   hasError: boolean;
 }
 
 function buildMsg(body: Record<string, any>): IEMessage {
-  const errorMessages: any[] = [];
+  const errorMessage: MsgDetail[] = [];
 
   if (body.error) {
-    errorMessages.push(typeof body.error === 'string' ? body.error : (body.error.message ?? body.error));
+    const text = typeof body.error === 'string' ? body.error : (body.error.message ?? body.error);
+    errorMessage.push({ id: 0, msg: String(text), msgType: 'Error' });
   }
 
-  const hasError = errorMessages.length > 0;
+  const hasError = errorMessage.length > 0;
 
   return {
     infoMessage: {
-      msgID: 0,
-      msgType: 0,
-      msgDescription: hasError ? '' : (body.message ?? ''),
+      id: 0,
+      msg: hasError ? null : (body.message ?? null),
+      msgType: 'Information',
     },
-    errorMessage: errorMessages,
+    errorMessage,
     hasError,
   };
 }

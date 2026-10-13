@@ -132,7 +132,7 @@ export function buildRbacRouter(deps: {
       const type = req.query.type as string | undefined;
       const groupId = req.query.groupId as string | undefined;
       const perms = await roleService.listPermissions({ type, groupId });
-      res.json({ data: perms });
+      res.json({ success: true, message: 'Permissions retrieved successfully', data: perms });
     })
   );
 
@@ -164,7 +164,11 @@ export function buildRbacRouter(deps: {
     '/permissions/groups',
     wrap(async (_req, res) => {
       const groups = await roleService.listPermissionGroups();
-      res.json({ data: groups });
+      res.json({
+        success: true,
+        message: 'Permission groups retrieved successfully',
+        data: groups,
+      });
     })
   );
 
@@ -202,7 +206,7 @@ export function buildRbacRouter(deps: {
     wrap(async (req, res) => {
       const orgId = req.auth!.tenantId;
       const roles = await roleService.list(orgId);
-      res.json({ data: roles });
+      res.json({ success: true, message: 'Roles retrieved successfully', data: roles });
     })
   );
 
@@ -245,7 +249,7 @@ export function buildRbacRouter(deps: {
     requirePermission('system:rbac:read'),
     wrap(async (req, res) => {
       const role = await roleService.getDetail(req.params.id);
-      res.json({ data: role });
+      res.json({ success: true, message: 'Role retrieved successfully', data: role });
     })
   );
 
@@ -287,7 +291,7 @@ export function buildRbacRouter(deps: {
     wrap(async (req, res) => {
       const input = CreateRole.parse(req.body) as CreateRoleInput;
       const role = await roleService.create(req.auth!.tenantId, input, req.auth!.userId);
-      res.status(201).json({ data: role });
+      res.status(201).json({ success: true, message: 'Role created successfully', data: role });
     })
   );
 
@@ -339,7 +343,7 @@ export function buildRbacRouter(deps: {
     wrap(async (req, res) => {
       const input = UpdateRole.parse(req.body) as Partial<CreateRoleInput>;
       const role = await roleService.update(req.params.id, input, req.auth!.userId);
-      res.json({ data: role });
+      res.json({ success: true, message: 'Role updated successfully', data: role });
     })
   );
 
@@ -383,7 +387,7 @@ export function buildRbacRouter(deps: {
     requirePermission('system:rbac:write'),
     wrap(async (req, res) => {
       await roleService.delete(req.params.id, req.auth!.userId);
-      res.json({ data: { ok: true } });
+      res.json({ success: true, message: 'Role deleted successfully', data: { ok: true } });
     })
   );
 
@@ -448,7 +452,11 @@ export function buildRbacRouter(deps: {
         effect: 'allow' | 'deny';
       }>;
       await roleService.setPermissions(req.params.id, perms, req.auth!.userId);
-      res.json({ data: { ok: true } });
+      res.json({
+        success: true,
+        message: 'Role permissions updated successfully',
+        data: { ok: true },
+      });
     })
   );
 
@@ -503,7 +511,11 @@ export function buildRbacRouter(deps: {
     wrap(async (req, res) => {
       const parents = InheritanceSet.parse(req.body);
       await roleService.setInheritance(req.params.id, parents, req.auth!.userId);
-      res.json({ data: { ok: true } });
+      res.json({
+        success: true,
+        message: 'Role inheritance updated successfully',
+        data: { ok: true },
+      });
     })
   );
 
@@ -574,7 +586,7 @@ export function buildRbacRouter(deps: {
         req.auth!.tenantId,
         req.auth!.userId
       );
-      res.status(201).json({ data: clone });
+      res.status(201).json({ success: true, message: 'Role cloned successfully', data: clone });
     })
   );
 
@@ -620,7 +632,7 @@ export function buildRbacRouter(deps: {
     wrap(async (req, res) => {
       const orgId = req.auth!.tenantId;
       const list = await userRoleService.listForUser(req.params.userId, orgId);
-      res.json({ data: list });
+      res.json({ success: true, message: 'User roles retrieved successfully', data: list });
     })
   );
 
@@ -673,7 +685,9 @@ export function buildRbacRouter(deps: {
         req.auth!.tenantId,
         req.auth!.userId
       );
-      res.status(201).json({ data: assignment });
+      res
+        .status(201)
+        .json({ success: true, message: 'Role assigned to user successfully', data: assignment });
     })
   );
 
@@ -724,7 +738,11 @@ export function buildRbacRouter(deps: {
     requirePermission('users:role:assign'),
     wrap(async (req, res) => {
       await userRoleService.revoke(req.params.assignmentId, req.auth!.userId, req.body?.reason);
-      res.json({ data: { ok: true } });
+      res.json({
+        success: true,
+        message: 'Role assignment removed successfully',
+        data: { ok: true },
+      });
     })
   );
 
@@ -775,7 +793,7 @@ export function buildRbacRouter(deps: {
       }
 
       res.setHeader('X-Policy-Version', String(policy.version));
-      res.json({ data: policy });
+      res.json({ success: true, message: 'Effective policy retrieved successfully', data: policy });
     })
   );
 
@@ -841,7 +859,11 @@ export function buildRbacRouter(deps: {
         checks
       );
       res.setHeader('X-Policy-Version', String(version));
-      res.json({ data: { results, version } });
+      res.json({
+        success: true,
+        message: 'Permission check completed successfully',
+        data: { results, version },
+      });
     })
   );
 
@@ -927,7 +949,7 @@ export function buildRbacRouter(deps: {
         page: req.query.page ? Number(req.query.page) : 1,
         pageSize: req.query.pageSize ? Number(req.query.pageSize) : 50,
       });
-      res.json(page);
+      res.json({ message: 'Audit logs retrieved successfully', ...page });
     })
   );
 

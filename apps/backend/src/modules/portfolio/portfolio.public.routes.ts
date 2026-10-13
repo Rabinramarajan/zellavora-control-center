@@ -50,7 +50,7 @@ router.get(
     }
     const data = await service.getPublicPortfolio(username);
     res.set('Cache-Control', 'public, max-age=60');
-    res.json({ success: true, data });
+    res.json({ success: true, message: 'Public portfolio retrieved successfully', data });
   })
 );
 

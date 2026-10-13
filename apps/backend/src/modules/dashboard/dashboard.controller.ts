@@ -39,7 +39,7 @@ export class DashboardController {
     try {
       const parsed = OverviewQuerySchema.parse(req.query);
       const data = await this.service.getOverview(parsed.range, resolveScope(req));
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Dashboard overview retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -55,7 +55,7 @@ export class DashboardController {
         resolveScope(req),
         { action: parsed.action, severity: parsed.severity }
       );
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Dashboard activity retrieved successfully', data });
     } catch (err) {
       next(err);
     }

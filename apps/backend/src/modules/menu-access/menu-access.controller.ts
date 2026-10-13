@@ -8,14 +8,18 @@ export class MenuAccessController {
   constructor(private readonly service = new MenuAccessService()) {}
 
   tree = (_req: AuthRequest, res: Response) => {
-    res.json({ success: true, data: this.service.tree() });
+    res.json({
+      success: true,
+      message: 'Menu access tree retrieved successfully',
+      data: this.service.tree(),
+    });
   };
 
   get = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { roleId } = MenuAccessRoleParamsSchema.parse(req.params);
       const data = await this.service.get(roleId, this.tenant(req));
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Menu access retrieved successfully', data });
     } catch (err) {
       next(err);
     }
@@ -26,7 +30,7 @@ export class MenuAccessController {
       const { roleId } = MenuAccessRoleParamsSchema.parse(req.params);
       const dto = UpdateMenuAccessSchema.parse(req.body);
       const data = await this.service.update(roleId, dto, this.tenant(req), req.userId!);
-      res.json({ success: true, data });
+      res.json({ success: true, message: 'Menu access updated successfully', data });
     } catch (err) {
       next(err);
     }
