@@ -1,5 +1,6 @@
 import { prisma } from '../../infrastructure/prisma';
 import type { TxClient } from '../../infrastructure/prisma';
+import { INDIVIDUAL_ROLE_NAME } from '../auth/individual-role';
 import type { DashboardScope } from './dashboard.scope';
 
 export interface DashboardTrendPoint {
@@ -40,6 +41,7 @@ const ACTIVITY_SELECT = {
 export interface DashboardRepository {
   countOrganizations(scope: DashboardScope, tx?: TxClient): Promise<number>;
   countMembers(scope: DashboardScope, tx?: TxClient): Promise<number>;
+  countIndividualUsers(scope: DashboardScope, tx?: TxClient): Promise<number>;
   countActiveSessions(scope: DashboardScope, tx?: TxClient): Promise<number>;
   countPendingInvitations(scope: DashboardScope, tx?: TxClient): Promise<number>;
   countProjects(scope: DashboardScope, tx?: TxClient): Promise<number>;
@@ -110,9 +112,23 @@ export class PrismaDashboardRepository implements DashboardRepository {
     return db.organization.count({ where: { id: scope.organizationId, isDeleted: false } });
   }
 
+  /** Organization members; personal accounts are reported by countIndividualUsers. */
   async countMembers(scope: DashboardScope, tx?: TxClient): Promise<number> {
     const db = tx ?? prisma;
-    return db.user.count({ where: { tenantId: scope.organizationId, isDeleted: false } });
+    return db.user.count({
+      where: {
+        tenantId: scope.organizationId,
+        isDeleted: false,
+        role: { not: INDIVIDUAL_ROLE_NAME },
+      },
+    });
+  }
+
+  async countIndividualUsers(scope: DashboardScope, tx?: TxClient): Promise<number> {
+    const db = tx ?? prisma;
+    return db.user.count({
+      where: { tenantId: scope.organizationId, isDeleted: false, role: INDIVIDUAL_ROLE_NAME },
+    });
   }
 
   async countActiveSessions(scope: DashboardScope, tx?: TxClient): Promise<number> {

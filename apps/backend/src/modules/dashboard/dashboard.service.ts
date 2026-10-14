@@ -145,6 +145,7 @@ export class DashboardService {
     const [
       organizations,
       members,
+      individualUsers,
       activeSessions,
       pendingInvitations,
       auditEvents24h,
@@ -157,6 +158,7 @@ export class DashboardService {
     ] = await Promise.all([
       this.repo.countOrganizations(scope),
       this.repo.countMembers(scope),
+      this.repo.countIndividualUsers(scope),
       this.repo.countActiveSessions(scope),
       this.repo.countPendingInvitations(scope),
       this.repo.countAuditEventsSince(scope, last24h),
@@ -185,6 +187,13 @@ export class DashboardService {
           value: members,
           hint: 'Active accounts',
           series: 'secondary',
+        },
+        {
+          key: 'individualUsers',
+          label: 'Individual Users',
+          value: individualUsers,
+          hint: 'Personal accounts',
+          series: null,
         },
         {
           key: 'activeSessions',

@@ -20,6 +20,7 @@ function repoStub(): { repo: DashboardRepository; scopes: DashboardScope[] } {
   const repo = {
     countOrganizations: num(1),
     countMembers: num(2),
+    countIndividualUsers: num(9),
     countActiveSessions: num(3),
     countPendingInvitations: num(4),
     countProjects: num(5),
@@ -68,6 +69,7 @@ describe('DashboardService.getOverview', () => {
     expect(overview.kpis.map((k) => k.key)).toEqual([
       'organizations',
       'members',
+      'individualUsers',
       'activeSessions',
       'pendingInvitations',
       'auditEvents24h',
@@ -101,6 +103,7 @@ describe('DashboardService.getOverview', () => {
 
     expect(repo.countOrganizations).not.toHaveBeenCalled();
     expect(repo.countMembers).not.toHaveBeenCalled();
+    expect(repo.countIndividualUsers).not.toHaveBeenCalled();
     expect(repo.countPendingInvitations).not.toHaveBeenCalled();
     expect(repo.planDistribution).not.toHaveBeenCalled();
   });
