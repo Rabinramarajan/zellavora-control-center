@@ -142,7 +142,7 @@ export const config = {
   apiVersion: process.env.API_VERSION || 'v1',
   corsOrigins: (
     process.env.VITE_CORS_ORIGINS ||
-    'http://localhost:2000,http://localhost:4200,http://localhost:3000'
+    'http://localhost:2000,http://localhost:4200,http://localhost:3000,https://admin.zellavora.com,https://demo.zellavora.com'
   ).split(',').map((o) => o.trim()),
 
   // ============================================================================
