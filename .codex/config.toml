@@ -1,6 +1,0 @@
-[mcp_servers.angular-cli]
-command = "cmd"
-args = [
-    "/c",
-    'cd apps\zcc-frontend && npx -y ng mcp',
-]
