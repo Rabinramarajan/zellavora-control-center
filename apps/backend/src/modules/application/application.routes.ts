@@ -12,6 +12,7 @@ import notificationRoutes from '../notification/notification.routes';
 import dailySheetsRoutes from '../daily-sheets/daily-sheets.routes';
 import monthlySheetsRoutes from '../monthly-sheets/monthly-sheets.routes';
 import timesheetsRoutes from '../timesheets/timesheets.routes';
+import pmRoutes from '../pm/pm.routes';
 
 const router: ExpressRouter = Router();
 
@@ -29,5 +30,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/daily-sheets', dailySheetsRoutes);
 router.use('/monthly-sheets', monthlySheetsRoutes);
 router.use('/timesheets', timesheetsRoutes);
+router.use('/pm', pmRoutes);
 
 export default router;

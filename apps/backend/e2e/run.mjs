@@ -41,9 +41,16 @@ const env = {
 
 const run = (label, command, args, options = {}) =>
   new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd: root, env, shell: process.platform === 'win32', stdio: options.quiet ? 'ignore' : 'inherit' });
+    const child = spawn(command, args, {
+      cwd: root,
+      env,
+      shell: process.platform === 'win32',
+      stdio: options.quiet ? 'ignore' : 'inherit',
+    });
     child.on('error', reject);
-    child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`${label} exited with ${code}`))));
+    child.on('exit', (code) =>
+      code === 0 ? resolve() : reject(new Error(`${label} exited with ${code}`))
+    );
   });
 
 const capture = (command, args) =>
@@ -74,7 +81,10 @@ let socket;
 let failed = false;
 try {
   // A leftover API from an earlier run would answer the checks with stale state.
-  const busy = await fetch(`http://127.0.0.1:${API_PORT}/health`).then(() => true, () => false);
+  const busy = await fetch(`http://127.0.0.1:${API_PORT}/health`).then(
+    () => true,
+    () => false
+  );
   if (busy) throw new Error(`port ${API_PORT} is already serving; stop it or set E2E_API_PORT`);
 
   console.log('> starting PGlite on', DB_PORT);
@@ -91,11 +101,22 @@ try {
       shell: process.platform === 'win32',
       stdio: 'inherit',
     });
-    child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error('migrate deploy failed'))));
+    child.on('exit', (code) =>
+      code === 0 ? resolve() : reject(new Error('migrate deploy failed'))
+    );
   });
 
   console.log('> checking the migrations match schema.prisma');
-  const diff = await capture('npx', ['prisma', 'migrate', 'diff', '--from-url', env.DIRECT_URL, '--to-schema-datamodel', 'prisma/schema.prisma', '--script']);
+  const diff = await capture('npx', [
+    'prisma',
+    'migrate',
+    'diff',
+    '--from-url',
+    env.DIRECT_URL,
+    '--to-schema-datamodel',
+    'prisma/schema.prisma',
+    '--script',
+  ]);
   if (!diff.includes('-- This is an empty migration.')) throw new Error(`schema drift:\n${diff}`);
 
   console.log('> seeding');
@@ -104,8 +125,19 @@ try {
   await run('fixtures', 'npx', ['tsx', 'e2e/fixtures.ts'], { quiet: true });
 
   console.log('> starting the API on', API_PORT);
-  api = spawn('npx', ['tsx', 'src/index.ts'], { cwd: root, env, shell: process.platform === 'win32', stdio: process.env.E2E_VERBOSE ? 'inherit' : 'ignore' });
+  api = spawn('npx', ['tsx', 'src/index.ts'], {
+    cwd: root,
+    env,
+    shell: process.platform === 'win32',
+    stdio: process.env.E2E_VERBOSE ? 'inherit' : 'ignore',
+  });
   await waitForHealth();
+
+  if (process.env.E2E_SERVE) {
+    // Leave the database and API running so the UI can be tried by hand; stop the process to end it.
+    console.log('> serving on', API_PORT, '(users: bob@beta.test / E2e-Passw0rd!x, org beta-co)');
+    await new Promise(() => undefined);
+  }
 
   console.log('> api checks');
   await run('api checks', 'node', ['e2e/api.checks.mjs']);
@@ -115,7 +147,8 @@ try {
 } finally {
   if (api) {
     // Synchronous: process.exit below would otherwise cut the kill short and leave the API running.
-    if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(api.pid), '/T', '/F'], { stdio: 'ignore' });
+    if (process.platform === 'win32')
+      spawnSync('taskkill', ['/pid', String(api.pid), '/T', '/F'], { stdio: 'ignore' });
     else api.kill('SIGTERM');
   }
   await socket?.stop().catch(() => undefined);

@@ -199,6 +199,10 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Maker-checker user requests.',
       },
       {
+        name: 'projectManagement',
+        description: 'Delivery projects, boards, tasks, comments and templates.',
+      },
+      {
         name: 'operations',
         description: 'Platform operations: system health and audit.',
       },

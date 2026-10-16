@@ -80,6 +80,7 @@ describe('selected menu access', () => {
       'dashboard',
       'portfolio',
       'projects',
+      'delivery',
       'content',
       'appearance',
       'analytics',

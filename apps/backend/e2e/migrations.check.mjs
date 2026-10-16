@@ -5,8 +5,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const dir = fileURLToPath(new URL('../prisma/migrations', import.meta.url));
-const all = fs.readdirSync(dir).filter((d) => fs.statSync(path.join(dir, d)).isDirectory()).sort();
-const mine = ['20261016000000_p0_security_permissions', '20261016010000_notification_created_at'];
+const all = fs
+  .readdirSync(dir)
+  .filter((d) => fs.statSync(path.join(dir, d)).isDirectory())
+  .sort();
+const mine = [
+  '20261016000000_p0_security_permissions',
+  '20261016010000_notification_created_at',
+  '20261017000000_pm_projects_tasks',
+  '20261017010000_pm_attachments_time',
+];
 const before = all.filter((m) => !mine.includes(m));
 const read = (m) => fs.readFileSync(path.join(dir, m, 'migration.sql'), 'utf8');
 
@@ -33,10 +41,31 @@ const q = async (db, sql, params) => (await db.query(sql, params)).rows;
     error = e.message;
   }
   check('applies to an empty database', !error, error ?? '');
-  const keys = (await q(db, "select key from permissions where key in ('organizations:read','organizations:update') order by key")).map((r) => r.key);
+  const keys = (
+    await q(
+      db,
+      "select key from permissions where key in ('organizations:read','organizations:update') order by key"
+    )
+  ).map((r) => r.key);
   check('creates the two permission codes', keys.length === 2, keys.join(','));
-  check('adds notifications.created_at', (await q(db, "select 1 from information_schema.columns where table_name='notifications' and column_name='created_at'")).length === 1);
-  check('creates the recipient/created_at index', (await q(db, "select 1 from pg_indexes where indexname='notifications_recipient_id_created_at_idx'")).length === 1);
+  check(
+    'adds notifications.created_at',
+    (
+      await q(
+        db,
+        "select 1 from information_schema.columns where table_name='notifications' and column_name='created_at'"
+      )
+    ).length === 1
+  );
+  check(
+    'creates the recipient/created_at index',
+    (
+      await q(
+        db,
+        "select 1 from pg_indexes where indexname='notifications_recipient_id_created_at_idx'"
+      )
+    ).length === 1
+  );
 }
 
 // ------------------------------------------------------------------ 2. populated database
@@ -66,7 +95,8 @@ const q = async (db, sql, params) => (await db.query(sql, params)).rows;
       ('${id(21)}', 'manage:settings', 'settings:manage');
     insert into role_permissions (id, organization_id, role_id, permission_id) values
       ('${id(30)}', '${ORG}', '${id(10)}', '${id(20)}'),
-      ('${id(31)}', '${ORG}', '${id(11)}', '${id(21)}');
+      ('${id(31)}', '${ORG}', '${id(11)}', '${id(21)}'),
+      ('${id(32)}', '${ORG}', '${id(12)}', (select id from permissions where key = 'portfolio:read'));
     insert into user_role_assignments (id, user_id, role_id, organization_id) values
       ('${id(40)}', '${id(2)}', '${id(11)}', '${ORG}');
     insert into notifications (id, organization_id, body, sent_at) values
@@ -83,26 +113,79 @@ const q = async (db, sql, params) => (await db.query(sql, params)).rows;
   check('applies to a populated database', !error, error ?? '');
 
   const grants = async (roleId) =>
-    (await q(db, "select p.key from role_permissions rp join permissions p on p.id=rp.permission_id where rp.role_id=$1 and rp.effect='allow' order by p.key", [roleId])).map((r) => r.key);
+    (
+      await q(
+        db,
+        "select p.key from role_permissions rp join permissions p on p.id=rp.permission_id where rp.role_id=$1 and rp.effect='allow' order by p.key",
+        [roleId]
+      )
+    ).map((r) => r.key);
   const admin = await grants(id(11));
-  check('Admin (holds settings:manage) gains organizations:read and organizations:update',
-    ['organizations:read', 'organizations:update'].every((k) => admin.includes(k)), admin.join(','));
+  check(
+    'Admin (holds settings:manage) gains organizations:read and organizations:update',
+    ['organizations:read', 'organizations:update'].every((k) => admin.includes(k)),
+    admin.join(',')
+  );
   const owner = await grants(id(10));
-  check('Owner gains organizations:read only (its *:* already covers the rest)',
-    owner.includes('organizations:read') && !owner.includes('organizations:update'), owner.join(','));
-  check('an INACTIVE role with no grants gets nothing', (await grants(id(12))).length === 0);
+  check(
+    'Owner gains organizations:read only (its *:* already covers the rest)',
+    owner.includes('organizations:read') && !owner.includes('organizations:update'),
+    owner.join(',')
+  );
+  const member = await grants(id(12));
+  check(
+    'a member role (portfolio:read) gains read and task permissions only',
+    ['pm:projects:read', 'pm:tasks:read', 'pm:tasks:write', 'pm:tasks:comment'].every((k) =>
+      member.includes(k)
+    ) &&
+      !member.some((k) =>
+        ['pm:projects:write', 'pm:projects:manage-members', 'pm:templates:manage'].includes(k)
+      ),
+    member.join(',')
+  );
+  check(
+    'a settings admin also gains project write, members, report and templates',
+    [
+      'pm:projects:write',
+      'pm:projects:manage-members',
+      'pm:projects:report',
+      'pm:templates:manage',
+    ].every((k) => admin.includes(k))
+  );
+  check(
+    'the pm tables exist with their unique keys',
+    (
+      await q(
+        db,
+        "select count(*)::int n from pg_indexes where indexname in ('pm_projects_organization_id_key_key','pm_tasks_project_id_number_key','pm_project_members_project_id_user_id_key')"
+      )
+    )[0].n === 3
+  );
 
   const assigned = async (userId) =>
-    (await q(db, 'select role_id from user_role_assignments where user_id=$1', [userId])).map((r) => r.role_id);
-  check('owner with no assignment gets an explicit Owner assignment', JSON.stringify(await assigned(id(1))) === JSON.stringify([id(10)]));
-  check('admin already assigned keeps exactly one assignment', (await assigned(id(2))).length === 1);
+    (await q(db, 'select role_id from user_role_assignments where user_id=$1', [userId])).map(
+      (r) => r.role_id
+    );
+  check(
+    'owner with no assignment gets an explicit Owner assignment',
+    JSON.stringify(await assigned(id(1))) === JSON.stringify([id(10)])
+  );
+  check(
+    'admin already assigned keeps exactly one assignment',
+    (await assigned(id(2))).length === 1
+  );
   check('viewer with no matching role stays unassigned', (await assigned(id(3))).length === 0);
-  check('user whose only matching role is INACTIVE stays unassigned', (await assigned(id(4))).length === 0);
+  check(
+    'user whose only matching role is INACTIVE stays unassigned',
+    (await assigned(id(4))).length === 0
+  );
   check('deleted user is not given an assignment', (await assigned(id(5))).length === 0);
 
   const n = await q(db, 'select id, created_at, sent_at from notifications order by id');
-  check('notification created_at is backfilled from sent_at',
-    new Date(n[0].created_at).toISOString() === '2026-01-02T03:04:05.000Z');
+  check(
+    'notification created_at is backfilled from sent_at',
+    new Date(n[0].created_at).toISOString() === '2026-01-02T03:04:05.000Z'
+  );
   check('notification never sent still gets a created_at', n[1].created_at !== null);
 }
 

@@ -40,6 +40,7 @@ import timesheetsRoutes from '../modules/timesheets/timesheets.routes';
 import approvalModeRoutes from '../modules/approval-mode/approval-mode.routes';
 import invoicesRoutes from '../modules/invoices/invoices.routes';
 import cmsRoutes from '../modules/cms/cms.routes';
+import pmRoutes from '../modules/pm/pm.routes';
 
 import operationsHealthRoutes from '../modules/operations/health/health.routes';
 
@@ -111,4 +112,5 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/timesheets', timesheetsRoutes);
   app.use('/api/v1/approval-mode', approvalModeRoutes);
   app.use('/api/v1/invoices', invoicesRoutes);
+  app.use('/api/v1/pm', pmRoutes);
 }

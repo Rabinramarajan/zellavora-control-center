@@ -8,7 +8,9 @@ const PASSWORD = 'E2e-Passw0rd!x';
 
 async function main() {
   const hash = await PasswordService.hash(PASSWORD);
-  const orgA = await prisma.organization.findUniqueOrThrow({ where: { clientCode: 'zellavora-inc' } });
+  const orgA = await prisma.organization.findUniqueOrThrow({
+    where: { clientCode: 'zellavora-inc' },
+  });
   const orgB = await prisma.organization.create({
     data: { name: 'Beta Co', clientCode: 'beta-co', plan: 'enterprise', enforce2fa: false },
   });
@@ -35,12 +37,24 @@ async function main() {
         status: 'ACTIVE',
       },
     });
-    await prisma.userTenant.create({ data: { userId: user.id, tenantId: org.id, role: role as never } });
+    await prisma.userTenant.create({
+      data: { userId: user.id, tenantId: org.id, role: role as never },
+    });
     return user;
   };
-  const mkRole = async (name: string, org: { id: string }, keys: Array<[string, 'allow' | 'deny']>, status: 'ACTIVE' | 'INACTIVE' = 'ACTIVE') => {
+  const mkRole = async (
+    name: string,
+    org: { id: string },
+    keys: Array<[string, 'allow' | 'deny']>,
+    status: 'ACTIVE' | 'INACTIVE' = 'ACTIVE'
+  ) => {
     const role = await prisma.role.create({
-      data: { name, key: `${org.id}_${name.toLowerCase().replace(/\s+/g, '_')}`, organizationId: org.id, status },
+      data: {
+        name,
+        key: `${org.id}_${name.toLowerCase().replace(/\s+/g, '_')}`,
+        organizationId: org.id,
+        status,
+      },
     });
     for (const [key, effect] of keys) {
       await prisma.rolePermission.create({
@@ -57,9 +71,23 @@ async function main() {
   const bob = await mkUser('bob@beta.test', 'owner', orgB);
   await assign(bob.id, ownerB.id, orgB);
   const bobPeer = await mkUser('peer@beta.test', 'member', orgB);
+  const pmMember = await mkRole('Pm Member', orgB, [
+    ['pm:projects:read', 'allow'],
+    ['pm:tasks:read', 'allow'],
+    ['pm:tasks:write', 'allow'],
+    ['pm:tasks:comment', 'allow'],
+  ]);
+  await assign(bobPeer.id, pmMember.id, orgB);
 
   // org A plain member: personal pages only
-  const memberA = await mkRole('Plain Member', orgA, [['notifications:read', 'allow'], ['portfolio:read', 'allow']]);
+  const memberA = await mkRole('Plain Member', orgA, [
+    ['notifications:read', 'allow'],
+    ['portfolio:read', 'allow'],
+    ['pm:projects:read', 'allow'],
+    ['pm:tasks:read', 'allow'],
+    ['pm:tasks:write', 'allow'],
+    ['pm:tasks:comment', 'allow'],
+  ]);
   const carol = await mkUser('carol@acme.test', 'member', orgA);
   await assign(carol.id, memberA.id, orgA);
 
@@ -76,7 +104,9 @@ async function main() {
 
   // group scenario: no direct role, access arrives through an active group
   const groupRole = await mkRole('Group Reader', orgB, [['users:read', 'allow']]);
-  const group = await prisma.group.create({ data: { name: 'Beta Readers', slug: 'beta-readers', status: 'ACTIVE' } });
+  const group = await prisma.group.create({
+    data: { name: 'Beta Readers', slug: 'beta-readers', status: 'ACTIVE' },
+  });
   await prisma.groupRole.create({ data: { groupId: group.id, roleId: groupRole.id } });
   const frank = await mkUser('frank@beta.test', 'member', orgB);
   await prisma.userGroup.create({ data: { userId: frank.id, groupId: group.id } });
@@ -97,7 +127,14 @@ async function main() {
     });
   }
   await prisma.notification.create({
-    data: { organizationId: orgB.id, recipientId: bob.id, title: 'bob private', body: 'secret', channels: ['in_app'], status: 'pending' },
+    data: {
+      organizationId: orgB.id,
+      recipientId: bob.id,
+      title: 'bob private',
+      body: 'secret',
+      channels: ['in_app'],
+      status: 'pending',
+    },
   });
 
   const ids = { orgA: orgA.id, orgB: orgB.id, bob: bob.id, carol: carol.id, peer: bobPeer.id };

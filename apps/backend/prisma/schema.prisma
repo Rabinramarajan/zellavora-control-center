@@ -75,6 +75,7 @@ model Organization {
   settings                 OrganizationSettings[]
   portfolioProjects        PortfolioProject[]
   projects                 Project[]
+  pmProjects               PmProject[]
   teams                    Team[]
   timesheets               Timesheet[]
   userRequests             UserRequest[]
@@ -84,106 +85,106 @@ model Organization {
 }
 
 model User {
-  id                      String               @id @default(uuid()) @db.Uuid
-  email                   String               @unique
-  emailId                 String?              @unique @map("email_id")
-  username                String?              @unique
-  fullName                String               @map("full_name")
-  firstName               String?              @map("first_name")
-  lastName                String?              @map("last_name")
-  displayName             String?              @map("display_name")
-  avatarUrl               String?              @map("avatar_url")
-  bio                     String?              @map("bio")
-  headline                String?              @map("headline")
-  mobile                  String?              @map("mobile")
-  mobileVerified          Boolean              @default(false) @map("mobile_verified")
-  department              String?              @map("department")
-  jobTitle                String?              @map("job_title")
-  status                  UserStatus           @default(ACTIVE) @map("status")
-  country                 String?              @map("country")
-  timezone                String?              @map("timezone")
-  language                String               @default("en") @map("language")
-  gender                  String?              @map("gender")
-  passwordHash            String?              @map("password_hash")
-  passwordChangedAt       DateTime?            @map("password_changed_at") @db.Timestamptz(6)
-  role                    String               @default("user")
-  tenantId                String?              @map("tenant_id") @db.Uuid
-  enable2fa               Boolean              @default(false) @map("enable_two_factor_authentication")
-  mfaEnabled              Boolean              @default(false) @map("mfa_enabled")
-  mfaEnrolledAt           DateTime?            @map("mfa_enrolled_at") @db.Timestamptz(6)
-  mfaMethod               String?              @map("mfa_method")
-  mfaSecret               String?              @map("mfa_secret")
-  recoveryCodes           Json?                @map("recovery_codes")
+  id                      String                 @id @default(uuid()) @db.Uuid
+  email                   String                 @unique
+  emailId                 String?                @unique @map("email_id")
+  username                String?                @unique
+  fullName                String                 @map("full_name")
+  firstName               String?                @map("first_name")
+  lastName                String?                @map("last_name")
+  displayName             String?                @map("display_name")
+  avatarUrl               String?                @map("avatar_url")
+  bio                     String?                @map("bio")
+  headline                String?                @map("headline")
+  mobile                  String?                @map("mobile")
+  mobileVerified          Boolean                @default(false) @map("mobile_verified")
+  department              String?                @map("department")
+  jobTitle                String?                @map("job_title")
+  status                  UserStatus             @default(ACTIVE) @map("status")
+  country                 String?                @map("country")
+  timezone                String?                @map("timezone")
+  language                String                 @default("en") @map("language")
+  gender                  String?                @map("gender")
+  passwordHash            String?                @map("password_hash")
+  passwordChangedAt       DateTime?              @map("password_changed_at") @db.Timestamptz(6)
+  role                    String                 @default("user")
+  tenantId                String?                @map("tenant_id") @db.Uuid
+  enable2fa               Boolean                @default(false) @map("enable_two_factor_authentication")
+  mfaEnabled              Boolean                @default(false) @map("mfa_enabled")
+  mfaEnrolledAt           DateTime?              @map("mfa_enrolled_at") @db.Timestamptz(6)
+  mfaMethod               String?                @map("mfa_method")
+  mfaSecret               String?                @map("mfa_secret")
+  recoveryCodes           Json?                  @map("recovery_codes")
   otp                     String?
-  isAccountLocked         Boolean              @default(false) @map("is_account_locked")
-  lastLockedDate          DateTime?            @map("last_locked_date") @db.Timestamptz(6)
-  failedLoginAttempts     Int                  @default(0) @map("failed_login_attempts")
-  successfulLoginAttempts Int                  @default(0) @map("successful_login_attempts")
-  currentLoginDatetime    DateTime?            @map("current_login_datetime") @db.Timestamptz(6)
-  lastLoginDatetime       DateTime?            @map("last_login_datetime") @db.Timestamptz(6)
-  defaultLandingPage      String?              @map("default_landing_page")
-  passwordResetFlag       Boolean              @default(false) @map("password_reset_flag")
-  emailVerified           Boolean              @default(false) @map("email_verified")
-  emailVerifiedAt         DateTime?            @map("email_verified_at") @db.Timestamptz(6)
-  keyToken                String?              @map("key_token")
-  statusValue             String?              @map("status_value")
-  statusDescription       String?              @map("status_description")
-  termsAccepted           Boolean              @default(false) @map("terms_accepted")
-  termsAcceptedAt         DateTime?            @map("terms_accepted_at") @db.Timestamptz(6)
-  privacyAccepted         Boolean              @default(false) @map("privacy_accepted")
-  privacyAcceptedAt       DateTime?            @map("privacy_accepted_at") @db.Timestamptz(6)
-  securityAlerts          Boolean              @default(true) @map("security_alerts")
-  marketingEmails         Boolean              @default(false) @map("marketing_emails")
-  isDeleted               Boolean              @default(false) @map("is_deleted")
-  deletedAt               DateTime?            @map("deleted_at") @db.Timestamptz(6)
-  createdBy               String?              @map("created_by") @db.Uuid
-  updatedBy               String?              @map("updated_by") @db.Uuid
-  deletedBy               String?              @map("deleted_by") @db.Uuid
-  version                 Int                  @default(1)
+  isAccountLocked         Boolean                @default(false) @map("is_account_locked")
+  lastLockedDate          DateTime?              @map("last_locked_date") @db.Timestamptz(6)
+  failedLoginAttempts     Int                    @default(0) @map("failed_login_attempts")
+  successfulLoginAttempts Int                    @default(0) @map("successful_login_attempts")
+  currentLoginDatetime    DateTime?              @map("current_login_datetime") @db.Timestamptz(6)
+  lastLoginDatetime       DateTime?              @map("last_login_datetime") @db.Timestamptz(6)
+  defaultLandingPage      String?                @map("default_landing_page")
+  passwordResetFlag       Boolean                @default(false) @map("password_reset_flag")
+  emailVerified           Boolean                @default(false) @map("email_verified")
+  emailVerifiedAt         DateTime?              @map("email_verified_at") @db.Timestamptz(6)
+  keyToken                String?                @map("key_token")
+  statusValue             String?                @map("status_value")
+  statusDescription       String?                @map("status_description")
+  termsAccepted           Boolean                @default(false) @map("terms_accepted")
+  termsAcceptedAt         DateTime?              @map("terms_accepted_at") @db.Timestamptz(6)
+  privacyAccepted         Boolean                @default(false) @map("privacy_accepted")
+  privacyAcceptedAt       DateTime?              @map("privacy_accepted_at") @db.Timestamptz(6)
+  securityAlerts          Boolean                @default(true) @map("security_alerts")
+  marketingEmails         Boolean                @default(false) @map("marketing_emails")
+  isDeleted               Boolean                @default(false) @map("is_deleted")
+  deletedAt               DateTime?              @map("deleted_at") @db.Timestamptz(6)
+  createdBy               String?                @map("created_by") @db.Uuid
+  updatedBy               String?                @map("updated_by") @db.Uuid
+  deletedBy               String?                @map("deleted_by") @db.Uuid
+  version                 Int                    @default(1)
   msg                     String?
-  createdAt               DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt               DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
-  mfaLastUsedCounter      Int?                 @map("mfa_last_used_counter")
-  employeeCode            String?              @unique @map("employee_code")
-  userType                String?              @map("user_type")
-  branchId                String?              @map("branch_id") @db.Uuid
-  reportingManagerId      String?              @map("reporting_manager_id") @db.Uuid
-  userNo                  Int                  @unique @default(autoincrement()) @map("user_no")
-  middleName              String?              @map("middle_name")
-  employmentType          String?              @map("employment_type")
-  joiningDate             DateTime?            @map("joining_date") @db.Date
-  company                 String?              @map("company")
-  workLocation            String?              @map("work_location")
-  costCenter              String?              @map("cost_center")
-  assignedOfficerId       String?              @map("assigned_officer_id") @db.Uuid
-  accessScope             String?              @map("access_scope")
-  alternateEmail          String?              @map("alternate_email")
-  alternateMobile         String?              @map("alternate_mobile")
-  addressLine1            String?              @map("address_line1")
-  addressLine2            String?              @map("address_line2")
-  city                    String?              @map("city")
-  state                   String?              @map("state")
-  postalCode              String?              @map("postal_code")
-  lockReason              String?              @map("lock_reason")
+  createdAt               DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
+  mfaLastUsedCounter      Int?                   @map("mfa_last_used_counter")
+  employeeCode            String?                @unique @map("employee_code")
+  userType                String?                @map("user_type")
+  branchId                String?                @map("branch_id") @db.Uuid
+  reportingManagerId      String?                @map("reporting_manager_id") @db.Uuid
+  userNo                  Int                    @unique @default(autoincrement()) @map("user_no")
+  middleName              String?                @map("middle_name")
+  employmentType          String?                @map("employment_type")
+  joiningDate             DateTime?              @map("joining_date") @db.Date
+  company                 String?                @map("company")
+  workLocation            String?                @map("work_location")
+  costCenter              String?                @map("cost_center")
+  assignedOfficerId       String?                @map("assigned_officer_id") @db.Uuid
+  accessScope             String?                @map("access_scope")
+  alternateEmail          String?                @map("alternate_email")
+  alternateMobile         String?                @map("alternate_mobile")
+  addressLine1            String?                @map("address_line1")
+  addressLine2            String?                @map("address_line2")
+  city                    String?                @map("city")
+  state                   String?                @map("state")
+  postalCode              String?                @map("postal_code")
+  lockReason              String?                @map("lock_reason")
   /// Platform-level super admin: may oversee data across every organization (e.g. sessions).
-  isPlatformAdmin         Boolean              @default(false) @map("is_platform_admin")
-  endDate                 DateTime?            @map("end_date") @db.Date
-  dateOfBirth             DateTime?            @map("date_of_birth") @db.Date
-  fatherName              String?              @map("father_name")
-  motherName              String?              @map("mother_name")
-  maritalStatus           String?              @map("marital_status")
-  spouseName              String?              @map("spouse_name")
-  spouseDateOfBirth       DateTime?            @map("spouse_date_of_birth") @db.Date
+  isPlatformAdmin         Boolean                @default(false) @map("is_platform_admin")
+  endDate                 DateTime?              @map("end_date") @db.Date
+  dateOfBirth             DateTime?              @map("date_of_birth") @db.Date
+  fatherName              String?                @map("father_name")
+  motherName              String?                @map("mother_name")
+  maritalStatus           String?                @map("marital_status")
+  spouseName              String?                @map("spouse_name")
+  spouseDateOfBirth       DateTime?              @map("spouse_date_of_birth") @db.Date
   /// Null for accounts that predate self-registration types, and for users
   /// created by an administrator or an invitation rather than by registering.
-  registrationType        RegistrationType?    @map("registration_type")
+  registrationType        RegistrationType?      @map("registration_type")
   auditLogs               AuditLog[]
-  blogPosts               BlogPost[]           @relation("BlogPostAuthor")
-  dailySheetApprovals     DailySheet[]         @relation("DailySheetApprover")
-  dailySheets             DailySheet[]         @relation("DailySheetUser")
-  invitedUsers            Invitation[]         @relation("InvitedBy")
-  monthlySheetApprovals   MonthlySheet[]       @relation("MonthlySheetApprover")
-  monthlySheets           MonthlySheet[]       @relation("MonthlySheetUser")
+  blogPosts               BlogPost[]             @relation("BlogPostAuthor")
+  dailySheetApprovals     DailySheet[]           @relation("DailySheetApprover")
+  dailySheets             DailySheet[]           @relation("DailySheetUser")
+  invitedUsers            Invitation[]           @relation("InvitedBy")
+  monthlySheetApprovals   MonthlySheet[]         @relation("MonthlySheetApprover")
+  monthlySheets           MonthlySheet[]         @relation("MonthlySheetUser")
   notifications           Notification[]
   userTenants             UserTenant[]
   passwordHistory         PasswordHistory[]
@@ -194,16 +195,16 @@ model User {
   portfolioEducation      PortfolioEducation[]
   portfolioServices       PortfolioServiceItem[]
   portfolioTestimonials   PortfolioTestimonial[]
-  timesheetApprovals      Timesheet[]          @relation("ApprovedTimesheets")
-  timesheets              Timesheet[]          @relation("TimesheetUser")
+  timesheetApprovals      Timesheet[]            @relation("ApprovedTimesheets")
+  timesheets              Timesheet[]            @relation("TimesheetUser")
   emailLogs               UserEmailLog[]
   userGroups              UserGroup[]
   adminNotes              UserNote[]
-  userRequestsBy          UserRequest[]        @relation("UserRequestRequester")
-  userRequestsFor         UserRequest[]        @relation("UserRequestTarget")
+  userRequestsBy          UserRequest[]          @relation("UserRequestRequester")
+  userRequestsFor         UserRequest[]          @relation("UserRequestTarget")
   roleAssignments         UserRoleAssignment[]
   statusHistory           UserStatusHistory[]
-  teams                   Team[]               @relation("TeamToUser")
+  teams                   Team[]                 @relation("TeamToUser")
 
   @@map("users")
 }
@@ -1809,4 +1810,265 @@ model PortfolioTestimonial {
 
   @@index([organizationId, userId, deletedAt, sortOrder])
   @@map("portfolio_testimonials")
+}
+
+// ---------------------------------------------------------------------------
+// Project and task management (/api/v1/pm). Separate from the portfolio `Project` above.
+// User ids are stored without foreign keys and checked against organization membership in the
+// service, so a deleted account never blocks a project.
+// ---------------------------------------------------------------------------
+
+enum PmProjectStatus {
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum PmVisibility {
+  PRIVATE
+  TEAM
+  ORG
+}
+
+enum PmMemberRole {
+  PM_LEAD
+  CONTRIBUTOR
+  VIEWER
+}
+
+enum PmPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum PmMilestoneStatus {
+  OPEN
+  DONE
+}
+
+enum PmRecurrence {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model PmProject {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  key            String            @db.VarChar(10)
+  name           String            @db.VarChar(160)
+  description    String?
+  status         PmProjectStatus   @default(PLANNED)
+  visibility     PmVisibility      @default(PRIVATE)
+  ownerId        String            @map("owner_id") @db.Uuid
+  teamId         String?           @map("team_id") @db.Uuid
+  startDate      DateTime?         @map("start_date") @db.Date
+  dueDate        DateTime?         @map("due_date") @db.Date
+  budgetHours    Decimal?          @map("budget_hours") @db.Decimal(9, 2)
+  /// Board columns, in order: [{ key, label, done }]. Every task status is one of these keys.
+  columns        Json
+  /// Last task number handed out; incremented under a row lock so numbers never repeat.
+  taskCounter    Int               @default(0) @map("task_counter")
+  createdBy      String?           @map("created_by") @db.Uuid
+  updatedBy      String?           @map("updated_by") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isDeleted      Boolean           @default(false) @map("is_deleted")
+  deletedAt      DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members        PmProjectMember[]
+  milestones     PmMilestone[]
+  tasks          PmTask[]
+
+  @@unique([organizationId, key])
+  @@index([organizationId, status])
+  @@index([organizationId, ownerId])
+  @@map("pm_projects")
+}
+
+model PmProjectMember {
+  id        String       @id @default(uuid()) @db.Uuid
+  projectId String       @map("project_id") @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  role      PmMemberRole @default(CONTRIBUTOR)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  project   PmProject    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("pm_project_members")
+}
+
+model PmMilestone {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  projectId      String            @map("project_id") @db.Uuid
+  name           String            @db.VarChar(160)
+  dueDate        DateTime?         @map("due_date") @db.Date
+  status         PmMilestoneStatus @default(OPEN)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  project        PmProject         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks          PmTask[]
+
+  @@index([projectId])
+  @@map("pm_milestones")
+}
+
+model PmTask {
+  id                  String             @id @default(uuid()) @db.Uuid
+  organizationId      String             @map("organization_id") @db.Uuid
+  projectId           String             @map("project_id") @db.Uuid
+  parentId            String?            @map("parent_id") @db.Uuid
+  milestoneId         String?            @map("milestone_id") @db.Uuid
+  number              Int
+  title               String             @db.VarChar(300)
+  description         String?
+  status              String             @db.VarChar(40)
+  priority            PmPriority         @default(MEDIUM)
+  assigneeId          String?            @map("assignee_id") @db.Uuid
+  reporterId          String             @map("reporter_id") @db.Uuid
+  dueDate             DateTime?          @map("due_date") @db.Date
+  estimateHours       Decimal?           @map("estimate_hours") @db.Decimal(7, 2)
+  position            Decimal            @default(0) @db.Decimal(20, 6)
+  /// Optimistic concurrency: a write that carries a stale version is refused with 409.
+  version             Int                @default(1)
+  completedAt         DateTime?          @map("completed_at") @db.Timestamptz(6)
+  recurrence          PmRecurrence       @default(NONE)
+  /// Set once the next occurrence has been created, so completing twice spawns only one.
+  recurrenceSpawnedAt DateTime?          @map("recurrence_spawned_at") @db.Timestamptz(6)
+  recurrenceParentId  String?            @map("recurrence_parent_id") @db.Uuid
+  createdBy           String?            @map("created_by") @db.Uuid
+  updatedBy           String?            @map("updated_by") @db.Uuid
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isDeleted           Boolean            @default(false) @map("is_deleted")
+  deletedAt           DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  project             PmProject          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone           PmMilestone?       @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  parent              PmTask?            @relation("PmTaskTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children            PmTask[]           @relation("PmTaskTree")
+  comments            PmTaskComment[]
+  activity            PmTaskActivity[]
+  attachments         PmTaskAttachment[]
+  timeEntries         PmTimeEntry[]
+  blockedBy           PmTaskDependency[] @relation("PmDependent")
+  blocks              PmTaskDependency[] @relation("PmBlocker")
+
+  @@unique([projectId, number])
+  @@index([organizationId, assigneeId, isDeleted])
+  @@index([projectId, status, position])
+  @@index([projectId, dueDate])
+  @@map("pm_tasks")
+}
+
+model PmTaskDependency {
+  id              String   @id @default(uuid()) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  taskId          String   @map("task_id") @db.Uuid
+  dependsOnTaskId String   @map("depends_on_task_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  task            PmTask   @relation("PmDependent", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOn       PmTask   @relation("PmBlocker", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+  @@index([dependsOnTaskId])
+  @@map("pm_task_dependencies")
+}
+
+model PmTaskComment {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  taskId         String    @map("task_id") @db.Uuid
+  authorId       String    @map("author_id") @db.Uuid
+  body           String
+  editedAt       DateTime? @map("edited_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  task           PmTask    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@map("pm_task_comments")
+}
+
+/// Append-only history of what changed on a task and who changed it.
+model PmTaskActivity {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  taskId         String   @map("task_id") @db.Uuid
+  actorId        String?  @map("actor_id") @db.Uuid
+  type           String   @db.VarChar(40)
+  data           Json?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  task           PmTask   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@map("pm_task_activity")
+}
+
+model PmTemplate {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  name           String    @db.VarChar(160)
+  description    String?
+  /// { columns, milestones: [{ name, offsetDays }], tasks: [{ title, description, priority, estimateHours, column, offsetDays }] }
+  definition     Json
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([organizationId, isDeleted])
+  @@map("pm_templates")
+}
+
+/// A file attached to a task. Bytes live in the row, like the media library, so there is no
+/// separate store to keep in step. Capped at 3 MB per file and 20 per task by the service.
+model PmTaskAttachment {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  taskId         String    @map("task_id") @db.Uuid
+  name           String    @db.VarChar(255)
+  mimeType       String    @map("mime_type") @db.VarChar(127)
+  size           Int
+  sha256         String    @db.VarChar(64)
+  data           Bytes
+  uploadedBy     String    @map("uploaded_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  task           PmTask    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, isDeleted])
+  @@map("pm_task_attachments")
+}
+
+/// Time a person spent on a task. The sum is the task's actual effort.
+model PmTimeEntry {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  projectId      String    @map("project_id") @db.Uuid
+  taskId         String    @map("task_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  workDate       DateTime  @map("work_date") @db.Date
+  hours          Decimal   @db.Decimal(5, 2)
+  note           String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  task           PmTask    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, isDeleted])
+  @@index([projectId, workDate])
+  @@index([organizationId, userId, workDate])
+  @@map("pm_time_entries")
 }

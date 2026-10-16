@@ -278,6 +278,14 @@ async function main() {
         ['cms', 'manage', 'Build and publish CMS pages'],
         ['timesheet', 'read', 'Keep daily, monthly and time sheets'],
         ['notifications', 'read', 'View your notifications'],
+        ['pm:projects', 'read', 'View delivery projects you can access'],
+        ['pm:projects', 'write', 'Create and edit delivery projects'],
+        ['pm:projects', 'manage-members', 'Add and remove project members'],
+        ['pm:projects', 'report', 'View project progress and reports'],
+        ['pm:tasks', 'read', 'View tasks in projects you can access'],
+        ['pm:tasks', 'write', 'Create and edit tasks'],
+        ['pm:tasks', 'comment', 'Comment on tasks'],
+        ['pm:templates', 'manage', 'Create and edit project templates'],
         ['organizations', 'read', 'View your organization profile'],
         [
           'organizations',
@@ -400,6 +408,10 @@ async function main() {
     'timesheet:read',
     'notifications:read',
     'organizations:read',
+    'pm:projects:read',
+    'pm:tasks:read',
+    'pm:tasks:write',
+    'pm:tasks:comment',
   ]);
   for (const role of [adminRole, userRole]) {
     for (const perm of permissionsList.filter((p) => memberKeys.has(p.key))) {

@@ -33,7 +33,8 @@ app.use('/favicon.png', express.static('public'));
 // upload route raises it, under Vercel's 4.5 MB request cap.
 const smallJson = express.json({ limit: '1mb' });
 const isMediaUpload = (method: string, path: string) =>
-  method === 'POST' && /\/storage\/media\/?$/.test(path);
+  method === 'POST' &&
+  (/\/storage\/media\/?$/.test(path) || /\/pm\/tasks\/[^/]+\/attachments\/?$/.test(path));
 app.use((req, res, next) =>
   isMediaUpload(req.method, req.path) ? next() : smallJson(req, res, next)
 );
@@ -153,12 +154,12 @@ app.get(
     const cpuCount = os.cpus().length || 1;
     const load = Math.min(os.loadavg()[0], cpuCount);
     const database = await probeDatabase();
-  const queue = await getQueueMetrics().catch(() => ({
-    mode: 'inline' as const,
-    pendingJobs: 0,
-    failedJobs: 0,
-    activeWorkers: 0,
-  }));
+    const queue = await getQueueMetrics().catch(() => ({
+      mode: 'inline' as const,
+      pendingJobs: 0,
+      failedJobs: 0,
+      activeWorkers: 0,
+    }));
     const blobConfigured = Boolean(
       process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_OIDC_TOKEN
     );
