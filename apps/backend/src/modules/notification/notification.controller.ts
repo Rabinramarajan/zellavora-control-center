@@ -1,31 +1,25 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { NotificationService } from './notification.service';
-import { SendNotificationSchema } from './notification.dto';
+import { ListNotificationsQuerySchema, type ListNotificationsQuery } from './notification.dto';
+import type { AuthRequest } from '../../middleware/auth';
 
 export class NotificationController {
   private readonly service = new NotificationService();
 
-  list = async (req: Request, res: Response, next: NextFunction) => {
+  list = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const orgId = req.query.organizationId as string;
-      const list = await this.service.getNotifications(orgId);
-      res.json({ success: true, message: 'Notifications retrieved successfully', data: list });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  send = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = SendNotificationSchema.parse(req.body) as {
-        organizationId: string;
-        recipientId?: string | null;
-        title?: string | null;
-        body: string;
-        channels?: string[];
-      };
-      const result = await this.service.sendNotification(data);
-      res.json({ success: true, message: 'Notification sent successfully', data: result });
+      const query = ListNotificationsQuerySchema.parse(req.query) as ListNotificationsQuery;
+      const { items, meta } = await this.service.listMine(
+        req.tenantId as string,
+        req.userId as string,
+        query
+      );
+      res.json({
+        success: true,
+        message: 'Notifications retrieved successfully',
+        data: items,
+        meta,
+      });
     } catch (err) {
       next(err);
     }

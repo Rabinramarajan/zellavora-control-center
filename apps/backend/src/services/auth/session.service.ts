@@ -15,6 +15,8 @@ import { prisma } from '../../infrastructure/prisma';
 import { AppError } from '../../middleware/error';
 import { TokenService } from './token.service';
 
+const ACTIVITY_WRITE_INTERVAL_MS = 60_000;
+
 export interface CreateSessionInput {
   userId: string;
   organizationId: string;
@@ -125,25 +127,30 @@ export class SessionService {
   static async touchIfActive(sessionId: string, userId: string, idleMinutes = 0): Promise<boolean> {
     const now = new Date();
     const idleCutoff = idleMinutes > 0 ? new Date(now.getTime() - idleMinutes * 60 * 1000) : null;
-    const { count } = await prisma.session.updateMany({
-      where: {
-        id: sessionId,
-        userId,
-        isActive: true,
-        expiresAt: { gt: now },
-        ...(idleCutoff ? { lastActivityAt: { gte: idleCutoff } } : {}),
-      },
-      data: { lastActivityAt: now },
+    const session = await prisma.session.findFirst({
+      where: { id: sessionId, userId, isActive: true, expiresAt: { gt: now } },
+      select: { lastActivityAt: true },
     });
-    if (count === 1) return true;
-    if (idleCutoff) {
+    if (!session) return false;
+
+    const last = session.lastActivityAt.getTime();
+    if (idleCutoff && last < idleCutoff.getTime()) {
       // Deactivate an idled-out session so its refresh token can't revive it.
       await prisma.session.updateMany({
         where: { id: sessionId, userId, isActive: true, lastActivityAt: { lt: idleCutoff } },
         data: { isActive: false },
       });
+      return false;
     }
-    return false;
+
+    // A write per request would make every call a write; once a minute keeps the idle clock accurate.
+    if (now.getTime() - last >= ACTIVITY_WRITE_INTERVAL_MS) {
+      await prisma.session.updateMany({
+        where: { id: sessionId, userId, isActive: true },
+        data: { lastActivityAt: now },
+      });
+    }
+    return true;
   }
 
   /** Revoke a session owned by `userId`. Returns false when no such live session exists. */

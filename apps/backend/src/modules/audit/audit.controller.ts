@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuditService } from './audit.service';
-import { AuditSearchQuerySchema, CreateAuditRecordSchema } from './audit.dto';
+import { AuditSearchQuerySchema } from './audit.dto';
 import { AuthRequest } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
 
@@ -89,19 +89,6 @@ export class AuditController {
       }
 
       res.json({ message: 'Audit log retrieved successfully', ...detail });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  /**
-   * POST /api/v1/audit-logs/log (internal/backward compatible)
-   */
-  log = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const data = CreateAuditRecordSchema.parse(req.body);
-      const log = await this.service.logActivity(data);
-      res.json({ success: true, message: 'Audit event logged successfully', data: log });
     } catch (err) {
       next(err);
     }

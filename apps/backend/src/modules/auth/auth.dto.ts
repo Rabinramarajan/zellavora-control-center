@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PasswordPolicySchema } from '../../services/auth';
 
 // Control characters (C0 + DEL + C1) are never valid in a person's name.
+// eslint-disable-next-line no-control-regex -- matching control characters is the point
 const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/;
 
 const email = z
@@ -59,9 +60,7 @@ export const LegacyLoginSchema = z.object({
   newPassword: z.string().optional(),
   confirmPassword: z.string().optional(),
   isPasswordValidation: z.boolean().optional(),
-  tokenkeys: z
-    .array(z.string())
-    .length(2, 'tokenkeys must contain exactly [key, iv]'),
+  tokenkeys: z.array(z.string()).length(2, 'tokenkeys must contain exactly [key, iv]'),
   isPinValidation: z.boolean().optional(),
   pin: z.string().optional(),
   password: z.string().min(1, 'Encrypted password is required'),

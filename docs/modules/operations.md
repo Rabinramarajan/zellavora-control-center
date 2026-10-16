@@ -8,7 +8,7 @@ Tools for operators: dependency health with per-service detail, and a searchable
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | System health     | `modules/operations/health/` (`health.checkers.ts`, `health.service.ts`, `health.controller.ts`)                          | `features/operations/system-health/` (`health-summary`, `health-service-table`, `health-service-details`) |
 | Audit logs        | `modules/audit/` (`audit.service.ts`, `audit.repository.ts`, `audit.sanitizer.ts`)                                        | `features/operations/audit-logs/` (`audit-log-search`, `audit-filter`, `audit-table`, `audit-details`)    |
-| Audit writers     | `infrastructure/audit.ts`, `services/auth/audit.service.ts`, `rbac/services/audit.service.ts`                             | —                                                                                                         |
+| Audit writers     | `infrastructure/audit.ts`, `services/auth/audit.service.ts`                             | —                                                                                                         |
 | Legacy audit read | `routes/admin-audit.ts`                                                                                                   | `core/api/audit.api.ts`                                                                                   |
 | Frontend data     | `core/api/system-health.api.ts`, `core/repositories/system-health.repository.ts`, `core/repositories/audit.repository.ts` |                                                                                                           |
 
@@ -28,7 +28,7 @@ Checkers (`health.checkers.ts`): **Database** (Prisma round trip), **Auth**, **S
 
 ## Audit logs
 
-Base path `/api/v1/operations/audit-logs` (aliases `/api/v1/audit-logs`, `/api/v1/clean/audits`).
+Base path `/api/v1/operations/audit-logs` (alias `/api/v1/audit-logs`).
 
 | Method | Path              | Permission                                                  | Purpose                                                                                                   |
 | ------ | ----------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -36,7 +36,8 @@ Base path `/api/v1/operations/audit-logs` (aliases `/api/v1/audit-logs`, `/api/v
 | GET    | `/filter-options` | `AUDIT_LOG_VIEW` or `system:audit:read`                     | Values for the filter dropdowns                                                                           |
 | GET    | `/export`         | `AUDIT_LOG_EXPORT` or `system:audit:export`                 | CSV export of the current filter                                                                          |
 | GET    | `/:id`            | `AUDIT_LOG_VIEW` or `system:audit:read`                     | Detail with before/after data                                                                             |
-| POST   | `/log`            | signed in only                                              | Write an audit record from the client                                                                     |
+
+There is no client-facing write endpoint: audit records are written server-side through `infrastructure/audit.ts`. `POST /log`, which trusted `organizationId` and `actorId` from the body, was deleted (review H3).
 
 Legacy: `GET /api/v1/admin/audit` and `/admin/audit/export` (signed in only; up to 1,000 rows).
 
@@ -62,6 +63,6 @@ Every read is scoped to the caller's organization. Records carry actor, action, 
 
 ## Review notes
 
-- `POST /log` lets any signed-in user write records for any organization and actor (review **H3**).
+- Fixed (**H3**): `POST /log` is deleted.
 - The legacy `/admin/audit` read skips the audit permission, and the frontend's `audit.api.ts` still uses it (**H4**).
 - Three separate audit writers exist (infrastructure, auth, RBAC). Converge on `infrastructure/audit.ts` so every record passes the sanitizer.

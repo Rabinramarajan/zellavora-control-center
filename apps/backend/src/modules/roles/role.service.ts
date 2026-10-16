@@ -1,4 +1,5 @@
 import { AppError } from '../../middleware/error';
+import { PermissionService } from '../../services/auth/permission.service';
 import { AuditService } from '../../infrastructure/audit';
 import { cacheDelPattern } from '../../infrastructure/cache';
 import { RoleRepository } from './role.repository';
@@ -309,5 +310,7 @@ export class RoleService {
 
   private invalidate() {
     void cacheDelPattern(`${ROLE_CACHE_PREFIX}*`);
+    // Roles, groups and assignments feed every user's cached permission set.
+    PermissionService.invalidate();
   }
 }

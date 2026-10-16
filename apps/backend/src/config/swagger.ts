@@ -138,6 +138,74 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
         description: 'Notification records and delivery.',
       },
       {
+        name: 'analytics',
+        description: 'Traffic analytics and reports.',
+      },
+      {
+        name: 'blog',
+        description: 'Blog posts and publishing.',
+      },
+      {
+        name: 'cms',
+        description: 'CMS pages and content.',
+      },
+      {
+        name: 'iamCommunications',
+        description: 'Announcements and messages to users.',
+      },
+      {
+        name: 'iamConfiguration',
+        description: 'Organization configuration values.',
+      },
+      {
+        name: 'iamDepartments',
+        description: 'Departments in the directory.',
+      },
+      {
+        name: 'settingsEmail',
+        description: 'Platform outbound email (SMTP) configuration.',
+      },
+      {
+        name: 'iamMenuAccess',
+        description: 'Menu visibility per role.',
+      },
+      {
+        name: 'iamPermissions',
+        description: 'Permission catalog.',
+      },
+      {
+        name: 'settingsRegistration',
+        description: 'Self-registration settings.',
+      },
+      {
+        name: 'iamSecurity',
+        description: 'Password, login and MFA policies.',
+      },
+      {
+        name: 'iamSessions',
+        description: 'Live sign-in sessions.',
+      },
+      {
+        name: 'iamTeams',
+        description: 'Teams in the directory.',
+      },
+      {
+        name: 'themes',
+        description: 'Organization themes.',
+      },
+      {
+        name: 'iamUserRequests',
+        description: 'Maker-checker user requests.',
+      },
+      {
+        name: 'operations',
+        description: 'Platform operations: system health and audit.',
+      },
+      {
+        name: 'health',
+        description: 'Liveness, readiness and dependency health.',
+      },
+      {
         name: 'auditLogs',
         description: 'Organization audit events.',
       },
@@ -184,23 +252,34 @@ URLs use lowercase, kebab-case resource names. Swagger groups operations by busi
       responses: {
         Unauthorized: {
           description: 'Missing, invalid or revoked access token',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+          },
         },
         Forbidden: {
           description: 'The caller lacks the required permission',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+          },
         },
         ValidationError: {
-          description: 'Request body or parameters failed validation; `error.fields` names each bad field',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          description:
+            'Request body or parameters failed validation; `error.fields` names each bad field',
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+          },
         },
         NotFound: {
           description: 'No such record for this caller',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+          },
         },
         LimitReached: {
           description: 'The section already holds the maximum number of items',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+          },
         },
       },
       schemas: {

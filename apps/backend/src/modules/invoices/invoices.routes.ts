@@ -124,7 +124,7 @@ router.get(
  * /api/v1/invoices/export/bulk:
  *   post:
  *     summary: exportInvoicesBulk
- *     description: ZIP of PDFs for up to 50 of the caller's invoices, `{ ids: [] }`.
+ *     description: ZIP of PDFs for up to 50 of the caller's invoices. The body is an object with an ids array.
  *     operationId: postInvoicesExportBulk
  *     tags: [invoices]
  *     responses:

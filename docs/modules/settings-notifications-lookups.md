@@ -25,7 +25,7 @@ The Email tab uses `/api/v1/settings/email` (see [security and communications](i
 
 ## Organization settings API
 
-Base path `/api/v1/organization-settings` (alias `/api/v1/clean/settings`); stored in `common_configurations`.
+Base path `/api/v1/organization-settings`; stored in `common_configurations`.
 
 | Method | Path         | Guard                                                                         |
 | ------ | ------------ | ----------------------------------------------------------------------------- |
@@ -36,18 +36,19 @@ Base path `/api/v1/organization-settings` (alias `/api/v1/clean/settings`); stor
 
 ## Notifications API
 
-Base path `/api/v1/notifications` (alias `/api/v1/clean/notifications`).
+Base path `/api/v1/notifications`. The router applies `authenticate`.
 
-| Method | Path                 | Guard    | Behaviour                                                                                             |
-| ------ | -------------------- | -------- | ----------------------------------------------------------------------------------------------------- |
-| GET    | `/?organizationId=…` | **none** | Notifications of the given organization                                                               |
-| POST   | `/send`              | **none** | Create a notification; when `channels` includes `email`, enqueues a `send-otp` job to a fixed address |
+| Method | Path | Guard     | Behaviour                                                                                                                  |
+| ------ | ---- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/`  | signed in | The caller's own notifications, newest `created_at` first (column added by migration `20261016010000_notification_created_at`). `page` and `pageSize` (default 25, max 100); other query fields answer 400 |
+
+The organization and recipient always come from the verified token. `POST /send` (which accepted any `organizationId` and enqueued a `send-otp` job to a hard-coded address) was deleted (review C3). Server code that needs an in-app message (timesheet reviews) calls `NotificationService.sendNotification` directly; it never sends email.
 
 The frontend notifications page also calls `/notifications/broadcast` and `/notifications/templates`, which do not exist. Working in-app messages and bulk email go through `/api/v1/iam/communications`.
 
 ## Lookups API
 
-Base path `/api/v1/lookups` (alias `/api/v1/clean/ddls`); public, read-only.
+Base path `/api/v1/lookups`; read-only, **requires sign-in** (review M9).
 
 | Method | Path                           | Returns                                                                                            |
 | ------ | ------------------------------ | -------------------------------------------------------------------------------------------------- |
@@ -65,6 +66,6 @@ Base path `/api/v1/lookups` (alias `/api/v1/clean/ddls`); public, read-only.
 
 ## Review notes
 
-- **Notifications endpoints have no authentication** (review **C3**), and the frontend page calls routes that do not exist.
+- Fixed (**C3**): notifications require sign-in and return only the caller's own rows; the send route is deleted. The frontend page still calls `/notifications/broadcast` and `/notifications/templates`, which do not exist (see the notifications rebuild, prompt P8).
 - Non-profile settings sections live in process memory, shared across tenants (review **M11**). Persist them through `organization-settings` with `settings:write`.
 - Two modules (`settings`, `configuration`) write the same table under different permissions. Merge them.

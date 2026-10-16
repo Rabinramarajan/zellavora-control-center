@@ -70,7 +70,7 @@ Base path `/api/v1/auth`.
 | POST         | `/reset-password`                                                    | token limiter           | Set a new password                                    |
 | POST         | `/logout`                                                            | authenticate            | End this session                                      |
 | POST         | `/logout-all`                                                        | authenticate, sensitive | End every session (password required)                 |
-| GET          | `/me`                                                                | authenticate            | Current user, permissions and sidebar menu            |
+| GET          | `/me`                                                                | authenticate            | Current user (including `isPlatformAdmin`), permissions, `deniedPermissions` (denies override grants, wildcards included) and sidebar menu |
 | PUT          | `/me/avatar`                                                         | authenticate            | Update avatar                                         |
 | GET          | `/tenants`                                                           | authenticate            | Organizations the user belongs to                     |
 | POST         | `/switch-tenant`                                                     | authenticate            | Re-issue tokens for another organization              |
@@ -116,7 +116,7 @@ The app initialiser loads `assets/appsettings.json`, then `AuthService.initializ
 
 - Strongest module in the codebase; keep it as the reference for others.
 - Refresh token lives in Web Storage on the client (review **M3**).
-- Secrets fall back to fixed strings when unset (**H1**).
+- Fixed (**H1**): signing secrets no longer fall back to fixed strings. A missing, short (< 32 bytes) or placeholder `JWT_SECRET` / `REFRESH_TOKEN_SECRET` makes token issue and verification answer 503 `AUTH_UNAVAILABLE`, and `collectConfigErrors` reports it.
 - The `invitation` module has no tests.
 
 ## Related

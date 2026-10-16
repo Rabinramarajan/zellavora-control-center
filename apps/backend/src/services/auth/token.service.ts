@@ -17,7 +17,7 @@
 import crypto from 'crypto';
 import jwt, { type JwtPayload, type Secret, type SignOptions } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../../config/env';
+import { config, isUsableSecret } from '../../config/env';
 import { prisma } from '../../infrastructure/prisma';
 import { AppError } from '../../middleware/error';
 
@@ -57,6 +57,20 @@ const ISSUER = 'zellavora-auth';
 const AUDIENCE = 'zellavora-app';
 
 export class TokenService {
+  /**
+   * The signing secret, or a 503 when it is missing, too short or a known placeholder.
+   * Checked on every sign and verify so a deployment that loses its secret fails closed
+   * instead of accepting tokens anyone could forge. The reason is logged by the boot
+   * config check, not returned to the caller.
+   */
+  private static secret(kind: 'access' | 'refresh'): Secret {
+    const value = kind === 'access' ? config.jwtSecret : config.refreshTokenSecret;
+    if (!isUsableSecret(value)) {
+      throw new AppError('Authentication is temporarily unavailable', 503, 'AUTH_UNAVAILABLE');
+    }
+    return value;
+  }
+
   /** Issue a fresh access+refresh pair bound to a (user, tenant, session) triple. */
   static async issue(opts: {
     userId: string;
@@ -81,7 +95,7 @@ export class TokenService {
         iss: ISSUER,
         aud: AUDIENCE,
       },
-      config.jwtSecret as Secret,
+      this.secret('access'),
       {
         expiresIn: config.jwtExpiry as SignOptions['expiresIn'],
         jwtid: accessJti,
@@ -99,7 +113,7 @@ export class TokenService {
         fam: family,
         type: 'refresh',
       },
-      config.refreshTokenSecret as Secret,
+      this.secret('refresh'),
       {
         expiresIn: refreshExpiry,
         jwtid: jti,
@@ -128,9 +142,10 @@ export class TokenService {
 
   /** Verify access token; throws on bad signature/exp/revocation. */
   static async verifyAccess(token: string): Promise<AccessTokenClaims> {
+    const secret = this.secret('access');
     let claims: JwtPayload;
     try {
-      claims = jwt.verify(token, config.jwtSecret as Secret, {
+      claims = jwt.verify(token, secret, {
         algorithms: ['HS256'],
         issuer: ISSUER,
         audience: AUDIENCE,
@@ -150,8 +165,9 @@ export class TokenService {
 
   /** Verify refresh token; returns decoded claims. */
   static verifyRefresh(token: string): RefreshTokenClaims {
+    const secret = this.secret('refresh');
     try {
-      const claims = jwt.verify(token, config.refreshTokenSecret as Secret, {
+      const claims = jwt.verify(token, secret, {
         algorithms: ['HS256'],
       }) as JwtPayload;
       if (claims.type !== 'refresh') throw new Error('wrong type');

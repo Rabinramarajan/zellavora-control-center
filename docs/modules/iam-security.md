@@ -56,7 +56,7 @@ Audience is one of: everyone in the organization, explicit users (≤1,000), or 
 
 ## Email settings
 
-Base path `/api/v1/settings/email`; `settings:manage`.
+Base path `/api/v1/settings/email`; **platform administrators only** (review **M6**). One SMTP configuration serves every organization, so an organization admin holding `settings:manage` can no longer change it.
 
 | Method | Path    | Purpose                                                                    |
 | ------ | ------- | -------------------------------------------------------------------------- |

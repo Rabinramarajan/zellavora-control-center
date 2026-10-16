@@ -12,7 +12,7 @@ A per-organization file library (images, video, audio, documents) organised in f
 
 ## API
 
-Base path `/api/v1/storage` (alias `/api/v1/clean/storage`).
+Base path `/api/v1/storage`.
 
 | Method | Path                     | Guard                                   | Purpose                                                                                         |
 | ------ | ------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -21,11 +21,11 @@ Base path `/api/v1/storage` (alias `/api/v1/clean/storage`).
 | DELETE | `/media?pathname=…`      | `media:delete`                          | Delete one file                                                                                 |
 | GET    | `/media/file?pathname=…` | signed in                               | Stream a file (private cache, 5 min)                                                            |
 | GET    | `/media/public/:id`      | Public                                  | Stream an image, video or audio file by id (public cache, 1 day); `?download=1` forces download |
-| POST   | `/upload`                | **none**                                | Older base64 upload to local disk (see review)                                                  |
 
 ## Rules
 
-- Decoded file size is capped at 3 MB so the base64 request stays under Vercel's 4.5 MB body limit.
+- Decoded file size is capped at 3 MB so the base64 request stays under Vercel's 4.5 MB body limit. `POST /media` is the only route that accepts a body above the global 1 MB JSON limit (4.5 MB, parsed after authentication and the permission check).
+- The older `POST /upload` route, which wrote to local disk without authentication, was deleted (review H2).
 - File and folder names reject `\ / ? # % :`; folders reject `.` and `..` segments.
 - MIME type comes from the client or, if absent, from the extension. Images, video and audio are **public** by id; everything else (PDF, text, CSV, JSON, archives) is private and only streams to signed-in members of the organization.
 - Every streamed file is sent with `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` and an explicit `Content-Disposition`, so an uploaded SVG or HTML file cannot run script.
@@ -45,6 +45,6 @@ None for the storage module or the media page.
 
 ## Review notes
 
-- **`POST /upload` has no authentication** and writes caller-supplied bytes to `./scratch/` on local disk (review **H2**). Delete it; `/media` is the supported path.
+- Fixed (**H2**): `POST /upload` is deleted; `/media` is the only upload path.
 - Storing file bytes in PostgreSQL keeps backups simple but grows the database quickly and loads whole files into memory on every read. The health checker already expects Vercel Blob (`BLOB_READ_WRITE_TOKEN`); plan the move before libraries grow.
 - `GET /media` and `/media/file` need only a sign-in, so every member can list and read private documents of their organization. Add a `media:read` permission if some documents should be restricted.

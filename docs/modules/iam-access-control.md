@@ -16,17 +16,20 @@ User ──(direct assignment)──▶ Role ──▶ Permission ◀── Reso
 | Resources                         | `apps/backend/src/modules/resources/`                                                                                                                                     |
 | Permission catalog and assignment | `apps/backend/src/modules/permission/` (`permission-catalog.*` for IAM, `permission.*` for the older list/assign API)                                                     |
 | Enforcement                       | `apps/backend/src/services/auth/permission.service.ts`, `src/middleware/auth.ts`                                                                                          |
-| Second engine (unwired)           | `apps/backend/src/rbac/` (Supabase tables, Redis policy cache, inheritance, deny-wins)                                                                                    |
+| Second engine (unwired)           | none: `apps/backend/src/rbac/` and `/api/v1/rbac` were deleted on 2026-10-16 (M1)                                                                                    |
 | Frontend                          | `features/iam/roles/` (list, detail, `permission-matrix`), `features/iam/groups/`, `features/iam/resources/`, `features/iam/permissions/` (catalog, detail, usage drawer) |
 | Frontend RBAC                     | `core/rbac/` (`PermissionService`, `policy.store.ts`, `*hasPermission` directive, policy-version interceptor), `core/auth/auth.guard.ts` (`canMatchPermission`)           |
 
 ## How a permission check works
 
 1. `authenticate` puts `userId` and `tenantId` on the request.
-2. `requirePermission('users:read', 'users:manage')` calls `PermissionService.loadForUser(userId, tenantId)` once per request: it reads the user's `user_role_assignments` in that organization and collects the `allow` permission keys of those roles. If there are none, it falls back to a role whose name matches `users.role`.
-3. `PermissionService.has(set, code)` passes on an exact match or a wildcard: `*:*` (owner), `resource:*` (any depth, e.g. `system:*` covers `system:audit:read`), or `*:action`.
+2. `requirePermission('users:read', 'users:manage')` calls `PermissionService.loadForUser(userId, tenantId)` once per request. It collects the permission rows of every **ACTIVE, non-deleted** role the user holds, from two sources: direct `user_role_assignments` in that organization, and roles granted to the user's **ACTIVE groups** (`user_groups` → `group_roles`). A role belongs to the organization or is global (no organization). The result is cached for 30 seconds under `iam:perms:{org}:{user}` and dropped by `PermissionService.invalidate()` whenever a role, group, group role, role permission, menu grant or assignment changes.
+3. A `deny` row on any of those roles removes the permission whatever other roles allow. `PermissionService.has(set, code)` checks the denies first, then the grants.
+4. Both lists match on an exact code or a wildcard: `*:*` (owner), `resource:*` (any depth, e.g. `system:*` covers `system:audit:read`), or `*:action`. So `deny users:manage` beats an Owner's `*:*`.
+5. The old fallback ("no assignment → the role whose name matches `users.role`") is **off**. Set `PERMISSION_ROLE_NAME_FALLBACK=true` to turn it back on; prefer explicit assignments. Migration `20261016000000_p0_security_permissions` created an explicit assignment for every member who depended on it.
+6. The User Request access preview (`user-requests/user-request.access.ts`) uses the same eligibility rules (active roles and groups, deny wins), so approvers see the access the user will actually get.
 
-The frontend gets the same keys from `GET /auth/me` and stores them in `policy.store.ts`; `canMatchPermission(code)` and `*hasPermission` read that store. `/api/v1/rbac/me/policy` is commented out in `core/rbac/services/permission.service.ts`.
+The frontend gets the same keys from `GET /auth/me` and stores them in `policy.store.ts`; `canMatchPermission(code)` and `*hasPermission` read that store. The `/api/v1/rbac` gateway no longer exists.
 
 ## Permission keys in use
 
@@ -92,13 +95,12 @@ All routes need `authenticate` plus the listed permission.
 
 ## Tests
 
-`roles/role.service.spec.ts`, `groups/group.service.spec.ts`, `permission/permission-catalog.service.spec.ts`. No tests for `resources` or for `PermissionService` resolution.
+`roles/role.service.spec.ts`, `groups/group.service.spec.ts`, `permission/permission-catalog.service.spec.ts`, `services/auth/permission.service.spec.ts` (role status, group roles, deny, fallback flag, cache). No tests for `resources`.
 
 ## Review notes
 
-- **Enforcement ignores role status, deny rules and group roles** (review **H6**). `loadForUser` collects `allow` keys from direct assignments only: an `INACTIVE` role keeps granting access, a `deny` on one role does not cancel an `allow` on another, and roles given through a group grant nothing at check time, while the User Request access preview counts group roles as granted.
+- Enforcement honours role status, deny rules and group roles (review **H6**, fixed 2026-10-16).
 - Roles, groups and resources are platform-wide, not per organization (role filter is optional). Decide whether tenant admins should manage them (related to **H5**).
-- `/api/v1/rbac` is a second engine with a deny-wins model, but it has no authentication and is unused by the UI (**M1**). Pick one engine.
 - The legacy `/api/v1/admin/roles|groups|resources` routes duplicate these modules without permission checks (**C2**).
 
 ## Related

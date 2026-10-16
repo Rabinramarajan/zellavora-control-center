@@ -3,11 +3,6 @@ import { z } from 'zod';
 /** Decoded file size cap; base64 inflates by ~4/3, keeping requests under Vercel's 4.5 MB body limit. */
 export const MAX_MEDIA_BYTES = 3 * 1024 * 1024;
 
-export const UploadFileSchema = z.object({
-  fileName: z.string().min(1, 'File name is required'),
-  base64Data: z.string().min(1, 'Base64 data is required'),
-});
-
 export const UploadMediaSchema = z.object({
   fileName: z
     .string()

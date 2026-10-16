@@ -63,7 +63,7 @@ export class UserAdminService {
   // ---------------------------------------------------------------------------
 
   async profile(id: string, actor: AdminActor) {
-    const user = await this.load(id);
+    const user = await this.load(id, actor.organizationId);
     const membership =
       user.userTenants.find((t) => t.tenantId === actor.organizationId) ?? user.userTenants[0];
     const people = [user.reportingManagerId, user.assignedOfficerId].filter(
@@ -216,7 +216,7 @@ export class UserAdminService {
   // ---------------------------------------------------------------------------
 
   async access(id: string, organizationId: string) {
-    const user = await this.load(id);
+    const user = await this.load(id, organizationId);
     const [groups, direct] = await Promise.all([
       this.repo.listGroups(id),
       this.repo.listDirectRoles(id, organizationId),
@@ -311,7 +311,7 @@ export class UserAdminService {
   // ---------------------------------------------------------------------------
 
   async sessions(id: string, actor: AdminActor) {
-    await this.load(id);
+    await this.load(id, actor.organizationId);
     const rows = await this.repo.listLiveSessions(id, actor.organizationId);
     return rows.map((s) => {
       const ua = describeUserAgent(s.userAgent);
@@ -331,7 +331,7 @@ export class UserAdminService {
 
   async revokeSession(id: string, sessionId: string, actor: AdminActor) {
     this.assertManage(actor);
-    await this.load(id);
+    await this.load(id, actor.organizationId);
     await new SessionsService().revoke(
       actor.organizationId,
       sessionId,
@@ -345,7 +345,7 @@ export class UserAdminService {
   /** Revokes every session of the user; when admins revoke their own, the current one is kept. */
   async revokeAllSessions(id: string, actor: AdminActor) {
     this.assertManage(actor);
-    await this.load(id);
+    await this.load(id, actor.organizationId);
     const result = await new SessionsService().revokeAllForUser(
       actor.organizationId,
       id,
@@ -362,7 +362,7 @@ export class UserAdminService {
 
   async sendPasswordReset(id: string, actor: AdminActor) {
     this.assertManage(actor);
-    const user = await this.load(id);
+    const user = await this.load(id, actor.organizationId);
     const status = accountStatusOf(user);
     if (!user.passwordHash || (status !== 'ACTIVE' && status !== 'LOCKED')) {
       throw new AppError(
@@ -385,7 +385,7 @@ export class UserAdminService {
 
   async resendInvitation(id: string, actor: AdminActor) {
     this.assertManage(actor);
-    const user = await this.load(id);
+    const user = await this.load(id, actor.organizationId);
     const status = accountStatusOf(user);
     if (status !== 'INVITED' && status !== 'PENDING_VERIFICATION') {
       throw new AppError('Only invited users can be sent a new invitation', 409, 'NOT_INVITED');
@@ -419,8 +419,13 @@ export class UserAdminService {
   }
 
   /** Emails the user after an account-state change made through the status/lock endpoints. */
-  async notifyStatusChange(id: string, to: AccountStatus, reason: string | null) {
-    const user = await this.repo.findUser(id);
+  async notifyStatusChange(
+    id: string,
+    organizationId: string,
+    to: AccountStatus,
+    reason: string | null
+  ) {
+    const user = await this.repo.findUser(id, organizationId);
     if (!user) return;
     const messages: Partial<
       Record<AccountStatus, [Parameters<UserAdminNotifier['send']>[1], string, string]>
@@ -461,8 +466,8 @@ export class UserAdminService {
   // Notes & history
   // ---------------------------------------------------------------------------
 
-  async notes(id: string) {
-    await this.load(id);
+  async notes(id: string, organizationId: string) {
+    await this.load(id, organizationId);
     const rows = await this.repo.listNotes(id);
     return rows.map((n) => ({
       id: n.id,
@@ -476,7 +481,7 @@ export class UserAdminService {
   }
 
   async addNote(id: string, dto: AddUserNoteDto, actor: AdminActor) {
-    await this.load(id);
+    await this.load(id, actor.organizationId);
     const author = (await this.repo.userNames([actor.userId]))[0];
     const note = await this.repo.addNote({
       userId: id,
@@ -496,11 +501,11 @@ export class UserAdminService {
       actorId: actor.userId,
       metadata: { noteId: note.id, noteType: dto.noteType },
     });
-    return this.notes(id);
+    return this.notes(id, actor.organizationId);
   }
 
   async requestHistory(id: string, organizationId: string) {
-    await this.load(id);
+    await this.load(id, organizationId);
     const rows = await this.repo.listRequests(id, organizationId);
     return rows.map((r) => ({
       id: r.id,
@@ -514,8 +519,8 @@ export class UserAdminService {
     }));
   }
 
-  async statusHistory(id: string) {
-    await this.load(id);
+  async statusHistory(id: string, organizationId: string) {
+    await this.load(id, organizationId);
     const rows = await this.repo.listStatusHistory(id);
     const label = (s: string | null) =>
       s ? (ACCOUNT_STATUS_LABELS[s as AccountStatus] ?? s) : null;
@@ -531,8 +536,8 @@ export class UserAdminService {
     }));
   }
 
-  async emailHistory(id: string) {
-    await this.load(id);
+  async emailHistory(id: string, organizationId: string) {
+    await this.load(id, organizationId);
     const [logs, requestEmails] = await Promise.all([
       this.repo.listEmailLogs(id),
       this.repo.listRequestEmails(id),
@@ -565,8 +570,8 @@ export class UserAdminService {
     ].sort((a, b) => (b.sentOn ?? '').localeCompare(a.sentOn ?? ''));
   }
 
-  async audit(id: string) {
-    await this.load(id);
+  async audit(id: string, organizationId: string) {
+    await this.load(id, organizationId);
     const rows = await this.repo.listAudit(id);
     return rows.map((log) => {
       const meta = (log.metadata ?? {}) as Record<string, unknown>;
@@ -596,9 +601,10 @@ export class UserAdminService {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  private async load(id: string) {
+  /** A user outside the caller's organization is reported as missing, never as forbidden. */
+  private async load(id: string, organizationId: string) {
     if (!UUID_PATTERN.test(id)) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
-    const user = await this.repo.findUser(id);
+    const user = await this.repo.findUser(id, organizationId);
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     return user;
   }

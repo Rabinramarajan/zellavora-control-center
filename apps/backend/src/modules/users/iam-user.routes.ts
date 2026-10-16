@@ -433,32 +433,146 @@ router.delete('/:id', authenticate, changeViaUserRequest);
  *       - { in: path, name: id, required: true, schema: { type: string } }
  *     responses:
  *       200: { description: Sessions revoked }
- * /api/v1/iam/users/{id}/{history}:
- *   get:
- *     summary: getUserHistory
- *     operationId: getIamUsersByIdHistory
- *     description: One of notes, requests, status-history, emails, audit (read-only).
+ * /api/v1/iam/users/{id}/sessions/{sessionId}:
+ *   delete:
+ *     summary: revokeUserSession
+ *     operationId: deleteIamUsersByIdSessionsBySessionId
  *     tags: [iamUsers]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - { in: path, name: id, required: true, schema: { type: string } }
- *       - { in: path, name: history, required: true, schema: { type: string, enum: [notes, requests, status-history, emails, audit] } }
+ *       - { in: path, name: sessionId, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Session revoked }
+ * /api/v1/iam/users/{id}/notes:
+ *   get:
+ *     summary: listUserNotes
+ *     operationId: getIamUsersByIdNotes
+ *     description: Internal notes on the account (read-only listing).
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
  *     responses:
  *       200: { description: History rows }
- * /api/v1/iam/users/{id}/{action}:
  *   post:
- *     summary: userSecurityAction
- *     operationId: postIamUsersByIdAction
- *     description: >
- *       password-reset, require-password-change, reset-mfa, resend-invitation, cancel-invitation.
- *       Each is only accepted when the account's state allows it, and is audited.
+ *     summary: addUserNote
+ *     operationId: postIamUsersByIdNotes
  *     tags: [iamUsers]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - { in: path, name: id, required: true, schema: { type: string } }
- *       - { in: path, name: action, required: true, schema: { type: string } }
+ *     responses:
+ *       201: { description: Note added }
+ * /api/v1/iam/users/{id}/requests:
+ *   get:
+ *     summary: listUserRequests
+ *     operationId: getIamUsersByIdRequests
+ *     description: User requests raised for the account (read-only).
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: History rows }
+ * /api/v1/iam/users/{id}/status-history:
+ *   get:
+ *     summary: listUserStatusHistory
+ *     operationId: getIamUsersByIdStatusHistory
+ *     description: Account status changes (read-only).
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: History rows }
+ * /api/v1/iam/users/{id}/emails:
+ *   get:
+ *     summary: listUserEmails
+ *     operationId: getIamUsersByIdEmails
+ *     description: Emails sent to the account (read-only).
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: History rows }
+ * /api/v1/iam/users/{id}/audit:
+ *   get:
+ *     summary: listUserAudit
+ *     operationId: getIamUsersByIdAudit
+ *     description: Audit trail of the account (read-only).
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: History rows }
+ * /api/v1/iam/users/{id}/password-reset:
+ *   post:
+ *     summary: sendUserPasswordReset
+ *     operationId: postIamUsersByIdPasswordReset
+ *     description: Emails the user a password reset link. Audited.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Updated profile }
+ * /api/v1/iam/users/{id}/require-password-change:
+ *   post:
+ *     summary: requireUserPasswordChange
+ *     operationId: postIamUsersByIdRequirePasswordChange
+ *     description: Raises a user request forcing a password change at next sign-in.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Updated profile }
+ * /api/v1/iam/users/{id}/reset-mfa:
+ *   post:
+ *     summary: resetUserMfa
+ *     operationId: postIamUsersByIdResetMfa
+ *     description: Raises a user request that clears the account second factor.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Updated profile }
+ * /api/v1/iam/users/{id}/resend-invitation:
+ *   post:
+ *     summary: resendUserInvitation
+ *     operationId: postIamUsersByIdResendInvitation
+ *     description: Sends a fresh invitation to a pending account. Audited.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Updated profile }
+ * /api/v1/iam/users/{id}/cancel-invitation:
+ *   post:
+ *     summary: cancelUserInvitation
+ *     operationId: postIamUsersByIdCancelInvitation
+ *     description: Raises a user request that cancels the pending invitation.
+ *     tags: [iamUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
  *     responses:
  *       200: { description: Updated profile }
  */

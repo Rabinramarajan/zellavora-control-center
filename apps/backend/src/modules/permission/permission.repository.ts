@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 import { IamPermissionListQuery } from './permission.dto';
+import { PermissionService } from '../../services/auth/permission.service';
 
 export class PermissionRepository extends BaseRepository {
   async findById(id: string, tx?: TxClient) {
@@ -37,13 +38,15 @@ export class PermissionRepository extends BaseRepository {
     organizationId: string,
     tx?: TxClient
   ) {
-    return this.getDb(tx).rolePermission.upsert({
+    const result = await this.getDb(tx).rolePermission.upsert({
       where: {
         roleId_permissionId: { roleId, permissionId },
       },
       update: { effect },
       create: { organizationId, roleId, permissionId, effect },
     });
+    PermissionService.invalidate();
+    return result;
   }
 
   // ---------------------------------------------------------------------------

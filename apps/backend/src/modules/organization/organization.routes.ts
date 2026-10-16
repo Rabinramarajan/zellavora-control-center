@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { OrganizationController } from './organization.controller';
+import { authenticate, requirePermission, requirePlatformAdmin } from '../../middleware/auth';
 
 const router = Router();
 const controller = new OrganizationController();
+
+router.use(authenticate);
 
 /**
  * @swagger
@@ -11,7 +14,7 @@ const controller = new OrganizationController();
  *     summary: getOrganizationById
  *     operationId: getOrganizationsById
  *     tags: [organizations]
- *     security: []
+ *     description: Returns the caller's own organization. Other ids return 404 unless the caller is a platform administrator.
  *     parameters:
  *       - in: path
  *         name: id
@@ -21,7 +24,7 @@ const controller = new OrganizationController();
  *       default:
  *         description: Operation response
  */
-router.get('/:id', controller.get);
+router.get('/:id', requirePermission('organizations:read'), controller.get);
 /**
  * @swagger
  * /api/v1/organizations:
@@ -29,12 +32,12 @@ router.get('/:id', controller.get);
  *     summary: createOrganization
  *     operationId: postOrganizations
  *     tags: [organizations]
- *     security: []
+ *     description: Platform administrators only.
  *     responses:
  *       default:
  *         description: Operation response
  */
-router.post('/', controller.create);
+router.post('/', requirePlatformAdmin, controller.create);
 /**
  * @swagger
  * /api/v1/organizations/{id}:
@@ -42,7 +45,7 @@ router.post('/', controller.create);
  *     summary: updateOrganization
  *     operationId: putOrganizationsById
  *     tags: [organizations]
- *     security: []
+ *     description: Updates the caller's own organization. Only a platform administrator can turn off two-factor enforcement.
  *     parameters:
  *       - in: path
  *         name: id
@@ -52,6 +55,6 @@ router.post('/', controller.create);
  *       default:
  *         description: Operation response
  */
-router.put('/:id', controller.update);
+router.put('/:id', requirePermission('organizations:update'), controller.update);
 
 export default router;

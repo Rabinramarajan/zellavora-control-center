@@ -8,6 +8,7 @@
  */
 import { AppError } from '../../middleware/error';
 import { AuditService } from '../../infrastructure/audit';
+import { PermissionService } from '../../services/auth/permission.service';
 import { cacheDelPattern } from '../../infrastructure/cache';
 import {
   MenuDefinitionNode,
@@ -109,6 +110,7 @@ export class MenuAccessService {
       metadata: { role: role.key },
     });
     void cacheDelPattern(`${ROLE_CACHE_PREFIX}*`);
+    PermissionService.invalidate();
     return after;
   }
 

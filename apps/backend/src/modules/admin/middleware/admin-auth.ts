@@ -1,36 +1,36 @@
 import type { Response, NextFunction } from 'express';
 import {
   authenticate as baseAuthenticate,
+  markGuard,
   requirePermission as baseRequirePermission,
+  resolvePlatformAdmin,
   type AuthRequest,
 } from '../../../middleware/auth';
-import { AppError } from '../../../middleware/error';
 
 export type { AuthRequest };
+
+/** Permission that opens the admin console API; every mounted router still checks its own. */
+export const ADMIN_ACCESS_PERMISSION = 'admin:access';
 
 /**
  * Admin Authentication Guard.
  * 1. Verifies the JWT and active session.
- * 2. Checks that the authenticated caller has administrative privileges
- *    (e.g. role 'admin', 'owner', 'platform_admin', or has an admin tenant context).
+ * 2. Requires the named `admin:access` permission (or platform-operator status), so holding
+ *    some role is not enough to reach the admin tree.
  */
-export const adminAuthGuard = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  await baseAuthenticate(req, res, (err?: unknown) => {
-    if (err) return next(err);
-
-    const role = (req.role || '').toLowerCase();
-
-    if (!role) {
-      return next(new AppError('Forbidden: No role assigned', 403, 'FORBIDDEN_NO_ROLE'));
-    }
-
-    next();
-  });
-};
+export const adminAuthGuard = markGuard(
+  async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    await baseAuthenticate(req, res, async (err?: unknown) => {
+      if (err) return next(err);
+      try {
+        if (await resolvePlatformAdmin(req)) return next();
+      } catch (e) {
+        return next(e);
+      }
+      return baseRequirePermission(ADMIN_ACCESS_PERMISSION)(req, res, next);
+    });
+  }
+);
 
 /**
  * Granular Admin permission check.

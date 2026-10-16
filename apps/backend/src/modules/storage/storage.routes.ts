@@ -1,23 +1,9 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { authenticate, requirePermission } from '../../middleware/auth';
 import { StorageController } from './storage.controller';
 
 const router = Router();
 const controller = new StorageController();
-
-/**
- * @swagger
- * /api/v1/storage/upload:
- *   post:
- *     summary: uploadFile
- *     operationId: postStorageUpload
- *     tags: [storage]
- *     security: []
- *     responses:
- *       default:
- *         description: Operation response
- */
-router.post('/upload', controller.upload);
 
 /**
  * @swagger
@@ -70,6 +56,8 @@ router.post(
   '/media',
   authenticate,
   requirePermission('media:upload', 'media:create'),
+  // Parsed here, after auth, so the larger cap applies to this route alone.
+  express.json({ limit: '4500kb' }),
   controller.uploadMedia
 );
 router.delete('/media', authenticate, requirePermission('media:delete'), controller.deleteMedia);

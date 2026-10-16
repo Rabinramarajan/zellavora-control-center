@@ -193,19 +193,113 @@ router.get('/:id/audit', ...can('user-requests:audit:read'), controller.audit);
 
 /**
  * @swagger
- * /api/v1/iam/user-requests/{id}/{action}:
+ * /api/v1/iam/user-requests/{id}/submit:
  *   post:
- *     summary: userRequestAction
- *     operationId: postIamUserRequestsByIdAction
- *     description: >
- *       Workflow transitions: submit, approve, reject, send-back, cancel, retry-provisioning.
- *       reject and send-back require `comments`.
+ *     summary: submitUserRequest
+ *     operationId: postIamUserRequestsByIdSubmit
+ *     description: Submits a draft or sent-back request for approval.
  *     tags: [iamUserRequests]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - { in: path, name: id, required: true, schema: { type: string } }
- *       - { in: path, name: action, required: true, schema: { type: string, enum: [submit, approve, reject, send-back, cancel, retry-provisioning] } }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               comments: { type: string }
+ *     responses:
+ *       200: { description: Updated request detail }
+ * /api/v1/iam/user-requests/{id}/approve:
+ *   post:
+ *     summary: approveUserRequest
+ *     operationId: postIamUserRequestsByIdApprove
+ *     description: Approves the request and provisions the change.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               comments: { type: string }
+ *     responses:
+ *       200: { description: Updated request detail }
+ * /api/v1/iam/user-requests/{id}/reject:
+ *   post:
+ *     summary: rejectUserRequest
+ *     operationId: postIamUserRequestsByIdReject
+ *     description: Rejects the request. Comments are required.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [comments]
+ *             properties:
+ *               comments: { type: string }
+ *     responses:
+ *       200: { description: Updated request detail }
+ * /api/v1/iam/user-requests/{id}/send-back:
+ *   post:
+ *     summary: sendBackUserRequest
+ *     operationId: postIamUserRequestsByIdSendBack
+ *     description: Returns the request to its maker for correction. Comments are required.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [comments]
+ *             properties:
+ *               comments: { type: string }
+ *     responses:
+ *       200: { description: Updated request detail }
+ * /api/v1/iam/user-requests/{id}/cancel:
+ *   post:
+ *     summary: cancelUserRequest
+ *     operationId: postIamUserRequestsByIdCancel
+ *     description: Cancels the request.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               comments: { type: string }
+ *     responses:
+ *       200: { description: Updated request detail }
+ * /api/v1/iam/user-requests/{id}/retry-provisioning:
+ *   post:
+ *     summary: retryUserRequestProvisioning
+ *     operationId: postIamUserRequestsByIdRetryProvisioning
+ *     description: Retries provisioning or the notification emails of an approved request.
+ *     tags: [iamUserRequests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
  *     requestBody:
  *       content:
  *         application/json:

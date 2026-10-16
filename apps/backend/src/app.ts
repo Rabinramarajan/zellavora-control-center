@@ -2,9 +2,6 @@ import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import Redis from 'ioredis';
-import { createClient } from '@supabase/supabase-js';
-import type { RequestHandler } from 'express';
 import { config, configErrors } from './config/env';
 import { errorHandler } from './middleware/error';
 import { registerSwaggerRoutes } from './routes/swagger';
@@ -13,11 +10,10 @@ import { responseEnvelope } from './middleware/response-envelope';
 import { createRateLimiter } from './middleware/rate-limit';
 import { requestContext } from './middleware/request-context';
 import { loginDecryptMiddleware } from './middleware/login-decrypt';
-import crypto from 'crypto';
 import os from 'os';
 import { prisma } from './infrastructure/prisma';
-import { buildRbac } from './rbac';
-import { logger } from './infrastructure/logger';
+import { getRedis } from './infrastructure/redis';
+import { authenticate, requirePermission } from './middleware/auth';
 
 const app = express();
 
@@ -32,8 +28,15 @@ registerSwaggerRoutes(app);
 app.use('/favicon.png', express.static('public'));
 
 // Middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Bodies are parsed before auth runs, so the global cap stays small. Only the media
+// upload route raises it, under Vercel's 4.5 MB request cap.
+const smallJson = express.json({ limit: '1mb' });
+const isMediaUpload = (method: string, path: string) =>
+  method === 'POST' && /\/storage\/media\/?$/.test(path);
+app.use((req, res, next) =>
+  isMediaUpload(req.method, req.path) ? next() : smallJson(req, res, next)
+);
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 app.use(responseEnvelope);
 
@@ -48,31 +51,11 @@ app.use(
   })
 );
 
-// Security headers with CSP for both Angular SPA and Swagger UI
+// Strict helmet defaults for the API. The relaxed policy Swagger UI needs is applied
+// only under /swagger (see routes/swagger.ts).
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      useDefaults: true,
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          'https://cdn.jsdelivr.net',
-          'https://cdnjs.cloudflare.com',
-        ],
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          'https://cdn.jsdelivr.net',
-          'https://fonts.googleapis.com',
-        ],
-        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'blob:'],
-        connectSrc: ["'self'"],
-        upgradeInsecureRequests: null,
-      },
-    },
+    contentSecurityPolicy: { useDefaults: true, directives: { upgradeInsecureRequests: null } },
     hsts: config.nodeEnv === 'production' ? { maxAge: 15552000, includeSubDomains: true } : false,
   })
 );
@@ -117,16 +100,13 @@ app.use(requestContext);
  *                   type: string
  *                   format: date-time
  */
-// Health check. Reports configuration problems instead of crashing on them,
-// so a misconfigured deployment is diagnosable rather than opaque.
+// Health check. Reports only whether the deployment is configured; the cause is in the
+// boot logs and, for operators, at /api/v1/operations/health.
 app.get('/health', (_req, res) => {
   const healthy = configErrors.length === 0;
   res.status(healthy ? 200 : 503).json({
     status: healthy ? 'ok' : 'degraded',
-    environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
-    ...(healthy ? {} : { configErrors }),
-    ...(rbacFailure ? { rbac: { status: 'unavailable', reason: rbacFailure } } : {}),
   });
 });
 
@@ -137,7 +117,7 @@ app.get('/health', (_req, res) => {
  *     summary: getSystemMetrics
  *     operationId: getApiHealth
  *     tags: [system]
- *     security: []
+ *     description: Requires the operations system-health permission.
  *     responses:
  *       200:
  *         description: Resource usage and dependency status for the admin System Health page
@@ -162,46 +142,53 @@ async function probeDatabase(): Promise<{
   }
 }
 
-app.get('/api/v1/health', async (_req, res) => {
-  const totalRam = os.totalmem();
-  const usedRam = totalRam - os.freemem();
-  const cpuCount = os.cpus().length || 1;
-  const load = Math.min(os.loadavg()[0], cpuCount);
-  const database = await probeDatabase();
-  const blobConfigured = Boolean(
-    process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_OIDC_TOKEN
-  );
-  const redisState: ServiceState = !config.redisUrl
-    ? 'failed'
-    : rbacFailure
-      ? 'degraded'
-      : 'healthy';
-  const gb = (bytes: number) => Math.round((bytes / 1024 ** 3) * 10) / 10;
+app.get(
+  '/api/v1/health',
+  authenticate,
+  requirePermission('OPERATIONS_SYSTEM_HEALTH_VIEW', 'system:rbac:read', 'system:audit:read'),
+  async (_req, res) => {
+    const totalRam = os.totalmem();
+    const usedRam = totalRam - os.freemem();
+    const cpuCount = os.cpus().length || 1;
+    const load = Math.min(os.loadavg()[0], cpuCount);
+    const database = await probeDatabase();
+    const blobConfigured = Boolean(
+      process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_OIDC_TOKEN
+    );
+    const redisState: ServiceState = !config.redisUrl
+      ? 'failed'
+      : getRedis()?.status === 'ready'
+        ? 'healthy'
+        : 'degraded';
+    const gb = (bytes: number) => Math.round((bytes / 1024 ** 3) * 10) / 10;
 
-  res.json({
-    cpu: {
-      used: Math.round(load * 10) / 10,
-      total: cpuCount,
-      percentage: Math.round((load / cpuCount) * 100),
-    },
-    ram: {
-      used: gb(usedRam),
-      total: gb(totalRam),
-      percentage: Math.round((usedRam / totalRam) * 100),
-    },
-    database,
-    storage: blobConfigured
-      ? { status: 'healthy', latencyMs: 0 }
-      : { status: 'failed', latencyMs: 0, message: 'BLOB_READ_WRITE_TOKEN is not set' },
-    redis: {
-      status: redisState,
-      latencyMs: 0,
-      ...(redisState === 'healthy' ? {} : { message: rbacFailure ?? 'REDIS_URL is not set' }),
-    },
-    queue: { pendingJobs: 0, activeWorkers: 0, status: redisState },
-    timestamp: new Date().toISOString(),
-  });
-});
+    res.json({
+      cpu: {
+        used: Math.round(load * 10) / 10,
+        total: cpuCount,
+        percentage: Math.round((load / cpuCount) * 100),
+      },
+      ram: {
+        used: gb(usedRam),
+        total: gb(totalRam),
+        percentage: Math.round((usedRam / totalRam) * 100),
+      },
+      database,
+      storage: blobConfigured
+        ? { status: 'healthy', latencyMs: 0 }
+        : { status: 'failed', latencyMs: 0, message: 'BLOB_READ_WRITE_TOKEN is not set' },
+      redis: {
+        status: redisState,
+        latencyMs: 0,
+        ...(redisState === 'healthy'
+          ? {}
+          : { message: config.redisUrl ? 'Redis is not connected' : 'REDIS_URL is not set' }),
+      },
+      queue: { pendingJobs: 0, activeWorkers: 0, status: redisState },
+      timestamp: new Date().toISOString(),
+    });
+  }
+);
 
 /**
  * @swagger
@@ -242,137 +229,7 @@ app.get('/info', (_req, res) => {
   });
 });
 
-// Legacy gettoken paths — aliases for /api/v1/auth/gettoken.
-// Returns hex-encoded key/iv: pure ASCII, safe through any HTTP transport.
-app.get(
-  [
-    '/api/v1/admin/api/Authentication/gettoken',
-    '/api/v1/Authentication/gettoken',
-    '/api/admin/Authentication/gettoken',
-  ],
-  (_req, res) => {
-    res.json([crypto.randomBytes(32).toString('hex'), crypto.randomBytes(16).toString('hex')]);
-  },
-);
-
 registerApiRoutes(app);
-
-// ---------- RBAC module ----------
-// The RBAC router is mounted SYNCHRONOUSLY below, before the 404 handler.
-// Express matches middleware in registration order, so a router added later
-// from an async callback sits behind the catch-all 404 and is unreachable.
-// Initialisation itself stays async and is deferred to the first request:
-// on a serverless platform, connecting to Redis during module evaluation
-// blocks (and can time out) every cold start, including requests that never
-// touch RBAC.
-
-type RbacHandle = Awaited<ReturnType<typeof buildRbac>>;
-
-let rbacPromise: Promise<RbacHandle | null> | null = null;
-
-type RbacFailureReason =
-  'SUPABASE_NOT_CONFIGURED' | 'REDIS_URL_MISSING' | 'REDIS_CONNECT_FAILED' | 'RBAC_INIT_FAILED';
-
-// Kept so the 503 and /health can say WHY RBAC is down; without it every
-// failure mode collapses into the same opaque response.
-let rbacFailure: RbacFailureReason | null = null;
-
-class RbacInitError extends Error {
-  public constructor(
-    public readonly reason: RbacFailureReason,
-    cause?: unknown
-  ) {
-    super(cause instanceof Error ? cause.message : reason);
-  }
-}
-
-async function createRbac(): Promise<RbacHandle> {
-  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
-    throw new RbacInitError('SUPABASE_NOT_CONFIGURED');
-  }
-  if (!config.redisUrl) {
-    throw new RbacInitError('REDIS_URL_MISSING');
-  }
-
-  const db = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const redis = new Redis(config.redisUrl, {
-    lazyConnect: true,
-    // Serverless: fail fast instead of retrying past the function timeout.
-    maxRetriesPerRequest: 2,
-    connectTimeout: 5000,
-    enableOfflineQueue: false,
-  });
-
-  // Attach the error listener BEFORE connecting so Node never sees an
-  // unhandled 'error' event from ioredis while it retries the connection.
-  redis.on('error', (err: Error) => {
-    logger.warn(`RBAC redis error: ${err.message}`);
-  });
-
-  try {
-    await redis.connect();
-  } catch (connectErr) {
-    redis.disconnect(); // stop background retries
-    throw new RbacInitError('REDIS_CONNECT_FAILED', connectErr);
-  }
-
-  let rbac: RbacHandle;
-  try {
-    rbac = await buildRbac({ db, redis });
-  } catch (initErr) {
-    redis.disconnect();
-    throw new RbacInitError('RBAC_INIT_FAILED', initErr);
-  }
-
-  // Make services reachable from request middleware (req.app.locals.*)
-  app.locals.engine = rbac.engine;
-  app.locals.audit = rbac.audit;
-  app.locals.roleService = rbac.roleService;
-  app.locals.userRoleService = rbac.userRoleService;
-
-  return rbac;
-}
-
-/** Resolves once per instance; a failed attempt is retried on the next request. */
-function getRbac(): Promise<RbacHandle | null> {
-  if (!rbacPromise) {
-    rbacPromise = createRbac()
-      .then((rbac) => {
-        rbacFailure = null;
-        return rbac;
-      })
-      .catch((err: unknown) => {
-        rbacPromise = null; // allow a later request to retry
-        rbacFailure = err instanceof RbacInitError ? err.reason : 'RBAC_INIT_FAILED';
-        logger.error(
-          `RBAC initialisation failed (${rbacFailure}): ${err instanceof Error ? err.message : String(err)}`
-        );
-        return null;
-      });
-  }
-  return rbacPromise;
-}
-
-const rbacGateway: RequestHandler = (req, res, next) => {
-  getRbac()
-    .then((rbac) => {
-      if (!rbac) {
-        res.status(503).json({
-          error: 'RBAC module unavailable',
-          code: 'RBAC_UNAVAILABLE',
-          reason: rbacFailure,
-        });
-        return;
-      }
-      rbac.router(req, res, next);
-    })
-    .catch(next);
-};
-
-app.use('/api/v1/rbac', rbacGateway);
 
 // 404 handler — must stay after every route registration above.
 app.use((_req, res) => {

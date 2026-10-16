@@ -105,7 +105,7 @@ Requests are editable in `DRAFT` and `SENT_BACK`, and cancellable from `DRAFT`, 
 
 ## Review notes
 
-- **Directory is not scoped to the caller's organization** (review **H5**): list, get, stats, lock and session revocation work across organizations. User Requests are scoped.
+- Fixed (**H5**): the directory (list, search, stats, get, lock) and every user-detail section and action (profile, access, sessions, revoke, notes, status history, emails, audit, password reset, resend invitation) are filtered by membership of the token's organization. A user in another organization answers 404. User Requests were already scoped.
 - The legacy `/api/v1/admin/users/save` endpoint writes users directly with only a sign-in check, bypassing this workflow (review **C2**). Retire it.
 - `/users` is a second users page on the same API; `/admin/users` already redirects here. See [legacy admin](legacy-admin.md).
 

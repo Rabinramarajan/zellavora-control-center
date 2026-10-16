@@ -45,7 +45,9 @@ export class UserAdminController {
   revokeAllSessions = handle('All user sessions revoked successfully', (req, actor) =>
     this.service.revokeAllSessions(req.params.id, actor)
   );
-  notes = handle('User notes retrieved successfully', (req) => this.service.notes(req.params.id));
+  notes = handle('User notes retrieved successfully', (req, actor) =>
+    this.service.notes(req.params.id, actor.organizationId)
+  );
   addNote = handle(
     'Note added successfully',
     (req, actor) => this.service.addNote(req.params.id, AddUserNoteSchema.parse(req.body), actor),
@@ -54,14 +56,14 @@ export class UserAdminController {
   requests = handle('User requests retrieved successfully', (req, actor) =>
     this.service.requestHistory(req.params.id, actor.organizationId)
   );
-  statusHistory = handle('User status history retrieved successfully', (req) =>
-    this.service.statusHistory(req.params.id)
+  statusHistory = handle('User status history retrieved successfully', (req, actor) =>
+    this.service.statusHistory(req.params.id, actor.organizationId)
   );
-  emails = handle('User email history retrieved successfully', (req) =>
-    this.service.emailHistory(req.params.id)
+  emails = handle('User email history retrieved successfully', (req, actor) =>
+    this.service.emailHistory(req.params.id, actor.organizationId)
   );
-  audit = handle('User audit trail retrieved successfully', (req) =>
-    this.service.audit(req.params.id)
+  audit = handle('User audit trail retrieved successfully', (req, actor) =>
+    this.service.audit(req.params.id, actor.organizationId)
   );
   sendPasswordReset = handle('Password reset email sent successfully', (req, actor) =>
     this.service.sendPasswordReset(req.params.id, actor)

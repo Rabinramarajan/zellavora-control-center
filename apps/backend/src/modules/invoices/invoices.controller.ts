@@ -63,13 +63,11 @@ export class InvoicesController {
 
   public async createClient(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(InvoiceClientSchema, req.body);
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: 'Invoice client created successfully',
-        data: await this.service.createClient(dto, actorOf(req)),
-      });
+    res.status(201).json({
+      success: true,
+      message: 'Invoice client created successfully',
+      data: await this.service.createClient(dto, actorOf(req)),
+    });
   }
 
   public async updateClient(req: AuthRequest, res: Response): Promise<void> {
@@ -108,13 +106,11 @@ export class InvoicesController {
 
   public async create(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(SaveInvoiceSchema, req.body);
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: 'Invoice created successfully',
-        data: await this.service.create(dto, actorOf(req)),
-      });
+    res.status(201).json({
+      success: true,
+      message: 'Invoice created successfully',
+      data: await this.service.create(dto, actorOf(req)),
+    });
   }
 
   public async update(req: AuthRequest, res: Response): Promise<void> {
@@ -137,13 +133,11 @@ export class InvoicesController {
   public async fromMonthlySheet(req: AuthRequest, res: Response): Promise<void> {
     const dto = parse(FromMonthlySheetSchema, req.body);
     const invoice = await this.service.fromMonthlySheet(req.params.sheetId, dto, actorOf(req));
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: 'Invoice created from monthly sheet successfully',
-        data: invoice,
-      });
+    res.status(201).json({
+      success: true,
+      message: 'Invoice created from monthly sheet successfully',
+      data: invoice,
+    });
   }
 
   public async issue(req: AuthRequest, res: Response): Promise<void> {
@@ -229,6 +223,8 @@ export class InvoicesController {
     const csv = await this.service.register(query, actorOf(req));
     const today = new Date().toISOString().slice(0, 10);
     // The BOM lets Excel read the file as UTF-8.
-    attachment(res, 'text/csv; charset=utf-8', `Invoice_Register_${today}.csv`).send(`﻿${csv}`);
+    attachment(res, 'text/csv; charset=utf-8', `Invoice_Register_${today}.csv`).send(
+      `\uFEFF${csv}`
+    );
   }
 }

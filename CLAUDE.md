@@ -21,7 +21,7 @@
 - **Styling**: Tailwind CSS with dark/light mode support
 
 ### Backend
-- **Runtime**: Node.js 20+
+- **Runtime**: Node.js 24+
 - **Framework**: Express.js
 - **Database**: PostgreSQL with Prisma ORM
 - **Auth**: Supabase Auth + JWT with Refresh Tokens

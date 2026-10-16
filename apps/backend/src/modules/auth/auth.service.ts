@@ -346,10 +346,14 @@ export class AuthService {
         mfaEnrolledAt: user.mfaEnrolledAt,
         lastLoginAt: user.lastLoginDatetime,
         createdAt: user.createdAt,
+        // Lets the UI hide platform-only screens; the API enforces it independently.
+        isPlatformAdmin: user.isPlatformAdmin === true,
       },
       tenant: { ...toTenantView(tenant), plan: tenant.plan, enforce2fa: tenant.enforce2fa },
       mfaSetupRequired: tenant.enforce2fa && !user.mfaEnabled,
       permissions: Array.from(permissions),
+      // Denies override grants, wildcards included, so the client needs them to mirror the server.
+      deniedPermissions: Array.from(permissions.denied),
       approval: { ...approval, reviewQueue },
       menu,
     };

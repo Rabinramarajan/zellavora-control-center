@@ -1,3 +1,5 @@
+> **Archived.** The Angular app described here (`apps/zcc-frontend`) is not in this repository. Keep the page for the frontend team; do not rely on it for the backend.
+
 # Frontend core, shared components and layout
 
 The Angular application shell that every feature builds on: bootstrap, HTTP pipeline, authentication state, permission checks, theming, layout, and the shared component library.

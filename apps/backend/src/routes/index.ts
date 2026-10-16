@@ -46,7 +46,11 @@ import operationsHealthRoutes from '../modules/operations/health/health.routes';
 import adminRoutes from '../modules/admin/admin.routes';
 import appRoutes from '../modules/application/application.routes';
 
-/** Register canonical API namespaces first, retaining historical paths as compatibility aliases. */
+/**
+ * Register the API namespaces. One canonical path per feature; the only aliases left are
+ * `/api/v1/audit-logs` and `/api/v1/system-health` (see docs/API_NAMING.md for the removal of
+ * the `/clean/*` paths). `/api/admin` and `/api/app` are separate, documented API surfaces.
+ */
 export function registerApiRoutes(app: Express): void {
   // Dedicated Module Route Groups
   app.use('/api/app', appRoutes);
@@ -57,20 +61,17 @@ export function registerApiRoutes(app: Express): void {
 
   // Operations Module (System Health + Audit Logs)
   app.use(['/api/v1/operations/health', '/api/v1/system-health'], operationsHealthRoutes);
-  app.use(
-    ['/api/v1/operations/audit-logs', '/api/v1/audit-logs', '/api/v1/clean/audits'],
-    auditLogRoutes
-  );
+  app.use(['/api/v1/operations/audit-logs', '/api/v1/audit-logs'], auditLogRoutes);
 
   // Organization and identity services
-  app.use(['/api/v1/invitations', '/api/v1/clean/invitations'], invitationRoutes);
-  app.use(['/api/v1/organizations', '/api/v1/clean/organizations'], organizationRoutes);
-  app.use(['/api/v1/branches', '/api/v1/clean/branches'], branchRoutes);
-  app.use(['/api/v1/permissions', '/api/v1/clean/permissions'], permissionRoutes);
-  app.use(['/api/v1/organization-settings', '/api/v1/clean/settings'], organizationSettingsRoutes);
-  app.use(['/api/v1/notifications', '/api/v1/clean/notifications'], notificationRoutes);
-  app.use(['/api/v1/storage', '/api/v1/clean/storage'], storageRoutes);
-  app.use(['/api/v1/lookups', '/api/v1/clean/ddls'], lookupRoutes);
+  app.use('/api/v1/invitations', invitationRoutes);
+  app.use('/api/v1/organizations', organizationRoutes);
+  app.use('/api/v1/branches', branchRoutes);
+  app.use('/api/v1/permissions', permissionRoutes);
+  app.use('/api/v1/organization-settings', organizationSettingsRoutes);
+  app.use('/api/v1/notifications', notificationRoutes);
+  app.use('/api/v1/storage', storageRoutes);
+  app.use('/api/v1/lookups', lookupRoutes);
 
   // Operations Dashboard (tenant-scoped)
   app.use('/api/v1/dashboard', dashboardRoutes);
@@ -111,4 +112,3 @@ export function registerApiRoutes(app: Express): void {
   app.use('/api/v1/approval-mode', approvalModeRoutes);
   app.use('/api/v1/invoices', invoicesRoutes);
 }
-

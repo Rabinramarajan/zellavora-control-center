@@ -1,16 +1,25 @@
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 
 export class NotificationRepository extends BaseRepository {
-  async findById(id: string, tx?: TxClient) {
-    return this.getDb(tx).notification.findUnique({
-      where: { id },
-    });
-  }
-
-  async listByOrganization(organizationId: string, tx?: TxClient) {
-    return this.getDb(tx).notification.findMany({
-      where: { organizationId },
-    });
+  /** One member's notifications, newest first. Both ids come from the verified token. */
+  async listForRecipient(
+    organizationId: string,
+    recipientId: string,
+    page: { skip: number; take: number },
+    tx?: TxClient
+  ) {
+    const where = { organizationId, recipientId };
+    const db = this.getDb(tx);
+    const [total, items] = await Promise.all([
+      db.notification.count({ where }),
+      db.notification.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: page.skip,
+        take: page.take,
+      }),
+    ]);
+    return { total, items };
   }
 
   async create(
@@ -19,20 +28,11 @@ export class NotificationRepository extends BaseRepository {
       recipientId?: string | null;
       title?: string | null;
       body: string;
-      channels?: any;
+      channels?: string[];
       status?: string;
     },
     tx?: TxClient
   ) {
-    return this.getDb(tx).notification.create({
-      data,
-    });
-  }
-
-  async updateStatus(id: string, status: string, tx?: TxClient) {
-    return this.getDb(tx).notification.update({
-      where: { id },
-      data: { status },
-    });
+    return this.getDb(tx).notification.create({ data });
   }
 }

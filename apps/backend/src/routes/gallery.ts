@@ -1,9 +1,18 @@
 import { Router, type Router as ExpressRouter } from 'express';
 import { supabase } from '../config/supabase';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 
 const router: ExpressRouter = Router();
+
+const UpdateGalleryItemSchema = z
+  .object({
+    media_url: z.string().min(1).max(2048).optional(),
+    caption: z.string().max(1000).nullable().optional(),
+    order_index: z.number().int().min(0).optional(),
+  })
+  .strict();
 
 /**
  * @swagger
@@ -242,7 +251,7 @@ router.put(
 
       const { data, error } = await supabase
         .from('project_gallery')
-        .update(req.body)
+        .update(UpdateGalleryItemSchema.parse(req.body))
         .eq('id', req.params.imageId)
         .eq('project_id', req.params.projectId)
         .select()

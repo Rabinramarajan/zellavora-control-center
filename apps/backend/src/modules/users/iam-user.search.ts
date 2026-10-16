@@ -51,8 +51,8 @@ export const userSearch = (
   },
   sortColumns: SORT_COLUMNS,
   defaultSort: { column: 'joiningDate', ascending: false },
-  run: async (c, { pageNumber, pageSize, sort }) => {
-    const page = await service.list({
+  run: async (c, { pageNumber, pageSize, sort }, req) => {
+    const page = await service.list(req.tenantId as string, {
       username: c.userLoginId,
       firstName: c.firstName,
       email: c.emailId,

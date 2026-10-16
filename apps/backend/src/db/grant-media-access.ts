@@ -68,8 +68,8 @@ async function main(): Promise<void> {
   for (const { tenantId, tenant } of memberships) {
     console.log(`📦 ${tenant.name}`);
 
-    // PermissionService only falls back to the role named after user.role when the
-    // user has no explicit assignments. Assign it explicitly so adding Media Manager
+    // A user with no assignment gets nothing from PermissionService (the role-name fallback
+    // is opt-in). Assign the role named after user.role explicitly so adding Media Manager
     // doesn't silently drop the permissions (and menus) the user has today.
     const assignmentCount = await prisma.userRoleAssignment.count({
       where: { userId: user.id, organizationId: tenantId },

@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { DdlController } from './ddl.controller';
+import { authenticate } from '../../middleware/auth';
 
 const router = Router();
 const controller = new DdlController();
+
+router.use(authenticate);
 
 /**
  * @swagger
@@ -11,7 +14,6 @@ const controller = new DdlController();
  *     summary: listLookupData
  *     operationId: getLookups
  *     tags: [lookups]
- *     security: []
  *     responses:
  *       default:
  *         description: Operation response
@@ -24,7 +26,6 @@ router.get('/', controller.getAll);
  *     summary: listLookupDataByTypes
  *     operationId: getLookupsTypes
  *     tags: [lookups]
- *     security: []
  *     responses:
  *       default:
  *         description: Operation response
@@ -37,7 +38,6 @@ router.get('/types', controller.getByTypes);
  *     summary: listLookupDataByType
  *     operationId: getLookupsByType
  *     tags: [lookups]
- *     security: []
  *     parameters:
  *       - in: path
  *         name: type

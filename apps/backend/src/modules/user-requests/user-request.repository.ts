@@ -306,7 +306,8 @@ export class UserRequestRepository extends BaseRepository {
   rolesWithPermissions(roleIds: string[]) {
     if (!roleIds.length) return Promise.resolve([]);
     return this.getDb().role.findMany({
-      where: { id: { in: roleIds } },
+      // Same eligibility as PermissionService: a disabled or deleted role grants nothing.
+      where: { id: { in: roleIds }, status: 'ACTIVE', isDeleted: false },
       select: {
         id: true,
         name: true,
@@ -314,8 +315,10 @@ export class UserRequestRepository extends BaseRepository {
         scope: true,
         isSystem: true,
         rolePermissions: {
-          where: { effect: 'allow' },
-          select: { permission: { select: { key: true, resource: true, action: true } } },
+          select: {
+            effect: true,
+            permission: { select: { key: true, resource: true, action: true } },
+          },
         },
       },
     });
@@ -324,7 +327,7 @@ export class UserRequestRepository extends BaseRepository {
   groupsWithRoles(groupIds: string[]) {
     if (!groupIds.length) return Promise.resolve([]);
     return this.getDb().group.findMany({
-      where: { id: { in: groupIds } },
+      where: { id: { in: groupIds }, status: 'ACTIVE', isDeleted: false },
       select: { id: true, name: true, groupRoles: { select: { roleId: true } } },
     });
   }

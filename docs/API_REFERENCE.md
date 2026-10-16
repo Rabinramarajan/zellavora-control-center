@@ -2,27 +2,6 @@
 
 Canonical URLs and operation names. Historical aliases are listed in [API_NAMING.md](API_NAMING.md). The live contract is available at `/swagger/swagger.json`.
 
-## accessControl
-
-| Method | URL                                                | Name                               | Operation ID                                 |
-| ------ | -------------------------------------------------- | ---------------------------------- | -------------------------------------------- |
-| GET    | `/api/v1/rbac/audit-logs`                          | searchTheRbacAuditLog | `getRbacAuditLogs`                           |
-| POST   | `/api/v1/rbac/check`                               | checkMultiplePermissions | `postRbacCheck`                              |
-| GET    | `/api/v1/rbac/me/policy`                           | getCurrentUserPermissionPolicy | `getRbacMePolicy`                            |
-| GET    | `/api/v1/rbac/permissions`                         | listAllPermissions | `getRbacPermissions`                         |
-| GET    | `/api/v1/rbac/permissions/groups`                  | listPermissionGroups | `getRbacPermissionsGroups`                   |
-| GET    | `/api/v1/rbac/roles`                               | listAllRolesInTheTenant | `getRbacRoles`                               |
-| POST   | `/api/v1/rbac/roles`                               | createRole | `postRbacRoles`                              |
-| DELETE | `/api/v1/rbac/roles/{id}`                          | deleteRole | `deleteRbacRolesById`                        |
-| GET    | `/api/v1/rbac/roles/{id}`                          | getRoleDetail | `getRbacRolesById`                           |
-| PATCH  | `/api/v1/rbac/roles/{id}`                          | updateRole | `patchRbacRolesById`                         |
-| POST   | `/api/v1/rbac/roles/{id}/clone`                    | cloneRole | `postRbacRolesByIdClone`                     |
-| PUT    | `/api/v1/rbac/roles/{id}/inheritance`              | setRoleInheritance | `putRbacRolesByIdInheritance`                |
-| PUT    | `/api/v1/rbac/roles/{id}/permissions`              | replaceRolePermissions | `putRbacRolesByIdPermissions`                |
-| GET    | `/api/v1/rbac/users/{userId}/roles`                | listRoleAssignmentsForUser | `getRbacUsersByUserIdRoles`                  |
-| POST   | `/api/v1/rbac/users/{userId}/roles`                | assignRoleToUser | `postRbacUsersByUserIdRoles`                 |
-| DELETE | `/api/v1/rbac/users/{userId}/roles/{assignmentId}` | revokeRoleAssignmentFromUser | `deleteRbacUsersByUserIdRolesByAssignmentId` |
-
 ## administrationAuditLogs
 
 | Method | URL                                | Name                          | Operation ID                |
@@ -117,7 +96,6 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | Method | URL                      | Name               | Operation ID       |
 | ------ | ------------------------ | ------------------ | ------------------ |
 | GET    | `/api/v1/audit-logs`     | listAuditLogs | `getAuditLogs`     |
-| POST   | `/api/v1/audit-logs/log` | createAuditEvent | `postAuditLogsLog` |
 
 ## authentication
 
@@ -291,7 +269,6 @@ Canonical URLs and operation names. Historical aliases are listed in [API_NAMING
 | Method | URL                          | Name               | Operation ID            |
 | ------ | ---------------------------- | ------------------ | ----------------------- |
 | GET    | `/api/v1/notifications`      | listNotifications | `getNotifications`      |
-| POST   | `/api/v1/notifications/send` | sendNotification | `postNotificationsSend` |
 
 ## organizationSettings
 
@@ -416,7 +393,6 @@ Owner API for the signed-in user's portfolio, plus the public read. Owner routes
 
 | Method | URL                      | Name        | Operation ID        |
 | ------ | ------------------------ | ----------- | ------------------- |
-| POST   | `/api/v1/storage/upload` | uploadFile | `postStorageUpload` |
 
 ## system
 

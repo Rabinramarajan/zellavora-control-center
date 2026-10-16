@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { AppError } from '../../middleware/error';
 import { AuditService } from '../../infrastructure/audit';
 import { cacheDelPattern } from '../../infrastructure/cache';
+import { PermissionService } from '../../services/auth/permission.service';
 import type { TxClient } from '../../infrastructure/prisma';
 import { AccessCalculator, AccessState, applyRequest } from './user-request.access';
 import { RequestPayload } from './user-request.dto';
@@ -523,6 +524,7 @@ export class UserRequestProvisioner {
         skipDuplicates: true,
       });
     }
+    PermissionService.invalidate();
     if (addTeams.length || removeTeams.length) {
       await tx.user.update({
         where: { id: userId },

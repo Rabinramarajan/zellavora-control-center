@@ -67,6 +67,23 @@ export const errorHandler = (
     return;
   }
 
+  // body-parser rejects before any route runs; these are client mistakes, not server faults.
+  const bodyParserType = (error as { type?: string }).type;
+  if (bodyParserType === 'entity.too.large') {
+    res.status(413).json({
+      success: false,
+      error: { message: 'Request body is too large', code: 'PAYLOAD_TOO_LARGE', status: 413 },
+    });
+    return;
+  }
+  if (bodyParserType === 'entity.parse.failed') {
+    res.status(400).json({
+      success: false,
+      error: { message: 'Request body is not valid JSON', code: 'INVALID_JSON', status: 400 },
+    });
+    return;
+  }
+
   res.status(500).json({
     success: false,
     error: {

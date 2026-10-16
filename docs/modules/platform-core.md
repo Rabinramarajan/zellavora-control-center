@@ -34,23 +34,25 @@ Registered in this order (`app.ts`):
 
 1. `trust proxy` (client IP from `X-Forwarded-For` on Vercel)
 2. Swagger routes, `/favicon.png`
-3. `express.json` / `urlencoded`, 50 MB limit
+3. `express.json` / `urlencoded`, 1 MB limit. `POST /storage/media` skips the global parser and raises it to 4.5 MB on its own route, after authentication
 4. Response envelope
 5. CORS (`VITE_CORS_ORIGINS`, credentials on)
-6. Helmet with CSP; HSTS in production
+6. Helmet with its default CSP; HSTS in production. Swagger UI gets a relaxed CSP (`unsafe-inline` scripts) only under `/swagger`
 7. Rate limit on `/api/v1/auth` (120 requests/minute per IP)
 8. Request context
-9. `/health`, `/api/v1/health`, `/info`
+9. `/health` (status and timestamp only), `/api/v1/health` (resource and dependency detail; needs sign-in and the operations system-health permission), `/info`
 10. `registerApiRoutes(app)`
-11. `/api/v1/rbac` gateway (initialises Supabase + Redis on first request)
-12. 404 JSON handler
-13. Error handler
+11. 404 JSON handler
+12. Error handler (also maps body-parser 413 and malformed JSON to 413 and 400)
 
 ## Authentication and permissions
 
 - **`authenticate`** reads `Authorization: Bearer <jwt>`, verifies it (HS256), sets `req.userId`, `req.tenantId` (`tid`), `req.role`, `req.sessionId`, and checks the session is still active and inside the organization's idle timeout. Logout, revocation and password reset therefore take effect on the next request.
-- **`requirePermission(...codes)`** loads the caller's effective permission set once per request (`services/auth/permission.service.ts`) and passes if any code matches. Codes accept wildcards (`users:*`).
-- Both must be applied per route; there is no global guard. See the review's route-guard test recommendation.
+- **`requirePermission(...codes)`** loads the caller's effective permission set once per request (`services/auth/permission.service.ts`, cached for 30 seconds) and passes if any code matches. Codes accept wildcards (`users:*`). A `deny` always wins; see [IAM access control](iam-access-control.md).
+- **`requirePlatformAdmin`** gates platform-operator routes on `users.is_platform_admin`. Tenant wildcard grants never satisfy it.
+- **`adminAuthGuard`** (the `/api/admin` tree) requires the `admin:access` permission or platform-operator status; each mounted router still checks its own permission.
+- Token signing fails closed: `TokenService` answers 503 `AUTH_UNAVAILABLE` when `JWT_SECRET` or `REFRESH_TOKEN_SECRET` is missing, shorter than 32 bytes or one of the old placeholder values.
+- Guards must be applied per router or route; there is no global guard. `src/routes/route-guard.spec.ts` walks every registered router and fails when a route outside a short, reviewed allow-list has no marked guard (`authenticate`, `requirePermission`, `requirePlatformAdmin`, `adminAuthGuard`).
 
 ## Error format
 
@@ -79,7 +81,7 @@ Zod failures return 400 with `code: "VALIDATION_ERROR"` and a `fields` map. Unkn
 
 ## Configuration
 
-Required everywhere: `JWT_SECRET`, `REFRESH_TOKEN_SECRET`. Required in production: `ENCRYPTION_KEY` (≥ 32 chars), `APP_URL`, `SMTP_HOST`. Common optional variables:
+Required everywhere: `JWT_SECRET`, `REFRESH_TOKEN_SECRET` (each at least 32 bytes, not a placeholder). Optional: `PERMISSION_ROLE_NAME_FALLBACK=true` re-enables the legacy "role named after `users.role`" grant for members with no role assignment (off by default). Required in production: `ENCRYPTION_KEY` (≥ 32 chars), `APP_URL`, `SMTP_HOST`. Common optional variables:
 
 | Variable                                            | Default                 | Purpose                                                            |
 | --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------ |
@@ -99,12 +101,9 @@ Required everywhere: `JWT_SECRET`, `REFRESH_TOKEN_SECRET`. Required in productio
 
 ## Tests
 
-`middleware/rate-limit.spec.ts`, `middleware/response-envelope.spec.ts`, `infrastructure/redis-keys.spec.ts`, `routes/api-contract.spec.ts` (currently failing: spec and routes have drifted).
+`middleware/rate-limit.spec.ts`, `middleware/response-envelope.spec.ts`, `infrastructure/redis-keys.spec.ts`, `routes/api-contract.spec.ts`, `routes/route-guard.spec.ts` (every route has a guard or is on the reviewed public list), `routes/anonymous-access.spec.ts` (anonymous requests, removed routes, body limit, CSP), `routes/legacy-validation.spec.ts`, `middleware/auth.guards.spec.ts`, `config/env.spec.ts`.
 
 ## Review notes
 
-- JWT secrets fall back to fixed strings when unset (review **H1**).
-- Health endpoints are public and verbose (**M4**); the member-portal route in `app.ts` is unexplained (**M5**).
-- 50 MB body limit (**M6**); `'unsafe-inline'` scripts in the global CSP (**M7**).
-- Each authenticated request writes `sessions.last_activity_at` (**M10**).
+- Fixed in the 2026-10-16 hardening pass: JWT secret fallbacks (**H1**), verbose public health (**M3**), the 50 MB body limit (**M4**), the global `unsafe-inline` CSP (**M5**), the per-request session write (**M10**) and the unwired RBAC gateway (**M1**).
 - `console.*` used instead of the Winston logger (**L1**).

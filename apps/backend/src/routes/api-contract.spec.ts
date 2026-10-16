@@ -22,6 +22,8 @@ const spec = swaggerSpec as {
   tags: { name: string }[];
 };
 const methods = ['get', 'post', 'put', 'patch', 'delete'];
+// Declared directly on the app in app.ts, so they are not mounted through registerApiRoutes.
+const APP_LEVEL_PATHS = new Set(['/api/v1/health']);
 const canonicalRoutes = mounts
   .filter((mount) => mount.paths.some((p) => p.startsWith('/api/v1')))
   .flatMap((mount) => {
@@ -53,7 +55,7 @@ describe('API naming contract', () => {
 
   it('documents real endpoints without publishing compatibility aliases', () => {
     for (const [path, item] of Object.entries(spec.paths)) {
-      if (!path.startsWith('/api/v1/') || path.startsWith('/api/v1/rbac/')) continue;
+      if (!path.startsWith('/api/v1/') || APP_LEVEL_PATHS.has(path)) continue;
       for (const method of methods.filter((method) => item[method])) {
         expect(canonicalRoutes).toContainEqual({ path, method });
       }
@@ -76,13 +78,9 @@ describe('API naming contract', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('keeps historical namespaces on the same router as canonical namespaces', () => {
-    expect(mounts.find((m) => m.paths.includes('/api/v1/clean/ddls'))?.paths[0]).toBe(
-      '/api/v1/lookups'
-    );
-    expect(mounts.find((m) => m.paths.includes('/api/v1/clean/settings'))?.paths[0]).toBe(
-      '/api/v1/organization-settings'
-    );
+  it('keeps no /clean/ compatibility aliases mounted', () => {
+    const aliases = mounts.flatMap((m) => m.paths).filter((p) => p.includes('/clean/'));
+    expect(aliases).toEqual([]);
   });
 });
 

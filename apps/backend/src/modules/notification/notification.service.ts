@@ -1,13 +1,21 @@
 import { NotificationRepository } from './notification.repository';
-import { addQueueJob } from '../../infrastructure/queue';
+import type { ListNotificationsQuery } from './notification.dto';
 
 export class NotificationService {
   private readonly repo = new NotificationRepository();
 
-  async getNotifications(orgId: string) {
-    return this.repo.listByOrganization(orgId);
+  async listMine(organizationId: string, userId: string, query: ListNotificationsQuery) {
+    const { total, items } = await this.repo.listForRecipient(organizationId, userId, {
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+    });
+    return { items, meta: { page: query.page, pageSize: query.pageSize, total } };
   }
 
+  /**
+   * Record a notification for a user of `organizationId`. Server-side callers only:
+   * no route exposes this, so the organization and recipient are never client input.
+   */
   async sendNotification(data: {
     organizationId: string;
     recipientId?: string | null;
@@ -15,24 +23,13 @@ export class NotificationService {
     body: string;
     channels?: string[];
   }) {
-    const notification = await this.repo.create({
+    return this.repo.create({
       organizationId: data.organizationId,
       recipientId: data.recipientId,
       title: data.title,
       body: data.body,
-      channels: data.channels || ['email'],
+      channels: data.channels ?? ['in_app'],
       status: 'pending',
     });
-
-    if (data.channels?.includes('email')) {
-      // Trigger background email task using BullMQ queue
-      await addQueueJob('send-otp', {
-        email: 'admin@zellavora.com', // Real impl maps to recipient email
-        otp: data.body,
-      });
-      await this.repo.updateStatus(notification.id, 'sent');
-    }
-
-    return notification;
   }
 }

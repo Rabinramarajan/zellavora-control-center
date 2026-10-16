@@ -16,7 +16,11 @@ describe('company content tenant binding', () => {
     const next = jest.fn();
     await new SettingsController().list({ tenantId, query: {} } as any, response as any, next);
     expect(next).not.toHaveBeenCalled();
-    expect(response.json).toHaveBeenCalledWith({ success: true, data: [] });
+    expect(response.json).toHaveBeenCalledWith({
+      success: true,
+      message: 'Settings retrieved successfully',
+      data: [],
+    });
   });
   it('rejects reads for a different company', async () => {
     const next = jest.fn();

@@ -16,15 +16,17 @@ The organizational structure inside a tenant. An **organization** (tenant, ident
 
 ## API
 
-**Organizations** `/api/v1/organizations` (alias `/api/v1/clean/organizations`)
+**Organizations** `/api/v1/organizations`. The router applies `authenticate` to every route.
 
-| Method | Path   | Guard    | Purpose                                                           |
-| ------ | ------ | -------- | ----------------------------------------------------------------- |
-| GET    | `/:id` | **none** | Read an organization                                              |
-| POST   | `/`    | **none** | Create (name, client code, logo); plan `enterprise`, 2FA enforced |
-| PUT    | `/:id` | **none** | Update name, logo, `enforce2fa`                                   |
+| Method | Path   | Guard                  | Purpose                                                                                                                                                              |
+| ------ | ------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/:id` | `organizations:read`   | Read the caller's own organization. Any other id answers 404 (platform administrators may read any)                                                                  |
+| POST   | `/`    | platform administrator | Create (name, client code, logo); plan `enterprise`, 2FA enforced                                                                                                    |
+| PUT    | `/:id` | `organizations:update` | Update name, logo, `enforce2fa` of the caller's own organization. Only a platform administrator can switch 2FA enforcement off; a tenant admin can only tighten it |
 
-**Branches** `/api/v1/branches` (alias `/api/v1/clean/branches`)
+Request bodies are strict: unknown fields answer 400. "Platform administrator" is `users.is_platform_admin`; tenant wildcard grants such as the Owner's `*:*` never imply it.
+
+**Branches** `/api/v1/branches`
 
 | Method            | Path        | Permission                     |
 | ----------------- | ----------- | ------------------------------ |
@@ -67,6 +69,6 @@ There is no screen for editing the organization itself. The organization is chos
 
 ## Review notes
 
-- **Organization endpoints have no authentication at all** (review **C1**). Anyone can create organizations or switch off an organization's mandatory 2FA.
+- Fixed (**C1**): the organization routes require sign-in and a permission, are limited to the caller's own organization, and only a platform administrator can create organizations or switch off mandatory 2FA.
 - Branch and department management reuse `users:read` / `users:manage`; consider dedicated `org:*` keys so HR-style structure edits do not imply user administration.
 - The legacy `/api/v1/admin/branches/*` routes duplicate the branch module without permission checks (**C2**).

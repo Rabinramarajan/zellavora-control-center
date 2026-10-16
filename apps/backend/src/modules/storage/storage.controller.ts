@@ -4,7 +4,6 @@ import {
   ListMediaQuerySchema,
   MediaIdParamSchema,
   MediaPathQuerySchema,
-  UploadFileSchema,
   UploadMediaSchema,
 } from './storage.dto';
 import type { MediaContent } from './storage.types';
@@ -37,16 +36,6 @@ const sendContent = (
 
 export class StorageController {
   private readonly service = new StorageService();
-
-  upload = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = UploadFileSchema.parse(req.body);
-      const result = await this.service.uploadFile(data.fileName, data.base64Data);
-      res.json({ success: true, message: 'File uploaded successfully', data: result });
-    } catch (err) {
-      next(err);
-    }
-  };
 
   listMedia = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

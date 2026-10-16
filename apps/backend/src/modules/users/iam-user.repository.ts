@@ -19,6 +19,11 @@ function endOfDay(date?: Date): Date | undefined {
 
 interface UserWhere extends Prisma.UserWhereInput {}
 
+/** Restricts a user query to members of one organization. */
+export const inOrganization = (organizationId: string): UserWhere => ({
+  userTenants: { some: { tenantId: organizationId } },
+});
+
 export class IamUserRepository extends BaseRepository {
   /** Public transaction wrapper so services can orchestrate multi-repo writes. */
   transaction<T>(
@@ -32,9 +37,14 @@ export class IamUserRepository extends BaseRepository {
     return this.getDb(tx).user.findUnique({ where: { id } });
   }
 
-  async findByIdDetail(id: string, tx?: TxClient) {
+  /** A member of `organizationId`, or null; the id of anyone else looks like a missing user. */
+  async findInOrganization(id: string, organizationId: string, tx?: TxClient) {
+    return this.getDb(tx).user.findFirst({ where: { id, ...inOrganization(organizationId) } });
+  }
+
+  async findByIdDetail(id: string, organizationId: string, tx?: TxClient) {
     return this.getDb(tx).user.findFirst({
-      where: { id, ...APPROVED_USER_WHERE },
+      where: { id, ...APPROVED_USER_WHERE, ...inOrganization(organizationId) },
       include: {
         roleAssignments: {
           include: { role: true },
@@ -56,16 +66,20 @@ export class IamUserRepository extends BaseRepository {
     return this.getDb(tx).user.findUnique({ where: { username } });
   }
 
-  async countByStatus(tx?: TxClient) {
+  async countByStatus(organizationId: string, tx?: TxClient) {
     return this.getDb(tx).user.groupBy({
       by: ['status'],
-      where: { isDeleted: false },
+      where: { isDeleted: false, ...inOrganization(organizationId) },
       _count: { _all: true },
     });
   }
 
-  async list(query: IamUserListQueryDto, tx?: TxClient) {
-    const and: UserWhere[] = [{ isDeleted: false }, APPROVED_USER_WHERE];
+  async list(organizationId: string, query: IamUserListQueryDto, tx?: TxClient) {
+    const and: UserWhere[] = [
+      { isDeleted: false },
+      APPROVED_USER_WHERE,
+      inOrganization(organizationId),
+    ];
     const contains = (value: string) => ({ contains: value, mode: 'insensitive' as const });
 
     if (query.q) {
@@ -189,9 +203,14 @@ export class IamUserRepository extends BaseRepository {
     });
   }
 
-  async countInvited(tx?: TxClient) {
+  async countInvited(organizationId: string, tx?: TxClient) {
     return this.getDb(tx).user.count({
-      where: { isDeleted: false, status: 'PENDING', passwordHash: null },
+      where: {
+        isDeleted: false,
+        status: 'PENDING',
+        passwordHash: null,
+        ...inOrganization(organizationId),
+      },
     });
   }
 

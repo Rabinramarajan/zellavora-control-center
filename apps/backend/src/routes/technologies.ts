@@ -1,9 +1,18 @@
 import { Router, type Router as ExpressRouter } from 'express';
 import { supabase } from '../config/supabase';
-import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { z } from 'zod';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 
 const router: ExpressRouter = Router();
+
+const CreateTechnologySchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    icon: z.string().max(500).nullable().optional(),
+    color: z.string().max(50).nullable().optional(),
+  })
+  .strict();
 
 /**
  * @swagger
@@ -63,18 +72,30 @@ router.get('/technologies', async (req, res, next) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Requires the projects:write permission
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/technologies', authenticateToken, async (req: AuthRequest, res, next) => {
-  try {
-    const { data, error } = await supabase.from('technologies').insert(req.body).select().single();
+router.post(
+  '/technologies',
+  authenticateToken,
+  requirePermission('projects:write'),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const input = CreateTechnologySchema.parse(req.body);
+      const { data, error } = await supabase.from('technologies').insert(input).select().single();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    res.status(201).json(data);
-  } catch (error) {
-    next(error);
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /**
  * @swagger

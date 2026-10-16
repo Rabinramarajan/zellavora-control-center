@@ -37,7 +37,7 @@ mountSearchRoutes(router, auditSearch(), [
 
 /**
  * @swagger
- * /api/v1/audit-logs:
+ * /api/v1/operations/audit-logs:
  *   get:
  *     summary: searchAuditLogs
  *     operationId: searchAuditLogs
@@ -75,7 +75,7 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/audit-logs/filter-options:
+ * /api/v1/operations/audit-logs/filter-options:
  *   get:
  *     summary: getAuditFilterOptions
  *     operationId: getAuditFilterOptions
@@ -95,7 +95,7 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/audit-logs/export:
+ * /api/v1/operations/audit-logs/export:
  *   get:
  *     summary: exportAuditLogsCsv
  *     operationId: exportAuditLogsCsv
@@ -122,7 +122,7 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/audit-logs/{id}:
+ * /api/v1/operations/audit-logs/{id}:
  *   get:
  *     summary: getAuditLogDetails
  *     operationId: getAuditLogDetails
@@ -143,8 +143,5 @@ router.get(
   requirePermission('AUDIT_LOG_VIEW', 'system:audit:read'),
   controller.getById
 );
-
-/** Internal logging endpoint */
-router.post('/log', authenticate, controller.log);
 
 export default router;

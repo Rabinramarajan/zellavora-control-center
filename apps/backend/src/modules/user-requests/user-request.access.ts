@@ -5,6 +5,7 @@ import {
   PRIVILEGED_ROLE_KEYS,
 } from './user-request.types';
 import { UserRequestRepository } from './user-request.repository';
+import { PermissionService } from '../../services/auth/permission.service';
 
 export interface AccessState {
   branchId: string | null;
@@ -187,13 +188,25 @@ export class AccessCalculator {
         string,
         { resource: string; action: string; sources: Set<string>; scopes: Set<string> }
       >();
+      // Deny wins over any grant, exactly as PermissionService resolves it at runtime.
+      const denied = new Set<string>();
+      const grantingRoleIds = new Set<string>(state.roleIds);
+      for (const group of groups.filter((g) => state.groupIds.includes(g.id))) {
+        group.groupRoles.forEach((gr) => grantingRoleIds.add(gr.roleId));
+      }
+      for (const role of roles.filter((r) => grantingRoleIds.has(r.id))) {
+        for (const { effect, permission } of role.rolePermissions) {
+          if (effect === 'deny') denied.add(permission.key);
+        }
+      }
       const grant = (roleId: string, via?: string) => {
         const role = roles.find((r) => r.id === roleId);
         if (!role) return;
         const label = via ? `${role.name} (via ${via})` : role.name;
         const scope =
           SCOPE_LABELS[state.accessScope ?? ''] ?? SCOPE_LABELS[role.scope] ?? role.scope;
-        for (const { permission } of role.rolePermissions) {
+        for (const { effect, permission } of role.rolePermissions) {
+          if (effect === 'deny' || PermissionService.has(denied, permission.key)) continue;
           const [resource, ...rest] = permission.key.split(':');
           const entry = sources.get(permission.key) ?? {
             resource: permission.resource ?? resource,
@@ -243,7 +256,10 @@ export class AccessCalculator {
       .some(
         (r) =>
           PRIVILEGED_ROLE_KEYS.has(r.key) ||
-          r.rolePermissions.some(({ permission }) => PRIVILEGED_PERMISSION_KEYS.has(permission.key))
+          r.rolePermissions.some(
+            ({ effect, permission }) =>
+              effect !== 'deny' && PRIVILEGED_PERMISSION_KEYS.has(permission.key)
+          )
       );
 
     return { comparison, permissions, privileged };

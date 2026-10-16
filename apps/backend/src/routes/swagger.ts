@@ -1,4 +1,5 @@
 import type { Express } from 'express';
+import helmet from 'helmet';
 import { swaggerSpec } from '../config/swagger';
 import { applicationSpec } from '../swagger/application.swagger';
 import { adminSpec } from '../swagger/admin.swagger';
@@ -41,7 +42,24 @@ function swaggerHtml(title: string, specUrl: string): string {
 </html>`;
 }
 
+// Swagger UI loads its bundle from a CDN and starts with an inline script, so it needs a
+// looser policy than the API. Scoped to /swagger so no data endpoint inherits it.
+const swaggerSecurityHeaders = helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      imgSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'"],
+      upgradeInsecureRequests: null,
+    },
+  },
+});
+
 export function registerSwaggerRoutes(app: Express): void {
+  app.use('/swagger', swaggerSecurityHeaders);
+
   // Swagger UI assets are served from CDN — swagger-ui-dist reads files from
   // disk at request time, which Vercel's build tracer never bundles.
 

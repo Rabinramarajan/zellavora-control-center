@@ -6,7 +6,7 @@
  * in production). Output format: base64( iv(12) || authTag(16) || ciphertext ).
  */
 import crypto from 'crypto';
-import { config } from '../../config/env';
+import { config, isUsableSecret } from '../../config/env';
 
 const ALGO = 'aes-256-gcm';
 const KEY_BYTES = 32;
@@ -20,6 +20,9 @@ export class EncryptionService {
         throw new Error('ENCRYPTION_KEY must be >= 32 bytes in production');
       }
       // Dev-only fallback: derive a deterministic key from the JWT secret.
+      if (!isUsableSecret(config.jwtSecret)) {
+        throw new Error('ENCRYPTION_KEY or a valid JWT_SECRET is required');
+      }
       return crypto.createHash('sha256').update(config.jwtSecret).digest();
     }
     // Allow user to pass either raw bytes or hex-encoded.

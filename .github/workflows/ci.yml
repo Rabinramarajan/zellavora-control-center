@@ -4,10 +4,19 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24'
 
 jobs:
-  # Lint and Format Check
+  # Lint and type-check the backend
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -16,22 +25,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: apps/backend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install backend dependencies for type checking
+      - name: Install backend dependencies
         run: npm ci --prefix apps/backend
 
-      - name: Lint code
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: apps/backend
+
+      - name: Lint backend
         run: npm run lint
 
-      - name: Check formatting
-        run: npm run format:check
-
-      - name: TypeScript strict check
+      - name: TypeScript check
         run: npm run type-check
 
   # Backend Tests
@@ -58,48 +66,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: apps/backend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install backend dependencies
+        run: npm ci --prefix apps/backend
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: apps/backend
 
       - name: Run backend tests
-        run: npm run test:backend
+        run: npx jest --runInBand --forceExit --coverage --coverageReporters=lcov --coverageDirectory=../../coverage/backend
+        working-directory: apps/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          JWT_SECRET: ci-only-jwt-secret-with-at-least-32-bytes
+          REFRESH_TOKEN_SECRET: ci-only-refresh-secret-with-at-least-32-bytes
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage/backend/lcov.info
           flags: backend
-          fail_ci_if_error: false
-
-  # Frontend Tests
-  frontend-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run frontend tests
-        run: npm run test:frontend
-        working-directory: ./apps/zcc-frontend
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./apps/zcc-frontend/coverage/lcov.info
-          flags: frontend
           fail_ci_if_error: false
 
   # Build Backend
@@ -112,54 +102,34 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: apps/backend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install backend dependencies
+        run: npm ci --prefix apps/backend
 
       - name: Build backend
-        run: npm run build:backend
+        run: npm run build
+        working-directory: apps/backend
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-dist
           path: apps/backend/dist
 
-  # Build Frontend
-  build-frontend:
-    needs: [lint, frontend-test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build frontend
-        run: npm run build:frontend
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: frontend-dist
-          path: dist/apps/zcc-frontend
-
   # Security Scan
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -167,6 +137,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
           sarif_file: 'trivy-results.sarif'

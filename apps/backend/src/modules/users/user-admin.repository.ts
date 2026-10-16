@@ -25,9 +25,14 @@ export class UserAdminRepository extends BaseRepository {
     return this.withTransaction(fn);
   }
 
-  findUser(id: string, tx?: TxClient) {
+  findUser(id: string, organizationId: string, tx?: TxClient) {
     return this.getDb(tx).user.findFirst({
-      where: { id, isDeleted: false, ...APPROVED_USER_WHERE },
+      where: {
+        id,
+        isDeleted: false,
+        ...APPROVED_USER_WHERE,
+        userTenants: { some: { tenantId: organizationId } },
+      },
       include: {
         userTenants: { include: { tenant: { select: { id: true, name: true } } } },
         teams: { where: { deletedAt: null }, select: { id: true, name: true } },

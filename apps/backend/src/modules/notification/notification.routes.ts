@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { NotificationController } from './notification.controller';
+import { authenticate } from '../../middleware/auth';
 
 const router = Router();
 const controller = new NotificationController();
+
+router.use(authenticate);
 
 /**
  * @swagger
@@ -11,24 +14,18 @@ const controller = new NotificationController();
  *     summary: listNotifications
  *     operationId: getNotifications
  *     tags: [notifications]
- *     security: []
+ *     description: Returns the signed-in user's own notifications, newest first.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: pageSize
+ *         schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
  *     responses:
  *       default:
  *         description: Operation response
  */
 router.get('/', controller.list);
-/**
- * @swagger
- * /api/v1/notifications/send:
- *   post:
- *     summary: sendNotification
- *     operationId: postNotificationsSend
- *     tags: [notifications]
- *     security: []
- *     responses:
- *       default:
- *         description: Operation response
- */
-router.post('/send', controller.send);
 
 export default router;

@@ -20,7 +20,6 @@ apps/backend/src/
   modules/              Feature routes, controllers, services, DTOs and repositories
   services/             Existing shared and authentication services
   infrastructure/       Database clients, logging, queues and request context
-  rbac/                 RBAC engine and its services
 ```
 
 Add feature-specific business logic to its service, transport validation to DTOs/controllers,

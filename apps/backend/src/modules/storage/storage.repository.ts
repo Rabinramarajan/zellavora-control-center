@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { BaseRepository, TxClient } from '../../infrastructure/prisma';
 
 /** Every column except the file bytes, so listings never pull blobs into memory. */
@@ -14,18 +12,6 @@ const MEDIA_METADATA = {
 } as const;
 
 export class StorageRepository extends BaseRepository {
-  async saveFile(fileName: string, base64Data: string): Promise<string> {
-    const dir = path.join(process.cwd(), 'scratch');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
-    const buffer = Buffer.from(cleanBase64, 'base64');
-    const filePath = path.join(dir, fileName);
-    fs.writeFileSync(filePath, buffer);
-    return `/scratch/${fileName}`;
-  }
-
   async listMedia(
     organizationId: string,
     options: { prefix?: string; offset: number; limit: number },

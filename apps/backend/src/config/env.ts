@@ -42,10 +42,13 @@ export const config = {
   // ============================================================================
   // JWT & Authentication
   // ============================================================================
-  jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
-  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || 'dev-refresh-secret',
+  jwtSecret: process.env.JWT_SECRET || '',
+  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || '',
   jwtExpiry: process.env.JWT_EXPIRY || '15m',
   refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || '7d',
+
+  // Off by default. When on, a user with no role assignment gets the role named after users.role.
+  permissionRoleNameFallback: process.env.PERMISSION_ROLE_NAME_FALLBACK === 'true',
 
   // Password & Security
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10),
@@ -143,7 +146,9 @@ export const config = {
   corsOrigins: (
     process.env.VITE_CORS_ORIGINS ||
     'http://localhost:2000,http://localhost:4200,http://localhost:3000,https://admin.zellavora.com,https://demo.zellavora.com'
-  ).split(',').map((o) => o.trim()),
+  )
+    .split(',')
+    .map((o) => o.trim()),
 
   // ============================================================================
   // Logging
@@ -208,6 +213,17 @@ export const config = {
 // directly via Prisma, so local/dev can run without SUPABASE_* configured.
 const requiredEnvVars = ['JWT_SECRET', 'REFRESH_TOKEN_SECRET'];
 
+/** Placeholder values that shipped as fallbacks in earlier releases; never valid signing keys. */
+const KNOWN_DEFAULT_SECRETS = new Set(['dev-secret-change-in-production', 'dev-refresh-secret']);
+const MIN_SECRET_BYTES = 32;
+
+/** Whether a token-signing secret is present, long enough and not a known placeholder. */
+export function isUsableSecret(secret: string | undefined): boolean {
+  return (
+    !!secret && Buffer.byteLength(secret) >= MIN_SECRET_BYTES && !KNOWN_DEFAULT_SECRETS.has(secret)
+  );
+}
+
 // Additional required for production
 const productionEnvVars = [
   'ENCRYPTION_KEY', // Must be provided in production
@@ -231,6 +247,12 @@ export function collectConfigErrors(): string[] {
   for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
       errors.push(`Missing required environment variable: ${envVar}`);
+    }
+  }
+
+  for (const envVar of requiredEnvVars) {
+    if (process.env[envVar] && !isUsableSecret(process.env[envVar])) {
+      errors.push(`${envVar} must be at least ${MIN_SECRET_BYTES} bytes and not a default value`);
     }
   }
 

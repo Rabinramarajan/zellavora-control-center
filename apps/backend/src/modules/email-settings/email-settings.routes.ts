@@ -5,7 +5,7 @@
  * for the whole deployment, including password-reset delivery.
  */
 import { Router, type Response, type Router as ExpressRouter } from 'express';
-import { authenticate, requirePermission, type AuthRequest } from '../../middleware/auth';
+import { authenticate, requirePlatformAdmin, type AuthRequest } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/async-handler';
 import { createRateLimiter, userOrIpKey } from '../../middleware/rate-limit';
 import { EmailSettingsService } from './email-settings.service';
@@ -28,7 +28,7 @@ const testLimiter = createRateLimiter({
  * @swagger
  * tags:
  *   name: settingsEmail
- *   description: System-wide outbound email (SMTP) configuration.
+ *   description: System-wide outbound email (SMTP) configuration. Platform administrators only, because one setting serves every organization.
  */
 
 /**
@@ -45,12 +45,12 @@ const testLimiter = createRateLimiter({
  *       200:
  *         description: Current email configuration
  *       403:
- *         description: Forbidden - requires settings:manage
+ *         description: Forbidden - requires a platform administrator
  */
 router.get(
   '/',
   authenticate,
-  requirePermission('settings:manage'),
+  requirePlatformAdmin,
   asyncHandler(async (_req: AuthRequest, res: Response) => {
     res.json({
       success: true,
@@ -80,12 +80,12 @@ router.get(
  *       400:
  *         description: Validation error
  *       403:
- *         description: Forbidden - requires settings:manage
+ *         description: Forbidden - requires a platform administrator
  */
 router.put(
   '/',
   authenticate,
-  requirePermission('settings:manage'),
+  requirePlatformAdmin,
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const input = EmailSettingsSchema.parse(req.body);
     res.json({
@@ -117,7 +117,7 @@ router.put(
 router.post(
   '/test',
   authenticate,
-  requirePermission('settings:manage'),
+  requirePlatformAdmin,
   testLimiter,
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const { to } = TestEmailSchema.parse(req.body);

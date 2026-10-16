@@ -278,6 +278,13 @@ async function main() {
         ['cms', 'manage', 'Build and publish CMS pages'],
         ['timesheet', 'read', 'Keep daily, monthly and time sheets'],
         ['notifications', 'read', 'View your notifications'],
+        ['organizations', 'read', 'View your organization profile'],
+        [
+          'organizations',
+          'update',
+          'Edit your organization profile and tighten its security settings',
+        ],
+        ['admin', 'access', 'Open the admin console API'],
       ] as const
     ).map(([resource, action, description]) => ({
       name: `${action}:${resource}`,
@@ -393,6 +400,7 @@ async function main() {
     'cms:read',
     'timesheet:read',
     'notifications:read',
+    'organizations:read',
   ]);
   for (const role of [adminRole, userRole]) {
     for (const perm of permissionsList.filter((p) => memberKeys.has(p.key))) {

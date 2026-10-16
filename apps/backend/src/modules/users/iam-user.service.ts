@@ -1,9 +1,10 @@
 import { AppError } from '../../middleware/error';
+import { PermissionService } from '../../services/auth/permission.service';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { AuditService } from '../../infrastructure/audit';
 import { cacheDelPattern } from '../../infrastructure/cache';
-import { IamUserRepository } from './iam-user.repository';
+import { IamUserRepository, inOrganization } from './iam-user.repository';
 import { APPROVED_USER_WHERE } from './approved-user';
 import { IamUserMapper } from './iam-user.mapper';
 import { UserAdminService } from './user-admin.service';
@@ -36,8 +37,8 @@ export class IamUserService {
   // Queries
   // ---------------------------------------------------------------------------
 
-  async list(query: IamUserListQueryDto) {
-    const { data, total } = await this.repo.list(query);
+  async list(organizationId: string, query: IamUserListQueryDto) {
+    const { data, total } = await this.repo.list(organizationId, query);
     const branchIds = [...new Set(data.map((r) => r.branchId).filter((v): v is string => !!v))];
     const branches = new Map((await this.repo.branchNames(branchIds)).map((b) => [b.id, b.name]));
     const rows = data.map((row) =>
@@ -51,11 +52,12 @@ export class IamUserService {
   }
 
   /** Counts per account status (Invited, Active, Locked, ...), matching the list filter. */
-  async stats() {
+  async stats(organizationId: string) {
+    const members = inOrganization(organizationId);
     const counts = await Promise.all(
       ACCOUNT_STATUSES.map((s) =>
         this.repo.countWhere({
-          AND: [{ isDeleted: false }, APPROVED_USER_WHERE, accountStatusWhere([s])],
+          AND: [{ isDeleted: false }, APPROVED_USER_WHERE, members, accountStatusWhere([s])],
         })
       )
     );
@@ -63,16 +65,20 @@ export class IamUserService {
       AccountStatus,
       number
     >;
-    const total = await this.repo.countWhere({ isDeleted: false, ...APPROVED_USER_WHERE });
+    const total = await this.repo.countWhere({
+      isDeleted: false,
+      ...APPROVED_USER_WHERE,
+      ...members,
+    });
     return { total, byStatus };
   }
 
-  async getById(id: string) {
+  async getById(id: string, organizationId: string) {
     // Prisma throws a 500 on non-UUID input for @db.Uuid columns; treat it as a missing user.
     if (!UUID_PATTERN.test(id)) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
-    const row = await this.repo.findByIdDetail(id);
+    const row = await this.repo.findByIdDetail(id, organizationId);
     if (!row) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
@@ -83,8 +89,12 @@ export class IamUserService {
   // Mutations
   // ---------------------------------------------------------------------------
 
-  async lock(id: string, dto: LockUserDto, actorId?: string | null) {
-    const existing = await this.repo.findById(id);
+  async lock(id: string, organizationId: string, dto: LockUserDto, actorId?: string | null) {
+    // Prisma throws a 500 on non-UUID input for @db.Uuid columns; treat it as a missing user.
+    if (!UUID_PATTERN.test(id)) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    }
+    const existing = await this.repo.findInOrganization(id, organizationId);
     if (!existing) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
@@ -117,13 +127,20 @@ export class IamUserService {
       after: { status: 'LOCKED', isAccountLocked: true },
       metadata: { email: existing.email, reason: dto.reason ?? null },
     });
-    await new UserAdminService().notifyStatusChange(id, 'LOCKED', dto.reason ?? null);
+    await new UserAdminService().notifyStatusChange(
+      id,
+      organizationId,
+      'LOCKED',
+      dto.reason ?? null
+    );
 
     this.invalidate();
-    return this.getById(id);
+    return this.getById(id, organizationId);
   }
 
   private invalidate() {
     void cacheDelPattern(`${USER_CACHE_PREFIX}*`);
+    // Roles, groups and assignments feed every user's cached permission set.
+    PermissionService.invalidate();
   }
 }

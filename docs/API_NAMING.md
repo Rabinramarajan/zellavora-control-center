@@ -11,15 +11,17 @@ Use the canonical URLs below for new integrations. Existing URLs remain aliases 
 - Use camelCase path parameter names, such as `{userId}`.
 - Group Swagger operations by business domain using camelCase tags and summaries without spaces or hyphens (for example, `administrationBranches` and `getAllTechnologies`).
 - Assign a unique camelCase operation ID to every method/path pair. Preserve these IDs unless deliberately changing the API contract.
-- Document canonical paths only. Maintain historical aliases during migration; removing them requires a separate compatibility decision.
+- Document canonical paths only. The `/api/v1/clean/*` aliases were removed on 2026-10-16 (review finding M7); every feature has one canonical path under `/api/v1`. `/api/v1/audit-logs` (for `/api/v1/operations/audit-logs`) and `/api/v1/system-health` (for `/api/v1/operations/health`) remain as the only aliases.
 
 ## Distinct contracts
 
 `/auth` is the existing session and tenant authentication API. `/identity/auth` is the organization identity service previously exposed under `/clean/auth`. They are separate implementations and must not be mounted over one another.
 
-`/settings` serves application settings by section. `/organization-settings` serves organization settings by key. The `/admin`, `/iam`, and `/rbac` domains likewise retain their distinct data and authorization contracts.
+`/settings` serves application settings by section. `/organization-settings` serves organization settings by key. The `/admin` and `/iam` domains likewise retain their distinct data and authorization contracts. The `/api/v1/rbac` gateway was removed on 2026-10-16 (finding M1); `PermissionService` is the only permission engine.
 
 ## Namespace migration
+
+The `/api/v1/clean/*` rows below are historical: those paths no longer exist and return 404. Use the canonical prefix.
 
 | Historical prefix             | Canonical prefix                |
 | ----------------------------- | ------------------------------- |
