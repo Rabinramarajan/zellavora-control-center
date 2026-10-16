@@ -64,7 +64,7 @@ describe('selected menu access', () => {
     ]);
     const childKeys = (key: string) =>
       menus.find((menu) => menu.key === key)?.children.map((menu) => menu.key);
-    expect(childKeys('portfolio')).toHaveLength(8);
+    expect(childKeys('portfolio')).toEqual([]);
     expect(childKeys('content')).toEqual(['blog', 'media', 'cms-builder']);
     expect(childKeys('appearance')).toEqual(['theme-builder']);
     expect(childKeys('freelancer')).toEqual([

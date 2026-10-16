@@ -21,15 +21,7 @@ their children are visible to the user.
 | # | Icon | Label | Route | Key | Required Permission |
 |---|------|-------|-------|-----|---------------------|
 | 1 | 📊 | Dashboard | `/dashboard` | `dashboard` | `dashboard:read` |
-| 2 | 🎨 | Portfolio | `/portfolio` | `portfolio` | — |
-| 2.1 | 👤 | ↳ Profile | `/portfolio/profile` | `portfolio-profile` | — |
-| 2.2 | 🌟 | ↳ Hero | `/portfolio/hero` | `portfolio-hero` | — |
-| 2.3 | 📝 | ↳ About | `/portfolio/about` | `portfolio-about` | — |
-| 2.4 | 🧠 | ↳ Skills | `/portfolio/skills` | `portfolio-skills` | — |
-| 2.5 | 💼 | ↳ Experience | `/portfolio/experience` | `portfolio-experience` | — |
-| 2.6 | 🎓 | ↳ Education | `/portfolio/education` | `portfolio-education` | — |
-| 2.7 | 🛠️ | ↳ Services | `/portfolio/services` | `portfolio-services` | — |
-| 2.8 | 💬 | ↳ Testimonials | `/portfolio/testimonials` | `portfolio-testimonials` | — |
+| 2 | 🎨 | Portfolio | `/portfolio` | `portfolio` | `portfolio:read` |
 | 3 | 🗂️ | Projects | `/projects` | `projects` | — |
 | 4 | 📝 | Content | — | `content` | — |
 | 4.1 | ✍️ | ↳ Blog / Insights | `/blog` | `blog` | — |
