@@ -131,7 +131,7 @@ router.get('/projects/:projectId/technologies', async (req, res, next) => {
 
     if (error) throw error;
 
-    const technologies = (data || []).map((pt: any) => pt.technologies);
+    const technologies = (data || []).map((pt: { technologies: unknown }) => pt.technologies);
 
     res.json(technologies);
   } catch (error) {

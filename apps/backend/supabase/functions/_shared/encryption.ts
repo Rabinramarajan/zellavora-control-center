@@ -1,3 +1,4 @@
+import { requireSecret } from './secrets.ts';
 import crypto from 'node:crypto';
 import { Buffer } from 'node:buffer';
 
@@ -9,7 +10,7 @@ const AUTH_TAG_BYTES = 16;
 export class EncryptionService {
   private static getKey(): Buffer {
     const encryptionKey = Deno.env.get('ENCRYPTION_KEY') ?? '';
-    const jwtSecret = Deno.env.get('JWT_SECRET') ?? 'dev-secret-change-in-production';
+    const jwtSecret = requireSecret('JWT_SECRET');
     const nodeEnv = Deno.env.get('NODE_ENV') ?? 'development';
 
     if (!encryptionKey || encryptionKey.length < KEY_BYTES) {

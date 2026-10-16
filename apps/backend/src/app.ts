@@ -1,3 +1,4 @@
+import { getQueueMetrics } from './infrastructure/queue';
 import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
@@ -152,6 +153,12 @@ app.get(
     const cpuCount = os.cpus().length || 1;
     const load = Math.min(os.loadavg()[0], cpuCount);
     const database = await probeDatabase();
+  const queue = await getQueueMetrics().catch(() => ({
+    mode: 'inline' as const,
+    pendingJobs: 0,
+    failedJobs: 0,
+    activeWorkers: 0,
+  }));
     const blobConfigured = Boolean(
       process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_OIDC_TOKEN
     );
@@ -184,7 +191,7 @@ app.get(
           ? {}
           : { message: config.redisUrl ? 'Redis is not connected' : 'REDIS_URL is not set' }),
       },
-      queue: { pendingJobs: 0, activeWorkers: 0, status: redisState },
+      queue: { ...queue, status: queue.mode === 'inline' ? 'degraded' : redisState },
       timestamp: new Date().toISOString(),
     });
   }

@@ -1,3 +1,4 @@
+import { getQueueMetrics } from '../../../infrastructure/queue';
 import { ServiceHealthResult } from './health.types';
 import { prisma } from '../../../infrastructure/prisma';
 import { config, configErrors } from '../../../config/env';
@@ -234,14 +235,15 @@ export class QueueHealthChecker implements IHealthChecker {
 
   async check(): Promise<ServiceHealthResult> {
     const started = Date.now();
-    const hasQueue = Boolean(config.redisUrl);
+    const metrics = await getQueueMetrics().catch(() => null);
+    const hasQueue = metrics?.mode === 'bullmq';
     const latency = Date.now() - started;
 
     return {
       id: this.id,
       name: this.name,
       type: 'QUEUE',
-      status: hasQueue ? 'HEALTHY' : 'DEGRADED',
+      status: !metrics ? 'DOWN' : hasQueue ? 'HEALTHY' : 'DEGRADED',
       critical: false,
       responseTimeMs: latency,
       lastCheckedAt: new Date().toISOString(),
@@ -249,8 +251,10 @@ export class QueueHealthChecker implements IHealthChecker {
         ? 'Asynchronous task workers active'
         : 'Async worker dispatch fallback to synchronous execution',
       details: {
-        activeWorkers: hasQueue ? 2 : 1,
-        pendingJobs: 0,
+        mode: metrics?.mode ?? 'unreachable',
+        activeWorkers: metrics?.activeWorkers ?? 0,
+        pendingJobs: metrics?.pendingJobs ?? 0,
+        failedJobs: metrics?.failedJobs ?? 0,
       },
     };
   }

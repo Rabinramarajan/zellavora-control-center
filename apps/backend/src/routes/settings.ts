@@ -5,7 +5,7 @@ import { prisma } from '../infrastructure/prisma';
 const router = Router();
 
 // Store settings in-memory
-const store: Record<string, any> = {
+const store: Record<string, unknown> = {
   general: {
     siteTitle: 'Zellavora Control Center',
     siteDescription: 'Centralized platform to manage portfolio, projects, content, and analytics.',
@@ -258,7 +258,7 @@ router.put(
     if (!store[section]) {
       store[section] = {};
     }
-    store[section] = { ...store[section], ...req.body };
+    store[section] = { ...(store[section] as object), ...req.body };
     res.json({ data: store[section] });
   }
 );

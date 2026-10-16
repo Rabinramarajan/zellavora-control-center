@@ -1,3 +1,4 @@
+import { logger } from '../infrastructure/logger';
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { config } from '../config/env';
@@ -26,7 +27,7 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  console.error(`[error] ${req.method} ${req.originalUrl}`, error);
+  logger.error(`[error] ${req.method} ${req.originalUrl}`, error);
 
   // If the response has already begun streaming, writing another one throws
   // ERR_HTTP_HEADERS_SENT and takes down the process. Hand off to Express's

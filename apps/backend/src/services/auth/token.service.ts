@@ -150,7 +150,7 @@ export class TokenService {
         issuer: ISSUER,
         audience: AUDIENCE,
       }) as JwtPayload;
-    } catch (e: any) {
+    } catch (e) {
       throw new AppError(this.mapJwtError(e), 401, 'INVALID_TOKEN');
     }
 
@@ -172,7 +172,7 @@ export class TokenService {
       }) as JwtPayload;
       if (claims.type !== 'refresh') throw new Error('wrong type');
       return claims as unknown as RefreshTokenClaims;
-    } catch (e: any) {
+    } catch (e) {
       throw new AppError(this.mapJwtError(e), 401, 'INVALID_REFRESH_TOKEN');
     }
   }
@@ -219,7 +219,7 @@ export class TokenService {
     return jwt.decode(token) as JwtPayload;
   }
 
-  private static mapJwtError(e: any): string {
+  private static mapJwtError(e: { name?: string; message?: string }): string {
     if (e?.name === 'TokenExpiredError') return 'Token expired';
     if (e?.name === 'JsonWebTokenError') return 'Invalid token';
     if (e?.name === 'NotBeforeError') return 'Token not yet valid';

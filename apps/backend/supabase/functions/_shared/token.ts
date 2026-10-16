@@ -1,3 +1,4 @@
+import { requireSecret } from './secrets.ts';
 import jwt from 'npm:jsonwebtoken@9.0.2';
 import crypto from 'node:crypto';
 import { getSupabaseAdmin } from './db.ts';
@@ -52,9 +53,9 @@ export class TokenService {
     const jti = crypto.randomUUID();
     const accessJti = crypto.randomUUID();
 
-    const jwtSecret = Deno.env.get('JWT_SECRET') ?? 'dev-secret-change-in-production';
+    const jwtSecret = requireSecret('JWT_SECRET');
     const jwtExpiry = Deno.env.get('JWT_EXPIRY') ?? '15m';
-    const refreshTokenSecret = Deno.env.get('REFRESH_TOKEN_SECRET') ?? 'dev-refresh-secret';
+    const refreshTokenSecret = requireSecret('REFRESH_TOKEN_SECRET');
     const refreshTokenExpiry = Deno.env.get('REFRESH_TOKEN_EXPIRY') ?? '7d';
 
     const accessToken = jwt.sign(
@@ -115,7 +116,7 @@ export class TokenService {
   }
 
   static verifyRefresh(token: string): RefreshTokenClaims {
-    const refreshTokenSecret = Deno.env.get('REFRESH_TOKEN_SECRET') ?? 'dev-refresh-secret';
+    const refreshTokenSecret = requireSecret('REFRESH_TOKEN_SECRET');
     try {
       const claims = jwt.verify(token, refreshTokenSecret, {
         algorithms: ['HS256'],

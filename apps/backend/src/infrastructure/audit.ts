@@ -1,3 +1,4 @@
+import { logger } from './logger';
 /**
  * Prisma-backed AuditService — writes structured audit events to the AuditLog
  * table. Unlike the Supabase-flavoured services/auth/audit.service.ts, this one
@@ -52,7 +53,7 @@ export class AuditService {
       });
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('[audit] failed to write event', { action: input.action, error: err });
+      logger.error('[audit] failed to write event', { action: input.action, error: err });
     }
   }
 }

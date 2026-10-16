@@ -140,14 +140,14 @@ describe('adminAuthGuard', () => {
     expect(err).toMatchObject({ status: 401, code: 'NO_TOKEN' });
   });
 
-  it('no longer lets a member through just because they have a role', async () => {
-    loadForUser.mockResolvedValue(permissions(['notifications:read']));
+  it('turns away an account whose roles grant nothing, however its token is labelled', async () => {
+    loadForUser.mockResolvedValue(permissions([]));
     const err = await run(adminAuthGuard, authed());
-    expect(err).toMatchObject({ status: 403, code: 'FORBIDDEN_PERMISSION' });
+    expect(err).toMatchObject({ status: 403, code: 'FORBIDDEN_NO_ACCESS' });
   });
 
-  it('admits a caller holding admin:access', async () => {
-    loadForUser.mockResolvedValue(permissions(['admin:access']));
+  it('admits a member who holds any permission (routes still check their own)', async () => {
+    loadForUser.mockResolvedValue(permissions(['notifications:read']));
     expect(await run(adminAuthGuard, authed())).toBeUndefined();
   });
 

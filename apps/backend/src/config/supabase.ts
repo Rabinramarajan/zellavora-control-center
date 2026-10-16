@@ -59,4 +59,4 @@ export const supabaseAnon: SupabaseClient = lazyClient(() =>
   )
 );
 
-export type Database = any;
+export type Database = unknown;

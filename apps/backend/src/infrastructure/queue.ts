@@ -12,12 +12,12 @@ export const emailQueue =
     : null;
 
 // Helper to queue a job
-export const addQueueJob = async (name: string, data: any): Promise<void> => {
+export const addQueueJob = async (name: string, data: Record<string, unknown>): Promise<void> => {
   if (emailQueue && config.redisEnabled) {
     try {
       await emailQueue.add(name, data);
       logger.info(`[Queue] Added job ${name} to Redis queue`);
-    } catch (err: any) {
+    } catch (err) {
       logger.error(`[Queue] Failed to add job to Redis queue: ${err.message}. Executing locally.`);
       await processJobLocally(name, data);
     }
@@ -27,7 +27,9 @@ export const addQueueJob = async (name: string, data: any): Promise<void> => {
   }
 };
 
-const processJobLocally = async (name: string, data: any): Promise<void> => {
+const processJobLocally = async (name: string, payload: Record<string, unknown>): Promise<void> => {
+  // Each job type documents its own fields; they are all strings except expiryMinutes.
+  const data = payload as Record<string, string> & { expiryMinutes: number };
   try {
     switch (name) {
       case 'send-otp':
@@ -68,7 +70,7 @@ const processJobLocally = async (name: string, data: any): Promise<void> => {
       default:
         logger.warn(`[Queue] Unknown job type: ${name}`);
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Queue] Error processing job ${name}: ${err.message}`);
     throw err;
   }
@@ -95,7 +97,7 @@ export const sendOtpEmail = async (
       logger.error(`[Email] Failed to send OTP to ${email}: ${result.error}`);
     }
     return result.success;
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Email] Error sending OTP email: ${err.message}`);
     return false;
   }
@@ -118,7 +120,7 @@ export const sendWelcomeEmail = async (email: string, tenantName: string): Promi
       logger.error(`[Email] Failed to send welcome email to ${email}: ${result.error}`);
     }
     return result.success;
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Email] Error sending welcome email: ${err.message}`);
     return false;
   }
@@ -144,7 +146,7 @@ export const sendEmailVerificationEmail = async (
       logger.error(`[Email] Failed to send verification email to ${email}: ${result.error}`);
     }
     return result.success;
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Email] Error sending verification email: ${err.message}`);
     return false;
   }
@@ -171,7 +173,7 @@ export const sendPasswordResetEmail = async (
       logger.error(`[Email] Failed to send password reset email to ${email}: ${result.error}`);
     }
     return result.success;
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Email] Error sending password reset email: ${err.message}`);
     return false;
   }
@@ -199,7 +201,7 @@ export const sendUserInvitationEmail = async (
       logger.error(`[Email] Failed to send invitation email to ${email}: ${result.error}`);
     }
     return result.success;
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Email] Error sending invitation email: ${err.message}`);
     return false;
   }
@@ -226,7 +228,7 @@ export const send2FACodeEmail = async (
       logger.error(`[Email] Failed to send 2FA code to ${email}: ${result.error}`);
     }
     return result.success;
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Email] Error sending 2FA code: ${err.message}`);
     return false;
   }
@@ -253,7 +255,7 @@ export const sendSecurityAlertEmail = async (
       logger.error(`[Email] Failed to send security alert to ${email}: ${result.error}`);
     }
     return result.success;
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`[Email] Error sending security alert: ${err.message}`);
     return false;
   }
@@ -268,7 +270,7 @@ if (emailQueue && config.redisEnabled) {
       try {
         await processJobLocally(job.name, job.data);
         logger.info(`[Queue Worker] Job ${job.name} completed successfully`);
-      } catch (err: any) {
+      } catch (err) {
         logger.error(`[Queue Worker] Job ${job.name} failed: ${err.message}`);
         throw err;
       }
@@ -288,3 +290,25 @@ if (emailQueue && config.redisEnabled) {
     logger.error(`[Queue Worker] Worker error: ${err.message}`);
   });
 }
+
+export interface QueueMetrics {
+  mode: 'bullmq' | 'inline';
+  pendingJobs: number;
+  failedJobs: number;
+  activeWorkers: number;
+}
+
+/** Real counts from BullMQ; without Redis jobs run inline, so nothing is ever pending. */
+export const getQueueMetrics = async (): Promise<QueueMetrics> => {
+  if (!emailQueue) return { mode: 'inline', pendingJobs: 0, failedJobs: 0, activeWorkers: 0 };
+  const [counts, workers] = await Promise.all([
+    emailQueue.getJobCounts('waiting', 'delayed', 'active', 'failed'),
+    emailQueue.getWorkers(),
+  ]);
+  return {
+    mode: 'bullmq',
+    pendingJobs: (counts.waiting ?? 0) + (counts.delayed ?? 0) + (counts.active ?? 0),
+    failedJobs: counts.failed ?? 0,
+    activeWorkers: workers.length,
+  };
+};

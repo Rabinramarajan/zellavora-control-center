@@ -14,11 +14,13 @@ export interface IEMessage {
   hasError: boolean;
 }
 
-function buildMsg(body: Record<string, any>): IEMessage {
+function buildMsg(body: Record<string, unknown> & { error?: unknown; message?: unknown }): IEMessage {
   const errorMessage: MsgDetail[] = [];
 
   if (body.error) {
-    const text = typeof body.error === 'string' ? body.error : (body.error.message ?? body.error);
+    const text = typeof body.error === 'string'
+        ? body.error
+        : ((body.error as { message?: unknown }).message ?? body.error);
     errorMessage.push({ id: 0, msg: String(text), msgType: 'Error' });
   }
 
@@ -27,7 +29,7 @@ function buildMsg(body: Record<string, any>): IEMessage {
   return {
     infoMessage: {
       id: 0,
-      msg: hasError ? null : (body.message ?? null),
+      msg: hasError ? null : ((body.message as string | undefined) ?? null),
       msgType: 'Information',
     },
     errorMessage,

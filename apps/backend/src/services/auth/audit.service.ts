@@ -1,3 +1,4 @@
+import { logger } from '../../infrastructure/logger';
 /**
  * AuditService — write structured audit events.
  *
@@ -98,7 +99,7 @@ export class AuditService {
       // Audit failures must NEVER break the user-facing flow.
       // Just log to server stderr; ops team can pick it up from logs.
       // eslint-disable-next-line no-console
-      console.error('[audit] failed to write event', { event, error });
+      logger.error('[audit] failed to write event', { event, error });
     }
   }
 

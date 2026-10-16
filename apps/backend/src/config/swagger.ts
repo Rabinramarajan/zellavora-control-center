@@ -1,3 +1,4 @@
+import { logger } from '../infrastructure/logger';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import { existsSync, statSync } from 'fs';
@@ -643,7 +644,7 @@ function buildSpec(): object {
   });
 
   if (!apis.length) {
-    console.warn('[swagger] No source roots found; serving base definition only');
+    logger.warn('[swagger] No source roots found; serving base definition only');
     return options.definition as object;
   }
 
@@ -651,13 +652,13 @@ function buildSpec(): object {
     const spec = swaggerJsdoc({ ...options, apis }) as { paths?: Record<string, unknown> };
     const pathCount = Object.keys(spec.paths ?? {}).length;
     if (pathCount > 0) {
-      console.log(`[swagger] Built spec with ${pathCount} paths`);
+      logger.info(`[swagger] Built spec with ${pathCount} paths`);
       return spec;
     }
-    console.warn('[swagger] JSDoc scan found no paths; serving base definition only');
+    logger.warn('[swagger] JSDoc scan found no paths; serving base definition only');
     return options.definition as object;
   } catch (err) {
-    console.warn(
+    logger.warn(
       '[swagger] JSDoc scan failed, serving base definition only:',
       (err as Error).message
     );

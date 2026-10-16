@@ -1,3 +1,4 @@
+import { logger } from '../infrastructure/logger';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import { existsSync } from 'fs';
@@ -88,7 +89,7 @@ Access is enforced by the \`adminAuthGuard\` middleware.
 function buildAdminSpec(): object {
   const srcRoot = resolveSrcRoot();
   if (!srcRoot) {
-    console.warn('[swagger/admin] Source root not found; serving base definition only');
+    logger.warn('[swagger/admin] Source root not found; serving base definition only');
     return definition as object;
   }
 
@@ -100,10 +101,10 @@ function buildAdminSpec(): object {
   try {
     const spec = swaggerJsdoc({ definition, apis }) as { paths?: Record<string, unknown> };
     const pathCount = Object.keys(spec.paths ?? {}).length;
-    console.log(`[swagger/admin] Built spec with ${pathCount} paths`);
+    logger.info(`[swagger/admin] Built spec with ${pathCount} paths`);
     return spec;
   } catch (err) {
-    console.warn('[swagger/admin] JSDoc scan failed:', (err as Error).message);
+    logger.warn('[swagger/admin] JSDoc scan failed:', (err as Error).message);
     return { ...definition, paths: {} };
   }
 }

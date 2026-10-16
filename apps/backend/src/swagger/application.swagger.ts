@@ -1,3 +1,4 @@
+import { logger } from '../infrastructure/logger';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import { existsSync } from 'fs';
@@ -64,7 +65,7 @@ Pass a Bearer JWT obtained via \`POST /api/app/auth/login\`:
 function buildApplicationSpec(): object {
   const srcRoot = resolveSrcRoot();
   if (!srcRoot) {
-    console.warn('[swagger/app] Source root not found; serving base definition only');
+    logger.warn('[swagger/app] Source root not found; serving base definition only');
     return definition as object;
   }
 
@@ -76,10 +77,10 @@ function buildApplicationSpec(): object {
   try {
     const spec = swaggerJsdoc({ definition, apis }) as { paths?: Record<string, unknown> };
     const pathCount = Object.keys(spec.paths ?? {}).length;
-    console.log(`[swagger/app] Built spec with ${pathCount} paths`);
+    logger.info(`[swagger/app] Built spec with ${pathCount} paths`);
     return spec;
   } catch (err) {
-    console.warn('[swagger/app] JSDoc scan failed:', (err as Error).message);
+    logger.warn('[swagger/app] JSDoc scan failed:', (err as Error).message);
     return { ...definition, paths: {} };
   }
 }

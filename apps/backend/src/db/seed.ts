@@ -284,7 +284,6 @@ async function main() {
           'update',
           'Edit your organization profile and tighten its security settings',
         ],
-        ['admin', 'access', 'Open the admin console API'],
       ] as const
     ).map(([resource, action, description]) => ({
       name: `${action}:${resource}`,

@@ -1,3 +1,4 @@
+import { logger } from './infrastructure/logger';
 /**
  * Long-lived server entrypoint (Docker / local dev only).
  * The serverless deployment uses `api/index.ts` and must never load this file.
@@ -12,7 +13,7 @@ assertConfigValid();
 const PORT = config.port;
 
 app.listen(PORT, () => {
-  console.log(`
+  logger.info(`
 ╔════════════════════════════════════════╗
 ║   Zellavora Control Center - Backend   ║
 ╚════════════════════════════════════════╝

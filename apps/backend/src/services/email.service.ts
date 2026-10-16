@@ -72,7 +72,7 @@ class EmailService {
         );
       }
       return this.sendViaConsole(options);
-    } catch (err: any) {
+    } catch (err) {
       logger.error(`[Email] Failed to send email: ${err.message}`);
       return {
         success: false,
@@ -104,7 +104,7 @@ class EmailService {
         success: true,
         messageId: info.messageId,
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error(`[SMTP] Send failed: ${err.message}`);
       throw err;
     }

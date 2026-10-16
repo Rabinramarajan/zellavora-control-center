@@ -58,6 +58,16 @@ Working on `D:\personal_github\zelavora-nexus` exposed two gaps, closed in a sec
 - `notifications` had no creation time, so a member's feed could not be ordered. Migration `20261016010000_notification_created_at` adds `created_at` (backfilled from `sent_at`) and an index; the list orders by it.
 - `GET /auth/me` now returns `user.isPlatformAdmin` (so the UI can hide platform-only screens) and `deniedPermissions` (so the UI mirrors deny-wins, including against `*:*`).
 
+## Verification and closeout (second pass)
+
+- Migrations applied through `prisma migrate deploy` on PGlite with no drift; `npm run e2e:migrations` covers empty and populated databases; `npm run e2e` runs 71 API checks against the real server. Both are CI jobs.
+- The `admin:access` permission was dropped: members legitimately use `/api/admin` (Nexus sends every call through it), so `adminAuthGuard` now only rejects accounts with no effective permission.
+- Deno edge functions now fail closed on missing, short or placeholder secrets (`_shared/secrets.ts`).
+- `console.*` replaced by the logger; `no-console` and `no-explicit-any` are errors; lint has 0 problems. `/api/v1/health` and the queue checker report real BullMQ counts.
+- `/api/admin` and `/api/app` are the surfaces the Nexus app calls (`public/app.settings.json`), so they are **not** deprecated; retire them only with a frontend migration.
+- Nexus: 292 of 292 unit tests pass and the production build succeeds (bundle budget warning predates this work).
+- Still unproven: a first run of the workflow on GitHub. Still without their own specs: admin, application, cms, ddl, invitation, operations, resources, teams (storage tenancy is covered by e2e).
+
 ## Rollout notes
 
 1. Run `npx prisma migrate deploy` (migrations `20261016000000_p0_security_permissions` and `20261016010000_notification_created_at`) **before** the new code takes traffic. It adds `organizations:read`, `organizations:update` and `admin:access`, grants them to existing roles, and gives every member who only had the role-name fallback an explicit role assignment.

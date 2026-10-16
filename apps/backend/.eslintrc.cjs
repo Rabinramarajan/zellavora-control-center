@@ -6,14 +6,15 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   env: { node: true, es2022: true, jest: true },
+  overrides: [{ files: ['src/db/**', 'e2e/**', '**/*.spec.ts'], rules: { 'no-console': 'off' } }, { files: ['**/*.spec.ts'], rules: { '@typescript-eslint/no-explicit-any': 'off' } }],
   ignorePatterns: ['dist/', 'coverage/', 'node_modules/', 'scripts/', '*.cjs'],
   rules: {
     // tsc already enforces unused locals and parameters; keep ESLint to the real defects.
     '@typescript-eslint/no-unused-vars': 'off',
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/ban-types': 'warn',
     '@typescript-eslint/no-empty-interface': 'off',
-    'no-console': 'off',
+    'no-console': 'error',
   },
 };

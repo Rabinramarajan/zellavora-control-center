@@ -50,7 +50,7 @@ Registered in this order (`app.ts`):
 - **`authenticate`** reads `Authorization: Bearer <jwt>`, verifies it (HS256), sets `req.userId`, `req.tenantId` (`tid`), `req.role`, `req.sessionId`, and checks the session is still active and inside the organization's idle timeout. Logout, revocation and password reset therefore take effect on the next request.
 - **`requirePermission(...codes)`** loads the caller's effective permission set once per request (`services/auth/permission.service.ts`, cached for 30 seconds) and passes if any code matches. Codes accept wildcards (`users:*`). A `deny` always wins; see [IAM access control](iam-access-control.md).
 - **`requirePlatformAdmin`** gates platform-operator routes on `users.is_platform_admin`. Tenant wildcard grants never satisfy it.
-- **`adminAuthGuard`** (the `/api/admin` tree) requires the `admin:access` permission or platform-operator status; each mounted router still checks its own permission.
+- **`adminAuthGuard`** (the `/api/admin` tree, which the Nexus app uses for every call) requires platform-operator status or at least one effective permission from an active role; a user whose roles are all disabled, or who has none, gets 403 `FORBIDDEN_NO_ACCESS`. Each mounted router still checks its own permission.
 - Token signing fails closed: `TokenService` answers 503 `AUTH_UNAVAILABLE` when `JWT_SECRET` or `REFRESH_TOKEN_SECRET` is missing, shorter than 32 bytes or one of the old placeholder values.
 - Guards must be applied per router or route; there is no global guard. `src/routes/route-guard.spec.ts` walks every registered router and fails when a route outside a short, reviewed allow-list has no marked guard (`authenticate`, `requirePermission`, `requirePlatformAdmin`, `adminAuthGuard`).
 

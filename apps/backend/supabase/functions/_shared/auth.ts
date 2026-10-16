@@ -1,3 +1,4 @@
+import { requireSecret } from './secrets.ts';
 import jwt from 'npm:jsonwebtoken@9.0.2';
 import { getSupabaseAdmin } from './db.ts';
 import { AppError } from './errors.ts';
@@ -26,7 +27,7 @@ export function getAuthToken(req: Request): string | null {
 }
 
 export async function verifyAccessToken(token: string): Promise<AccessTokenClaims> {
-  const secret = Deno.env.get('JWT_SECRET') ?? 'dev-secret-change-in-production';
+  const secret = requireSecret('JWT_SECRET');
   let claims: any;
   try {
     claims = jwt.verify(token, secret, {
